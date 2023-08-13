@@ -1,0 +1,55 @@
+name: Build PR (only formatting)
+
+on:
+  pull_request:
+    branches:
+      - 'master'
+
+env:
+  OPAMROOT: /home/user/.opam
+  OPAMYES: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: kakadu18/ocaml:fp2023
+
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
+
+    steps:
+      #- name: Cancel Previous Runs
+      #  uses: styfle/cancel-workflow-action@0.9.1
+      #  with:
+      #    access_token: ${{ github.token }}
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0                # fix me later
+
+      - name: List installed OPAM packages
+        run: opam list
+
+      - name: Get branch name
+        id: branch-name
+        uses: tj-actions/branch-names@v6
+
+      ############# Detecting and compiling fp2023
+      # Smart link about setting environment variables
+      # https://docs.github.com/en/actions/reference/workflow-commands-for-github-actions#setting-an-environment-variable
+      - run: |
+          sh -x ./detect_latest_pr.sh "pull/${{ steps.branch-name.outputs.ref_branch }}" >> $GITHUB_ENV
+          echo "${{ env.latest }}"
+
+      #- name: Installing dependencies
+      #  run: cd ${{ env.latest }} && opam install . --deps-only --with-test --with-doc
+
+      - name: Naive linting
+        run: |
+          cd ${{ env.latest }} && python3 ../lint_filesystem.py ${{ env.latest }}
+
+      - name: Checking ocamlformat
+        run: |
+          cd ${{ env.latest }} && opam exec -- dune build @fmt --profile=release

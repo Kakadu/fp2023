@@ -1,0 +1,122 @@
+name: Build master
+
+on:
+  #pull_request:
+  #  branches:
+  #    - 'master'
+  push:
+    paths-ignore:
+      - 'README.md'
+      - 'exam.md'
+    branches:
+      - 'master'
+env:
+  OPAMROOT: /home/user/.opam
+  OPAMYES: true
+
+jobs:
+  build:
+    defaults:
+      run:
+        shell: bash
+
+    runs-on: ubuntu-latest
+    container:
+      image: kakadu18/ocaml:fp2023
+      #options: --user user
+      #options: -v /__w/test-ocaml-ci-docker/test-ocaml-ci-docker:/home/user/:rw -w /home/user/
+
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      #cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+      cancel-in-progress: true
+        #${{ github.ref != 'refs/heads/main' }}
+
+    steps:
+
+      # Tryign to use concurrency pecification instead of this action.
+      #- name: Cancel Previous Runs
+      #  uses: styfle/cancel-workflow-action@0.11.0
+      #  with:
+      #    access_token: ${{ github.token }}
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+        #  path: /__w/test-ocaml-ci-docker/test-ocaml-ci-docker
+
+      - run: ls -la
+      #- run: git log
+      #- run: git diff --name-only HEAD~0 HEAD~1
+      ############# Detecting and compiling fp202x
+      # Smart link about setting environment variables
+      # https://docs.github.com/en/actions/reference/workflow-commands-for-github-actions#setting-an-environment-variable
+      - run: |
+          bash -x ./detect_latest.sh >> $GITHUB_ENV
+          echo "${{ env.latest }}"
+
+      - name: Installing dependencies
+        run: cd ${{ env.latest }} && opam install . --deps-only --with-test --with-doc --yes
+
+      - if: false
+        name: Checking ocamlformat
+        run: |
+          cd ${{ env.latest }} && opam exec -- dune build @fmt --profile=release
+
+      - name: Compiling ${{ env.latest }}...
+        run: cd ${{ env.latest }} && opam exec -- dune build --profile=release
+
+      - name: Running tests in ${{ env.latest }}...
+        run: cd ${{ env.latest }} && opam exec -- dune runtest --profile=release
+
+      - name: Build API documentation for ${{ env.latest }}...
+        run: |
+          opam install odoc --yes
+          cd ${{ env.latest }} && opam exec -- dune build @doc --profile=release
+
+      - uses: actions/checkout@v2
+        with:
+          repository: Kakadu/zanuda
+          path: zanuda
+
+      - run: opam pin add ./zanuda --no-action
+      - name: Installing linter
+        run: opam install zanuda --yes --with-doc
+
+      - uses: reviewdog/action-setup@v1
+
+      - run: echo "RDJSON_DIR_PATH=_build/default/_found_lints" >> $GITHUB_ENV
+      - run: cd ${{ env.latest }} && mkdir -p ${{ env.RDJSON_DIR_PATH }}
+      - run: echo "RDJSON_FILE_PATH=${{ env.RDJSON_DIR_PATH }}/lints.rdjsonl" >> $GITHUB_ENV
+
+      - name: Running linter in ${{ env.latest }}...
+        run: cd ${{ env.latest }} && opam exec -- zanuda -dir . -add-prefix ${{ env.latest }}/ -ordjsonl ${{ env.RDJSON_FILE_PATH }}
+
+
+      # github has a limit on annotations. pr-review seems not have this limitation
+        # Error: reviewdog: Too many results (annotations) in diff.
+        # You may miss some annotations due to GitHub limitation for annotation created by logging command.
+        # Please check GitHub Actions log console to see all results.
+
+        # Limitation:
+        # - 10 warning annotations and 10 error annotations per step
+        # - 50 annotations per job (sum of annotations from all the steps)
+        # - 50 annotations per run (separate from the job annotations, these annotations aren't created by users)
+
+#      - name: Run reviewdog check (1/5)
+#        if: ${{ true }}
+#        continue-on-error: true
+#        env:
+#          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.REVIEWDOG_TOKEN1 }}
+#        run: >
+#          cat ${{ env.latest }}/${{ env.RDJSON_FILE_PATH }} |
+#          sed -n '1,49p' |
+#          reviewdog -f=rdjsonl -filter-mode nofilter -reporter=github-pr-check
+
+      #- name: Run reviewdog
+      #  env:
+      #    REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.REVIEWDOG_TOKEN1 }}
+      #  run: >
+      #    cat ${{ env.latest }}/${{ env.RDJSON_FILE_PATH }} |
+      #    reviewdog -f=rdjsonl -filter-mode nofilter -reporter=github-pr-review
