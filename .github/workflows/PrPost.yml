@@ -20,6 +20,7 @@ jobs:
       - run: echo "event = ${{ github.event.workflow_run.event }}"
       - run: echo "conclusion  = ${{ github.event.workflow_run.conclusion }}"
 
+      # TODO: https://github.com/actions/download-artifact
       - name: 'Download artifact'
         uses: actions/github-script@v3.1.0
         with:

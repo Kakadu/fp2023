@@ -103,18 +103,20 @@ jobs:
       # we use commit previous from head because HEAD is merge commit by some reason
       # TODO: maybe PR_number is not required
 
-      - run: echo $(git rev-parse HEAD)
-      - run: echo $(git rev-parse HEAD~1)
-      - run: echo ${{ github.event.pull_request.head.sha }}
-      - run: PAGER= git log
-
-      - uses: actions/upload-artifact@v3
+      - name: Upload linter (other_stuff) artifact
+        uses: actions/upload-artifact@v3
         with:
           name: other_stuff
           path: |
             ${{ env.latest }}/${{ env.RDJSON_DIR_PATH }}
 
-      - uses: actions/upload-artifact@v3
+      - run: echo $(git rev-parse HEAD)
+      - run: echo $(git rev-parse HEAD~1)
+      - run: echo ${{ github.event.pull_request.head.sha }}
+      - run: PAGER= git log
+
+      - name: Update docs artifact
+        uses: actions/upload-artifact@v3
         with:
           name: docs
           path: |
@@ -138,7 +140,8 @@ jobs:
 
       - run: cat jscpd_report.txt
 
-      - uses: actions/upload-artifact@v2
+      - name: Update JSCPD artifact
+        uses: actions/upload-artifact@v3
         with:
           name: jscpd_report
           path: |
