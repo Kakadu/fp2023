@@ -53,3 +53,5 @@ jobs:
       - name: Checking ocamlformat
         run: |
           cd ${{ env.latest }} && opam exec -- dune build @fmt --profile=release
+
+      # TODO: onfail post a comment how to fix it

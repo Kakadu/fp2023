@@ -7,7 +7,9 @@ on:
     workflows: ["Build PR"]
     types:
       - completed
-
+env:
+  OPAMROOT: /home/user/.opam
+  OPAMYES: true
 jobs:
   upload_lints:
     runs-on: ubuntu-latest
@@ -17,31 +19,52 @@ jobs:
     if: >
       ${{ github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success' }}
     steps:
-      - run: echo "event = ${{ github.event.workflow_run.event }}""
+      - run: echo "event = ${{ github.event.workflow_run.event }}"
       - run: echo "conclusion  = ${{ github.event.workflow_run.conclusion }}"
 
-      - name: 'Download artifact'
-        uses: actions/github-script@v3.1.0
+      - name: Download artifact
+        id: download-artifact
+        uses: dawidd6/action-download-artifact@v2
         with:
-          script: |
-            var artifacts = await github.actions.listWorkflowRunArtifacts({
-               owner: context.repo.owner,
-               repo: context.repo.repo,
-               run_id: ${{ github.event.workflow_run.id }},
-            });
-            var matchArtifact = artifacts.data.artifacts.filter((artifact) => {
-              return artifact.name == "other_stuff";
-            })[0];
-            var download = await github.actions.downloadArtifact({
-               owner: context.repo.owner,
-               repo: context.repo.repo,
-               artifact_id: matchArtifact.id,
-               archive_format: 'zip',
-            });
-            var fs = require('fs');
-            fs.writeFileSync('${{ github.workspace }}/other_stuff.zip', Buffer.from(download.data));
+          workflow: PR.yml
+          name: review
 
-      - run: unzip other_stuff.zip
+      - name: Install GH CLI
+        uses: dev-hanz-ops/install-gh-cli-action@v0.1.0
+      # https://stackoverflow.com/a/72532196
+      - run: echo ${{ secrets.GITHUB_TOKEN }} | gh auth login --with-token
+      - run: >
+          echo '{"name":"PR postprocess","status":"completed","head_sha":"${{ github.sha }}"}' |
+            gh api /repos/Kakadu/fp2023/check-runs --input -
+
+      #- run: unzip review.zip
+      #- uses: actions/download-artifact@v3
+      #  with:
+      #    name: other_stuff.zip
+
+      # TODO: https://github.com/actions/download-artifact
+#      - name: 'Download artifact'
+#        uses: actions/github-script@v3.1.0
+#        with:
+#          script: |
+#            var artifacts = await github.actions.listWorkflowRunArtifacts({
+#               owner: context.repo.owner,
+#               repo: context.repo.repo,
+#               run_id: ${{ github.event.workflow_run.id }},
+#            });
+#            var matchArtifact = artifacts.data.artifacts.filter((artifact) => {
+#              return artifact.name == "other_stuff";
+#            })[0];
+#            var download = await github.actions.downloadArtifact({
+#               owner: context.repo.owner,
+#               repo: context.repo.repo,
+#               artifact_id: matchArtifact.id,
+#               archive_format: 'zip',
+#            });
+#            var fs = require('fs');
+#            fs.writeFileSync('${{ github.workspace }}/other_stuff.zip', Buffer.from(download.data));
+
+
       - run: |
           echo "LANG_NAME=$(cat projectname.txt)" >> $GITHUB_ENV
           echo "PIARAST_NAME=$(cat piarast.txt)" >> $GITHUB_ENV
@@ -57,15 +80,18 @@ jobs:
           echo "CI_COMMIT = ${{ env.CI_COMMIT }}"
           echo "CI_REPO_OWNER = ${{ env.CI_REPO_OWNER }}"
 
+      - run: >
+          opam reinstall reviewer --yes
+
       - name: Run reviewer
         run: >
-          opam exec -- reviewer
-            -owner ${{env.CI_REPO_OWNER}}
-            -repo ${{github.event.repository.name}}
-            -pr_number ${{ env.CI_PULL_REQUEST }}
-            -commit ${{ env.CI_COMMIT }}
-            -irdjsonl ${{ env.REPORT_FILE_NAME }}
-            -token ${{ secrets.GITHUB_TOKEN }}
+          opam exec -- reviewer \
+            -owner ${{env.CI_REPO_OWNER}} \
+            -repo ${{github.event.repository.name}} \
+            -pr_number ${{ env.CI_PULL_REQUEST }} \
+            -commit ${{ env.CI_COMMIT }} \
+            -irdjsonl ${{ env.REPORT_FILE_NAME }} \
+            -token ${{ secrets.GITHUB_TOKEN }} \
             -review
 
 
@@ -148,31 +174,15 @@ jobs:
       ${{ github.event.workflow_run.event == 'pull_request' &&
       github.event.workflow_run.conclusion == 'success' }}
     steps:
-      - name: 'Download artifact'
-        uses: actions/github-script@v3.1.0
+      - name: Download artifact
+        id: download-artifact
+        uses: dawidd6/action-download-artifact@v2
         with:
-          script: |
-            //console.log(${{ github.event.workflow_run.id }});
-            var artifacts = await github.actions.listWorkflowRunArtifacts({
-               owner: context.repo.owner,
-               repo: context.repo.repo,
-               run_id: ${{ github.event.workflow_run.id }},
-            });
-            var matchArtifact = artifacts.data.artifacts.filter((artifact) => {
-              return artifact.name == "docs";
-            })[0];
-            var download = await github.actions.downloadArtifact({
-               owner: context.repo.owner,
-               repo: context.repo.repo,
-               artifact_id: matchArtifact.id,
-               archive_format: 'zip',
-            });
-            var fs = require('fs');
-            fs.writeFileSync('${{ github.workspace }}/docs.zip', Buffer.from(download.data));
+          workflow: PR.yml
+          name: docs
+          path: docs
 
-      - run: |
-          mkdir docs
-          cd docs && unzip ../docs.zip
+      - run: ls docs
       - run: |
           echo "LANG_NAME=$(cat docs/_found_lints/projectname.txt)" >> $GITHUB_ENV
           echo "PR_NUMBER=$(cat docs/_found_lints/PR_number.txt)" >> $GITHUB_ENV
@@ -230,34 +240,18 @@ jobs:
   ###################################################################################################
   process_clones:
     runs-on: ubuntu-latest
-    if: false
-    #if: >
-    #  ${{ github.event.workflow_run.event == 'pull_request' &&
-    #  github.event.workflow_run.conclusion == 'success' }}
+    #if: false
+    if: >
+      ${{ github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success' }}
     steps:
-      - name: 'Download artifact'
-        uses: actions/github-script@v3.1.0
+      - name: Download artifact
+        id: download-artifact
+        uses: dawidd6/action-download-artifact@v2
         with:
-          script: |
-            //console.log(${{ github.event.workflow_run.id }});
-            var artifacts = await github.actions.listWorkflowRunArtifacts({
-               owner: context.repo.owner,
-               repo: context.repo.repo,
-               run_id: ${{ github.event.workflow_run.id }},
-            });
-            var matchArtifact = artifacts.data.artifacts.filter((artifact) => {
-              return artifact.name == "jscpd_report";
-            })[0];
-            var download = await github.actions.downloadArtifact({
-               owner: context.repo.owner,
-               repo: context.repo.repo,
-               artifact_id: matchArtifact.id,
-               archive_format: 'zip',
-            });
-            var fs = require('fs');
-            fs.writeFileSync('${{ github.workspace }}/jscpd_report.zip', Buffer.from(download.data));
+          workflow: PR.yml
+          name: jscpd_report
 
-      - run: unzip jscpd_report.zip
       - run: |
           echo "PR_NUMBER=$(cat PR_number.txt)" >> $GITHUB_ENV
 
