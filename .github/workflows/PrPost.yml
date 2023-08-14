@@ -292,12 +292,12 @@ jobs:
         id: render_template
         shell: bash
         run: |
-          printf "%s" "$(< jscpd_report.txt)" > text.md
+          sed -e :a -e '/^\n*$/{$d;N;};/\n$/ba' -i jscpd_report.txt
           cat << EOF > template.md
           A report of looking for clones for mini language
 
           ```
-          $(cat text.md)
+          $(cat jscpd_report.txt)
           ```
           EOF
 
