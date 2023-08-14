@@ -21,7 +21,7 @@ for x in [x for x in os.listdir(".") if good_dir(x)]:
 
 if 1:
   print("Looking for clones in itself");
-  cmd = f"jscpd --pattern '{LANG}/**/*.ml*' -b -r consoleFull > _reports/vs_{LANG}.txt"
+  cmd = f"{NPM_BIN}/jscpd --pattern '{LANG}/**/*.ml*' -b -r consoleFull > _reports/vs_{LANG}.txt"
   os.system(cmd)
 
 os.system(f"cat {REPORTS_DIR}/*.txt > {REPORT_FILE}")
