@@ -300,6 +300,7 @@ jobs:
           echo -n `cat jscpd_report.txt` >> template.md
           echo -n '\n```' >> template.md
 
+      - run: cat template.md
 
       #- name: Render template
       #  id: render_template
