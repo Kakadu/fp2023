@@ -291,9 +291,8 @@ jobs:
         id: render_template
         shell: bash
         run: |
-          sed -e :a -e '/^\n*$/{$d;N;};/\n$/ba' -i jscpd_report.txt
           printf "A report of looking for clones for mini language\n\n```\n" > template.md
-          cat jscpd_report.txt >> template.md
+          echo -n `cat jscpd_report.txt` >> template.md
           printf "\n```" >> template.md
 
 
