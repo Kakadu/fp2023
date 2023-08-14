@@ -25,8 +25,17 @@ jobs:
         uses: dawidd6/action-download-artifact@v2
         with:
           workflow: PR.yml
-          name: review.zip
+          name: review
 
+      - run: ls
+
+      # https://stackoverflow.com/a/72532196
+      - run: echo ${{ secrets.GITHUB_TOKEN }} | gh auth login --with-token
+      - run: >
+          echo '{"name":"PR postprocess","head_sha":"${{ github.sha }}"}' |
+            gh api /repos/Kakadu/fp2023/check-runs --input -
+
+      #- run: unzip review.zip
       #- uses: actions/download-artifact@v3
       #  with:
       #    name: other_stuff.zip
@@ -53,7 +62,7 @@ jobs:
 #            var fs = require('fs');
 #            fs.writeFileSync('${{ github.workspace }}/other_stuff.zip', Buffer.from(download.data));
 
-      - run: unzip review.zip
+
       - run: |
           echo "LANG_NAME=$(cat projectname.txt)" >> $GITHUB_ENV
           echo "PIARAST_NAME=$(cat piarast.txt)" >> $GITHUB_ENV
