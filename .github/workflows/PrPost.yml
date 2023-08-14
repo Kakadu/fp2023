@@ -34,7 +34,7 @@ jobs:
       # https://stackoverflow.com/a/72532196
       - run: echo ${{ secrets.GITHUB_TOKEN }} | gh auth login --with-token
       - run: >
-          echo '{"name":"PR postprocess","head_sha":"${{ github.sha }}"}' |
+          echo '{"name":"PR postprocess","status":"completed","head_sha":"${{ github.sha }}"}' |
             gh api /repos/Kakadu/fp2023/check-runs --input -
 
       #- run: unzip review.zip
@@ -79,6 +79,9 @@ jobs:
           echo "CI_PULL_REQUEST = ${{ env.CI_PULL_REQUEST }}"
           echo "CI_COMMIT = ${{ env.CI_COMMIT }}"
           echo "CI_REPO_OWNER = ${{ env.CI_REPO_OWNER }}"
+
+      - run: >
+          opam reinstall reviewer --yes
 
       - name: Run reviewer
         run: >
