@@ -82,13 +82,13 @@ jobs:
 
       - name: Run reviewer
         run: >
-          opam exec -- reviewer
-            -owner ${{env.CI_REPO_OWNER}}
-            -repo ${{github.event.repository.name}}
-            -pr_number ${{ env.CI_PULL_REQUEST }}
-            -commit ${{ env.CI_COMMIT }}
-            -irdjsonl ${{ env.REPORT_FILE_NAME }}
-            -token ${{ secrets.GITHUB_TOKEN }}
+          opam exec -- reviewer \
+            -owner ${{env.CI_REPO_OWNER}} \
+            -repo ${{github.event.repository.name}} \
+            -pr_number ${{ env.CI_PULL_REQUEST }} \
+            -commit ${{ env.CI_COMMIT }} \
+            -irdjsonl ${{ env.REPORT_FILE_NAME }} \
+            -token ${{ secrets.GITHUB_TOKEN }} \
             -review
 
 
