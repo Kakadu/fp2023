@@ -279,12 +279,12 @@ jobs:
             -H "X-GitHub-Api-Version: 2022-11-28"
 
 
+      - name: Read file contents
+        id: read-escaped-markdown
+        uses: andstor/file-reader-action@v1
+        with:
+          path: text.md
 
-      #- name: Read file contents
-      #  id: read-escaped-markdown
-      #  uses: andstor/file-reader-action@v1
-      #  with:
-      #    path: text.md
 
       # https://stackoverflow.com/a/7359879
       - name: Prepare text with clones report
