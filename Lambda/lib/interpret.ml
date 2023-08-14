@@ -20,10 +20,10 @@ let parse_and_run str =
   let ans =
     let module I = Interpret (Result) in
     match Parser.parse str with
-    | Caml.Result.Ok ast -> I.run ast
-    | Caml.Result.Error _ ->
-      Caml.Format.eprintf "Parsing error\n%!";
-      Caml.exit 1
+    | Stdlib.Result.Ok ast -> I.run ast
+    | Stdlib.Result.Error _ ->
+      Stdlib.Format.eprintf "Parsing error\n%!";
+      Stdlib.exit 1
   in
   ans
 ;;
