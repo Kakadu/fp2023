@@ -62,6 +62,9 @@ jobs:
       - run: >
           opam reinstall reviewer --yes
 
+      - name:  lints.rdjsonl
+        run: cat  lints.rdjsonl
+
       - name: Run reviewer
         run: >
           opam exec -- reviewer -token ${{ secrets.GITHUB_TOKEN }} -owner ${{env.CI_REPO_OWNER}} -repo ${{github.event.repository.name}} -pr_number ${{ env.CI_PULL_REQUEST }} -commit ${{ env.CI_COMMIT }} -irdjsonl lints.rdjsonl -review
@@ -190,7 +193,7 @@ jobs:
           body="${body//'%'/'%25'}"
           body="${body//$'\n'/'%0A'}"
           body="${body//$'\r'/'%0D'}"
-          echo ::set-output name=body::$body
+          echo "body=$body" >> $GITHUB_OUTPUT
 
       - name: Find Comment
         uses: peter-evans/find-comment@v1
