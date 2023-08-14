@@ -64,13 +64,7 @@ jobs:
 
       - name: Run reviewer
         run: >
-          opam exec -- reviewer -token ${{ secrets.GITHUB_TOKEN }} \
-            -owner ${{env.CI_REPO_OWNER}} \
-            -repo ${{github.event.repository.name}} \
-            -pr_number ${{ env.CI_PULL_REQUEST }} \
-            -commit ${{ env.CI_COMMIT }} \
-            -irdjsonl ${{ env.REPORT_FILE_NAME }} \
-            -review
+          opam exec -- reviewer -token ${{ secrets.GITHUB_TOKEN }} -owner ${{env.CI_REPO_OWNER}} -repo ${{github.event.repository.name}} -pr_number ${{ env.CI_PULL_REQUEST }} -commit ${{ env.CI_COMMIT }} -irdjsonl ${{ env.REPORT_FILE_NAME }} -review
 
 
       # TODO: Maybe not deploy empty lint files
