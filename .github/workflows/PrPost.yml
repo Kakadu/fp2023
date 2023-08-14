@@ -27,8 +27,8 @@ jobs:
           workflow: PR.yml
           name: review
 
-      - run: ls
-
+      - name: Install GH CLI
+        uses: dev-hanz-ops/install-gh-cli-action
       # https://stackoverflow.com/a/72532196
       - run: echo ${{ secrets.GITHUB_TOKEN }} | gh auth login --with-token
       - run: >
