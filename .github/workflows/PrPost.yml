@@ -3,13 +3,14 @@ name: Comment on the PR
 # read-write repo token
 # access to secrets
 on:
-  #workflow_run:
-  #  workflows: ["Build PR"]
-  #  types:
-  #    - completed
-  pull_request:
-    branches:
-      - 'master'
+  workflow_run:
+    workflows: ["Build PR"]
+    types:
+      - completed
+  #pull_request:
+  #  branches:
+  #    - 'master'
+
 env:
   OPAMROOT: /home/user/.opam
   OPAMYES: true
@@ -25,13 +26,13 @@ jobs:
       - run: echo "event = ${{ github.event.workflow_run.event }}"
       - run: echo "conclusion  = ${{ github.event.workflow_run.conclusion }}"
 
-      - name: Wait for build to succeed
-        uses: fountainhead/action-wait-for-check@v1.1.0
-        id: wait-for-build
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          checkName: Build PR
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      #- name: Wait for build to succeed
+      #  uses: fountainhead/action-wait-for-check@v1.1.0
+      #  id: wait-for-build
+      #  with:
+      #    token: ${{ secrets.GITHUB_TOKEN }}
+      #    checkName: Build PR
+      #    ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Download artifact
         id: download-artifact
