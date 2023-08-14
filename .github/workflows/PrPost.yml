@@ -28,7 +28,7 @@ jobs:
           name: review
 
       - name: Install GH CLI
-        uses: dev-hanz-ops/install-gh-cli-action
+        uses: dev-hanz-ops/install-gh-cli-action@v0.1.0
       # https://stackoverflow.com/a/72532196
       - run: echo ${{ secrets.GITHUB_TOKEN }} | gh auth login --with-token
       - run: >
