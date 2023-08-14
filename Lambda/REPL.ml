@@ -2,7 +2,7 @@ open Base
 open Lambda_lib
 
 let run_repl _ =
-  Caml.Format.eprintf "OCaml-style toplevel (ocamlc, utop) is not implemented"
+  Stdlib.Format.eprintf "OCaml-style toplevel (ocamlc, utop) is not implemented"
 ;;
 
 let run_single eval =
@@ -10,11 +10,11 @@ let run_single eval =
   let text = Stdio.In_channel.(input_all stdin) |> String.rstrip in
   let ast = Parser.parse text in
   match ast with
-  | Error e -> Caml.Format.printf "Error: %a\n%!" Parser.pp_error e
+  | Error e -> Stdlib.Format.printf "Error: %a\n%!" Parser.pp_error e
   | Result.Ok ast ->
-    Caml.Format.printf "Parsed result: %a\n%!" Printast.pp_named ast;
+    Stdlib.Format.printf "Parsed result: %a\n%!" Printast.pp_named ast;
     (match eval ast with
-     | rez -> Caml.Format.printf "Evaluated result: %a\n%!" Printast.pp_named rez)
+     | rez -> Stdlib.Format.printf "Evaluated result: %a\n%!" Printast.pp_named rez)
 ;;
 
 type strategy =
@@ -30,7 +30,7 @@ type opts =
 
 let () =
   let opts = { batch = false; stra = CBN } in
-  let open Caml.Arg in
+  let open Stdlib.Arg in
   parse
     [ ( "-"
       , Unit (fun () -> opts.batch <- true)
@@ -41,8 +41,8 @@ let () =
     ; "-ao", Unit (fun () -> opts.stra <- NO), "Applicative Order strategy"
     ]
     (fun _ ->
-      Caml.Format.eprintf "Positioned arguments are not supported\n";
-      Caml.exit 1)
+      Stdlib.Format.eprintf "Positioned arguments are not supported\n";
+      Stdlib.exit 1)
     "Read-Eval-Print-Loop for Utyped Lambda Calculus";
   let eval =
     Lambda.apply_strat
