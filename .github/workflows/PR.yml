@@ -103,10 +103,10 @@ jobs:
       # we use commit previous from head because HEAD is merge commit by some reason
       # TODO: maybe PR_number is not required
 
-      - name: Upload linter (other_stuff) artifact
+      - name: Upload linter (review.zip) artifact
         uses: actions/upload-artifact@v3
         with:
-          name: other_stuff
+          name: review
           path: |
             ${{ env.latest }}/${{ env.RDJSON_DIR_PATH }}
 

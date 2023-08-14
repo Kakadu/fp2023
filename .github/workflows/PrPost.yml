@@ -20,9 +20,16 @@ jobs:
       - run: echo "event = ${{ github.event.workflow_run.event }}"
       - run: echo "conclusion  = ${{ github.event.workflow_run.conclusion }}"
 
-      - uses: actions/download-artifact@v3
+      - name: Download artifact
+        id: download-artifact
+        uses: dawidd6/action-download-artifact@v2
         with:
-          name: other_stuff.zip
+          workflow: PR.yml
+          name: review.zip
+
+      #- uses: actions/download-artifact@v3
+      #  with:
+      #    name: other_stuff.zip
 
       # TODO: https://github.com/actions/download-artifact
 #      - name: 'Download artifact'
@@ -46,7 +53,7 @@ jobs:
 #            var fs = require('fs');
 #            fs.writeFileSync('${{ github.workspace }}/other_stuff.zip', Buffer.from(download.data));
 
-      - run: unzip other_stuff.zip
+      - run: unzip review.zip
       - run: |
           echo "LANG_NAME=$(cat projectname.txt)" >> $GITHUB_ENV
           echo "PIARAST_NAME=$(cat piarast.txt)" >> $GITHUB_ENV
