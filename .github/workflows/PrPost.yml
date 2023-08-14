@@ -7,6 +7,10 @@ on:
     workflows: ["Build PR"]
     types:
       - completed
+  #pull_request:
+  #  branches:
+  #    - 'master'
+
 env:
   OPAMROOT: /home/user/.opam
   OPAMYES: true
@@ -21,6 +25,14 @@ jobs:
     steps:
       - run: echo "event = ${{ github.event.workflow_run.event }}"
       - run: echo "conclusion  = ${{ github.event.workflow_run.conclusion }}"
+
+      #- name: Wait for build to succeed
+      #  uses: fountainhead/action-wait-for-check@v1.1.0
+      #  id: wait-for-build
+      #  with:
+      #    token: ${{ secrets.GITHUB_TOKEN }}
+      #    checkName: Build PR
+      #    ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Download artifact
         id: download-artifact
@@ -81,8 +93,6 @@ jobs:
       - name: Deploy found lints
         uses: peaceiris/actions-gh-pages@v3
         with:
-          #deploy_key: ${{ secrets.FP2022_UPLOAD_LINTS }}
-          #github_token: ${{ secrets.GITHUB_TOKEN }}
           personal_token: ${{ secrets.FP2023_UPLOAD_LINTS }}
           publish_dir: ./lints
           external_repository: Kakadu/fp2021-ci-artifacts
@@ -95,6 +105,7 @@ jobs:
           # https://github.com/Kakadu/fp2023/settings/secrets/actions/new
 
       - name: Prepare text with found lints
+        if: false
         shell: bash
         run: |
           export TZ='Europe/Moscow'
@@ -103,30 +114,41 @@ jobs:
           cat lints.txt >> text.md
           echo '```' >> text.md
 
-      - run: cat text.md
+      #- run: cat text.md
 
       - name: Escaping markdown
+        if: false
         run: cat text.md | sed -e 's/%/%25/' | perl -pe 's/\n/%0A/g' > text.escaped.md
 
       - name: Read file contents
+        if: false
         id: read-escaped-markdown
         uses: andstor/file-reader-action@v1
         with:
           path: text.md
 
       - name: contents of escaped file
+        if: false
         run: cat text.escaped.md
       #- name: contents of a variable
       #  run: echo ${{ steps.read-escaped-markdown.outputs.contents }}
 
       - name: Find a comment with linter report
-        uses: peter-evans/find-comment@v1
+        #if: false
+        uses: peter-evans/find-comment@v2
         id: fc
         with:
           issue-number: ${{ env.CI_PULL_REQUEST }}
           body-includes: Linter report from
           comment-author: github-actions[bot]
+      - name: Tracing ${{ steps.fc.outputs.comment-id }}
+        run: |
+          echo "${{ steps.fc.outputs.comment-id }}"
+          echo "${{ steps.fc.outputs.comment-body }}"
+          echo "${{ steps.fc.outputs.comment-author }}"
+          echo "${{ steps.fc.outputs.comment-created-at }}"
 
+      # The way to remove comments changes to prevent pulling extra docker image should exist.
       - name: Delete old comment
         uses: jungwinter/comment@v1
         if: ${{ steps.fc.outputs.comment-id != 0 }}
@@ -135,7 +157,16 @@ jobs:
           comment_id: ${{ steps.fc.outputs.comment-id }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      #- name: Delete old comment
+      #  if: steps.fc.outputs.comment-id != 0
+      #  run: |
+      #    curl -L https://api.github.com/repos/Kakadu/fp2023/pulls/comments/${{ steps.fc.outputs.comment-id }} \
+      #      -X DELETE -H "Accept: application/vnd.github+json" \
+      #      -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+      #      -H "X-GitHub-Api-Version: 2022-11-28"
+
       - name: Create comment
+        if: false
         uses: peter-evans/create-or-update-comment@v1
         with:
           edit-mode: replace
@@ -196,13 +227,18 @@ jobs:
           echo "body=$body" >> $GITHUB_OUTPUT
 
       - name: Find Comment
-        uses: peter-evans/find-comment@v1
+        uses: peter-evans/find-comment@v2
         id: fc
         if: ${{ always() }}
         with:
           issue-number: ${{ env.PR_NUMBER }}
           body-includes: Документация построена
           comment-author: github-actions[bot]
+      - run: |
+          echo "${{ steps.fc.outputs.comment-id }}"
+          echo "${{ steps.fc.outputs.comment-body }}"
+          echo "${{ steps.fc.outputs.comment-author }}"
+          echo "${{ steps.fc.outputs.comment-created-at }}"
 
       - name: Create comment
         uses: peter-evans/create-or-update-comment@v1
@@ -229,27 +265,21 @@ jobs:
 
       - run: |
           echo "PR_NUMBER=$(cat PR_number.txt)" >> $GITHUB_ENV
+          echo "LANG_NAME=$(cat projectname.txt)" >> $GITHUB_ENV
 
-      - name: Prepare text with clones report
-        shell: bash
-        run: |
-          printf "%s" "$(< jscpd_report.txt)" > text.md
-          # https://stackoverflow.com/a/12524345
-
-      - name: Read file contents
-        id: read-escaped-markdown
-        uses: andstor/file-reader-action@v1
-        with:
-          path: text.md
 
       - name: Find Comment
-        uses: peter-evans/find-comment@v1
+        uses: peter-evans/find-comment@v2
         id: fc
-        if: ${{ always() }}
+        #if: ${{ always() }}
         with:
           issue-number: ${{ env.PR_NUMBER }}
-          body-includes: A report of looking for clones
+          body-includes: "#### A report of looking for clones for mini language"
           comment-author: github-actions[bot]
+
+      - name: ${{ steps.fc.outputs.comment-id }}
+        run: |
+          echo "${{ steps.fc.outputs.comment-body }}"
 
       - name: Delete old comment
         uses: jungwinter/comment@v1
@@ -259,21 +289,52 @@ jobs:
           comment_id: ${{ steps.fc.outputs.comment-id }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Render template
-        id: template
-        uses: chuhlomin/render-template@v1.4
+      #- name: Delete old comment
+      #  if: ${{ steps.fc.outputs.comment-id != 0 }}
+      #  run: |
+      #    curl -L https://api.github.com/repos/Kakadu/fp2023/pulls/comments/${{ steps.fc.outputs.comment-id }} \
+      #      -X DELETE -H "Accept: application/vnd.github+json" \
+      #      -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+      #      -H "X-GitHub-Api-Version: 2022-11-28"
+# I tried to remove manually but it doesn't work
+# { "message": "Not Found",
+#  "documentation_url": "https://docs.github.com/rest/pulls/comments#delete-a-review-comment-for-a-pull-request"
+#}
+
+      - name: Read file contents
+        id: read-escaped-markdown
+        uses: andstor/file-reader-action@v1
         with:
-          template: .github/jscpd.template.md
-          vars: |
-            contents: ${{ steps.read-escaped-markdown.outputs.contents }}
+          path: jscpd_report.txt
+
+
+      # https://stackoverflow.com/a/7359879
+      - name: Prepare text with clones report
+        id: render_template
+        shell: bash
+        run: |
+          printf "#### A report of looking for clones for mini language ${{ env.LANG_NAME }}\n\n\`\`\`\n" > template.md
+          cat jscpd_report.txt >> template.md
+          printf "\`\`\`" >> template.md
+
+      - run: cat template.md
+
+      # I used the following action earlier, but it pull +1 docker image
+      #- name: Render template
+      #  id: render_template
+      #  uses: chuhlomin/render-template@v1.4
+      #  with:
+      #    template: .github/jscpd.template.md
+      #    vars: |
+      #      contents: ${{ steps.read-escaped-markdown.outputs.contents }}
 
       - name: Create comment
-        uses: peter-evans/create-or-update-comment@v1
+        uses: peter-evans/create-or-update-comment@v3
         if: ${{ steps.read-escaped-markdown.outputs.contents != '' }}
         with:
           edit-mode: replace
           issue-number: ${{ env.PR_NUMBER }}
-          body: ${{ steps.read-escaped-markdown.outputs.contents }}
+          body-path: template.md
 
       - if: ${{ steps.read-escaped-markdown.outputs.contents == '' }}
         run: echo "JSPD report is empty"

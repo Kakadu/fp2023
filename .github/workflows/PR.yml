@@ -31,9 +31,9 @@ jobs:
         with:
           fetch-depth: 0                # fix me later
 
-      - run: opam pin add https://github.com/Kakadu/mylinter.git --no-action
-      - name: Installing a linter
-        run: opam install zanuda --yes
+      #- run: opam pin add https://github.com/Kakadu/mylinter.git --no-action
+      #- name: Installing a linter
+      #  run: opam install zanuda --yes
 
       - name: List installed OPAM packages
         run: opam list
@@ -125,14 +125,17 @@ jobs:
             ${{ env.latest }}/${{ env.RDJSON_DIR_PATH }}/PR_number.txt
           #${{ env.latest }}/${{ env.RDJSON_DIR_PATH }}/CI_COMMIT.txt
 
+      # Omitted. It is in docker image already
       #- name: Installing a clone detector
       #  run: npm install jscpd
-      - run: which jscpd || exit 0
-      - run: ls ~/.local/bin || exit 0
-      - run: pwd ~ || exit 0
+
+      #- run: which jscpd || exit 0
+      #- run: ls ~/.local/bin || exit 0
+      #- run: pwd ~ || exit 0
 
       - name: Looking for clones
         run: |
+          echo ${{ env.latest }} > projectname.txt
           python3 ./find_clones.py ${{ env.latest }}
           #python3 -m trace --trace ./find_clones.py ${{ env.latest }}
 
@@ -147,4 +150,4 @@ jobs:
           path: |
             jscpd_report.txt
             PR_number.txt
-            .github/jscpd.template.md
+            projectname.txt
