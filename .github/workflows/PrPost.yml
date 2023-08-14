@@ -127,13 +127,25 @@ jobs:
           body-includes: Linter report from
           comment-author: github-actions[bot]
 
+      # The way to remove comments changes to prevent pulling extra docker image.
+      #- name: Delete old comment
+      #  uses: jungwinter/comment@v1
+      #  if: ${{ steps.fc.outputs.comment-id != 0 }}
+      #  with:
+      #    type: delete
+      #    comment_id: ${{ steps.fc.outputs.comment-id }}
+      #    token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Delete old comment
-        uses: jungwinter/comment@v1
         if: ${{ steps.fc.outputs.comment-id != 0 }}
-        with:
-          type: delete
-          comment_id: ${{ steps.fc.outputs.comment-id }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+        run: >
+          curl -L
+            -X DELETE
+            -H "Accept: application/vnd.github+json"
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}"
+            -H "X-GitHub-Api-Version: 2022-11-28"
+            https://api.github.com/repos/Kakadu/fp2023/pulls/comments/${{ steps.fc.outputs.comment-id }}
+
 
       - name: Create comment
         uses: peter-evans/create-or-update-comment@v1
