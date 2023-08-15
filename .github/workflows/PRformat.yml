@@ -51,7 +51,38 @@ jobs:
           cd ${{ env.latest }} && python3 ../lint_filesystem.py ${{ env.latest }}
 
       - name: Checking ocamlformat
+        id: check-ocamlformat
+        continue-on-error: true
         run: |
           cd ${{ env.latest }} && opam exec -- dune build @fmt --profile=release
 
       # TODO: onfail post a comment how to fix it
+
+      - name: Find a comment with OCamlformat report
+        uses: peter-evans/find-comment@v1
+        id: fc
+        with:
+          issue-number: ${{ env.CI_PULL_REQUEST }}
+          body-includes: OCamlformat report for
+          comment-author: github-actions[bot]
+
+      - name: Remove comment if build is ok
+        if: steps.check-ocamlformat.outputs.exit_code == 0
+        run: |
+          curl -L https://api.github.com/repos/Kakadu/fp2023/pulls/comments/${{ steps.fc.outputs.comment-id }} \
+            -X DELETE -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "X-GitHub-Api-Version: 2022-11-28"
+
+      - name: Create comment
+        if: steps.check-ocamlformat.outputs.exit_code != 0
+        uses: peter-evans/create-or-update-comment@v1
+        with:
+          edit-mode: replace
+          issue-number: ${{ env.CI_PULL_REQUEST }}
+          body: |
+            ### OCamlformat report for ${{ env.latest }}
+
+            Format check failed. It could have two reasons:
+            * You didn't configure VsCode extensions properly
+            * The versions of ocamlformat differ on your machine and on CI

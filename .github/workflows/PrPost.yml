@@ -134,7 +134,7 @@ jobs:
       #  run: echo ${{ steps.read-escaped-markdown.outputs.contents }}
 
       - name: Find a comment with linter report
-        if: false
+        #if: false
         uses: peter-evans/find-comment@v1
         id: fc
         with:
@@ -152,8 +152,8 @@ jobs:
       #    token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Delete old comment
-        if: false
-        #if: ${{ steps.fc.outputs.comment-id != 0 }}
+        #if: false
+        if: steps.fc.outputs.comment-id != 0
         run: |
           curl -L https://api.github.com/repos/Kakadu/fp2023/pulls/comments/${{ steps.fc.outputs.comment-id }} \
             -X DELETE -H "Accept: application/vnd.github+json" \
@@ -261,7 +261,7 @@ jobs:
       - name: Find Comment
         uses: peter-evans/find-comment@v1
         id: fc
-        if: ${{ always() }}
+        #if: ${{ always() }}
         with:
           issue-number: ${{ env.PR_NUMBER }}
           body-includes: "#### A report of looking for clones for mini language"
