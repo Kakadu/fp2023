@@ -296,9 +296,9 @@ jobs:
         id: render_template
         shell: bash
         run: |
-          echo 'A report of looking for clones for mini language\n\n```' > template.md
-          echo -n `cat jscpd_report.txt` >> template.md
-          echo -n '\n```' >> template.md
+          printf "A report of looking for clones for mini language\n\n\`\`\`" > template.md
+          cat jscpd_report.txt >> template.md
+          printf "\`\`\`" >> template.md
 
       - run: cat template.md
 
