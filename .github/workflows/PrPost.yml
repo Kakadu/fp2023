@@ -142,10 +142,11 @@ jobs:
           body-includes: Linter report from
           comment-author: github-actions[bot]
       - run: |
-          echo ${{ steps.fc.outputs.comment-id }}
-          echo ${{ steps.fc.outputs.comment-body }}
-          echo ${{ steps.fc.outputs.comment-author }}
-          echo ${{ steps.fc.outputs.comment-created-at }}
+          echo "${{ steps.fc.outputs.comment-id }}"
+          echo "${{ steps.fc.outputs.comment-body }}"
+          echo "${{ steps.fc.outputs.comment-author }}"
+          echo "${{ steps.fc.outputs.comment-created-at }}"
+
       # The way to remove comments changes to prevent pulling extra docker image.
       #- name: Delete old comment
       #  uses: jungwinter/comment@v1
@@ -234,10 +235,11 @@ jobs:
           body-includes: Документация построена
           comment-author: github-actions[bot]
       - run: |
-          echo ${{ steps.fc.outputs.comment-id }}
-          echo ${{ steps.fc.outputs.comment-body }}
-          echo ${{ steps.fc.outputs.comment-author }}
-          echo ${{ steps.fc.outputs.comment-created-at }}
+          echo "${{ steps.fc.outputs.comment-id }}"
+          echo "${{ steps.fc.outputs.comment-body }}"
+          echo "${{ steps.fc.outputs.comment-author }}"
+          echo "${{ steps.fc.outputs.comment-created-at }}"
+
       - name: Create comment
         uses: peter-evans/create-or-update-comment@v1
         with:
@@ -276,10 +278,11 @@ jobs:
           comment-author: github-actions[bot]
 
       - run: |
-          echo ${{ steps.fc.outputs.comment-id }}
-          echo ${{ steps.fc.outputs.comment-body }}
-          echo ${{ steps.fc.outputs.comment-author }}
-          echo ${{ steps.fc.outputs.comment-created-at }}
+          echo "${{ steps.fc.outputs.comment-id }}"
+          echo "${{ steps.fc.outputs.comment-body }}"
+          echo "${{ steps.fc.outputs.comment-author }}"
+          echo "${{ steps.fc.outputs.comment-created-at }}"
+
       #- name: Delete old comment
       #  uses: jungwinter/comment@v1
       #  if: ${{ steps.fc.outputs.comment-id != 0 }}
