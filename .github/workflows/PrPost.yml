@@ -135,13 +135,17 @@ jobs:
 
       - name: Find a comment with linter report
         #if: false
-        uses: peter-evans/find-comment@v1
+        uses: peter-evans/find-comment@v2
         id: fc
         with:
           issue-number: ${{ env.CI_PULL_REQUEST }}
           body-includes: Linter report from
           comment-author: github-actions[bot]
-
+      - run: |
+          echo ${{ steps.fc.outputs.comment-id }}
+          echo ${{ steps.fc.outputs.comment-body }}
+          echo ${{ steps.fc.outputs.comment-author }}
+          echo ${{ steps.fc.outputs.comment-created-at }}
       # The way to remove comments changes to prevent pulling extra docker image.
       #- name: Delete old comment
       #  uses: jungwinter/comment@v1
@@ -222,14 +226,18 @@ jobs:
           echo "body=$body" >> $GITHUB_OUTPUT
 
       - name: Find Comment
-        uses: peter-evans/find-comment@v1
+        uses: peter-evans/find-comment@v2
         id: fc
         if: ${{ always() }}
         with:
           issue-number: ${{ env.PR_NUMBER }}
           body-includes: Документация построена
           comment-author: github-actions[bot]
-
+      - run: |
+          echo ${{ steps.fc.outputs.comment-id }}
+          echo ${{ steps.fc.outputs.comment-body }}
+          echo ${{ steps.fc.outputs.comment-author }}
+          echo ${{ steps.fc.outputs.comment-created-at }}
       - name: Create comment
         uses: peter-evans/create-or-update-comment@v1
         with:
@@ -259,7 +267,7 @@ jobs:
 
 
       - name: Find Comment
-        uses: peter-evans/find-comment@v1
+        uses: peter-evans/find-comment@v2
         id: fc
         #if: ${{ always() }}
         with:
@@ -267,6 +275,11 @@ jobs:
           body-includes: "#### A report of looking for clones for mini language"
           comment-author: github-actions[bot]
 
+      - run: |
+          echo ${{ steps.fc.outputs.comment-id }}
+          echo ${{ steps.fc.outputs.comment-body }}
+          echo ${{ steps.fc.outputs.comment-author }}
+          echo ${{ steps.fc.outputs.comment-created-at }}
       #- name: Delete old comment
       #  uses: jungwinter/comment@v1
       #  if: ${{ steps.fc.outputs.comment-id != 0 }}
