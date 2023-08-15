@@ -135,6 +135,7 @@ jobs:
 
       - name: Looking for clones
         run: |
+          echo ${{ env.latest }} > projectname.txt
           python3 ./find_clones.py ${{ env.latest }}
           #python3 -m trace --trace ./find_clones.py ${{ env.latest }}
 
@@ -149,4 +150,4 @@ jobs:
           path: |
             jscpd_report.txt
             PR_number.txt
-            .github/jscpd.template.md
+            projectname.txt

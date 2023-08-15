@@ -255,7 +255,7 @@ jobs:
 
       - run: |
           echo "PR_NUMBER=$(cat PR_number.txt)" >> $GITHUB_ENV
-
+          echo "LANG_NAME=$(cat projectname.txt)" >> $GITHUB_ENV
 
 
       - name: Find Comment
@@ -264,7 +264,7 @@ jobs:
         if: ${{ always() }}
         with:
           issue-number: ${{ env.PR_NUMBER }}
-          body-includes: A report of looking for clones
+          body-includes: "#### A report of looking for clones for mini language"
           comment-author: github-actions[bot]
 
       #- name: Delete old comment
@@ -296,12 +296,13 @@ jobs:
         id: render_template
         shell: bash
         run: |
-          printf "A report of looking for clones for mini language\n\n\`\`\`" > template.md
+          printf "#### A report of looking for clones for mini language ${{ env.LANG_NAME }}\n\n\`\`\`\n" > template.md
           cat jscpd_report.txt >> template.md
           printf "\`\`\`" >> template.md
 
       - run: cat template.md
 
+      # I used the following action earlier, but it pull +1 docker image
       #- name: Render template
       #  id: render_template
       #  uses: chuhlomin/render-template@v1.4
