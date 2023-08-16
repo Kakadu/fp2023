@@ -180,7 +180,7 @@ jobs:
       ${{ github.event.workflow_run.event == 'pull_request' &&
       github.event.workflow_run.conclusion == 'success' }}
     steps:
-      - name: Download artifact
+      - name: Download odoc artifact
         id: download-artifact
         uses: dawidd6/action-download-artifact@v2
         with:
@@ -208,14 +208,41 @@ jobs:
           keep_files: true
           destination_dir: docs/${{ env.LANG_NAME }}
           commit_message: >
-            Deploying documentation for ${{ env.LANG_NAME }}: https://kakadu.github.io/fp2021/docs/${{ env.LANG_NAME }}
-          user_name: 'fp2021[bot]'
-          user_email: 'fp2021[bot]@users.noreply.github.com'
+            Deploying documentation for ${{ env.LANG_NAME }}: https://kakadu.github.io/fp2023/docs/${{ env.LANG_NAME }}
+          user_name: 'fp2023[bot]'
+          user_email: 'fp2023[bot]@users.noreply.github.com'
+
+      - name: Download coverage artifact
+        id: download-artifact
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          workflow: PR.yml
+          name: coverage
+          path: .
+
+      - run: ls _coverage
+
+      - name: Deploy coverage
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}  # used only to publish in local repo
+          publish_dir: ./_coverage
+          publish_branch: gh-pages
+          enable_jekyll: false
+          keep_files: true
+          destination_dir: cov/${{ env.LANG_NAME }}
+          commit_message: >
+            Deploying coverage for ${{ env.LANG_NAME }}: https://kakadu.github.io/fp2023/cov/${{ env.LANG_NAME }}
+          user_name: 'fp2023[bot]'
+          user_email: 'fp2023[bot]@users.noreply.github.com'
 
       - shell: bash
         run: >
           cat > text.md <<-EOF
-              Документация построена $(TZ='Europe/Moscow' date), должна скоро появиться в https://kakadu.github.io/fp2022/docs/${{ env.LANG_NAME }}
+              Документация построена $(TZ='Europe/Moscow' date), должна скоро появиться в https://kakadu.github.io/fp2023/docs/${{ env.LANG_NAME }}.
+
+              Тестовое покрытие $(cat _coverage/percent.txt) посчитано
+              в https://kakadu.github.io/fp2023/cov/${{ env.LANG_NAME }}
           EOF
 
       - id: get-comment-body

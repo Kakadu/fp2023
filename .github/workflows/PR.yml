@@ -125,6 +125,29 @@ jobs:
             ${{ env.latest }}/${{ env.RDJSON_DIR_PATH }}/PR_number.txt
           #${{ env.latest }}/${{ env.RDJSON_DIR_PATH }}/CI_COMMIT.txt
 
+      - name: Calculating coverage (1/2)
+        run: |
+          cd ${{ env.latest }} && dune runtest --instrument-with bisect_ppx
+        env:
+          BISECT_DIR: ${{ runner.temp }}/_bisect_ppx_data
+          BISECT_FILE: ${{ runner.temp }}/_bisect_ppx_data/data
+
+      - name: Calculating coverage (2/2)
+        id: calc-coverage
+        run: |
+            bisect-ppx-report summary --coverage-path ${{ env.BISECT_DIR }}
+            bisect-ppx-report summary --coverage-path ${{ env.BISECT_DIR }} | cut -f3 | xargs -I{} echo "percent={}" >> $GITHUB_OUTPUT
+            bisect-ppx-report summary --coverage-path ${{ env.BISECT_DIR }} | cut -f3 | xargs -I{} echo "{}" > _coverage/percent.txt
+        env:
+          BISECT_DIR: ${{ runner.temp }}/_bisect_ppx_data
+          BISECT_FILE: ${{ runner.temp }}/_bisect_ppx_data/data
+
+      - name: Update coverage artifact ${{ steps.calc-coverage.outputs.percent }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage
+          path: _coverage
+
       # Omitted. It is in docker image already
       #- name: Installing a clone detector
       #  run: npm install jscpd
