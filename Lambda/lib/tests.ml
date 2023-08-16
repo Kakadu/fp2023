@@ -12,3 +12,29 @@ let%test _ = fact 5 = 120
   of a minilanguge, it is not longer a unit tests but an integration test.
   Read about dune's cram tests and put the test into `demos/somefile.t`.
 *)
+
+open Lambda_lib
+open Parser
+
+let parse_optimistically str = Result.get_ok (parse str)
+let pp = Printast.pp_named
+
+let%expect_test _ =
+  Format.printf "%a" pp (parse_optimistically "x y");
+  [%expect {| (App ((Var x), (Var y))) |}]
+;;
+
+let%expect_test _ =
+  Format.printf "%a" pp (parse_optimistically "(x y)");
+  [%expect {| (App ((Var x), (Var y))) |}]
+;;
+
+let%expect_test _ =
+  Format.printf "%a" pp (parse_optimistically "(\\x . x x)");
+  [%expect {| (Abs (x, (App ((Var x), (Var x))))) |}]
+;;
+
+let%expect_test _ =
+  Format.printf "%a" pp (parse_optimistically "(λf.λx. f (x x))");
+  [%expect {| (Abs (f, (Abs (x, (App ((Var f), (App ((Var x), (Var x))))))))) |}]
+;;

@@ -1,4 +1,4 @@
-(** Copyright 2021-2022, Kakadu and contributors *)
+(** Copyright 2021-2023, Kakadu and contributors *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
@@ -6,7 +6,7 @@ open Ast
 open Base
 open Utils
 
-(* smart constructors *)
+(* Smart constructors *)
 let var x = Var x
 let abs x y = Abs (x, y)
 let app x y = App (x, y)
@@ -44,9 +44,9 @@ let subst x ~by:v =
 ;;
 
 type strat =
-  { on_var : strat -> name -> string t
-  ; on_abs : strat -> name -> string t -> string t
-  ; on_app : strat -> string t -> string t -> string t
+  { on_var : strat -> name -> string Ast.t
+  ; on_abs : strat -> name -> string Ast.t -> string Ast.t
+  ; on_app : strat -> string Ast.t -> string Ast.t -> string Ast.t
   }
 
 let apply_strat st = function
