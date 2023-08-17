@@ -234,7 +234,9 @@ jobs:
       - shell: bash
         run: >
           cat > text.md <<-EOF
-              Документация построена $(TZ='Europe/Moscow' date +%F\ %k:%M), должна скоро появиться в https://kakadu.github.io/${{ github.event.repository.name }}/docs/${{ env.LANG_NAME }}. Тестовое покрытие $(cat _coverage/percent.txt) посчитано в https://kakadu.github.io/${{ github.event.repository.name }}/cov/${{ env.LANG_NAME }}.
+          Документация построена $(TZ='Europe/Moscow' date +%F\ %k:%M), должна скоро появиться в https://kakadu.github.io/${{ github.event.repository.name }}/docs/${{ env.LANG_NAME }}.
+
+          Тестовое покрытие $(cat _coverage/percent.txt) посчитано в https://kakadu.github.io/${{ github.event.repository.name }}/cov/${{ env.LANG_NAME }}.
           EOF
 
       #- id: get-comment-body
