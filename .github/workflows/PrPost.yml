@@ -177,17 +177,20 @@ jobs:
       ${{ github.event.workflow_run.event == 'pull_request' &&
       github.event.workflow_run.conclusion == 'success' }}
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
       - name: Download odoc artifact
         uses: dawidd6/action-download-artifact@v2
         with:
           workflow: PR.yml
           name: docs
-          path: docs
+          path: _docs
 
       #- run: ls docs
       - run: |
-          echo "LANG_NAME=$(cat docs/_found_lints/projectname.txt)" >> $GITHUB_ENV
-          echo "PR_NUMBER=$(cat docs/_found_lints/PR_number.txt)" >> $GITHUB_ENV
+          echo "LANG_NAME=$(cat _docs/_found_lints/projectname.txt)" >> $GITHUB_ENV
+          echo "PR_NUMBER=$(cat _docs/_found_lints/PR_number.txt)" >> $GITHUB_ENV
       - run: |
           echo "${{ env.LANG_NAME }}"
           echo "${{ env.PR_NUMBER }}"
@@ -198,7 +201,7 @@ jobs:
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}  # used only to publish in local repo
-          publish_dir: ./docs/_doc/_html
+          publish_dir: ./_docs/_doc/_html
           publish_branch: gh-pages
           enable_jekyll: false
           keep_files: true
@@ -231,10 +234,7 @@ jobs:
           user_name: '${{ github.event.repository.name }}[bot]'
           user_email: '${{ github.event.repository.name }}[bot]@users.noreply.github.com'
 
-      - shell: bash
-        run: >
-          echo "Документация построена $(TZ='Europe/Moscow' date +%F\ %k:%M), должна скоро появиться в https://kakadu.github.io/${{ github.event.repository.name }}/docs/${{ env.LANG_NAME }}" > text.md
-          echo "\nА тестовое покрытие в $(cat _coverage/percent.txt) --- https://kakadu.github.io/${{ github.event.repository.name }}/cov/${{ env.LANG_NAME }}." >> text.md
+      - run: .github/make_doc_msg.sh "${{ github.event.repository.name }}" "${{ env.LANG_NAME }}" text.md
 
       - name: Find Comment
         uses: peter-evans/find-comment@v2
