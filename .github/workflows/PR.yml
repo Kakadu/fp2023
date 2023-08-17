@@ -50,7 +50,7 @@ jobs:
       #- run: git branch -vvv
 
         #  Outputs: "main"
-      ############# Detecting and compiling fp2022
+      ############# Detecting and compiling fp2023
       # Smart link about setting environment variables
       # https://docs.github.com/en/actions/reference/workflow-commands-for-github-actions#setting-an-environment-variable
       - run: |

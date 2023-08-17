@@ -53,7 +53,7 @@ jobs:
 
       - run: >
           echo '{"name":"PR postprocess","head_sha":"${{ github.sha }}"}' |
-            gh api /repos/Kakadu/fp2023/check-runs --input -
+            gh api /repos/Kakadu/${{ github.event.repository.name }}/check-runs --input -
         if: false
 
       - run: |
@@ -204,9 +204,9 @@ jobs:
           keep_files: true
           destination_dir: docs/${{ env.LANG_NAME }}
           commit_message: >
-            Deploying documentation for ${{ env.LANG_NAME }}: https://kakadu.github.io/fp2023/docs/${{ env.LANG_NAME }}
-          user_name: 'fp2023[bot]'
-          user_email: 'fp2023[bot]@users.noreply.github.com'
+            Deploying documentation for ${{ env.LANG_NAME }}: https://kakadu.github.io/${{ github.event.repository.name }}/docs/${{ env.LANG_NAME }}
+          user_name: '${{ github.event.repository.name }}[bot]'
+          user_email: '${{ github.event.repository.name }}[bot]@users.noreply.github.com'
 
       - name: Download coverage artifact
         uses: dawidd6/action-download-artifact@v2
@@ -227,23 +227,23 @@ jobs:
           keep_files: true
           destination_dir: cov/${{ env.LANG_NAME }}
           commit_message: >
-            Deploying coverage for ${{ env.LANG_NAME }}: https://kakadu.github.io/fp2023/cov/${{ env.LANG_NAME }}
-          user_name: 'fp2023[bot]'
-          user_email: 'fp2023[bot]@users.noreply.github.com'
+            Deploying coverage for ${{ env.LANG_NAME }}: https://kakadu.github.io/${{ github.event.repository.name }}/cov/${{ env.LANG_NAME }}
+          user_name: '${{ github.event.repository.name }}[bot]'
+          user_email: '${{ github.event.repository.name }}[bot]@users.noreply.github.com'
 
       - shell: bash
         run: >
           cat > text.md <<-EOF
-              Документация построена $(TZ='Europe/Moscow' date +%F\ %k:%M), должна скоро появиться в https://kakadu.github.io/fp2023/docs/${{ env.LANG_NAME }}. Тестовое покрытие $(cat _coverage/percent.txt) посчитано в https://kakadu.github.io/fp2023/cov/${{ env.LANG_NAME }}.
+              Документация построена $(TZ='Europe/Moscow' date +%F\ %k:%M), должна скоро появиться в https://kakadu.github.io/${{ github.event.repository.name }}/docs/${{ env.LANG_NAME }}. Тестовое покрытие $(cat _coverage/percent.txt) посчитано в https://kakadu.github.io/${{ github.event.repository.name }}/cov/${{ env.LANG_NAME }}.
           EOF
 
-      - id: get-comment-body
-        run: |
-          body=$(cat text.md)
-          body="${body//'%'/'%25'}"
-          body="${body//$'\n'/'%0A'}"
-          body="${body//$'\r'/'%0D'}"
-          echo "body=$body" >> $GITHUB_OUTPUT
+      #- id: get-comment-body
+      #  run: |
+      #    body=$(cat text.md)
+      #    body="${body//'%'/'%25'}"
+      #    body="${body//$'\n'/'%0A'}"
+      #    body="${body//$'\r'/'%0D'}"
+      #    echo "body=$body" >> $GITHUB_OUTPUT
 
       - name: Find Comment
         uses: peter-evans/find-comment@v2
@@ -266,7 +266,7 @@ jobs:
           comment-id: ${{ steps.fc.outputs.comment-id }}
           edit-mode: replace
           issue-number: ${{ env.PR_NUMBER }}
-          body: ${{ steps.get-comment-body.outputs.body }}
+          body-path: text.md
 
   ###################################################################################################
   process_clones:
