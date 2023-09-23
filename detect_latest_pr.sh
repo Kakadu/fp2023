@@ -31,7 +31,7 @@ if [ "$rez" = "1" ]; then
   echo "latest='$topnames'"
   exit 0
 else
-  echo "Too many cancdidates ($rez) to be a last solution"
+  echo "Too many candidates ($rez) to be a last solution"
   echo "'$topnames'"
   exit 1
 fi
