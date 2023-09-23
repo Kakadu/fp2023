@@ -11,7 +11,6 @@ echo ""
 CHANGES=`git diff-tree $(git merge-base upstream/master $1)..$1 | rev | cut -f 1 | rev`
 
 set answer=""
-IFS=$'\n'
 for dir in $CHANGES
 do
   #echo $dir
@@ -28,7 +27,7 @@ done
 topnames=`echo $answer | sed '/^$/d' | uniq`
 rez=`echo $topnames | wc -l`
 if [ "$rez" = "1" ]; then
-  echo "latest='$topnames'"
+  echo "latest=$topnames"
   exit 0
 else
   echo "Too many cancdidates ($rez) to be a last solution"
