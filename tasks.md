@@ -310,6 +310,17 @@
     * Эти запросы должны исполняться на больших данных, автогенеренных с помощью https://github.com/NetApp/SQL_Storage_Benchmark. Постарайтесь не складывать большие файлы в Git, а придумать, чтобы они докачивались при билде.
     * Большие входы должны заставить интерпретатор исполняться запросы эффективно, а не как попало.
     </details>
+1. [LLVM IR](https://llvm.org/docs/LangRef.html) <details><summary>Подробнее</summary>
+    * Типы:
+        * int'ы разной битности (i1 - int из одного бита = bool)
+        * half, float, double
+        * указатели
+        * вектора, массивы, структуры
+        * функции
+        * токены, метки
+    * [Весь набор инструкций](https://llvm.org/docs/LangRef.html#instruction-reference)
+    * [High level structure](https://llvm.org/docs/LangRef.html#high-level-structure) реализовывать не нужно, но нужно уметь их отбрасывать, чтобы можно было запускать программы включающие их
+   </details>
 
 ### Гробики
 
