@@ -23,8 +23,13 @@ open Printf
 let () =
   let s = get_output "git remote | grep upstream" in
   log "%S" s;
-  if not (List.mem "upstream" @@ Str.split (Str.regexp "\n") s) then
-    exit 1
+  if not (List.mem "upstream" @@ Str.split (Str.regexp "\n") s) then (
+    let _ = Sys.command "git remote add upstream https://github.com/Kakadu/fp2023.git" in
+    let _ = Sys.command "git fetch upstream master" in
+    Format.eprintf "Upstream added\n%!";
+    ()
+  )
+
 
 let user_branch =
   if Array.length Sys.argv < 2
