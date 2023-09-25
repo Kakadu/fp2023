@@ -5,9 +5,10 @@
 let red = "\027[0;31m"
 let no_color = "\027[0m"
 
+let log fmt = Format.kasprintf (fun s -> if false then print_endline s ) fmt
 let get_output fmt =
   Format.kasprintf (fun cmd ->
-      Printf.printf "Running: %s%s%s\n%!" red cmd no_color;
+      log "Running: %s%s%s" red cmd no_color;
       let ch = Unix.open_process_in cmd in
       let s = In_channel.input_all ch in
       let () = In_channel.close ch in
@@ -17,11 +18,11 @@ let get_output fmt =
 
 open Printf
 
-let () = print_endline "hello world"
+(* let () = print_endline "hello world" *)
 
 let () =
   let s = get_output "git remote | grep upstream" in
-  Printf.printf "%S\n%!" s;
+  log "%S" s;
   if not (List.mem "upstream" @@ Str.split (Str.regexp "\n") s) then
     exit 1
 
@@ -38,7 +39,7 @@ let merge_base =
       Format.eprintf "[ %s ]\n%!" (String.concat "; " xs);
       exit 1
 
-let () = Printf.printf "%S\n%!" merge_base
+let () = log "%S " merge_base
 
 let calculate_common_subdir files =
   let module SS = Set.Make(String) in
@@ -55,11 +56,11 @@ let calculate_common_subdir files =
 
 let pp_str_list ppf xs =
   Format.fprintf ppf "[ %s ]" (String.concat ", " xs)
-
+(*  *)
 let () =
   let s =
     get_output "git diff-tree %s..%s  | rev | cut -f 1 | rev" merge_base user_branch in
-  Printf.printf "%S\n" s;
+  log "%S " s;
   let changed_files =
     String.split_on_char '\n' s |> List.filter (function
       | "" -> false
@@ -67,7 +68,7 @@ let () =
       | _ -> true
       )
     in
-  Printf.printf "%s\n%!" (String.concat ", " changed_files);
+  log "%s " (String.concat ", " changed_files);
   match changed_files with
   | [] -> Format.eprintf "No changed files.\n%!"; exit 1
   | xs ->
