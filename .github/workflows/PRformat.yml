@@ -39,8 +39,14 @@ jobs:
       ############# Detecting and compiling fp2023
       # Smart link about setting environment variables
       # https://docs.github.com/en/actions/reference/workflow-commands-for-github-actions#setting-an-environment-variable
-      - run: |
+      - if: ${{ github.event.pull_request.user.login != 'fp2022-helper' }}
+        run: |
           sh -x ./detect_latest_pr.sh "pull/${{ steps.branch-name.outputs.ref_branch }}" >> $GITHUB_ENV
+          echo "${{ env.latest }}"
+
+      - if: ${{ github.event.pull_request.user.login == 'fp2022-helper' }}
+        run: |
+          opam exec -- ocaml ./detect_latest_pr.ml "pull/${{ steps.branch-name.outputs.ref_branch }}" >> $GITHUB_ENV
           echo "${{ env.latest }}"
 
       #- name: Installing dependencies
