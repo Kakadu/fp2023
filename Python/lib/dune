@@ -2,7 +2,7 @@
  (name lambda_lib)
  (public_name Python.Lib)
  (modules Ast Lambda Interpret Parser Printast Pprintast utils)
- (modules_without_implementation ast)
+ (modules_without_implementation)
  (libraries base angstrom)
  (preprocess
   (pps ppx_deriving.show))
