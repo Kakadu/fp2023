@@ -10,6 +10,7 @@ type 'name t =
 type value = 
   | Int of int
   | String of string
+  | List of value list
 
 (*Standart arithmetic operations *)
   type arith_op =
@@ -25,7 +26,6 @@ type value =
 
 (*Standart expressions*)
 type expression = 
-  | List of value list
   | Const of value
   | Var of string
   | ArithOp of arith_op * expression * expression
