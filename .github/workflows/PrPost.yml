@@ -84,8 +84,8 @@ jobs:
       - name: Deploy found lints
         uses: peaceiris/actions-gh-pages@v3
         with:
-          github_token: ${{ secrets.FP2023_UPLOAD_LINTS }}
-          #personal_token: ${{ secrets.CLASSIC_TOKEN }}
+          #github_token: ${{ secrets.FP2023_UPLOAD_LINTS }}
+          personal_token: ${{ secrets.CLASSIC_TOKEN }}
           # used only to publish in local repo
           publish_dir: ./lints
           external_repository: Kakadu/fp2021-ci-artifacts
@@ -159,7 +159,10 @@ jobs:
 
       - run: opam list
       - name: manual adding of a comment from text.md
-        run: opam exec -- ocaml .github/add_comment.ml -file text.md -token ${{ secrets.CLASSIC_TOKEN }} -issue ${{ env.CI_PULL_REQUEST }}
+        run: |
+          opam exec -- ocaml .github/add_comment.ml -file text.md \
+            -token ${{ secrets.CLASSIC_TOKEN }} \
+            -issue ${{ env.CI_PULL_REQUEST }}
 
 
   ###################################################################################################
@@ -198,8 +201,8 @@ jobs:
       - name: Deploy documentation
         uses: peaceiris/actions-gh-pages@v3
         with:
-          github_token: ${{ secrets.FP2023_UPLOAD_LINTS }}
-          #personal_token: ${{ secrets.CLASSIC_TOKEN }}
+          #github_token: ${{ secrets.FP2023_UPLOAD_LINTS }}
+          personal_token: ${{ secrets.CLASSIC_TOKEN }}
           #github_token: ${{ secrets.PAT1 }}  # used only to publish in local repo
           publish_dir: ./_docs/_doc/_html
           publish_branch: gh-pages
