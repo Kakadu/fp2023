@@ -264,7 +264,8 @@ jobs:
         run: >
           opam exec -- ocaml .github/add_comment.ml -file text.md \
             -token ${{ secrets.CLASSIC_TOKEN }} \
-            -issue ${{ env.PR_NUMBER }}
+            -issue ${{ env.PR_NUMBER }} \
+            -repo fp2023 -user Kakadu
 
 
   upload_coverage:
