@@ -162,7 +162,8 @@ jobs:
         run: >
           opam exec -- ocaml .github/add_comment.ml -file text.md \
             -token ${{ secrets.CLASSIC_TOKEN }} \
-            -issue ${{ env.CI_PULL_REQUEST }}
+            -issue ${{ env.CI_PULL_REQUEST }} \
+            -repo fp2023 -user Kakadu
 
 
   ###################################################################################################
@@ -246,7 +247,7 @@ jobs:
 
       - name: Manually remove comment '${{ steps.fc-docs.outputs.comment-id }}' with docs info
         if: ${{ steps.fc-docs.outputs.comment-id != 0 }}
-        run: |
+        run: >
           opam exec -- ocaml .github/add_comment.ml \
             -token ${{ secrets.GITHUB_TOKEN }} \
             -issue ${{ env.PR_NUMBER }} \
