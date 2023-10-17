@@ -18,8 +18,8 @@ jobs:
     container:
       image: kakadu18/ocaml:fp2023
 
-    #permissions:
-    #  pull-requests: write
+    permissions:
+      pull-requests: write
     if: >
       ${{ github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success' }}
 
@@ -123,7 +123,7 @@ jobs:
         if: ${{ steps.fc-linter.outputs.comment-id != 0 }}
         run: |
           opam exec -- ocaml .github/add_comment.ml \
-            -token ${{ secrets.CLASSIC_TOKEN }} \
+            -token ${{ secrets.GITHUB_TOKEN }} \
             -issue ${{ env.CI_PULL_REQUEST }} \
             -delete-comment ${{ steps.fc-linter.outputs.comment-id }} \
             -user Kakadu \
@@ -245,7 +245,7 @@ jobs:
         if: ${{ steps.fc-docs.outputs.comment-id != 0 }}
         run: |
           opam exec -- ocaml .github/add_comment.ml \
-            -token ${{ secrets.CLASSIC_TOKEN }} \
+            -token ${{ secrets.GITHUB_TOKEN }} \
             -issue ${{ env.PR_NUMBER }} \
             -delete-comment ${{ steps.fc-docs.outputs.comment-id }} \
             -user Kakadu \
