@@ -84,7 +84,7 @@ jobs:
       - name: Deploy found lints
         uses: peaceiris/actions-gh-pages@v3
         with:
-          personal_token: ${{ secrets.FP2023_UPLOAD_LINTS }}
+          github_token: ${{ secrets.FP2023_UPLOAD_LINTS }}
           #personal_token: ${{ secrets.CLASSIC_TOKEN }}
           # used only to publish in local repo
           publish_dir: ./lints
