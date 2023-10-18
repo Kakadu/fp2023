@@ -50,7 +50,7 @@ let lp = token "("
 let rp = token ")"
 let nil = token "[]" *> return nil
 let pcons = token "::" *> return pcons
-let pany = token1 "_" *> skip_whitespace1 *> return pany (* skip_whitespace1 ?? *)
+let pany = token1 "_" *> skip_whitespace1 *> return pany
 let parens p = lp *> p <* rp
 let sbrcts p = token "[" *> p <* token "]"
 let dsmcln = token ";;"
@@ -139,7 +139,7 @@ let pfun pexpr =
   | _ -> failwith "unreachable"
 ;;
 
-let decl kw pexpr =
+let decl kws pexpr =
   let exp =
     skip_whitespace *> many patern
     >>= fun args ->
@@ -149,11 +149,13 @@ let decl kw pexpr =
     | h :: tl -> List.fold_left ~init:(Ast.pfun h e) ~f:(fun acc x -> Ast.pfun x acc) tl
     | _ -> e
   in
-  token kw *> lift2 pdecl (ptoken patern) exp
+  match kws with
+  | _ :: [] -> token "let" *> lift2 pdecl (ptoken patern) exp
+  | _ -> token "let" *> token "rec" *> lift2 pdecl (ptoken patern) exp
 ;;
 
-let nrec_decl = decl "let"
-let rec_decl = decl "let rec"
+let nrec_decl = decl ["let"]
+let rec_decl = decl ["let"; "rec"]
 
 let plet pexpr =
   lift2 plet (nrec_decl pexpr) (option (Ast.econst Unit) (token "in" *> pexpr))
@@ -194,7 +196,7 @@ let add_sub = op [ "+", Plus; "-", Sub ]
 let cmp = op [ "<=", Ltq; "<", Lt; ">=", Gtq; ">", Gt; "=", Eq; "!=", Neq ]
 let andop = op [ "&&", And ] (* & ?*)
 let orop = op [ "||", Or ] (* or ?*)
-let neg = op [ "not", Not; "- ", Minus ]
+let neg = op [ "not", Not; "-", Minus ]
 
 let pobj pexpr =
   let ov = lift2 oval (token "val" *> patern) (token "=" *> pexpr) in
@@ -210,7 +212,7 @@ let pobj pexpr =
   let om =
     lift3
       omthd
-      (token "method private" *> return Private <|> token "method" *> return Public)
+      (token "method" *> token "private" *> return Private <|> token "method" *> return Public)
       patern
       helper
   in

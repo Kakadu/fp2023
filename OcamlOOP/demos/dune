@@ -12,7 +12,9 @@
  (modules demo_fact)
  (libraries OcamlOOP.Lib)
  (preprocess
- (pps ppx_show ppx_deriving.eq)))
+ (pps ppx_show ppx_deriving.eq))
+ (instrumentation
+  (backend bisect_ppx)))
 
 (executable
  (name demo_obj)
@@ -21,6 +23,8 @@
  (libraries OcamlOOP.Lib)
  (preprocess
  (pps ppx_show ppx_deriving.eq))
+ (instrumentation
+  (backend bisect_ppx))
  )
 
 (executable
@@ -30,6 +34,8 @@
  (libraries OcamlOOP.Lib)
  (preprocess
  (pps ppx_show ppx_deriving.eq))
+ (instrumentation
+  (backend bisect_ppx))
  )
 
 (executable
@@ -39,6 +45,8 @@
  (libraries OcamlOOP.Lib stdio)
  (preprocess
  (pps ppx_show ppx_deriving.eq))
+ (instrumentation
+  (backend bisect_ppx))
  )
 
 (cram

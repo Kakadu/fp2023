@@ -5,4 +5,6 @@
  (inline_tests)
  (preprocess
   (pps ppx_show ppx_expect ppx_deriving.eq))
- (libraries ppx_show.runtime base angstrom))
+ (libraries ppx_show.runtime base angstrom)
+ (instrumentation
+  (backend bisect_ppx)))
