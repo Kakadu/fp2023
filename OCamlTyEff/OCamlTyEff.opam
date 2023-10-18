@@ -8,6 +8,8 @@ license: "MIT"
 depends: [
   "ocaml"
   "dune" {>= "3.11"}
+  "base"
+  "angstrom"
   "odoc" {with-doc}
 ]
 build: [

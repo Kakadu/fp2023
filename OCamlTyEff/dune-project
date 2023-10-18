@@ -14,4 +14,4 @@
  (name OCamlTyEff)
  (synopsis "OCaml interpreter with support for typed effects")
  (description "OCaml interpreter with support for typed effects")
- (depends ocaml dune))
+ (depends ocaml dune base angstrom))
