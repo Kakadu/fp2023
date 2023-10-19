@@ -1,6 +1,8 @@
 # Created by https://www.toptal.com/developers/gitignore/api/macos,ocaml
 # Edit at https://www.toptal.com/developers/gitignore?templates=macos,ocaml
 
+.vscode
+
 ### macOS ###
 # General
 .DS_Store
