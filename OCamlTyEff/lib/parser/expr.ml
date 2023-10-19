@@ -14,10 +14,9 @@ let parse_exp_const = parse_const >>| fun const -> Exp_constant const
 *)
 let parse_exp_let pexp =
   skip_let_keyword
-  *> lift3
-       (fun rec_flag bindings exp -> Exp_let (rec_flag, bindings, exp))
-       parse_rec_flag
-       (parse_bindings pexp parse_pattern)
+  *> lift2
+       (fun (rec_flag, bindings) exp -> Exp_let (rec_flag, bindings, exp))
+       (parse_let_binding pexp parse_pattern)
        (ws *> string "in" *> pexp)
 
 let parse_expression =

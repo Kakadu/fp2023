@@ -127,3 +127,10 @@ let parse_bindings pexp ppat =
       (ws *> char '=' *> pexp)
   in
   sep_by1 (ws *> string "and") parse_binding
+
+(**
+  [let P1 = E1 and P2 = E2 and ... and Pn = En]
+  [let rec P1 PArg1 = E1 and P2 = E2 and ... and Pn = En]
+*)
+let parse_let_binding pexp ppat =
+  skip_let_keyword *> both parse_rec_flag (parse_bindings pexp ppat)

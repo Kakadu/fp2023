@@ -10,11 +10,8 @@ open Pattern
   [let rec P1 PArg1 = E1 and P2 = E2 and ... and Pn = En]
 *)
 let parse_str_let =
-  skip_let_keyword
-  *> lift2
-       (fun rec_flag bindings -> Str_value (rec_flag, bindings))
-       parse_rec_flag
-       (parse_bindings parse_expression parse_pattern)
+  parse_let_binding parse_expression parse_pattern
+  >>| fun (rec_flag, bindings) -> Str_value (rec_flag, bindings)
 
 let parse_structure : structure t =
   let parse_structure_item =
