@@ -4,7 +4,7 @@ open Ast
 open Common
 open Pattern
 
-let parse_exp_ident = parse_name >>| fun name -> Exp_ident (Ident name)
+let parse_exp_ident = parse_value_name >>| fun name -> Exp_ident (Ident name)
 
 let parse_exp_const = parse_const >>| fun const -> Exp_constant const
 

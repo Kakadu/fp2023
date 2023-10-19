@@ -4,7 +4,88 @@ open Ast
 
 let ws = skip_while Char.is_whitespace
 
-let parse_name = take_while1 (function 'a' .. 'z' -> true | _ -> false)
+(* ======= Value names ======= *)
+
+let is_keyword = function
+  | "and"
+  | "as"
+  | "assert"
+  | "asr"
+  | "begin"
+  | "class"
+  | "constraint"
+  | "do"
+  | "done"
+  | "downto"
+  | "else"
+  | "end"
+  | "exception"
+  | "external"
+  | "false"
+  | "for"
+  | "fun"
+  | "function"
+  | "functor"
+  | "if"
+  | "in"
+  | "include"
+  | "inherit"
+  | "initializer"
+  | "land"
+  | "lazy"
+  | "let"
+  | "lor"
+  | "lsl"
+  | "lsr"
+  | "lxor"
+  | "match"
+  | "method"
+  | "mod"
+  | "module"
+  | "mutable"
+  | "new"
+  | "nonrec"
+  | "object"
+  | "of"
+  | "open"
+  | "or"
+  | "private"
+  | "rec"
+  | "sig"
+  | "struct"
+  | "then"
+  | "to"
+  | "true"
+  | "try"
+  | "type"
+  | "val"
+  | "virtual"
+  | "when"
+  | "while"
+  | "with" ->
+      true
+  | _ ->
+      false
+
+(**
+  value_name ::= (a..z | _) \{ A..Z | a..z | 0..9 | _ | ' \}
+  must not be keyword
+*)
+let parse_value_name =
+  let parse_first =
+    satisfy (function 'a' .. 'z' | '_' -> true | _ -> false)
+    >>| String.of_char
+  in
+  let parse_rest =
+    take_while (function
+      | 'A' .. 'Z' | 'a' .. 'z' | '0' .. '9' | '_' | '\'' ->
+          true
+      | _ ->
+          false )
+  in
+  let* name = lift2 String.( ^ ) parse_first parse_rest in
+  if not (is_keyword name) then return name
+  else fail (name ^ " keyword can't be used as value name")
 
 (* ======= Constants ======= *)
 
