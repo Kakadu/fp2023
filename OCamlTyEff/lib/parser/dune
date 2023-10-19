@@ -1,3 +1,4 @@
 (library
  (name parser)
+ (public_name OCamlTyEff.Parser)
  (libraries base angstrom ast))
