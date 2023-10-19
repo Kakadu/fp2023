@@ -67,10 +67,6 @@ let is_keyword = function
   | _ ->
       false
 
-(**
-  value_name ::= (a..z | _) \{ A..Z | a..z | 0..9 | _ | ' \}
-  must not be keyword
-*)
 let parse_value_name =
   let parse_first =
     satisfy (function 'a' .. 'z' | '_' -> true | _ -> false)
@@ -128,9 +124,5 @@ let parse_bindings pexp ppat =
   in
   sep_by1 (ws *> string "and") parse_binding
 
-(**
-  [let P1 = E1 and P2 = E2 and ... and Pn = En]
-  [let rec P1 PArg1 = E1 and P2 = E2 and ... and Pn = En]
-*)
 let parse_let_binding pexp ppat =
   skip_let_keyword *> both parse_rec_flag (parse_bindings pexp ppat)
