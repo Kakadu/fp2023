@@ -22,12 +22,54 @@
     <div id="report">
       <div id="lines-layer">
         <pre>
+<a id="L1"></a><span > </span>
+<a id="L2"></a><span > </span>
+<a id="L3"></a><span > </span>
+<a id="L4"></a><span > </span>
+<a id="L5"></a><span > </span>
+<a id="L6"></a><span class="visited"> </span>
+<a id="L7"></a><span > </span>
+<a id="L8"></a><span class="visited"> </span>
+<a id="L9"></a><span > </span>
+<a id="L10"></a><span > </span>
+<a id="L11"></a><span > </span>
+<a id="L12"></a><span > </span>
+<a id="L13"></a><span > </span>
+<a id="L14"></a><span > </span>
 </pre>
       </div>
       <div id="text-layer">
         <pre id="line-numbers">
+<a href="#L1"> 1</a>
+<a href="#L2"> 2</a>
+<a href="#L3"> 3</a>
+<a href="#L4"> 4</a>
+<a href="#L5"> 5</a>
+<a href="#L6"> 6</a>
+<a href="#L7"> 7</a>
+<a href="#L8"> 8</a>
+<a href="#L9"> 9</a>
+<a href="#L10">10</a>
+<a href="#L11">11</a>
+<a href="#L12">12</a>
+<a href="#L13">13</a>
+<a href="#L14">14</a>
 </pre>
-<pre><code class="ocaml"></code></pre>
+<pre><code class="ocaml">(** Copyright 2021-2022, Kakadu and contributors *)
+
+(** SPDX-License-Identifier: LGPL-3.0-or-later *)
+
+(** ***** UNIT TESTS COULD GO HERE (JUST AN EXAMPLE) *)
+let rec fact n = <span data-count="5">i</span>f n = 1 then <span data-count="1">1</span> else <span data-count="4">n</span> * fac<span data-count="4">t</span> (n - 1)
+
+let%test _ = <span data-count="1">f</span>ac<span data-count="1">t</span> 5 = 120
+
+(* These is a simple unit test that tests a single function 'fact'
+   If you want to test something large, like interpretation of a piece
+   of a minilanguge, it is not longer a unit tests but an integration test.
+   Read about dune's cram tests and put the test into `demos/somefile.t`.
+*)
+</code></pre>
       </div>
     </div>
     <script src="../coverage.js"></script>
