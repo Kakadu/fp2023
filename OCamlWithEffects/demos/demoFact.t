@@ -1,12 +1,8 @@
-  $ dune exec demoFact
-  [(EDeclaration ("fact", ["n"],
-      (EIfThenElse (
-         (EBinaryOperation (Eq, (EIdentifier "n"), (EConst (Int 1)))),
-         (EConst (Int 1)),
-         (EBinaryOperation (Mul, (EIdentifier "n"),
-            (EApplication ((EIdentifier "fact"),
-               (EBinaryOperation (Sub, (EIdentifier "n"), (EConst (Int 1))))))
-            ))
-         ))
-      ))
-    ]
+  $ dune exec demo << EOF
+  > 
+  > let rec fact n = if n = 1 then 1 else n * fact (n - 1);;
+  > let res = fact 5;;
+  > 
+  > EOF
+  val fact : int -> int = <fun>
+  val res : int = 120
