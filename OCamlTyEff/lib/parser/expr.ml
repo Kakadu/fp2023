@@ -20,4 +20,9 @@ let parse_exp_let pexp =
 
 let parse_expression =
   fix (fun pexp ->
-      ws *> choice [parse_exp_let pexp; parse_exp_ident; parse_exp_const] )
+      ws
+      *> choice
+           [ char '(' *> pexp <* ws <* char ')'
+           ; parse_exp_let pexp
+           ; parse_exp_ident
+           ; parse_exp_const ] )
