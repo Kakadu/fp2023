@@ -2,14 +2,39 @@
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-type name = string
+type id = string [@@deriving eq, show { with_path = false }]
 
-(** The main type for our AST (дерева абстрактного синтаксиса) *)
-type 'name t =
-  | Var of 'name (** Variable [x] *)
-  | Abs of 'name * 'name t (** Abstraction [λx.t] *)
-  | App of 'name t * 'name t
+type const =
+  | Char of char
+  | Int of int
+  | Float of float
+  | Bool of bool
+  | Unit
+[@@deriving eq, show { with_path = false }]
 
-(* Application [f g ] *)
-(** In type definition above the 3rd constructor is intentionally without documentation
-to test linter *)
+type bin_op =
+  | Plus
+  | Dash
+  | Asterisk
+  | Slash
+  | Eq
+  | NEq
+  | Gt
+  | Gte
+  | Lt
+  | Lte
+  | And
+  | Or
+[@@deriving eq, show { with_path = false }]
+
+type un_op =
+  | Not
+  | Minus
+[@@deriving eq, show { with_path = false }]
+
+type expr =
+  | Const of const
+  | BinaryOperation of bin_op * expr * expr
+  | UnaryOperation of un_op * expr
+  | Identifier of id
+[@@deriving eq, show { with_path = false }]
