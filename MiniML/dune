@@ -1,0 +1,16 @@
+(env
+ (dev
+  (flags
+   (:standard -warn-error -A -w -3-9-32-34-58)))
+ (release
+  (flags
+   (:standard -warn-error -A -w -58))))
+
+(executable
+ (name REPL)
+ (public_name REPL)
+ (modules REPL)
+ (libraries Lambda.Lib stdio))
+
+(cram
+ (deps ./REPL.exe %{bin:REPL}))
