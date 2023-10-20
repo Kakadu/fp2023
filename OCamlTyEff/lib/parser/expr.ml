@@ -18,11 +18,16 @@ let parse_exp_let pexp =
     (parse_let_binding pexp parse_pattern)
     (ws *> string "in" *> pexp)
 
+let parse_single_exp pexp =
+  ws
+  *> choice
+       [ char '(' *> pexp <* ws <* char ')'
+       ; parse_exp_let pexp
+       ; parse_exp_ident
+       ; parse_exp_const ]
+
 let parse_expression =
   fix (fun pexp ->
-      ws
-      *> choice
-           [ char '(' *> pexp <* ws <* char ')'
-           ; parse_exp_let pexp
-           ; parse_exp_ident
-           ; parse_exp_const ] )
+      sep_by1 ws (parse_single_exp pexp)
+      >>| function
+      | h :: [] -> h | h :: tl -> Exp_apply (h, tl) | [] -> assert false )
