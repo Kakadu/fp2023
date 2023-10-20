@@ -6,17 +6,17 @@
 
 (license LGPL-3.0-or-later)
 
-(authors "FIXME Vasya Pupkin")
+(authors "Ilya Syresenkov")
 
-(maintainers "FIXME Vasya Pupkin")
+(maintainers "Ilya Syresenkov")
 
-(bug_reports "FIXME where to put bug reports about the code")
+(bug_reports "Write bug reports in Github issues")
 
-(homepage "FIXME Homepage")
+(homepage "github.com/Kakadu/fp2023")
 
 (package
- (name Lambda) ; FIXME and regenerate .opam file using 'dune build @install'
- (synopsis "FIXME An interpreter for language")
+ (name MiniML) ; FIXME and regenerate .opam file using 'dune build @install'
+ (synopsis "MiniML interpreter")
  (description
   "FIXME. A longer description, for example, which are the most interesing features being supported, etc.")
  (version 0.1)
