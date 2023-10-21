@@ -2,6 +2,11 @@ open! Base
 open Angstrom
 open Ast
 
+let pp printer parser str =
+  Stdlib.Format.printf "%a" printer
+  @@ Result.ok_or_failwith
+  @@ Angstrom.parse_string ~consume:Angstrom.Consume.All parser str
+
 let ws = skip_while Char.is_whitespace
 
 (* ======= Value names ======= *)
