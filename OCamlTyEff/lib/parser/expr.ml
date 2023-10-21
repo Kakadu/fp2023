@@ -44,58 +44,59 @@ let parse_single_exp pexp =
 
 (* ======= Operators parsing ======= *)
 
-type expr_op = OpSeq | OpList | OpApply | OpCustom of ident
+let is_core_operator_char = function
+  | '$' | '&' | '*' | '+' | '-' | '/' | '=' | '>' | '@' | '^' | '|' ->
+      true
+  | _ ->
+      false
 
-let peek_custom_operator =
-  let is_core_operator_char = function
-    | '$' | '&' | '*' | '+' | '-' | '/' | '=' | '>' | '@' | '^' | '|' ->
-        true
-    | _ ->
-        false
-  in
-  let is_operator_char x =
-    match x with
-    | '~' | '!' | '?' | '%' | '<' | ':' | '.' ->
-        true
-    | _ as x when is_core_operator_char x ->
-        true
-    | _ ->
-        false
-  in
-  let peek_first =
-    peek_char_fail
-    >>= fun x ->
-    if is_core_operator_char x || Char.equal x '%' || Char.equal x '<' then
-      return (String.of_char x)
-    else fail "not a infix-symbol"
-  in
-  let rec peek_rest acc index =
-    peek_string index
-    >>| (fun s -> String.get s (String.length s - 1)) (* get last char *)
-    >>= fun c ->
-    if is_operator_char c then peek_rest (acc ^ String.of_char c) (index + 1)
-    else return acc
-  in
-  lift2 String.( ^ ) peek_first (peek_rest "" 2)
-  >>| fun x -> {op= OpCustom (Ident x); op_length= String.length x}
+let is_operator_char x =
+  match x with
+  | '~' | '!' | '?' | '%' | '<' | ':' | '.' ->
+      true
+  | _ as x when is_core_operator_char x ->
+      true
+  | _ ->
+      false
 
-(** Returns operator and its length *)
-let peek_operator =
+type expr_infix_op = IOpSeq | IOpList | IOpApply | IOpCustom of ident
+
+(** Try to peek infix operator. If nothing found return IOpApply *)
+let peek_infix_op =
   let peek_list_operator =
     peek_string 2
     >>= fun s ->
-    if String.equal s "::" then return {op= OpList; op_length= 2}
+    if String.equal s "::" then return {op= IOpList; op_length= 2}
     else fail "not a list operator"
   in
   let peek_seq_operator =
     peek_char_fail
     >>= fun c ->
-    if Char.equal c ';' then return {op= OpSeq; op_length= 1}
+    if Char.equal c ';' then return {op= IOpSeq; op_length= 1}
     else fail "not a seq operator"
   in
+  let peek_custom_infix_op =
+    (* (core-operator-char | % | <) { operator-char } *)
+    let peek_first =
+      peek_char_fail
+      >>= fun x ->
+      if is_core_operator_char x || Char.equal x '%' || Char.equal x '<' then
+        return (String.of_char x)
+      else fail "not a infix-symbol"
+    in
+    let rec peek_rest acc index =
+      peek_string index
+      >>| (fun s -> String.get s (String.length s - 1)) (* get last char *)
+      >>= fun c ->
+      if is_operator_char c then peek_rest (acc ^ String.of_char c) (index + 1)
+      else return acc
+    in
+    lift2 String.( ^ ) peek_first (peek_rest "" 2)
+    >>| fun id -> {op= IOpCustom (Ident id); op_length= String.length id}
+  in
   option
-    {op= OpApply; op_length= 0} (* application operator is 0 chars long *)
-    (choice [peek_custom_operator; peek_list_operator; peek_seq_operator])
+    {op= IOpApply; op_length= 0} (* application operator is 0 chars long *)
+    (choice [peek_custom_infix_op; peek_list_operator; peek_seq_operator])
 
 (**
    Set precedence and associativity for operators.
@@ -103,14 +104,14 @@ let peek_operator =
 
    Used in Pratt parsing method
 *)
-let get_binding_power = function
-  | OpApply ->
+let get_infix_binding_power = function
+  | IOpApply ->
       (100, 101)
-  | OpList ->
+  | IOpList ->
       (81, 80)
-  | OpSeq ->
+  | IOpSeq ->
       (11, 10)
-  | OpCustom (Ident id) ->
+  | IOpCustom (Ident id) ->
       let is_prefix prefix = String.is_prefix ~prefix id in
       let is_equal str = String.( = ) id str in
       if is_prefix "**" then (91, 90)
@@ -126,21 +127,63 @@ let get_binding_power = function
       else if is_equal "||" then (66, 65)
       else assert false
 
+type expr_prefix_op = POpPlus | POpMinus | POpCustom of ident
+
+let parse_prefix_op =
+  let parse_prefix_plus = char '+' *> return POpPlus in
+  let parse_prefix_minus = char '-' *> return POpMinus in
+  let parse_custom_prefix_op =
+    let parse_prefix1 =
+      (* ! { operator-char } *)
+      char '!' *> take_while is_operator_char >>| fun s -> "!" ^ s
+    in
+    let parse_prefix2 =
+      (* (?|~) { operator-char }+ *)
+      let parse_first =
+        satisfy (fun c -> Char.equal '?' c || Char.equal '~' c)
+        >>| String.of_char
+      in
+      let parse_rest = take_while1 is_operator_char in
+      lift2 String.( ^ ) parse_first parse_rest
+    in
+    parse_prefix1 <|> parse_prefix2 >>| fun id -> POpCustom (Ident id)
+  in
+  parse_prefix_minus <|> parse_prefix_plus <|> parse_custom_prefix_op
+
+let get_prefix_binding_power = function
+  | POpPlus | POpCustom _ ->
+      500 (* highest precedence *)
+  | POpMinus ->
+      95 (* a bit lower than application precedence *)
+
 let parse_expression =
-  let fold_fun acc (op, rhs) =
+  let infix_fold_fun acc (op, rhs) =
     match op with
-    | OpApply ->
+    | IOpApply ->
         Exp_apply (acc, rhs)
-    | OpList ->
+    | IOpList ->
         Exp_construct (Ident "::", Some (Exp_tuple [acc; rhs]))
-    | OpSeq ->
+    | IOpSeq ->
         Exp_sequence (acc, rhs)
-    | OpCustom op ->
+    | IOpCustom op ->
         Exp_apply (Exp_apply (Exp_ident op, acc), rhs)
   in
+  let apply_prefix_op op exp =
+    Exp_apply
+      ( Exp_ident
+          ( match op with
+          | POpMinus ->
+              Ident "~-"
+          | POpPlus ->
+              Ident "~+"
+          | POpCustom id ->
+              id )
+      , exp )
+  in
   fix (fun pexp ->
-      parse_infix ~parse_operand:(parse_single_exp pexp) ~peek_operator
-        ~get_binding_power ~fold_fun )
+      parse_infix_prefix ~parse_operand:(parse_single_exp pexp) ~peek_infix_op
+        ~get_infix_binding_power ~infix_fold_fun ~parse_prefix_op
+        ~get_prefix_binding_power ~apply_prefix_op )
 
 (* ======= Tests ======= *)
 
@@ -199,4 +242,36 @@ let%expect_test "parse_seq_op" =
        (Exp_sequence ((Exp_ident (Ident "a")), (Exp_ident (Ident "b")))),
        (Exp_sequence ((Exp_ident (Ident "c")),
           (Exp_sequence ((Exp_ident (Ident "d")), (Exp_ident (Ident "e"))))))
+       )) |}]
+
+let%expect_test "parse_plus_minus_prefix_op" =
+  pp pp_expression parse_expression "1 + - + + 3" ;
+  [%expect
+    {|
+    (Exp_apply (
+       (Exp_apply ((Exp_ident (Ident "+")), (Exp_constant (Const_integer 1)))),
+       (Exp_apply ((Exp_ident (Ident "~-")),
+          (Exp_apply ((Exp_ident (Ident "~+")),
+             (Exp_apply ((Exp_ident (Ident "~+")),
+                (Exp_constant (Const_integer 3))))
+             ))
+          ))
+       )) |}]
+
+let%expect_test "parse_custom_prefix_op" =
+  pp pp_expression parse_expression "?!5; !%< 123; !0; ~-3" ;
+  [%expect
+    {|
+    (Exp_sequence (
+       (Exp_apply ((Exp_ident (Ident "?!")), (Exp_constant (Const_integer 5)))),
+       (Exp_sequence (
+          (Exp_apply ((Exp_ident (Ident "!%<")),
+             (Exp_constant (Const_integer 123)))),
+          (Exp_sequence (
+             (Exp_apply ((Exp_ident (Ident "!")),
+                (Exp_constant (Const_integer 0)))),
+             (Exp_apply ((Exp_ident (Ident "~-")),
+                (Exp_constant (Const_integer 3))))
+             ))
+          ))
        )) |}]
