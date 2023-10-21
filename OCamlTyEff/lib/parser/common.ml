@@ -98,7 +98,10 @@ let parse_int =
 
 (** ["hello world"] *)
 let parse_string =
-  char '"' *> take_till (Char.equal '"') <* char '"' >>| fun s -> Const_string s
+  let open Char in
+  char (of_int_exn 34) *> take_till (Char.equal (of_int_exn 34))
+  <* char (of_int_exn 34) (* [of_int_exn 34 = '"'] *)
+  >>| fun s -> Const_string s
 
 let parse_char = char '\'' *> any_char <* char '\'' >>| fun c -> Const_char c
 
