@@ -9,6 +9,8 @@ let pp printer parser str =
 
 let ws = skip_while Char.is_whitespace
 
+let ws1 = take_while1 Char.is_whitespace *> return ()
+
 (* ======= Value names ======= *)
 
 let is_keyword = function
@@ -106,7 +108,8 @@ let parse_const = choice [parse_char; parse_string; parse_int]
 
 let skip_let_keyword = ws *> string "let"
 
-let parse_rec_flag = ws *> option Nonrecursive (string "rec" *> return Recursive)
+let parse_rec_flag =
+  ws1 *> option Nonrecursive (string "rec" *> return Recursive)
 
 (**
   [P1 = E1 and ... and Pn = En]
