@@ -1,4 +1,5 @@
 type ident = Ident of string  (** Identifiers *)
+[@@deriving show {with_path= false}]
 
 type constant =
   | Const_integer of int  (** Integer such as [25] *)
@@ -6,6 +7,7 @@ type constant =
   | Const_string of string
       (** Constant string such as ["constant"] or [{|other constant|}] *)
   | Const_float of float  (** Float such as [3.14] *)
+[@@deriving show {with_path= false}]
 
 (* ======= Patterns ======= *)
 
@@ -22,21 +24,26 @@ type pattern =
           - [C]   when [args] is [None]
           - [C P] when [args] is [Some P]
         *)
+[@@deriving show {with_path= false}]
 
 (* ======= Expressions ======= *)
 
 type rec_flag =
   | Recursive  (** Recursive value binding *)
   | Nonrecursive  (** Nonrecursive value binding *)
+[@@deriving show {with_path= false}]
 
 and value_binding = {pat: pattern; expr: expression}
+[@@deriving show {with_path= false}]
 
 and function_body =
   | Function_body of expression  (** Expression as function body *)
   | Function_cases of case list  (** For functions defined using [function] *)
+[@@deriving show {with_path= false}]
 
 (** Pattern matching case *)
 and case = {left: pattern; right: expression}
+[@@deriving show {with_path= false}]
 
 and expression =
   | Exp_ident of ident  (** Identifiers such as [x], [fact] *)
@@ -73,10 +80,11 @@ and expression =
   | Exp_ifthenelse of expression * expression * expression option
       (** [if E1 then E2 else E3] *)
   | Exp_sequence of expression * expression  (** [E1; E2] *)
+[@@deriving show {with_path= false}]
 
 (* ======= Module structure ======= *)
 
-type structure = structure_item list
+type structure = structure_item list [@@deriving show {with_path= false}]
 
 and structure_item =
   | Str_eval of expression  (** [E] *)
@@ -87,3 +95,4 @@ and structure_item =
           - [let rec P1 = E1 and ... and Pn = EN ]
               when [rec] is [Recursive]
         *)
+[@@deriving show {with_path= false}]
