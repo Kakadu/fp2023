@@ -10,6 +10,8 @@ depends: [
   "dune" {>= "3.11"}
   "base"
   "angstrom"
+  "ppx_deriving"
+  "ppx_expect"
   "odoc" {with-doc}
 ]
 build: [
