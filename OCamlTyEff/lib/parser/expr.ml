@@ -18,7 +18,11 @@ let parse_exp_let pexp =
     (parse_let_binding pexp parse_pattern)
     (ws *> string "in" *> pexp)
 
-(** [if E1 then E2 else E3 <optional>] *)
+(**
+  [if E1 then E2 else E3 <optional>]
+
+  todo: if precedence must be higher than ';'
+*)
 let parse_exp_ite pexp =
   lift3
     (fun c t e -> Exp_ifthenelse (c, t, e))
@@ -36,7 +40,7 @@ let parse_single_exp pexp =
        ; parse_exp_let pexp
        ; parse_exp_ite pexp ]
 
-type operator = OpList | OpApply | OpCustom of ident
+type operator = OpSeq | OpList | OpApply | OpCustom of ident
 
 let peek_custom_operator =
   let is_core_operator_char = function
@@ -68,10 +72,8 @@ let peek_custom_operator =
     if is_operator_char c then peek_rest (acc ^ String.of_char c) (index + 1)
     else return acc
   in
-  option
-    (OpApply, 0) (* application operator is 0 chars long *)
-    ( lift2 String.( ^ ) peek_first (peek_rest "" 2)
-    >>| fun x -> (OpCustom (Ident x), String.length x) )
+  lift2 String.( ^ ) peek_first (peek_rest "" 2)
+  >>| fun x -> (OpCustom (Ident x), String.length x)
 
 (** Returns operator and its length *)
 let peek_operator =
@@ -81,7 +83,14 @@ let peek_operator =
     if String.equal s "::" then return (OpList, 2)
     else fail "not a list operator"
   in
-  peek_list_operator <|> peek_custom_operator
+  let peek_seq_operator =
+    peek_char_fail
+    >>= fun c ->
+    if Char.equal c ';' then return (OpSeq, 2) else fail "not a seq operator"
+  in
+  option
+    (OpApply, 0) (* application operator is 0 chars long *)
+    (choice [peek_custom_operator; peek_list_operator; peek_seq_operator])
 
 (** Set precedence and associativity for operators. Used in Pratt parsing method *)
 let get_binding_power = function
@@ -89,6 +98,8 @@ let get_binding_power = function
       (100, 101)
   | OpList ->
       (81, 80)
+  | OpSeq ->
+      (11, 10)
   | OpCustom (Ident id) ->
       let is_prefix prefix = String.is_prefix ~prefix id in
       let is_equal str = String.( = ) id str in
@@ -128,6 +139,8 @@ let parse_expression =
             Exp_apply (acc, rhs)
         | OpList ->
             Exp_construct (Ident "::", Some (Exp_tuple [acc; rhs]))
+        | OpSeq ->
+            Exp_sequence (acc, rhs)
         | OpCustom op ->
             Exp_apply (Exp_apply (Exp_ident op, acc), rhs) )
       results
@@ -181,4 +194,14 @@ let%expect_test "parse_list_op" =
                                 ]))
                      ))
                   ]))
+       )) |}]
+
+let%expect_test "parse_seq_op" =
+  pp pp_expression parse_expression "(a ; b) ; c ; d ; e" ;
+  [%expect
+    {|
+    (Exp_sequence (
+       (Exp_sequence ((Exp_ident (Ident "a")), (Exp_ident (Ident "b")))),
+       (Exp_sequence ((Exp_ident (Ident "c")),
+          (Exp_sequence ((Exp_ident (Ident "d")), (Exp_ident (Ident "e"))))))
        )) |}]
