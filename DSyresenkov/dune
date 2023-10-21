@@ -10,7 +10,7 @@
  (name REPL)
  (public_name REPL)
  (modules REPL)
- (libraries MiniML.Lib stdio))
+ (libraries DSyresenkov.Lib stdio))
 
 (cram
  (deps ./REPL.exe %{bin:REPL}))

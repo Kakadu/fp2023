@@ -1,6 +1,6 @@
 (library
  (name miniml_lib)
- (public_name MiniML.Lib)
+ (public_name DSyresenkov.Lib)
  (modules Ast Parser)
  (modules_without_implementation ast)
  (libraries base angstrom)

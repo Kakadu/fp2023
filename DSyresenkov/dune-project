@@ -15,7 +15,7 @@
 (homepage "github.com/Kakadu/fp2023")
 
 (package
- (name MiniML) ; FIXME and regenerate .opam file using 'dune build @install'
+ (name DSyresenkov) ; FIXME and regenerate .opam file using 'dune build @install'
  (synopsis "MiniML interpreter")
  (description
   "FIXME. A longer description, for example, which are the most interesing features being supported, etc.")
