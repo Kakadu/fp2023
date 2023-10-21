@@ -36,8 +36,87 @@ let parse_single_exp pexp =
        ; parse_exp_let pexp
        ; parse_ite pexp ]
 
+type operator = Apply | Operator of ident
+
+(** Returns operator and its length *)
+let peek_operator =
+  let is_core_operator_char = function
+    | '$' | '&' | '*' | '+' | '-' | '/' | '=' | '>' | '@' | '^' | '|' ->
+        true
+    | _ ->
+        false
+  in
+  let is_operator_char x =
+    match x with
+    | '~' | '!' | '?' | '%' | '<' | ':' | '.' ->
+        true
+    | _ as x when is_core_operator_char x ->
+        true
+    | _ ->
+        false
+  in
+  let peek_first =
+    peek_char_fail
+    >>= fun x ->
+    if is_core_operator_char x || Char.equal x '%' || Char.equal x '<' then
+      return (String.of_char x)
+    else fail "not a infix-symbol"
+  in
+  let rec peek_rest acc index =
+    peek_string index
+    >>| (fun s -> String.get s (String.length s - 1)) (* get last char *)
+    >>= fun c ->
+    if is_operator_char c then peek_rest (acc ^ String.of_char c) (index + 1)
+    else return acc
+  in
+  option
+    (Apply, 0) (* application operator is 0 chars long *)
+    ( lift2 String.( ^ ) peek_first (peek_rest "" 2)
+    >>| fun x -> (Operator (Ident x), String.length x) )
+
+(** Used in Pratt parsing method *)
+let get_binding_power = function
+  | Apply ->
+      (100, 101)
+  | Operator (Ident id) ->
+      let is_prefix prefix = String.is_prefix ~prefix id in
+      let is_equal str = String.( = ) id str in
+      if is_prefix "**" then (91, 90)
+      else if is_prefix "*" || is_prefix "/" || is_prefix "%" then (85, 86)
+      else if is_prefix "+" || is_prefix "-" then (83, 84)
+      else if is_prefix "@" || is_prefix "^" then (81, 80)
+      else if
+        is_prefix "=" || is_prefix "<" || is_prefix ">" || is_prefix "|"
+        || (is_prefix "&" && not (is_equal "&"))
+        || is_prefix "$" || is_equal "!="
+      then (75, 76)
+      else if is_equal "&" || is_equal "&&" then (71, 70)
+      else if is_equal "||" then (66, 65)
+      else assert false
+
 let parse_expression =
-  fix (fun pexp ->
-      sep_by1 ws (parse_single_exp pexp)
-      >>| function
-      | h :: [] -> h | h :: tl -> Exp_apply (h, tl) | [] -> assert false )
+  (*
+     Pratt parsing
+     https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html
+  *)
+  let rec helper min_bp pexp =
+    let* lhs = parse_single_exp pexp in
+    many
+      (let* op, op_len = ws *> peek_operator in
+       let l_bp, r_bp = get_binding_power op in
+       if l_bp < min_bp then fail "found op with lower binding power"
+       else
+         advance op_len
+         *> let* rhs = helper r_bp pexp in
+            return (rhs, op) )
+    >>| fun results ->
+    List.fold_left ~init:lhs
+      ~f:(fun acc (rhs, op) ->
+        match op with
+        | Apply ->
+            Exp_apply (acc, rhs)
+        | Operator op ->
+            Exp_apply (Exp_apply (Exp_ident op, acc), rhs) )
+      results
+  in
+  fix (fun pexp -> helper 0 pexp)
