@@ -26,12 +26,15 @@ val parse_let_binding :
   [let rec P1 PArg1 = E1 and P2 = E2 and ... and Pn = En]
 *)
 
-type 'a operator = {op: 'a; op_length: int}
+type 'a infix_operator = {op: 'a; op_length: int}
 
-val parse_infix :
-     parse_operand:'a t
-  -> peek_operator:'b operator t
-  -> get_binding_power:('b -> int * int)
-  -> fold_fun:('a -> 'b * 'a -> 'a)
-  -> 'a t
-(** Parse infix expressions using Pratt parsing *)
+val parse_infix_prefix :
+     parse_operand:'exp t
+  -> peek_infix_op:'infix infix_operator t
+  -> get_infix_binding_power:('infix -> int * int)
+  -> infix_fold_fun:('exp -> 'infix * 'exp -> 'exp)
+  -> parse_prefix_op:'prefix t
+  -> get_prefix_binding_power:('prefix -> int)
+  -> apply_prefix_op:('prefix -> 'exp -> 'exp)
+  -> 'exp t
+(** Parse expressions with infix and prefix operators using Pratt parsing *)
