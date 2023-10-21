@@ -36,10 +36,9 @@ let parse_single_exp pexp =
        ; parse_exp_let pexp
        ; parse_exp_ite pexp ]
 
-type operator = Apply | Operator of ident
+type operator = OpList | OpApply | OpCustom of ident
 
-(** Returns operator and its length *)
-let peek_operator =
+let peek_custom_operator =
   let is_core_operator_char = function
     | '$' | '&' | '*' | '+' | '-' | '/' | '=' | '>' | '@' | '^' | '|' ->
         true
@@ -70,21 +69,33 @@ let peek_operator =
     else return acc
   in
   option
-    (Apply, 0) (* application operator is 0 chars long *)
+    (OpApply, 0) (* application operator is 0 chars long *)
     ( lift2 String.( ^ ) peek_first (peek_rest "" 2)
-    >>| fun x -> (Operator (Ident x), String.length x) )
+    >>| fun x -> (OpCustom (Ident x), String.length x) )
 
-(** Used in Pratt parsing method *)
+(** Returns operator and its length *)
+let peek_operator =
+  let peek_list_operator =
+    peek_string 2
+    >>= fun s ->
+    if String.equal s "::" then return (OpList, 2)
+    else fail "not a list operator"
+  in
+  peek_list_operator <|> peek_custom_operator
+
+(** Set precedence and associativity for operators. Used in Pratt parsing method *)
 let get_binding_power = function
-  | Apply ->
+  | OpApply ->
       (100, 101)
-  | Operator (Ident id) ->
+  | OpList ->
+      (81, 80)
+  | OpCustom (Ident id) ->
       let is_prefix prefix = String.is_prefix ~prefix id in
       let is_equal str = String.( = ) id str in
       if is_prefix "**" then (91, 90)
       else if is_prefix "*" || is_prefix "/" || is_prefix "%" then (85, 86)
       else if is_prefix "+" || is_prefix "-" then (83, 84)
-      else if is_prefix "@" || is_prefix "^" then (81, 80)
+      else if is_prefix "@" || is_prefix "^" then (79, 78)
       else if
         is_prefix "=" || is_prefix "<" || is_prefix ">" || is_prefix "|"
         || (is_prefix "&" && not (is_equal "&"))
@@ -113,9 +124,11 @@ let parse_expression =
     List.fold_left ~init:lhs
       ~f:(fun acc (rhs, op) ->
         match op with
-        | Apply ->
+        | OpApply ->
             Exp_apply (acc, rhs)
-        | Operator op ->
+        | OpList ->
+            Exp_construct (Ident "::", Some (Exp_tuple [acc; rhs]))
+        | OpCustom op ->
             Exp_apply (Exp_apply (Exp_ident op, acc), rhs) )
       results
   in
@@ -146,3 +159,26 @@ let%expect_test "parse_exp_ifthenelse" =
     (Exp_ifthenelse ((Exp_ident (Ident "a")),
        (Exp_ifthenelse ((Exp_ident (Ident "b")), (Exp_ident (Ident "c")), None)),
        (Some (Exp_ident (Ident "d"))))) |}]
+
+let%expect_test "parse_list_op" =
+  pp pp_expression parse_expression "(a :: b) :: c :: d :: e" ;
+  [%expect
+    {|
+    (Exp_construct ((Ident "::"),
+       (Some (Exp_tuple
+                [(Exp_construct ((Ident "::"),
+                    (Some (Exp_tuple
+                             [(Exp_ident (Ident "a")); (Exp_ident (Ident "b"))]))
+                    ));
+                  (Exp_construct ((Ident "::"),
+                     (Some (Exp_tuple
+                              [(Exp_ident (Ident "c"));
+                                (Exp_construct ((Ident "::"),
+                                   (Some (Exp_tuple
+                                            [(Exp_ident (Ident "d"));
+                                              (Exp_ident (Ident "e"))]))
+                                   ))
+                                ]))
+                     ))
+                  ]))
+       )) |}]
