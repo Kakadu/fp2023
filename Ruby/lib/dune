@@ -1,7 +1,7 @@
 (library
  (name lambda_lib)
  (public_name Lambda.Lib)
- (modules Ast Lambda Interpret Parser Printast Pprintast utils)
+ (modules Ast Interpret Parser utils)
  (modules_without_implementation ast)
  (libraries base angstrom)
  (preprocess
