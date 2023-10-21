@@ -18,13 +18,23 @@ let parse_exp_let pexp =
     (parse_let_binding pexp parse_pattern)
     (ws *> string "in" *> pexp)
 
+(** [if E1 then E2 else E3 <optional>] *)
+let parse_ite pexp =
+  lift3
+    (fun c t e -> Exp_ifthenelse (c, t, e))
+    (string "if" *> pexp)
+    (ws *> string "then" *> pexp)
+    ( option None (ws *> string "else" >>| Option.some)
+    >>= function None -> return None | Some _ -> pexp >>| Option.some )
+
 let parse_single_exp pexp =
   ws
   *> choice
-       [ char '(' *> pexp <* ws <* char ')'
+       [ parse_exp_ident
+       ; parse_exp_const
+       ; char '(' *> pexp <* ws <* char ')'
        ; parse_exp_let pexp
-       ; parse_exp_ident
-       ; parse_exp_const ]
+       ; parse_ite pexp ]
 
 let parse_expression =
   fix (fun pexp ->
