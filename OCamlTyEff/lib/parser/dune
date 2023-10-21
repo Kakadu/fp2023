@@ -1,4 +1,13 @@
 (library
  (name parser)
  (public_name OCamlTyEff.Parser)
+ (modules common expr pattern structure parser)
  (libraries base angstrom ast))
+
+(library
+ (name test)
+ (modules test)
+ (libraries base ast parser)
+ (preprocess
+  (pps ppx_expect))
+ (inline_tests))
