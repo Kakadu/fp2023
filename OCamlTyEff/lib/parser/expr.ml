@@ -120,3 +120,20 @@ let parse_expression =
       results
   in
   fix (fun pexp -> helper 0 pexp)
+
+(* ======= Tests ======= *)
+
+let%expect_test "parse_exp_let" =
+  pp pp_expression
+    (parse_exp_let parse_expression)
+    "let rec a = 1 and b = 2 in let e = 3 in a" ;
+  [%expect
+    {|
+    (Exp_let (Recursive,
+       [{ pat = (Pat_var "a"); expr = (Exp_constant (Const_integer 1)) };
+         { pat = (Pat_var "b"); expr = (Exp_constant (Const_integer 2)) }],
+       (Exp_let (Nonrecursive,
+          [{ pat = (Pat_var "e"); expr = (Exp_constant (Const_integer 3)) }],
+          (Exp_ident (Ident "a"))))
+       )) |}]
+
