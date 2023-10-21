@@ -1,6 +1,5 @@
 (library
  (name ast)
  (public_name OCamlTyEff.Ast)
- (modules_without_implementation ast)
  (preprocess
   (pps ppx_deriving.show)))
