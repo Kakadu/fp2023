@@ -19,7 +19,7 @@ let parse_exp_let pexp =
     (ws *> string "in" *> pexp)
 
 (** [if E1 then E2 else E3 <optional>] *)
-let parse_ite pexp =
+let parse_exp_ite pexp =
   lift3
     (fun c t e -> Exp_ifthenelse (c, t, e))
     (string "if" *> pexp)
@@ -34,7 +34,7 @@ let parse_single_exp pexp =
        ; parse_exp_const
        ; char '(' *> pexp <* ws <* char ')'
        ; parse_exp_let pexp
-       ; parse_ite pexp ]
+       ; parse_exp_ite pexp ]
 
 type operator = Apply | Operator of ident
 
@@ -137,3 +137,12 @@ let%expect_test "parse_exp_let" =
           (Exp_ident (Ident "a"))))
        )) |}]
 
+let%expect_test "parse_exp_ifthenelse" =
+  pp pp_expression
+    (parse_exp_ite parse_expression)
+    "if a then (if b then c) else d" ;
+  [%expect
+    {|
+    (Exp_ifthenelse ((Exp_ident (Ident "a")),
+       (Exp_ifthenelse ((Exp_ident (Ident "b")), (Exp_ident (Ident "c")), None)),
+       (Some (Exp_ident (Ident "d"))))) |}]
