@@ -1,4 +1,4 @@
-type ident = Ident of string
+type ident = Ident of string  (** Identifiers *)
 
 type constant =
   | Const_integer of int  (** Integer such as [25] *)
@@ -7,7 +7,7 @@ type constant =
       (** Constant string such as ["constant"] or [{|other constant|}] *)
   | Const_float of float  (** Float such as [3.14] *)
 
-(** Patterns *)
+(* ======= Patterns ======= *)
 
 type pattern =
   | Pat_any  (** The pattern [_] *)
@@ -23,14 +23,16 @@ type pattern =
           - [C P] when [args] is [Some P]
         *)
 
-(** Expressions *)
+(* ======= Expressions ======= *)
 
-type rec_flag = Recursive | Nonrecursive
+type rec_flag =
+  | Recursive  (** Recursive value binding *)
+  | Nonrecursive  (** Nonrecursive value binding *)
 
 and value_binding = {pat: pattern; expr: expression}
 
 and function_body =
-  | Function_body of expression
+  | Function_body of expression  (** Expression as function body *)
   | Function_cases of case list  (** For functions defined using [function] *)
 
 (** Pattern matching case *)
@@ -72,7 +74,7 @@ and expression =
       (** [if E1 then E2 else E3] *)
   | Exp_sequence of expression * expression  (** [E1; E2] *)
 
-(** Module structure *)
+(* ======= Module structure ======= *)
 
 type structure = structure_item list
 
