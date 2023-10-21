@@ -56,9 +56,8 @@ and expression =
           A function must have parameters. [Exp_function (params, body)] must
           have non-empty [params] or a [Function_cases _] body.
         *)
-  | Exp_apply of expression * expression list
-      (** [Exp_apply(E0, [E1 ; ... ; En])] represents [E0 E1 ... En]. 
-          Invariant: [n > 0] *)
+  | Exp_apply of expression * expression
+      (** [Exp_apply(E0, E1)] represents [E0 E1] *)
   | Exp_match of expression * case list
       (** [match E0 with P1 -> E1 | ... | Pn -> En] *)
   | Exp_tuple of expression list
