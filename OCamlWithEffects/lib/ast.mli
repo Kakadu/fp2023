@@ -37,6 +37,7 @@ type expr =
   | UnaryOperation of un_op * expr
   | Identifier of id
   | Application of expr * expr
+  | Fun of id list * expr
   | Declaration of id * id list * expr
   | RecDeclaration of id * id list * expr
 [@@deriving eq, show { with_path = false }]
