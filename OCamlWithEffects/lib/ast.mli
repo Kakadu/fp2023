@@ -7,7 +7,6 @@ type id = string [@@deriving eq, show { with_path = false }]
 type const =
   | Char of char
   | Int of int
-  | Float of float
   | Bool of bool
   | Unit
 [@@deriving eq, show { with_path = false }]
@@ -37,4 +36,7 @@ type expr =
   | BinaryOperation of bin_op * expr * expr
   | UnaryOperation of un_op * expr
   | Identifier of id
+  | Application of expr * expr
+  | Declaration of id * id list * expr
+  | RecDeclaration of id * id list * expr
 [@@deriving eq, show { with_path = false }]
