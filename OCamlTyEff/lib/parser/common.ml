@@ -137,3 +137,26 @@ let parse_bindings pexp ppat =
 
 let parse_let_binding pexp ppat =
   skip_let_keyword *> both parse_rec_flag (parse_bindings pexp ppat)
+
+(* ======= Infix parsing ======= *)
+
+type 'a operator = {op: 'a; op_length: int}
+
+let parse_infix ~parse_operand ~peek_operator ~get_binding_power ~fold_fun =
+  (*
+     Pratt parsing
+     https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html
+  *)
+  let rec helper min_bp pexp =
+    let* lhs = parse_operand in
+    many
+      (let* {op; op_length} = ws *> peek_operator in
+       let l_bp, r_bp = get_binding_power op in
+       if l_bp < min_bp then fail "found op with lower binding power"
+       else
+         advance op_length
+         *> let* rhs = helper r_bp pexp in
+            return (op, rhs) )
+    >>| fun results -> List.fold_left ~init:lhs ~f:fold_fun results
+  in
+  fix (fun pexp -> helper 0 pexp)

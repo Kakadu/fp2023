@@ -4,6 +4,8 @@ open Ast
 open Common
 open Pattern
 
+(* ======= Single expressions parsing ======= *)
+
 let parse_exp_ident = parse_value_name >>| fun name -> Exp_ident (Ident name)
 
 let parse_exp_const = parse_const >>| fun const -> Exp_constant const
@@ -40,7 +42,9 @@ let parse_single_exp pexp =
        ; parse_exp_let pexp
        ; parse_exp_ite pexp ]
 
-type operator = OpSeq | OpList | OpApply | OpCustom of ident
+(* ======= Operators parsing ======= *)
+
+type expr_op = OpSeq | OpList | OpApply | OpCustom of ident
 
 let peek_custom_operator =
   let is_core_operator_char = function
@@ -73,26 +77,32 @@ let peek_custom_operator =
     else return acc
   in
   lift2 String.( ^ ) peek_first (peek_rest "" 2)
-  >>| fun x -> (OpCustom (Ident x), String.length x)
+  >>| fun x -> {op= OpCustom (Ident x); op_length= String.length x}
 
 (** Returns operator and its length *)
 let peek_operator =
   let peek_list_operator =
     peek_string 2
     >>= fun s ->
-    if String.equal s "::" then return (OpList, 2)
+    if String.equal s "::" then return {op= OpList; op_length= 2}
     else fail "not a list operator"
   in
   let peek_seq_operator =
     peek_char_fail
     >>= fun c ->
-    if Char.equal c ';' then return (OpSeq, 2) else fail "not a seq operator"
+    if Char.equal c ';' then return {op= OpSeq; op_length= 1}
+    else fail "not a seq operator"
   in
   option
-    (OpApply, 0) (* application operator is 0 chars long *)
+    {op= OpApply; op_length= 0} (* application operator is 0 chars long *)
     (choice [peek_custom_operator; peek_list_operator; peek_seq_operator])
 
-(** Set precedence and associativity for operators. Used in Pratt parsing method *)
+(**
+   Set precedence and associativity for operators.
+   https://v2.ocaml.org/manual/expr.html#ss:precedence-and-associativity
+
+   Used in Pratt parsing method
+*)
 let get_binding_power = function
   | OpApply ->
       (100, 101)
@@ -117,35 +127,20 @@ let get_binding_power = function
       else assert false
 
 let parse_expression =
-  (*
-     Pratt parsing
-     https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html
-  *)
-  let rec helper min_bp pexp =
-    let* lhs = parse_single_exp pexp in
-    many
-      (let* op, op_len = ws *> peek_operator in
-       let l_bp, r_bp = get_binding_power op in
-       if l_bp < min_bp then fail "found op with lower binding power"
-       else
-         advance op_len
-         *> let* rhs = helper r_bp pexp in
-            return (rhs, op) )
-    >>| fun results ->
-    List.fold_left ~init:lhs
-      ~f:(fun acc (rhs, op) ->
-        match op with
-        | OpApply ->
-            Exp_apply (acc, rhs)
-        | OpList ->
-            Exp_construct (Ident "::", Some (Exp_tuple [acc; rhs]))
-        | OpSeq ->
-            Exp_sequence (acc, rhs)
-        | OpCustom op ->
-            Exp_apply (Exp_apply (Exp_ident op, acc), rhs) )
-      results
+  let fold_fun acc (op, rhs) =
+    match op with
+    | OpApply ->
+        Exp_apply (acc, rhs)
+    | OpList ->
+        Exp_construct (Ident "::", Some (Exp_tuple [acc; rhs]))
+    | OpSeq ->
+        Exp_sequence (acc, rhs)
+    | OpCustom op ->
+        Exp_apply (Exp_apply (Exp_ident op, acc), rhs)
   in
-  fix (fun pexp -> helper 0 pexp)
+  fix (fun pexp ->
+      parse_infix ~parse_operand:(parse_single_exp pexp) ~peek_operator
+        ~get_binding_power ~fold_fun )
 
 (* ======= Tests ======= *)
 
