@@ -4,8 +4,10 @@ open Ast
 (** Parse string and pretty print the output *)
 let pp str = Stdlib.Format.printf "%a" pp_structure (Parser.parse_exn str)
 
-let%expect_test "parse_commets" =
-  pp "let rec(*firstcomment*)f n = (* second comment *)(* third comment*) n + 1" ;
+let%expect_test "parse_comments" =
+  pp
+    "let(*sas*)rec(*firstcomment*)f n = (* second comment *) (* third \
+     comment*) n + 1" ;
   [%expect
     {|
     [(Str_value (Recursive,
