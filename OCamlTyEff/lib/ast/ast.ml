@@ -1,5 +1,5 @@
 type ident = Ident of string  (** Identifiers *)
-[@@deriving show {with_path= false}]
+[@@deriving show {with_path= false}, eq]
 
 type constant =
   | Const_integer of int  (** Integer such as [25] *)

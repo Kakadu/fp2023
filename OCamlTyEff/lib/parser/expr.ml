@@ -20,31 +20,19 @@ let parse_exp_let pexp =
     (parse_let_binding pexp parse_pattern)
     (ws *> string "in" *> pexp)
 
-(**
-  [if E1 then E2 else E3 <optional>]
-
-  todo: if precedence must be higher than ';'
-*)
-let parse_exp_ite pexp =
+(** [if E1 then E2 else E3 <optional>] *)
+let parse_exp_ite pexp_if pexp_thenelse =
   lift3
     (fun c t e -> Exp_ifthenelse (c, t, e))
-    (string "if" *> pexp)
-    (ws *> string "then" *> pexp)
+    (string "if" *> pexp_if)
+    (ws *> string "then" *> pexp_thenelse)
+    (* None if else not found *)
     ( option None (ws *> string "else" >>| Option.some)
-    >>= function None -> return None | Some _ -> pexp >>| Option.some )
+    >>= function None -> return None | Some _ -> pexp_thenelse >>| Option.some
+    )
 
 let parse_exp_empty_list_construct =
   string "[]" *> return (Exp_construct (Ident "[]", None))
-
-let parse_single_exp pexp =
-  ws
-  *> choice
-       [ parse_exp_ident
-       ; parse_exp_const
-       ; char '(' *> pexp <* ws <* char ')'
-       ; parse_exp_empty_list_construct
-       ; parse_exp_let pexp
-       ; parse_exp_ite pexp ]
 
 (* ======= Operators parsing ======= *)
 
@@ -68,9 +56,13 @@ type expr_infix_op =
   | IOpTuple
   | IOpApply
   | IOpCustom of ident
+[@@deriving eq]
 
-(** Try to peek infix operator. If nothing found return IOpApply *)
-let peek_infix_op =
+(**
+   Try to peek infix operator. If nothing found return IOpApply.
+   Fail if [disabled_op] found
+*)
+let peek_infix_op disabled_op =
   let peek_list_operator =
     peek_string 2
     >>= fun s ->
@@ -110,11 +102,16 @@ let peek_infix_op =
   in
   option
     {op= IOpApply; op_length= 0} (* application operator is 0 chars long *)
-    (choice
-       [ peek_custom_infix_op
-       ; peek_list_operator
-       ; peek_seq_operator
-       ; peek_tuple_operator ] )
+    ( choice
+        [ peek_custom_infix_op
+        ; peek_list_operator
+        ; peek_seq_operator
+        ; peek_tuple_operator ]
+    >>= fun op ->
+    (* fail if disabled_op was passed and found *)
+    Option.value_map disabled_op ~default:(return op) ~f:(fun disabled_op ->
+        if equal_expr_infix_op disabled_op op.op then fail "operator disabled"
+        else return op ) )
 
 (**
    Set precedence and associativity for operators.
@@ -177,39 +174,55 @@ let get_prefix_binding_power = function
       95 (* a bit lower than application precedence *)
 
 let parse_expression =
-  let infix_fold_fun acc (op, rhs) =
-    match op with
-    | IOpApply ->
-        Exp_apply (acc, rhs)
-    | IOpList ->
-        Exp_construct (Ident "::", Some (Exp_tuple [acc; rhs]))
-    | IOpSeq ->
-        Exp_sequence (acc, rhs)
-    | IOpTuple -> (
-      match rhs with
-      | Exp_tuple l ->
-          Exp_tuple (acc :: l)
-      | _ ->
-          Exp_tuple [acc; rhs] )
-    | IOpCustom op ->
-        Exp_apply (Exp_apply (Exp_ident op, acc), rhs)
+  let parse_single_exp pexp =
+    ws
+    *> choice
+         [ parse_exp_ident
+         ; parse_exp_const
+         ; char '(' *> pexp None <* ws <* char ')'
+         ; parse_exp_empty_list_construct
+         ; parse_exp_let (pexp None)
+           (* disable seq operator in then and else blocks to maintain correct precedence *)
+         ; parse_exp_ite (pexp None) (pexp (Some IOpSeq)) ]
   in
-  let apply_prefix_op op exp =
-    Exp_apply
-      ( Exp_ident
-          ( match op with
-          | POpMinus ->
-              Ident "~-"
-          | POpPlus ->
-              Ident "~+"
-          | POpCustom id ->
-              id )
-      , exp )
+  let rec parse_ops disabled_op =
+    let infix_fold_fun acc (op, rhs) =
+      match op with
+      | IOpApply ->
+          Exp_apply (acc, rhs)
+      | IOpList ->
+          Exp_construct (Ident "::", Some (Exp_tuple [acc; rhs]))
+      | IOpSeq ->
+          Exp_sequence (acc, rhs)
+      | IOpTuple -> (
+        match rhs with
+        | Exp_tuple l ->
+            Exp_tuple (acc :: l)
+        | _ ->
+            Exp_tuple [acc; rhs] )
+      | IOpCustom op ->
+          Exp_apply (Exp_apply (Exp_ident op, acc), rhs)
+    in
+    let apply_prefix_op op exp =
+      Exp_apply
+        ( Exp_ident
+            ( match op with
+            | POpMinus ->
+                Ident "~-"
+            | POpPlus ->
+                Ident "~+"
+            | POpCustom id ->
+                id )
+        , exp )
+    in
+    fix (fun _ ->
+        parse_infix_prefix
+          ~parse_operand:(parse_single_exp parse_ops)
+          ~peek_infix_op:(peek_infix_op disabled_op)
+          ~get_infix_binding_power ~infix_fold_fun ~parse_prefix_op
+          ~get_prefix_binding_power ~apply_prefix_op )
   in
-  fix (fun pexp ->
-      parse_infix_prefix ~parse_operand:(parse_single_exp pexp) ~peek_infix_op
-        ~get_infix_binding_power ~infix_fold_fun ~parse_prefix_op
-        ~get_prefix_binding_power ~apply_prefix_op )
+  parse_ops None
 
 (* ======= Tests ======= *)
 
@@ -228,14 +241,30 @@ let%expect_test "parse_exp_let" =
        )) |}]
 
 let%expect_test "parse_exp_ifthenelse" =
-  pp pp_expression
-    (parse_exp_ite parse_expression)
-    "if a then (if b then c) else d" ;
+  pp pp_expression parse_expression "if a then (if b then c) else d" ;
   [%expect
     {|
     (Exp_ifthenelse ((Exp_ident (Ident "a")),
        (Exp_ifthenelse ((Exp_ident (Ident "b")), (Exp_ident (Ident "c")), None)),
        (Some (Exp_ident (Ident "d"))))) |}]
+
+let%expect_test "parse_if_with_seq1" =
+  pp pp_expression parse_expression "if a; b then c; d" ;
+  [%expect
+    {|
+    (Exp_sequence (
+       (Exp_ifthenelse (
+          (Exp_sequence ((Exp_ident (Ident "a")), (Exp_ident (Ident "b")))),
+          (Exp_ident (Ident "c")), None)),
+       (Exp_ident (Ident "d")))) |}]
+
+let%expect_test "parse_if_with_seq2" =
+  pp pp_expression parse_expression "if a; b then (c; d)" ;
+  [%expect
+    {|
+    (Exp_ifthenelse (
+       (Exp_sequence ((Exp_ident (Ident "a")), (Exp_ident (Ident "b")))),
+       (Exp_sequence ((Exp_ident (Ident "c")), (Exp_ident (Ident "d")))), None)) |}]
 
 let%expect_test "parse_list_op" =
   pp pp_expression parse_expression "(a :: b) :: c :: d :: []" ;
