@@ -35,6 +35,9 @@ val parse_value_name : string t
   must not be keyword
 *)
 
+val parse_constr_name : string t
+(** constr-name ::= (A..Z) \{ A..Z | a..z | 0..9 | _ | ' \} *)
+
 val parse_const : constant t
 
 val parse_let_binding :

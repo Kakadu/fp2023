@@ -10,6 +10,9 @@ let parse_exp_ident = parse_value_name >>| fun name -> Exp_ident (Ident name)
 
 let parse_exp_const = parse_const >>| fun const -> Exp_constant const
 
+let parse_exp_constr =
+  parse_constr_name >>| fun name -> Exp_construct (Ident name, None)
+
 (**
   [let P1 = E1 and P2 = E2 and ... and Pn = En in E]
   [let rec P1 PArg1 = E1 and P2 = E2 and ... and Pn = En in E]
@@ -149,6 +152,7 @@ let parse_expression =
     *> choice
          [ parse_exp_ident
          ; parse_exp_const
+         ; parse_exp_constr
          ; char '(' *> pexp None <* ws <* char ')'
            (* disable ; as it's a separator in lists *)
          ; parse_exp_list (pexp (Some IOpSeq))
@@ -159,8 +163,14 @@ let parse_expression =
   let rec parse_ops disabled_op =
     let infix_fold_fun acc (op, rhs) =
       match op with
-      | IOpApply ->
-          Exp_apply (acc, rhs)
+      | IOpApply -> (
+        match acc with
+        | Exp_construct (id, None) ->
+            (* constructor application *)
+            Exp_construct (id, Some rhs)
+        | _ ->
+            (* function application *)
+            Exp_apply (acc, rhs) )
       | IOpList ->
           Exp_construct (Ident "::", Some (Exp_tuple [acc; rhs]))
       | IOpSeq ->
@@ -251,6 +261,25 @@ let%expect_test "parse_if_with_seq2" =
     (Exp_ifthenelse (
        (Exp_sequence ((Exp_ident (Ident "a")), (Exp_ident (Ident "b")))),
        (Exp_sequence ((Exp_ident (Ident "c")), (Exp_ident (Ident "d")))), None)) |}]
+
+let%expect_test "parse_constr1" =
+  pp pp_expression parse_expression "Nil" ;
+  [%expect {| (Exp_construct ((Ident "Nil"), None)) |}]
+
+let%expect_test "parse_constr2" =
+  pp pp_expression parse_expression "Some x" ;
+  [%expect
+    {| (Exp_construct ((Ident "Some"), (Some (Exp_ident (Ident "x"))))) |}]
+
+let%expect_test "parse_constr3" =
+  pp pp_expression parse_expression "Cons (1, Nil)" ;
+  [%expect
+    {|
+    (Exp_construct ((Ident "Cons"),
+       (Some (Exp_tuple
+                [(Exp_constant (Const_integer 1));
+                  (Exp_construct ((Ident "Nil"), None))]))
+       )) |}]
 
 let%expect_test "parse_list" =
   pp pp_expression parse_expression "[a;b;c]" ;

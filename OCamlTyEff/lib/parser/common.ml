@@ -151,13 +151,29 @@ let parse_lowercase_ident =
       | _ ->
           false )
   in
-  let* name = lift2 String.( ^ ) parse_first parse_rest in
-  if not (is_keyword name) then return name
-  else fail (name ^ " keyword can't be used as value name")
+  lift2 String.( ^ ) parse_first parse_rest
+
+let parse_uppercase_ident =
+  let parse_first =
+    satisfy (function 'A' .. 'Z' -> true | _ -> false) >>| String.of_char
+  in
+  let parse_rest =
+    take_while (function
+      | 'A' .. 'Z' | 'a' .. 'z' | '0' .. '9' | '_' | '\'' ->
+          true
+      | _ ->
+          false )
+  in
+  lift2 String.( ^ ) parse_first parse_rest
 
 let parse_value_name =
   parse_lowercase_ident
   <|> (char '(' *> ws *> parse_custom_operator_name <* ws <* char ')')
+  >>= fun name ->
+  if not (is_keyword name) then return name
+  else fail (name ^ " keyword can't be used as value name")
+
+let parse_constr_name = parse_uppercase_ident
 
 (* ======= Constants ======= *)
 
