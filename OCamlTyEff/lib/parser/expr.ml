@@ -49,6 +49,22 @@ let parse_exp_list pexp =
   in
   char '[' *> parse_list <* ws <* char ']'
 
+let parse_match_cases pexp =
+  let parse_case =
+    lift2
+      (fun pat exp -> {left= pat; right= exp})
+      (parse_pattern <* ws <* string "->" <* ws)
+      pexp
+  in
+  option () (char '|' *> return ()) (* skip | if there *)
+  *> sep_by1 (ws *> char '|' *> ws) parse_case
+
+let parse_exp_match pexp_match pexp_with =
+  lift2
+    (fun exp cases -> Exp_match (exp, cases))
+    (string "match" *> pexp_match)
+    (ws *> string "with" *> ws *> parse_match_cases pexp_with)
+
 (* ======= Operators parsing ======= *)
 
 type expr_infix_op =
@@ -157,8 +173,10 @@ let parse_expression =
            (* disable ; as it's a separator in lists *)
          ; parse_exp_list (pexp (Some IOpSeq))
          ; parse_exp_let (pexp None)
-           (* disable ; in then and else blocks to maintain correct precedence *)
-         ; parse_exp_ite (pexp None) (pexp (Some IOpSeq)) ]
+           (* disable ; in [then] and [else] blocks to maintain correct precedence *)
+         ; parse_exp_ite (pexp None) (pexp (Some IOpSeq))
+           (* disable | in [with] block as it's used as cases separator *)
+         ; parse_exp_match (pexp None) (pexp (Some (IOpCustom (Ident "|")))) ]
   in
   let rec parse_ops disabled_op =
     let infix_fold_fun acc (op, rhs) =
@@ -222,7 +240,7 @@ let%expect_test "parse_custom_operator1" =
           ))
        )) |}]
 
-let%expect_test "parse_exp_let" =
+let%expect_test "parse_let" =
   pp pp_expression
     (parse_exp_let parse_expression)
     "let rec a = 1 and b = 2 in let e = 3 in a" ;
@@ -236,7 +254,7 @@ let%expect_test "parse_exp_let" =
           (Exp_ident (Ident "a"))))
        )) |}]
 
-let%expect_test "parse_exp_ifthenelse" =
+let%expect_test "parse_ifthenelse" =
   pp pp_expression parse_expression "if a then (if b then c) else d" ;
   [%expect
     {|
@@ -261,6 +279,26 @@ let%expect_test "parse_if_with_seq2" =
     (Exp_ifthenelse (
        (Exp_sequence ((Exp_ident (Ident "a")), (Exp_ident (Ident "b")))),
        (Exp_sequence ((Exp_ident (Ident "c")), (Exp_ident (Ident "d")))), None)) |}]
+
+let%expect_test "parse_match1" =
+  pp pp_expression parse_expression "match a with b -> c | d -> e" ;
+  [%expect
+    {|
+    (Exp_match ((Exp_ident (Ident "a")),
+       [{ left = (Pat_var "b"); right = (Exp_ident (Ident "c")) };
+         { left = (Pat_var "d"); right = (Exp_ident (Ident "e")) }]
+       )) |}]
+
+let%expect_test "parse_match2" =
+  pp pp_expression parse_expression "match a with | b | c | d -> e | f -> g" ;
+  [%expect
+    {|
+    (Exp_match ((Exp_ident (Ident "a")),
+       [{ left =
+          (Pat_or ((Pat_or ((Pat_var "b"), (Pat_var "c"))), (Pat_var "d")));
+          right = (Exp_ident (Ident "e")) };
+         { left = (Pat_var "f"); right = (Exp_ident (Ident "g")) }]
+       )) |}]
 
 let%expect_test "parse_constr1" =
   pp pp_expression parse_expression "Nil" ;
