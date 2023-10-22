@@ -21,19 +21,34 @@ let parse_single_pat ppat =
 
 (* ======= Operators parsing ======= *)
 
-type pat_infix_op = OpOr | OpTuple
+type pat_infix_op = OpOr | OpTuple | OpList
 
 let peek_infix_op =
-  peek_char_fail
-  >>= function
-  | '|' ->
-      return {op= OpOr; op_length= 1}
-  | ',' ->
-      return {op= OpTuple; op_length= 1}
-  | _ ->
-      fail "not a pattern infix operator"
+  let peek_tuple_or_ops =
+    peek_char_fail
+    >>= function
+    | '|' ->
+        return {op= OpOr; op_length= 1}
+    | ',' ->
+        return {op= OpTuple; op_length= 1}
+    | _ ->
+        fail "not a pattern infix operator"
+  in
+  let peek_list_op =
+    peek_string 2
+    >>= fun s ->
+    if String.equal s "::" then return {op= OpList; op_length= 2}
+    else fail "not a pattern list operator"
+  in
+  peek_tuple_or_ops <|> peek_list_op
 
-let get_infix_binding_power = function OpOr -> (1, 2) | OpTuple -> (5, 4)
+let get_infix_binding_power = function
+  | OpOr ->
+      (1, 2)
+  | OpTuple ->
+      (5, 4)
+  | OpList ->
+      (11, 10)
 
 let parse_pattern =
   let infix_fold_fun acc (op, rhs) =
@@ -46,6 +61,8 @@ let parse_pattern =
           Pat_tuple (acc :: tl)
       | _ ->
           Pat_tuple [acc; rhs] )
+    | OpList ->
+        Pat_construct (Ident "::", Some (Pat_tuple [acc; rhs]))
   in
   fix (fun ppat ->
       parse_infix_prefix ~parse_operand:(parse_single_pat ppat) ~peek_infix_op
@@ -88,3 +105,36 @@ let%expect_test "parse_pat_or_tuple" =
     {|
     (Pat_or ((Pat_tuple [(Pat_var "a"); (Pat_var "b")]),
        (Pat_tuple [(Pat_var "c"); (Pat_var "d")]))) |}]
+
+let%expect_test "parse_pat_list" =
+  pp pp_pattern parse_pattern "a::(b::c)::d" ;
+  [%expect
+    {|
+    (Pat_construct ((Ident "::"),
+       (Some (Pat_tuple
+                [(Pat_var "a");
+                  (Pat_construct ((Ident "::"),
+                     (Some (Pat_tuple
+                              [(Pat_construct ((Ident "::"),
+                                  (Some (Pat_tuple [(Pat_var "b"); (Pat_var "c")]))
+                                  ));
+                                (Pat_var "d")]))
+                     ))
+                  ]))
+       )) |}]
+
+let%expect_test "parse_pat_list_or_tuple" =
+  pp pp_pattern parse_pattern "a::b::c,d|e" ;
+  [%expect
+    {|
+    (Pat_or (
+       (Pat_tuple
+          [(Pat_construct ((Ident "::"),
+              (Some (Pat_tuple
+                       [(Pat_var "a");
+                         (Pat_construct ((Ident "::"),
+                            (Some (Pat_tuple [(Pat_var "b"); (Pat_var "c")]))))
+                         ]))
+              ));
+            (Pat_var "d")]),
+       (Pat_var "e"))) |}]
