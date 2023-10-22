@@ -4,7 +4,7 @@
  (modules demo_fact)
  (libraries Python.Lib)
  (preprocess
-  (pps ppx_show ppx_deriving.eq))
+  (pps ppx_show))
  (instrumentation
   (backend bisect_ppx)))
 
