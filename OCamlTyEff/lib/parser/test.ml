@@ -4,6 +4,44 @@ open Ast
 (** Parse string and pretty print the output *)
 let pp str = Stdlib.Format.printf "%a" pp_structure (Parser.parse_exn str)
 
+let%expect_test "parse_custom_operator1" =
+  pp "let (>>=) a b = a ** b" ;
+  [%expect
+    {|
+    [(Str_value (Nonrecursive,
+        [{ pat = (Pat_var ">>=");
+           expr =
+           (Exp_function ([(Pat_var "a"); (Pat_var "b")],
+              (Function_body
+                 (Exp_apply (
+                    (Exp_apply ((Exp_ident (Ident "**")), (Exp_ident (Ident "a"))
+                       )),
+                    (Exp_ident (Ident "b")))))
+              ))
+           }
+          ]
+        ))
+      ] |}]
+
+let%expect_test "parse_custom_operator2" =
+  pp "let (++) a b = a + b" ;
+  [%expect
+    {|
+    [(Str_value (Nonrecursive,
+        [{ pat = (Pat_var "++");
+           expr =
+           (Exp_function ([(Pat_var "a"); (Pat_var "b")],
+              (Function_body
+                 (Exp_apply (
+                    (Exp_apply ((Exp_ident (Ident "+")), (Exp_ident (Ident "a"))
+                       )),
+                    (Exp_ident (Ident "b")))))
+              ))
+           }
+          ]
+        ))
+      ] |}]
+
 let%expect_test "parse_comments" =
   pp
     "let(*sas*)rec(*firstcomment*)f n = (* second comment *) (* third \
