@@ -11,13 +11,21 @@ let parse_pat_var = parse_value_name >>| fun name -> Pat_var name
 
 let parse_pat_const = parse_const >>| fun const -> Pat_constant const
 
+(* [Cons (hd, tl)] *)
+let parse_pat_constr ppat_single =
+  let* name = parse_constr_name in
+  let* arg = option None (ppat_single <* ws >>| Option.some) in
+  return (Pat_construct (Ident name, arg))
+
 let parse_single_pat ppat =
-  ws
-  *> choice
-       [ parse_pat_any
-       ; parse_pat_var
-       ; parse_pat_const
-       ; char '(' *> ppat <* ws <* char ')' ]
+  fix (fun ppat_single ->
+      ws
+      *> choice
+           [ parse_pat_any
+           ; parse_pat_var
+           ; parse_pat_const
+           ; parse_pat_constr ppat_single
+           ; char '(' *> ppat <* ws <* char ')' ] )
 
 (* ======= Operators parsing ======= *)
 
@@ -84,6 +92,28 @@ let%expect_test "parse_pat_any" =
 let%expect_test "parse_pat_const" =
   pp pp_pattern parse_pattern "5" ;
   [%expect {| (Pat_constant (Const_integer 5)) |}]
+
+let%expect_test "parse_pat_constr1" =
+  pp pp_pattern parse_pattern "C" ;
+  [%expect {| (Pat_construct ((Ident "C"), None)) |}]
+
+let%expect_test "parse_pat_constr2" =
+  pp pp_pattern parse_pattern "C a" ;
+  [%expect {| (Pat_construct ((Ident "C"), (Some (Pat_var "a")))) |}]
+
+let%expect_test "parse_pat_constr2" =
+  pp pp_pattern parse_pattern "Cons (hd, tl)" ;
+  [%expect
+    {|
+    (Pat_construct ((Ident "Cons"),
+       (Some (Pat_tuple [(Pat_var "hd"); (Pat_var "tl")])))) |}]
+
+let%expect_test "parse_pat_constr_or_tuple" =
+  pp pp_pattern parse_pattern "C _ | a, b" ;
+  [%expect
+    {|
+    (Pat_or ((Pat_construct ((Ident "C"), (Some Pat_any))),
+       (Pat_tuple [(Pat_var "a"); (Pat_var "b")]))) |}]
 
 let%expect_test "parse_pat_or" =
   pp pp_pattern parse_pattern "a | (b | c) | d" ;
