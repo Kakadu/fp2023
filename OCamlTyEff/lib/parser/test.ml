@@ -4,6 +4,25 @@ open Ast
 (** Parse string and pretty print the output *)
 let pp str = Stdlib.Format.printf "%a" pp_structure (Parser.parse_exn str)
 
+let%expect_test "parse_commets" =
+  pp "let rec(*firstcomment*)f n = (* second comment *)(* third comment*) n + 1" ;
+  [%expect
+    {|
+    [(Str_value (Recursive,
+        [{ pat = (Pat_var "f");
+           expr =
+           (Exp_function ([(Pat_var "n")],
+              (Function_body
+                 (Exp_apply (
+                    (Exp_apply ((Exp_ident (Ident "+")), (Exp_ident (Ident "n"))
+                       )),
+                    (Exp_constant (Const_integer 1)))))
+              ))
+           }
+          ]
+        ))
+      ] |}]
+
 let%expect_test "parse_let_rec_without_whitespaces" =
   pp "letrec f n = n + 1" ;
   [%expect
