@@ -7,16 +7,20 @@ let pp printer parser str =
   @@ Result.ok_or_failwith
   @@ Angstrom.parse_string ~consume:Angstrom.Consume.All parser str
 
-let ws = skip_while Char.is_whitespace
+let skip_whitespaces = skip_while Char.is_whitespace
 
-let ws1 = take_while1 Char.is_whitespace *> return ()
+let skip_whitespaces1 = take_while1 Char.is_whitespace *> return ()
 
 let parse_comments =
-  ws *> string "(*" *> many_till any_char (string "*)") *> return ()
+  skip_whitespaces *> string "(*"
+  *> many_till any_char (string "*)")
+  *> return ()
 
-let ws = ws *> many parse_comments *> ws *> return ()
+let ws = many parse_comments *> skip_whitespaces
 
-let ws1 = choice [ws1 *> many parse_comments; many1 parse_comments] *> return ()
+let ws1 =
+  (skip_whitespaces1 *> many parse_comments <|> many1 parse_comments)
+  *> return ()
 
 (* ======= Value names ======= *)
 
