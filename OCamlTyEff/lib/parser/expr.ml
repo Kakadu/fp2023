@@ -50,8 +50,7 @@ let is_core_operator_char = function
   | _ ->
       false
 
-let is_operator_char x =
-  match x with
+let is_operator_char = function
   | '~' | '!' | '?' | '%' | '<' | ':' | '.' ->
       true
   | _ as x when is_core_operator_char x ->
@@ -59,7 +58,12 @@ let is_operator_char x =
   | _ ->
       false
 
-type expr_infix_op = IOpSeq | IOpList | IOpApply | IOpCustom of ident
+type expr_infix_op =
+  | IOpSeq
+  | IOpList
+  | IOpTuple
+  | IOpApply
+  | IOpCustom of ident
 
 (** Try to peek infix operator. If nothing found return IOpApply *)
 let peek_infix_op =
@@ -74,6 +78,12 @@ let peek_infix_op =
     >>= fun c ->
     if Char.equal c ';' then return {op= IOpSeq; op_length= 1}
     else fail "not a seq operator"
+  in
+  let peek_tuple_operator =
+    peek_char_fail
+    >>= fun c ->
+    if Char.equal c ',' then return {op= IOpTuple; op_length= 1}
+    else fail "not a tuple operator"
   in
   let peek_custom_infix_op =
     (* (core-operator-char | % | <) { operator-char } *)
@@ -96,7 +106,11 @@ let peek_infix_op =
   in
   option
     {op= IOpApply; op_length= 0} (* application operator is 0 chars long *)
-    (choice [peek_custom_infix_op; peek_list_operator; peek_seq_operator])
+    (choice
+       [ peek_custom_infix_op
+       ; peek_list_operator
+       ; peek_seq_operator
+       ; peek_tuple_operator ] )
 
 (**
    Set precedence and associativity for operators.
@@ -111,6 +125,8 @@ let get_infix_binding_power = function
       (81, 80)
   | IOpSeq ->
       (11, 10)
+  | IOpTuple ->
+      (51, 50)
   | IOpCustom (Ident id) ->
       let is_prefix prefix = String.is_prefix ~prefix id in
       let is_equal str = String.( = ) id str in
@@ -165,6 +181,12 @@ let parse_expression =
         Exp_construct (Ident "::", Some (Exp_tuple [acc; rhs]))
     | IOpSeq ->
         Exp_sequence (acc, rhs)
+    | IOpTuple -> (
+      match rhs with
+      | Exp_tuple l ->
+          Exp_tuple (acc :: l)
+      | _ ->
+          Exp_tuple [acc; rhs] )
     | IOpCustom op ->
         Exp_apply (Exp_apply (Exp_ident op, acc), rhs)
   in
@@ -243,6 +265,15 @@ let%expect_test "parse_seq_op" =
        (Exp_sequence ((Exp_ident (Ident "c")),
           (Exp_sequence ((Exp_ident (Ident "d")), (Exp_ident (Ident "e"))))))
        )) |}]
+
+let%expect_test "parse_tuple_op" =
+  pp pp_expression parse_expression "a, (b, c), d, e" ;
+  [%expect
+    {|
+    (Exp_tuple
+       [(Exp_ident (Ident "a"));
+         (Exp_tuple [(Exp_ident (Ident "b")); (Exp_ident (Ident "c"))]);
+         (Exp_ident (Ident "d")); (Exp_ident (Ident "e"))]) |}]
 
 let%expect_test "parse_plus_minus_prefix_op" =
   pp pp_expression parse_expression "1 + - + + 3" ;
