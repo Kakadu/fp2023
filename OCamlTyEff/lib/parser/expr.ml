@@ -48,20 +48,6 @@ let parse_exp_list pexp =
 
 (* ======= Operators parsing ======= *)
 
-let is_core_operator_char = function
-  | '$' | '&' | '*' | '+' | '-' | '/' | '=' | '>' | '@' | '^' | '|' ->
-      true
-  | _ ->
-      false
-
-let is_operator_char = function
-  | '~' | '!' | '?' | '%' | '<' | ':' | '.' ->
-      true
-  | _ as x when is_core_operator_char x ->
-      true
-  | _ ->
-      false
-
 type expr_infix_op =
   | IOpSeq
   | IOpList
@@ -94,23 +80,8 @@ let peek_infix_op disabled_op =
     else fail "not a tuple operator"
   in
   let peek_custom_infix_op =
-    (* (core-operator-char | % | <) { operator-char } *)
-    let peek_first =
-      peek_char_fail
-      >>= fun x ->
-      if is_core_operator_char x || Char.equal x '%' || Char.equal x '<' then
-        return (String.of_char x)
-      else fail "not a infix-symbol"
-    in
-    let rec peek_rest acc index =
-      peek_string index
-      >>| (fun s -> String.get s (String.length s - 1)) (* get last char *)
-      >>= fun c ->
-      if is_operator_char c then peek_rest (acc ^ String.of_char c) (index + 1)
-      else return acc
-    in
-    lift2 String.( ^ ) peek_first (peek_rest "" 2)
-    >>| fun id -> {op= IOpCustom (Ident id); op_length= String.length id}
+    peek_custom_infix_operator_name
+    >>| fun name -> {op= IOpCustom (Ident name); op_length= String.length name}
   in
   option
     {op= IOpApply; op_length= 0} (* application operator is 0 chars long *)
@@ -162,22 +133,9 @@ let parse_prefix_op =
   let parse_prefix_plus = char '+' *> return POpPlus in
   let parse_prefix_minus = char '-' *> return POpMinus in
   let parse_custom_prefix_op =
-    let parse_prefix1 =
-      (* ! { operator-char } *)
-      char '!' *> take_while is_operator_char >>| fun s -> "!" ^ s
-    in
-    let parse_prefix2 =
-      (* (?|~) { operator-char }+ *)
-      let parse_first =
-        satisfy (fun c -> Char.equal '?' c || Char.equal '~' c)
-        >>| String.of_char
-      in
-      let parse_rest = take_while1 is_operator_char in
-      lift2 String.( ^ ) parse_first parse_rest
-    in
-    parse_prefix1 <|> parse_prefix2 >>| fun id -> POpCustom (Ident id)
+    parse_custom_prefix_operator_name >>| fun id -> POpCustom (Ident id)
   in
-  parse_prefix_minus <|> parse_prefix_plus <|> parse_custom_prefix_op
+  choice [parse_prefix_minus; parse_prefix_plus; parse_custom_prefix_op]
 
 let get_prefix_binding_power = function
   | POpPlus | POpCustom _ ->
@@ -238,6 +196,21 @@ let parse_expression =
   parse_ops None
 
 (* ======= Tests ======= *)
+
+let%expect_test "parse_custom_operator1" =
+  pp pp_expression parse_expression "a >>= b ++ c ** d !+ e" ;
+  [%expect
+    {|
+    (Exp_apply ((Exp_apply ((Exp_ident (Ident ">>=")), (Exp_ident (Ident "a")))),
+       (Exp_apply (
+          (Exp_apply ((Exp_ident (Ident "++")), (Exp_ident (Ident "b")))),
+          (Exp_apply (
+             (Exp_apply ((Exp_ident (Ident "**")), (Exp_ident (Ident "c")))),
+             (Exp_apply ((Exp_ident (Ident "d")),
+                (Exp_apply ((Exp_ident (Ident "!+")), (Exp_ident (Ident "e"))))))
+             ))
+          ))
+       )) |}]
 
 let%expect_test "parse_exp_let" =
   pp pp_expression

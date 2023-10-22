@@ -11,9 +11,27 @@ val pp : (Format.formatter -> 'a -> unit) -> 'a t -> string -> unit
 val ws : unit t
 (** skip whitespaces *)
 
+val is_core_operator_char : char -> bool
+(** core-operator-char ::= \{$ | & | * | + | - | / | = | > | @ | ^ | \| \} *)
+
+val is_operator_char : char -> bool
+(** operator-char ::= \{~ | ! | ? | core-operator-char | % | < | : | .\} *)
+
+val peek_custom_infix_operator_name : string t
+(** 
+  infix-symbol ::= (core-operator-char | % | <) \{ operator-char \} 
+*)
+
+val parse_custom_prefix_operator_name : string t
+(**
+  prefix-symbol ::= ! \{ operator-char \} 
+                    | (? | ~) \{ operator-char \}+
+*)
+
 val parse_value_name : string t
 (**
-  value_name ::= (a..z | _) \{ A..Z | a..z | 0..9 | _ | ' \}
+  value-name ::= (a..z | _) \{ A..Z | a..z | 0..9 | _ | ' \}
+                 | (prefix-symbol ∣ infix-symbol) 
   must not be keyword
 *)
 

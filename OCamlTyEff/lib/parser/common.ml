@@ -22,6 +22,60 @@ let ws1 =
   (skip_whitespaces1 *> many parse_comments <|> many1 parse_comments)
   *> return ()
 
+(* ======= Operator names ======= *)
+
+let is_core_operator_char = function
+  | '$' | '&' | '*' | '+' | '-' | '/' | '=' | '>' | '@' | '^' | '|' ->
+      true
+  | _ ->
+      false
+
+let is_operator_char = function
+  | '~' | '!' | '?' | '%' | '<' | ':' | '.' ->
+      true
+  | _ as x when is_core_operator_char x ->
+      true
+  | _ ->
+      false
+
+let parse_custom_prefix_operator_name =
+  let parse_prefix1 =
+    (* ! { operator-char } *)
+    char '!' *> take_while is_operator_char >>| fun s -> "!" ^ s
+  in
+  let parse_prefix2 =
+    (* (?|~) { operator-char }+ *)
+    let parse_first =
+      satisfy (fun c -> Char.equal '?' c || Char.equal '~' c) >>| String.of_char
+    in
+    let parse_rest = take_while1 is_operator_char in
+    lift2 String.( ^ ) parse_first parse_rest
+  in
+  parse_prefix1 <|> parse_prefix2
+
+let peek_custom_infix_operator_name =
+  (* (core-operator-char | % | <) { operator-char } *)
+  let peek_first =
+    peek_char_fail
+    >>= fun c ->
+    if is_core_operator_char c || Char.equal c '%' || Char.equal c '<' then
+      return (String.of_char c)
+    else fail "not a infix-symbol"
+  in
+  let rec peek_rest acc index =
+    peek_string index
+    >>| (fun s -> String.get s (String.length s - 1)) (* get last char *)
+    >>= fun c ->
+    if is_operator_char c then peek_rest (acc ^ String.of_char c) (index + 1)
+    else return acc
+  in
+  lift2 String.( ^ ) peek_first (peek_rest "" 2)
+
+let parse_custom_operator_name =
+  parse_custom_prefix_operator_name
+  <|> ( peek_custom_infix_operator_name
+      >>= fun name -> advance (String.length name) *> return name )
+
 (* ======= Value names ======= *)
 
 let is_keyword = function
@@ -85,7 +139,7 @@ let is_keyword = function
   | _ ->
       false
 
-let parse_value_name =
+let parse_lowercase_ident =
   let parse_first =
     satisfy (function 'a' .. 'z' | '_' -> true | _ -> false)
     >>| String.of_char
@@ -100,6 +154,10 @@ let parse_value_name =
   let* name = lift2 String.( ^ ) parse_first parse_rest in
   if not (is_keyword name) then return name
   else fail (name ^ " keyword can't be used as value name")
+
+let parse_value_name =
+  parse_lowercase_ident
+  <|> (char '(' *> ws *> parse_custom_operator_name <* ws <* char ')')
 
 (* ======= Constants ======= *)
 
@@ -182,3 +240,23 @@ let parse_infix_prefix ~parse_operand ~peek_infix_op ~get_infix_binding_power
     >>| fun results -> List.fold_left ~init:lhs ~f:infix_fold_fun results
   in
   helper 0
+
+let%expect_test "parse_custom_operator_name1" =
+  pp Format.pp_print_string parse_value_name "(>>)" ;
+  [%expect {| >> |}]
+
+let%expect_test "parse_custom_operator_name2" =
+  pp Format.pp_print_string parse_value_name "(%>)" ;
+  [%expect {| %> |}]
+
+let%expect_test "parse_custom_operator_name3" =
+  pp Format.pp_print_string parse_value_name "(!)" ;
+  [%expect {| ! |}]
+
+let%expect_test "parse_custom_operator_name4" =
+  pp Format.pp_print_string parse_value_name "(~:=)" ;
+  [%expect {| ~:= |}]
+
+let%expect_test "parse_custom_operator_name5" =
+  pp Format.pp_print_string parse_value_name "(@<>)" ;
+  [%expect {| @<> |}]
