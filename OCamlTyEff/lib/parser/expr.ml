@@ -33,12 +33,16 @@ let parse_exp_ite pexp =
     ( option None (ws *> string "else" >>| Option.some)
     >>= function None -> return None | Some _ -> pexp >>| Option.some )
 
+let parse_exp_empty_list_construct =
+  string "[]" *> return (Exp_construct (Ident "[]", None))
+
 let parse_single_exp pexp =
   ws
   *> choice
        [ parse_exp_ident
        ; parse_exp_const
        ; char '(' *> pexp <* ws <* char ')'
+       ; parse_exp_empty_list_construct
        ; parse_exp_let pexp
        ; parse_exp_ite pexp ]
 
@@ -234,7 +238,7 @@ let%expect_test "parse_exp_ifthenelse" =
        (Some (Exp_ident (Ident "d"))))) |}]
 
 let%expect_test "parse_list_op" =
-  pp pp_expression parse_expression "(a :: b) :: c :: d :: e" ;
+  pp pp_expression parse_expression "(a :: b) :: c :: d :: []" ;
   [%expect
     {|
     (Exp_construct ((Ident "::"),
@@ -249,7 +253,9 @@ let%expect_test "parse_list_op" =
                                 (Exp_construct ((Ident "::"),
                                    (Some (Exp_tuple
                                             [(Exp_ident (Ident "d"));
-                                              (Exp_ident (Ident "e"))]))
+                                              (Exp_construct ((Ident "[]"), None
+                                                 ))
+                                              ]))
                                    ))
                                 ]))
                      ))
