@@ -12,9 +12,11 @@ let ws = skip_while Char.is_whitespace
 let ws1 = take_while1 Char.is_whitespace *> return ()
 
 let parse_comments =
-  string "(*" *> many_till any_char (string "*)") *> return ()
+  ws *> string "(*" *> many_till any_char (string "*)") *> return ()
 
-let ws = ws *> many (parse_comments *> ws) *> return ()
+let ws = ws *> many parse_comments *> ws *> return ()
+
+let ws1 = choice [ws1 *> many parse_comments; many1 parse_comments] *> return ()
 
 (* ======= Value names ======= *)
 
