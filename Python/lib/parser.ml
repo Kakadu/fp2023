@@ -243,10 +243,11 @@ let parse p s = parse_string ~consume:All p s
 
 (* A parser for Python *)
 let pyParser = sep_by skip_stmt_sep (p_exp_or_stmt.p_statement p_exp_or_stmt)
+let parser s = parse pyParser s
 
 (* Tests *)
 let%test _ =
-  parse pyParser "print(\"Hello World\")"
+  parser "print(\"Hello World\")"
   = Ok
       [ Expression (FunctionCall (Identifier "print", [ Const (String "Hello World") ])) ]
 ;;
