@@ -31,8 +31,20 @@ let parse_exp_ite pexp_if pexp_thenelse =
     >>= function None -> return None | Some _ -> pexp_thenelse >>| Option.some
     )
 
-let parse_exp_empty_list_construct =
-  string "[]" *> return (Exp_construct (Ident "[]", None))
+(** [a; b; c] *)
+let parse_exp_list pexp =
+  let parse_list =
+    sep_by (ws *> char ';') pexp
+    >>| fun list ->
+    let rec helper = function
+      | h :: tl ->
+          Exp_construct (Ident "::", Some (Exp_tuple [h; helper tl]))
+      | [] ->
+          Exp_construct (Ident "[]", None)
+    in
+    helper list
+  in
+  char '[' *> parse_list <* ws <* char ']'
 
 (* ======= Operators parsing ======= *)
 
@@ -180,9 +192,10 @@ let parse_expression =
          [ parse_exp_ident
          ; parse_exp_const
          ; char '(' *> pexp None <* ws <* char ')'
-         ; parse_exp_empty_list_construct
+           (* disable ; as it's a separator in lists *)
+         ; parse_exp_list (pexp (Some IOpSeq))
          ; parse_exp_let (pexp None)
-           (* disable seq operator in then and else blocks to maintain correct precedence *)
+           (* disable ; in then and else blocks to maintain correct precedence *)
          ; parse_exp_ite (pexp None) (pexp (Some IOpSeq)) ]
   in
   let rec parse_ops disabled_op =
@@ -265,6 +278,57 @@ let%expect_test "parse_if_with_seq2" =
     (Exp_ifthenelse (
        (Exp_sequence ((Exp_ident (Ident "a")), (Exp_ident (Ident "b")))),
        (Exp_sequence ((Exp_ident (Ident "c")), (Exp_ident (Ident "d")))), None)) |}]
+
+let%expect_test "parse_list" =
+  pp pp_expression parse_expression "[a;b;c]" ;
+  [%expect
+    {|
+    (Exp_construct ((Ident "::"),
+       (Some (Exp_tuple
+                [(Exp_ident (Ident "a"));
+                  (Exp_construct ((Ident "::"),
+                     (Some (Exp_tuple
+                              [(Exp_ident (Ident "b"));
+                                (Exp_construct ((Ident "::"),
+                                   (Some (Exp_tuple
+                                            [(Exp_ident (Ident "c"));
+                                              (Exp_construct ((Ident "[]"), None
+                                                 ))
+                                              ]))
+                                   ))
+                                ]))
+                     ))
+                  ]))
+       )) |}]
+
+let%expect_test "parse_list_with_seq" =
+  pp pp_expression parse_expression "[a;(b;c)]" ;
+  [%expect
+    {|
+    (Exp_construct ((Ident "::"),
+       (Some (Exp_tuple
+                [(Exp_ident (Ident "a"));
+                  (Exp_construct ((Ident "::"),
+                     (Some (Exp_tuple
+                              [(Exp_sequence ((Exp_ident (Ident "b")),
+                                  (Exp_ident (Ident "c"))));
+                                (Exp_construct ((Ident "[]"), None))]))
+                     ))
+                  ]))
+       )) |}]
+
+let%expect_test "parse_list_1element" =
+  pp pp_expression parse_expression "[a]" ;
+  [%expect
+    {|
+    (Exp_construct ((Ident "::"),
+       (Some (Exp_tuple
+                [(Exp_ident (Ident "a")); (Exp_construct ((Ident "[]"), None))]))
+       )) |}]
+
+let%expect_test "parse_list_empty" =
+  pp pp_expression parse_expression "[]" ;
+  [%expect {| (Exp_construct ((Ident "[]"), None)) |}]
 
 let%expect_test "parse_list_op" =
   pp pp_expression parse_expression "(a :: b) :: c :: d :: []" ;
