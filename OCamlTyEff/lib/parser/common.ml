@@ -11,6 +11,11 @@ let ws = skip_while Char.is_whitespace
 
 let ws1 = take_while1 Char.is_whitespace *> return ()
 
+let parse_comments =
+  string "(*" *> many_till any_char (string "*)") *> return ()
+
+let ws = ws *> many (parse_comments *> ws) *> return ()
+
 (* ======= Value names ======= *)
 
 let is_keyword = function
