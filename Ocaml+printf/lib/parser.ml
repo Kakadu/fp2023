@@ -213,3 +213,5 @@ let program_parser =
   let empty_decl = many (take_whitespaces *> string ";;") in
   many1 (empty_decl *> decl <* empty_decl) <* take_whitespaces
 ;;
+
+let parse s = parse_string ~consume:All program_parser s

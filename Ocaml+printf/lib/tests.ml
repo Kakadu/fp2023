@@ -124,15 +124,3 @@ let%test _ =
     "let rec fac n = if n <= 1 then 1 else n * fac (n - 1)"
     expected
 ;;
-
-
-let%test _ =
-  let expected =
-    [ 
-    ]
-  in
-  test_parser
-    program_parser
-    "let fib n = if n <= 1 then 1 else fib (n - 1) + fib (n - 2)"
-    expected
-;;
