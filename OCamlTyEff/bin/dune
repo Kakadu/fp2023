@@ -1,7 +1,0 @@
-(executable
- (name interpret)
- (public_name interpret)
- (libraries base ast parser))
-
-(cram
- (deps ./interpret.exe %{bin:interpret}))
