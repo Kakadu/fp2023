@@ -25,7 +25,11 @@ let eif_then_else condition true_b false_b = EIfThenElse (condition, true_b, fal
 let ematch_with expression cases = EMatchWith (expression, cases)
 (* ---------------- *)
 
-let keywords = [ "let"; "rec"; "match"; "with"; "if"; "then"; "else"; "in"; "fun"; "and" ]
+let is_keyword = function
+  | "let" | "rec" | "match" | "with" | "if" | "then" | "else" | "in" | "fun" | "and" ->
+    true
+  | _ -> false
+;;
 
 let is_whitespace = function
   | ' ' | '\t' | '\n' | '\r' -> true
@@ -48,3 +52,6 @@ let is_lower = function
   | 'a' .. 'z' -> true
   | _ -> false
 ;;
+
+let is_letter c = is_upper c || is_lower c
+let parens p = skip_wspace *> char '(' *> p <* char ')' <* skip_wspace
