@@ -1,6 +1,6 @@
 (library
  (name ocaml_printf_lib)
- (public_name OcamlPrintf.Lib)
+ (public_name Ocaml+printf.Lib)
  (modules Ast Parser Tests)
  (libraries base stdlib angstrom)
  (inline_tests)

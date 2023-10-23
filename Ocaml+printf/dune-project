@@ -15,7 +15,7 @@
 (homepage "https://github.com/aartdem/fp2023")
 
 (package
- (name OcamlPrintf)
+ (name Ocaml+printf)
  (synopsis "An interpreter for Ocaml with printf")
  (description
   "FIXME. A longer description, for example, which are the most interesing features being supported, etc. - TODO")
