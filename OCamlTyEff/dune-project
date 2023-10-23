@@ -4,8 +4,6 @@
 
 (generate_opam_files true)
 
-(cram enable)
-
 (authors "Andrei <therain.i@yahoo.com>" "Danil S <danil.slinchuk@gmail.com>")
 
 (maintainers
