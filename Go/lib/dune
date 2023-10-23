@@ -2,10 +2,11 @@
  (name lambda_lib)
  (public_name Lambda.Lib)
  (modules Ast Lambda Interpret Parser Printast Pprintast utils)
+ (inline_tests)
  (modules_without_implementation ast)
  (libraries base angstrom)
  (preprocess
-  (pps ppx_deriving.show))
+  (pps ppx_deriving.show ppx_inline_test))
  (instrumentation
   (backend bisect_ppx)))
 
