@@ -219,3 +219,15 @@ let program_parser =
 ;;
 
 let parse s = parse_string ~consume:All program_parser s
+
+(* simple inline unit tests *)
+let%test _ = parse_string ~consume:All expr_valname "   _" = Ok (Expr_val (LCIdent "_"))
+
+let%test _ =
+  parse_string ~consume:All expr_valname "a_Aasd0320"
+  = Ok (Expr_val (LCIdent "a_Aasd0320"))
+;;
+
+let%test _ = parse_string ~consume:All (parenthesis (char 'a')) "  (  a  )" = Ok 'a'
+let%test _ = parse_string ~consume:All expr_integer " 123" = Ok (Expr_const (Int 123))
+let%test _ = parse_string ~consume:All expr_integer "123" = Ok (Expr_const (Int 123))

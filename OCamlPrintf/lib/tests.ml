@@ -6,17 +6,6 @@ open Angstrom
 open Parser
 open Ast
 
-(* simple unit tests *)
-let%test _ = parse_string ~consume:All expr_valname "_" = Ok (Expr_val (LCIdent "_"))
-
-let%test _ =
-  parse_string ~consume:All expr_valname "_Aasd0320" = Ok (Expr_val (LCIdent "_Aasd0320"))
-;;
-
-let%test _ = parse_string ~consume:All expr_valname "a" = Ok (Expr_val (LCIdent "a"))
-let%test _ = parse_string ~consume:All (parenthesis (char 'a')) "  (  a  )" = Ok 'a'
-let%test _ = parse_string ~consume:All const_integer "123" = Ok (Int 123)
-
 (* helper function for inline testing *)
 let test_parser p input expected =
   let result = parse_string p ~consume:All input in
@@ -31,7 +20,7 @@ let test_parser p input expected =
     false
 ;;
 
-(* tests for interpretator *)
+(* tests for program_parser *)
 
 let%test _ =
   let expexted =
