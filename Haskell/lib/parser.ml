@@ -140,9 +140,10 @@ let pgeq = pbinop ">=" Geq
 let pexpr =
   fix
   @@ fun pexpr ->
-  let pexprvar = expr_var <$> pname in
   let pexprlit = expr_lit <$> plit in
-  let pvalue = choice [ pexprlit; pexprvar; (* pneg; *) pparens pexpr ] in
+  let pexprvar = expr_var <$> pname in
+  let pneg = char '-' *> (pexprlit <|> pparens pexpr) >>| fun e -> ExprUnOp (Neg, e) in
+  let pvalue = choice [ pexprlit; pexprvar; pneg; pparens pexpr ] in
   let pebinop =
     let app = chainl1 pvalue (return expr_app) in
     let pmuldiv =
