@@ -6,11 +6,11 @@
   (flags
    (:standard -warn-error -A -w -58))))
 
-(executable
- (name REPL)
- (public_name REPL)
- (modules REPL)
- (libraries DSyresenkov.Lib stdio))
+; (executable
+;  (name REPL)
+;  (public_name REPL)
+;  (modules REPL)
+;  (libraries DSyresenkov.Lib stdio))
 
-(cram
- (deps ./REPL.exe %{bin:REPL}))
+; (cram
+;  (deps ./REPL.exe %{bin:REPL}))
