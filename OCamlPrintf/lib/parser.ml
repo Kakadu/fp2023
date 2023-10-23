@@ -75,7 +75,7 @@ let const_integer =
 
 let expr_integer = take_whitespaces *> const_integer >>| fun x -> Expr_const x
 
-(* fails if s with characters after that can be interpreted by Ocaml as user-defined operator *)
+(* fails if s with characters after that can be interpreted by OCaml as user-defined operator *)
 let op_parse_helper s =
   let second_operator_char = function
     | '$'
