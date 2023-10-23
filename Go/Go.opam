@@ -23,7 +23,7 @@ depends: [
   "adding"
   "dependencies"
   "to"
-  "'dune'"
+  "dune"
   "files"
   "and"
   "the"
