@@ -53,6 +53,7 @@ let chainl1 e op =
 let pwspaces = take_while is_ws
 let pwspaces1 = take_while1 is_ws
 let pspaces = take_while (fun c -> is_ws c || is_eol c)
+let pspaces1 = take_while1 (fun c -> is_ws c || is_eol c)
 let ptoken p = pwspaces *> p
 let ptoken1 p = pwspaces1 *> p
 let pstoken s = ptoken (string s)
@@ -173,13 +174,25 @@ let pexpr =
     >>= fun then_branch ->
     pexpr >>| fun else_branch -> ExprIf (cond, then_branch, else_branch)
   in
+  (* let pcase =
+     pstoken "case" *> ptoken pexpr
+     <* pstoken1 "of"
+     <* pspaces1
+     >>= fun caseexpr ->
+     many1
+     (ppat
+     <* string "->"
+     <* space
+     >>= fun pat -> parse_expr <* space >>| fun result_expr -> pat, result_expr)
+     >>| fun branches -> Case (case_expr, branches)
+     in *)
   choice [ pif; pebinop ]
 ;;
 
 let pdecl =
-  lift2 dec_let (ptoken ppat) (lift2 expr_fun (many ppat) (pstoken1 "=" *> ptoken pexpr))
-  <* pwspaces
+  lift2 dec_let (ptoken ppat) (lift2 expr_fun (many ppat) (pstoken "=" *> ptoken pexpr))
+  <* pspaces
 ;;
 
-let pprog = many pdecl
+let pprog : prog t = many1 (ptoken pdecl <* ptoken @@ many @@ pstoken ";;")
 let parse s = parse_string ~consume:All pprog s

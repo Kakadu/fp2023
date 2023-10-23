@@ -1,0 +1,9 @@
+(executable
+ (name haskellParser)
+ (public_name haskellParser)
+ (libraries haskellLib base)
+ (instrumentation
+  (backend bisect_ppx)))
+
+(cram
+ (deps ./haskellParser.exe))
