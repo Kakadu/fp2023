@@ -293,3 +293,7 @@ let%expect_test "parse_value_name_operator4" =
 let%expect_test "parse_value_name_operator5" =
   pp Stdlib.Format.pp_print_string parse_value_name "(@<>)" ;
   [%expect {| @<> |}]
+
+let%expect_test "parse_constr_name" =
+  pp Stdlib.Format.pp_print_string parse_constr_name "Nil";
+  [%expect {| Nil |}]
