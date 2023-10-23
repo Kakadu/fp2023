@@ -6,11 +6,11 @@
 
 (cram enable)
 
-(authors "Andrei <therain.i@yahoo.com>" "Danil S <danil.slinchuk@gmail.com")
+(authors "Andrei <therain.i@yahoo.com>" "Danil S <danil.slinchuk@gmail.com>")
 
 (maintainers
  "Andrei <therain.i@yahoo.com>"
- "Danil S <danil.slinchuk@gmail.com")
+ "Danil S <danil.slinchuk@gmail.com>")
 
 (license MIT)
 
