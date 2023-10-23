@@ -32,12 +32,14 @@ type un_op =
 [@@deriving eq, show { with_path = false }]
 
 type expr =
-  | Const of const
-  | BinaryOperation of bin_op * expr * expr
-  | UnaryOperation of un_op * expr
-  | Identifier of id
-  | Application of expr * expr
-  | Fun of id list * expr
-  | Declaration of id * id list * expr
-  | RecDeclaration of id * id list * expr
+  | EConst of const
+  | EBinaryOperation of bin_op * expr * expr
+  | EUnaryOperation of un_op * expr
+  | EIdentifier of id
+  | EApplication of expr * expr
+  | EFun of id list * expr
+  | EDeclaration of id * id list * expr
+  | ERecDeclaration of id * id list * expr
+  | EIfThenElse of expr * expr * expr
+  | EMatchWith of expr * (expr * expr) list
 [@@deriving eq, show { with_path = false }]
