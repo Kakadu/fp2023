@@ -1,4 +1,4 @@
-(** Copyright 2021-2023, aartdem *)
+(** Copyright 2023, aartdem *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
@@ -60,15 +60,22 @@ let%test _ =
                 , Bin_op
                     ( Div
                     , Expr_const (Int 10)
-                    , Bin_op (Add, Expr_const (Int 2), Expr_const (Int 5)) )
-                , Bin_op (Sub, Expr_const (Int 7), Expr_const (Int 1)) )
+                    , Bin_op
+                        ( Add
+                        , Expr_const (Int 2)
+                        , Un_op (Un_plus, Un_op (Un_plus, Expr_const (Int 5))) ) )
+                , Bin_op (Add, Expr_const (Int 7), Un_op (Un_minus, Expr_const (Int 1)))
+                )
             , Bin_op
                 ( Add
                 , Expr_const (Int 1)
                 , Bin_op (Mul, Expr_const (Int 2), Expr_const (Int 3)) ) ) )
     ]
   in
-  test_parser program_parser "let a =  10/( 2+5 )*( 7  - 1) - ( 1 + 2*  3 ) " expexted
+  test_parser
+    program_parser
+    "let a =  10/( 2+(+ +5) )*( 7 + - 1) - ( 1 + 2*  3 ) "
+    expexted
 ;;
 
 let%test _ =

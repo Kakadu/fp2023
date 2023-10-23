@@ -1,4 +1,4 @@
-(** Copyright 2021-2023, aartdem *)
+(** Copyright 2023, aartdem *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
@@ -161,44 +161,46 @@ let chainl1 e op =
   e >>= fun init -> go init
 ;;
 
-let rec unary_op expr_parser =
-  take_whitespaces *> peek_char
-  >>= function
-  | Some c when c = '+' || c = '-' ->
-    op_parse_helper (Base.String.of_char c)
-    *> (take_whitespaces *> parenthesis (unary_op expr_parser) <|> unary_op expr_parser)
-    >>| fun e -> if c = '+' then Un_op (Un_plus, e) else Un_op (Un_minus, e)
-  | _ -> expr_parser
+let unary_op expr_item_parser =
+  fix (fun cur_expr ->
+    take_whitespaces
+    *> choice
+         [ (op_parse_helper "+" *> cur_expr >>| fun e -> Un_op (Un_plus, e))
+         ; (op_parse_helper "-" *> cur_expr >>| fun e -> Un_op (Un_minus, e))
+         ; expr_item_parser
+         ])
 ;;
 
-let rec if_then_else expr_parser =
-  lift3
-    (fun e1 e2 e3 -> ITE (e1, e2, e3))
-    (keyword "if" >>= fun _ -> if_then_else expr_parser <|> expr_parser)
-    (keyword "then" >>= fun _ -> if_then_else expr_parser <|> expr_parser)
-    (keyword "else" >>= fun _ -> if_then_else expr_parser <|> expr_parser)
+let if_then_else expr_item_parser =
+  fix (fun cur_expr ->
+    lift3
+      (fun e1 e2 e3 -> ITE (e1, e2, e3))
+      (keyword "if" *> (cur_expr <|> expr_item_parser))
+      (keyword "then" *> (cur_expr <|> expr_item_parser))
+      (keyword "else" *> (cur_expr <|> expr_item_parser))
+    <|> expr_item_parser)
 ;;
 
 let expr =
-  fix (fun cur_parser ->
-    let cur_parser = expr_integer <|> expr_valname <|> parenthesis cur_parser in
-    let cur_parser = chainl1 cur_parser (return (fun e1 e2 -> App (e1, e2))) in
-    let cur_parser = unary_op cur_parser in
-    let cur_parser = chainl1 cur_parser (mul <|> div) in
-    let cur_parser = chainl1 cur_parser (add <|> sub) in
-    let cur_parser = chainl1 cur_parser rel in
-    let cur_parser = if_then_else cur_parser <|> cur_parser in
-    cur_parser)
+  fix (fun cur_expr ->
+    let cur_expr = expr_integer <|> expr_valname <|> parenthesis cur_expr in
+    let cur_expr = chainl1 cur_expr (return (fun e1 e2 -> App (e1, e2))) in
+    let cur_expr = unary_op cur_expr in
+    let cur_expr = chainl1 cur_expr (mul <|> div) in
+    let cur_expr = chainl1 cur_expr (add <|> sub) in
+    let cur_expr = chainl1 cur_expr rel in
+    let cur_expr = if_then_else cur_expr in
+    cur_expr)
 ;;
 
-let rec decl_fun expr_parser =
-  valname
-  >>= fun valname ->
-  choice
-    [ (take_whitespaces *> char '=' *> expr_parser >>| fun expr -> Fun (valname, expr))
-    ; (take_whitespaces1 *> decl_fun expr_parser
-       >>| fun fun_expr -> Fun (valname, fun_expr))
-    ]
+let fun_args =
+  fix (fun cur_parser ->
+    valname
+    >>= fun valname ->
+    choice
+      [ (take_whitespaces *> char '=' *> expr >>| fun fun_expr -> Fun (valname, fun_expr))
+      ; (take_whitespaces1 *> cur_parser >>| fun fun_expr -> Fun (valname, fun_expr))
+      ])
 ;;
 
 let decl =
@@ -207,8 +209,7 @@ let decl =
        (fun rec_flag name expr -> Let_decl (rec_flag, name, expr))
        (option false (keyword1 "rec" >>| fun s -> String.equal s "rec"))
        (take_whitespaces1 *> valname)
-       (take_whitespaces *> op_parse_helper "=" *> expr
-        <|> take_whitespaces1 *> decl_fun expr)
+       (take_whitespaces *> op_parse_helper "=" *> expr <|> take_whitespaces1 *> fun_args)
   <* take_whitespaces
   <* option "" (string ";;")
 ;;
