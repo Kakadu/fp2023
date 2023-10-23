@@ -1,6 +1,11 @@
-(** Copyright 2021-2023, Ilya Syresenkov *)
+(** Copyright 2021-2023, Kakadu, Ilya Syresenkov and contributors *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
+
+(*
+   TODO:
+   1. Add pretty print
+*)
 
 (** ***** UNIT TESTS COULD GO HERE (JUST AN EXAMPLE) *)
 let rec fact n = if n = 1 then 1 else n * fact (n - 1)
