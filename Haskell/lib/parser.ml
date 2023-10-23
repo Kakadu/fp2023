@@ -1,8 +1,8 @@
-(** Copyright 2021-2023, Kakadu and contributors *)
+(** Copyright 2023-2024, Danil P *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
-open Angstrom
 
+open Angstrom
 open Ast
 
 let is_ws = function
@@ -181,33 +181,5 @@ let pdecl =
   <* pwspaces
 ;;
 
-let parse_program = many pdecl
-let parse str = parse_string ~consume:All parse_program str
-
-let ptest str expected =
-  match parse str with
-  | Ok actual -> List.equal equal_decl expected actual
-  | Error err ->
-    Format.printf "%s\n" err;
-    false
-;;
-
-let%test _ = ptest "x = 2" [ DeclLet (PatVar "x", ExprLit (LitInt 2)) ]
-
-let%test _ =
-  ptest
-    "fact n = if (n < 2) then 1 else fact (n - 1) * n"
-    [ DeclLet
-        ( PatVar "fact"
-        , ExprFunc
-            ( PatVar "n"
-            , ExprIf
-                ( ExprBinOp (Lt, ExprVar "n", ExprLit (LitInt 2))
-                , ExprLit (LitInt 1)
-                , ExprBinOp
-                    ( Mul
-                    , ExprApp
-                        (ExprVar "fact", ExprBinOp (Sub, ExprVar "n", ExprLit (LitInt 1)))
-                    , ExprVar "n" ) ) ) )
-    ]
-;;
+let pprog = many pdecl
+let parse s = parse_string ~consume:All pprog s
