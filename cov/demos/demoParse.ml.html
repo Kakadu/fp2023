@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8"/>
     <title>demoParse.ml &mdash; Coverage report</title>
-    <meta name="description" content="71.43% coverage in demos/demoParse.ml">
+    <meta name="description" content="60.00% coverage in demos/demoParse.ml">
     <link rel="stylesheet" href="../coverage.css"/>
     <script src="../highlight.pack.js"></script>
     <script>hljs.initHighlightingOnLoad();</script>
@@ -15,7 +15,7 @@
           <span class="dirname">demos/</span>demoParse.ml
         </a>
       </h1>
-      <h2>71.43%</h2>
+      <h2>60.00%</h2>
     </div>
     <div id="navbar">
       <span class="unvisited" style="bottom:8.33%"></span>
@@ -27,7 +27,7 @@
 <a id="L2"></a><span > </span>
 <a id="L3"></a><span > </span>
 <a id="L4"></a><span > </span>
-<a id="L5"></a><span class="visited"> </span>
+<a id="L5"></a><span > </span>
 <a id="L6"></a><span > </span>
 <a id="L7"></a><span > </span>
 <a id="L8"></a><span > </span>
@@ -52,17 +52,17 @@
 <a href="#L11">11</a>
 <a href="#L12">12</a>
 </pre>
-<pre><code class="ocaml">(** Copyright 2021-2022, Kakadu and contributors *)
+<pre><code class="ocaml">(** Copyright 2021-2023, aartdem *)
 
-(** SPDX-License-Identifier: CC0-1.0 *)
+(** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-let parse inp = <span data-count="2">A</span>ngstrom.parse_string ~consume:All Lib.Parser.statement_parser inp
+open Ocaml_printf_lib
 
 let () =
-  let inp = Stdio.In_channel.input_all Caml.stdin in
-  <span data-count="2">m</span>atch parse inp with
-  | <span data-count="2">R</span>esult.Ok x -&gt; Format.print<span data-count="2">f</span> "Parse result: %s" (Lib.Ast.show_comman<span data-count="2">d</span> x)
-  | <span data-count="0">E</span>rror e -&gt; Format.print<span data-count="0">f</span> "Error%s" e
+  let s = Stdio.In_channel.input_all Stdlib.stdin in
+  <span data-count="1">m</span>atch Ocaml_printf_lib.Parser.parse s with
+  | <span data-count="1">R</span>esult.Ok ast -&gt; Format.print<span data-count="1">f</span> "%a\n%!" Ast.pp_program ast
+  | <span data-count="0">E</span>rror msg -&gt; Format.print<span data-count="0">f</span> "Error %s\n" msg
 ;;
 </code></pre>
       </div>
