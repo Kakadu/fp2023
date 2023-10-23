@@ -2,14 +2,16 @@
 opam-version: "2.0"
 synopsis: "OCaml interpreter with support for typed effects"
 description: "OCaml interpreter with support for typed effects"
-maintainer: ["Andrei Sukharev" "Danil Slinchuk"]
-authors: ["Andrei Sukharev" "Danil Slinchuk"]
+maintainer: [
+  "Andrei <therain.i@yahoo.com>" "Danil S <danil.slinchuk@gmail.com"
+]
+authors: ["Andrei <therain.i@yahoo.com>" "Danil S <danil.slinchuk@gmail.com"]
 license: "MIT"
 homepage: "https://github.com/therain7/OCamlTyEff"
-bug-reports: "https://github.com/therain7/OCamlTyEff"
+bug-reports: "https://github.com/therain7/OCamlTyEff/issues"
 depends: [
   "ocaml"
-  "dune" {>= "3.11"}
+  "dune" {>= "3.7"}
   "base"
   "angstrom"
   "ppx_deriving"

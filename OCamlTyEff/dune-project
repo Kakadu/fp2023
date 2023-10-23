@@ -1,12 +1,16 @@
-(lang dune 3.11)
+(lang dune 3.7)
 
 (name OCamlTyEff)
 
 (generate_opam_files true)
 
+(cram enable)
+
 (authors "Andrei <therain.i@yahoo.com>" "Danil S <danil.slinchuk@gmail.com")
 
-(maintainers "Andrei <therain.i@yahoo.com>" "Danil S <danil.slinchuk@gmail.com")
+(maintainers
+ "Andrei <therain.i@yahoo.com>"
+ "Danil S <danil.slinchuk@gmail.com")
 
 (license MIT)
 
