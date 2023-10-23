@@ -25,9 +25,21 @@ let is_digit = function
   | _ -> false
 ;;
 
-(* not all cases are considered for now *)
+(* maybe not all cases are considered for now *)
 let is_keyword = function
-  | "let" | "rec" | "if" | "then" | "else" | "fun" | "not" -> true
+  | "and"
+  | "else"
+  | "false"
+  | "fun"
+  | "function"
+  | "if"
+  | "in"
+  | "let"
+  | "match"
+  | "or"
+  | "rec"
+  | "then"
+  | "true" -> true
   | _ -> false
 ;;
 
@@ -48,9 +60,6 @@ let valname =
 ;;
 
 let expr_valname = take_whitespaces *> valname >>| fun x -> Expr_val x
-let left_bracket = take_whitespaces *> char '('
-let right_bracket = take_whitespaces *> char ')'
-let parenthesis p = left_bracket *> take_whitespaces *> p <* right_bracket
 
 let const_integer =
   token
@@ -62,16 +71,27 @@ let const_integer =
 
 let expr_integer = take_whitespaces *> const_integer >>| fun x -> Expr_const x
 
-let chainl1 e op =
-  let rec go acc = lift2 (fun f x -> f acc x) op e >>= go <|> return acc in
-  e >>= fun init -> go init
-;;
-
-(* fails if s with characters after that can be interpreted by Ocaml as user-defined operator
-   not all cases are considered for now *)
+(* fails if s with characters after that can be interpreted by Ocaml as user-defined operator *)
 let op_parse_helper s =
   let second_operator_char = function
-    | '$' | '&' | '*' | '+' | '-' | '/' | '=' | '>' | '@' | '^' | '|' | '<' -> true
+    | '$'
+    | '&'
+    | '*'
+    | '+'
+    | '-'
+    | '/'
+    | '='
+    | '>'
+    | '@'
+    | '^'
+    | '|'
+    | '%'
+    | '<'
+    | '!'
+    | '.'
+    | ':'
+    | '?'
+    | '~' -> true
     | _ -> false
   in
   string s *> peek_char
@@ -79,6 +99,10 @@ let op_parse_helper s =
   | Some x when second_operator_char x -> fail "unsopported operator"
   | _ -> return ""
 ;;
+
+let left_bracket = take_whitespaces *> char '('
+let right_bracket = take_whitespaces *> char ')'
+let parenthesis p = left_bracket *> take_whitespaces *> p <* right_bracket
 
 let mul =
   take_whitespaces *> op_parse_helper "*" *> return (fun e1 e2 -> Bin_op (Mul, e1, e2))
@@ -94,16 +118,6 @@ let add =
 
 let sub =
   take_whitespaces *> op_parse_helper "-" *> return (fun e1 e2 -> Bin_op (Sub, e1, e2))
-;;
-
-let rec unary_op expr_parser =
-  take_whitespaces *> peek_char
-  >>= function
-  | Some c when c = '+' || c = '-' ->
-    op_parse_helper (Base.String.of_char c)
-    *> (take_whitespaces *> parenthesis (unary_op expr_parser) <|> unary_op expr_parser)
-    >>| fun e -> if c = '+' then Un_op (Un_plus, e) else Un_op (Un_minus, e)
-  | _ -> expr_parser
 ;;
 
 let rel =
@@ -138,6 +152,21 @@ let keyword1 s =
   >>= fun res -> if res = s then return s else fail "keyword expected"
 ;;
 
+let chainl1 e op =
+  let rec go acc = lift2 (fun f x -> f acc x) op e >>= go <|> return acc in
+  e >>= fun init -> go init
+;;
+
+let rec unary_op expr_parser =
+  take_whitespaces *> peek_char
+  >>= function
+  | Some c when c = '+' || c = '-' ->
+    op_parse_helper (Base.String.of_char c)
+    *> (take_whitespaces *> parenthesis (unary_op expr_parser) <|> unary_op expr_parser)
+    >>| fun e -> if c = '+' then Un_op (Un_plus, e) else Un_op (Un_minus, e)
+  | _ -> expr_parser
+;;
+
 let rec if_then_else expr_parser =
   lift3
     (fun e1 e2 e3 -> ITE (e1, e2, e3))
@@ -145,8 +174,6 @@ let rec if_then_else expr_parser =
     (keyword "then" >>= fun _ -> if_then_else expr_parser <|> expr_parser)
     (keyword "else" >>= fun _ -> if_then_else expr_parser <|> expr_parser)
 ;;
-
-(* let rec rec_expr = *)
 
 let expr =
   fix (fun cur_parser ->
