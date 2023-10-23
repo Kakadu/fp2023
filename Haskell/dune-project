@@ -12,7 +12,7 @@
 
 (bug_reports "github.com/ancavar/fp2023/issues")
 
-(homepage "")
+(homepage "github.com/ancavar/fp2023/issues")
 
 (package
  (name Haskell)
