@@ -3,9 +3,11 @@ opam-version: "2.0"
 synopsis: "OCaml interpreter with support for typed effects"
 description: "OCaml interpreter with support for typed effects"
 maintainer: [
-  "Andrei <therain.i@yahoo.com>" "Danil S <danil.slinchuk@gmail.com"
+  "Andrei <therain.i@yahoo.com>" "Danil S <danil.slinchuk@gmail.com>"
 ]
-authors: ["Andrei <therain.i@yahoo.com>" "Danil S <danil.slinchuk@gmail.com"]
+authors: [
+  "Andrei <therain.i@yahoo.com>" "Danil S <danil.slinchuk@gmail.com>"
+]
 license: "MIT"
 homepage: "https://github.com/therain7/OCamlTyEff"
 bug-reports: "https://github.com/therain7/OCamlTyEff/issues"
