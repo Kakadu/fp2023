@@ -1,6 +1,6 @@
 (library
  (name haskellLib)
- (public_name haskell.lib)
+ (public_name Haskell.lib)
  (modules Parser Ast)
  (libraries base angstrom ppx_show.runtime)
  (instrumentation
