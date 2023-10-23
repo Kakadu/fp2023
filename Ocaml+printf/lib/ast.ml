@@ -1,3 +1,7 @@
+(** Copyright 2021-2023, aartdem *)
+
+(** SPDX-License-Identifier: LGPL-3.0-or-later *)
+
 type const =
   | Int of int (**  1 *)
   | Bool of bool (** true *)
