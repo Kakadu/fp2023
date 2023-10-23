@@ -1,23 +1,19 @@
-### An implementaion of Lambda mini-language
+### An implementaion of Python mini-language
 
 This is a homework for functional programming course.
 
 License: LGPL for implementation code + WTFPL for test examles in miniLanguage
 
-Author: Vasy Pupkin, vasya@pupkin.com
+Author: Averin Pavel, st107211@student.spbu.ru
 
 Features done (append only):
 
-- Parser  (for example)
-- interpreter of non-recursive functions (for example)
-- ...
+- Factorial parser 
 
 Features in progress (and TODOs):
 
-- Interpreter of recursive functions is not yet ready  (for example)
-- TODO: make pretty-printing less memory consuming (for example)
-- ...
-
+- The rest of the parser 
+- Interpreter 
 
 ##### Замечания по стилю кодирования
 
