@@ -10,6 +10,10 @@
 
 (license MIT)
 
+(homepage "https://github.com/therain7/OCamlTyEff")
+
+(bug_reports "https://github.com/therain7/OCamlTyEff/issues")
+
 (package
  (name OCamlTyEff)
  (synopsis "OCaml interpreter with support for typed effects")
