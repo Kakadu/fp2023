@@ -2,7 +2,7 @@
 
 (** SPDX-License-Identifier: CC0-1.0 *)
 
-open Lambda_lib
+open Go_lib
 open Ast
 open Lambda
 open Utils

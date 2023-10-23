@@ -1,6 +1,6 @@
 (library
- (name lambda_lib)
- (public_name Lambda.Lib)
+ (name Go_lib)
+ (public_name Go.Lib)
  (modules Ast Lambda Interpret Parser Printast Pprintast utils)
  (inline_tests)
  (modules_without_implementation ast)
@@ -13,7 +13,7 @@
 (library
  (name tests)
  (modules tests)
- (libraries lambda_lib)
+ (libraries Go_lib)
  (preprocess
   (pps ppx_expect ppx_deriving.show))
  (instrumentation

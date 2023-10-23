@@ -13,7 +13,7 @@ let%test _ = fact 5 = 120 *)
   Read about dune's cram tests and put the test into `demos/somefile.t`.
 *)
 
-open Lambda_lib
+open Go_lib
 open Parser
 
 let parse_optimistically str = Result.get_ok (parse str)

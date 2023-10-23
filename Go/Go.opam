@@ -18,6 +18,19 @@ depends: [
   "bisect_ppx"
   "odoc" {with-doc}
   "ocamlformat" {build}
+  "base"
+  "After"
+  "adding"
+  "dependencies"
+  "to"
+  "'dune'"
+  "files"
+  "and"
+  "the"
+  "same"
+  "dependecies"
+  "here"
+  "too"
 ]
 build: [
   ["dune" "subst"] {dev}
