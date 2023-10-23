@@ -1,0 +1,8 @@
+(library
+ (name Lib)
+ (inline_tests)
+ (preprocess
+  (pps ppx_inline_test ppx_deriving.show ppx_deriving.ord ppx_variants_conv))
+ (libraries angstrom)
+ (instrumentation
+  (backend bisect_ppx)))
