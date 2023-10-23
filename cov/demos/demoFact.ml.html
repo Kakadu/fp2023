@@ -74,9 +74,9 @@
 </pre>
 <pre><code class="ocaml">open C_lib
 
-
 let () =
-  let s = "int factorial(int n) {\n\
+  let s =
+    "int factorial(int n) {\n\
     \    if (n &gt;= 1) {\n\
     \      return n * factorial(n - 1);\n\
     \    }\n\
@@ -88,12 +88,12 @@ let () =
     \    int n = 5; \n\
     \    return factorial(n);\n\
     \  }\n\
-    \  " 
+    \  "
   in
   match Parser.parse s with
   | <span data-count="1">R</span>esult.Ok ast -&gt; Format.print<span data-count="1">f</span> "%a\n" Ast.pp_prog ast
   | <span data-count="0">E</span>rror _ -&gt; Format.print<span data-count="0">f</span> "Some error"
-  
+;;
 </code></pre>
       </div>
     </div>
