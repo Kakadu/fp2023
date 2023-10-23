@@ -1,3 +1,7 @@
+(** Copyright 2023 Danil S, Andrei *)
+
+(** SPDX-License-Identifier: MIT *)
+
 type ident = Ident of string  (** Identifiers *)
 [@@deriving show {with_path= false}, eq]
 

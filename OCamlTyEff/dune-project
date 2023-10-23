@@ -4,9 +4,9 @@
 
 (generate_opam_files true)
 
-(authors "Andrei Sukharev" "Danil Slinchuk")
+(authors "Andrei <therain.i@yahoo.com>" "Danil S <danil.slinchuk@gmail.com")
 
-(maintainers "Andrei Sukharev" "Danil Slinchuk")
+(maintainers "Andrei <therain.i@yahoo.com>" "Danil S <danil.slinchuk@gmail.com")
 
 (license MIT)
 
