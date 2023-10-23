@@ -15,7 +15,7 @@
 (homepage "")
 
 (package
- (name haskell)
+ (name Haskell)
  (synopsis "An interpreter for Haskell")
  (description
   "haskell is being supported pogchamp times 3 fire emoji times 3.")
