@@ -5,7 +5,9 @@
  (libraries base angstrom ast)
  (preprocess
   (pps ppx_expect ppx_deriving.eq))
- (inline_tests))
+ (inline_tests)
+ (instrumentation
+  (backend bisect_ppx)))
 
 (library
  (name test)
