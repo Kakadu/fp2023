@@ -8,16 +8,4 @@
 
 (cram
  (applies_to interpretTests)
- (deps
-  ./demoNO.exe
-  ./demoAO.exe
-  ./demoParse.exe
-  ../REPL.exe
-  ./demo_input.txt))
-
-(cram
- (applies_to parsingTests)
- (deps
-  ./demoParse.exe
-  ;
-  ))
+ (deps ./demoParse.exe))
