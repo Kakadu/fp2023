@@ -261,22 +261,35 @@ let parse_infix_prefix ~parse_operand ~peek_infix_op ~get_infix_binding_power
   in
   helper 0
 
-let%expect_test "parse_custom_operator_name1" =
-  pp Format.pp_print_string parse_value_name "(>>)" ;
+(* ======= Tests ======= *)
+let%expect_test "parse_value_name1" =
+  pp Stdlib.Format.pp_print_string parse_value_name "abc" ;
+  [%expect {| abc |}]
+
+let%expect_test "parse_value_name2" =
+  pp Stdlib.Format.pp_print_string parse_value_name "a0b'c_d" ;
+  [%expect {| a0b'c_d |}]
+
+let%expect_test "parse_value_name3" =
+  pp Stdlib.Format.pp_print_string parse_value_name "_0a" ;
+  [%expect {| _0a |}]
+
+let%expect_test "parse_value_name_operator1" =
+  pp Stdlib.Format.pp_print_string parse_value_name "(>>)" ;
   [%expect {| >> |}]
 
-let%expect_test "parse_custom_operator_name2" =
-  pp Format.pp_print_string parse_value_name "(%>)" ;
+let%expect_test "parse_value_name_operator2" =
+  pp Stdlib.Format.pp_print_string parse_value_name "(%>)" ;
   [%expect {| %> |}]
 
-let%expect_test "parse_custom_operator_name3" =
-  pp Format.pp_print_string parse_value_name "(!)" ;
+let%expect_test "parse_value_name_operator3" =
+  pp Stdlib.Format.pp_print_string parse_value_name "(!)" ;
   [%expect {| ! |}]
 
-let%expect_test "parse_custom_operator_name4" =
-  pp Format.pp_print_string parse_value_name "(~:=)" ;
+let%expect_test "parse_value_name_operator4" =
+  pp Stdlib.Format.pp_print_string parse_value_name "(~:=)" ;
   [%expect {| ~:= |}]
 
-let%expect_test "parse_custom_operator_name5" =
-  pp Format.pp_print_string parse_value_name "(@<>)" ;
+let%expect_test "parse_value_name_operator5" =
+  pp Stdlib.Format.pp_print_string parse_value_name "(@<>)" ;
   [%expect {| @<> |}]
