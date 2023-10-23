@@ -15,4 +15,6 @@
  (libraries base ast parser)
  (preprocess
   (pps ppx_expect))
- (inline_tests))
+ (inline_tests)
+ (instrumentation
+  (backend bisect_ppx)))
