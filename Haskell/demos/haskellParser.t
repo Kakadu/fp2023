@@ -30,8 +30,3 @@ yet another factorial
                   (ExprBinOp (Sub, (ExprVar "n"), (ExprLit (LitInt 1))))))
                ))))))
     ]
-
-  $ ./haskellParser.exe <<EOF
-  > x=1
-  > EOF
-  [(DeclLet ((PatVar "x"), (ExprLit (LitInt 1))))]

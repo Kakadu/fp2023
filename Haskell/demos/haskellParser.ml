@@ -9,7 +9,7 @@ let parse s =
   | Ok a -> a
   | Error err ->
     Format.printf "%s\n" err;
-    Stdlib.exit 1
+    exit 1
 ;;
 
 let () =
