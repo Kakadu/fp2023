@@ -53,3 +53,42 @@ let%expect_test _ =
                   (ExprVar "n")))
                )))))) |}]
 ;;
+
+let%expect_test _ =
+  ptest pdecl pp_decl "x = [1, 2]";
+  [%expect
+    {|
+    (DeclLet
+       ((PatVar "x"),
+        (ExprCons ((ExprLit (LitInt 1)),
+           (ExprCons ((ExprLit (LitInt 2)), ExprNil)))))) |}]
+;;
+
+let%expect_test _ =
+  ptest pdecl pp_decl "(x, y, z, (a, b)) = (1, 2, 3, (4, 5))";
+  [%expect
+    {|
+    (DeclLet
+       ((PatTuple
+           [(PatVar "x"); (PatVar "y"); (PatVar "z");
+             (PatTuple [(PatVar "a"); (PatVar "b")])]),
+        (ExprTuple
+           [(ExprLit (LitInt 1)); (ExprLit (LitInt 2)); (ExprLit (LitInt 3));
+             (ExprTuple [(ExprLit (LitInt 4)); (ExprLit (LitInt 5))])]))) |}]
+;;
+
+let%expect_test _ =
+  ptest pexpr pp_expr "1 : 2 : 3 : [4, 5, 6]";
+  [%expect
+    {|
+    (ExprCons ((ExprLit (LitInt 1)),
+       (ExprCons ((ExprLit (LitInt 2)),
+          (ExprCons ((ExprLit (LitInt 3)),
+             (ExprCons ((ExprLit (LitInt 4)),
+                (ExprCons ((ExprLit (LitInt 5)),
+                   (ExprCons ((ExprLit (LitInt 6)), ExprNil))))
+                ))
+             ))
+          ))
+       )) |}]
+;;
