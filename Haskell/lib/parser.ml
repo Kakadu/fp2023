@@ -142,8 +142,15 @@ let pexpr =
   @@ fun pexpr ->
   let pexprlit = expr_lit <$> plit in
   let pexprvar = expr_var <$> pname in
+  let pexprtuple =
+    let contents = sep_by (char ',') @@ ptoken pexpr in
+    pparens contents
+    >>= function
+    | [ x ] -> return x
+    | elems -> return (expr_tuple elems)
+  in
   let pneg = char '-' *> (pexprlit <|> pparens pexpr) >>| fun e -> ExprUnOp (Neg, e) in
-  let pvalue = choice [ pexprlit; pexprvar; pneg; pparens pexpr ] in
+  let pvalue = choice [ pexprlit; pexprvar; pneg; pexprtuple; pparens pexpr ] in
   let pebinop =
     let app = chainl1 pvalue (return expr_app) in
     let pmuldiv =
