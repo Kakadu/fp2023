@@ -4,3 +4,5 @@ _coverage
 /node_modules
 /esy.lock
 /.melange.eobjs
+.DS_Store
+_build/

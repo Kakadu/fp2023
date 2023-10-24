@@ -1,0 +1,5 @@
+(library
+ (name ast)
+ (public_name OCamlTyEff.Ast)
+ (preprocess
+  (pps ppx_deriving.show ppx_deriving.eq)))
