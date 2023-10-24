@@ -50,6 +50,7 @@ let chainl1 e op =
   e >>= fun init -> go init
 ;;
 
+let rec chainr1 e op = e >>= fun a -> op >>= (fun f -> chainr1 e op >>| f a) <|> return a
 let pwspaces = take_while is_ws
 let pwspaces1 = take_while1 is_ws
 let pspaces = take_while (fun c -> is_ws c || is_eol c)
@@ -70,10 +71,16 @@ let expr_fun args expr = List.fold_right (fun p e -> ExprFunc (p, e)) args expr
 let expr_binop op lexp rexp = ExprBinOp (op, lexp, rexp)
 let expr_tuple l = ExprTuple l
 let expr_app o1 o2 = ExprApp (o1, o2)
+let expr_cons e1 e2 = ExprCons (e1, e2)
+let expr_list l = List.fold_right (fun e1 e2 -> ExprCons (e1, e2)) l ExprNil
+let expr_nil _ = ExprNil
 let pat_var pat = PatVar pat
 let pat_lit lit = PatLit lit
 let pat_wild _ = PatWild
-let pat_list l = PatList l
+let pat_nil _ = PatNil
+let pat_cons l = List.fold_right (fun e1 e2 -> PatCons (e1, e2)) l PatNil
+
+(* let pat_list l = PatList l *)
 let pat_tuple l = PatTuple l
 let dec_let pat expr = DeclLet (pat, expr)
 
@@ -95,6 +102,8 @@ let pname =
 (* Literals *)
 
 let pint = lit_int <$> ptoken @@ take_while1 is_digit
+
+(*todo: between*)
 let pstring = lit_str <$> ptoken @@ (char '"' *> take_till (Char.equal '"')) <* char '"'
 let pchar = lit_char <$> ptoken @@ (char '\'' *> any_char) <* char '\''
 let plit = choice [ pint; pstring; pchar ]
@@ -107,18 +116,26 @@ let ppat =
   let pplit = pat_lit <$> plit in
   let pwild = pat_wild <$> pstoken "_" in
   let ppvar = pat_var <$> pname in
-  let pplist =
+  (* let pplist =
     let contents = sep_by (char ',') @@ ptoken pattern in
     pbrackets contents >>| pat_list
+  in *)
+  let ppnil = pat_nil <$> pstoken "[]" in
+  (* тут идет вызов паттерна, в котором идет еще вызов паттерна от pptuple*)
+  (*
+     let pcons =
+    let contents = sep_by (char ':') @@ ptoken pattern in
+    contents >>| fun l -> pat_cons l 
   in
+  *)
   let pptuple =
     let contents = sep_by (char ',') @@ ptoken pattern in
     pparens contents
-    >>= function
-    | [ x ] -> return x
-    | elems -> return (pat_tuple elems)
+    >>| function
+    | [ x ] -> x
+    | elems -> pat_tuple elems
   in
-  choice [ pplist; pptuple; pplit; ppvar; pwild ]
+  choice [ ppnil; pptuple; pplit; ppvar; pwild ]
 ;;
 
 (* Expressions *)
@@ -150,7 +167,11 @@ let pexpr =
     | elems -> return (expr_tuple elems)
   in
   let pneg = char '-' *> (pexprlit <|> pparens pexpr) >>| fun e -> ExprUnOp (Neg, e) in
-  let pvalue = choice [ pexprlit; pexprvar; pneg; pexprtuple; pparens pexpr ] in
+  let penil = expr_nil <$> pstoken "[]" in
+  let pelist = expr_list <$> pbrackets (sep_by (char ',') @@ ptoken pexpr) in
+  let pvalue =
+    choice [ pexprlit; pexprvar; pneg; pexprtuple; pelist; penil; pparens pexpr ]
+  in
   let pebinop =
     let app = chainl1 pvalue (return expr_app) in
     let pmuldiv =
@@ -161,9 +182,13 @@ let pexpr =
       let op = choice [ padd; psub ] in
       chainl1 pmuldiv op
     in
+    let pcons =
+      let op = pstoken ":" *> return expr_cons in
+      chainr1 paddsub op
+    in
     let pcmpr =
       let op = choice [ peq; pneq; pleq; pgeq; plt; pgt ] in
-      chainl1 paddsub op
+      chainl1 pcons op
     in
     let pandor =
       let op = choice [ pand; por ] in

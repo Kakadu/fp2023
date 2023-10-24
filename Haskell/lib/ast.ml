@@ -36,8 +36,9 @@ and expr =
   | ExprApp of expr * expr
   | ExprIf of expr * expr * expr
   | ExprTuple of expr list
+  | ExprList of expr list
   | ExprCons of expr * expr
-  | ExprNil
+  | ExprNil (* [] *)
   | ExprCase of expr * alt list
   | ExprBinOp of bin_op * expr * expr
   | ExprUnOp of un_op * expr
@@ -49,9 +50,8 @@ and pat =
   | PatVar of id (** Variable Pat (name binding) [x] *)
   | PatLit of lit (** Literal pat [1], ['a'], ["hello"] *)
   | PatTuple of pat list (** Tuple pat [(x, y)] *)
-  | PatCon of pat * pat (** Constructor pat *)
+  | PatCons of pat * pat (** Constructor pat *)
   | PatAs of id * pat (** As-pat [list@(x:xs)] *)
-  | PatList of pat list
   | PatRec of id * pat list (**Record pat [Point {x = 3, y}] *)
   | PatNil (** [] *)
 [@@deriving eq, show { with_path = false }]
