@@ -1,5 +1,5 @@
-#load "ast.cmi"
-#require "angstrom"
+(* #load "ast.cmi"
+#require "angstrom" *)
 open Angstrom
 open Ast
 
@@ -44,28 +44,23 @@ let is_end = function
   | _ -> false
 ;;
 
-let keywords = [
+let kwds_stm_start = [
   "let";
   "const";
   "function";
   "if";
-  "else";
   "return"
+]
+
+let other_keywords = [
+  "else";
 ];;
+let keywords = kwds_stm_start @ other_keywords
 let is_keyword ch = List.mem ch keywords;;
 
 let rec return_eq_element el_for_comp trans = function
   | a :: tail -> if el_for_comp = trans a then Some a else return_eq_element el_for_comp trans tail
   | _ -> None
-
-(* let is_next_kwd_pars = 
-  let rec self = function
-  | a :: tail -> peek_string @@ String.length a + 1 >>= (fun str -> 
-    match (return_eq_element (str) (fun b -> a ^ Char.escaped b) spaces) with
-      | Some _ -> return true
-      | _ -> self tail)
-  | _ -> return false in
-  self keywords *)
 
 let is_spec_symbol = function
   | '$' | '_' -> true
@@ -80,11 +75,11 @@ let is_valid_identifier_ch ch =
 
 let read_word = take_while is_valid_identifier_ch
 
-let is_next_kwd = 
+let next_is_kwd = 
   let rec self = function
   | a :: tail -> string a *> satisfy is_empty *> return true <|> self tail
   | _ -> return false in
-  (self keywords >>= fun c ->
+  (self kwds_stm_start >>= fun c ->
     if c then fail "" else return false)
   <|> return true
 
@@ -96,7 +91,7 @@ let token s = empty *> s
 let token1 s = empty1 *> s
 let token_str s = token @@ string s
 let token_end_of_stm_exc ?(exp = "") s = 
-  token ((is_next_kwd >>= (fun c -> if c then fail exp else nothing))
+  token ((next_is_kwd >>= (fun c -> if c then fail exp else nothing))
   *> (take_while is_end >>= (function | "" -> nothing | _ -> fail exp))
   *> s)
 
@@ -104,7 +99,7 @@ let to_end_of_stm =
   empty >>= (fun chs -> 
     end_of_input 
     <|> skip is_end 
-    <|> (is_next_kwd >>= (fun c -> if c && (String.exists is_line_break chs) then nothing else fail "incorrect end of statment")))
+    <|> (next_is_kwd >>= (fun c -> if c && (String.exists is_line_break chs) then nothing else fail "incorrect end of statment")))
 
 let is_false_fail cond ?(error_msg="") input = if cond input then return input else fail error_msg
 
@@ -171,6 +166,7 @@ let parse_expression =
 let valid_identifier =
   token @@ lift2 (^) (satisfy is_valid_first_identifier_ch >>| Char.escaped)
   (fix(fun self -> lift2 (^) (satisfy is_valid_identifier_ch >>| Char.escaped) self <|> return ""))
+  >>= fun name -> if is_keyword name then fail "name of keyword shouldn't be a keyword" else return name
   (*TODO: Error, Here is some problem with it*)
   
 let var_parser (init_word: string) = 
@@ -187,9 +183,6 @@ let var_parser (init_word: string) =
     })
   )  
 (*TODO: var support*)
-
-let parse_word_in words =
-  choice (List.map (fun word -> string word <* empty1) words)
 
 let parse_statements stopper = 
   many_till (token (read_word <* empty1 >>= 
