@@ -1,4 +1,4 @@
-(** Copyright 2021-2023, Kakadu and contributors *)
+(** Copyright 2021-2023, DmitryPilyuk and raf-nr *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
@@ -54,4 +54,24 @@ let is_lower = function
 ;;
 
 let is_letter c = is_upper c || is_lower c
+let const_int = take_while1 (fun c -> is_digit c) >>| int_of_string >>| fun x -> Int x
 let parens p = skip_wspace *> char '(' *> p <* char ')' <* skip_wspace
+
+let parse_const =
+  fix
+  @@ fun self ->
+  skip_wspace
+  *> (parens self
+      <|>
+      let parse_int = take_while1 is_digit >>| int_of_string >>| fun x -> Int x
+      and parse_str =
+        char '"' *> take_while (( != ) '"') <* char '"' >>| fun x -> String x
+      and parse_char = char '\'' *> any_char <* char '\'' >>| fun x -> Char x
+      and parse_bool =
+        string "true" <|> string "false" >>| bool_of_string >>| fun x -> Bool x
+      and parse_unit = string "()" >>| fun _ -> Unit in
+      let parse_const =
+        choice [ parse_int; parse_str; parse_char; parse_bool; parse_unit ]
+      in
+      lift econst parse_const)
+;;

@@ -1,4 +1,4 @@
-(** Copyright 2021-2023, Kakadu and contributors *)
+(** Copyright 2021-2023, DmitryPilyuk and raf-nr *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
@@ -6,6 +6,7 @@ type id = string [@@deriving eq, show { with_path = false }]
 
 type const =
   | Char of char
+  | String of string
   | Int of int
   | Bool of bool
   | Unit
