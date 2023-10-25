@@ -1,5 +1,5 @@
-(* #load "ast.cmi"
-#require "angstrom" *)
+#load "ast.cmi"
+#require "angstrom"
 open Angstrom
 open Ast
 
@@ -10,11 +10,17 @@ let nothing = return ()
 
 let is_space = function 
   | ' '
-  | '\t'
+  | '\t' -> true
+  | _ -> false
+;;
+
+let is_line_break = function
   | '\n'
   | '\r' -> true
   | _ -> false
 ;;
+
+let is_empty ch = is_space ch || is_line_break ch;;
 
 let is_lower = function
   | 'a' .. 'z' -> true
@@ -26,7 +32,7 @@ let is_upper = function
   | _ -> false
 ;;
 
-let is_letter ch = is_lower ch || is_upper ch
+let is_letter ch = is_lower ch || is_upper ch;;
 
 let is_digit = function
   | '0' .. '9' -> true
@@ -76,15 +82,16 @@ let read_word = take_while is_valid_identifier_ch
 
 let is_next_kwd = 
   let rec self = function
-  | a :: tail -> string a *> satisfy is_space *> return true <|> self tail
+  | a :: tail -> string a *> satisfy is_empty *> return true <|> self tail
   | _ -> return false in
   (self keywords >>= fun c ->
     if c then fail "" else return false)
   <|> return true
 
-let empty = skip_while(is_space)
-let empty1 = take_while1(is_space)
-let token_space s = skip_while(is_space) *> s
+let empty = take_while(is_empty)
+let empty1 = take_while1(is_empty)
+let spaces = take_while(is_space)
+let token_space s = spaces *> s
 let token s = empty *> s
 let token1 s = empty1 *> s
 let token_str s = token @@ string s
@@ -93,7 +100,11 @@ let token_end_of_stm_exc ?(exp = "") s =
   *> (take_while is_end >>= (function | "" -> nothing | _ -> fail exp))
   *> s)
 
-let to_end_of_stm = token (end_of_input <|> skip is_end <|> (is_next_kwd >>= (fun c -> if c then nothing else fail "incorrect end of statment")))
+let to_end_of_stm = 
+  empty >>= (fun chs -> 
+    end_of_input 
+    <|> skip is_end 
+    <|> (is_next_kwd >>= (fun c -> if c && (String.exists is_line_break chs) then nothing else fail "incorrect end of statment")))
 
 let is_false_fail cond ?(error_msg="") input = if cond input then return input else fail error_msg
 
