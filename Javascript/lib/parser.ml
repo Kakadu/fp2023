@@ -99,7 +99,9 @@ let to_end_of_stm =
   empty >>= (fun chs -> 
     end_of_input 
     <|> skip is_end 
-    <|> (next_is_kwd >>= (fun c -> if c && (String.exists is_line_break chs) then nothing else fail "incorrect end of statment")))
+    <|> (next_is_kwd >>= (fun c -> 
+      if c && (String.exists is_line_break chs) 
+      then nothing else fail "incorrect end of statment")))
 
 let is_false_fail cond ?(error_msg="") input = if cond input then return input else fail error_msg
 
@@ -110,13 +112,24 @@ let parens p = between p lp rp
 
 let number n = Number n
 let const c = Const c
+let var v = Var v
+let fun_call name args = FunctionCall(name, args)
 
 let parse_number = 
   consumed @@ lift3 (fun a b c -> a^b^c) (take_while is_digit) (string ".") (take_while is_digit) 
   <|> take_while1 is_digit >>= (function |"." -> fail "incorrect number" | _ as num -> return num)
   >>| (fun n -> number @@ float_of_string n)
 (*TODO: -,NaN..., BigINT*)
-let my_parse = parse_number
+
+let valid_identifier =
+  token @@ lift2 (^) 
+  (satisfy is_valid_first_identifier_ch >>| Char.escaped <?> "invalid first char of var name")
+  (fix(fun self -> 
+    lift2 (^) (satisfy is_valid_identifier_ch >>| Char.escaped) self <|> return "") <?> "invalid chars of var name")
+  >>= fun name -> 
+    if is_keyword name then fail "name of keyword shouldn't be a keyword" else return name
+  (*TODO: Error, Here is some problem with it*)
+
 
 let bop op first second = BinOp(op, first, second)
 let uop op = UnrecognizedOp(op)
@@ -153,26 +166,24 @@ let parse_list_of_mini_expressions parsed_list =
   | _ as a -> DebugExp a (*For Debug*)
 (*TODO: error*)
 
-let parse_expression = 
+let rec parse_arguments = fun () ->
+  parens(sep_by (token_str ",") (parse_expression ())) <?> "incorrect function arguments"
+and parse_expression = fun () ->
   fix(fun self ->
-    many(token_end_of_stm_exc (choice [
+    many(token (choice [
       parens self;
-      all_op_parser >>| (uop);
-      parse_number >>| const
+      all_op_parser >>| uop;
+      parse_number >>| const;
+      lift2 fun_call valid_identifier (parse_arguments ());
+      valid_identifier >>| var
     ])) >>| parse_list_of_mini_expressions)
    <?> "incorrect expression"
-(*TODO: correct next statement recognise and stop ("let a = 3 + 4 \n 5 + 6") (scan?)*)
-
-let valid_identifier =
-  token @@ lift2 (^) (satisfy is_valid_first_identifier_ch >>| Char.escaped)
-  (fix(fun self -> lift2 (^) (satisfy is_valid_identifier_ch >>| Char.escaped) self <|> return ""))
-  >>= fun name -> if is_keyword name then fail "name of keyword shouldn't be a keyword" else return name
-  (*TODO: Error, Here is some problem with it*)
+(*TODO: correct next statement recognise and stop ("let a = 3 + 4 \n 5 + 6") (scan?) (I've tried and failed)*)
   
 let var_parser (init_word: string) = 
   valid_identifier
   >>= (fun identifier ->
-    (token_str "=" *> parse_expression <* to_end_of_stm >>| (fun c -> Some c)) 
+    (token_str "=" *> parse_expression () <* to_end_of_stm >>| (fun c -> Some c)) 
     <|> (to_end_of_stm *> return None) <?> "incorrect definition"
     >>| (fun expr -> VarDeck 
     {
