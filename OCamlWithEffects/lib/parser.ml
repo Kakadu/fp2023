@@ -54,7 +54,6 @@ let is_lower = function
 ;;
 
 let is_letter c = is_upper c || is_lower c
-let const_int = take_while1 (fun c -> is_digit c) >>| int_of_string >>| fun x -> Int x
 let parens p = skip_wspace *> char '(' *> p <* char ')' <* skip_wspace
 
 let parse_const =

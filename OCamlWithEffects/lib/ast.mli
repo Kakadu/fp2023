@@ -14,9 +14,9 @@ type const =
 
 type bin_op =
   | Plus
-  | Dash
-  | Asterisk
-  | Slash
+  | Sub
+  | Mul
+  | Div
   | Eq
   | NEq
   | Gt
