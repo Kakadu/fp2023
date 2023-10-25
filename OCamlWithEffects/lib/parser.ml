@@ -53,8 +53,22 @@ let is_lower = function
   | _ -> false
 ;;
 
+let is_ident c = is_lower c || is_upper c || c = '_'
+
+let is_acceptable_fl = function 
+  | Some c when is_lower c || c = '_' -> return c
+  | _ -> fail "abc"
+;;
+
+let ident =
+  skip_wspace 
+  *> peek_char
+  >>= is_acceptable_fl
+  >>= fun _ -> take_while is_ident
+  >>= fun s -> if is_keyword s then fail "Parsing error: name is used as keyword" else return @@ EIdentifier s
+
 let is_letter c = is_upper c || is_lower c
-let parens p = skip_wspace *> char '(' *> p <* char ')' <* skip_wspace
+let parens p = skip_wspace *> char '(' *> p <* skip_wspace <* char ')'
 
 let parse_const =
   fix

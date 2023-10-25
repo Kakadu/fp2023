@@ -2,7 +2,7 @@
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-type id = string [@@deriving eq, show { with_path = false }]
+type id = string  [@@deriving eq, show { with_path = false }]
 
 type const =
   | Char of char
