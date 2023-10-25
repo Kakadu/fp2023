@@ -1,21 +1,21 @@
 (library
- (name lambda_lib)
+ (name cSharp_Exc_Lib)
  (public_name CSharpExceptions.Lib)
  (modules Ast Parser)
 ;  (modules_without_implementation ast)
- (libraries base angstrom)
+ (libraries base angstrom str)
  (inline_tests)
  (preprocess
   (pps ppx_deriving.show ppx_inline_test ppx_deriving.eq))
  (instrumentation
   (backend bisect_ppx)))
 
-; (library
-;  (name tests)
-;  (modules tests)
-;  (libraries lambda_lib)
-;  (preprocess
-;   (pps ppx_expect ppx_deriving.show))
-;  (instrumentation
-;   (backend bisect_ppx))
-;  (inline_tests))
+(library
+ (name tests)
+ (modules tests)
+ (libraries cSharp_Exc_Lib)
+ (preprocess
+  (pps ppx_expect ppx_deriving.show))
+ (instrumentation
+  (backend bisect_ppx))
+ (inline_tests))
