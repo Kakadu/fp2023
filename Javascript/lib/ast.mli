@@ -19,7 +19,7 @@ type expression =
   | Parens of expression
   | Const of typename
   | Var of string
-  | FunctionCall of expression list
+  | FunctionCall of string * expression list
   | DebugExp of expression list
 [@@derving show {with_path = false}]
 
