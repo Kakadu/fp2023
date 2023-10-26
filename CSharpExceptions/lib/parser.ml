@@ -156,12 +156,17 @@ let p_keyword_type =
 
 let p_var_type = p_keyword_type >>= fun x -> return (TVariable x)
 let ep_spaces prs = skip_spaces *> prs
+let ep_parens prs = ep_spaces @@ (char '(' *> prs) <* char ')'
 let convert_val_to_expr prs = ep_spaces prs >>| fun x -> EVal x
 let ep_number = convert_val_to_expr p_number
 let ep_char = convert_val_to_expr p_char
 let ep_string = convert_val_to_expr p_string
 let ep_bool = convert_val_to_expr p_bool
 let ep_identifier = ep_spaces p_ident >>= fun x -> return (EIdentifier x)
+
+let ep_value =
+  choice ?failure_msg:(Some "Not a value") [ ep_bool; ep_char; ep_number; ep_string ]
+;;
 
 let ep_member_ident =
   fix (fun member_foo ->
@@ -196,6 +201,53 @@ let ep_var_decl =
        [ p_var_type >>= _ep_var_decl
        ; p_ident >>| (fun cl -> TVariable (TNullable (TClass cl))) >>= _ep_var_decl
        ]
+;;
+
+let ( |-> ) op tp = ep_spaces @@ (string op *> return tp)
+let ( =>| ) op tp = op |-> tp >>| fun tp a -> EUn_op (tp, a)
+let ( ==>| ) op tp = op |-> tp >>| fun t a b -> EBin_op (t, a, b)
+let ( +^ ) = "+" ==>| Plus
+let ( *^ ) = "*" ==>| Asterisk
+let ( -^ ) = "-" ==>| Minus
+let ( /^ ) = "/" ==>| Division
+let ( %^ ) = "%" ==>| Mod
+let ( ==^ ) = "==" ==>| Equal
+let ( !=^ ) = "!=" ==>| NotEqual
+let ( <^ ) = "<" ==>| Less
+let ( <=^ ) = "<=" ==>| LessOrEqual
+let ( >^ ) = ">" ==>| More
+let ( >=^ ) = ">=" ==>| MoreOrEqual
+let ( &&^ ) = "&&" ==>| And
+let ( ||^ ) = "||" ==>| Or
+let ( =^ ) = "=" ==>| Assign
+let ep_un_minus = "-" =>| UMinus
+let ep_not = "!" =>| UNot
+let ep_new = "new" =>| New
+let chainl0 expr un_op = un_op >>= (fun op -> expr >>| fun exp -> op exp) <|> expr
+
+let chainl1 expr bin_op =
+  let rec epars e1 =
+    lift2 (fun b_op e2 -> b_op e1 e2) bin_op expr >>= epars <|> return e1
+  in
+  expr >>= fun init -> epars init
+;;
+
+let rec chainr1 e op = e >>= fun a -> op >>= (fun f -> chainr1 e op >>| f a) <|> return a
+let ( >- ) lvl p_list = chainl0 lvl (choice p_list)
+let ( >>- ) lvl p_list = chainl1 lvl (choice p_list)
+let ( -<< ) lvl p_list = chainr1 lvl (choice p_list)
+
+let ep_bin_op =
+  fix (fun expr ->
+    let lvl1 = choice [ ep_parens expr; ep_value; ep_method_fild ] in
+    let lvl2 = lvl1 >- [ ep_un_minus; ep_new; ep_not ] in
+    let lvl3 = lvl2 >>- [ ( *^ ); ( /^ ); ( %^ ) ] in
+    let lvl4 = lvl3 >>- [ ( +^ ); ( -^ ) ] in
+    let lvl5 = lvl4 >>- [ ( <=^ ); ( >=^ ); ( <^ ); ( >^ ) ] in
+    let lvl6 = lvl5 >>- [ ( ==^ ); ( !=^ ) ] in
+    let lvl7 = lvl6 >>- [ ( &&^ ) ] in
+    let lvl8 = lvl7 >>- [ ( ||^ ) ] in
+    lvl8 -<< [ ( =^ ) ])
 ;;
 
 let parse str ~p =

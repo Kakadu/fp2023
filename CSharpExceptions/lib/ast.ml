@@ -2,64 +2,53 @@
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-(* type value_ =
-  | VNullable of nulable_value
-  | VNot_Nullable of base_value *)
-
-(* and nulable_value = *)
 type value_ =
   | Null
-  | VBase of base_value
   | VString of string
-  | VArray of value_ list
-  | VClass of string
-[@@deriving show]
-
-and base_value =
+  | VClass of string (*а оно надо вообще?*)
   | VInt of int
   | VChar of char
   | VBool of bool
-  | VDouble of float
-[@@deriving show]
+[@@deriving show { with_path = false }, eq]
 
-type value_literal = 
-  | Double_lit
-  (* | Float_lit  *)
-
+type ident = Name of string
+[@@deriving show { with_path = false }, eq]
 
 (* ************************************************* *)
-type arity = Arity of int
-
 type type_ =
   | Method of meth_type
   | Variable of var_type (** Method type *)
+[@@deriving show { with_path = false }, eq]
 
 and meth_type =
   | Void
   | TReturn of assignable_type
+[@@deriving show { with_path = false }, eq]
 
 (** Variable type *)
 and var_type =
   (* TODO: *)
   (* | Var *)
   | TVariable of assignable_type
+[@@deriving show { with_path = false }, eq]
 
 (** Type that can be assigne *)
 and assignable_type =
   | TNot_Nullable of base_type
   | TNullable of nulable_type
+[@@deriving show { with_path = false }, eq]
 
 and base_type =
   | TInt
   | TChar
   | TBool
-  | TDouble
+[@@deriving show { with_path = false }, eq]
 
 and nulable_type =
   | TBase of base_type
-  | TArray of arity * var_type
   | TString
-  | TClass of string
+  | TClass of ident
+[@@deriving show { with_path = false }, eq]
 
 (* ************************************************* *)
 type modifier =
@@ -88,6 +77,7 @@ type bin_op =
   | Plus
   | Minus
   | Division
+  | Mod
   | Equal
   | NotEqual
   | Less
@@ -96,12 +86,12 @@ type bin_op =
   | MoreOrEqual
   | And
   | Or
+  | Assign
 
 type un_op =
   | UMinus
   | UNot
-
-type ident = Name of string
+  | New
 
 (** The main type for our AST (дерева абстрактного синтаксиса) *)
 type expr =
@@ -114,14 +104,15 @@ type expr =
   | EBin_op of bin_op * expr * expr
   | EUn_op of un_op * expr
   | Return of expr option
-  | Assign of expr * expr
+  | EMember_ident of expr * expr
+  | Cast of assignable_type * expr
   (*  *)
   | EClass_decl of class_
   | EException_decl of class_
   | EClass_member of class_member
-  | EVar_decl of var_type * expr
+  | EVar_decl of var_type * ident
+  | EAssign of expr * expr
   | Steps of expr list
-  | EHas_member of ident * expr (** A.b *)
   (*  *)
   | EIf_else of expr * expr * expr option
 (* | EWhile *)
@@ -132,10 +123,11 @@ type expr =
 
 and args = (ident * expr) list
 
+(* TODO: переделать на records? *)
 and method_sign =
   | Main
   | Default of method_modifier list option * meth_type * ident * args option
-| Constructor of args option * expr option
+  | Constructor of args option * expr option
 
 and class_member =
   | Fild of fild_modifier list option * fild_modifier * ident * expr option

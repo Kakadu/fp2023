@@ -77,6 +77,7 @@ type bin_op =
   | Plus
   | Minus
   | Division
+  | Mod
   | Equal
   | NotEqual
   | Less
@@ -85,10 +86,12 @@ type bin_op =
   | MoreOrEqual
   | And
   | Or
+  | Assign
 
 type un_op =
   | UMinus
   | UNot
+  | New
 
 (** The main type for our AST (дерева абстрактного синтаксиса) *)
 type expr =
@@ -103,12 +106,12 @@ type expr =
   | Return of expr option
   | EMember_ident of expr * expr
   | Cast of assignable_type * expr
-  | Assign of expr * expr (* ? *)
   (*  *)
   | EClass_decl of class_
   | EException_decl of class_
   | EClass_member of class_member
   | EVar_decl of var_type * ident
+  | EAssign of expr * expr
   | Steps of expr list
   (*  *)
   | EIf_else of expr * expr * expr option
