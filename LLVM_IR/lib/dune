@@ -1,20 +1,21 @@
 (library
- (name lambda_lib)
+ (name llvm_lib)
  (public_name LLVM_IR.Lib)
- (modules Ast Lambda Interpret Parser Printast Pprintast utils)
- (modules_without_implementation ast)
- (libraries base angstrom)
+ (modules Ast Parser)
+ ;  (modules_without_implementation ast)
+ (libraries base angstrom ppx_show.runtime)
+ (inline_tests)
  (preprocess
-  (pps ppx_deriving.show))
+  (pps ppx_deriving.show ppx_deriving.ord ppx_expect))
  (instrumentation
   (backend bisect_ppx)))
 
-(library
- (name tests)
- (modules tests)
- (libraries lambda_lib)
- (preprocess
-  (pps ppx_expect ppx_deriving.show))
- (instrumentation
-  (backend bisect_ppx))
- (inline_tests))
+; (library
+;  (name tests)
+;  (modules tests)
+;  (libraries lambda_lib)
+;  (preprocess
+;   (pps ppx_expect ppx_deriving.show))
+;  (instrumentation
+;   (backend bisect_ppx))
+;  (inline_tests))
