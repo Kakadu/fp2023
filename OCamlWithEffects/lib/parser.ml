@@ -5,6 +5,15 @@
 open Ast
 open Angstrom
 
+type dispatch =
+  { parse_bin_op : dispatch -> expr Angstrom.t
+  ; parse_un_op : dispatch -> expr Angstrom.t
+  ; parse_application : dispatch -> expr Angstrom.t
+  ; parse_fun : dispatch -> expr Angstrom.t
+  ; parse_if_then_else : dispatch -> expr Angstrom.t
+  ; parse_expression : dispatch -> expr Angstrom.t
+  }
+
 (* Constructors for expressions *)
 let econst x = EConst x
 let ebinop op left_op right_op = EBinaryOperation (op, left_op, right_op)
@@ -55,20 +64,41 @@ let is_lower = function
 
 let is_ident c = is_lower c || is_upper c || c = '_'
 
-let is_acceptable_fl = function 
+let is_acceptable_fl = function
   | Some c when is_lower c || c = '_' -> return c
   | _ -> fail "abc"
 ;;
 
 let ident =
-  skip_wspace 
-  *> peek_char
+  skip_wspace *> peek_char
   >>= is_acceptable_fl
-  >>= fun _ -> take_while is_ident
-  >>= fun s -> if is_keyword s then fail "Parsing error: name is used as keyword" else return @@ EIdentifier s
+  >>= fun _ ->
+  take_while is_ident
+  >>= fun s ->
+  if is_keyword s
+  then fail "Parsing error: name is used as keyword"
+  else return @@ EIdentifier s
+;;
 
 let is_letter c = is_upper c || is_lower c
 let parens p = skip_wspace *> char '(' *> p <* skip_wspace <* char ')'
+
+let parse_name =
+  fix
+  @@ fun self ->
+  skip_wspace
+  *> (parens self
+      <|> take_while1 (fun x ->
+        is_lower x || is_upper x || is_digit x || x = '\'' || x = '_'))
+;;
+
+let parse_uncapitalized_name =
+  parse_name
+  >>= fun name ->
+  if is_lower name.[0] || name.[0] = '_'
+  then return name
+  else fail "Parsing error: not an uncapitalized entity."
+;;
 
 let parse_const =
   fix
@@ -87,4 +117,53 @@ let parse_const =
         choice [ parse_int; parse_str; parse_char; parse_bool; parse_unit ]
       in
       lift econst parse_const)
+;;
+
+let parse_fun pack =
+  fix
+  @@ fun self ->
+  skip_wspace
+  *>
+  let parse_expr =
+    choice
+      [ pack.parse_bin_op pack
+      ; pack.parse_un_op pack
+      ; pack.parse_application pack
+      ; self
+      ; pack.parse_if_then_else pack
+      ; parse_const
+      ; ident
+      ]
+  in
+  parens self
+  <|> string "fun"
+      *> lift2
+           efun
+           (many1 parse_uncapitalized_name <* skip_wspace <* string "->" <* skip_wspace)
+           (parse_expr <* skip_wspace)
+;;
+
+let parse_if_then_else pack =
+  fix
+  @@ fun self ->
+  skip_wspace
+  *>
+  let parse_expr =
+    choice
+      [ pack.parse_bin_op pack
+      ; pack.parse_un_op pack
+      ; pack.parse_application pack
+      ; self
+      ; pack.parse_fun pack
+      ; parse_const
+      ; ident
+      ]
+  in
+  parens self
+  <|> string "if"
+      *> lift3
+           eif_then_else
+           parse_expr
+           (skip_wspace *> string "then" *> parse_expr)
+           (skip_wspace *> string "then" *> parse_expr)
 ;;
