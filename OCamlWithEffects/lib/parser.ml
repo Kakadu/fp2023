@@ -46,6 +46,7 @@ let is_whitespace = function
 ;;
 
 let skip_wspace = skip_while is_whitespace
+let skip_wspace1 = take_while1 is_whitespace
 
 let is_digit = function
   | '0' .. '9' -> true
@@ -166,4 +167,34 @@ let parse_if_then_else pack =
            parse_expr
            (skip_wspace *> string "then" *> parse_expr)
            (skip_wspace *> string "then" *> parse_expr)
+;;
+
+let parse_declaration pack =
+  fix
+  @@ fun _ ->
+  let parse_expr =
+    choice
+      [ pack.parse_bin_op pack
+      ; pack.parse_un_op pack
+      ; pack.parse_application pack
+      ; pack.parse_fun pack
+      ; pack.parse_if_then_else pack
+      ; parse_const
+      ; ident
+      ]
+  in
+  skip_wspace *> string "let" *> skip_wspace1 *> option "" (string "rec" <* skip_wspace1)
+  >>= function
+  | "rec" ->
+    lift3
+      rec_declraration
+      parse_uncapitalized_name
+      (many parse_uncapitalized_name)
+      (skip_wspace *> string "=" *> parse_expr)
+  | _ ->
+    lift3
+      declraration
+      parse_uncapitalized_name
+      (many parse_uncapitalized_name)
+      (skip_wspace *> string "=" *> parse_expr)
 ;;
