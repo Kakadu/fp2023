@@ -2,7 +2,7 @@
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-type ident = string [@@deriving show { with_path = false }]
+type id = string [@@deriving show { with_path = false }]
 
 type const =
   | Intenger of int
@@ -22,14 +22,14 @@ type bin_op =
 
 type expression =
   | Empty
-  | Var of ident
+  | Var of id
   | Const of const
   | IfThenElse of expression * expression * expression
   | Binop of bin_op * expression * expression
   | List of expression list
-  | Fun of ident * expression
+  | Fun of id * expression
   | App of expression * expression
-  | Let of fun_rec * ident * expression * expression
+  | Let of fun_rec * id * expression * expression
 [@@deriving show { with_path = false }]
 
 and fun_rec =

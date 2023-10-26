@@ -8,4 +8,4 @@
      Binop
      (Mul, Var ("x"),
       App (Var ("fact"), Binop (Sub, Var ("x"), Const (Intenger (1))))))),
-  Empty)
+   Empty)
