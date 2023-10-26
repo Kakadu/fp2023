@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8"/>
     <title>ast.ml &mdash; Coverage report</title>
-    <meta name="description" content="38.89% coverage in lib/ast.ml">
+    <meta name="description" content="100.00% coverage in lib/ast.ml">
     <link rel="stylesheet" href="../coverage.css"/>
     <script src="../highlight.pack.js"></script>
     <script>hljs.initHighlightingOnLoad();</script>
@@ -15,16 +15,9 @@
           <span class="dirname">lib/</span>ast.ml
         </a>
       </h1>
-      <h2>38.89%</h2>
+      <h2>100.00%</h2>
     </div>
     <div id="navbar">
-      <span class="some-visited" style="top:20.75%"></span>
-      <span class="unvisited" style="top:47.17%"></span>
-      <span class="unvisited" style="bottom:47.17%"></span>
-      <span class="unvisited" style="bottom:35.85%"></span>
-      <span class="unvisited" style="bottom:13.21%"></span>
-      <span class="unvisited" style="bottom:11.32%"></span>
-      <span class="unvisited" style="bottom:7.55%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -33,13 +26,13 @@
 <a id="L2"></a><span > </span>
 <a id="L3"></a><span > </span>
 <a id="L4"></a><span > </span>
-<a id="L5"></a><span > </span>
+<a id="L5"></a><span class="visited"> </span>
 <a id="L6"></a><span > </span>
-<a id="L7"></a><span > </span>
+<a id="L7"></a><span class="visited"> </span>
 <a id="L8"></a><span > </span>
 <a id="L9"></a><span > </span>
 <a id="L10"></a><span > </span>
-<a id="L11"></a><span class="some-visited"> </span>
+<a id="L11"></a><span > </span>
 <a id="L12"></a><span > </span>
 <a id="L13"></a><span > </span>
 <a id="L14"></a><span class="visited"> </span>
@@ -52,36 +45,20 @@
 <a id="L21"></a><span > </span>
 <a id="L22"></a><span > </span>
 <a id="L23"></a><span class="visited"> </span>
-<a id="L24"></a><span class="visited"> </span>
-<a id="L25"></a><span class="unvisited"> </span>
+<a id="L24"></a><span > </span>
+<a id="L25"></a><span > </span>
 <a id="L26"></a><span > </span>
 <a id="L27"></a><span > </span>
-<a id="L28"></a><span class="unvisited"> </span>
+<a id="L28"></a><span > </span>
 <a id="L29"></a><span > </span>
 <a id="L30"></a><span > </span>
 <a id="L31"></a><span > </span>
 <a id="L32"></a><span > </span>
 <a id="L33"></a><span > </span>
-<a id="L34"></a><span class="unvisited"> </span>
-<a id="L35"></a><span > </span>
-<a id="L36"></a><span class="visited"> </span>
+<a id="L34"></a><span > </span>
+<a id="L35"></a><span class="visited"> </span>
+<a id="L36"></a><span > </span>
 <a id="L37"></a><span > </span>
-<a id="L38"></a><span > </span>
-<a id="L39"></a><span > </span>
-<a id="L40"></a><span > </span>
-<a id="L41"></a><span class="visited"> </span>
-<a id="L42"></a><span > </span>
-<a id="L43"></a><span > </span>
-<a id="L44"></a><span > </span>
-<a id="L45"></a><span > </span>
-<a id="L46"></a><span class="unvisited"> </span>
-<a id="L47"></a><span class="unvisited"> </span>
-<a id="L48"></a><span > </span>
-<a id="L49"></a><span class="unvisited"> </span>
-<a id="L50"></a><span > </span>
-<a id="L51"></a><span > </span>
-<a id="L52"></a><span > </span>
-<a id="L53"></a><span class="visited"> </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -123,76 +100,44 @@
 <a href="#L35">35</a>
 <a href="#L36">36</a>
 <a href="#L37">37</a>
-<a href="#L38">38</a>
-<a href="#L39">39</a>
-<a href="#L40">40</a>
-<a href="#L41">41</a>
-<a href="#L42">42</a>
-<a href="#L43">43</a>
-<a href="#L44">44</a>
-<a href="#L45">45</a>
-<a href="#L46">46</a>
-<a href="#L47">47</a>
-<a href="#L48">48</a>
-<a href="#L49">49</a>
-<a href="#L50">50</a>
-<a href="#L51">51</a>
-<a href="#L52">52</a>
-<a href="#L53">53</a>
 </pre>
-<pre><code class="ocaml">(** Copyright 2021-2023, Kakadu, Ilya Syresenkov and contributors *)
+<pre><code class="ocaml">(** Copyright 2021-2023, Kakadu and contributors *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-(*
-   TODO:
-   1. Implenent standart IO funtions
-*)
+<span data-count="18">t</span>ype id = strin<span data-count="6">g</span> [@@deriving show { with_path = false }]
 
-(** Identifiers for variables and functions names *)
-<span data-count="0">t</span>ype id = <span data-count="7">s</span>tring [@@deriving show { with_path = false }]
-
-(** Binary operators *)
-<span data-count="3">t</span>ype binop =
-  | Add (** + *)
-  | Sub (** - *)
-  | Div (** / *)
-  | Mul (** * *)
-  | Eq (** = *)
-  | Neq (** &lt;&gt; *)
+<span data-count="18">t</span>ype const =
+  | Intenger of int
+  | Float of float
+  | Bool of bool
+  | Char of char
 [@@deriving show { with_path = false }]
 
-<span data-count="6">t</span>ype const =
-  | CInt of in<span data-count="2">t</span> (** Integers 1, 2, ... *)
-  | CBool of boo<span data-count="0">l</span> (** Boolean true or false *)
+<span data-count="6">t</span>ype bin_op =
+  | Add
+  | Sub
+  | Mul
+  | Div
+  | Eq
+  | Neq
 [@@deriving show { with_path = false }]
 
-<span data-count="0">t</span>ype pattern =
-  | PWild (** | _ -&gt; ... *)
-  | PConst of const (** | const -&gt; ... *)
-  | PVar of id (** | varname -&gt; ... *)
-  | PCons of pattern * pattern (** | p1 :: p2 -&gt; ... *)
-  | POr of pattern * pattern (** | p1 | p2 | p3 -&gt; ... *)
-[@@deriving show { with_path = false }<span data-count="0">]</span>
-
-<span data-count="1">t</span>ype is_rec =
-  | Rec (** Recursive functions can call themselves in their body *)
-  | NonRec
+<span data-count="193">t</span>ype expression =
+  | Empty
+  | Var of id
+  | Const of const
+  | IfThenElse of expression * expression * expression
+  | Binop of bin_op * expression * expression
+  | List of expression list
+  | Fun of id * expression
+  | App of expression * expression
+  | Let of fun_rec * id * expression * expression
 [@@deriving show { with_path = false }]
 
-<span data-count="83">t</span>ype expr =
-  | EUnit (** Empty expression *)
-  | EConst of const (** Consts *)
-  | EVar of id (** Variables with their names *)
-  | EBinop of binop * expr * expr (** e1 binop e2 *)
-  | ETuple of <span data-count="0">e</span>xpr lis<span data-count="0">t</span> (** Tuples of 2 or more elements, separeted by ',' *)
-  | EList of <span data-count="0">e</span>xpr lis<span data-count="0">t</span> (** Lists [1; 2; 3], ...*)
-  | EBranch of expr * expr * expr (** if [cond] then [a] else [b] *)
-  | EMatch of expr * <span data-count="0">(</span><span data-count="0">p</span>attern * expr) lis<span data-count="0">t</span> (** match [x] with | [p1] -&gt; [e1] | ... *)
-  | ELet of is_rec * id * expr * expr (** let rec f *)
-  | EFun of id * expr (** Anonymous function *)
-  | EApp of expr * expr (** Application f x *)
-[@@deriving show { with_path = false }<span data-count="67">]</span>
+<span data-count="2">a</span>nd fun_rec =
+  | Rec
+  | NoRec
 </code></pre>
       </div>
     </div>

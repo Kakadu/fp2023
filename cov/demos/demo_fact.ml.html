@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8"/>
     <title>demo_fact.ml &mdash; Coverage report</title>
-    <meta name="description" content="71.43% coverage in demos/demo_fact.ml">
+    <meta name="description" content="50.00% coverage in demos/demo_fact.ml">
     <link rel="stylesheet" href="../coverage.css"/>
     <script src="../highlight.pack.js"></script>
     <script>hljs.initHighlightingOnLoad();</script>
@@ -15,10 +15,10 @@
           <span class="dirname">demos/</span>demo_fact.ml
         </a>
       </h1>
-      <h2>71.43%</h2>
+      <h2>50.00%</h2>
     </div>
     <div id="navbar">
-      <span class="unvisited" style="bottom:5.56%"></span>
+      <span class="unvisited" style="bottom:7.69%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -33,14 +33,9 @@
 <a id="L8"></a><span > </span>
 <a id="L9"></a><span > </span>
 <a id="L10"></a><span > </span>
-<a id="L11"></a><span > </span>
-<a id="L12"></a><span > </span>
+<a id="L11"></a><span class="visited"> </span>
+<a id="L12"></a><span class="unvisited"> </span>
 <a id="L13"></a><span > </span>
-<a id="L14"></a><span > </span>
-<a id="L15"></a><span class="visited"> </span>
-<a id="L16"></a><span class="visited"> </span>
-<a id="L17"></a><span class="unvisited"> </span>
-<a id="L18"></a><span > </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -58,29 +53,19 @@
 <a href="#L11">11</a>
 <a href="#L12">12</a>
 <a href="#L13">13</a>
-<a href="#L14">14</a>
-<a href="#L15">15</a>
-<a href="#L16">16</a>
-<a href="#L17">17</a>
-<a href="#L18">18</a>
 </pre>
-<pre><code class="ocaml">open Angstrom
-open Python_Lib.Parser
-open Python_Lib.Ast
+<pre><code class="ocaml">(** Copyright 2021-2022, Kakadu and contributors *)
 
-let test_parse =
-  let res =
-    parser
-      "\n\
-       def factorial(x):\n\
-      \    if (x == 1):\n\
-      \        return 1\n\
-      \    else:\n\
-      \        return (x * factorial(x - 1))"
-  in
-  <span data-count="1">m</span>atch res with
-  | <span data-count="1">O</span>k v -&gt; List.ite<span data-count="1">r</span> (fun e -&gt; <span data-count="1">p</span>rint_endline (show_statemen<span data-count="1">t</span> e)) v
-  | <span data-count="0">E</span>rror v -&gt; print_endlin<span data-count="0">e</span> v
+(** SPDX-License-Identifier: CC0-1.0 *)
+open DRozhkov_lib.Ast
+
+open DRozhkov_lib.Parser
+
+let () =
+  let test = "let rec fact x = if x = 0 then 1 else x * fact (x - 1)" in
+  match parser test with
+  | <span data-count="1">R</span>esult.Ok res -&gt; Format.print<span data-count="1">f</span> "%a\n" pp_expression res
+  | <span data-count="0">_</span> -&gt; Format.print<span data-count="0">f</span> "WTF????????"
 ;;
 </code></pre>
       </div>
