@@ -2,11 +2,9 @@
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-open Stdlib
 open Angstrom
 open Ast
 
-(* begin parser *)
 let is_whitespace = function
   | ' ' | '\t' | '\n' | '\r' -> true
   | _ -> false
@@ -175,9 +173,9 @@ let if_then_else expr_item_parser =
   fix (fun cur_expr ->
     lift3
       (fun e1 e2 e3 -> ITE (e1, e2, e3))
-      (keyword "if" *> (cur_expr <|> expr_item_parser))
-      (keyword "then" *> (cur_expr <|> expr_item_parser))
-      (keyword "else" *> (cur_expr <|> expr_item_parser))
+      (keyword "if" *> cur_expr)
+      (keyword "then" *> cur_expr)
+      (keyword "else" *> cur_expr)
     <|> expr_item_parser)
 ;;
 
@@ -214,21 +212,9 @@ let decl =
   <* option "" (string ";;")
 ;;
 
-let program_parser =
+let program_parser : program t =
   let empty_decl = many (take_whitespaces *> string ";;") in
   many1 (empty_decl *> decl <* empty_decl) <* take_whitespaces
 ;;
 
 let parse s = parse_string ~consume:All program_parser s
-
-(* simple inline unit tests *)
-let%test _ = parse_string ~consume:All expr_valname "   _" = Ok (Expr_val (LCIdent "_"))
-
-let%test _ =
-  parse_string ~consume:All expr_valname "a_Aasd0320"
-  = Ok (Expr_val (LCIdent "a_Aasd0320"))
-;;
-
-let%test _ = parse_string ~consume:All (parenthesis (char 'a')) "  (  a  )" = Ok 'a'
-let%test _ = parse_string ~consume:All expr_integer " 123" = Ok (Expr_const (Int 123))
-let%test _ = parse_string ~consume:All expr_integer "123" = Ok (Expr_const (Int 123))

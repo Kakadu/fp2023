@@ -1,0 +1,20 @@
+(library
+ (name ocaml_printf_lib)
+ (public_name Ocaml+printf.Lib)
+ (modules Ast Parser)
+ (libraries base stdlib angstrom)
+ (inline_tests)
+ (preprocess
+  (pps ppx_expect ppx_deriving.show ppx_deriving.eq))
+ (instrumentation
+  (backend bisect_ppx)))
+
+(library
+ (name tests)
+ (modules Tests)
+ (libraries ocaml_printf_lib)
+ (inline_tests)
+ (preprocess
+  (pps ppx_expect ppx_deriving.show))
+ (instrumentation
+  (backend bisect_ppx)))

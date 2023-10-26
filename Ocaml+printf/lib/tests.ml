@@ -3,12 +3,50 @@
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
 open Angstrom
-open Parser
-open Ast
+open Ocaml_printf_lib.Parser
+open Ocaml_printf_lib.Ast
 
-(* helper function for inline testing *)
-let test_parser p input expected =
-  let result = parse_string p ~consume:All input in
+(* simple inline unit tests *)
+let%test _ = parse_string ~consume:All expr_valname "   _" = Ok (Expr_val (LCIdent "_"))
+
+let%test _ =
+  parse_string ~consume:All expr_valname "a_Aasd0320"
+  = Ok (Expr_val (LCIdent "a_Aasd0320"))
+;;
+
+let%test _ = parse_string ~consume:All expr_integer " 123" = Ok (Expr_const (Int 123))
+let%test _ = parse_string ~consume:All expr_integer "123" = Ok (Expr_const (Int 123))
+
+let%test _ =
+  parse_string ~consume:All (parenthesis expr_integer) "  (  123 )"
+  = Ok (Expr_const (Int 123))
+;;
+
+let%test _ =
+  parse_string ~consume:All (parenthesis expr_valname) "  ( abcd )"
+  = Ok (Expr_val (LCIdent "abcd"))
+;;
+
+let%test _ =
+  parse_string ~consume:All (unary_op expr_integer) "+ -  +1"
+  = Ok (Un_op (Un_plus, Un_op (Un_minus, Un_op (Un_plus, Expr_const (Int 1)))))
+;;
+
+let%test _ =
+  parse_string
+    ~consume:All
+    (if_then_else (expr_integer <|> expr_valname))
+    "if 1 then if abc1 then 3 else a22 else 5"
+  = Ok
+      (ITE
+         ( Expr_const (Int 1)
+         , ITE (Expr_val (LCIdent "abc1"), Expr_const (Int 3), Expr_val (LCIdent "a22"))
+         , Expr_const (Int 5) ))
+;;
+
+(* helper function for inline testing program_parser *)
+let test_parser input expected =
+  let result = parse_string program_parser ~consume:All input in
   match result with
   | Ok actual ->
     let res1 = equal_program expected actual in
@@ -28,7 +66,7 @@ let%test _ =
     ; Let_decl (false, LCIdent "_b", Bin_op (Add, Expr_const (Int 1), Expr_const (Int 2)))
     ]
   in
-  test_parser program_parser "  ;; ;;;;   ;; ;;let _a=1;; ;;;; let   _b =1+2  " expexted
+  test_parser "  ;; ;;;;   ;; ;;let _a=1;; ;;;; let   _b =1+2  " expexted
 ;;
 
 let%test _ =
@@ -45,7 +83,7 @@ let%test _ =
                 ) ) )
     ]
   in
-  test_parser program_parser "let abcde a  b  c  d  e   =1     " expexted
+  test_parser "let abcde a  b  c  d  e   =1     " expexted
 ;;
 
 let%test _ =
@@ -72,30 +110,7 @@ let%test _ =
                 , Bin_op (Mul, Expr_const (Int 2), Expr_const (Int 3)) ) ) )
     ]
   in
-  test_parser
-    program_parser
-    "let a =  10/( 2+(+ +5) )*( 7 + - 1) - ( 1 + 2*  3 ) "
-    expexted
-;;
-
-let%test _ =
-  let expexted =
-    [ Let_decl
-        ( false
-        , LCIdent "x"
-        , ITE
-            ( Expr_const (Int 1)
-            , ITE
-                ( Expr_const (Int 2)
-                , ITE (Expr_const (Int 3), Expr_const (Int 4), Expr_const (Int 5))
-                , Expr_const (Int 6) )
-            , Expr_const (Int 7) ) )
-    ]
-  in
-  test_parser
-    program_parser
-    "let x = if 1 then if 2 then if 3 then 4 else 5 else 6 else 7"
-    expexted
+  test_parser "let a =  10/( 2+(+ +5) )*( 7 + - 1) - ( 1 + 2*  3 ) " expexted
 ;;
 
 (* factorail *)
@@ -119,8 +134,5 @@ let%test _ =
             ) )
     ]
   in
-  test_parser
-    program_parser
-    "let rec fac n = if n <= 1 then 1 else n * fac (n - 1)"
-    expected
+  test_parser "let rec fac n = if n <= 1 then 1 else n * fac (n - 1)" expected
 ;;
