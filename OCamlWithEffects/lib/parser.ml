@@ -71,7 +71,7 @@ let is_acceptable_fl = function
 ;;
 
 let chainl1 e op =
-  let rec go acc = lift2 (fun f x -> f acc x) op e >>= go <|> return acc in
+  let rec go acc = lift2 (fun f x -> EBinaryOperation(f, acc, x)) op e >>= go <|> return acc in
   e >>= fun init -> go init
 ;;
 
@@ -203,3 +203,66 @@ let parse_declaration pack =
       (many parse_uncapitalized_name)
       (skip_wspace *> string "=" *> parse_expr)
 ;;
+
+(* Constructors *)
+let sAdd _ = Plus
+let sSub _ = Sub
+let sMul _ = Mul
+let sDiv _ = Div
+let sEq _ = Eq
+let sNEq _ = NEq
+let sGt _ = Gt
+let sGte _ = Gte
+let sLt _ = Lt
+let sLte _ = Lte
+let sAnd _ = And
+let sOr _ = Or
+
+let parse_bin_op pack = 
+  fix
+  @@ fun self ->
+  skip_wspace
+  *>
+  let addition = skip_wspace *> char '+' >>| sAdd
+  and subtraction = skip_wspace *> char '-' >>| sSub
+  and multiplication = skip_wspace *> char '*' >>| sMul
+  and division = skip_wspace *> char '/' >>| sDiv
+  and eqality = skip_wspace *> char '=' >>| sEq
+  and neqality = skip_wspace *> string "!=" <|> string "<>" >>| sEq
+  and logand = skip_wspace *> string "&&" >>| sAnd
+  and logor = skip_wspace *> string "||" >>| sOr
+  and larger = skip_wspace *> char '>' >>| sGt
+  and largerEq = skip_wspace *> string ">=" >>| sGte
+  and less = skip_wspace *> char '<' >>| sLt
+  and lessEq = skip_wspace *> string "<=" >>| sLte
+  in
+  let parse_expr =
+    choice
+      [ parens self
+      ; pack.parse_un_op pack
+      ; pack.parse_application pack
+      ; pack.parse_fun pack
+      ; pack.parse_if_then_else pack
+      ; parse_const
+      ; parse_ident
+      ]
+  in
+  choice[
+    chainl1 parse_expr multiplication;
+    chainl1 parse_expr division;
+    chainl1 parse_expr addition;
+    chainl1 parse_expr subtraction;
+    chainl1 parse_expr larger;
+    chainl1 parse_expr largerEq;
+    chainl1 parse_expr less;
+    chainl1 parse_expr lessEq;
+    chainl1 parse_expr eqality;
+    chainl1 parse_expr neqality;
+    chainl1 parse_expr logand;
+    chainl1 parse_expr logor
+  ]
+  >>= fun s ->
+    match s with
+    | EBinaryOperation (_, _, _) -> return s
+    | _ -> return fail "error"
+  ;;
