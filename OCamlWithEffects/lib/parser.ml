@@ -70,15 +70,9 @@ let is_acceptable_fl = function
   | _ -> fail "abc"
 ;;
 
-let ident =
-  skip_wspace *> peek_char
-  >>= is_acceptable_fl
-  >>= fun _ ->
-  take_while is_ident
-  >>= fun s ->
-  if is_keyword s
-  then fail "Parsing error: name is used as keyword"
-  else return @@ EIdentifier s
+let chainl1 e op =
+  let rec go acc = lift2 (fun f x -> f acc x) op e >>= go <|> return acc in
+  e >>= fun init -> go init
 ;;
 
 let is_letter c = is_upper c || is_lower c
@@ -99,6 +93,17 @@ let parse_uncapitalized_name =
   if is_lower name.[0] || name.[0] = '_'
   then return name
   else fail "Parsing error: not an uncapitalized entity."
+;;
+
+let parse_ident =
+  skip_wspace *> peek_char
+  >>= is_acceptable_fl
+  >>= fun _ ->
+  take_while is_ident
+  >>= fun s ->
+  if is_keyword s
+  then fail "Parsing error: name is used as keyword"
+  else return @@ EIdentifier s
 ;;
 
 let parse_const =
@@ -133,7 +138,7 @@ let parse_fun pack =
       ; self
       ; pack.parse_if_then_else pack
       ; parse_const
-      ; ident
+      ; parse_ident
       ]
   in
   parens self
@@ -157,7 +162,7 @@ let parse_if_then_else pack =
       ; self
       ; pack.parse_fun pack
       ; parse_const
-      ; ident
+      ; parse_ident
       ]
   in
   parens self
@@ -180,7 +185,7 @@ let parse_declaration pack =
       ; pack.parse_fun pack
       ; pack.parse_if_then_else pack
       ; parse_const
-      ; ident
+      ; parse_ident
       ]
   in
   skip_wspace *> string "let" *> skip_wspace1 *> option "" (string "rec" <* skip_wspace1)
