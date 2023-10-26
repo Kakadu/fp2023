@@ -264,5 +264,5 @@ let parse_bin_op pack =
   >>= fun s ->
     match s with
     | EBinaryOperation (_, _, _) -> return s
-    | _ -> return fail "error"
+    | _ -> fail "dddddddd"
   ;;
