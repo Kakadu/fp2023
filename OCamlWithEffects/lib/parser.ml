@@ -238,7 +238,7 @@ let parse_bin_op pack =
   in
   let parse_expr =
     choice
-      [ parens self
+      [parens self
       ; pack.parse_un_op pack
       ; pack.parse_application pack
       ; pack.parse_fun pack
@@ -247,22 +247,22 @@ let parse_bin_op pack =
       ; parse_ident
       ]
   in
-  choice[
-    chainl1 parse_expr multiplication;
-    chainl1 parse_expr division;
-    chainl1 parse_expr addition;
-    chainl1 parse_expr subtraction;
-    chainl1 parse_expr larger;
-    chainl1 parse_expr largerEq;
-    chainl1 parse_expr less;
-    chainl1 parse_expr lessEq;
-    chainl1 parse_expr eqality;
-    chainl1 parse_expr neqality;
-    chainl1 parse_expr logand;
-    chainl1 parse_expr logor
-  ]
+  choice
+    [chainl1 parse_expr multiplication
+    ;  chainl1 parse_expr division
+    ;  chainl1 parse_expr addition
+    ;  chainl1 parse_expr subtraction
+    ;  chainl1 parse_expr larger
+    ;  chainl1 parse_expr largerEq
+    ;  chainl1 parse_expr less
+    ;  chainl1 parse_expr lessEq
+    ;  chainl1 parse_expr eqality
+    ;  chainl1 parse_expr neqality
+    ;  chainl1 parse_expr logand
+    ;  chainl1 parse_expr logor
+    ]
   >>= fun s ->
     match s with
     | EBinaryOperation (_, _, _) -> return s
-    | _ -> fail "dddddddd"
+    | _ -> fail "Error: not binary operation."
   ;;
