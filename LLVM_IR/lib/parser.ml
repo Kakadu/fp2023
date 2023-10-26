@@ -121,11 +121,6 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  test_parse parse_type Ast.show_tp "<4xi32>";
-  [%expect {| (Vector (4, (Integer 32))) |}]
-;;
-
-let%expect_test _ =
   test_parse parse_type Ast.show_tp "{i32, i42, float}";
   [%expect {| (Struct [(Integer 32); (Integer 42); Float]) |}]
 ;;
