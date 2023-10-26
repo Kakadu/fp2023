@@ -1,4 +1,6 @@
 type tp =
+  (* only for function ret*)
+  | Void (** void *)
   (* primitive types*)
   | Float (** float *)
   | Integer of int (** i1, i2 ... in *)
@@ -14,12 +16,28 @@ type tp =
 *)
 [@@deriving show { with_path = false }]
 
-type ret_type =
-  | Void (** void *)
-  | Type of tp
+type instruction = string
 [@@deriving show { with_path = false }]
 
-type func =
-  { returnType : ret_type
-  ; parameters : tp list
+type basic_block =
+  { num : int
+  ; instructions : instruction list
   }
+[@@deriving show { with_path = false }]
+
+
+type variable =
+  { name : string
+  ; tp : tp
+  }
+[@@deriving show { with_path = false }]
+
+
+type func =
+  { name : string
+  ; returnType : tp
+  ; parameters : variable list
+  ; basic_blocks : basic_block list
+  }
+[@@deriving show { with_path = false }]
+
