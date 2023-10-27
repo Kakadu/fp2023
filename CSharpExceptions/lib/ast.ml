@@ -36,25 +36,23 @@ and var_type =
 and assignable_type =
   | TNot_Nullable of base_type
   | TNullable of nulable_type
-[@@deriving show { with_path = false }, eq]
 
 and base_type =
   | TInt
   | TChar
   | TBool
-[@@deriving show { with_path = false }, eq]
 
 and nulable_type =
   | TBase of base_type
   | TString
   | TClass of ident
-[@@deriving show { with_path = false }, eq]
 
 (* ************************************************* *)
 type modifier =
   | Class of access_modifier
   | Method of method_modifier
   | Fild of fild_modifier
+[@@deriving show { with_path = false }, eq]
 
 and method_modifier =
   | MAccess of access_modifier
@@ -87,12 +85,13 @@ type bin_op =
   | And
   | Or
   | Assign
+[@@deriving show { with_path = false }, eq]
 
 type un_op =
   | UMinus
   | UNot
   | New
-
+[@@deriving show { with_path = false }, eq]
 (** The main type for our AST (дерева абстрактного синтаксиса) *)
 type expr =
   | EVal of value_
@@ -115,10 +114,12 @@ type expr =
   | Steps of expr list
   (*  *)
   | EIf_else of expr * expr * expr option
+  | EBreak
+  | EReturn
+[@@deriving show { with_path = false }, eq]
 (* | EWhile *)
 (* | EFor *)
 (* | ETry_catch_fin *)
-(* | EBreak *)
 (* | ESwitch *)
 
 and args = (ident * expr) list

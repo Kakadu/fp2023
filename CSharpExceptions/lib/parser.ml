@@ -14,6 +14,26 @@ open Ast
 (** @see <https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/>
       C# keywords *)
 
+let p_list1 exp =
+  fix (fun foo -> lift2 (fun x tl -> x :: tl) exp foo <|> (exp >>| fun x -> x :: []))
+;;
+
+let p_list exp = p_list1 exp <|> return []
+let chainl0 expr un_op = un_op >>= (fun op -> expr >>| fun exp -> op exp) <|> expr
+
+let chainl1 expr bin_op =
+  let rec epars e1 =
+    lift2 (fun b_op e2 -> b_op e1 e2) bin_op expr >>= epars <|> return e1
+  in
+  expr >>= fun init -> epars init
+;;
+
+let chainr1 exp op =
+  fix (fun foo ->
+    lift2 (fun e1_op e2 -> e1_op e2) (lift2 (fun e1 bin_op -> bin_op e1) exp op) foo
+    <|> exp)
+;;
+
 let is_type_as_keyword = function
   | "int" | "char" | "string" | "bool" -> true
   | _ -> false
@@ -75,19 +95,7 @@ let is_nullable = function
   | _ -> false
 ;;
 
-(* let foo = fix (fun foo1 -> char 'x' *> foo1 <|> return ()) *)
-(* let func = fix (fun foo -> string "x" >>= (fun x -> foo >>| fun t -> x ^ t) <|> return "") *)
-
 let s_token = take_while1 is_token
-
-(* let sign =
-   peek_char
-   >>= function
-   | Some '+' -> advance 1 >>| fun _ -> "+"
-   | Some '-' -> advance 1 >>| fun _ -> "-"
-   | Some c when is_digit_char c -> return "+"
-   | _ -> fail "Not a digit"
-   ;; *)
 
 let s_string =
   char '\"'
@@ -156,7 +164,8 @@ let p_keyword_type =
 
 let p_var_type = p_keyword_type >>= fun x -> return (TVariable x)
 let ep_spaces prs = skip_spaces *> prs
-let ep_parens prs = ep_spaces @@ (char '(' *> prs) <* char ')'
+let ep_parens prs = ep_spaces @@ (char '(' *> prs) <* ep_spaces @@ char ')'
+let ep_figure_parens prs = ep_spaces @@ (char '{' *> prs) <* ep_spaces @@ char '}'
 let convert_val_to_expr prs = ep_spaces prs >>| fun x -> EVal x
 let ep_number = convert_val_to_expr p_number
 let ep_char = convert_val_to_expr p_char
@@ -168,36 +177,28 @@ let ep_value =
   choice ?failure_msg:(Some "Not a value") [ ep_bool; ep_char; ep_number; ep_string ]
 ;;
 
-let ep_member_ident =
-  fix (fun member_foo ->
-    ep_identifier
-    >>= fun id ->
-    skip_spaces *> char '.' *> member_foo
-    >>| (fun id2 -> EMember_ident (id, id2))
-    <|> return id)
+let ep_dot = ep_spaces @@ (char '.' *> return (fun e1 e2 -> EMember_ident (e1, e2)))
+let ep_member_ident = chainr1 ep_identifier ep_dot
+
+let ep_params ep_arg =
+  let ep_args = ep_arg <* ep_spaces @@ char ',' <|> ep_arg in
+  ep_parens @@ p_list1 ep_args >>= fun exp -> return (EParams exp)
 ;;
 
-(* let ep_params = *)
-(** replace with ep_params (foo stub) *)
-let eP_PARAMS_STAB =
-  ep_spaces
-  @@ (char '('
-      *> take_till (function
-        | ')' -> true
-        | _ -> false)
-      *> return (EIdentifier (Name "PARAMS")))
+let ep_method_inv meth_ident ep_args =
+  ep_params ep_args >>| fun args -> EMethod_invoke (meth_ident, args)
 ;;
 
-let ep_method_inv meth_ident =
-  eP_PARAMS_STAB >>| fun args -> EMethod_invoke (meth_ident, args)
+let ep_method_fild ep_args =
+  ep_member_ident >>= fun id -> ep_method_inv id ep_args <|> return id
 ;;
 
-let ep_method_fild = ep_member_ident >>= fun id -> ep_method_inv id <|> return id
 let _ep_var_decl tp = skip_spaces1 *> p_ident >>| fun id -> EVar_decl (tp, id)
 
 let ep_var_decl =
   ep_spaces
   @@ choice
+       ?failure_msg:(Some "Not a declaration")
        [ p_var_type >>= _ep_var_decl
        ; p_ident >>| (fun cl -> TVariable (TNullable (TClass cl))) >>= _ep_var_decl
        ]
@@ -223,23 +224,13 @@ let ( =^ ) = "=" ==>| Assign
 let ep_un_minus = "-" =>| UMinus
 let ep_not = "!" =>| UNot
 let ep_new = "new" =>| New
-let chainl0 expr un_op = un_op >>= (fun op -> expr >>| fun exp -> op exp) <|> expr
-
-let chainl1 expr bin_op =
-  let rec epars e1 =
-    lift2 (fun b_op e2 -> b_op e1 e2) bin_op expr >>= epars <|> return e1
-  in
-  expr >>= fun init -> epars init
-;;
-
-let rec chainr1 e op = e >>= fun a -> op >>= (fun f -> chainr1 e op >>| f a) <|> return a
 let ( >- ) lvl p_list = chainl0 lvl (choice p_list)
 let ( >>- ) lvl p_list = chainl1 lvl (choice p_list)
 let ( -<< ) lvl p_list = chainr1 lvl (choice p_list)
 
-let ep_bin_op =
+let ep_operation =
   fix (fun expr ->
-    let lvl1 = choice [ ep_parens expr; ep_value; ep_method_fild ] in
+    let lvl1 = choice [ ep_parens expr; ep_value; ep_method_fild expr ] in
     let lvl2 = lvl1 >- [ ep_un_minus; ep_new; ep_not ] in
     let lvl3 = lvl2 >>- [ ( *^ ); ( /^ ); ( %^ ) ] in
     let lvl4 = lvl3 >>- [ ( +^ ); ( -^ ) ] in
@@ -249,6 +240,73 @@ let ep_bin_op =
     let lvl8 = lvl7 >>- [ ( ||^ ) ] in
     lvl8 -<< [ ( =^ ) ])
 ;;
+
+let ep_eAssign_eDecl =
+  choice
+    ?failure_msg:(Some "Not a declaration or assignment")
+    [ lift2
+        (fun decl value -> EAssign (decl, value))
+        ep_var_decl
+        (ep_spaces (char '=') *> ep_operation)
+    ; ep_var_decl
+    ]
+;;
+
+let _ep_keyword kw =
+  ep_spaces @@ s_token
+  >>= function
+  | x when x == kw -> return kw
+  | _ -> fail ("Not a " ^ kw)
+;;
+
+let ep_break = _ep_keyword "break" *> return EBreak
+let ep_return = _ep_keyword "return" *> return EReturn
+let ep_is kw ~then_:ps = _ep_keyword kw *> ps
+
+let _ep_if_cond =
+  let p_cond = ep_parens ep_operation in
+  ep_is "if" ~then_:p_cond
+;;
+
+let _ep_else_cond ep_body ep_ifls =
+  let elif =
+    ep_spaces @@ peek_string 2
+    >>= function
+    | "if" -> ep_ifls
+    | _ -> fail "It isn't else if"
+  in
+  choice [ elif; ep_is "else" ~then_:ep_body ]
+  >>= (fun else_ -> return (Some else_))
+  <|> return None
+;;
+
+let rec ep_if_else ep_body =
+  let ifls = ep_if_else ep_body in
+  let else_ = _ep_else_cond ep_body ifls in
+  lift3 (fun cond body else_ -> EIf_else (cond, body, else_)) _ep_if_cond ep_body else_
+;;
+
+let _ep_brunch_loop ep_body =
+  choice ?failure_msg:(Some "It isn't IF or") [ ep_if_else ep_body ]
+
+
+let rec _ep_steps (ep_br_lp : expr t -> expr t) =
+  let ep_lp_br_steps = _ep_steps ep_br_lp in
+  (*  ^^^^^^^^^^^^^^ если проблемы с бесконечной рекурсией, то здесь - мб левая рекурсия *)
+  let body_step =
+    let p_step ep = ep <* ep_spaces @@ char ';' in
+    choice
+      [ p_step ep_eAssign_eDecl
+      ; p_step ep_operation
+      ; p_step (_ep_brunch_loop ep_lp_br_steps)
+      ; p_step ep_break
+      ; p_step ep_return
+      ]
+  in
+  ep_figure_parens @@ p_list body_step >>| fun bd -> Steps bd
+;;
+
+
 
 let parse str ~p =
   match parse_string p ~consume:Angstrom.Consume.All str with
@@ -323,3 +381,73 @@ let%test _ = test_bool "false" (VBool false)
 (* false *)
 let%test _ = not (test_bool "@das" (VBool false))
 let%test _ = not (test_bool "das" (VBool false))
+
+(* ep_operation *)
+let test_operation = test_pars ep_operation equal_expr
+
+(* true *)
+let%test _ =
+  test_operation
+    "-(!(a +  2 - (    t.a.b     /     t.r)*2))"
+    (EUn_op
+       ( UMinus
+       , EUn_op
+           ( UNot
+           , EBin_op
+               ( Minus
+               , EBin_op (Plus, EIdentifier (Name "a"), EVal (VInt 2))
+               , EBin_op
+                   ( Asterisk
+                   , EBin_op
+                       ( Division
+                       , EMember_ident
+                           ( EIdentifier (Name "t")
+                           , EMember_ident (EIdentifier (Name "a"), EIdentifier (Name "b"))
+                           )
+                       , EMember_ident (EIdentifier (Name "t"), EIdentifier (Name "r")) )
+                   , EVal (VInt 2) ) ) ) ))
+;;
+
+let%test _ =
+  test_operation
+    "a = b= c"
+    (EBin_op
+       ( Assign
+       , EIdentifier (Name "a")
+       , EBin_op (Assign, EIdentifier (Name "b"), EIdentifier (Name "c")) ))
+;;
+
+let%test _ =
+  test_operation
+    "a (1+2,  d  , \"qwe\") + 100000"
+    (EBin_op
+       ( Plus
+       , EMethod_invoke
+           ( EIdentifier (Name "a")
+           , EParams
+               [ EBin_op (Plus, EVal (VInt 1), EVal (VInt 2))
+               ; EIdentifier (Name "d")
+               ; EVal (VString "qwe")
+               ] )
+       , EVal (VInt 100000) ))
+;;
+
+(* ep_eAssign_eDecl *)
+let test_eAssign_eDecl = test_pars ep_eAssign_eDecl equal_expr
+
+let%test _ =
+  test_eAssign_eDecl
+    "a         egor    =    a (1+2,  d  , \"qwe\") + 100000"
+    (EAssign
+       ( EVar_decl (TVariable (TNullable (TClass (Name "a"))), Name "egor")
+       , EBin_op
+           ( Plus
+           , EMethod_invoke
+               ( EIdentifier (Name "a")
+               , EParams
+                   [ EBin_op (Plus, EVal (VInt 1), EVal (VInt 2))
+                   ; EIdentifier (Name "d")
+                   ; EVal (VString "qwe")
+                   ] )
+           , EVal (VInt 100000) ) ))
+;;
