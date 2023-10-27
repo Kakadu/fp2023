@@ -71,7 +71,9 @@ let is_acceptable_fl = function
 ;;
 
 let chainl1 e op =
-  let rec go acc = lift2 (fun f x -> EBinaryOperation(f, acc, x)) op e >>= go <|> return acc in
+  let rec go acc =
+    lift2 (fun f x -> EBinaryOperation (f, acc, x)) op e >>= go <|> return acc
+  in
   e >>= fun init -> go init
 ;;
 
@@ -204,6 +206,34 @@ let parse_declaration pack =
       (skip_wspace *> string "=" *> parse_expr)
 ;;
 
+let parse_application pack =
+  fix
+  @@ fun self ->
+  skip_wspace
+  *> (parens self
+      <|>
+      let function_parser =
+        choice
+          [ parens @@ pack.parse_fun pack
+          ; parens @@ pack.parse_if_then_else pack
+          ; parse_ident
+          ]
+      and operand_parser =
+        choice
+          [ parens @@ pack.parse_bin_op pack
+          ; parens @@ pack.parse_un_op pack
+          ; parens self
+          ; parens @@ pack.parse_fun pack
+          ; parens @@ pack.parse_if_then_else pack
+          ; parse_const
+          ; parse_ident
+          ]
+      in
+      let chainl acc = lift (eapplication acc) operand_parser in
+      let rec go acc = chainl acc >>= go <|> return acc in
+      function_parser >>= fun init -> chainl init >>= fun init -> go init)
+;;
+
 (* Constructors *)
 let sAdd _ = Plus
 let sSub _ = Sub
@@ -218,7 +248,7 @@ let sLte _ = Lte
 let sAnd _ = And
 let sOr _ = Or
 
-let parse_bin_op pack = 
+let parse_bin_op pack =
   fix
   @@ fun self ->
   skip_wspace
@@ -234,11 +264,10 @@ let parse_bin_op pack =
   and larger = skip_wspace *> char '>' >>| sGt
   and largerEq = skip_wspace *> string ">=" >>| sGte
   and less = skip_wspace *> char '<' >>| sLt
-  and lessEq = skip_wspace *> string "<=" >>| sLte
-  in
+  and lessEq = skip_wspace *> string "<=" >>| sLte in
   let parse_expr =
     choice
-      [parens self
+      [ parens self
       ; pack.parse_un_op pack
       ; pack.parse_application pack
       ; pack.parse_fun pack
@@ -248,21 +277,21 @@ let parse_bin_op pack =
       ]
   in
   choice
-    [chainl1 parse_expr multiplication
-    ;  chainl1 parse_expr division
-    ;  chainl1 parse_expr addition
-    ;  chainl1 parse_expr subtraction
-    ;  chainl1 parse_expr larger
-    ;  chainl1 parse_expr largerEq
-    ;  chainl1 parse_expr less
-    ;  chainl1 parse_expr lessEq
-    ;  chainl1 parse_expr eqality
-    ;  chainl1 parse_expr neqality
-    ;  chainl1 parse_expr logand
-    ;  chainl1 parse_expr logor
+    [ chainl1 parse_expr multiplication
+    ; chainl1 parse_expr division
+    ; chainl1 parse_expr addition
+    ; chainl1 parse_expr subtraction
+    ; chainl1 parse_expr larger
+    ; chainl1 parse_expr largerEq
+    ; chainl1 parse_expr less
+    ; chainl1 parse_expr lessEq
+    ; chainl1 parse_expr eqality
+    ; chainl1 parse_expr neqality
+    ; chainl1 parse_expr logand
+    ; chainl1 parse_expr logor
     ]
   >>= fun s ->
-    match s with
-    | EBinaryOperation (_, _, _) -> return s
-    | _ -> fail "Error: not binary operation."
-  ;;
+  match s with
+  | EBinaryOperation (_, _, _) -> return s
+  | _ -> fail "Error: not binary operation."
+;;
