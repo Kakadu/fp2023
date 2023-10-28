@@ -13,6 +13,44 @@ let pp string =
   | None ->
       Stdlib.print_endline "syntax error"
 
+let%expect_test "parse_let_binding_pattern2" =
+  pp "let ft::sc::tr = sc" ;
+  [%expect
+    {|
+    [(Str_value (Nonrecursive,
+        [{ pat =
+           (Pat_construct ((Ident "::"),
+              (Some (Pat_tuple
+                       [(Pat_var "ft");
+                         (Pat_construct ((Ident "::"),
+                            (Some (Pat_tuple [(Pat_var "sc"); (Pat_var "tr")]))))
+                         ]))
+              ));
+           expr = (Exp_ident (Ident "sc")) }
+          ]
+        ))
+      ] |}]
+
+let%expect_test "parse_let_binding_pattern1" =
+  pp "let (f, s) = (f + s, f - s)" ;
+  [%expect
+    {|
+    [(Str_value (Nonrecursive,
+        [{ pat = (Pat_tuple [(Pat_var "f"); (Pat_var "s")]);
+           expr =
+           (Exp_tuple
+              [(Exp_apply (
+                  (Exp_apply ((Exp_ident (Ident "+")), (Exp_ident (Ident "f")))),
+                  (Exp_ident (Ident "s"))));
+                (Exp_apply (
+                   (Exp_apply ((Exp_ident (Ident "-")), (Exp_ident (Ident "f")))),
+                   (Exp_ident (Ident "s"))))
+                ])
+           }
+          ]
+        ))
+      ] |}]
+
 let%expect_test "parse_custom_operator1" =
   pp "let (>>=) a b = a ** b" ;
   [%expect
