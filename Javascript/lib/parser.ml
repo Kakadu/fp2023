@@ -4,7 +4,6 @@ open Angstrom
 open Ast
 
 let chars2string chars = List.fold_left (fun a b -> a ^ Char.escaped b) "" chars
-let brek a = "{" ^ a ^ "}" (*For Debug*)
 
 let nothing = return ()
 
@@ -44,18 +43,15 @@ let is_end = function
   | _ -> false
 ;;
 
-let kwds_stm_start = [
+let keywords = [
   "let";
   "const";
   "function";
   "if";
-  "return"
+  "return";
+  "else"
 ]
 
-let other_keywords = [
-  "else";
-];;
-let keywords = kwds_stm_start @ other_keywords
 let is_keyword ch = List.mem ch keywords;;
 
 let rec return_eq_element el_for_comp trans = function
@@ -79,37 +75,45 @@ let next_is_kwd =
   let rec self = function
   | a :: tail -> string a *> satisfy is_empty *> return true <|> self tail
   | _ -> return false in
-  (self kwds_stm_start >>= fun c ->
+  (self keywords >>= fun c ->
     if c then fail "" else return false)
   <|> return true
 
 let empty = take_while(is_empty)
 let empty1 = take_while1(is_empty)
 let spaces = take_while(is_space)
-let token_space s = spaces *> s
-let token s = empty *> s
-let token1 s = empty1 *> s
+let token_space p = spaces *> p
+let token p = empty *> p
+let token1 p = empty1 *> p
+let token_ch ch = token @@ char ch *> return ()
 let token_str s = token @@ string s
 let token_end_of_stm_exc ?(exp = "") s = 
   token ((next_is_kwd >>= (fun c -> if c then fail exp else nothing))
   *> (take_while is_end >>= (function | "" -> nothing | _ -> fail exp))
   *> s)
 
+let between p l r= l *> p <* r
+let lp = token_ch '('
+let rp = token_ch ')'
+let lc = token_ch '{'
+let rc = token_ch '}'
+let parens p = between p lp rp
+let cur_parens p = between p lc rc
+
 let to_end_of_stm = 
   empty >>= (fun chs -> 
     end_of_input 
     <|> skip is_end 
+    <|> (peek_char_fail >>= function | '}' -> nothing | _ -> fail "")
     <|> (next_is_kwd >>= (fun c -> 
       if c && (String.exists is_line_break chs) 
-      then nothing else fail "incorrect end of statment")))
+      then nothing else fail "incorrect end of statement")))
 
 let is_false_fail cond ?(error_msg="") input = if cond input then return input else fail error_msg
 
-let between p l r= l *> p <* r
-let lp = token_str "("
-let rp = token_str ")"
-let parens p = between p lp rp
 
+
+let some n = Some n
 let number n = Number n
 let const c = Const c
 let var v = Var v
@@ -168,6 +172,7 @@ let parse_list_of_mini_expressions parsed_list =
 
 let rec parse_arguments = fun () ->
   parens(sep_by (token_str ",") (parse_expression ())) <?> "incorrect function arguments"
+
 and parse_expression = fun () ->
   fix(fun self ->
     many(token (choice [
@@ -183,7 +188,7 @@ and parse_expression = fun () ->
 let var_parser (init_word: string) = 
   valid_identifier
   >>= (fun identifier ->
-    (token_str "=" *> parse_expression () <* to_end_of_stm >>| (fun c -> Some c)) 
+    (token_str "=" *> parse_expression () <* to_end_of_stm >>| some) 
     <|> (to_end_of_stm *> return None) <?> "incorrect definition"
     >>| (fun expr -> VarDeck 
     {
@@ -195,15 +200,49 @@ let var_parser (init_word: string) =
   )  
 (*TODO: var support*)
 
-let parse_statements stopper = 
-  many_till (token (read_word <* empty1 >>= 
+let parse_return =
+  token @@ parse_expression () >>| (fun c -> Return c) <* to_end_of_stm
+
+let parse_empty_stm =
+  to_end_of_stm >>| fun _ -> EmptyStm
+
+let rec func_parser = fun () ->
+  token valid_identifier >>= fun name -> 
+    token @@ parse_arguments () >>= fun arguments -> 
+      (to_end_of_stm >>| fun _ -> None) <|>
+      (lc *> parse_statements rc >>| (fun c -> Some(Block c)) <* to_end_of_stm)
+      >>| fun body -> FunDeck { 
+          fun_identifier = name; 
+          arguments = arguments; 
+          body = body 
+        }
+
+and parse_block_or_stm = fun () ->
+  (lc *> parse_statements rc >>| fun c -> Block c)
+  <|> parse_stm ()
+
+and if_parser = fun () ->
+  token @@ parens (parse_expression ()) >>= fun condition ->
+   parse_block_or_stm () >>= fun then_stm ->
+    ((token_str "else" *> token1(parse_block_or_stm () >>| some)) <|> return None)
+     >>| fun else_stm ->
+      If (condition, then_stm, else_stm)
+
+and parse_stm = fun () ->
+  token (read_word >>= 
     (fun word -> match word with
-      | "let" | "const" -> var_parser word
-      | _ -> fail "incorrect statement"
+      | "let" | "const" -> token1 @@ var_parser word <?> "wrong var statement"
+      | "function" -> token1 @@ func_parser () <?> "wrong function statement"
+      | "if" -> token1 @@ if_parser () <?> "wrong if statement"
+      | "return" -> token @@ parse_return <?> "wrong return statement"
+      | _ -> parse_empty_stm <?> "incorrect statement"
     ) 
-    (* <|> (many any_char >>| (fun a -> DebugStm (chars2string a))) For Debug *)
-     <* empty))
-    stopper
+    (* <|> (many any_char >>| (fun a -> DebugStm (chars2string a)))  *)
+    (* For Debug *)
+     <* empty)
+
+and parse_statements stopper =
+    many_till (parse_stm ()) stopper
 
 let parse_programm = 
   parse_statements end_of_input >>| (fun c -> Programm c)

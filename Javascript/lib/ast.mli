@@ -34,10 +34,8 @@ type var_init =
 and fun_init =
 {
   fun_identifier: string;
-  is_rec: bool;
   arguments: expression list;
-  value_type: typename;
-  body: statement;
+  body: statement option;
 }
 
 and statement =
@@ -47,6 +45,7 @@ and statement =
   | FunDeck of fun_init
   | If of expression * statement * statement option
   | Return of expression
+  | EmptyStm
   | DebugStm of string
   | Programm of statement list
 [@@deriving show { with_path = false }]
