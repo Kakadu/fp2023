@@ -187,12 +187,23 @@ let parse_int =
   take_while1 (function '0' .. '9' -> true | _ -> false)
   >>| fun i -> Const_integer (Int.of_string i)
 
-(** ["hello world"] *)
 let parse_string =
-  let open Char in
-  char (of_int_exn 34) *> take_till (Char.equal (of_int_exn 34))
-  <* char (of_int_exn 34) (* [of_int_exn 34 = '"'] *)
-  >>| fun s -> Const_string s
+  let parse_string_literal1 =
+    (* [{id|hello_world|id}] *)
+    let ident = take_while (function 'a' .. 'z' | '_' -> true | _ -> false) in
+    char '{' *> ident
+    >>= fun id ->
+    char '|' *> many_till any_char (string ("|" ^ id ^ "}"))
+    >>| fun s -> Const_string (String.of_list s)
+  in
+  let parse_string_literal2 =
+    (* ["hello world"] *)
+    let open Char in
+    char (of_int_exn 34) *> take_till (Char.equal (of_int_exn 34))
+    <* char (of_int_exn 34) (* [of_int_exn 34 = '"'] *)
+    >>| fun s -> Const_string s
+  in
+  parse_string_literal2 <|> parse_string_literal1
 
 let parse_char = char '\'' *> any_char <* char '\'' >>| fun c -> Const_char c
 
@@ -264,6 +275,19 @@ let parse_infix_prefix ~parse_operand ~peek_infix_op ~get_infix_binding_power
   helper 0
 
 (* ======= Tests ======= *)
+
+let%expect_test "parse_quoted_string_literal1" =
+  pp pp_constant parse_string "{|Hello world!|}" ;
+  [%expect {| (Const_string "Hello world!") |}]
+
+let%expect_test "parse_quoted_string_literal2" =
+  pp pp_constant parse_string "{aa|Hello world!|aa}" ;
+  [%expect {| (Const_string "Hello world!") |}]
+
+let%expect_test "parse_quoted_string_literal3" =
+  pp pp_constant parse_string "{aa|Hello |aa world!|aa}" ;
+  [%expect {| (Const_string "Hello |aa world!") |}]
+
 let%expect_test "parse_value_name1" =
   pp Stdlib.Format.pp_print_string parse_value_name "abc" ;
   [%expect {| abc |}]
