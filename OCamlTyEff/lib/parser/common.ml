@@ -1,4 +1,4 @@
-(** Copyright 2023 Danil S, Andrei *)
+(** Copyright 2023, Danil S, Andrei *)
 
 (** SPDX-License-Identifier: MIT *)
 
@@ -297,5 +297,5 @@ let%expect_test "parse_value_name_operator5" =
   [%expect {| @<> |}]
 
 let%expect_test "parse_constr_name" =
-  pp Stdlib.Format.pp_print_string parse_constr_name "Nil";
+  pp Stdlib.Format.pp_print_string parse_constr_name "Nil" ;
   [%expect {| Nil |}]
