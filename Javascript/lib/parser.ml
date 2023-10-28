@@ -1,3 +1,6 @@
+(** Copyright 2023, Kuarni, AlexShmak *)
+(** SPDX-License-Identifier: LGPL-3.0-or-later *)
+
 (* #load "ast.cmi"
 #require "angstrom" *)
 open Angstrom
