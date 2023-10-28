@@ -1,15 +1,33 @@
-(** Copyright 2021-2023, Kakadu and contributors *)
+type atom =
+  | Name of string
+  | Oper of string
 
-(** SPDX-License-Identifier: LGPL-3.0-or-later *)
+val equal_atom : atom -> atom -> bool
+val pp_atom : Format.formatter -> atom -> unit
+val show_atom : atom -> string
 
-type name = string
+type const =
+  | Num of int
+  | Atom of atom
 
-(** The main type for our AST (дерева абстрактного синтаксиса) *)
-type 'name t =
-  | Var of 'name (** Variable [x] *)
-  | Abs of 'name * 'name t (** Abstraction [λx.t] *)
-  | App of 'name t * 'name t
+val equal_const : const -> const -> bool
+val pp_const : Format.formatter -> const -> unit
+val show_const : const -> string
 
-(* Application [f g ] *)
-(** In type definition above the 3rd constructor is intentionally without documentation
-to test linter *)
+type term =
+  | Const of const
+  | Var of string
+  | Relation of
+      { atom : atom
+      ; terms : term list
+      }
+
+val equal_term : term -> term -> bool
+val pp_term : Format.formatter -> term -> unit
+val show_term : term -> string
+
+type many_term = Many_term of term list
+
+val equal_many_term : many_term -> many_term -> bool
+val pp_many_term : Format.formatter -> many_term -> unit
+val show_many_term : many_term -> string
