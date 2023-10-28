@@ -182,7 +182,7 @@ let ep_member_ident = chainr1 ep_identifier ep_dot
 
 let ep_params ep_arg =
   let ep_args = ep_arg <* ep_spaces @@ char ',' <|> ep_arg in
-  ep_parens @@ p_list1 ep_args >>= fun exp -> return (EParams exp)
+  ep_parens @@ p_list ep_args >>= fun exp -> return (EParams exp)
 ;;
 
 let ep_method_inv meth_ident ep_args =
@@ -255,7 +255,7 @@ let ep_eAssign_eDecl =
 let _ep_keyword kw =
   ep_spaces @@ s_token
   >>= function
-  | x when x == kw -> return kw
+  | x when String.( = ) x kw -> return kw
   | _ -> fail ("Not a " ^ kw)
 ;;
 
@@ -269,44 +269,39 @@ let _ep_if_cond =
 ;;
 
 let _ep_else_cond ep_body ep_ifls =
-  let elif =
-    ep_spaces @@ peek_string 2
-    >>= function
-    | "if" -> ep_ifls
-    | _ -> fail "It isn't else if"
-  in
-  choice [ elif; ep_is "else" ~then_:ep_body ]
+  choice
+    ?failure_msg:(Some "It isn't ELSE or ELSE IF")
+    [ ep_is "else" ~then_:ep_ifls; ep_is "else" ~then_:ep_body ]
   >>= (fun else_ -> return (Some else_))
   <|> return None
 ;;
 
-let rec ep_if_else ep_body =
-  let ifls = ep_if_else ep_body in
-  let else_ = _ep_else_cond ep_body ifls in
-  lift3 (fun cond body else_ -> EIf_else (cond, body, else_)) _ep_if_cond ep_body else_
+let ep_if_else ep_body =
+  fix (fun if_else ->
+    let else_ = _ep_else_cond ep_body if_else in
+    lift3 (fun cond body else_ -> EIf_else (cond, body, else_)) _ep_if_cond ep_body else_)
 ;;
 
 let _ep_brunch_loop ep_body =
-  choice ?failure_msg:(Some "It isn't IF or") [ ep_if_else ep_body ]
-
-
-let rec _ep_steps (ep_br_lp : expr t -> expr t) =
-  let ep_lp_br_steps = _ep_steps ep_br_lp in
-  (*  ^^^^^^^^^^^^^^ если проблемы с бесконечной рекурсией, то здесь - мб левая рекурсия *)
-  let body_step =
-    let p_step ep = ep <* ep_spaces @@ char ';' in
-    choice
-      [ p_step ep_eAssign_eDecl
-      ; p_step ep_operation
-      ; p_step (_ep_brunch_loop ep_lp_br_steps)
-      ; p_step ep_break
-      ; p_step ep_return
-      ]
-  in
-  ep_figure_parens @@ p_list body_step >>| fun bd -> Steps bd
+  choice ?failure_msg:(Some "It isn't IF or ...") [ ep_if_else ep_body ]
 ;;
 
+let ep_steps =
+  fix (fun steps ->
+    let body_step =
+      let p_step ep = ep <* ep_spaces @@ char ';' in
+      choice
+        [ p_step ep_eAssign_eDecl
+        ; p_step ep_operation
+        ; p_step ep_break
+        ; p_step ep_return
+        ; _ep_brunch_loop steps
+        ]
+    in
+    ep_figure_parens @@ p_list body_step >>| fun bd -> Steps bd)
+;;
 
+let ep_brunch_loop = _ep_brunch_loop ep_steps
 
 let parse str ~p =
   match parse_string p ~consume:Angstrom.Consume.All str with
@@ -450,4 +445,60 @@ let%test _ =
                    ; EVal (VString "qwe")
                    ] )
            , EVal (VInt 100000) ) ))
+;;
+
+(* ep_steps *)
+
+let test_steps = test_pars ep_steps equal_expr
+
+let%test _ =
+  test_steps
+    "{if (true) \n\
+    \      { q; \n\
+    \        a(); \n\
+    \        1+2; \n\
+    \        if(false) \n\
+    \          {\n\
+    \            e;\n\
+    \          } else \n\
+    \            {\n\
+    \              int  ?   exmp = 243 + 1;\n\
+    \            }\n\
+    \          } \n\
+    \          a(1+2 , cl); \n\
+    \          if (1+ run()) \n\
+    \                {\n\
+    \                  first(1);\n\
+    \                } else if (true) {}\n\
+    \          }"
+    (Steps
+       [ EIf_else
+           ( EVal (VBool true)
+           , Steps
+               [ EIdentifier (Name "q")
+               ; EMethod_invoke (EIdentifier (Name "a"), EParams [])
+               ; EBin_op (Plus, EVal (VInt 1), EVal (VInt 2))
+               ; EIf_else
+                   ( EVal (VBool false)
+                   , Steps [ EIdentifier (Name "e") ]
+                   , Some
+                       (Steps
+                          [ EAssign
+                              ( EVar_decl (TVariable (TNullable (TBase TInt)), Name "exmp")
+                              , EBin_op (Plus, EVal (VInt 243), EVal (VInt 1)) )
+                          ]) )
+               ]
+           , None )
+       ; EMethod_invoke
+           ( EIdentifier (Name "a")
+           , EParams
+               [ EBin_op (Plus, EVal (VInt 1), EVal (VInt 2)); EIdentifier (Name "cl") ]
+           )
+       ; EIf_else
+           ( EBin_op
+               (Plus, EVal (VInt 1), EMethod_invoke (EIdentifier (Name "run"), EParams []))
+           , Steps
+               [ EMethod_invoke (EIdentifier (Name "first"), EParams [ EVal (VInt 1) ]) ]
+           , Some (EIf_else (EVal (VBool true), Steps [], None)) )
+       ])
 ;;

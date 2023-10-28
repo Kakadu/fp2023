@@ -11,6 +11,9 @@ val ep_var_decl: expr Angstrom.t
 val ep_operation: expr Angstrom.t
 val ep_eAssign_eDecl: expr Angstrom.t
 val ep_brunch_loop: expr Angstrom.t
+val ep_steps: expr Angstrom.t
+val _ep_if_cond: expr Angstrom.t
+val _ep_keyword: string -> string Angstrom.t
 
 
 val n_parse : 'a Angstrom.t -> string -> ('a , string) result
