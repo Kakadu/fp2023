@@ -7,11 +7,9 @@ open Angstrom
 
 type dispatch =
   { parse_bin_op : dispatch -> expr Angstrom.t
-  ; parse_un_op : dispatch -> expr Angstrom.t
   ; parse_application : dispatch -> expr Angstrom.t
   ; parse_fun : dispatch -> expr Angstrom.t
   ; parse_if_then_else : dispatch -> expr Angstrom.t
-  ; parse_expression : dispatch -> expr Angstrom.t
   }
 
 (* Constructors for expressions *)
@@ -135,7 +133,6 @@ let parse_fun pack =
   let parse_expr =
     choice
       [ pack.parse_bin_op pack
-      ; pack.parse_un_op pack
       ; pack.parse_application pack
       ; self
       ; pack.parse_if_then_else pack
@@ -159,7 +156,6 @@ let parse_if_then_else pack =
   let parse_expr =
     choice
       [ pack.parse_bin_op pack
-      ; pack.parse_un_op pack
       ; pack.parse_application pack
       ; self
       ; pack.parse_fun pack
@@ -182,7 +178,6 @@ let parse_declaration pack =
   let parse_expr =
     choice
       [ pack.parse_bin_op pack
-      ; pack.parse_un_op pack
       ; pack.parse_application pack
       ; pack.parse_fun pack
       ; pack.parse_if_then_else pack
@@ -221,7 +216,6 @@ let parse_application pack =
       and operand_parser =
         choice
           [ parens @@ pack.parse_bin_op pack
-          ; parens @@ pack.parse_un_op pack
           ; parens self
           ; parens @@ pack.parse_fun pack
           ; parens @@ pack.parse_if_then_else pack
@@ -268,7 +262,6 @@ let parse_bin_op pack =
   let parse_expr =
     choice
       [ parens self
-      ; pack.parse_un_op pack
       ; pack.parse_application pack
       ; pack.parse_fun pack
       ; pack.parse_if_then_else pack
@@ -294,4 +287,10 @@ let parse_bin_op pack =
   match s with
   | EBinaryOperation (_, _, _) -> return s
   | _ -> fail "Error: not binary operation."
+;;
+
+let default = { parse_bin_op; parse_application; parse_fun; parse_if_then_else }
+
+let parse input =
+  parse_string ~consume:All (many (parse_declaration default) <* skip_wspace) input
 ;;
