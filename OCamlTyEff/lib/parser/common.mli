@@ -47,8 +47,8 @@ val parse_const : constant t
 val parse_let_binding :
   expression t -> pattern t -> (rec_flag * value_binding list) t
 (**
-  [let P1 = E1 and P2 = E2 and ... and Pn = En]
-  [let rec P1 PArg1 = E1 and P2 = E2 and ... and Pn = En]
+  [let P1 = E1 and P2 = E2 and ...]
+  [let rec ValName1 PArg1 = E1 and P1 = E2 and ...]
 *)
 
 type 'a infix_operator = {op: 'a; op_length: int}

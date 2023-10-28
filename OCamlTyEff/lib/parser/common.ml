@@ -217,23 +217,21 @@ let parse_rec_flag =
   ws1 *> option Nonrecursive (string "rec" *> return Recursive)
 
 (**
-  [P1 = E1 and ... and Pn = En]
-  [P1 PArg1 = E1 and ... and Pn = En]
+  [P1 = E1 and P2 = E2 and ...]
+  [ValName1 PArg1 = E1 and P1 = E2 and ...]
 *)
 let parse_bindings pexp ppat =
   let parse_binding =
-    let parse_args = ws *> sep_by ws ppat in
-    let insert_args exp = function
-      (* [let f x = E] => [let f = fun x -> E] *)
-      | [] ->
-          exp
-      | _ as args ->
-          Exp_function (args, Function_body exp)
+    let parse_fun_binding =
+      lift3
+        (fun name args exp ->
+          {pat= Pat_var name; expr= Exp_function (args, Function_body exp)} )
+        (ws *> parse_value_name)
+        (ws *> sep_by1 ws ppat)
+        (ws *> char '=' *> pexp)
     in
-    lift3
-      (fun pat args exp -> {pat; expr= insert_args exp args})
-      ppat parse_args
-      (ws *> char '=' *> pexp)
+    parse_fun_binding
+    <|> lift2 (fun pat expr -> {pat; expr}) ppat (ws *> char '=' *> pexp)
   in
   sep_by1 (ws *> string "and") parse_binding
 
