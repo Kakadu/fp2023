@@ -9,41 +9,60 @@ type tp =
   | TVector of int * tp (** <int x primitive_type> *)
   | TArr of int * tp (** [int x type] *)
   | TStruct of tp list (** {type1, type2...} *)
+  (* additional types*)
   | TLabel (** label *)
   | TFunc of tp * tp list (** <returntype> (<parameter list>) *)
 (*
    | Token
    | Metadata
 *)
-[@@deriving show { with_path = false }]
+[@@deriving show { with_path = false }, eq]
 
 type variable =
   | LocalVar of string (** %name *)
   | GlobalVar of string (** @name *)
 [@@deriving show { with_path = false }]
 
-type value =
-  | FromVariable of variable
-  | Const
+and pointer_const = 
+| PointerGlob of variable
+| PointerInt of int
+[@@deriving show { with_path = false }]
+
+
+and const =
+  | CVoid
+  | CInteger of int * int (** size and value*)
+  | CFloat of float
+  | CPointer of pointer_const
+  | CVector of const list
+  | CArr of const list
+  | CStruct of const list
+  | CLabel of basic_block
+  | CFunc of func
+[@@deriving show { with_path = false }]
+
+and value =
+  | FromVariable of variable*tp
+  | Const of const
 [@@deriving show { with_path = false }]
 
 (* ############ Instructions Start ########### *)
-type terminator_instruction =
+and terminator_instruction =
   | Ret of tp * value (** ret <type> <value> *)
   | Br of value (** br label <dest> *)
   | BrCond of value * value * value (** br i1 <cond>, label <iftrue>, label <iffalse> *)
 [@@deriving show { with_path = false }]
 
-type binary_operation_body =
+  and binary_operation_body =
   variable * tp * value * value (* <result> = bin_op <ty> <val1>, <val2> *)
 [@@deriving show { with_path = false }]
 
-type binary_operation =
+and binary_operation =
   | Mul of binary_operation_body
   | Sub of binary_operation_body
 [@@deriving show { with_path = false }]
 
-type instruction =
+and instruction =
   | Terminator of terminator_instruction
   | Binary of binary_operation
   | Other
@@ -57,15 +76,11 @@ type instruction =
 [@@deriving show { with_path = true }]
 (* ############ Instructions End ########### *)
 
-type basic_block =
-  { name : string
-  ; instructions : instruction list
-  }
-[@@deriving show { with_path = false }]
+and basic_block = instruction list [@@deriving show { with_path = false }]
 
-type func =
+and func =
   { parameters : variable list
-  ; basic_blocks : basic_block list
+  ; basic_blocks : variable * basic_block list
   }
 [@@deriving show { with_path = false }]
 
