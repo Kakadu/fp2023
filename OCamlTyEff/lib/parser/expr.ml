@@ -18,8 +18,8 @@ let parse_exp_constr =
   parse_constr_name >>| fun name -> Exp_construct (Ident name, None)
 
 (**
-  [let P1 = E1 and P2 = E2 and ... and Pn = En in E]
-  [let rec P1 PArg1 = E1 and P2 = E2 and ... and Pn = En in E]
+  [let P1 = E1 and P2 = E2 and ... in E]
+  [let rec ValName1 PArg1 = E1 and P1 = E2 and ... in E]
 *)
 let parse_exp_let pexp =
   lift2

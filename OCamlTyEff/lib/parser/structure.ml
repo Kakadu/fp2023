@@ -10,8 +10,8 @@ open Expr
 open Pattern
 
 (**
-  [let P1 = E1 and P2 = E2 and ... and Pn = En]
-  [let rec P1 PArg1 = E1 and P2 = E2 and ... and Pn = En]
+  [let P1 = E1 and P2 = E2 and ...]
+  [let rec ValName1 PArg1 = E1 and P1 = E2 and ...]
 *)
 let parse_str_let =
   parse_let_binding parse_expression parse_pattern
