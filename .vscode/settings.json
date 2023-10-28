@@ -1,6 +1,0 @@
-{
-    "ocaml.sandbox": {
-        "kind": "opam",
-        "switch": "ocaml-variants.4.14.1+options"
-    }
-}
