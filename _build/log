@@ -1,5 +1,0 @@
-# dune build @install
-# OCAMLPARAM: unset
-# Shared cache: disabled
-# Workspace root: /home/ilya_/fp2023
-# Auto-detected concurrency: 4
