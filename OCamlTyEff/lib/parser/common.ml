@@ -172,14 +172,17 @@ let parse_uppercase_ident =
   in
   lift2 String.( ^ ) parse_first parse_rest
 
+let parse_constr_name =
+  let parse_bool_constr = string "true" <|> string "false" in
+  let parse_unit_constr = string "()" in
+  choice [parse_uppercase_ident; parse_bool_constr; parse_unit_constr]
+
 let parse_value_name =
   parse_lowercase_ident
   <|> (char '(' *> ws *> parse_custom_operator_name <* ws <* char ')')
   >>= fun name ->
   if not (is_keyword name) then return name
   else fail (name ^ " keyword can't be used as value name")
-
-let parse_constr_name = parse_uppercase_ident
 
 (* ======= Constants ======= *)
 
@@ -273,6 +276,18 @@ let parse_infix_prefix ~parse_operand ~peek_infix_op ~get_infix_binding_power
   helper 0
 
 (* ======= Tests ======= *)
+
+let%expect_test "parse_pat_bool1" =
+  pp Stdlib.Format.pp_print_string parse_constr_name "true" ;
+  [%expect {| true |}]
+
+let%expect_test "parse_pat_bool2" =
+  pp Stdlib.Format.pp_print_string parse_constr_name "false" ;
+  [%expect {| false |}]
+
+let%expect_test "parse_pat_unit" =
+  pp Stdlib.Format.pp_print_string parse_constr_name "()" ;
+  [%expect {| () |}]
 
 let%expect_test "parse_quoted_string_literal1" =
   pp pp_constant parse_string "{|Hello world!|}" ;
