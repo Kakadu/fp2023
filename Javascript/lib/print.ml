@@ -4,8 +4,8 @@
 open Parser
 open Ast
 
-let pp_ok str =
-  Format.printf "%a" pp_statement @@ Result.get_ok(parse str)
+let pp_ok ?(parser) str =
+  Format.printf "%a" pp_statement @@ Result.get_ok(parse ?parser str)
 ;;
 
 let pp_error str = match Result.get_error(parse str) with
