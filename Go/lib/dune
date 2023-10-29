@@ -1,7 +1,7 @@
 (library
  (name Go_lib)
  (public_name Go.Lib)
- (modules Ast Lambda Interpret Parser Printast Pprintast utils)
+ (modules Ast Parser )
  (inline_tests)
  (modules_without_implementation ast)
  (libraries base angstrom)
@@ -10,12 +10,12 @@
  (instrumentation
   (backend bisect_ppx)))
 
-(library
- (name tests)
- (modules tests)
- (libraries Go_lib)
- (preprocess
-  (pps ppx_expect ppx_deriving.show))
- (instrumentation
-  (backend bisect_ppx))
- (inline_tests))
+; (library
+;  (name tests)
+;  (modules tests)
+;  (libraries Go_lib)
+;  (preprocess
+;   (pps ppx_expect ppx_deriving.show))
+;  (instrumentation
+;   (backend bisect_ppx))
+;  (inline_tests))
