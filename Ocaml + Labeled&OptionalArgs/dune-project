@@ -1,0 +1,31 @@
+(lang dune 3.7)
+
+(generate_opam_files true)
+
+(cram enable)
+
+(license LGPL-3.0-or-later)
+
+(authors "Leonid Elkin")
+
+(maintainers "Leonid Elkin")
+
+(bug_reports "https://github.com/LeonidElkin/fp2023/issues")
+
+(homepage "https://github.com/LeonidElkin/fp2023")
+
+(package
+ (name OcamlLabeled&OptionalArgs)
+ (synopsis "Ocaml + Labeled and optional arguments")
+ (description
+  "Ocaml implementation with labeled and optional arguments support")
+ (version 0.1)
+ (depends
+  dune
+  angstrom
+  (ppx_inline_test :with-test)
+  ppx_expect
+  ppx_deriving
+  bisect_ppx
+  (odoc :with-doc)
+  (ocamlformat :build)))
