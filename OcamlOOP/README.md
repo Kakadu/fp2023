@@ -4,19 +4,14 @@ This is a homework for functional programming course.
 
 License: LGPL for implementation code + WTFPL for test examles in miniLanguage
 
-Author: Vasy Pupkin, vasya@pupkin.com
+Author: Artem Rzhankov, st108141@student.spbu.ru
 
 Features done (append only):
 
-- Parser  (for example)
-- interpreter of non-recursive functions (for example)
-- ...
+- Parser 
 
 Features in progress (and TODOs):
 
-- Interpreter of recursive functions is not yet ready  (for example)
-- TODO: make pretty-printing less memory consuming (for example)
-- ...
 
 
 ##### Замечания по стилю кодирования

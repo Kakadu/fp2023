@@ -1,39 +1,53 @@
+(env
+ (dev
+  (flags
+   (:standard -warn-error -A -w -3-9-32-34-58)))
+ (release
+  (flags
+   (:standard -warn-error -A -w -58))))
+ 
 (executable
- (name demoAO)
- (modules demoAO)
- (public_name demoAO)
- (libraries lambda_lib)
+ (name demo_fact)
+ (public_name demo_fact)
+ (modules demo_fact)
+ (libraries OcamlOOP.Lib)
+ (preprocess
+ (pps ppx_show ppx_deriving.eq))
  (instrumentation
   (backend bisect_ppx)))
 
 (executable
- (name demoNO)
- (modules demoNO)
- (public_name demoNO)
- (libraries lambda_lib)
+ (name demo_obj)
+ (public_name demo_obj)
+ (modules demo_obj)
+ (libraries OcamlOOP.Lib)
+ (preprocess
+ (pps ppx_show ppx_deriving.eq))
  (instrumentation
-  (backend bisect_ppx)))
+  (backend bisect_ppx))
+ )
 
 (executable
- (name demoParse)
- (modules demoParse)
- (public_name demoParse)
- (libraries lambda_lib stdio)
+ (name demo_obj1)
+ (public_name demo_obj1)
+ (modules demo_obj1)
+ (libraries OcamlOOP.Lib)
+ (preprocess
+ (pps ppx_show ppx_deriving.eq))
  (instrumentation
-  (backend bisect_ppx)))
+  (backend bisect_ppx))
+ )
+
+(executable
+ (name demo)
+ (public_name demo)
+ (modules demo)
+ (libraries OcamlOOP.Lib stdio)
+ (preprocess
+ (pps ppx_show ppx_deriving.eq))
+ (instrumentation
+  (backend bisect_ppx))
+ )
 
 (cram
- (applies_to interpretTests)
- (deps
-  ./demoNO.exe
-  ./demoAO.exe
-  ./demoParse.exe
-  ../REPL.exe
-  ./demo_input.txt))
-
-(cram
- (applies_to parsingTests)
- (deps
-  ./demoParse.exe
-  ;
-  ))
+  (deps %{bin:demo_fact} %{bin:demo_obj} %{bin:demo_obj1} %{bin:demo}))
