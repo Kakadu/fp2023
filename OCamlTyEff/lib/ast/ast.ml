@@ -10,7 +10,6 @@ type constant =
   | Const_char of char  (** Character such as ['c'] *)
   | Const_string of string
       (** Constant string such as ["constant"] or [{|other constant|}] *)
-  | Const_float of float  (** Float such as [3.14] *)
 [@@deriving show {with_path= false}]
 
 (* ======= Patterns ======= *)
