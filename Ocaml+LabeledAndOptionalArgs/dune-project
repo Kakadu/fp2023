@@ -15,7 +15,7 @@
 (homepage "https://github.com/LeonidElkin/fp2023")
 
 (package
- (name OcamlLabeled&OptionalArgs)
+ (name Ocaml+LabeledAndOptionalArgs)
  (synopsis "Ocaml + Labeled and optional arguments")
  (description
   "Ocaml implementation with labeled and optional arguments support")

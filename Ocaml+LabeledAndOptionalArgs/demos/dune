@@ -2,7 +2,7 @@
  (name demo_fact)
  (modules demo_fact)
  (public_name demo_fact)
- (libraries OcamlLabeled&OptionalArgs.Lib)
+ (libraries Ocaml+LabeledAndOptionalArgs.Lib)
  (instrumentation
   (backend bisect_ppx)))
 
