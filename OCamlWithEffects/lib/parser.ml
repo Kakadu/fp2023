@@ -157,8 +157,8 @@ let parse_if_then_else pack =
     choice
       [ pack.parse_bin_op pack
       ; pack.parse_application pack
-      ; self
       ; pack.parse_fun pack
+      ; self
       ; parse_const
       ; parse_ident
       ]
@@ -169,7 +169,7 @@ let parse_if_then_else pack =
            eif_then_else
            parse_expr
            (skip_wspace *> string "then" *> parse_expr)
-           (skip_wspace *> string "then" *> parse_expr)
+           (skip_wspace *> string "else" *> parse_expr)
 ;;
 
 let parse_declaration pack =
@@ -269,20 +269,20 @@ let parse_bin_op pack =
       ; parse_ident
       ]
   in
-  choice
-    [ chainl1 parse_expr multiplication
-    ; chainl1 parse_expr division
-    ; chainl1 parse_expr addition
-    ; chainl1 parse_expr subtraction
-    ; chainl1 parse_expr larger
-    ; chainl1 parse_expr largerEq
-    ; chainl1 parse_expr less
-    ; chainl1 parse_expr lessEq
-    ; chainl1 parse_expr eqality
-    ; chainl1 parse_expr neqality
-    ; chainl1 parse_expr logand
-    ; chainl1 parse_expr logor
-    ]
+  let ( <||> ) = chainl1 in
+  parse_expr
+  <||> multiplication
+  <||> division
+  <||> addition
+  <||> subtraction
+  <||> larger
+  <||> largerEq
+  <||> less
+  <||> lessEq
+  <||> eqality
+  <||> neqality
+  <||> logand
+  <||> logor
   >>= fun s ->
   match s with
   | EBinaryOperation (_, _, _) -> return s
