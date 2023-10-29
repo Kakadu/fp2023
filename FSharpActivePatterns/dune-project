@@ -6,17 +6,17 @@
 
 (license LGPL-3.0-or-later)
 
-(authors "FIXME Vasya Pupkin")
+(authors "Vitaliy Dyachkov")
 
-(maintainers "FIXME Vasya Pupkin")
+(maintainers "https://github.com/YazoonDinalt")
 
-(bug_reports "FIXME where to put bug reports about the code")
+(bug_reports "https://github.com/YazoonDinalt/fp2023")
 
-(homepage "FIXME Homepage")
+(homepage "https://github.com/YazoonDinalt/fp2023")
 
 (package
- (name Lambda) ; FIXME and regenerate .opam file using 'dune build @install'
- (synopsis "FIXME An interpreter for language")
+ (name FSharpActivePatterns) ; FIXME and regenerate .opam file using 'dune build @install'
+ (synopsis "An interpreter for FSharp")
  (description
   "FIXME. A longer description, for example, which are the most interesing features being supported, etc.")
  (version 0.1)
@@ -29,6 +29,6 @@
   bisect_ppx
   (odoc :with-doc)
   (ocamlformat :build)
-  ; base
+  base
   ; After adding dependencies to 'dune' files and the same dependecies here too
   ))
