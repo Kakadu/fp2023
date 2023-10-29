@@ -431,8 +431,67 @@ let%expect_test _ =
       parameters = [(LocalVar "0"); (LocalVar "1")] } |}]
 ;;
 
+let additional_type tp =
+  parse_additional_type
+  >>= fun parsed_tp ->
+  if tp = parsed_tp then return tp else fail "Parser error: get unexpected type"
+;;
+
+let parse_type_with_value =
+  parse_additional_type >>= fun tp -> parse_value tp >>| fun value -> tp, value
+;;
+
+let type_with_value tp =
+  parse_type_with_value
+  >>= function
+  | parsed_type, value when parsed_type = tp -> return value
+  | _ -> fail "Parser error: get unexpected type"
+;;
+
+let parse_terminator_instruction =
+  let iret =
+    word "ret" *> whitespaces *> parse_type_with_value
+    >>| function
+    | tp, value -> Ast.Ret (tp, value)
+  and ibr =
+    word "br" *> whitespaces *> type_with_value Ast.TLabel >>| fun value -> Ast.Br value
+  and ibr_cond =
+    word "br" *> lift3
+    (fun b l1 l2 -> Ast.BrCond(b, l1, l2))
+    (type_with_value (Ast.TInteger 1) <* char ',')
+    (type_with_value Ast.TLabel <* char ',')
+    (type_with_value Ast.TLabel)
+  in
+  whitespaces *> choice [ iret; ibr; ibr_cond]
+;;
+
 let parse_instruction : Ast.instruction t =
-  return (Ast.Terminator (Ast.Br (Ast.Const Ast.CVoid)))
+  choice [ (parse_terminator_instruction >>| fun ins -> Ast.Terminator ins) ]
+;;
+
+let%expect_test _ =
+  test_parse parse_instruction Ast.show_instruction "ret i32 %14";
+  [%expect
+    {|
+    (Terminator
+       (Ret ((TInteger 32), (FromVariable ((LocalVar "14"), (TInteger 32)))))) |}]
+;;
+
+let%expect_test _ =
+  test_parse parse_instruction Ast.show_instruction "br label %13";
+  [%expect
+    {|
+    (Terminator (Br (FromVariable ((LocalVar "13"), TLabel)))) |}]
+;;
+
+let%expect_test _ =
+  test_parse parse_instruction Ast.show_instruction " br i1 %5, label %6, label %7";
+  [%expect
+    {|
+    (Terminator
+       (BrCond ((FromVariable ((LocalVar "5"), (TInteger 1))),
+          (FromVariable ((LocalVar "6"), TLabel)),
+          (FromVariable ((LocalVar "7"), TLabel))))) |}]
 ;;
 
 let parse_basic_block_variable =
@@ -449,4 +508,8 @@ let parse_basic_block =
 ;;
 
 let parse_function_body = whitespaces *> char '{' *> whitespaces
-let parse_function = whitespaces *> word "define" *> parse_function_annotation >>= fun _ -> parse_function_body
+
+let parse_function =
+  whitespaces *> word "define" *> parse_function_annotation
+  >>= fun _ -> parse_function_body
+;;
