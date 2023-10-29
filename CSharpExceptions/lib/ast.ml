@@ -1,6 +1,8 @@
-(** Copyright 2021-2023, Kakadu and contributors *)
+(** Copyright 2021-2023, Georgy Sichkar *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
+
+(** {2 Value types} *)
 
 type value_ =
   | Null
@@ -8,15 +10,15 @@ type value_ =
   | VInt of int
   | VChar of char
   | VBool of bool
-  | VVar of string
 [@@deriving show { with_path = false }, eq]
 
 type ident = Id of string [@@deriving show { with_path = false }, eq]
 
-(* ************************************************* *)
+(** {2 Declarations types} *)
+
 type type_ =
   | TMethod of meth_type
-  | TVariable of var_type (** Method type *)
+  | TVariable of var_type
 [@@deriving show { with_path = false }, eq]
 
 and meth_type =
@@ -25,11 +27,7 @@ and meth_type =
 [@@deriving show { with_path = false }, eq]
 
 (** Variable type *)
-and var_type =
-  (* TODO: *)
-  (* | Var *)
-  | TVar of assignable_type
-[@@deriving show { with_path = false }, eq]
+and var_type = TVar of assignable_type [@@deriving show { with_path = false }, eq]
 
 (** Type that can be assigne *)
 and assignable_type =
@@ -46,91 +44,82 @@ and nulable_type =
   | TString
   | TClass of ident
 
-(* ************************************************* *)
-(* type modifier =
-   | MClass of access_modifier
-   | MMethod of method_modifier
-   | MFild of fild_modifier *)
-(* [@@deriving show { with_path = false }, eq] *)
 and method_modifier =
   | MAccess of access_modifier
   | MStatic
-(* | Virtual *)
-(* | Override *)
+(* TODO: | Virtual *)
+(* TODO: | Override *)
 
 and fild_modifier = FAccess of access_modifier
-(* | New *)
-(* | Const *)
+(* TODO:| New *)
+(* TODO:| Const *)
 
 and access_modifier =
   | MPublic
   | MPrivate
   | MProtected
 
-(* ************************************************* *)
 type bin_op =
-  | Asterisk
-  | Plus
-  | Minus
-  | Division
-  | Mod
-  | Equal
-  | NotEqual
-  | Less
-  | LessOrEqual
-  | More
-  | MoreOrEqual
-  | And
-  | Or
-  | Assign
+  | Asterisk (* [*] *)
+  | Plus (* [+] *)
+  | Minus (* [-] *)
+  | Division (* [/] *)
+  | Mod (* [%] *)
+  | Equal (* [==] *)
+  | NotEqual (* [!=] *)
+  | Less (* [<] *)
+  | LessOrEqual (* [+] *)
+  | More (* [>] *)
+  | MoreOrEqual (* [>=] *)
+  | And (* [&&] *)
+  | Or (* [||] *)
+  | Assign (* [=] *)
 [@@deriving show { with_path = false }, eq]
 
 type un_op =
-  | UMinus
-  | UNot
-  | New
+  | UMinus (* [-] *)
+  | UNot (* [!] *)
+  | New (* [new] *)
 [@@deriving show { with_path = false }, eq]
 
-(* The main type for our AST *)
 type expr =
-  | EVal of value_
+  | EVal of value_ (* assignable values *)
   (*  *)
-  | EIdentifier of ident
-  | EParams of expr list
-  | EMethod_invoke of expr * expr
+  | EIdentifier of ident (* id of something e.g. class name; var name; method name *)
+  | EParams of expr list (* method(a, b, c) -> [a; b; c] *)
+  | EMethod_invoke of expr * expr (* method(a, b, c) -> EIdentifier, EParams *)
   (*  *)
   | EBin_op of bin_op * expr * expr
   | EUn_op of un_op * expr
-  | Return of expr option
-  | EMember_ident of expr * expr
-  | Cast of assignable_type * expr
+  | EMember_ident of expr * expr (* access by point e.g. A.run() *)
+  (* TODO: | Cast of assignable_type * expr *)
   (*  *)
   | EClass_decl of class_sign
   | EDecl of type_ * ident
   | EAssign of expr * expr
-  | Steps of expr list
+  | Steps of expr list (* sequence of actions inside {...} *)
   (*  *)
   | EIf_else of expr * expr * expr option
   | EReturn of expr option
   | EBreak
-(* | EWhile *)
-(* | EFor *)
-(* | ETry_catch_fin *)
-(* | ESwitch *)
+(* TODO:| EWhile *)
+(* TODO:| EFor *)
+(* TODO:| ETry_catch_fin *)
+(* TODO:| ESwitch *)
 [@@deriving show { with_path = false }, eq]
 
 and args = Args of expr list [@@deriving show { with_path = false }, eq]
 
 and class_member =
   | Fild of fild_sign
-  | Main of method_sign * expr
-  | Method of method_sign * expr (* <- для юли expr option, если она делает abstruct *)
-  | Constructor of constructor_sign * expr
+  | Main of method_sign * expr (* expr - Steps *)
+  | Method of method_sign * expr (* expr - Steps *)
+  | Constructor of constructor_sign * expr (* expr - Steps *)
 
 and class_sign =
   { cl_modif : access_modifier option
   ; cl_id : ident
-  ; parent : ident option (* <- для юли мб понадобится еще как-то методы обозначить*)
+  ; parent : ident option
   ; cl_mems : class_member list
   }
 
