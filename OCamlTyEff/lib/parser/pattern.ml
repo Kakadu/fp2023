@@ -15,6 +15,20 @@ let parse_pat_var = parse_value_name >>| fun name -> Pat_var name
 
 let parse_pat_const = parse_const >>| fun const -> Pat_constant const
 
+let parse_pat_list ppat =
+  let parse_list =
+    sep_by (ws *> char ';') ppat
+    >>| fun list ->
+    let rec helper = function
+      | h :: tl ->
+          Pat_construct (Ident "::", Some (Pat_tuple [h; helper tl]))
+      | [] ->
+          Pat_construct (Ident "[]", None)
+    in
+    helper list
+  in
+  char '[' *> parse_list <* ws <* char ']'
+
 (* [Cons (hd, tl)] *)
 let parse_pat_constr ppat_single =
   let* name = parse_constr_name in
@@ -28,6 +42,7 @@ let parse_single_pat ppat =
            [ parse_pat_any
            ; parse_pat_var
            ; parse_pat_const
+           ; parse_pat_list ppat
            ; parse_pat_constr ppat_single
            ; char '(' *> ppat <* ws <* char ')' ] )
 
@@ -172,3 +187,36 @@ let%expect_test "parse_pat_list_or_tuple" =
               ));
             (Pat_var "d")]),
        (Pat_var "e"))) |}]
+
+let%expect_test "parse_list" =
+  pp pp_pattern parse_pattern "[a;b;c]" ;
+  [%expect
+    {|
+    (Pat_construct ((Ident "::"),
+       (Some (Pat_tuple
+                [(Pat_var "a");
+                  (Pat_construct ((Ident "::"),
+                     (Some (Pat_tuple
+                              [(Pat_var "b");
+                                (Pat_construct ((Ident "::"),
+                                   (Some (Pat_tuple
+                                            [(Pat_var "c");
+                                              (Pat_construct ((Ident "[]"), None
+                                                 ))
+                                              ]))
+                                   ))
+                                ]))
+                     ))
+                  ]))
+       )) |}]
+
+let%expect_test "parse_list_1element" =
+  pp pp_pattern parse_pattern "[a]" ;
+  [%expect
+    {|
+    (Pat_construct ((Ident "::"),
+       (Some (Pat_tuple [(Pat_var "a"); (Pat_construct ((Ident "[]"), None))])))) |}]
+
+let%expect_test "parse_list_empty" =
+  pp pp_pattern parse_pattern "[]" ;
+  [%expect {| (Pat_construct ((Ident "[]"), None)) |}]
