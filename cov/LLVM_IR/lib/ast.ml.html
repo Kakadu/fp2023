@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8"/>
     <title>ast.ml &mdash; Coverage report</title>
-    <meta name="description" content="83.08% coverage in lib/ast.ml">
+    <meta name="description" content="83.33% coverage in lib/ast.ml">
     <link rel="stylesheet" href="../coverage.css"/>
     <script src="../highlight.pack.js"></script>
     <script>hljs.initHighlightingOnLoad();</script>
@@ -15,7 +15,7 @@
           <span class="dirname">lib/</span>ast.ml
         </a>
       </h1>
-      <h2>83.08%</h2>
+      <h2>83.33%</h2>
     </div>
     <div id="navbar">
       <span class="unvisited" style="top:6.54%"></span>
@@ -64,7 +64,7 @@
 <a id="L30"></a><span class="visited"> </span>
 <a id="L31"></a><span > </span>
 <a id="L32"></a><span class="unvisited"> </span>
-<a id="L33"></a><span > </span>
+<a id="L33"></a><span class="visited"> </span>
 <a id="L34"></a><span > </span>
 <a id="L35"></a><span class="visited"> </span>
 <a id="L36"></a><span > </span>
@@ -275,24 +275,24 @@
 *)
 [@@deriving show { with_path = false }, eq<span data-count="43">]</span>
 
-<span data-count="826">t</span>ype variable =
+<span data-count="198">t</span>ype variable =
   | LocalVar of strin<span data-count="61">g</span> (** %name *)
   | GlobalVar of strin<span data-count="5">g</span> (** @name *)
 [@@deriving show { with_path = false }]
 
-<span data-count="6">a</span>nd pointer_const =
+<span data-count="12">t</span>ype pointer_const =
   | PointerGlob of variable
   | PointerInt of in<span data-count="0">t</span>
-[@@deriving show { with_path = false }]
+[@@deriving show { with_path = false }<span data-count="6">]</span>
 
-<span data-count="50">a</span>nd const =
+<span data-count="672">t</span>ype const =
   | CVoid
   | CInteger of in<span data-count="20">t</span> * <span data-count="20">i</span>n<span data-count="40">t</span> (** size and value*)
   | CFloat of floa<span data-count="2">t</span>
   | CPointer of pointer_const
-  | CVector of <span data-count="17">c</span>onst lis<span data-count="4">t</span>
-  | CArr of <span data-count="27">c</span>onst lis<span data-count="6">t</span>
-  | CStruct of <span data-count="9">c</span>onst lis<span data-count="2">t</span>
+  | CVector of <span data-count="17">c</span>onst lis<span data-count="4">t</span> (** &lt;const, const, ...&gt; *)
+  | CArr of <span data-count="27">c</span>onst lis<span data-count="6">t</span>  (** [const, const, ...] *)
+  | CStruct of <span data-count="9">c</span>onst lis<span data-count="2">t</span> (** {const, const, ...} *)
   | CLabel of basic_block
   | CFunc of func
 [@@deriving show { with_path = false }]
@@ -354,7 +354,7 @@
   { parameters : <span data-count="5">v</span>ariable lis<span data-count="1">t</span>
   ; basic_blocks : <span data-count="17">(</span><span data-count="8">v</span>ariable*const) lis<span data-count="4">t</span>
   }
-[@@deriving show { with_path = false }<span data-count="668">]</span>
+[@@deriving show { with_path = false }<span data-count="662">]</span>
 
 <span data-count="7">t</span>ype glob_list = <span data-count="5">(</span><span data-count="2">t</span>p * variable * const) lis<span data-count="1">t</span> [@@deriving show { with_path = false }<span data-count="8">]</span>
 
