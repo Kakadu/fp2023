@@ -3,10 +3,12 @@ opam-version: "2.0"
 version: "0.1"
 synopsis: "An interpreter for Golang language"
 description:
-  "FIXME. A longer description, for example, which are the most interesing features being supported, etc."
+  "A longer description, for example, which are the most interesing features being supported, etc."
 maintainer: ["Nikita Lukonenko"]
 authors: ["Nikita Lukonenko"]
 license: "LGPL-3.0-or-later"
+homepage: "FIXME Homepage"
+bug-reports: "FIXME where to put bug reports about the code"
 depends: [
   "dune" {>= "3.7"}
   "angstrom"
@@ -21,7 +23,7 @@ depends: [
   "adding"
   "dependencies"
   "to"
-  "'dune'"
+  "dune"
   "files"
   "and"
   "the"
