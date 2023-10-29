@@ -18,6 +18,10 @@ type binop =
   | Mul (** * *)
   | Eq (** = *)
   | Neq (** <> *)
+  | Les (** < *)
+  | Leq (** <= *)
+  | Gre (** > *)
+  | Geq (** >= *)
 [@@deriving show { with_path = false }]
 
 type const =
@@ -51,3 +55,5 @@ type expr =
   | EFun of id * expr (** Anonymous function *)
   | EApp of expr * expr (** Application f x *)
 [@@deriving show { with_path = false }]
+
+type program = expr list [@@deriving show { with_path = false }]
