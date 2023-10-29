@@ -6,19 +6,19 @@
 
 (license LGPL-3.0-or-later)
 
-(authors "FIXME Vasya Pupkin")
+(authors "Efremov Alexey")
 
-(maintainers "FIXME Vasya Pupkin")
+(maintainers "Efremov Alexeyn")
 
-(bug_reports "FIXME where to put bug reports about the code")
+(bug_reports "https://github.com/Kakadu/fp2023/issues")
 
-(homepage "FIXME Homepage")
+(homepage "https://github.com/Kakadu/fp2023/tree/master/LLVM_IR")
 
 (package
  (name LLVM_IR) ; FIXME and regenerate .opam file using 'dune build @install'
- (synopsis "FIXME An interpreter for language")
+ (synopsis "An interpreter for LLVM Intermediate Representation")
  (description
-  "FIXME. A longer description, for example, which are the most interesing features being supported, etc.")
+  "An interpreter for LLVM Intermediate Representation with interesting features, also known as bugs")
  (version 0.1)
  (depends
   dune
