@@ -58,7 +58,10 @@ let keywords = [
 let is_keyword ch = List.mem ch keywords;;
 
 let rec return_eq_element el_for_comp trans = function
-  | a :: tail -> if el_for_comp = trans a then Some a else return_eq_element el_for_comp trans tail
+  | a :: tail -> 
+    if el_for_comp = trans a 
+      then Some a 
+      else return_eq_element el_for_comp trans tail
   | _ -> None
 
 let is_spec_symbol = function
@@ -112,9 +115,10 @@ let to_end_of_stm =
       if c && (String.exists is_line_break chs) 
       then nothing else fail "incorrect end of statement")))
 
-let is_false_fail cond ?(error_msg="") input = if cond input then return input else fail error_msg
-
-
+let is_false_fail cond ?(error_msg="") input = 
+  if cond input 
+    then return input 
+    else fail error_msg
 
 let some n = Some n
 let number n = Number n
@@ -123,7 +127,7 @@ let var v = Var v
 let fun_call name args = FunctionCall(name, args)
 
 let parse_number = 
-  consumed @@ lift3 (fun a b c -> a^b^c) (take_while is_digit) (string ".") (take_while is_digit) 
+  lift3 (fun a b c -> a^b^c) (take_while is_digit) (string ".") (take_while is_digit) 
   <|> take_while1 is_digit >>= (function |"." -> fail "incorrect number" | _ as num -> return num)
   >>| (fun n -> number @@ float_of_string n)
 (*TODO: -,NaN..., BigINT*)
@@ -170,7 +174,7 @@ let parse_list_of_mini_expressions parsed_list =
     (*TODO: think how to replace @ operator and mb rewrite all expr parser*)
   match for_every_op analize_bin_op parsed_list with
   | [a] -> a
-  | _ as a -> DebugExp a (*For Debug*)
+  | _ -> assert false
 (*TODO: error*)
 
 let rec parse_arguments = fun () ->
