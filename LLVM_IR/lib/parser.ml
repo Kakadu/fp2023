@@ -451,9 +451,7 @@ let parse_binary_operation =
 let parse_other_operation =
   let iicmp =
     lift3
-      (fun var cond tup ->
-        match tup with
-        | tp, v1, v2 -> Ast.Icmp (var, cond, tp, v1, v2))
+      (fun var cond (tp, v1, v2) -> Ast.Icmp (var, cond, tp, v1, v2))
       parse_instruction_result
       (whitespaces *> word "icmp" *> whitespaces *> parse_word)
       (whitespaces *> parse_type_with_value2)
@@ -712,7 +710,7 @@ let parse_function_body =
   whitespaces
   *> char '{'
   *> whitespaces
-  *> lift2 (fun h tl -> h::tl) parse_start_basic_block (many parse_basic_block)
+  *> lift2 (fun h tl -> h :: tl) parse_start_basic_block (many parse_basic_block)
   <* whitespaces
   <* char '}'
 ;;
@@ -730,7 +728,8 @@ let parse_function =
 
 let start_parse : Ast.glob_list t = many (choice [ parse_function ])
 
-let parse_programm prog =  
+let parse_programm prog =
   match Angstrom.parse_string ~consume:Consume.Prefix start_parse prog with
-| Result.Error e ->  Result.Error e
-| Result.Ok lst -> Result.Ok (Ast.show_glob_list lst)
+  | Result.Error e -> Result.Error e
+  | Result.Ok lst -> Result.Ok (Ast.show_glob_list lst)
+;;

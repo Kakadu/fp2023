@@ -27,19 +27,19 @@ type variable =
   | GlobalVar of string (** @name *)
 [@@deriving show { with_path = false }]
 
-and pointer_const =
+type pointer_const =
   | PointerGlob of variable
   | PointerInt of int
 [@@deriving show { with_path = false }]
 
-and const =
+type const =
   | CVoid
   | CInteger of int * int (** size and value*)
   | CFloat of float
   | CPointer of pointer_const
-  | CVector of const list
-  | CArr of const list
-  | CStruct of const list
+  | CVector of const list (** <const, const, ...> *)
+  | CArr of const list  (** [const, const, ...] *)
+  | CStruct of const list (** {const, const, ...} *)
   | CLabel of basic_block
   | CFunc of func
 [@@deriving show { with_path = false }]

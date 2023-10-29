@@ -4,7 +4,7 @@ version: "0.1"
 synopsis: "An interpreter for LLVM Intermediate Representation"
 description:
   "An interpreter for LLVM Intermediate Representation with interesting features, also known as bugs"
-maintainer: ["Efremov Alexeyn"]
+maintainer: ["Efremov Alexey"]
 authors: ["Efremov Alexey"]
 license: "LGPL-3.0-or-later"
 homepage: "https://github.com/Kakadu/fp2023/tree/master/LLVM_IR"
