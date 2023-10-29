@@ -1,3 +1,7 @@
+(** Copyright 2023-2024, Efremov Alexey *)
+
+(** SPDX-License-Identifier: CC0-1.0 *)
+
 val test_parse : 'a Angstrom.t -> ('a -> string) -> string -> unit
 val whitespace : char -> bool
 val comment : unit Angstrom.t
