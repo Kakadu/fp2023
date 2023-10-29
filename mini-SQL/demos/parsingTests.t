@@ -13,11 +13,26 @@ answer is correct
     condition = (Some (Const (Bool true)))}
 
   $ ./demoParse.exe <<-EOF
-  > SELECT *, *, Name, age, 1 + 1 FROM table WHERE NOT False
+  > SELECT *, *, Name, age, 21 - 15 * 2 FROM table WHERE (age = 25 OR age = 27) AND ID > 10
   Parse result: Select {
     exprs =
     [All_Columns; All_Columns; (Expr (Const (Name "Name")));
       (Expr (Const (Name "age")));
-      (Expr (Binary_operation (Add, (Const (Digit 1)), (Const (Digit 1)))))];
+      (Expr
+         (Binary_operation (Substract, (Const (Digit 21)),
+            (Binary_operation (Multiply, (Const (Digit 15)), (Const (Digit 2))
+               ))
+            )))
+      ];
     table = "table";
-    condition = (Some (Unary_operation (Not, (Const (Bool false)))))}
+    condition =
+    (Some (Binary_operation (And,
+             (Binary_operation (Or,
+                (Binary_operation (Equal, (Const (Name "age")),
+                   (Const (Digit 25)))),
+                (Binary_operation (Equal, (Const (Name "age")),
+                   (Const (Digit 27))))
+                )),
+             (Binary_operation (Greater_Than, (Const (Name "ID")),
+                (Const (Digit 10))))
+             )))}

@@ -2,6 +2,7 @@ type value =
   | Name of string
   | String of string
   | Digit of int
+  | Float_Digit of float
   | Bool of bool
 [@@deriving show { with_path = false }]
 
@@ -19,11 +20,11 @@ type bin_op =
   | Or
   (* Compare *)
   | Equal
-  | NotEqual
-  | GreaterThan
-  | LessThan
-  | LessThanOrEqual
-  | GreaterThanOrEqual
+  | Not_Equal
+  | Greater_Than
+  | Less_Than
+  | Less_Than_Or_Equal
+  | Greater_Than_Or_Equal
 [@@deriving show { with_path = false }]
 
 type expr =
