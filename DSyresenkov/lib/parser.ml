@@ -14,6 +14,12 @@
    6. Add comments parser
 *)
 
+(*
+   Type anotations
+   let f : int -> int -> bool = fun x y -> x = y
+   let f (x : int) (y : int) : bool = x = y
+*)
+
 open Angstrom
 open Base
 open Ast
@@ -132,6 +138,10 @@ let pmul = pstoken "*" *> return Mul
 let pdiv = pstoken "/" *> return Div
 let peq = pstoken "=" *> return Eq
 let pneq = pstoken "<>" *> return Neq
+let ples = pstoken "<" *> return Les
+let pleq = pstoken "<=" *> return Leq
+let pgre = pstoken ">" *> return Gre
+let pgeq = pstoken ">=" *> return Geq
 
 let pexpr =
   fix
@@ -145,8 +155,8 @@ let pexpr =
   in
   let pe = plbinop pe (pmul <|> pdiv) in
   let pe = plbinop pe (padd <|> psub) in
-  let pe = plbinop pe (peq <|> pneq) in
+  let pe = plbinop pe (choice [ peq; pneq; ples; pleq; pgre; pgeq ]) in
   choice [ plet pexpr; pbranch pexpr; pe ]
 ;;
 
-let parse = parse_string ~consume:Consume.All (pexpr <* pspaces)
+let parse = parse_string ~consume:Consume.All (many1 (plet pexpr) <* pspaces)

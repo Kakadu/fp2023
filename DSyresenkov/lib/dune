@@ -4,10 +4,9 @@
  (modules Ast Parser)
  (libraries base angstrom)
  (preprocess
-  (pps ppx_expect ppx_deriving.show))
+  (pps ppx_deriving.show))
  (instrumentation
-  (backend bisect_ppx))
-  (inline_tests))
+  (backend bisect_ppx)))
 
 (library
  (name tests)

@@ -4,4 +4,4 @@
 
 open Ast
 
-val parse : string -> (expr, string) result
+val parse : string -> (expr list, string) result
