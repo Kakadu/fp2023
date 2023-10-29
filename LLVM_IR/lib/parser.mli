@@ -48,3 +48,4 @@ val parse_basic_block : (Ast.variable * Ast.const) Angstrom.t
 val parse_function_body : (Ast.variable * Ast.const) list Angstrom.t
 val parse_function : (Ast.tp * Ast.variable * Ast.const) Angstrom.t
 val start_parse : Ast.glob_list Angstrom.t
+val parse_programm : string -> (string, string) result

@@ -2,7 +2,6 @@
  (name llvm_lib)
  (public_name LLVM_IR.Lib)
  (modules Ast Parser)
- ;  (modules_without_implementation ast)
  (libraries base angstrom ppx_show.runtime)
  (inline_tests)
  (preprocess
