@@ -61,10 +61,14 @@ and binary_operation =
   | Sub of binary_operation_body
 [@@deriving show { with_path = false }]
 
-and other_operation = 
-| Icmp of variable*string*tp*value*value (** <result> = icmp <cond> <ty> <op1>, <op2> *)
-| Call of variable*tp*value*(value list) (** <result> = call <ty> <fnptrval>(<function args>) *)
+and other_operation =
+  | Icmp of variable * string * tp * value * value
+      (** <result> = icmp <cond> <ty> <op1>, <op2> *)
+  | Call of variable * tp * value * value list
+      (** <result> = call <ty> <fnptrval>(<function args>) *)
+
 and align = int
+
 and memory_address_inst =
   | Alloca of variable * tp * value * align
       (** <result> = alloca <type> [, <ty> <NumElements>] [, align <alignment>] *)
@@ -91,8 +95,9 @@ and basic_block = instruction list [@@deriving show { with_path = false }]
 
 and func =
   { parameters : variable list
-  ; basic_blocks : variable * basic_block list
+  ; basic_blocks : (variable*const) list
   }
 [@@deriving show { with_path = false }]
 
-type glob_list = (tp * variable * value) list [@@deriving show { with_path = false }]
+type glob_list = (tp * variable * const) list [@@deriving show { with_path = false }]
+
