@@ -23,11 +23,10 @@ type variable =
   | GlobalVar of string (** @name *)
 [@@deriving show { with_path = false }]
 
-and pointer_const = 
-| PointerGlob of variable
-| PointerInt of int
+and pointer_const =
+  | PointerGlob of variable
+  | PointerInt of int
 [@@deriving show { with_path = false }]
-
 
 and const =
   | CVoid
@@ -42,7 +41,7 @@ and const =
 [@@deriving show { with_path = false }]
 
 and value =
-  | FromVariable of variable*tp
+  | FromVariable of variable * tp
   | Const of const
 [@@deriving show { with_path = false }]
 
@@ -53,7 +52,7 @@ and terminator_instruction =
   | BrCond of value * value * value (** br i1 <cond>, label <iftrue>, label <iffalse> *)
 [@@deriving show { with_path = false }]
 
-  and binary_operation_body =
+and binary_operation_body =
   variable * tp * value * value (* <result> = bin_op <ty> <val1>, <val2> *)
 [@@deriving show { with_path = false }]
 
@@ -62,11 +61,23 @@ and binary_operation =
   | Sub of binary_operation_body
 [@@deriving show { with_path = false }]
 
+and other_operation = 
+| Icmp of variable*string*tp*value*value (** <result> = icmp <cond> <ty> <op1>, <op2> *)
+| Call of variable*tp*value*(value list) (** <result> = call <ty> <fnptrval>(<function args>) *)
+and align = int
+and memory_address_inst =
+  | Alloca of variable * tp * int * align
+      (** <result> = alloca <type> [, <ty> <NumElements>] [, align <alignment>] *)
+  | Store of tp * value * value * align
+      (** store <ty> <value>, ptr <pointer>[, align <alignment>] *)
+  | Load of variable * tp * value * align
+      (** <result> = load <ty>, ptr <pointer>[, align <alignment>]*)
+
 and instruction =
   | Terminator of terminator_instruction
   | Binary of binary_operation
-  | Other
-  | MemoryAddress
+  | Other of other_operation
+  | MemoryAddress of memory_address_inst
 (* | Unary
    | BitwiseBinary
    | Vector

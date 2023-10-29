@@ -195,7 +195,6 @@ let parse_global_variable =
   whitespaces *> char '@' *> parse_name >>| fun name -> Ast.GlobalVar name
 ;;
 
-
 let rec parse_const tp =
   let rec makeList i arg = if i = 0 then [] else arg :: makeList (i - 1) arg in
   match tp with
@@ -411,7 +410,7 @@ let parse_function_annotation =
           args
       in
       { self = name; parameters = arg_vars; tp = Ast.TFunc (ret, arg_types) })
-    (whitespaces *> word "define" *> whitespaces *> parse_additional_type)
+    (whitespaces *> parse_additional_type)
     parse_global_variable
     (whitespaces
      *> char '('
@@ -424,10 +423,7 @@ let parse_function_annotation =
 ;;
 
 let%expect_test _ =
-  test_parse
-    parse_function_annotation
-    show_func_annotation
-    "define i32 @fac(i32 %0, i34 %1)";
+  test_parse parse_function_annotation show_func_annotation "i32 @fac(i32 %0, i34 %1)";
   [%expect
     {|
     { self = (GlobalVar "fac");
@@ -453,3 +449,4 @@ let parse_basic_block =
 ;;
 
 let parse_function_body = whitespaces *> char '{' *> whitespaces
+let parse_function = whitespaces *> word "define" *> parse_function_annotation >>= fun _ -> parse_function_body
