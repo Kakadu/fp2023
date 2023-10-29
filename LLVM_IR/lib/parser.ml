@@ -283,6 +283,7 @@ and parse_const_integer size =
 ;;
 
 let parse_value tp =
+  whitespaces *>
   choice
     [ (parse_local_variable >>| fun var -> Ast.FromVariable (var, tp))
     ; (parse_const tp >>| fun const -> Ast.Const const)
@@ -456,17 +457,36 @@ let parse_terminator_instruction =
   and ibr =
     word "br" *> whitespaces *> type_with_value Ast.TLabel >>| fun value -> Ast.Br value
   and ibr_cond =
-    word "br" *> lift3
-    (fun b l1 l2 -> Ast.BrCond(b, l1, l2))
-    (type_with_value (Ast.TInteger 1) <* char ',')
-    (type_with_value Ast.TLabel <* char ',')
-    (type_with_value Ast.TLabel)
+    word "br"
+    *> lift3
+         (fun b l1 l2 -> Ast.BrCond (b, l1, l2))
+         (type_with_value (Ast.TInteger 1) <* char ',')
+         (type_with_value Ast.TLabel <* char ',')
+         (type_with_value Ast.TLabel)
   in
-  whitespaces *> choice [ iret; ibr; ibr_cond]
+  whitespaces *> choice [ iret; ibr; ibr_cond ]
+;;
+
+let parse_binary_operation =
+  let help (mnem : string) (bin_op : Ast.binary_operation_body -> Ast.binary_operation) =
+    parse_local_variable
+    <* whitespaces
+    <* char '='
+    >>= fun var ->
+    whitespaces *> word mnem *> whitespaces *> parse_type_with_value
+    >>= function
+    | tp, v1 ->
+      whitespaces *> char ',' *> parse_value tp
+      >>= fun v2 -> return (bin_op (var, tp, v1, v2))
+  in
+  choice [ help "sub" (fun x -> Ast.Sub x); help "mul" (fun x -> Ast.Mul x) ]
 ;;
 
 let parse_instruction : Ast.instruction t =
-  choice [ (parse_terminator_instruction >>| fun ins -> Ast.Terminator ins) ]
+  choice
+    [ (parse_terminator_instruction >>| fun ins -> Ast.Terminator ins)
+    ; (parse_binary_operation >>| fun ins -> Ast.Binary ins)
+    ]
 ;;
 
 let%expect_test _ =
@@ -479,8 +499,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   test_parse parse_instruction Ast.show_instruction "br label %13";
-  [%expect
-    {|
+  [%expect {|
     (Terminator (Br (FromVariable ((LocalVar "13"), TLabel)))) |}]
 ;;
 
@@ -492,6 +511,26 @@ let%expect_test _ =
        (BrCond ((FromVariable ((LocalVar "5"), (TInteger 1))),
           (FromVariable ((LocalVar "6"), TLabel)),
           (FromVariable ((LocalVar "7"), TLabel))))) |}]
+;;
+
+let%expect_test _ =
+  test_parse parse_instruction Ast.show_instruction "  %9 = sub i32 %8, 1";
+  [%expect {|
+    (Binary
+       (Sub
+          ((LocalVar "9"), (TInteger 32),
+           (FromVariable ((LocalVar "8"), (TInteger 32))),
+           (Const (CInteger (32, 1)))))) |}]
+;;
+
+let%expect_test _ =
+  test_parse parse_instruction Ast.show_instruction "   %12 = mul i32 %10, %11";
+  [%expect {|
+    (Binary
+       (Mul
+          ((LocalVar "12"), (TInteger 32),
+           (FromVariable ((LocalVar "10"), (TInteger 32))),
+           (FromVariable ((LocalVar "11"), (TInteger 32)))))) |}]
 ;;
 
 let parse_basic_block_variable =

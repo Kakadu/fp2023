@@ -53,7 +53,7 @@ and terminator_instruction =
 [@@deriving show { with_path = false }]
 
 and binary_operation_body =
-  variable * tp * value * value (* <result> = bin_op <ty> <val1>, <val2> *)
+  variable * tp * value * value (* <result> = <bin_op> <ty> <val1>, <val2> *)
 [@@deriving show { with_path = false }]
 
 and binary_operation =
