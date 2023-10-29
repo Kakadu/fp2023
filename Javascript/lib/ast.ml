@@ -8,13 +8,13 @@ type bin_op =
   | Div
   | Equal
   | NotEqual
-[@@derving show {with_path = false}]
+[@@deriving eq, show {with_path = false}]
 
 type typename =
   | Number of float
   | VarType
   | FuncType
-[@@derving show {with_path = false}]
+[@@deriving eq, show {with_path = false}]
 
 type expression =
   | BinOp of bin_op * expression * expression
@@ -24,21 +24,21 @@ type expression =
   | Var of string
   | FunctionCall of string * expression list
   | DebugExp of expression list
-[@@derving show {with_path = false}]
+[@@deriving eq, show {with_path = false}]
 
 type var_init =
 {
   var_identifier: string;
   is_const: bool;
   var_type: typename;
-  value: expression option;
+  value: expression option
 }
 
 and fun_init =
 {
   fun_identifier: string;
   arguments: expression list;
-  body: statement option;
+  body: statement option
 }
 
 and statement =
@@ -51,4 +51,4 @@ and statement =
   | EmptyStm
   | DebugStm of string
   | Programm of statement list
-[@@deriving show { with_path = false }]
+[@@deriving eq, show { with_path = false }]
