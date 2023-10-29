@@ -44,3 +44,5 @@ type expr =
   | EIfThenElse of expr * expr * expr
   | EMatchWith of expr * (expr * expr) list
 [@@deriving eq, show { with_path = false }]
+
+type program = expr list [@@deriving eq, show { with_path = false }]
