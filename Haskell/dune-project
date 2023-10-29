@@ -6,19 +6,19 @@
 
 (license LGPL-3.0-or-later)
 
-(authors "FIXME Vasya Pupkin")
+(authors "Danil Parfyonov")
 
-(maintainers "FIXME Vasya Pupkin")
+(maintainers "Danil Parfyonov")
 
-(bug_reports "FIXME where to put bug reports about the code")
+(bug_reports "github.com/ancavar/fp2023/issues")
 
-(homepage "FIXME Homepage")
+(homepage "github.com/ancavar/fp2023/issues")
 
 (package
- (name Lambda) ; FIXME and regenerate .opam file using 'dune build @install'
- (synopsis "FIXME An interpreter for language")
+ (name Haskell)
+ (synopsis "An interpreter for Haskell")
  (description
-  "FIXME. A longer description, for example, which are the most interesing features being supported, etc.")
+  "haskell is being supported pogchamp times 3 fire emoji times 3.")
  (version 0.1)
  (depends
   dune

@@ -1,20 +1,10 @@
 (library
- (name lambda_lib)
- (public_name Lambda.Lib)
- (modules Ast Lambda Interpret Parser Printast Pprintast utils)
- (modules_without_implementation ast)
- (libraries base angstrom)
+ (name python_Lib)
+ (public_name Python.Lib)
+ (modules Ast Parser)
+ (libraries ppx_show.runtime base angstrom)
+ (inline_tests)
  (preprocess
-  (pps ppx_deriving.show))
+  (pps ppx_inline_test ppx_deriving.show ppx_deriving.eq ppx_expect))
  (instrumentation
   (backend bisect_ppx)))
-
-(library
- (name tests)
- (modules tests)
- (libraries lambda_lib)
- (preprocess
-  (pps ppx_expect ppx_deriving.show))
- (instrumentation
-  (backend bisect_ppx))
- (inline_tests))

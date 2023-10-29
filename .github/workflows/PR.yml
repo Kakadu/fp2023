@@ -53,9 +53,17 @@ jobs:
       ############# Detecting and compiling fp2023
       # Smart link about setting environment variables
       # https://docs.github.com/en/actions/reference/workflow-commands-for-github-actions#setting-an-environment-variable
-      - run: |
+      - if: false
+        #if: ${{ github.event.pull_request.user.login != 'fp2022-helper' }}
+        run: |
           sh -x ./detect_latest_pr.sh "pull/${{ steps.branch-name.outputs.ref_branch }}" >> $GITHUB_ENV
           echo "${{ env.latest }}"
+
+      # TODO: set OCAMLRUNPARAM=b
+      - run: |
+          opam exec -- ocaml ./detect_latest_pr.ml "pull/${{ steps.branch-name.outputs.ref_branch }}" -user Kakadu -repo fp2023 >> $GITHUB_ENV
+          echo "${{ env.latest }}"
+        #if: ${{ github.event.pull_request.user.login == 'fp2022-helper' }}
 
       - name: Installing dependencies
         run: cd ${{ env.latest }} && opam install . --deps-only --with-test --with-doc
@@ -91,7 +99,7 @@ jobs:
 
       - name: Running linter in ${{ env.latest }}...
         run: |
-          cd ${{ env.latest }} && opam exec -- zanuda -dir . -add-prefix ${{ env.latest }}/ -ordjsonl ${{ env.RDJSON_FILE_PATH }} > ${{ env.ZANUDA_REPORT_FILE_PATH }}
+          cd ${{ env.latest }} && opam exec -- zanuda -dir . -add-prefix ${{ env.latest }}/ -no-no_toplevel_eval -ordjsonl ${{ env.RDJSON_FILE_PATH }} > ${{ env.ZANUDA_REPORT_FILE_PATH }}
 
       - run: cat ${{ env.latest }}/${{ env.RDJSON_FILE_PATH }}
       - name: Preparing lints tarball
@@ -182,6 +190,7 @@ jobs:
           BISECT_DIR: /tmp/bisect_ppx_data
           BISECT_FILE: /tmp/bisect_ppx_data/data
 
+      - run: echo ${{ env.latest }} > ${{ env.latest }}/_coverage/projectname.txt
       - name: Update coverage artifact ${{ steps.calc-coverage.outputs.percent }}
         uses: actions/upload-artifact@v3
         with:

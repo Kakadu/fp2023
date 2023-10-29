@@ -6,23 +6,24 @@
 
 (license LGPL-3.0-or-later)
 
-(authors "FIXME Vasya Pupkin")
+(authors "Pavlushkin Dmitrii Vladimirovich")
 
-(maintainers "FIXME Vasya Pupkin")
+(maintainers "st106768@student.spbu.ru")
 
 (bug_reports "FIXME where to put bug reports about the code")
 
-(homepage "FIXME Homepage")
+(homepage "https://github.com/PavlushaSource")
 
 (package
- (name Lambda) ; FIXME and regenerate .opam file using 'dune build @install'
- (synopsis "FIXME An interpreter for language")
+ (name C) ; FIXME and regenerate .opam file using 'dune build @install'
+ (synopsis "Interpreter of the C language")
  (description
   "FIXME. A longer description, for example, which are the most interesing features being supported, etc.")
  (version 0.1)
  (depends
   dune
   angstrom
+  stdint
   (ppx_inline_test :with-test)
   ppx_expect
   ppx_deriving

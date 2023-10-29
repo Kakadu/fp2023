@@ -15,7 +15,7 @@
 (homepage "FIXME Homepage")
 
 (package
- (name Lambda) ; FIXME and regenerate .opam file using 'dune build @install'
+ (name OcamlOOP)
  (synopsis "FIXME An interpreter for language")
  (description
   "FIXME. A longer description, for example, which are the most interesing features being supported, etc.")
@@ -29,6 +29,6 @@
   bisect_ppx
   (odoc :with-doc)
   (ocamlformat :build)
-  ; base
+  base
   ; After adding dependencies to 'dune' files and the same dependecies here too
   ))
