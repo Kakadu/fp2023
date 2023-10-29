@@ -5,19 +5,18 @@
 type value_ =
   | Null
   | VString of string
-  | VClass of string (*а оно надо вообще?*)
   | VInt of int
   | VChar of char
   | VBool of bool
+  | VVar of string
 [@@deriving show { with_path = false }, eq]
 
-type ident = Name of string
-[@@deriving show { with_path = false }, eq]
+type ident = Id of string [@@deriving show { with_path = false }, eq]
 
 (* ************************************************* *)
 type type_ =
-  | Method of meth_type
-  | Variable of var_type (** Method type *)
+  | TMethod of meth_type
+  | TVariable of var_type (** Method type *)
 [@@deriving show { with_path = false }, eq]
 
 and meth_type =
@@ -29,7 +28,7 @@ and meth_type =
 and var_type =
   (* TODO: *)
   (* | Var *)
-  | TVariable of assignable_type
+  | TVar of assignable_type
 [@@deriving show { with_path = false }, eq]
 
 (** Type that can be assigne *)
@@ -48,15 +47,14 @@ and nulable_type =
   | TClass of ident
 
 (* ************************************************* *)
-type modifier =
-  | Class of access_modifier
-  | Method of method_modifier
-  | Fild of fild_modifier
-[@@deriving show { with_path = false }, eq]
-
+(* type modifier =
+   | MClass of access_modifier
+   | MMethod of method_modifier
+   | MFild of fild_modifier *)
+(* [@@deriving show { with_path = false }, eq] *)
 and method_modifier =
   | MAccess of access_modifier
-  | Static
+  | MStatic
 (* | Virtual *)
 (* | Override *)
 
@@ -65,9 +63,9 @@ and fild_modifier = FAccess of access_modifier
 (* | Const *)
 
 and access_modifier =
-  | Public
-  | Private
-  | Protected
+  | MPublic
+  | MPrivate
+  | MProtected
 
 (* ************************************************* *)
 type bin_op =
@@ -92,7 +90,8 @@ type un_op =
   | UNot
   | New
 [@@deriving show { with_path = false }, eq]
-(** The main type for our AST (дерева абстрактного синтаксиса) *)
+
+(* The main type for our AST *)
 type expr =
   | EVal of value_
   (*  *)
@@ -106,36 +105,54 @@ type expr =
   | EMember_ident of expr * expr
   | Cast of assignable_type * expr
   (*  *)
-  | EClass_decl of class_
-  | EException_decl of class_
-  | EClass_member of class_member
-  | EVar_decl of var_type * ident
+  | EClass_decl of class_sign
+  | EDecl of type_ * ident
   | EAssign of expr * expr
   | Steps of expr list
   (*  *)
   | EIf_else of expr * expr * expr option
+  | EReturn of expr option
   | EBreak
-  | EReturn
-[@@deriving show { with_path = false }, eq]
 (* | EWhile *)
 (* | EFor *)
 (* | ETry_catch_fin *)
 (* | ESwitch *)
+[@@deriving show { with_path = false }, eq]
 
-and args = (ident * expr) list
-
-(* TODO: переделать на records? *)
-and method_sign =
-  | Main
-  | Default of method_modifier list option * meth_type * ident * args option
-  | Constructor of args option * expr option
+and args = Args of expr list [@@deriving show { with_path = false }, eq]
 
 and class_member =
-  | Fild of fild_modifier list option * fild_modifier * ident * expr option
-  | Method of method_sign * expr option
+  | Fild of fild_sign
+  | Main of method_sign * expr
+  | Method of method_sign * expr (* <- для юли expr option, если она делает abstruct *)
+  | Constructor of constructor_sign * expr
 
-and class_ = Class of access_modifier option * ident * expr option
+and class_sign =
+  { cl_modif : access_modifier option
+  ; cl_id : ident
+  ; parent : ident option (* <- для юли мб понадобится еще как-то методы обозначить*)
+  ; cl_mems : class_member list
+  }
 
-(* Application [f g ] *)
-(** In type definition above the 3rd constructor is intentionally without documentation
-    to test linter *)
+and fild_sign =
+  { f_modif : fild_modifier option
+  ; f_type : var_type
+  ; f_id : ident
+  ; f_val : expr option
+  }
+
+and method_sign =
+  { m_modif : method_modifier option
+  ; m_type : meth_type
+  ; m_id : ident
+  ; m_args : args
+  }
+
+and constructor_sign =
+  { con_modif : access_modifier option
+  ; con_id : ident
+  ; con_args : args
+  ; base_params : expr option
+  }
+
+type tast = class_sign list [@@deriving show { with_path = false }, eq]
