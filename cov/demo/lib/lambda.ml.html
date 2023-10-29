@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>lambda.ml &mdash; Coverage report</title>
+    <meta name="description" content="95.56% coverage in lib/lambda.ml">
+    <link rel="stylesheet" href="../coverage.css"/>
+    <script src="../highlight.pack.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+  </head>
+  <body>
+    <div id="header">
+      <h1>
+        <a href="../index.html">
+          <span class="dirname">lib/</span>lambda.ml
+        </a>
+      </h1>
+      <h2>95.56%</h2>
+    </div>
+    <div id="navbar">
+      <span class="some-visited" style="top:15.97%"></span>
+      <span class="unvisited" style="bottom:48.74%"></span>
+      <span class="unvisited" style="bottom:42.02%"></span>
+    </div>
+    <div id="report">
+      <div id="lines-layer">
+        <pre>
+<a id="L1"></a><span > </span>
+<a id="L2"></a><span > </span>
+<a id="L3"></a><span > </span>
+<a id="L4"></a><span > </span>
+<a id="L5"></a><span > </span>
+<a id="L6"></a><span > </span>
+<a id="L7"></a><span > </span>
+<a id="L8"></a><span > </span>
+<a id="L9"></a><span > </span>
+<a id="L10"></a><span class="visited"> </span>
+<a id="L11"></a><span class="visited"> </span>
+<a id="L12"></a><span class="visited"> </span>
+<a id="L13"></a><span > </span>
+<a id="L14"></a><span > </span>
+<a id="L15"></a><span class="visited"> </span>
+<a id="L16"></a><span class="visited"> </span>
+<a id="L17"></a><span class="visited"> </span>
+<a id="L18"></a><span class="visited"> </span>
+<a id="L19"></a><span class="some-visited"> </span>
+<a id="L20"></a><span class="visited"> </span>
+<a id="L21"></a><span > </span>
+<a id="L22"></a><span > </span>
+<a id="L23"></a><span > </span>
+<a id="L24"></a><span > </span>
+<a id="L25"></a><span > </span>
+<a id="L26"></a><span class="visited"> </span>
+<a id="L27"></a><span > </span>
+<a id="L28"></a><span > </span>
+<a id="L29"></a><span > </span>
+<a id="L30"></a><span > </span>
+<a id="L31"></a><span class="visited"> </span>
+<a id="L32"></a><span class="visited"> </span>
+<a id="L33"></a><span class="visited"> </span>
+<a id="L34"></a><span class="visited"> </span>
+<a id="L35"></a><span class="visited"> </span>
+<a id="L36"></a><span class="visited"> </span>
+<a id="L37"></a><span class="visited"> </span>
+<a id="L38"></a><span class="visited"> </span>
+<a id="L39"></a><span > </span>
+<a id="L40"></a><span class="visited"> </span>
+<a id="L41"></a><span class="visited"> </span>
+<a id="L42"></a><span > </span>
+<a id="L43"></a><span > </span>
+<a id="L44"></a><span > </span>
+<a id="L45"></a><span > </span>
+<a id="L46"></a><span > </span>
+<a id="L47"></a><span > </span>
+<a id="L48"></a><span > </span>
+<a id="L49"></a><span > </span>
+<a id="L50"></a><span > </span>
+<a id="L51"></a><span > </span>
+<a id="L52"></a><span > </span>
+<a id="L53"></a><span class="visited"> </span>
+<a id="L54"></a><span class="visited"> </span>
+<a id="L55"></a><span class="visited"> </span>
+<a id="L56"></a><span > </span>
+<a id="L57"></a><span > </span>
+<a id="L58"></a><span > </span>
+<a id="L59"></a><span class="visited"> </span>
+<a id="L60"></a><span class="visited"> </span>
+<a id="L61"></a><span class="unvisited"> </span>
+<a id="L62"></a><span > </span>
+<a id="L63"></a><span > </span>
+<a id="L64"></a><span > </span>
+<a id="L65"></a><span > </span>
+<a id="L66"></a><span > </span>
+<a id="L67"></a><span class="visited"> </span>
+<a id="L68"></a><span class="visited"> </span>
+<a id="L69"></a><span class="unvisited"> </span>
+<a id="L70"></a><span > </span>
+<a id="L71"></a><span > </span>
+<a id="L72"></a><span > </span>
+<a id="L73"></a><span > </span>
+<a id="L74"></a><span class="visited"> </span>
+<a id="L75"></a><span > </span>
+<a id="L76"></a><span > </span>
+<a id="L77"></a><span > </span>
+<a id="L78"></a><span > </span>
+<a id="L79"></a><span > </span>
+<a id="L80"></a><span > </span>
+<a id="L81"></a><span class="visited"> </span>
+<a id="L82"></a><span class="visited"> </span>
+<a id="L83"></a><span class="visited"> </span>
+<a id="L84"></a><span > </span>
+<a id="L85"></a><span class="visited"> </span>
+<a id="L86"></a><span class="visited"> </span>
+<a id="L87"></a><span > </span>
+<a id="L88"></a><span > </span>
+<a id="L89"></a><span > </span>
+<a id="L90"></a><span > </span>
+<a id="L91"></a><span > </span>
+<a id="L92"></a><span > </span>
+<a id="L93"></a><span > </span>
+<a id="L94"></a><span class="visited"> </span>
+<a id="L95"></a><span class="visited"> </span>
+<a id="L96"></a><span > </span>
+<a id="L97"></a><span class="visited"> </span>
+<a id="L98"></a><span class="visited"> </span>
+<a id="L99"></a><span > </span>
+<a id="L100"></a><span > </span>
+<a id="L101"></a><span > </span>
+<a id="L102"></a><span > </span>
+<a id="L103"></a><span > </span>
+<a id="L104"></a><span > </span>
+<a id="L105"></a><span > </span>
+<a id="L106"></a><span class="visited"> </span>
+<a id="L107"></a><span class="visited"> </span>
+<a id="L108"></a><span class="visited"> </span>
+<a id="L109"></a><span class="visited"> </span>
+<a id="L110"></a><span class="visited"> </span>
+<a id="L111"></a><span class="visited"> </span>
+<a id="L112"></a><span class="visited"> </span>
+<a id="L113"></a><span class="visited"> </span>
+<a id="L114"></a><span class="visited"> </span>
+<a id="L115"></a><span class="visited"> </span>
+<a id="L116"></a><span class="visited"> </span>
+<a id="L117"></a><span class="visited"> </span>
+<a id="L118"></a><span class="visited"> </span>
+<a id="L119"></a><span class="visited"> </span>
+</pre>
+      </div>
+      <div id="text-layer">
+        <pre id="line-numbers">
+<a href="#L1">  1</a>
+<a href="#L2">  2</a>
+<a href="#L3">  3</a>
+<a href="#L4">  4</a>
+<a href="#L5">  5</a>
+<a href="#L6">  6</a>
+<a href="#L7">  7</a>
+<a href="#L8">  8</a>
+<a href="#L9">  9</a>
+<a href="#L10"> 10</a>
+<a href="#L11"> 11</a>
+<a href="#L12"> 12</a>
+<a href="#L13"> 13</a>
+<a href="#L14"> 14</a>
+<a href="#L15"> 15</a>
+<a href="#L16"> 16</a>
+<a href="#L17"> 17</a>
+<a href="#L18"> 18</a>
+<a href="#L19"> 19</a>
+<a href="#L20"> 20</a>
+<a href="#L21"> 21</a>
+<a href="#L22"> 22</a>
+<a href="#L23"> 23</a>
+<a href="#L24"> 24</a>
+<a href="#L25"> 25</a>
+<a href="#L26"> 26</a>
+<a href="#L27"> 27</a>
+<a href="#L28"> 28</a>
+<a href="#L29"> 29</a>
+<a href="#L30"> 30</a>
+<a href="#L31"> 31</a>
+<a href="#L32"> 32</a>
+<a href="#L33"> 33</a>
+<a href="#L34"> 34</a>
+<a href="#L35"> 35</a>
+<a href="#L36"> 36</a>
+<a href="#L37"> 37</a>
+<a href="#L38"> 38</a>
+<a href="#L39"> 39</a>
+<a href="#L40"> 40</a>
+<a href="#L41"> 41</a>
+<a href="#L42"> 42</a>
+<a href="#L43"> 43</a>
+<a href="#L44"> 44</a>
+<a href="#L45"> 45</a>
+<a href="#L46"> 46</a>
+<a href="#L47"> 47</a>
+<a href="#L48"> 48</a>
+<a href="#L49"> 49</a>
+<a href="#L50"> 50</a>
+<a href="#L51"> 51</a>
+<a href="#L52"> 52</a>
+<a href="#L53"> 53</a>
+<a href="#L54"> 54</a>
+<a href="#L55"> 55</a>
+<a href="#L56"> 56</a>
+<a href="#L57"> 57</a>
+<a href="#L58"> 58</a>
+<a href="#L59"> 59</a>
+<a href="#L60"> 60</a>
+<a href="#L61"> 61</a>
+<a href="#L62"> 62</a>
+<a href="#L63"> 63</a>
+<a href="#L64"> 64</a>
+<a href="#L65"> 65</a>
+<a href="#L66"> 66</a>
+<a href="#L67"> 67</a>
+<a href="#L68"> 68</a>
+<a href="#L69"> 69</a>
+<a href="#L70"> 70</a>
+<a href="#L71"> 71</a>
+<a href="#L72"> 72</a>
+<a href="#L73"> 73</a>
+<a href="#L74"> 74</a>
+<a href="#L75"> 75</a>
+<a href="#L76"> 76</a>
+<a href="#L77"> 77</a>
+<a href="#L78"> 78</a>
+<a href="#L79"> 79</a>
+<a href="#L80"> 80</a>
+<a href="#L81"> 81</a>
+<a href="#L82"> 82</a>
+<a href="#L83"> 83</a>
+<a href="#L84"> 84</a>
+<a href="#L85"> 85</a>
+<a href="#L86"> 86</a>
+<a href="#L87"> 87</a>
+<a href="#L88"> 88</a>
+<a href="#L89"> 89</a>
+<a href="#L90"> 90</a>
+<a href="#L91"> 91</a>
+<a href="#L92"> 92</a>
+<a href="#L93"> 93</a>
+<a href="#L94"> 94</a>
+<a href="#L95"> 95</a>
+<a href="#L96"> 96</a>
+<a href="#L97"> 97</a>
+<a href="#L98"> 98</a>
+<a href="#L99"> 99</a>
+<a href="#L100">100</a>
+<a href="#L101">101</a>
+<a href="#L102">102</a>
+<a href="#L103">103</a>
+<a href="#L104">104</a>
+<a href="#L105">105</a>
+<a href="#L106">106</a>
+<a href="#L107">107</a>
+<a href="#L108">108</a>
+<a href="#L109">109</a>
+<a href="#L110">110</a>
+<a href="#L111">111</a>
+<a href="#L112">112</a>
+<a href="#L113">113</a>
+<a href="#L114">114</a>
+<a href="#L115">115</a>
+<a href="#L116">116</a>
+<a href="#L117">117</a>
+<a href="#L118">118</a>
+<a href="#L119">119</a>
+</pre>
+<pre><code class="ocaml">(** Copyright 2021-2023, Kakadu and contributors *)
+
+(** SPDX-License-Identifier: LGPL-3.0-or-later *)
+
+open Ast
+open Base
+open Utils
+
+(* Smart constructors *)
+let var x = <span data-count="452">V</span>ar x
+let abs x y = <span data-count="18237">A</span>bs (x, y)
+let app x y = <span data-count="15934">A</span>pp (x, y)
+
+let replace_name x ~by =
+  <span data-count="39">l</span>et rec helper = function
+    | <span data-count="178">V</span>ar y when String.equa<span data-count="178">l</span> x y -&gt; <span data-count="39">V</span>ar by
+    | <span data-count="139">V</span>ar t -&gt; Var t
+    | <span data-count="139">A</span>pp (l, r) -&gt; App (helpe<span data-count="139">r</span> l, helpe<span data-count="139">r</span> r)
+    | <span data-count="48">A</span>bs (y, t) when String.equa<span data-count="48">l</span> x y -&gt; <span data-count="0">A</span>bs (by, helpe<span data-count="0">r</span> t)
+    | <span data-count="48">A</span>bs (z, t) -&gt; Abs (z, helpe<span data-count="48">r</span> t)
+  in
+  helper
+;;
+
+let rec next_name s old =
+  <span data-count="78">i</span>f List.mem ~equal:String.equal old s then <span data-count="39">n</span>ext_name ("_" ^ s) old else <span data-count="39">s</span>
+;;
+
+(*  The call [subst x ~by:v e] means `[x/v]e` or `e[v -&gt; x]` *)
+let subst x ~by:v =
+  <span data-count="801">l</span>et rec helper e =
+    <span data-count="47303">m</span>atch e with
+    | <span data-count="14100">V</span>ar y when String.equa<span data-count="14100">l</span> y x -&gt; <span data-count="961">v</span>
+    | <span data-count="13139">V</span>ar y -&gt; Var y
+    | <span data-count="15892">A</span>pp (l, r) -&gt; app (helpe<span data-count="15892">r</span> l) (helpe<span data-count="15892">r</span> r)
+    | <span data-count="17311">A</span>bs (y, b) when String.equa<span data-count="17311">l</span> y x -&gt; <span data-count="2593">a</span>bs y b
+    | <span data-count="14718">A</span>bs (y, t) when is_free_i<span data-count="14718">n</span> y v -&gt;
+      <span data-count="39">l</span>et frees = free_var<span data-count="39">s</span> v @ free_var<span data-count="39">s</span> t in
+      let w = next_name y frees in
+      <span data-count="39">h</span>elper (ab<span data-count="39">s</span> w (replace_nam<span data-count="39">e</span> y ~by:w t))
+    | <span data-count="14679">A</span>bs (y, b) -&gt; abs y (helpe<span data-count="14679">r</span> b)
+  in
+  helper
+;;
+
+type strat =
+  { on_var : strat -&gt; name -&gt; string Ast.t
+  ; on_abs : strat -&gt; name -&gt; string Ast.t -&gt; string Ast.t
+  ; on_app : strat -&gt; string Ast.t -&gt; string Ast.t -&gt; string Ast.t
+  }
+
+let apply_strat st = function
+  | <span data-count="382">V</span>ar name -&gt; st.on_var st name
+  | <span data-count="870">A</span>bs (x, b) -&gt; st.on_abs st x b
+  | <span data-count="997">A</span>pp (l, r) -&gt; st.on_app st l r
+;;
+
+let without_strat =
+  let on_var _ = <span data-count="382">v</span>ar in
+  let on_abs _ = <span data-count="764">a</span>bs in
+  let on_app _ = <span data-count="0">a</span>pp in
+  { on_var; on_abs; on_app }
+;;
+
+let cbn_strat =
+  let on_app st f arg =
+    <span data-count="609">m</span>atch apply_strat st f with
+    | <span data-count="609">A</span>bs (x, e) -&gt; apply_strat st (subs<span data-count="609">t</span> x ~by:arg e)
+    | <span data-count="0">f</span>2 -&gt; App (f2, arg)
+  in
+  { without_strat with on_app }
+;;
+
+let under_abstraction st x b = <span data-count="106">a</span>bs x (apply_stra<span data-count="106">t</span> st b)
+
+(* Normal Order Reduction to Normal Form
+   Application function reduced as CBN first
+   + Reduce under abstractions *)
+let nor_strat =
+  let on_app st f arg =
+    <span data-count="274">m</span>atch apply_strat cbn_strat f with
+    | <span data-count="154">A</span>bs (x, e) -&gt; apply_strat st @@ subs<span data-count="154">t</span> x ~by:arg e
+    | <span data-count="120">f</span>1 -&gt;
+      let f2 = apply_strat st f1 in
+      <span data-count="120">l</span>et arg2 = apply_strat st arg in
+      <span data-count="120">A</span>pp (f2, arg2)
+  in
+  { without_strat with on_app; on_abs = under_abstraction }
+;;
+
+(* Call-by-Value Reduction to Weak Normal Form *)
+let cbv_strat =
+  let on_app st f arg =
+    <span data-count="112">m</span>atch apply_strat st f with
+    | <span data-count="24">A</span>bs (x, e) -&gt;
+      let arg2 = apply_strat st arg in
+      <span data-count="24">a</span>pply_strat st @@ subs<span data-count="24">t</span> x ~by:arg2 e
+    | <span data-count="88">f</span>2 -&gt; App (f2, apply_stra<span data-count="88">t</span> st arg)
+  in
+  { without_strat with on_app }
+;;
+
+(* Applicative Order Reduction to Normal Form
+   As CBV but reduce under abstractions *)
+let ao_strat = { cbv_strat with on_abs = under_abstraction }
+let a = va<span data-count="7">r</span> "a"
+let x = va<span data-count="7">r</span> "x"
+let y = va<span data-count="7">r</span> "y"
+let z = va<span data-count="7">r</span> "z"
+let f = va<span data-count="7">r</span> "f"
+let g = va<span data-count="7">r</span> "g"
+let h = va<span data-count="7">r</span> "h"
+let m = va<span data-count="7">r</span> "m"
+let n = va<span data-count="7">r</span> "n"
+let p = va<span data-count="7">r</span> "p"
+let zero = abs "f<span data-count="7">"</span> @@ ab<span data-count="7">s</span> "x" x
+let one = abs "f<span data-count="7">"</span> @@ abs "x<span data-count="7">"</span> @@ ap<span data-count="7">p</span> f x
+let two = abs "f<span data-count="7">"</span> @@ abs "x<span data-count="7">"</span> @@ ap<span data-count="7">p</span> f (ap<span data-count="7">p</span> f x)
+let three = abs "f<span data-count="7">"</span> @@ abs "x<span data-count="7">"</span> @@ ap<span data-count="7">p</span> f (ap<span data-count="7">p</span> f (ap<span data-count="7">p</span> f x))
+</code></pre>
+      </div>
+    </div>
+    <script src="../coverage.js"></script>
+  </body>
+</html>
