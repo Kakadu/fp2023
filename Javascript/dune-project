@@ -6,19 +6,19 @@
 
 (license LGPL-3.0-or-later)
 
-(authors "FIXME Vasya Pupkin")
+(authors "Kuarni <kuarni22@gmail.com>, AlexShmak <lexnder9@gmail.com>")
 
-(maintainers "FIXME Vasya Pupkin")
+(maintainers "Kuarni <kuarni22@gmail.com>, AlexShmak <lexnder9@gmail.com>")
 
-(bug_reports "FIXME where to put bug reports about the code")
+(bug_reports "https://github.com/AlexShmak/fp2023/issues")
 
-(homepage "FIXME Homepage")
+(homepage "https://github.com/AlexShmak/fp2023")
 
 (package
- (name Lambda) ; FIXME and regenerate .opam file using 'dune build @install'
- (synopsis "FIXME An interpreter for language")
+ (name Javascript)
+ (synopsis "Parser for javascript and it's interepreter in future")
  (description
-  "FIXME. A longer description, for example, which are the most interesing features being supported, etc.")
+  "Here is parser of javascript which can parse factorial code")
  (version 0.1)
  (depends
   dune
@@ -29,6 +29,4 @@
   bisect_ppx
   (odoc :with-doc)
   (ocamlformat :build)
-  ; base
-  ; After adding dependencies to 'dune' files and the same dependecies here too
   ))
