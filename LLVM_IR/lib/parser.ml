@@ -283,11 +283,11 @@ and parse_const_integer size =
 ;;
 
 let parse_value tp =
-  whitespaces *>
-  choice
-    [ (parse_local_variable >>| fun var -> Ast.FromVariable (var, tp))
-    ; (parse_const tp >>| fun const -> Ast.Const const)
-    ]
+  whitespaces
+  *> choice
+       [ (parse_local_variable >>| fun var -> Ast.FromVariable (var, tp))
+       ; (parse_const tp >>| fun const -> Ast.Const const)
+       ]
 ;;
 
 let%expect_test _ =
@@ -442,12 +442,21 @@ let parse_type_with_value =
   parse_additional_type >>= fun tp -> parse_value tp >>| fun value -> tp, value
 ;;
 
+let parse_type_with_value2 =
+  parse_additional_type
+  >>= fun tp ->
+  parse_value tp
+  >>= fun v1 -> whitespaces *> char ',' *> parse_value tp >>| fun v2 -> tp, v1, v2
+;;
+
 let type_with_value tp =
   parse_type_with_value
   >>= function
   | parsed_type, value when parsed_type = tp -> return value
   | _ -> fail "Parser error: get unexpected type"
 ;;
+
+let parse_instruction_result = parse_local_variable <* whitespaces <* char '='
 
 let parse_terminator_instruction =
   let iret =
@@ -469,23 +478,49 @@ let parse_terminator_instruction =
 
 let parse_binary_operation =
   let help (mnem : string) (bin_op : Ast.binary_operation_body -> Ast.binary_operation) =
-    parse_local_variable
-    <* whitespaces
-    <* char '='
+    parse_instruction_result
     >>= fun var ->
-    whitespaces *> word mnem *> whitespaces *> parse_type_with_value
+    whitespaces *> word mnem *> whitespaces *> parse_type_with_value2
     >>= function
-    | tp, v1 ->
-      whitespaces *> char ',' *> parse_value tp
-      >>= fun v2 -> return (bin_op (var, tp, v1, v2))
+    | tp, v1, v2 -> return (bin_op (var, tp, v1, v2))
   in
-  choice [ help "sub" (fun x -> Ast.Sub x); help "mul" (fun x -> Ast.Mul x) ]
+  whitespaces
+  *> choice [ help "sub" (fun x -> Ast.Sub x); help "mul" (fun x -> Ast.Mul x) ]
+;;
+
+let parse_other_operation =
+  let iicmp =
+    lift3
+      (fun var cond tup ->
+        match tup with
+        | tp, v1, v2 -> Ast.Icmp (var, cond, tp, v1, v2))
+      parse_instruction_result
+      (whitespaces *> word "icmp" *> whitespaces *> parse_word)
+      (whitespaces *> parse_type_with_value2)
+  and icall =
+    lift4
+      (fun var ret_tp vptr arg_lst -> Ast.Call (var, ret_tp, vptr, arg_lst))
+      parse_instruction_result
+      (whitespaces *> word "call" *> whitespaces *> parse_additional_type)
+      (whitespaces *> parse_value Ast.TPointer)
+      (whitespaces
+       *> char '('
+       *> sep_by
+            (whitespaces *> char ',')
+            (whitespaces *> parse_type_with_value
+             >>= function
+             | _, value -> return value)
+       <* whitespaces
+       <* char ')')
+  in
+  whitespaces *> choice [ iicmp; icall ]
 ;;
 
 let parse_instruction : Ast.instruction t =
   choice
     [ (parse_terminator_instruction >>| fun ins -> Ast.Terminator ins)
     ; (parse_binary_operation >>| fun ins -> Ast.Binary ins)
+    ; (parse_other_operation >>| fun ins -> Ast.Other ins)
     ]
 ;;
 
@@ -515,7 +550,8 @@ let%expect_test _ =
 
 let%expect_test _ =
   test_parse parse_instruction Ast.show_instruction "  %9 = sub i32 %8, 1";
-  [%expect {|
+  [%expect
+    {|
     (Binary
        (Sub
           ((LocalVar "9"), (TInteger 32),
@@ -525,12 +561,33 @@ let%expect_test _ =
 
 let%expect_test _ =
   test_parse parse_instruction Ast.show_instruction "   %12 = mul i32 %10, %11";
-  [%expect {|
+  [%expect
+    {|
     (Binary
        (Mul
           ((LocalVar "12"), (TInteger 32),
            (FromVariable ((LocalVar "10"), (TInteger 32))),
            (FromVariable ((LocalVar "11"), (TInteger 32)))))) |}]
+;;
+
+let%expect_test _ =
+  test_parse parse_instruction Ast.show_instruction "   %10 = call i32 @fac(i32 %9)  ";
+  [%expect
+    {|
+    (Other
+       (Call ((LocalVar "10"), (TInteger 32),
+          (Const (CPointer (PointerGlob (GlobalVar "fac")))),
+          [(FromVariable ((LocalVar "9"), (TInteger 32)))]))) |}]
+;;
+
+let%expect_test _ =
+  test_parse parse_instruction Ast.show_instruction " %5 = icmp slt i32 %4, 1";
+  [%expect
+    {|
+    (Other
+       (Icmp ((LocalVar "5"), "slt", (TInteger 32),
+          (FromVariable ((LocalVar "4"), (TInteger 32))),
+          (Const (CInteger (32, 1)))))) |}]
 ;;
 
 let parse_basic_block_variable =
