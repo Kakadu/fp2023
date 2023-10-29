@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8"/>
     <title>ast.ml &mdash; Coverage report</title>
-    <meta name="description" content="69.23% coverage in lib/ast.ml">
+    <meta name="description" content="72.15% coverage in lib/ast.ml">
     <link rel="stylesheet" href="../coverage.css"/>
     <script src="../highlight.pack.js"></script>
     <script>hljs.initHighlightingOnLoad();</script>
@@ -15,7 +15,7 @@
           <span class="dirname">lib/</span>ast.ml
         </a>
       </h1>
-      <h2>69.23%</h2>
+      <h2>72.15%</h2>
     </div>
     <div id="navbar">
       <span class="unvisited" style="top:9.46%"></span>
@@ -29,14 +29,12 @@
       <span class="unvisited" style="top:29.73%"></span>
       <span class="unvisited" style="top:31.08%"></span>
       <span class="unvisited" style="top:32.43%"></span>
-      <span class="unvisited" style="top:36.49%"></span>
       <span class="unvisited" style="top:37.84%"></span>
       <span class="unvisited" style="top:40.54%"></span>
       <span class="unvisited" style="top:47.30%"></span>
       <span class="unvisited" style="bottom:47.30%"></span>
       <span class="some-visited" style="bottom:32.43%"></span>
       <span class="unvisited" style="bottom:28.38%"></span>
-      <span class="some-visited" style="bottom:20.27%"></span>
       <span class="unvisited" style="bottom:14.86%"></span>
     </div>
     <div id="report">
@@ -68,7 +66,7 @@
 <a id="L24"></a><span class="unvisited"> </span>
 <a id="L25"></a><span > </span>
 <a id="L26"></a><span > </span>
-<a id="L27"></a><span class="unvisited"> </span>
+<a id="L27"></a><span class="visited"> </span>
 <a id="L28"></a><span class="unvisited"> </span>
 <a id="L29"></a><span class="visited"> </span>
 <a id="L30"></a><span class="unvisited"> </span>
@@ -100,8 +98,8 @@
 <a id="L56"></a><span > </span>
 <a id="L57"></a><span > </span>
 <a id="L58"></a><span class="visited"> </span>
-<a id="L59"></a><span class="some-visited"> </span>
-<a id="L60"></a><span > </span>
+<a id="L59"></a><span > </span>
+<a id="L60"></a><span class="visited"> </span>
 <a id="L61"></a><span class="visited"> </span>
 <a id="L62"></a><span > </span>
 <a id="L63"></a><span class="unvisited"> </span>
@@ -206,7 +204,7 @@
   <span data-count="0">|</span> CNil
 [@@deriving eq, show { with_path = false }]
 
-<span data-count="17">t</span>ype bin_op =
+<span data-count="12">t</span>ype bin_op =
   <span data-count="5">|</span> Add (* + *)
   <span data-count="3">|</span> Sub (* - *)
   <span data-count="2">|</span> Mul (* * *)
@@ -221,18 +219,18 @@
   <span data-count="0">|</span> Or (* || *)
 [@@deriving eq, show { with_path = false }]
 
-<span data-count="0">a</span>nd unary_op =
+<span data-count="5">t</span>ype unary_op =
   <span data-count="0">|</span> Plus (* ~+ *)
   <span data-count="5">|</span> Minus (* ~- *)
   <span data-count="0">|</span> Not (* ~not *)
-[@@deriving show { with_path = false }]
+[@@deriving eq, show { with_path = false }]
 
 <span data-count="51">t</span>ype ident = <span data-count="96">I</span>dent of strin<span data-count="1">g</span> [@@deriving eq, show { with_path = false }]
 
 <span data-count="0">t</span>ype capitalized_ident = <span data-count="0">C</span>apitalized_ident of strin<span data-count="0">g</span>
 [@@deriving eq, show { with_path = false }]
 
-<span data-count="231">t</span>ype expr =
+<span data-count="155">t</span>ype expr =
   <span data-count="0">|</span> EEmpty (* Empty expression *)
   <span data-count="51">|</span> EConst of cons<span data-count="17">t</span> (* Const. Examples: 100; true; "hello, world!" *)
   <span data-count="99">|</span> EBinop of
@@ -252,9 +250,9 @@
   <span data-count="11">|</span> Not_recursive
 [@@deriving eq, show { with_path = false }]
 
-<span data-count="1">a</span>nd bind = <span data-count="108">D</span>Let of rec_flag * ident * exp<span data-count="60">r</span> [@@deriving eq, show { with_path = false }]
-<span data-count="0">a</span>nd decl = <span data-count="2">b</span>ind * expr [@@deriving eq, show { with_path = false }<span data-count="61">]</span>
+<span data-count="1">a</span>nd bind = <span data-count="108">D</span>Let of rec_flag * ident * exp<span data-count="60">r</span> [@@deriving eq, show { with_path = false }<span data-count="20">]</span>
 
+<span data-count="76">t</span>ype decl = <span data-count="2">b</span>ind * expr [@@deriving eq, show { with_path = false }<span data-count="41">]</span>
 <span data-count="1">t</span>ype prog = <span data-count="5">d</span>ecl lis<span data-count="1">t</span> [@@deriving show { with_path = false }<span data-count="2">]</span>
 
 let econst c = <span data-count="0">E</span>Const c
