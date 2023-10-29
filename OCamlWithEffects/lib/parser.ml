@@ -32,6 +32,21 @@ let eif_then_else condition true_b false_b = EIfThenElse (condition, true_b, fal
 let ematch_with expression cases = EMatchWith (expression, cases)
 (* ---------------- *)
 
+(* Constructors for binary operations *)
+let sAdd _ = Plus
+let sSub _ = Sub
+let sMul _ = Mul
+let sDiv _ = Div
+let sEq _ = Eq
+let sNEq _ = NEq
+let sGt _ = Gt
+let sGte _ = Gte
+let sLt _ = Lt
+let sLte _ = Lte
+let sAnd _ = And
+let sOr _ = Or
+(* ---------------- *)
+
 let is_keyword = function
   | "let" | "rec" | "match" | "with" | "if" | "then" | "else" | "in" | "fun" | "and" ->
     true
@@ -66,13 +81,6 @@ let is_ident c = is_lower c || is_upper c || c = '_'
 let is_acceptable_fl = function
   | Some c when is_lower c || c = '_' -> return c
   | _ -> fail "abc"
-;;
-
-let chainl1 e op =
-  let rec go acc =
-    lift2 (fun f x -> EBinaryOperation (f, acc, x)) op e >>= go <|> return acc
-  in
-  e >>= fun init -> go init
 ;;
 
 let is_letter c = is_upper c || is_lower c
@@ -172,6 +180,58 @@ let parse_if_then_else pack =
            (skip_wspace *> string "else" *> parse_expr)
 ;;
 
+let parse_bin_op pack =
+  fix
+  @@ fun self ->
+  skip_wspace
+  *>
+  let addition = skip_wspace *> char '+' >>| sAdd
+  and subtraction = skip_wspace *> char '-' >>| sSub
+  and multiplication = skip_wspace *> char '*' >>| sMul
+  and division = skip_wspace *> char '/' >>| sDiv
+  and eqality = skip_wspace *> char '=' >>| sEq
+  and neqality = skip_wspace *> string "!=" <|> string "<>" >>| sEq
+  and logand = skip_wspace *> string "&&" >>| sAnd
+  and logor = skip_wspace *> string "||" >>| sOr
+  and larger = skip_wspace *> char '>' >>| sGt
+  and largerEq = skip_wspace *> string ">=" >>| sGte
+  and less = skip_wspace *> char '<' >>| sLt
+  and lessEq = skip_wspace *> string "<=" >>| sLte in
+  let parse_expr =
+    choice
+      [ parens self
+      ; pack.parse_application pack
+      ; pack.parse_fun pack
+      ; pack.parse_if_then_else pack
+      ; parse_const
+      ; parse_ident
+      ]
+  and chainl1 e op =
+    let rec go acc =
+      lift2 (fun f x -> EBinaryOperation (f, acc, x)) op e >>= go <|> return acc
+    in
+    e >>= fun init -> go init
+  in
+  let ( <||> ) = chainl1 in
+  parse_expr
+  <||> multiplication
+  <||> division
+  <||> addition
+  <||> subtraction
+  <||> larger
+  <||> largerEq
+  <||> less
+  <||> lessEq
+  <||> eqality
+  <||> neqality
+  <||> logand
+  <||> logor
+  >>= fun s ->
+  match s with
+  | EBinaryOperation (_, _, _) -> return s
+  | _ -> fail "Error: not binary operation."
+;;
+
 let parse_declaration pack =
   fix
   @@ fun _ ->
@@ -226,67 +286,6 @@ let parse_application pack =
       let chainl acc = lift (eapplication acc) operand_parser in
       let rec go acc = chainl acc >>= go <|> return acc in
       function_parser >>= fun init -> chainl init >>= fun init -> go init)
-;;
-
-(* Constructors *)
-let sAdd _ = Plus
-let sSub _ = Sub
-let sMul _ = Mul
-let sDiv _ = Div
-let sEq _ = Eq
-let sNEq _ = NEq
-let sGt _ = Gt
-let sGte _ = Gte
-let sLt _ = Lt
-let sLte _ = Lte
-let sAnd _ = And
-let sOr _ = Or
-
-let parse_bin_op pack =
-  fix
-  @@ fun self ->
-  skip_wspace
-  *>
-  let addition = skip_wspace *> char '+' >>| sAdd
-  and subtraction = skip_wspace *> char '-' >>| sSub
-  and multiplication = skip_wspace *> char '*' >>| sMul
-  and division = skip_wspace *> char '/' >>| sDiv
-  and eqality = skip_wspace *> char '=' >>| sEq
-  and neqality = skip_wspace *> string "!=" <|> string "<>" >>| sEq
-  and logand = skip_wspace *> string "&&" >>| sAnd
-  and logor = skip_wspace *> string "||" >>| sOr
-  and larger = skip_wspace *> char '>' >>| sGt
-  and largerEq = skip_wspace *> string ">=" >>| sGte
-  and less = skip_wspace *> char '<' >>| sLt
-  and lessEq = skip_wspace *> string "<=" >>| sLte in
-  let parse_expr =
-    choice
-      [ parens self
-      ; pack.parse_application pack
-      ; pack.parse_fun pack
-      ; pack.parse_if_then_else pack
-      ; parse_const
-      ; parse_ident
-      ]
-  in
-  let ( <||> ) = chainl1 in
-  parse_expr
-  <||> multiplication
-  <||> division
-  <||> addition
-  <||> subtraction
-  <||> larger
-  <||> largerEq
-  <||> less
-  <||> lessEq
-  <||> eqality
-  <||> neqality
-  <||> logand
-  <||> logor
-  >>= fun s ->
-  match s with
-  | EBinaryOperation (_, _, _) -> return s
-  | _ -> fail "Error: not binary operation."
 ;;
 
 let default = { parse_bin_op; parse_application; parse_fun; parse_if_then_else }
