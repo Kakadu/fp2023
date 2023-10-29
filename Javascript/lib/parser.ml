@@ -1,10 +1,10 @@
 (** Copyright 2023, Kuarni, AlexShmak *)
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-(* #load "ast.cmi"
-#require "angstrom" *)
 open Angstrom
 open Ast
+
+type error = [ `ParsingError of string ]
 
 let chars2string chars = List.fold_left (fun a b -> a ^ Char.escaped b) "" chars
 
@@ -250,9 +250,9 @@ and parse_statements stopper =
 let parse_programm = 
   parse_statements end_of_input >>| (fun c -> Programm c)
 
-let parse str =
+let parse ?(parser=parse_programm) str =
   match
-    Angstrom.parse_string (parse_programm) ~consume:Angstrom.Consume.All str
+    Angstrom.parse_string (parser) ~consume:Angstrom.Consume.All str
   with
   | Result.Ok x -> Result.Ok x
   | Error er -> Result.Error (`ParsingError er)
