@@ -66,7 +66,7 @@ and other_operation =
 | Call of variable*tp*value*(value list) (** <result> = call <ty> <fnptrval>(<function args>) *)
 and align = int
 and memory_address_inst =
-  | Alloca of variable * tp * int * align
+  | Alloca of variable * tp * value * align
       (** <result> = alloca <type> [, <ty> <NumElements>] [, align <alignment>] *)
   | Store of tp * value * value * align
       (** store <ty> <value>, ptr <pointer>[, align <alignment>] *)

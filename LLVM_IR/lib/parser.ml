@@ -516,11 +516,45 @@ let parse_other_operation =
   whitespaces *> choice [ iicmp; icall ]
 ;;
 
+let parse_memory_instruction =
+  let parse_align =
+    whitespaces *> char ',' *> whitespaces *> word "align" *> whitespaces *> integer
+    <|> return 1
+  in
+  let ialloca =
+    lift4
+      (fun var tp value align -> Ast.Alloca (var, tp, value, align))
+      parse_instruction_result
+      (whitespaces *> word "alloca" *> parse_main_type)
+      (whitespaces *> char ',' *> whitespaces *> parse_type_with_value
+       >>= (function
+             | Ast.TInteger _, value -> return value
+             | _ -> fail "Parser error: excepted integer type")
+       <|> return (Ast.Const (Ast.CInteger (1, 1))))
+      (whitespaces *> parse_align)
+  and istore =
+    lift3
+      (fun (tp, value) vptr align -> Ast.Store (tp, value, vptr, align))
+      (whitespaces *> word "store" *> whitespaces *> parse_type_with_value)
+      (whitespaces *> char ',' *> whitespaces *> type_with_value Ast.TPointer)
+      parse_align
+  and iload =
+    lift4
+      (fun res tp vptr align -> Ast.Load (res, tp, vptr, align))
+      parse_instruction_result
+      (whitespaces *> word "load" *> parse_main_type)
+      (whitespaces *> char ',' *> whitespaces *> type_with_value Ast.TPointer)
+      parse_align
+  in
+  whitespaces *> choice [ ialloca; istore; iload ]
+;;
+
 let parse_instruction : Ast.instruction t =
   choice
     [ (parse_terminator_instruction >>| fun ins -> Ast.Terminator ins)
     ; (parse_binary_operation >>| fun ins -> Ast.Binary ins)
     ; (parse_other_operation >>| fun ins -> Ast.Other ins)
+    ; (parse_memory_instruction >>| fun ins -> Ast.MemoryAddress ins)
     ]
 ;;
 
@@ -588,6 +622,57 @@ let%expect_test _ =
        (Icmp ((LocalVar "5"), "slt", (TInteger 32),
           (FromVariable ((LocalVar "4"), (TInteger 32))),
           (Const (CInteger (32, 1)))))) |}]
+;;
+
+let%expect_test _ =
+  test_parse parse_instruction Ast.show_instruction "  %2 = alloca i32, align 4";
+  [%expect
+    {|
+      (MemoryAddress
+         (Alloca ((LocalVar "2"), (TInteger 32), (Const (CInteger (1, 1))), 4))) |}]
+;;
+
+let%expect_test _ =
+  test_parse parse_instruction Ast.show_instruction "  %2 = alloca i32";
+  [%expect
+    {|
+      (MemoryAddress
+         (Alloca ((LocalVar "2"), (TInteger 32), (Const (CInteger (1, 1))), 1))) |}]
+;;
+
+let%expect_test _ =
+  test_parse parse_instruction Ast.show_instruction "   %2 = alloca i32, i32 4, align 4";
+  [%expect
+    {|
+      (MemoryAddress
+         (Alloca ((LocalVar "2"), (TInteger 32), (Const (CInteger (32, 4))), 4))) |}]
+;;
+
+let%expect_test _ =
+  test_parse parse_instruction Ast.show_instruction "   %2 = alloca i32, i32 %kakadu";
+  [%expect
+    {|
+      (MemoryAddress
+         (Alloca ((LocalVar "2"), (TInteger 32),
+            (FromVariable ((LocalVar "kakadu"), (TInteger 32))), 1))) |}]
+;;
+
+let%expect_test _ =
+  test_parse parse_instruction Ast.show_instruction "%11 = load i32, ptr %3, align 4";
+  [%expect
+    {|
+      (MemoryAddress
+         (Load ((LocalVar "11"), (TInteger 32),
+            (FromVariable ((LocalVar "3"), TPointer)), 4))) |}]
+;;
+
+let%expect_test _ =
+  test_parse parse_instruction Ast.show_instruction "  store i32 %12, ptr %2, align 4";
+  [%expect
+    {|
+      (MemoryAddress
+         (Store ((TInteger 32), (FromVariable ((LocalVar "12"), (TInteger 32))),
+            (FromVariable ((LocalVar "2"), TPointer)), 4))) |}]
 ;;
 
 let parse_basic_block_variable =
