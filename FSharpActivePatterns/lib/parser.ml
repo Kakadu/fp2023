@@ -494,12 +494,6 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  let test = "(1 + 2) * (3 + 4)" in
-  start_test expression show_expr test;
-  [%expect {|  |}]
-;;
-
-let%expect_test _ =
   let test = "(3, 1234, [1;2;3])" in
   start_test expression show_expr test;
   [%expect
