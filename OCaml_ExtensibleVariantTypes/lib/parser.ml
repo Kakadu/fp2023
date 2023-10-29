@@ -156,7 +156,7 @@ let parse_identifier =
   else return @@ Ident str_res
 ;;
 
-let parse_identifier_to_expr = parse_identifier >>= fun id -> return @@ eid @@ id
+let parse_identifier_to_expr = parse_identifier >>= fun id -> return @@ eid id
 
 let parse_params =
   lift
@@ -164,7 +164,7 @@ let parse_params =
     (sep_by1
        parse_space1
        (parse_identifier >>= fun ident_list_res -> return @@ EId ident_list_res))
-  >>= fun ident_list_res -> return @@ ident_list_res
+  >>= fun ident_list_res -> return ident_list_res
 ;;
 
 let parse_bind_let =
@@ -199,7 +199,6 @@ let parse_anon_func parse_expr =
        eanonfun
        (parse_params <|> parse_params_anon_func <* parse_stoken "->")
        parse_expr
-  >>= fun res -> return @@ res
 ;;
 
 (****************************************************** Branching ******************************************************)
@@ -300,7 +299,7 @@ let parse_expr =
         ]
     in
     let parser_ehelper = choice [ parser_ehelper; parse_un_op_app parser_ehelper ] in
-    let parser_ehelper = choice [ parse_app parser_ehelper ] in
+    let parser_ehelper = parse_app parser_ehelper in
     let parser_ehelper = parse_tuple parser_ehelper in
     choice ~failure_msg:"Can't parse expr" [ parser_ehelper ])
 ;;
@@ -310,8 +309,6 @@ let parse_decls =
     prog
     (many (lift2 decl parse_bind_let (parse_expr <* (parse_stoken ";;" <|> parse_space))))
 ;;
-
-let parse_expr s = Angstrom.parse_string ~consume:Consume.All parse_expr s
 
 let parse_program s =
   match Angstrom.parse_string ~consume:Consume.All parse_decls s with

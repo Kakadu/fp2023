@@ -24,11 +24,11 @@ type bin_op =
   | Or (* || *)
 [@@deriving eq, show { with_path = false }]
 
-and unary_op =
+type unary_op =
   | Plus (* ~+ *)
   | Minus (* ~- *)
   | Not (* ~not *)
-[@@deriving show { with_path = false }]
+[@@deriving eq, show { with_path = false }]
 
 type ident = Ident of string [@@deriving eq, show { with_path = false }]
 
@@ -56,8 +56,8 @@ and rec_flag =
 [@@deriving eq, show { with_path = false }]
 
 and bind = DLet of rec_flag * ident * expr [@@deriving eq, show { with_path = false }]
-and decl = bind * expr [@@deriving eq, show { with_path = false }]
 
+type decl = bind * expr [@@deriving eq, show { with_path = false }]
 type prog = decl list [@@deriving show { with_path = false }]
 
 let econst c = EConst c
