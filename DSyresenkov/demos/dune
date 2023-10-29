@@ -1,0 +1,10 @@
+(executable
+ (name demoFact)
+ (modules demoFact)
+ (public_name demoFact)
+ (libraries miniml_lib)
+ (instrumentation
+  (backend bisect_ppx)))
+
+(cram
+ (deps %{bin:demoFact}))

@@ -1,0 +1,10 @@
+(executable
+ (name demo_fact)
+ (modules demo_fact)
+ (public_name demo_fact)
+ (libraries DRozhkov.Lib)
+ (instrumentation
+  (backend bisect_ppx)))
+
+(cram
+ (deps %{bin:demo_fact}))
