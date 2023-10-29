@@ -1,10 +1,19 @@
 (library
  (name javascript_lib)
- (public_name JS.Lib)
- (modules Ast Parser)
- (modules_without_implementation ast)
+ (public_name Javascript.Lib)
+ (modules Ast Parser Print)
  (libraries base angstrom)
  (preprocess
-  (pps ppx_deriving.show))
+  (pps ppx_expect ppx_deriving.show ppx_deriving.eq))
  (instrumentation
   (backend bisect_ppx)))
+
+(library
+ (name tests)
+ (modules Tests)
+ (libraries javascript_lib)
+ (preprocess
+  (pps ppx_expect ppx_deriving.show ppx_deriving.eq ppx_assert))
+ (instrumentation
+  (backend bisect_ppx))
+ (inline_tests))
