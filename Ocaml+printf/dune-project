@@ -6,19 +6,19 @@
 
 (license LGPL-3.0-or-later)
 
-(authors "FIXME Vasya Pupkin")
+(authors "Demchenko Artem")
 
-(maintainers "FIXME Vasya Pupkin")
+(maintainers "Demchenko Artem")
 
-(bug_reports "FIXME where to put bug reports about the code")
+(bug_reports "https://github.com/aartdem/fp2023")
 
-(homepage "FIXME Homepage")
+(homepage "https://github.com/aartdem/fp2023")
 
 (package
- (name Lambda) ; FIXME and regenerate .opam file using 'dune build @install'
- (synopsis "FIXME An interpreter for language")
+ (name Ocaml+printf)
+ (synopsis "An interpreter for Ocaml with printf")
  (description
-  "FIXME. A longer description, for example, which are the most interesing features being supported, etc.")
+  "FIXME. A longer description, for example, which are the most interesing features being supported, etc. - TODO")
  (version 0.1)
  (depends
   dune
