@@ -1,4 +1,2 @@
-profile=janestreet
-sequence-style=terminator
-max-indent=2
-
+profile = ocamlformat
+version = 0.26.1
