@@ -1,24 +1,13 @@
-(** Copyright 2021-2023, Kakadu and contributors *)
+(** Copyright 2021-2023, Georgy Sichkar *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
 (* TODO: implement parser here *)
 
-(* *_ - parser that don't fail *)
-(* *' - parser that don't advance input *)
-
 open Base
 open Angstrom
 open Ast
 
-(** @see <https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/>
-      C# keywords *)
-
-(* let p_list1 exp =
-   fix (fun foo -> lift2 (fun x tl -> x :: tl) exp foo <|> (exp >>| fun x -> x :: []))
-   ;;
-
-   let p_list exp = p_list1 exp <|> return [] *)
 let chainl0 expr un_op = un_op >>= (fun op -> expr >>| fun exp -> op exp) <|> expr
 
 let chainl1 expr bin_op =
@@ -39,6 +28,8 @@ let is_type_as_keyword = function
   | _ -> false
 ;;
 
+(** @see <https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/>
+      C# keywords *)
 let is_keyword = function
   | "if"
   | "else"
@@ -172,24 +163,19 @@ let p_keyword_type =
 
 let ( #~> ) str tp = read_as_token str *> return tp
 
-(* access modifiers *)
 let p_access_modifier =
   choice
     ?failure_msg:(Some "Not a access modifier")
     [ "public" #~> MPublic; "private" #~> MPrivate; "protected" #~> MProtected ]
 ;;
 
-(* method modifiers *)
 let p_method_modifier =
   choice
     ?failure_msg:(Some "Not a method modifier")
     [ "static" #~> MStatic; (p_access_modifier >>= fun x -> return (MAccess x)) ]
 ;;
 
-(* fild modifiers *)
 let p_fild_modifier = p_access_modifier >>= fun x -> return (FAccess x)
-
-(*  *)
 let p_kvar_type = p_keyword_type >>= fun x -> return (TVar x)
 
 let p_method_type =
@@ -331,7 +317,6 @@ let _ep_if_else ep_body =
     lift3 (fun cond body else_ -> EIf_else (cond, body, else_)) _ep_if_cond ep_body else_)
 ;;
 
-(* let ep_steps *)
 let _ep_brunch_loop ep_body =
   choice ?failure_msg:(Some "It isn't IF or ...") [ _ep_if_else ep_body ]
 ;;
@@ -349,7 +334,6 @@ let ep_steps =
     let step = _ep_semicolon1 in
     let op_step = _ep_semicolon in
     let body_step =
-      (* let p_step ep = ep <* ep_spaces @@ char ';' in *)
       choice
         [ step ep_eAssign_eDecl
         ; step ep_method_invoke
@@ -437,12 +421,13 @@ let ep_class =
 
 let ep_classes : tast t = many ep_class
 
-let parse str ~p =
+let _parse str ~p =
   match parse_string p ~consume:Angstrom.Consume.All str with
   | Ok x -> Some x
   | Error _ -> None
 ;;
 
+let parse = parse_string ep_classes ~consume:Angstrom.Consume.All
 let n_parse p = parse_string p ~consume:Angstrom.Consume.Prefix
 
 (* *******************->  tests  <-******************* *)
@@ -456,10 +441,8 @@ let show_wrap form = function
   | _ -> Format.print_string "Some error during parsing\n"
 ;;
 
-let test_pars ps eq str ans = eq_wrap ~eq ans (parse ~p:ps str)
-let print_pars ps form str = show_wrap form (parse ~p:ps str)
-
-(* let%test_unit _ = print_pars func *)
+let test_pars ps eq str ans = eq_wrap ~eq ans (_parse ~p:ps str)
+let print_pars ps form str = show_wrap form (_parse ~p:ps str)
 
 (* p_num tests: *)
 let test_num = test_pars p_number equal_value_
@@ -511,7 +494,7 @@ let%test _ = test_bool "false" (VBool false)
 let%test _ = not (test_bool "@das" (VBool false))
 let%test _ = not (test_bool "das" (VBool false))
 
-(* ep_operation *)
+(* ep_operation tests: *)
 let test_operation = test_pars ep_operation equal_expr
 
 (* true *)
@@ -827,8 +810,9 @@ let%expect_test _ =
     \        }\n\
     \    }\n\
      }\n\n\
-     class trueF {}"
-;[%expect {|
+     class trueF {}";
+  [%expect
+    {|
   [{ cl_modif = None; cl_id = (Id "Program"); parent = (Some (Id "Exception"));
      cl_mems =
      [(Fild
@@ -869,3 +853,4 @@ let%expect_test _ =
        ]
      };
     { cl_modif = None; cl_id = (Id "trueF"); parent = None; cl_mems = [] }] |}]
+;;
