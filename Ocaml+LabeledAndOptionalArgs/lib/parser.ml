@@ -353,12 +353,12 @@ let test_parse str expected =
 
 let%test _ =
   test_parse
-    " let rec fact ( n : int ) = if n < 1 then 1 else n * fact (n - 1) "
+    " let rec fact ( n : int ) : int = if n < 1 then 1 else n * fact (n - 1) "
     [ LetDecl
         ( true
         , "fact"
         , [ NoLabel ("n", IntType) ]
-        , UndefinedType
+        , IntType
         , IfThenElse
             ( BinOp (Less, Var "n", Const (Int 1))
             , Const (Int 1)
