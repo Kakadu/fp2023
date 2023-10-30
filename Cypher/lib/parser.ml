@@ -64,6 +64,14 @@ let chainl1 e op =
 
 let rec chainr1 e op = e >>= fun a -> op >>= (fun f -> chainr1 e op >>| f a) <|> return a
 
+let un_chainl1 e op =
+  lift2 (fun e ops -> List.fold_left (fun e f -> f e) e ops) e (many op)
+;;
+
+let un_chainr1 e op =
+  lift2 (fun ops e -> List.fold_right (fun f e -> f e) ops e) (many op) e
+;;
+
 let parse p str =
   match parse_string ~consume:All (skip_spaces_after p) str with
   | Ok v -> v
@@ -260,21 +268,15 @@ let lgeq =
 let expr =
   fix (fun expr ->
     let factor = choice [ parens expr; const; property; var; liter ] in
-    let null_or_not_null =
-      choice
-        [ lift2 (fun x f -> f x) factor uis_null
-        ; lift2 (fun x f -> f x) factor uis_not_null
-        ; factor
-        ]
-    in
-    let minus = null_or_not_null <|> lift2 (fun f x -> f x) uminus null_or_not_null in
+    let null_or_not_null = un_chainl1 factor (uis_null <|> uis_not_null) in
+    let minus = un_chainr1 null_or_not_null uminus in
     let caret = chainl1 minus bcaret in
     let asterisk_slash_percent = chainl1 caret (choice [ basterisk; bslash; bpercent ]) in
     let plus_minus = chainl1 asterisk_slash_percent (bplus <|> bminus) in
     let list_op =
       chainr1 plus_minus (choice [ leq; lneq; lleq; lgeq; lless; lgreater ])
     in
-    let unot = list_op <|> lift2 (fun f x -> f x) unot list_op in
+    let unot = un_chainr1 list_op unot in
     let bxor = chainl1 unot bxor in
     let band = chainl1 bxor band in
     let bor = chainl1 band bor in

@@ -23,7 +23,7 @@ let%expect_test "Simple expr with unary minus" =
   [%expect
     {|
   (Bin_op (Plus, (Un_op (Minus, (Const (Float 120.607)))),
-     (Bin_op (Slash, (Const (Int64 -400L)),
+     (Bin_op (Slash, (Un_op (Minus, (Const (Int64 400L)))),
         (Bin_op (Caret, (Const (Int64 10L)), (Un_op (Minus, (Var "x")))))))
      )) |}]
 ;;
@@ -32,28 +32,27 @@ let%expect_test "Multiple sequential comparison operators" =
   parse_and_print {| 1+-1 = 0 <> 10 >= 5*1 <= 5/1 > - -4 |};
   [%expect
     {|
-  (List_op ((Bin_op (Plus, (Const (Int64 1L)), (Const (Int64 -1L)))),
+  (List_op (
+     (Bin_op (Plus, (Const (Int64 1L)), (Un_op (Minus, (Const (Int64 1L)))))),
      [(Eq, (Const (Int64 0L))); (NEq, (Const (Int64 10L)));
        (GEq, (Bin_op (Asterisk, (Const (Int64 5L)), (Const (Int64 1L)))));
        (LEq, (Bin_op (Slash, (Const (Int64 5L)), (Const (Int64 1L)))));
-       (Greater, (Un_op (Minus, (Const (Int64 -4L)))))]
+       (Greater, (Un_op (Minus, (Un_op (Minus, (Const (Int64 4L)))))))]
      )) |}]
 ;;
 
 let%expect_test "Null check operators" =
   parse_and_print {| 4 = (4 + a is null IS NOT NULL) is null |};
-  [%expect.unreachable]
-[@@expect.uncaught_exn
-  {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Failure ": end_of_input")
-  Raised at Stdlib.failwith in file "stdlib.ml", line 29, characters 17-33
-  Called from Test.parse_and_print in file "lib/test.ml", line 9, characters 64-78
-  Called from Test.(fun) in file "lib/test.ml", line 44, characters 2-63
-  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19 |}]
+  [%expect
+    {|
+    (List_op ((Const (Int64 4L)),
+       [(Eq,
+         (Un_op (IS_NULL,
+            (Bin_op (Plus, (Const (Int64 4L)),
+               (Un_op (IS_NOT_NULL, (Un_op (IS_NULL, (Var "a")))))))
+            )))
+         ]
+       )) |}]
 ;;
 
 let%expect_test "Boolean oparators and literals" =
