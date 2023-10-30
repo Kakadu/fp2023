@@ -90,17 +90,18 @@ let parse_const = choice [ parse_nil; parse_int; parse_bool; parse_str ]
 
 (* Parse var *)
 
-let check_var varname =
-  if is_keyword varname
-  then fail ("You can not use" ^ varname ^ "keywords as vars")
-  else if Char.is_digit @@ String.get varname 0
-  then fail "Identifier first sumbol is letter, not digit"
-  else return varname
-;;
-
 let var cond =
   parse_white_space *> take_while1 cond
-  >>= fun v -> if String.length v == 0 then fail "Not identifier" else check_var v
+  >>= fun v ->
+  if String.length v == 0
+  then fail "Not identifier"
+  else if is_keyword v
+  then fail ("You can not use" ^ v ^ "keywords as vars")
+  else if Char.is_digit @@ String.get v 0
+  then fail "Identifier first sumbol is letter, not digit"
+  else if String.equal v "_"
+  then fail "Wildcard \"_\" not expected"
+  else return v
 ;;
 
 let p_var =
