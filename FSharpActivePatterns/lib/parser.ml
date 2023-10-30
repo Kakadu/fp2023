@@ -194,13 +194,6 @@ let parse_list_expr ps =
   (fun v -> ListExpr v) <$> (pstrtoken "[" *> sep_by1 (pstrtoken ";") ps <* pstrtoken "]")
 ;;
 
-(* let parse_tuple_expr ps =
-   (fun v -> TupleExpr v)
-   <$> (pstrtoken "(" *> sep_by1 (pstrtoken ",") ps
-   <* pstrtoken ")"
-   <|> sep_by1 (pstrtoken ",") ps)
-   ;; *)
-
 let parse_tuple_expr ps = (fun v -> TupleExpr v) <$> parens (sep_by1 (pstrtoken ",") ps)
 
 let plet_body pargs pexpr =
