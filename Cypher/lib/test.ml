@@ -1,4 +1,4 @@
-(** Copyright 2023 Arseniy Baytenov *)
+(** Copyright 2023, Arseniy Baytenov *)
 
 (** SPDX-License-Identifier: MIT *)
 
