@@ -2251,7 +2251,7 @@ let parse_function =
 
 let start_parse : Ast.glob_list t = man<span data-count="3">y</span> (choic<span data-count="3">e</span> [ parse_function ])
 
-let parse_programm prog =
+let parse_program prog =
   <span data-count="1">m</span>atch Angstrom.parse_string ~consume:Consume.Prefix start_parse prog with
   | <span data-count="0">R</span>esult.Error e -&gt; Result.Error e
   | <span data-count="1">R</span>esult.Ok lst -&gt; Result.Ok (Ast.show_glob_lis<span data-count="1">t</span> lst)
