@@ -2,10 +2,8 @@
  (name demoParse)
  (modules demoParse)
  (public_name demoParse)
- (libraries llvm_lib stdio)
-)
+ (libraries llvm_lib stdio))
 
 (cram
  (applies_to parsingTests)
- (deps ./demoParse.exe 
- ./attachments/fac.ll))
+ (deps ./demoParse.exe ./attachments/fac.ll))

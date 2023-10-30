@@ -32,8 +32,7 @@ type pointer_const =
   | PointerInt of int
 [@@deriving show { with_path = false }]
 
-type align = int (* just for better reading*)
-[@@deriving show { with_path = false }]
+type align = int (* just for better reading*) [@@deriving show { with_path = false }]
 
 type const =
   | CVoid
