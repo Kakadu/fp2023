@@ -53,6 +53,13 @@ let skip_spaces_after p =
     | _ -> false)
 ;;
 
+let check_after p cond =
+  p
+  <* (satisfy (fun c -> not @@ cond c)
+      <|> return '!'
+      >>= fun c -> if c != '!' then fail "Incorrect symbol" else return '!')
+;;
+
 let parens p = skip_spaces (char '(') *> p <* skip_spaces (char ')')
 let braces p = skip_spaces (char '{') *> p <* skip_spaces (char '}')
 let sq_brackets p = skip_spaces (char '[') *> p <* skip_spaces (char ']')
@@ -112,24 +119,30 @@ let liter =
     >>= fun l ->
     if uc l <> "NULL" then fail "Literal NULL parse fail" else return @@ Liter Null
   in
-  skip_spaces @@ choice [ ltrue; lfalse; lnull ]
+  check_after
+    (skip_spaces @@ choice [ ltrue; lfalse; lnull ])
+    (fun c -> not @@ is_digit c)
 ;;
 
 let const =
   let sign = choice [ char '-' *> return "-"; string "" *> return "" ] in
   let int64 =
-    lift2
-      (fun sign num -> Int64 (Int64.of_string (sign ^ num)))
-      sign
-      (take_while1 is_digit)
+    check_after
+      (lift2
+         (fun sign num -> Int64 (Int64.of_string (sign ^ num)))
+         sign
+         (take_while1 is_digit))
+      (fun c -> not @@ is_letter c)
   in
   let float =
-    lift4
-      (fun sign int dot fract -> Float (float_of_string (sign ^ int ^ dot ^ fract)))
-      sign
-      (take_while1 is_digit)
-      (char '.' *> return ".")
-      (take_while1 is_digit)
+    check_after
+      (lift4
+         (fun sign int dot fract -> Float (float_of_string (sign ^ int ^ dot ^ fract)))
+         sign
+         (take_while1 is_digit)
+         (char '.' *> return ".")
+         (take_while1 is_digit))
+      (fun c -> not @@ is_letter c)
   in
   let string =
     let content_while_not c = lift (fun s -> String s) (take_while (( <> ) c)) in
@@ -149,38 +162,49 @@ let property =
        (skip_spaces (skip (fun c -> c = '.') *> skip_spaces name))
 ;;
 
-let uminus = skip_spaces (char '-') *> return (fun e -> Un_op (Minus, e))
+let uminus =
+  check_after
+    (skip_spaces (char '-') *> return (fun e -> Un_op (Minus, e)))
+    (fun c -> not @@ is_digit c)
+;;
 
 let uis_null =
-  skip_spaces
-    (lift2
-       (fun s1 s2 -> s1, s2)
-       (take_while is_letter)
-       (skip_spaces (take_while is_letter))
-     >>= fun (s1, s2) ->
-     if (uc s1, uc s2) <> ("IS", "NULL")
-     then fail "IS_NULL parse fail"
-     else return (fun e -> Un_op (IS_NULL, e)))
+  check_after
+    (skip_spaces
+       (lift2
+          (fun s1 s2 -> s1, s2)
+          (take_while is_letter)
+          (skip_spaces (take_while is_letter))
+        >>= fun (s1, s2) ->
+        if (uc s1, uc s2) <> ("IS", "NULL")
+        then fail "IS_NULL parse fail"
+        else return (fun e -> Un_op (IS_NULL, e))))
+    (fun c -> not @@ is_digit c)
 ;;
 
 let uis_not_null =
-  skip_spaces
-    (lift3
-       (fun s1 s2 s3 -> s1, s2, s3)
-       (take_while is_letter)
-       (skip_spaces (take_while is_letter))
-       (skip_spaces (take_while is_letter))
-     >>= fun (s1, s2, s3) ->
-     if (uc s1, uc s2, uc s3) <> ("IS", "NOT", "NULL")
-     then fail "IS_NOT_NULL parse fail"
-     else return (fun e -> Un_op (IS_NOT_NULL, e)))
+  check_after
+    (skip_spaces
+       (lift3
+          (fun s1 s2 s3 -> s1, s2, s3)
+          (take_while is_letter)
+          (skip_spaces (take_while is_letter))
+          (skip_spaces (take_while is_letter))
+        >>= fun (s1, s2, s3) ->
+        if (uc s1, uc s2, uc s3) <> ("IS", "NOT", "NULL")
+        then fail "IS_NOT_NULL parse fail"
+        else return (fun e -> Un_op (IS_NOT_NULL, e))))
+    (fun c -> not @@ is_digit c)
 ;;
 
 let unot =
-  skip_spaces
-    (take_while is_letter
-     >>= fun s ->
-     if uc s <> "NOT" then fail "NOT parse fail" else return (fun e -> Un_op (NOT, e)))
+  check_after
+    (skip_spaces
+       (take_while is_letter
+        >>= fun s ->
+        if uc s <> "NOT" then fail "NOT parse fail" else return (fun e -> Un_op (NOT, e))
+       ))
+    (fun c -> not @@ is_digit c)
 ;;
 
 let bcaret = skip_spaces (char '^') *> return (fun e1 e2 -> Bin_op (Caret, e1, e2))
@@ -191,30 +215,36 @@ let bplus = skip_spaces (char '+') *> return (fun e1 e2 -> Bin_op (Plus, e1, e2)
 let bminus = skip_spaces (char '-') *> return (fun e1 e2 -> Bin_op (Minus, e1, e2))
 
 let band =
-  skip_spaces
-    (take_while is_letter
-     >>= fun s ->
-     if uc s <> "AND"
-     then fail "AND parse fail"
-     else return (fun e1 e2 -> Bin_op (AND, e1, e2)))
+  check_after
+    (skip_spaces
+       (take_while is_letter
+        >>= fun s ->
+        if uc s <> "AND"
+        then fail "AND parse fail"
+        else return (fun e1 e2 -> Bin_op (AND, e1, e2))))
+    (fun c -> not @@ is_digit c)
 ;;
 
 let bor =
-  skip_spaces
-    (take_while is_letter
-     >>= fun s ->
-     if uc s <> "OR"
-     then fail "OR parse fail"
-     else return (fun e1 e2 -> Bin_op (OR, e1, e2)))
+  check_after
+    (skip_spaces
+       (take_while is_letter
+        >>= fun s ->
+        if uc s <> "OR"
+        then fail "OR parse fail"
+        else return (fun e1 e2 -> Bin_op (OR, e1, e2))))
+    (fun c -> not @@ is_digit c)
 ;;
 
 let bxor =
-  skip_spaces
-    (take_while is_letter
-     >>= fun s ->
-     if uc s <> "XOR"
-     then fail "XOR parse fail"
-     else return (fun e1 e2 -> Bin_op (XOR, e1, e2)))
+  check_after
+    (skip_spaces
+       (take_while is_letter
+        >>= fun s ->
+        if uc s <> "XOR"
+        then fail "XOR parse fail"
+        else return (fun e1 e2 -> Bin_op (XOR, e1, e2))))
+    (fun c -> not @@ is_digit c)
 ;;
 
 let leq =
