@@ -2,6 +2,7 @@
  (name prologDatalog_lib)
  (public_name PrologDatalog.Lib)
  (modules Ast Parser)
+ (inline_tests)
  (libraries base angstrom)
  (preprocess
   (pps ppx_expect ppx_deriving.show ppx_deriving.eq))
