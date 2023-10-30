@@ -728,7 +728,7 @@ let parse_function =
 
 let start_parse : Ast.glob_list t = many (choice [ parse_function ])
 
-let parse_programm prog =
+let parse_program prog =
   match Angstrom.parse_string ~consume:Consume.Prefix start_parse prog with
   | Result.Error e -> Result.Error e
   | Result.Ok lst -> Result.Ok (Ast.show_glob_list lst)

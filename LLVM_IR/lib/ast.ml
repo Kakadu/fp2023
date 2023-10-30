@@ -32,13 +32,16 @@ type pointer_const =
   | PointerInt of int
 [@@deriving show { with_path = false }]
 
+type align = int (* just for better reading*)
+[@@deriving show { with_path = false }]
+
 type const =
   | CVoid
   | CInteger of int * int (** size and value*)
   | CFloat of float
   | CPointer of pointer_const
   | CVector of const list (** <const, const, ...> *)
-  | CArr of const list  (** [const, const, ...] *)
+  | CArr of const list (** [const, const, ...] *)
   | CStruct of const list (** {const, const, ...} *)
   | CLabel of basic_block
   | CFunc of func
@@ -71,8 +74,6 @@ and other_operation =
   | Call of variable * tp * value * value list
       (** <result> = call <ty> <fnptrval>(<function args>) *)
 
-and align = int
-
 and memory_address_inst =
   | Alloca of variable * tp * value * align
       (** <result> = alloca <type> [, <ty> <NumElements>] [, align <alignment>] *)
@@ -99,9 +100,8 @@ and basic_block = instruction list [@@deriving show { with_path = false }]
 
 and func =
   { parameters : variable list
-  ; basic_blocks : (variable*const) list
+  ; basic_blocks : (variable * const) list
   }
 [@@deriving show { with_path = false }]
 
 type glob_list = (tp * variable * const) list [@@deriving show { with_path = false }]
-
