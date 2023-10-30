@@ -877,8 +877,8 @@ let evar x = <span data-count="6">E</span>Var x
 
 let parse_evar = evar &lt;$<span data-count="2">&gt;</span> parse_id
 let parse_etypes = parse_types &gt;&gt;<span data-count="2">|</span> fun x -&gt; <span data-count="3">E</span>Types x
-let parse_arg = man<span data-count="2">y</span> @@ parens_or_no<span data-count="2">t</span> @@ parse_evar
-let parse_arg1 = many<span data-count="2">1</span> @@ parens_or_no<span data-count="2">t</span> @@ parse_evar
+let parse_arg = man<span data-count="2">y</span> @@ parens_or_no<span data-count="2">t</span> parse_evar
+let parse_arg1 = many<span data-count="2">1</span> @@ parens_or_no<span data-count="2">t</span> parse_evar
 
 type edispatch =
   {
@@ -974,7 +974,7 @@ let parse_eapp parse_expr =
   <span data-count="4">t</span>ake_empty *&gt; lift<span data-count="4">2</span>
     (fun expr l -&gt; <span data-count="4">l</span>et res = List.fold_left ~f:eapp ~init:expr l 
     in <span data-count="4">r</span>es)
-    parse_expr (man<span data-count="4">y</span> (token<span data-count="4">1</span> @@ parse_expr))
+    parse_expr (man<span data-count="4">y</span> (token<span data-count="4">1</span> parse_expr))
 ;;
 
 let pack =
