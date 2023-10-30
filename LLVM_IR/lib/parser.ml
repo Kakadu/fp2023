@@ -229,13 +229,13 @@ and parse_const_aggregate_type ob cb tp_list =
   let readed_types =
     List.map
       (function
-       | tp, _ -> tp)
+        | tp, _ -> tp)
       lst
   in
   let consts =
     List.map
       (function
-       | _, c -> c)
+        | _, c -> c)
       lst
   in
   if List.equal Ast.equal_tp readed_types tp_list
@@ -486,8 +486,8 @@ let parse_memory_instruction =
       (whitespaces *> word "alloca" *> parse_main_type)
       (whitespaces *> char ',' *> whitespaces *> parse_type_with_value
        >>= (function
-             | Ast.TInteger _, value -> return value
-             | _ -> fail "Parser error: excepted integer type")
+              | Ast.TInteger _, value -> return value
+              | _ -> fail "Parser error: excepted integer type")
        <|> return (Ast.Const (Ast.CInteger (1, 1))))
       (whitespaces *> parse_align)
   and istore =
@@ -646,13 +646,13 @@ let parse_function_annotation =
       let arg_types =
         List.map
           (function
-           | tp, _ -> tp)
+            | tp, _ -> tp)
           args
       in
       let arg_vars =
         List.map
           (function
-           | _, var -> var)
+            | _, var -> var)
           args
       in
       { self = name; parameters = arg_vars; tp = Ast.TFunc (ret, arg_types) })

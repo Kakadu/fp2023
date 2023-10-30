@@ -12,7 +12,7 @@ type tp =
   (* first class types*)
   | TVector of int * tp (** <int x primitive_type> *)
   | TArr of int * tp (** [int x type] *)
-  | TStruct of tp list (** {type1, type2...} *)
+  | TStruct of tp list (** \{type1, type2...\} *)
   (* additional types*)
   | TLabel (** label *)
   | TFunc of tp * tp list (** <returntype> (<parameter list>) *)
@@ -24,7 +24,7 @@ type tp =
 
 type variable =
   | LocalVar of string (** %name *)
-  | GlobalVar of string (** @name *)
+  | GlobalVar of string (** \@name *)
 [@@deriving show { with_path = false }]
 
 type pointer_const =
@@ -41,7 +41,7 @@ type const =
   | CPointer of pointer_const
   | CVector of const list (** <const, const, ...> *)
   | CArr of const list (** [const, const, ...] *)
-  | CStruct of const list (** {const, const, ...} *)
+  | CStruct of const list (** \{const, const, ...\} *)
   | CLabel of basic_block
   | CFunc of func
 [@@deriving show { with_path = false }]
@@ -69,17 +69,17 @@ and binary_operation =
 
 and other_operation =
   | Icmp of variable * string * tp * value * value
-      (** <result> = icmp <cond> <ty> <op1>, <op2> *)
+  (** <result> = icmp <cond> <ty> <op1>, <op2> *)
   | Call of variable * tp * value * value list
-      (** <result> = call <ty> <fnptrval>(<function args>) *)
+  (** <result> = call <ty> <fnptrval>(<function args>) *)
 
 and memory_address_inst =
   | Alloca of variable * tp * value * align
-      (** <result> = alloca <type> [, <ty> <NumElements>] [, align <alignment>] *)
+  (** <result> = alloca <type> [, <ty> <NumElements>] [, align <alignment>] *)
   | Store of tp * value * value * align
-      (** store <ty> <value>, ptr <pointer>[, align <alignment>] *)
+  (** store <ty> <value>, ptr <pointer>[, align <alignment>] *)
   | Load of variable * tp * value * align
-      (** <result> = load <ty>, ptr <pointer>[, align <alignment>]*)
+  (** <result> = load <ty>, ptr <pointer>[, align <alignment>]*)
 
 and instruction =
   | Terminator of terminator_instruction
