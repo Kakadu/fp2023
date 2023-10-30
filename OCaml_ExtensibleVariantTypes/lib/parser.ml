@@ -56,7 +56,6 @@ let keywords =
   ; "fun"
   ; "type"
   ; "int"
-  ; "string"
   ; "bool"
   ; "when"
   ; "function"
@@ -126,7 +125,7 @@ let parse_satisfy_ops op parser =
   parse_space
   *>
   let* chars =
-    take_while1 (fun c -> not (is_digit c or is_ident_char c or c = '(' or is_space c))
+    take_while (fun c -> not (is_digit c or is_ident_char c or c = '(' or is_space c))
   in
   if chars = op then parser else fail "The operators don't match"
 ;;
@@ -158,47 +157,30 @@ let parse_identifier =
 
 let parse_identifier_to_expr = parse_identifier >>= fun id -> return @@ eid id
 
-let parse_params =
-  lift
-    eparams
-    (sep_by1
-       parse_space1
-       (parse_identifier >>= fun ident_list_res -> return @@ EId ident_list_res))
-  >>= fun ident_list_res -> return ident_list_res
+let parse_params_and_expr parse_expr sep =
+  let parse_param =
+    parse_parens (parse_tuple parse_identifier_to_expr) <|> parse_identifier_to_expr
+  in
+  fix
+  @@ fun parse_params_and_expr ->
+  let* parameter = parse_param in
+  let* expr =
+    choice [ parse_space1 *> parse_params_and_expr; parse_satisfy_ops sep parse_expr ]
+  in
+  return @@ efun (eapp parameter expr)
 ;;
 
-let parse_bind_let =
+let parse_bind_let parse_expr =
   parse_stoken "let"
   *> lift3
        dlet
        (parse_stoken1 "rec" *> return Recursive <|> return Not_recursive)
        (parse_token1 parse_identifier)
-       (choice
-          [ (parse_space1
-             *> let* params = parse_params in
-                return params)
-            <* parse_satisfy_ops "=" (string "")
-          ; parse_satisfy_ops "=" (return @@ eparams [])
-          ])
+       (parse_params_and_expr parse_expr "=" <|> parse_satisfy_ops "=" parse_expr)
 ;;
 
-let parse_let_decl parse_expr = lift2 decl parse_bind_let parse_expr
-
-let parse_params_anon_func =
-  eparams
-  <$> sep_by
-        parse_space1
-        ((let* tuple_res = parse_parens (parse_tuple parse_identifier_to_expr) in
-          return tuple_res)
-         <|> parse_identifier_to_expr)
-;;
-
-let parse_anon_func parse_expr =
-  parse_stoken "fun"
-  *> lift2
-       eanonfun
-       (parse_params <|> parse_params_anon_func <* parse_stoken "->")
-       parse_expr
+let parse_anon_fun parse_expr =
+  parse_stoken "fun" *> parse_space1 *> parse_params_and_expr parse_expr "->"
 ;;
 
 (****************************************************** Branching ******************************************************)
@@ -267,16 +249,13 @@ and parse_fun_app parse_expr =
   let rec parse_fun_app_currying app1 =
     let* app2 =
       choice
-        [ (parse_str_bin_op >>= fun _ -> return @@ EEmpty)
+        [ parse_str_bin_op *> return EEmpty
         ; parse_expr
         ; parse_parens (parse_app parse_expr)
-        ; return @@ eparams [] (* there is nothing more to parse*)
         ]
     in
     if app2 = EEmpty
     then fail "Can't proccess bin op, only fun app"
-    else if app2 = eparams []
-    then return app1
     else parse_fun_app_currying (eapp app1 app2) <|> return (eapp app1 app2)
   in
   let* app1 = parse_expr in
@@ -294,7 +273,7 @@ let parse_expr =
         [ parse_parens parse_expr
         ; parse_const_to_expr
         ; parse_identifier_to_expr
-        ; parse_anon_func parse_expr
+        ; parse_anon_fun parse_expr
         ; parse_branching parse_expr
         ]
     in
@@ -305,16 +284,14 @@ let parse_expr =
 ;;
 
 let parse_decls =
-  lift
-    prog
-    (many (lift2 decl parse_bind_let (parse_expr <* (parse_stoken ";;" <|> parse_space))))
+  lift prog (many (parse_bind_let parse_expr <* (parse_stoken ";;" <|> parse_space)))
 ;;
 
 let parse_program s =
   match Angstrom.parse_string ~consume:Consume.All parse_decls s with
-  | Ok v -> v
+  | Ok v -> Ok v
   | Error msg ->
     (match msg with
-     | ": end_of_input" -> failwith "Can't parse decl"
-     | _ -> failwith msg)
+     | ": end_of_input" -> Error "Can't parse decl"
+     | _ -> Error msg)
 ;;
