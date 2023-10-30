@@ -1752,13 +1752,13 @@ and parse_const_aggregate_type ob cb tp_list =
   <span data-count="7">l</span>et readed_types =
     List.map
       (function
-       | <span data-count="17">t</span>p, _ -&gt; tp)
+        | <span data-count="17">t</span>p, _ -&gt; tp)
       lst
   in
   <span data-count="7">l</span>et consts =
     List.map
       (function
-       | <span data-count="17">_</span>, c -&gt; c)
+        | <span data-count="17">_</span>, c -&gt; c)
       lst
   in
   <span data-count="7">i</span>f List.equal Ast.equal_tp readed_types tp_list
@@ -2009,8 +2009,8 @@ let parse_memory_instruction =
       (whitespaces *<span data-count="3">&gt;</span> wor<span data-count="3">d</span> "alloca" *<span data-count="3">&gt;</span> parse_main_type)
       (whitespaces *<span data-count="3">&gt;</span> cha<span data-count="3">r</span> ',' *<span data-count="3">&gt;</span> whitespaces *<span data-count="3">&gt;</span> parse_type_with_value
        &gt;&gt;<span data-count="3">=</span> (function
-             | <span data-count="2">A</span>st.TInteger _, value -&gt; return value
-             | <span data-count="0">_</span> -&gt; fail "Parser error: excepted integer type")
+              | <span data-count="2">A</span>st.TInteger _, value -&gt; return value
+              | <span data-count="0">_</span> -&gt; fail "Parser error: excepted integer type")
        &lt;|<span data-count="3">&gt;</span> retur<span data-count="3">n</span> (Ast.Const (Ast.CInteger (1, 1))))
       (whitespaces *<span data-count="3">&gt;</span> parse_align)
   and istore =
@@ -2169,13 +2169,13 @@ let parse_function_annotation =
       <span data-count="2">l</span>et arg_types =
         List.map
           (function
-           | <span data-count="3">t</span>p, _ -&gt; tp)
+            | <span data-count="3">t</span>p, _ -&gt; tp)
           args
       in
       <span data-count="2">l</span>et arg_vars =
         List.map
           (function
-           | <span data-count="3">_</span>, var -&gt; var)
+            | <span data-count="3">_</span>, var -&gt; var)
           args
       in
       <span data-count="2">{</span> self = name; parameters = arg_vars; tp = Ast.TFunc (ret, arg_types) })

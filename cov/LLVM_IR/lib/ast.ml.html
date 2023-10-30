@@ -263,7 +263,7 @@
   (* first class types*)
   <span data-count="0">|</span> TVector of in<span data-count="2">t</span> * t<span data-count="0">p</span> (** &lt;int x primitive_type&gt; *)
   <span data-count="10">|</span> TArr of in<span data-count="3">t</span> * t<span data-count="4">p</span> (** [int x type] *)
-  <span data-count="0">|</span> TStruct of <span data-count="40">t</span>p lis<span data-count="9">t</span> (** {type1, type2...} *)
+  <span data-count="0">|</span> TStruct of <span data-count="40">t</span>p lis<span data-count="9">t</span> (** \{type1, type2...\} *)
   (* additional types*)
   <span data-count="0">|</span> TLabel (** label *)
   <span data-count="0">|</span> TFunc of tp * <span data-count="16">t</span>p lis<span data-count="5">t</span> (** &lt;returntype&gt; (&lt;parameter list&gt;) *)
@@ -275,7 +275,7 @@
 
 <span data-count="198">t</span>ype variable =
   | LocalVar of strin<span data-count="61">g</span> (** %name *)
-  | GlobalVar of strin<span data-count="5">g</span> (** @name *)
+  | GlobalVar of strin<span data-count="5">g</span> (** \@name *)
 [@@deriving show { with_path = false }]
 
 <span data-count="12">t</span>ype pointer_const =
@@ -292,7 +292,7 @@
   | CPointer of pointer_const
   | CVector of <span data-count="17">c</span>onst lis<span data-count="4">t</span> (** &lt;const, const, ...&gt; *)
   | CArr of <span data-count="27">c</span>onst lis<span data-count="6">t</span> (** [const, const, ...] *)
-  | CStruct of <span data-count="9">c</span>onst lis<span data-count="2">t</span> (** {const, const, ...} *)
+  | CStruct of <span data-count="9">c</span>onst lis<span data-count="2">t</span> (** \{const, const, ...\} *)
   | CLabel of basic_block
   | CFunc of func
 [@@deriving show { with_path = false }]
@@ -320,17 +320,17 @@
 
 <span data-count="4">a</span>nd other_operation =
   | Icmp of variable * <span data-count="2">s</span>trin<span data-count="4">g</span> * tp * value * value
-      (** &lt;result&gt; = icmp &lt;cond&gt; &lt;ty&gt; &lt;op1&gt;, &lt;op2&gt; *)
+  (** &lt;result&gt; = icmp &lt;cond&gt; &lt;ty&gt; &lt;op1&gt;, &lt;op2&gt; *)
   | Call of variable * tp * value * <span data-count="12">v</span>alue lis<span data-count="4">t</span>
-      (** &lt;result&gt; = call &lt;ty&gt; &lt;fnptrval&gt;(&lt;function args&gt;) *)
+  (** &lt;result&gt; = call &lt;ty&gt; &lt;fnptrval&gt;(&lt;function args&gt;) *)
 
 <span data-count="15">a</span>nd memory_address_inst =
   | Alloca of variable * tp * value * align
-      (** &lt;result&gt; = alloca &lt;type&gt; [, &lt;ty&gt; &lt;NumElements&gt;] [, align &lt;alignment&gt;] *)
+  (** &lt;result&gt; = alloca &lt;type&gt; [, &lt;ty&gt; &lt;NumElements&gt;] [, align &lt;alignment&gt;] *)
   | Store of tp * value * value * align
-      (** store &lt;ty&gt; &lt;value&gt;, ptr &lt;pointer&gt;[, align &lt;alignment&gt;] *)
+  (** store &lt;ty&gt; &lt;value&gt;, ptr &lt;pointer&gt;[, align &lt;alignment&gt;] *)
   | Load of variable * tp * value * align
-      (** &lt;result&gt; = load &lt;ty&gt;, ptr &lt;pointer&gt;[, align &lt;alignment&gt;]*)
+  (** &lt;result&gt; = load &lt;ty&gt;, ptr &lt;pointer&gt;[, align &lt;alignment&gt;]*)
 
 <span data-count="73">a</span>nd instruction =
   | Terminator of terminator_instruction
