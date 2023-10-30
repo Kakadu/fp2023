@@ -127,6 +127,10 @@ let parse_tuple parser =
     (sep_by1 (pstrtoken ",") parser)
 ;;
 
+let parse_tuple1 ps =
+  (fun v -> Tuple v) <$> (pstrtoken "(" *> sep_by1 (pstrtoken ",") ps <* pstrtoken ")")
+;;
+
 let parse_list ps =
   (fun v -> List v) <$> (pstrtoken "[" *> sep_by1 (pstrtoken ";") ps <* pstrtoken "]")
 ;;
@@ -190,12 +194,14 @@ let parse_list_expr ps =
   (fun v -> ListExpr v) <$> (pstrtoken "[" *> sep_by1 (pstrtoken ";") ps <* pstrtoken "]")
 ;;
 
-let parse_tuple_expr ps =
-  (fun v -> TupleExpr v)
-  <$> (pstrtoken "(" *> sep_by1 (pstrtoken ",") ps
-       <* pstrtoken ")"
-       <|> sep_by1 (pstrtoken ",") ps)
-;;
+(* let parse_tuple_expr ps =
+   (fun v -> TupleExpr v)
+   <$> (pstrtoken "(" *> sep_by1 (pstrtoken ",") ps
+   <* pstrtoken ")"
+   <|> sep_by1 (pstrtoken ",") ps)
+   ;; *)
+
+let parse_tuple_expr ps = (fun v -> TupleExpr v) <$> parens (sep_by1 (pstrtoken ",") ps)
 
 let plet_body pargs pexpr =
   parse_token1 pargs
@@ -233,22 +239,22 @@ let pack =
   let expr pack = expr_parsers pack in
   let const_e pack = fix @@ fun _ -> parse_econst <|> parens @@ pack.const_e pack in
   let var_e pack = fix @@ fun _ -> parse_evar <|> parens @@ pack.var_e pack in
-  let value_e pack =
-    fix @@ fun _ -> (pack.const_e pack <|> pack.var_e pack)
-  in
+  let value_e pack = fix @@ fun _ -> pack.const_e pack <|> pack.var_e pack in
   let op_parsers pack =
     choice
       [ pack.list_e pack
+      ; pack.tuple_e pack
       ; pack.app_e pack
-      ; parens_only [ pack.tuple_e pack; pack.op_e pack ]
-      ; pack.var_e pack
-      ; pack.const_e pack
+      ; parens_only [ pack.op_e pack ]
+      ; pack.value_e pack
       ]
   in
   let parse_if_state pack =
     pack.op_e pack <|> pack.let_e pack <|> pack.app_e pack <|> pack.if_e pack
   in
-  let list_parsers pack = pack.value_e pack <|> pack.list_e pack <|> pack.tuple_e pack in
+  let list_parsers pack =
+    pack.value_e pack <|> pack.list_e pack <|> parens @@ pack.list_e pack
+  in
   let tuple_parsers pack =
     pack.value_e pack <|> pack.list_e pack <|> parens @@ pack.tuple_e pack
   in
@@ -285,7 +291,7 @@ let pack =
     fix @@ fun _ -> parse_list_expr (list_parsers pack <|> parens @@ pack.list_e pack)
   in
   let tuple_e pack =
-    fix @@ fun _ -> parse_tuple_expr (tuple_parsers pack <|> parens @@ pack.tuple_e pack)
+    fix @@ fun _ -> parse_tuple_expr (tuple_parsers pack <|> parens @@ pack.value_e pack)
   in
   let let_e_without_rec pack =
     fix
@@ -488,7 +494,8 @@ let%expect_test _ =
 let%expect_test _ =
   let test = "1 + 3 * 4" in
   start_test expression show_expr test;
-  [%expect {|
+  [%expect
+    {|
     (BinExpr (Add, (ConstExpr (CInt 1)),
        (BinExpr (Mul, (ConstExpr (CInt 3)), (ConstExpr (CInt 4)))))) |}]
 ;;
