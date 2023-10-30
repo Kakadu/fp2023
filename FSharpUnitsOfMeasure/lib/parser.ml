@@ -7,6 +7,7 @@ open Base
 open Angstrom
 
 let empty_space = function
+
   | ' ' | '\t' | '\n' | '\r' -> true
   | _ -> false
 ;;

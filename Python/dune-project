@@ -6,17 +6,18 @@
 
 (license LGPL-3.0-or-later)
 
-(authors "FIXME Vasya Pupkin")
+(authors "Averin Pavel")
 
-(maintainers "FIXME Vasya Pupkin")
+(maintainers "Averin Pavel")
+
 
 (bug_reports "FIXME where to put bug reports about the code")
 
 (homepage "FIXME Homepage")
 
 (package
- (name Lambda) ; FIXME and regenerate .opam file using 'dune build @install'
- (synopsis "FIXME An interpreter for language")
+ (name Python) ; FIXME and regenerate .opam file using 'dune build @install'
+ (synopsis "FIXME An interpreter for Python")
  (description
   "FIXME. A longer description, for example, which are the most interesing features being supported, etc.")
  (version 0.1)
