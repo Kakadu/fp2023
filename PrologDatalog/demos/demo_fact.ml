@@ -1,5 +1,5 @@
-open Prolog_lib.Ast
-open Prolog_lib.Parser
+open PrologDatalog_lib.Ast
+open PrologDatalog_lib.Parser
 open Angstrom
 
 let () =

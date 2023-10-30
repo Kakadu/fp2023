@@ -2,7 +2,7 @@
  (name demo_fact)
  (modules demo_fact)
  (public_name demo_fact)
- (libraries Prolog.Lib)
+ (libraries PrologDatalog.Lib angstrom)
  (instrumentation
   (backend bisect_ppx)))
 

@@ -1,4 +1,4 @@
-### An implementaion of Prolog/Datalog
+### An implementaion of Prolog
 
 This is a homework for functional programming course.
 
@@ -8,11 +8,10 @@ Author: Pogorelov Ilya, ilya_pogorelov_04@mail.ru
 
 Features done (append only):
 
-- Nothing 
+- Parser
 
 Features in progress (and TODOs):
 
-- Parser  
 - interpreter of non-recursive functions 
 - Interpreter of recursive functions 
 

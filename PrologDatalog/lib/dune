@@ -1,6 +1,6 @@
 (library
- (name prolog_lib)
- (public_name Prolog.Lib)
+ (name prologDatalog_lib)
+ (public_name PrologDatalog.Lib)
  (modules Ast Parser)
  (libraries base angstrom)
  (preprocess

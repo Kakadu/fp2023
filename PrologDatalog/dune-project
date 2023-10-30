@@ -16,7 +16,7 @@
 (homepage "https://github.com/twotwozeronine/fp2023")
 
 (package
- (name Prolog) ; FIXME and regenerate .opam file using 'dune build @install'
+ (name PrologDatalog) ; FIXME and regenerate .opam file using 'dune build @install'
  (synopsis "An interpreter for language Prolog")
  (description
   "Prolog interpreter on Ocaml language. Implementation of base Prolog functionality")
