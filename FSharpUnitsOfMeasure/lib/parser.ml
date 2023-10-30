@@ -122,8 +122,8 @@ let evar x = EVar x
 
 let parse_evar = evar <$> parse_id
 let parse_etypes = parse_types >>| fun x -> ETypes x
-let parse_arg = many @@ parens_or_not @@ parse_evar
-let parse_arg1 = many1 @@ parens_or_not @@ parse_evar
+let parse_arg = many @@ parens_or_not parse_evar
+let parse_arg1 = many1 @@ parens_or_not parse_evar
 
 type edispatch =
   {
@@ -219,7 +219,7 @@ let parse_eapp parse_expr =
   take_empty *> lift2
     (fun expr l -> let res = List.fold_left ~f:eapp ~init:expr l 
     in res)
-    parse_expr (many (token1 @@ parse_expr))
+    parse_expr (many (token1 parse_expr))
 ;;
 
 let pack =
