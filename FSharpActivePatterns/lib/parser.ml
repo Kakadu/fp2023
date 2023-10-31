@@ -93,7 +93,6 @@ let parse_const = parse_white_space *> choice [ parse_int; parse_bool; parse_str
 
 (* Parse var *)
 
-
 let check_var varname =
   if is_keyword varname
   then fail ("You can not use" ^ varname ^ "keywords as vars")
