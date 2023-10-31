@@ -93,12 +93,12 @@ let parse_const = parse_white_space *> choice [ parse_int; parse_bool; parse_str
 
 (* Parse var *)
 
-let check_var aaaa =
-  if is_keyword aaaa
-  then fail ("You can not use" ^ aaaa ^ "keywords as vars")
-  else if Char.is_digit @@ String.get aaaa 0
+let check_var varname  =
+  if is_keyword varname 
+  then fail ("You can not use" ^ varname  ^ "keywords as vars")
+  else if Char.is_digit @@ String.get varname  0
   then fail "Identifier first sumbol is letter, not digit"
-  else return aaaa
+  else return varname 
 ;;
 
 let var cond =
