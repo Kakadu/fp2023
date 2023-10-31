@@ -314,7 +314,7 @@ let pack =
   { var_e; const_e; op_e; list_e; tuple_e; fun_e; let_e; app_e; value_e; if_e; expr }
 ;;
 
-let expression = pack.expr pack
+let parse = pack.expr pack
 
 (* TESTS *)
 let start_test parser show input =
@@ -467,20 +467,20 @@ let%expect_test _ =
 
 let%expect_test _ =
   let test = "[1;2; 3]" in
-  start_test expression show_expr test;
+  start_test parse show_expr test;
   [%expect
     {| (ListExpr [(ConstExpr (CInt 1)); (ConstExpr (CInt 2)); (ConstExpr (CInt 3))]) |}]
 ;;
 
 let%expect_test _ =
   let test = "1       *      3" in
-  start_test expression show_expr test;
+  start_test parse show_expr test;
   [%expect {| (BinExpr (Mul, (ConstExpr (CInt 1)), (ConstExpr (CInt 3)))) |}]
 ;;
 
 let%expect_test _ =
   let test = "1 + 3 * 4" in
-  start_test expression show_expr test;
+  start_test parse show_expr test;
   [%expect
     {|
     (BinExpr (Add, (ConstExpr (CInt 1)),
@@ -489,7 +489,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   let test = "(3, 1234, [1;2;3])" in
-  start_test expression show_expr test;
+  start_test parse show_expr test;
   [%expect
     {|
     (TupleExpr
@@ -501,7 +501,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   let test = "let f x = x+x" in
-  start_test expression show_expr test;
+  start_test parse show_expr test;
   [%expect
     {|
     (LetExpr ("f",
@@ -510,7 +510,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   let test = "let rec f x = f * x" in
-  start_test expression show_expr test;
+  start_test parse show_expr test;
   [%expect
     {|
     (LetRecExpr ("f",
@@ -519,7 +519,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   let test = "if x=1  then x+1 else x-1" in
-  start_test expression show_expr test;
+  start_test parse show_expr test;
   [%expect
     {|
     (IfExpr ((BinExpr (Eq, (VarExpr "x"), (ConstExpr (CInt 1)))),
@@ -529,7 +529,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   let test = "let rec fact n = if n = 1 then 1 else n * (fact (n - 1))" in
-  start_test expression show_expr test;
+  start_test parse show_expr test;
   [%expect
     {|
     (LetRecExpr ("fact",
