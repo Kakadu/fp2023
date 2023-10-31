@@ -93,18 +93,17 @@ let parse_const = parse_white_space *> choice [ parse_int; parse_bool; parse_str
 
 (* Parse var *)
 
+let check_var aaaa =
+  if is_keyword aaaa
+  then fail ("You can not use" ^ aaaa ^ "keywords as vars")
+  else if Char.is_digit @@ String.get aaaa 0
+  then fail "Identifier first sumbol is letter, not digit"
+  else return aaaa
+;;
+
 let var cond =
   parse_white_space *> take_while1 cond
-  >>= fun v ->
-  if String.length v == 0
-  then fail "Not identifier"
-  else if is_keyword v
-  then fail ("You can not use" ^ v ^ "keywords as vars")
-  else if Char.is_digit @@ String.get v 0
-  then fail "Identifier first sumbol is letter, not digit"
-  else if String.equal v "_"
-  then fail "Wildcard \"_\" not expected"
-  else return v
+  >>= fun v -> if String.length v == 0 then fail "Not identifier" else check_var v
 ;;
 
 let p_var =
@@ -180,11 +179,8 @@ let constr_ereclet r f = LetRecExpr (r, f)
 let constr_eapp f args = List.fold_left ~init:f ~f:(fun f arg -> AppExpr (f, arg)) args
 let parse_econst = (fun v -> ConstExpr v) <$> parse_const
 let parse_evar = (fun v -> VarExpr v) <$> p_var
-let pfun_args = fix @@ fun p -> many (pack.list pack <|> pack.value pack) <|> parens @@ p
-
-let pfun_args1 =
-  fix @@ fun p -> many1 (pack.list pack <|> pack.value pack) <|> parens @@ p
-;;
+let pfun_args = fix @@ fun p -> many (pack.list pack <|> pack.value pack) <|> parens p
+let pfun_args1 = fix @@ fun p -> many1 (pack.list pack <|> pack.value pack) <|> parens p
 
 let parse_list_expr ps =
   (fun v -> ListExpr v) <$> (pstrtoken "[" *> sep_by1 (pstrtoken ";") ps <* pstrtoken "]")
@@ -328,7 +324,6 @@ let start_test parser show input =
   | Error err -> Format.printf "%s" err
 ;;
 
-1
 (* Test const parser *)
 
 let%expect_test _ =
