@@ -130,6 +130,11 @@ let pbranch pexpr =
        (pstoken "else" *> pexpr <|> return EUnit)
 ;;
 
+let plist pexpr =
+  let psqparens p = pstoken "[" *> p <* pstoken "]" in
+  psqparens @@ sep_by1 (pstoken ";") pexpr >>| fun x -> EList x
+;;
+
 let pebinop chain1 e pbinop = chain1 e (pbinop >>| fun op e1 e2 -> EBinop (op, e1, e2))
 let plbinop = pebinop chainl1
 let padd = pstoken "+" *> return Add
@@ -146,7 +151,7 @@ let pgeq = pstoken ">=" *> return Geq
 let pexpr =
   fix
   @@ fun pexpr ->
-  let pe = choice [ pparens pexpr; pconst; pvar ] in
+  let pe = choice [ pparens pexpr; pconst; pvar; plist pexpr ] in
   let pe =
     lift2
       (fun f args -> List.fold_left ~f:(fun f arg -> EApp (f, arg)) ~init:f args)
@@ -156,6 +161,13 @@ let pexpr =
   let pe = plbinop pe (pmul <|> pdiv) in
   let pe = plbinop pe (padd <|> psub) in
   let pe = plbinop pe (choice [ peq; pneq; ples; pleq; pgre; pgeq ]) in
+  let pe =
+    sep_by1 (pstoken ",") pe
+    >>| fun x ->
+    match x with
+    | e :: [] -> e
+    | _ -> ETuple x
+  in
   choice [ plet pexpr; pbranch pexpr; pe ]
 ;;
 
