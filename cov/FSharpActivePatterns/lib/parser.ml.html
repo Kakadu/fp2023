@@ -1241,12 +1241,12 @@ let parse_const = parse_white_space *<span data-count="2">&gt;</span> choic<span
 
 (* Parse var *)
 
-let check_var aaaa =
-  <span data-count="86">i</span>f is_keyword aaaa
-  then <span data-count="22">f</span>ail ("You can not use" ^ aaaa ^ "keywords as vars")
-  else <span data-count="64">i</span>f Char.is_digit @@ String.ge<span data-count="64">t</span> aaaa 0
+let check_var varname  =
+  <span data-count="86">i</span>f is_keyword varname 
+  then <span data-count="22">f</span>ail ("You can not use" ^ varname  ^ "keywords as vars")
+  else <span data-count="64">i</span>f Char.is_digit @@ String.ge<span data-count="64">t</span> varname  0
   then <span data-count="28">f</span>ail "Identifier first sumbol is letter, not digit"
-  else <span data-count="36">r</span>eturn aaaa
+  else <span data-count="36">r</span>eturn varname 
 ;;
 
 let var cond =
