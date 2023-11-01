@@ -31,7 +31,7 @@ type pattern =
   | Const of const
   | Var of name
   | Tuple of pattern list (* a, b *)
-  | List of pattern list (* [1;2;3] *)
+  | List of pattern list (** [1;2;3] *) (* Will bite during interpreter implementation *)
 [@@deriving show { with_path = false }]
 
 type expr =
