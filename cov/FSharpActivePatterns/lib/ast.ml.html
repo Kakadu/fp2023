@@ -157,7 +157,7 @@
   | Const of const
   | Var of name
   | Tuple of <span data-count="78">p</span>attern lis<span data-count="18">t</span> (* a, b *)
-  | List of <span data-count="48">p</span>attern lis<span data-count="11">t</span> (* [1;2;3] *)
+  | List of <span data-count="48">p</span>attern lis<span data-count="11">t</span> (** [1;2;3] *) (* Will bite during interpreter implementation *)
 [@@deriving show { with_path = false }<span data-count="128">]</span>
 
 <span data-count="292">t</span>ype expr =
