@@ -1,10 +1,18 @@
+(** Copyright 2023-2024, Pogorelov Ilya *)
+
+(** SPDX-License-Identifier: LGPL-3.0-or-later *)
+
+type name = string [@@deriving eq, show { with_path = false }]
+type num = int [@@deriving eq, show { with_path = false }]
+type oper = string [@@deriving eq, show { with_path = false }]
+
 type atom =
-  | Name of string
-  | Oper of string
+  | Name of name
+  | Oper of oper
 [@@deriving eq, show { with_path = false }]
 
 type const =
-  | Num of int
+  | Num of num
   | Atom of atom
 [@@deriving eq, show { with_path = false }]
 
