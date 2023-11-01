@@ -18,45 +18,57 @@
       <h2>0.00%</h2>
     </div>
     <div id="navbar">
-      <span class="unvisited" style="top:5.00%"></span>
-      <span class="unvisited" style="top:10.00%"></span>
-      <span class="unvisited" style="top:15.00%"></span>
-      <span class="unvisited" style="top:30.00%"></span>
-      <span class="unvisited" style="top:35.00%"></span>
-      <span class="unvisited" style="top:40.00%"></span>
-      <span class="unvisited" style="top:45.00%"></span>
-      <span class="unvisited" style="bottom:45.00%"></span>
-      <span class="unvisited" style="bottom:40.00%"></span>
-      <span class="unvisited" style="bottom:35.00%"></span>
-      <span class="unvisited" style="bottom:30.00%"></span>
+      <span class="unvisited" style="top:17.86%"></span>
+      <span class="unvisited" style="top:21.43%"></span>
+      <span class="unvisited" style="top:25.00%"></span>
+      <span class="unvisited" style="top:32.14%"></span>
+      <span class="unvisited" style="top:35.71%"></span>
+      <span class="unvisited" style="top:39.29%"></span>
+      <span class="unvisited" style="top:42.86%"></span>
+      <span class="unvisited" style="top:50.00%"></span>
+      <span class="unvisited" style="bottom:46.43%"></span>
+      <span class="unvisited" style="bottom:42.86%"></span>
+      <span class="unvisited" style="bottom:39.29%"></span>
+      <span class="unvisited" style="bottom:32.14%"></span>
+      <span class="unvisited" style="bottom:28.57%"></span>
       <span class="unvisited" style="bottom:25.00%"></span>
-      <span class="unvisited" style="bottom:20.00%"></span>
-      <span class="unvisited" style="bottom:10.00%"></span>
+      <span class="unvisited" style="bottom:21.43%"></span>
+      <span class="unvisited" style="bottom:17.86%"></span>
+      <span class="unvisited" style="bottom:14.29%"></span>
+      <span class="unvisited" style="bottom:7.14%"></span>
       <span class="unvisited" style="bottom:0.00%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
         <pre>
-<a id="L1"></a><span class="unvisited"> </span>
-<a id="L2"></a><span class="unvisited"> </span>
-<a id="L3"></a><span class="unvisited"> </span>
+<a id="L1"></a><span > </span>
+<a id="L2"></a><span > </span>
+<a id="L3"></a><span > </span>
 <a id="L4"></a><span > </span>
-<a id="L5"></a><span > </span>
+<a id="L5"></a><span class="unvisited"> </span>
 <a id="L6"></a><span class="unvisited"> </span>
 <a id="L7"></a><span class="unvisited"> </span>
-<a id="L8"></a><span class="unvisited"> </span>
+<a id="L8"></a><span > </span>
 <a id="L9"></a><span class="unvisited"> </span>
-<a id="L10"></a><span > </span>
+<a id="L10"></a><span class="unvisited"> </span>
 <a id="L11"></a><span class="unvisited"> </span>
 <a id="L12"></a><span class="unvisited"> </span>
-<a id="L13"></a><span class="unvisited"> </span>
+<a id="L13"></a><span > </span>
 <a id="L14"></a><span class="unvisited"> </span>
 <a id="L15"></a><span class="unvisited"> </span>
 <a id="L16"></a><span class="unvisited"> </span>
-<a id="L17"></a><span > </span>
-<a id="L18"></a><span class="unvisited"> </span>
-<a id="L19"></a><span > </span>
+<a id="L17"></a><span class="unvisited"> </span>
+<a id="L18"></a><span > </span>
+<a id="L19"></a><span class="unvisited"> </span>
 <a id="L20"></a><span class="unvisited"> </span>
+<a id="L21"></a><span class="unvisited"> </span>
+<a id="L22"></a><span class="unvisited"> </span>
+<a id="L23"></a><span class="unvisited"> </span>
+<a id="L24"></a><span class="unvisited"> </span>
+<a id="L25"></a><span > </span>
+<a id="L26"></a><span class="unvisited"> </span>
+<a id="L27"></a><span > </span>
+<a id="L28"></a><span class="unvisited"> </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -81,14 +93,30 @@
 <a href="#L18">18</a>
 <a href="#L19">19</a>
 <a href="#L20">20</a>
+<a href="#L21">21</a>
+<a href="#L22">22</a>
+<a href="#L23">23</a>
+<a href="#L24">24</a>
+<a href="#L25">25</a>
+<a href="#L26">26</a>
+<a href="#L27">27</a>
+<a href="#L28">28</a>
 </pre>
-<pre><code class="ocaml"><span data-count="0">t</span>ype atom =
-  <span data-count="0">|</span> Name of strin<span data-count="0">g</span>
-  <span data-count="0">|</span> Oper of strin<span data-count="0">g</span>
-[@@deriving eq, show { with_path = false }]
+<pre><code class="ocaml">(** Copyright 2023-2024, Pogorelov Ilya *)
+
+(** SPDX-License-Identifier: LGPL-3.0-or-later *)
+
+<span data-count="0">t</span>ype name = <span data-count="0">s</span>tring [@@deriving eq, show { with_path = false }]
+<span data-count="0">t</span>ype num = <span data-count="0">i</span>nt [@@deriving eq, show { with_path = false }]
+<span data-count="0">t</span>ype oper = <span data-count="0">s</span>tring [@@deriving eq, show { with_path = false }]
+
+<span data-count="0">t</span>ype atom =
+  <span data-count="0">|</span> Name of nam<span data-count="0">e</span>
+  <span data-count="0">|</span> Oper of ope<span data-count="0">r</span>
+[@@deriving eq, show { with_path = false }<span data-count="0">]</span>
 
 <span data-count="0">t</span>ype const =
-  <span data-count="0">|</span> Num of in<span data-count="0">t</span>
+  <span data-count="0">|</span> Num of nu<span data-count="0">m</span>
   <span data-count="0">|</span> Atom of ato<span data-count="0">m</span>
 [@@deriving eq, show { with_path = false }<span data-count="0">]</span>
 
