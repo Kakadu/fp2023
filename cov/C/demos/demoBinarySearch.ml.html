@@ -18,7 +18,8 @@
       <h2>50.00%</h2>
     </div>
     <div id="navbar">
-      <span class="unvisited" style="bottom:2.78%"></span>
+      <span class="unvisited" style="bottom:2.70%"></span>
+      <span class="unvisited" style="bottom:0.00%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -57,8 +58,9 @@
 <a id="L32"></a><span > </span>
 <a id="L33"></a><span > </span>
 <a id="L34"></a><span class="visited"> </span>
-<a id="L35"></a><span class="unvisited"> </span>
-<a id="L36"></a><span > </span>
+<a id="L35"></a><span class="visited"> </span>
+<a id="L36"></a><span class="unvisited"> </span>
+<a id="L37"></a><span class="unvisited"> </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -99,6 +101,7 @@
 <a href="#L34">34</a>
 <a href="#L35">35</a>
 <a href="#L36">36</a>
+<a href="#L37">37</a>
 </pre>
 <pre><code class="ocaml">open C_lib
 
@@ -133,9 +136,10 @@ let () =
   |}
   in
   match Parser.parse s with
-  | <span data-count="1">R</span>esult.Ok ast -&gt; Format.print<span data-count="1">f</span> "%a\n" Ast.pp_prog ast
-  | <span data-count="0">E</span>rror _ -&gt; Format.print<span data-count="0">f</span> "Some error"
-;;
+  | <span data-count="1">R</span>esult.Ok ast -&gt;
+      Format.print<span data-count="1">f</span> "%a\n" Ast.pp_prog ast
+  | <span data-count="0">E</span>rror _ -&gt;
+      Format.print<span data-count="0">f</span> "Some error"
 </code></pre>
       </div>
     </div>
