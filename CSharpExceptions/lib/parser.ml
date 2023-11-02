@@ -610,7 +610,8 @@ let%test _ =
        ; EMethod_invoke
            ( EIdentifier (Id "a")
            , Params
-               [ EBin_op (Plus, EConst (VInt 1), EConst (VInt 2)); EIdentifier (Id "cl") ] )
+               [ EBin_op (Plus, EConst (VInt 1), EConst (VInt 2)); EIdentifier (Id "cl") ]
+           )
        ; EIf_else
            ( EBin_op
                (Plus, EConst (VInt 1), EMethod_invoke (EIdentifier (Id "run"), Params []))
@@ -809,8 +810,9 @@ let%expect_test _ =
     \            return num * Fac(num - 1);\n\
     \        }\n\
     \    }\n\
-     }\n\n\
-     class trueF {}";
+     }\n\n\n\n\
+    \     \n\
+    \     class trueF {}";
   [%expect
     {|
   [{ cl_modif = None; cl_id = (Id "Program"); parent = (Some (Id "Exception"));
