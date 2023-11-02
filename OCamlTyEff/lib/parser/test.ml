@@ -6,7 +6,12 @@ open! Base
 open Ast
 
 (** Parse string and pretty print the output *)
-let pp str = Stdlib.Format.printf "%a" pp_structure (Parser.parse_exn str)
+let pp string =
+  match Parser.parse string with
+  | Some str ->
+      Stdlib.Format.printf "%a" pp_structure str
+  | None ->
+      Stdlib.print_endline "syntax error"
 
 let%expect_test "parse_custom_operator1" =
   pp "let (>>=) a b = a ** b" ;
