@@ -13,18 +13,18 @@ SPDX-License-Identifier: CC0-1.0
            },
          (Steps
             [(EIf_else (
-                (EBin_op (Equal, (EIdentifier (Id "num")), (EVal (VInt 1)))),
-                (Steps [(EReturn (Some (EVal (VInt 1))))]),
+                (EBin_op (Equal, (EIdentifier (Id "num")), (EConst (VInt 1)))),
+                (Steps [(EReturn (Some (EConst (VInt 1))))]),
                 (Some (Steps
                          [(EReturn
                              (Some (EBin_op (Asterisk,
                                       (EIdentifier (Id "num")),
                                       (EMethod_invoke (
                                          (EIdentifier (Id "Fac")),
-                                         (EParams
+                                         (Params
                                             [(EBin_op (Minus,
                                                 (EIdentifier (Id "num")),
-                                                (EVal (VInt 1))))
+                                                (EConst (VInt 1))))
                                               ])
                                          ))
                                       ))))

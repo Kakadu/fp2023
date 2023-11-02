@@ -16,48 +16,56 @@ type ident = Id of string [@@deriving show { with_path = false }, eq]
 
 (** {2 Declarations types} *)
 
+(** Variable type *)
+
+(** Type that can be assigne *)
+
+type base_type =
+  | TInt
+  | TChar
+  | TBool
+[@@deriving show { with_path = false }, eq]
+
+type nulable_type =
+  | TBase of base_type
+  | TString
+  | TClass of ident
+[@@deriving show { with_path = false }, eq]
+
+type assignable_type =
+  | TNot_Nullable of base_type
+  | TNullable of nulable_type
+[@@deriving show { with_path = false }, eq]
+
+type var_type = TVar of assignable_type [@@deriving show { with_path = false }, eq]
+
+type meth_type =
+  | Void
+  | TReturn of assignable_type
+[@@deriving show { with_path = false }, eq]
+
 type type_ =
   | TMethod of meth_type
   | TVariable of var_type
 [@@deriving show { with_path = false }, eq]
 
-and meth_type =
-  | Void
-  | TReturn of assignable_type
+type access_modifier =
+  | MPublic
+  | MPrivate
+  | MProtected
 [@@deriving show { with_path = false }, eq]
 
-(** Variable type *)
-and var_type = TVar of assignable_type [@@deriving show { with_path = false }, eq]
-
-(** Type that can be assigne *)
-and assignable_type =
-  | TNot_Nullable of base_type
-  | TNullable of nulable_type
-
-and base_type =
-  | TInt
-  | TChar
-  | TBool
-
-and nulable_type =
-  | TBase of base_type
-  | TString
-  | TClass of ident
-
-and method_modifier =
+type method_modifier =
   | MAccess of access_modifier
   | MStatic
 (* TODO: | Virtual *)
 (* TODO: | Override *)
+[@@deriving show { with_path = false }, eq]
 
-and fild_modifier = FAccess of access_modifier
+type fild_modifier = FAccess of access_modifier
 (* TODO:| New *)
 (* TODO:| Const *)
-
-and access_modifier =
-  | MPublic
-  | MPrivate
-  | MProtected
+[@@deriving show { with_path = false }, eq]
 
 type bin_op =
   | Asterisk (* [*] *)
@@ -83,11 +91,10 @@ type un_op =
 [@@deriving show { with_path = false }, eq]
 
 type expr =
-  | EVal of value_ (* assignable values *)
+  | EConst of value_ (* assignable values *)
   (*  *)
   | EIdentifier of ident (* id of something e.g. class name; var name; method name *)
-  | EParams of expr list (* method(a, b, c) -> [a; b; c] *)
-  | EMethod_invoke of expr * expr (* method(a, b, c) -> EIdentifier, EParams *)
+  | EMethod_invoke of expr * params (* method(a, b, c) | Class.method(a, b, c) *)
   (*  *)
   | EBin_op of bin_op * expr * expr
   | EUn_op of un_op * expr
@@ -109,19 +116,7 @@ type expr =
 [@@deriving show { with_path = false }, eq]
 
 and args = Args of expr list [@@deriving show { with_path = false }, eq]
-
-and class_member =
-  | Fild of fild_sign
-  | Main of method_sign * expr (* expr - Steps *)
-  | Method of method_sign * expr (* expr - Steps *)
-  | Constructor of constructor_sign * expr (* expr - Steps *)
-
-and class_sign =
-  { cl_modif : access_modifier option
-  ; cl_id : ident
-  ; parent : ident option
-  ; cl_mems : class_member list
-  }
+and params = Params of expr list [@@deriving show { with_path = false }, eq]
 
 and fild_sign =
   { f_modif : fild_modifier option
@@ -141,7 +136,20 @@ and constructor_sign =
   { con_modif : access_modifier option
   ; con_id : ident
   ; con_args : args
-  ; base_params : expr option
+  ; base_params : params option
+  }
+
+and class_member =
+  | Fild of fild_sign
+  | Main of method_sign * expr (* expr - Steps *)
+  | Method of method_sign * expr (* expr - Steps *)
+  | Constructor of constructor_sign * expr (* expr - Steps *)
+
+and class_sign =
+  { cl_modif : access_modifier option
+  ; cl_id : ident
+  ; parent : ident option
+  ; cl_mems : class_member list
   }
 
 type tast = class_sign list [@@deriving show { with_path = false }, eq]

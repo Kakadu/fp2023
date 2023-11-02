@@ -76,7 +76,7 @@ let is_token = function
 
 let if_value cond x =
   try cond x |> fun _ -> true with
-  | _ -> false
+  | Failure _ | Invalid_argument _ -> false
 ;;
 
 let is_int = if_value int_of_string
@@ -187,7 +187,7 @@ let p_method_type =
 let ep_spaces prs = skip_spaces *> prs
 let ep_parens prs = ep_spaces @@ (char '(' *> prs) <* ep_spaces @@ char ')'
 let ep_figure_parens prs = ep_spaces @@ (char '{' *> prs) <* ep_spaces @@ char '}'
-let convert_val_to_expr prs = ep_spaces prs >>| fun x -> EVal x
+let convert_val_to_expr prs = ep_spaces prs >>| fun x -> EConst x
 let ep_number = convert_val_to_expr p_number
 let ep_char = convert_val_to_expr p_char
 let ep_string = convert_val_to_expr p_string
@@ -201,26 +201,26 @@ let ep_value =
 let ep_dot = ep_spaces @@ (char '.' *> return (fun e1 e2 -> EMember_ident (e1, e2)))
 let ep_member_ident = chainr1 ep_identifier ep_dot
 
-let _ep_list_from ep_arg =
+let ep_list_from_ ep_arg =
   let ep_args = ep_arg <* ep_spaces @@ char ',' <|> ep_arg in
   ep_parens @@ many ep_args
 ;;
 
-let _ep_invoke meth_ident ep_arg =
-  _ep_list_from ep_arg
-  >>= (fun exp -> return (EParams exp))
+let ep_invoke_ meth_ident ep_arg =
+  ep_list_from_ ep_arg
+  >>= (fun exp -> return (Params exp))
   >>| fun args -> EMethod_invoke (meth_ident, args)
 ;;
 
-let _ep_method_invoke ep_arg = ep_member_ident >>= fun id -> _ep_invoke id ep_arg
+let ep_method_invoke_ ep_arg = ep_member_ident >>= fun id -> ep_invoke_ id ep_arg
 
-let _ep_method_fild ep_arg =
-  ep_member_ident >>= fun id -> _ep_invoke id ep_arg <|> return id
+let ep_method_fild_ ep_arg =
+  ep_member_ident >>= fun id -> ep_invoke_ id ep_arg <|> return id
 ;;
 
-let _ep_var_decl tp = skip_spaces1 *> p_ident >>| fun id -> EDecl (TVariable tp, id)
+let ep_var_decl_ tp = skip_spaces1 *> p_ident >>| fun id -> EDecl (TVariable tp, id)
 
-let _ep_var_type =
+let ep_var_type_ =
   ep_spaces
   @@ choice
        ?failure_msg:(Some "Not a var declaration")
@@ -232,7 +232,7 @@ let ep_var_decl =
   @@ choice
        ?failure_msg:(Some "Not a var declaration")
        [ p_kvar_type; (p_ident >>| fun cl -> TVar (TNullable (TClass cl))) ]
-  >>= _ep_var_decl
+  >>= ep_var_decl_
 ;;
 
 let ( |-> ) op tp = ep_spaces @@ (string op *> return tp)
@@ -261,7 +261,7 @@ let ( -<< ) lvl ps_list = chainr1 lvl (choice ps_list)
 
 let ep_operation =
   fix (fun expr ->
-    let lvl1 = choice [ ep_parens expr; ep_value; _ep_method_fild expr ] in
+    let lvl1 = choice [ ep_parens expr; ep_value; ep_method_fild_ expr ] in
     let lvl2 = lvl1 >- [ ep_un_minus; ep_new; ep_not ] in
     let lvl3 = lvl2 >>- [ ( *^ ); ( /^ ); ( %^ ) ] in
     let lvl4 = lvl3 >>- [ ( +^ ); ( -^ ) ] in
@@ -273,7 +273,7 @@ let ep_operation =
 ;;
 
 let ep_assign = lift3 (fun ident eq ex -> eq ident ex) ep_identifier ( =^ ) ep_operation
-let ep_method_invoke = _ep_method_invoke ep_operation
+let ep_method_invoke = ep_method_invoke_ ep_operation
 
 let ep_eAssign_eDecl =
   choice
@@ -286,53 +286,53 @@ let ep_eAssign_eDecl =
     ]
 ;;
 
-let _ep_keyword kw = ep_spaces @@ read_as_token kw
-let ep_break = _ep_keyword "break" *> return EBreak
+let ep_keyword_ kw = ep_spaces @@ read_as_token kw
+let ep_break = ep_keyword_ "break" *> return EBreak
 
 let ep_return =
   lift2
     (fun _ ex -> EReturn ex)
-    (_ep_keyword "return")
+    (ep_keyword_ "return")
     (ep_operation >>= (fun x -> return (Some x)) <|> return None)
 ;;
 
-let _ep_is kw ~then_:ps = _ep_keyword kw *> ps
+let ep_is_ kw ~then_:ps = ep_keyword_ kw *> ps
 
-let _ep_if_cond =
+let ep_if_cond_ =
   let p_cond = ep_parens ep_operation in
-  _ep_is "if" ~then_:p_cond
+  ep_is_ "if" ~then_:p_cond
 ;;
 
-let _ep_else_cond ep_body ep_ifls =
+let ep_else_cond_ ep_body ep_ifls =
   choice
     ?failure_msg:(Some "It isn't ELSE or ELSE IF")
-    [ _ep_is "else" ~then_:ep_ifls; _ep_is "else" ~then_:ep_body ]
+    [ ep_is_ "else" ~then_:ep_ifls; ep_is_ "else" ~then_:ep_body ]
   >>= (fun else_ -> return (Some else_))
   <|> return None
 ;;
 
-let _ep_if_else ep_body =
+let ep_if_else_ ep_body =
   fix (fun if_else ->
-    let else_ = _ep_else_cond ep_body if_else in
-    lift3 (fun cond body else_ -> EIf_else (cond, body, else_)) _ep_if_cond ep_body else_)
+    let else_ = ep_else_cond_ ep_body if_else in
+    lift3 (fun cond body else_ -> EIf_else (cond, body, else_)) ep_if_cond_ ep_body else_)
 ;;
 
-let _ep_brunch_loop ep_body =
-  choice ?failure_msg:(Some "It isn't IF or ...") [ _ep_if_else ep_body ]
+let ep_brunch_loop_ ep_body =
+  choice ?failure_msg:(Some "It isn't IF or ...") [ ep_if_else_ ep_body ]
 ;;
 
-let _ep_skip_semicolon = ep_spaces @@ char ';'
+let ep_skip_semicolon_ = ep_spaces @@ char ';'
 
-let _ep_semicolon1 ps =
-  ps <* _ep_skip_semicolon *> fix (fun foo -> _ep_skip_semicolon *> foo <|> return "")
+let ep_semicolon1_ ps =
+  ps <* ep_skip_semicolon_ *> fix (fun foo -> ep_skip_semicolon_ *> foo <|> return "")
 ;;
 
-let _ep_semicolon ps = _ep_semicolon1 ps <|> ps
+let ep_semicolon_ ps = ep_semicolon1_ ps <|> ps
 
 let ep_steps =
   fix (fun steps ->
-    let step = _ep_semicolon1 in
-    let op_step = _ep_semicolon in
+    let step = ep_semicolon1_ in
+    let op_step = ep_semicolon_ in
     let body_step =
       choice
         [ step ep_eAssign_eDecl
@@ -340,36 +340,36 @@ let ep_steps =
         ; step ep_assign
         ; step ep_break
         ; step ep_return
-        ; op_step @@ _ep_brunch_loop steps
+        ; op_step @@ ep_brunch_loop_ steps
         ]
     in
     ep_figure_parens @@ many body_step >>| fun bd -> Steps bd)
 ;;
 
-let ep_brunch_loop = _ep_brunch_loop ep_steps
-let _ep_args = _ep_list_from ep_var_decl >>= fun exp -> return (Args exp)
-let _ep_modifier p_mod = option None (ep_spaces @@ p_mod >>= fun x -> return (Some x))
+let ep_brunch_loop = ep_brunch_loop_ ep_steps
+let ep_args_ = ep_list_from_ ep_var_decl >>= fun exp -> return (Args exp)
+let ep_modifier_ p_mod = option None (ep_spaces p_mod >>= fun x -> return (Some x))
 
 let ep_method_sign =
   lift4
     (fun m_modif m_type m_id m_args -> { m_modif; m_type; m_id; m_args })
-    (_ep_modifier p_method_modifier)
+    (ep_modifier_ p_method_modifier)
     (ep_spaces p_method_type)
     (ep_spaces p_ident)
-    _ep_args
+    ep_args_
 ;;
 
 let ep_constructor_sign =
   let ep_base_cons =
-    ep_spaces @@ (char ':' *> _ep_is "base" ~then_:(_ep_list_from ep_operation))
-    >>| fun x -> Some (EParams x)
+    ep_spaces @@ (char ':' *> ep_is_ "base" ~then_:(ep_list_from_ ep_operation))
+    >>| fun x -> Some (Params x)
   in
   lift4
     (fun con_modif con_id con_args base_params ->
       { con_modif; con_id; con_args; base_params })
-    (_ep_modifier p_access_modifier)
+    (ep_modifier_ p_access_modifier)
     (ep_spaces p_ident)
-    _ep_args
+    ep_args_
     (option None ep_base_cons)
 ;;
 
@@ -377,8 +377,8 @@ let ep_fild_sign =
   let f_value = ep_spaces (char '=') *> ep_operation >>| fun x -> Some x in
   lift4
     (fun f_modif f_type f_id f_val -> { f_modif; f_type; f_id; f_val })
-    (_ep_modifier p_fild_modifier)
-    (ep_spaces _ep_var_type)
+    (ep_modifier_ p_fild_modifier)
+    (ep_spaces ep_var_type_)
     (ep_spaces p_ident)
     (option None f_value)
   <* ep_spaces @@ char ';'
@@ -390,30 +390,30 @@ let is_main (m_sign : method_sign) =
   | _ -> false
 ;;
 
-let _ep_method_member =
+let ep_method_member_ =
   ep_method_sign
   >>= function
   | mt when is_main mt -> lift2 (fun mt bd -> Main (mt, bd)) (return mt) ep_steps
   | mt -> lift2 (fun mt bd -> Method (mt, bd)) (return mt) ep_steps
 ;;
 
-let _ep_constructor_member =
+let ep_constructor_member_ =
   lift2 (fun con_sign body_ -> Constructor (con_sign, body_)) ep_constructor_sign ep_steps
 ;;
 
-let _ep_fild_member = ep_fild_sign >>| fun x -> Fild x
+let ep_fild_member_ = ep_fild_sign >>| fun x -> Fild x
 
 let ep_class_members =
-  let member = choice [ _ep_method_member; _ep_fild_member; _ep_constructor_member ] in
+  let member = choice [ ep_method_member_; ep_fild_member_; ep_constructor_member_ ] in
   ep_figure_parens @@ many member
 ;;
 
 let ep_class =
   let p_parent = ep_spaces @@ (char ':' *> skip_spaces *> p_ident) >>| fun x -> Some x in
-  let class_id = ep_spaces @@ _ep_is "class" ~then_:(ep_spaces p_ident) in
+  let class_id = ep_spaces @@ ep_is_ "class" ~then_:(ep_spaces p_ident) in
   lift4
     (fun cl_modif cl_id parent cl_mems -> { cl_modif; cl_id; parent; cl_mems })
-    (_ep_modifier p_access_modifier)
+    (ep_modifier_ p_access_modifier)
     class_id
     (option None p_parent)
     ep_class_members
@@ -421,7 +421,7 @@ let ep_class =
 
 let ep_classes : tast t = many ep_class
 
-let _parse str ~p =
+let parse_ str ~p =
   match parse_string p ~consume:Angstrom.Consume.All str with
   | Ok x -> Some x
   | Error _ -> None
@@ -441,8 +441,8 @@ let show_wrap form = function
   | _ -> Format.print_string "Some error during parsing\n"
 ;;
 
-let test_pars ps eq str ans = eq_wrap ~eq ans (_parse ~p:ps str)
-let print_pars ps form str = show_wrap form (_parse ~p:ps str)
+let test_pars ps eq str ans = eq_wrap ~eq ans (parse_ ~p:ps str)
+let print_pars ps form str = show_wrap form (parse_ ~p:ps str)
 
 (* p_num tests: *)
 let test_num = test_pars p_number equal_value_
@@ -507,7 +507,7 @@ let%test _ =
            ( UNot
            , EBin_op
                ( Minus
-               , EBin_op (Plus, EIdentifier (Id "a"), EVal (VInt 2))
+               , EBin_op (Plus, EIdentifier (Id "a"), EConst (VInt 2))
                , EBin_op
                    ( Asterisk
                    , EBin_op
@@ -516,7 +516,7 @@ let%test _ =
                            ( EIdentifier (Id "t")
                            , EMember_ident (EIdentifier (Id "a"), EIdentifier (Id "b")) )
                        , EMember_ident (EIdentifier (Id "t"), EIdentifier (Id "r")) )
-                   , EVal (VInt 2) ) ) ) ))
+                   , EConst (VInt 2) ) ) ) ))
 ;;
 
 let%test _ =
@@ -535,12 +535,12 @@ let%test _ =
        ( Plus
        , EMethod_invoke
            ( EIdentifier (Id "a")
-           , EParams
-               [ EBin_op (Plus, EVal (VInt 1), EVal (VInt 2))
+           , Params
+               [ EBin_op (Plus, EConst (VInt 1), EConst (VInt 2))
                ; EIdentifier (Id "d")
-               ; EVal (VString "qwe")
+               ; EConst (VString "qwe")
                ] )
-       , EVal (VInt 100000) ))
+       , EConst (VInt 100000) ))
 ;;
 
 (* ep_eAssign_eDecl *)
@@ -555,12 +555,12 @@ let%test _ =
            ( Plus
            , EMethod_invoke
                ( EIdentifier (Id "a")
-               , EParams
-                   [ EBin_op (Plus, EVal (VInt 1), EVal (VInt 2))
+               , Params
+                   [ EBin_op (Plus, EConst (VInt 1), EConst (VInt 2))
                    ; EIdentifier (Id "d")
-                   ; EVal (VString "qwe")
+                   ; EConst (VString "qwe")
                    ] )
-           , EVal (VInt 100000) ) ))
+           , EConst (VInt 100000) ) ))
 ;;
 
 (* ep_steps *)
@@ -589,11 +589,11 @@ let%test _ =
     \      }"
     (Steps
        [ EIf_else
-           ( EVal (VBool true)
+           ( EConst (VBool true)
            , Steps
-               [ EMethod_invoke (EIdentifier (Id "a"), EParams [])
+               [ EMethod_invoke (EIdentifier (Id "a"), Params [])
                ; EIf_else
-                   ( EVal (VBool false)
+                   ( EConst (VBool false)
                    , Steps
                        [ EBin_op (Assign, EIdentifier (Id "e"), EIdentifier (Id "b"))
                        ; EReturn None
@@ -603,21 +603,21 @@ let%test _ =
                           [ EAssign
                               ( EDecl
                                   (TVariable (TVar (TNullable (TBase TInt))), Id "exmp")
-                              , EBin_op (Plus, EVal (VInt 243), EVal (VInt 1)) )
+                              , EBin_op (Plus, EConst (VInt 243), EConst (VInt 1)) )
                           ]) )
                ]
            , None )
        ; EMethod_invoke
            ( EIdentifier (Id "a")
-           , EParams
-               [ EBin_op (Plus, EVal (VInt 1), EVal (VInt 2)); EIdentifier (Id "cl") ] )
+           , Params
+               [ EBin_op (Plus, EConst (VInt 1), EConst (VInt 2)); EIdentifier (Id "cl") ] )
        ; EIf_else
            ( EBin_op
-               (Plus, EVal (VInt 1), EMethod_invoke (EIdentifier (Id "run"), EParams []))
+               (Plus, EConst (VInt 1), EMethod_invoke (EIdentifier (Id "run"), Params []))
            , Steps
-               [ EMethod_invoke (EIdentifier (Id "first"), EParams [ EVal (VInt 1) ]) ]
-           , Some (EIf_else (EVal (VBool true), Steps [], None)) )
-       ; EReturn (Some (EBin_op (Plus, EVal (VInt 1), EVal (VInt 1))))
+               [ EMethod_invoke (EIdentifier (Id "first"), Params [ EConst (VInt 1) ]) ]
+           , Some (EIf_else (EConst (VBool true), Steps [], None)) )
+       ; EReturn (Some (EBin_op (Plus, EConst (VInt 1), EConst (VInt 1))))
        ])
 ;;
 
@@ -646,10 +646,10 @@ let%expect_test _ =
   [%expect
     {|
       (Steps
-         [(EIf_else ((EVal (VBool true)),
+         [(EIf_else ((EConst (VBool true)),
              (Steps
-                [(EMethod_invoke ((EIdentifier (Id "a")), (EParams [])));
-                  (EIf_else ((EVal (VBool false)),
+                [(EMethod_invoke ((EIdentifier (Id "a")), (Params [])));
+                  (EIf_else ((EConst (VBool false)),
                      (Steps
                         [(EBin_op (Assign, (EIdentifier (Id "e")),
                             (EIdentifier (Id "b"))));
@@ -659,32 +659,32 @@ let%expect_test _ =
                                   (EDecl (
                                      (TVariable (TVar (TNullable (TBase TInt)))),
                                      (Id "exmp"))),
-                                  (EBin_op (Plus, (EVal (VInt 243)),
-                                     (EVal (VInt 1))))
+                                  (EBin_op (Plus, (EConst (VInt 243)),
+                                     (EConst (VInt 1))))
                                   ))
                                 ]))
                      ))
                   ]),
              None));
            (EMethod_invoke ((EIdentifier (Id "a")),
-              (EParams
-                 [(EBin_op (Plus, (EVal (VInt 1)), (EVal (VInt 2))));
+              (Params
+                 [(EBin_op (Plus, (EConst (VInt 1)), (EConst (VInt 2))));
                    (EIdentifier (Id "cl"))])
               ));
            (EIf_else (
-              (EBin_op (Plus, (EVal (VInt 1)),
-                 (EMethod_invoke ((EIdentifier (Id "run")), (EParams []))))),
+              (EBin_op (Plus, (EConst (VInt 1)),
+                 (EMethod_invoke ((EIdentifier (Id "run")), (Params []))))),
               (Steps
                  [(EMethod_invoke ((EIdentifier (Id "first")),
-                     (EParams [(EVal (VInt 1))])))
+                     (Params [(EConst (VInt 1))])))
                    ]),
-              (Some (EIf_else ((EVal (VBool true)), (Steps []), None)))));
-           (EReturn (Some (EBin_op (Plus, (EVal (VInt 1)), (EVal (VInt 1))))))])
+              (Some (EIf_else ((EConst (VBool true)), (Steps []), None)))));
+           (EReturn (Some (EBin_op (Plus, (EConst (VInt 1)), (EConst (VInt 1))))))])
 
      |}]
 ;;
 
-let test_pp_fuc = print_pars _ep_method_member pp_class_member
+let test_pp_fuc = print_pars ep_method_member_ pp_class_member
 
 let%expect_test _ =
   test_pp_fuc
@@ -708,16 +708,16 @@ let%expect_test _ =
          (Args [(EDecl ((TVariable (TVar (TNot_Nullable TInt))), (Id "num")))]) },
        (Steps
           [(EIf_else (
-              (EBin_op (Equal, (EIdentifier (Id "num")), (EVal (VInt 1)))),
-              (Steps [(EReturn (Some (EVal (VInt 1))))]),
+              (EBin_op (Equal, (EIdentifier (Id "num")), (EConst (VInt 1)))),
+              (Steps [(EReturn (Some (EConst (VInt 1))))]),
               (Some (Steps
                        [(EReturn
                            (Some (EBin_op (Asterisk, (EIdentifier (Id "num")),
                                     (EMethod_invoke ((EIdentifier (Id "Fac")),
-                                       (EParams
+                                       (Params
                                           [(EBin_op (Minus,
                                               (EIdentifier (Id "num")),
-                                              (EVal (VInt 1))))
+                                              (EConst (VInt 1))))
                                             ])
                                        ))
                                     ))))
@@ -753,7 +753,7 @@ let%expect_test _ =
      cl_mems =
      [(Fild
          { f_modif = None; f_type = (TVar (TNot_Nullable TInt));
-           f_id = (Id "A1"); f_val = (Some (EVal (VInt 0))) });
+           f_id = (Id "A1"); f_val = (Some (EConst (VInt 0))) });
        (Fild
           { f_modif = (Some (FAccess MPublic));
             f_type = (TVar (TNullable (TClass (Id "MyClass"))));
@@ -767,18 +767,18 @@ let%expect_test _ =
             },
           (Steps
              [(EIf_else (
-                 (EBin_op (Equal, (EIdentifier (Id "num")), (EVal (VInt 1)))),
-                 (Steps [(EReturn (Some (EVal (VInt 1))))]),
+                 (EBin_op (Equal, (EIdentifier (Id "num")), (EConst (VInt 1)))),
+                 (Steps [(EReturn (Some (EConst (VInt 1))))]),
                  (Some (Steps
                           [(EReturn
                               (Some (EBin_op (Asterisk,
                                        (EIdentifier (Id "num")),
                                        (EMethod_invoke (
                                           (EIdentifier (Id "Fac")),
-                                          (EParams
+                                          (Params
                                              [(EBin_op (Minus,
                                                  (EIdentifier (Id "num")),
-                                                 (EVal (VInt 1))))
+                                                 (EConst (VInt 1))))
                                                ])
                                           ))
                                        ))))
@@ -817,7 +817,7 @@ let%expect_test _ =
      cl_mems =
      [(Fild
          { f_modif = None; f_type = (TVar (TNot_Nullable TInt));
-           f_id = (Id "A1"); f_val = (Some (EVal (VInt 0))) });
+           f_id = (Id "A1"); f_val = (Some (EConst (VInt 0))) });
        (Fild
           { f_modif = (Some (FAccess MPublic));
             f_type = (TVar (TNullable (TClass (Id "MyClass"))));
@@ -831,18 +831,18 @@ let%expect_test _ =
             },
           (Steps
              [(EIf_else (
-                 (EBin_op (Equal, (EIdentifier (Id "num")), (EVal (VInt 1)))),
-                 (Steps [(EReturn (Some (EVal (VInt 1))))]),
+                 (EBin_op (Equal, (EIdentifier (Id "num")), (EConst (VInt 1)))),
+                 (Steps [(EReturn (Some (EConst (VInt 1))))]),
                  (Some (Steps
                           [(EReturn
                               (Some (EBin_op (Asterisk,
                                        (EIdentifier (Id "num")),
                                        (EMethod_invoke (
                                           (EIdentifier (Id "Fac")),
-                                          (EParams
+                                          (Params
                                              [(EBin_op (Minus,
                                                  (EIdentifier (Id "num")),
-                                                 (EVal (VInt 1))))
+                                                 (EConst (VInt 1))))
                                                ])
                                           ))
                                        ))))
