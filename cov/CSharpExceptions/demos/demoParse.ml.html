@@ -54,7 +54,7 @@
 
 let () =
   let s = Stdio.In_channel.input_all Stdlib.stdin in
-  <span data-count="1">m</span>atch Csharp_Exc_Lib.Parser.parse s with
+  <span data-count="1">m</span>atch Csharp_Exc_Lib.Parser.parse_ast s with
   | <span data-count="1">R</span>esult.Ok ast -&gt; Format.print<span data-count="1">f</span> "%a\n%!" Csharp_Exc_Lib.Ast.pp_tast ast
   | <span data-count="0">E</span>rror _ -&gt; Format.print<span data-count="0">f</span> "Some error with parsing"
 ;;
