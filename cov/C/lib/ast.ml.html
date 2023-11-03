@@ -320,10 +320,10 @@ open Stdint
   | Assign of expr * statement  (** int n = b = 4*)
   | Expression of expr
   | Return of expr
-  | Compound of <span data-count="166">s</span>tatement lis<span data-count="36">t</span>  (** \{ n = 4; \{ n = 3;...\} here n = 4 \} *)
+  | Compound of <span data-count="166">s</span>tatement lis<span data-count="36">t</span>  (** { n = 4; { n = 3;...} here n = 4 } *)
   | While of expr * statement
   | For of <span data-count="0">s</span>tatement option * <span data-count="0">e</span>xpr optio<span data-count="0">n</span> * <span data-count="0">e</span>xpr optio<span data-count="0">n</span> * statement
-      (** for (init?; cond?; upd?) '\{' expr list '\}' *)
+    (** for (init?; cond?; upd?) { expr list } *)
   | If of expr * statement
   | If_else of expr * statement * statement
   | Break

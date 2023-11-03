@@ -1671,8 +1671,8 @@ let p_un expr =
 
 let p_deref expr =
   <span data-count="3">f</span>ix (fun deref -&gt;
-    <span data-count="3">t</span>oke<span data-count="3">n</span> "*" *<span data-count="3">&gt;</span> (paren<span data-count="3">s</span> expr &lt;|<span data-count="3">&gt;</span> p_index_arra<span data-count="3">y</span> expr &lt;|<span data-count="3">&gt;</span> var_name &lt;|<span data-count="3">&gt;</span> deref)
-    &gt;&gt;= fun exp -&gt; <span data-count="2">r</span>eturn @@ Unary_expr (Dereference, exp) )
+      <span data-count="3">t</span>oke<span data-count="3">n</span> "*" *<span data-count="3">&gt;</span> (paren<span data-count="3">s</span> expr &lt;|<span data-count="3">&gt;</span> p_index_arra<span data-count="3">y</span> expr &lt;|<span data-count="3">&gt;</span> var_name &lt;|<span data-count="3">&gt;</span> deref)
+      &gt;&gt;= fun exp -&gt; <span data-count="2">r</span>eturn @@ Unary_expr (Dereference, exp) )
 
 let p_address expr =
   <span data-count="3">(</span>fun exp -&gt; <span data-count="1">U</span>nary_expr (Address, exp))
@@ -1685,23 +1685,23 @@ let p_not expr = <span data-count="3">t</span>oke<span data-count="3">n</span> "
 
 let p_expr : expr t =
   fi<span data-count="4">x</span> (fun expr -&gt;
-    <span data-count="3">l</span>et term =
-      choice
-        [paren<span data-count="3">s</span> expr; p_func_cal<span data-count="3">l</span> expr; p_index_arra<span data-count="3">y</span> expr; var_name; p_const]
-    in
-    <span data-count="3">l</span>et term = p_no<span data-count="3">t</span> term &lt;|&gt; term in
-    <span data-count="3">l</span>et term = p_cas<span data-count="3">t</span> term &lt;|&gt; term in
-    <span data-count="3">l</span>et term = p_addres<span data-count="3">s</span> term &lt;|&gt; term in
-    <span data-count="3">l</span>et term = p_dere<span data-count="3">f</span> term &lt;|&gt; term in
-    <span data-count="3">l</span>et term = p_u<span data-count="3">n</span> term &lt;|&gt; term in
-    <span data-count="3">l</span>et term = chainl1 term (emul &lt;|<span data-count="3">&gt;</span> emod &lt;|<span data-count="3">&gt;</span> ediv) in
-    <span data-count="3">l</span>et term = chainl1 term (eadd &lt;|<span data-count="3">&gt;</span> esub) in
-    <span data-count="3">l</span>et term = chainl1 term (ershft &lt;|<span data-count="3">&gt;</span> elshift) in
-    <span data-count="3">l</span>et term = chainl1 term (elte &lt;|<span data-count="3">&gt;</span> egte &lt;|<span data-count="3">&gt;</span> el &lt;|<span data-count="3">&gt;</span> eg &lt;|<span data-count="3">&gt;</span> eeq &lt;|<span data-count="3">&gt;</span> eneq) in
-    <span data-count="3">l</span>et term = chainr1 term eand in
-    <span data-count="3">l</span>et term = chainr1 term eor in
-    <span data-count="3">l</span>et term = fi<span data-count="3">x</span> (fun e -&gt; <span data-count="3">t</span>erm &lt;|&gt; p_elements_ar<span data-count="3">r</span> e) &lt;|&gt; term in
-    <span data-count="3">t</span>erm )
+      <span data-count="3">l</span>et term =
+        choice
+          [paren<span data-count="3">s</span> expr; p_func_cal<span data-count="3">l</span> expr; p_index_arra<span data-count="3">y</span> expr; var_name; p_const]
+      in
+      <span data-count="3">l</span>et term = p_no<span data-count="3">t</span> term &lt;|&gt; term in
+      <span data-count="3">l</span>et term = p_cas<span data-count="3">t</span> term &lt;|&gt; term in
+      <span data-count="3">l</span>et term = p_addres<span data-count="3">s</span> term &lt;|&gt; term in
+      <span data-count="3">l</span>et term = p_dere<span data-count="3">f</span> term &lt;|&gt; term in
+      <span data-count="3">l</span>et term = p_u<span data-count="3">n</span> term &lt;|&gt; term in
+      <span data-count="3">l</span>et term = chainl1 term (emul &lt;|<span data-count="3">&gt;</span> emod &lt;|<span data-count="3">&gt;</span> ediv) in
+      <span data-count="3">l</span>et term = chainl1 term (eadd &lt;|<span data-count="3">&gt;</span> esub) in
+      <span data-count="3">l</span>et term = chainl1 term (ershft &lt;|<span data-count="3">&gt;</span> elshift) in
+      <span data-count="3">l</span>et term = chainl1 term (elte &lt;|<span data-count="3">&gt;</span> egte &lt;|<span data-count="3">&gt;</span> el &lt;|<span data-count="3">&gt;</span> eg &lt;|<span data-count="3">&gt;</span> eeq &lt;|<span data-count="3">&gt;</span> eneq) in
+      <span data-count="3">l</span>et term = chainr1 term eand in
+      <span data-count="3">l</span>et term = chainr1 term eor in
+      <span data-count="3">l</span>et term = fi<span data-count="3">x</span> (fun e -&gt; <span data-count="3">t</span>erm &lt;|&gt; p_elements_ar<span data-count="3">r</span> e) &lt;|&gt; term in
+      <span data-count="3">t</span>erm )
 
 let%expect_test "type parse" =
   <span data-count="1">p</span>p pp_types p_type "int32_t";
@@ -1839,14 +1839,14 @@ let p_var_decl =
   in
   let p_type_array t =
     <span data-count="2">f</span>ix (fun arr_type : types t -&gt;
-      <span data-count="2">s</span>ize_arr
-      &gt;&gt;= fun sz -&gt;
-      <span data-count="2">w</span>hitespace *<span data-count="2">&gt;</span> peek_char
-      &gt;&gt;= function
-      | <span data-count="0">S</span>ome '[' -&gt;
-          arr_type &gt;&gt;= fun t -&gt; <span data-count="0">r</span>eturn @@ Array (Some sz, t)
-      | <span data-count="2">_</span> -&gt;
-          return @@ Array (Some sz, t) )
+        <span data-count="2">s</span>ize_arr
+        &gt;&gt;= fun sz -&gt;
+        <span data-count="2">w</span>hitespace *<span data-count="2">&gt;</span> peek_char
+        &gt;&gt;= function
+        | <span data-count="0">S</span>ome '[' -&gt;
+            arr_type &gt;&gt;= fun t -&gt; <span data-count="0">r</span>eturn @@ Array (Some sz, t)
+        | <span data-count="2">_</span> -&gt;
+            return @@ Array (Some sz, t) )
   in
   p_type
   &gt;&gt;<span data-count="4">=</span> function
@@ -1923,17 +1923,17 @@ let p_for statements =
 
 let p_statements =
   fi<span data-count="4">x</span> (fun statements -&gt;
-    <span data-count="3">c</span>hoice
-      [ p_compoun<span data-count="3">d</span> statements
-      ; p_if_els<span data-count="3">e</span> statements
-      ; p_i<span data-count="3">f</span> statements
-      ; p_whil<span data-count="3">e</span> statements
-      ; p_fo<span data-count="3">r</span> statements
-      ; p_assign
-      ; p_var_decl
-      ; p_continue
-      ; p_break
-      ; p_return ] )
+      <span data-count="3">c</span>hoice
+        [ p_compoun<span data-count="3">d</span> statements
+        ; p_if_els<span data-count="3">e</span> statements
+        ; p_i<span data-count="3">f</span> statements
+        ; p_whil<span data-count="3">e</span> statements
+        ; p_fo<span data-count="3">r</span> statements
+        ; p_assign
+        ; p_var_decl
+        ; p_continue
+        ; p_break
+        ; p_return ] )
 
 let p_func_decl statements =
   <span data-count="4">p</span>_type
