@@ -20,6 +20,7 @@ val ep_value : Ast.expr Angstrom.t
 (** {2 Language constructs parsers} *)
 
 val ep_member_ident : Ast.expr Angstrom.t
+val ep_method_member : Ast.class_member Angstrom.t
 val ep_var_decl : Ast.expr Angstrom.t
 val ep_operation : Ast.expr Angstrom.t
 val ep_assign : Ast.expr Angstrom.t
@@ -37,4 +38,7 @@ val ep_class : Ast.class_sign Angstrom.t
 val ep_classes : Ast.tast Angstrom.t
 
 (** [parse s] - this parser will read the string s and return the result *)
-val parse : string -> (Ast.tast, string) result
+val parse_ast : string -> (Ast.tast, string) result
+
+val parse_until_true : 'a Angstrom.t -> string -> ('a, string) result
+val parse_option : string -> p:'a Angstrom.t -> 'a option
