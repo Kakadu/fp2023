@@ -1,3 +1,7 @@
+(** Copyright 2021-2023, Georgy Sichkar *)
+
+(** SPDX-License-Identifier: LGPL-3.0-or-later *)
+
 open Csharp_Exc_Lib.Parser
 open Csharp_Exc_Lib.Ast
 
