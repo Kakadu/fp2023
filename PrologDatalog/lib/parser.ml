@@ -194,6 +194,52 @@ let parse_prolog = many1 term >>| many_term_c
 
 let parse_program str =
   match parse_string ~consume:Consume.All parse_prolog str with
-  | Ok x -> Ok x
-  | Error er -> Error (`ParsingError er)
+  | Ok res -> Format.printf "%s" (show_many_term res)
+  | Error e -> Format.printf "%s" e
+;;
+
+(**tests*)
+
+let%expect_test _ =
+  let test =
+    {|factorial(0, 1). factorial(N, Fact) :- N > 0, N1 is N - 1, factorial(N1, Fact1), Fact is N * Fact1.|}
+  in
+  parse_program test;
+  [%expect
+    {|
+     (Many_term
+        [Relation {atom = (Name "factorial");
+           terms = [(Const (Num 0)); (Const (Num 1))]};
+          Relation {atom = (Oper ":-");
+            terms =
+            [Relation {atom = (Name "factorial");
+               terms = [(Var "N"); (Var "Fact")]};
+              Relation {atom = (Oper ",");
+                terms =
+                [Relation {atom = (Oper ",");
+                   terms =
+                   [Relation {atom = (Oper ",");
+                      terms =
+                      [Relation {atom = (Oper ">");
+                         terms = [(Var "N"); (Const (Num 0))]};
+                        Relation {atom = (Oper "is");
+                          terms =
+                          [(Var "N1");
+                            Relation {atom = (Oper "-");
+                              terms = [(Var "N"); (Const (Num 1))]}
+                            ]}
+                        ]};
+                     Relation {atom = (Name "factorial");
+                       terms = [(Var "N1"); (Var "Fact1")]}
+                     ]};
+                  Relation {atom = (Oper "is");
+                    terms =
+                    [(Var "Fact");
+                      Relation {atom = (Oper "*");
+                        terms = [(Var "N"); (Var "Fact1")]}
+                      ]}
+                  ]}
+              ]}
+          ])
+     |}]
 ;;
