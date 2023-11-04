@@ -31,10 +31,11 @@ type const =
 
 type pattern =
   | PWild (** | _ -> ... *)
+  | PEmpty (** | [] -> ... *)
   | PConst of const (** | const -> ... *)
   | PVar of id (** | varname -> ... *)
-  | PCons of pattern * pattern (** | p1 :: p2 -> ... *)
-  | POr of pattern * pattern (** | p1 | p2 | p3 -> ... *)
+  | PCons of pattern list (** | p1 :: p2 -> ... *)
+  | POr of pattern list (** | p1 | p2 | p3 -> ... *)
 [@@deriving show { with_path = false }]
 
 type is_rec =

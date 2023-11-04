@@ -11,3 +11,8 @@ Features done (append only):
 - Factorial Parser
 
 Features in progress (and TODOs):
+
+- Unary operanors 
+- Type annotations
+- List a :: b syntax
+- Comments parser
