@@ -6,12 +6,11 @@
 
 (*
    Todo:
-   1. Implement signed int parse
+   1. Implement unary operators
    2. Think about type annotations support
    3. Implement match parsing
    4. Think about supporting list a :: b syntax
-   5. Add tuples and lists parsers
-   6. Add comments parser
+   5. Add comments parser
 *)
 
 (*
@@ -93,7 +92,7 @@ let pid =
   >>= fun s -> if is_keyword s then fail "Keyword identifiers are forbidden" else return s
 ;;
 
-let pint = ptoken @@ take_while1 is_digit >>| fun x -> EConst (CInt (int_of_string x))
+let pint = ptoken @@ take_while1 is_digit >>| fun x -> CInt (int_of_string x)
 
 let pbool =
   ptoken
@@ -102,10 +101,10 @@ let pbool =
        ; pstoken "false" *> return false
        ; fail "Failed to parse boolean"
        ]
-  >>| fun x -> EConst (CBool x)
+  >>| fun x -> CBool x
 ;;
 
-let pconst = choice [ pint; pbool ]
+let pconst = choice [ pint; pbool ] >>| fun x -> EConst x
 let pvar = pid >>| fun e -> EVar e
 
 let plet pexpr =
@@ -132,7 +131,53 @@ let pbranch pexpr =
 
 let plist pexpr =
   let psqparens p = pstoken "[" *> p <* pstoken "]" in
-  psqparens @@ sep_by1 (pstoken ";") pexpr >>| fun x -> EList x
+  psqparens @@ sep_by (pstoken ";") pexpr >>| fun x -> EList x
+;;
+
+let ppconst = choice [ pint; pbool ] >>| fun x -> PConst x
+let ppvar = pid >>| fun x -> PVar x
+
+let ppattern =
+  fix
+  @@ fun ppattern ->
+  let ppt =
+    choice
+      [ pparens ppattern
+      ; ppconst
+      ; (pstoken "_" >>| fun _ -> PWild)
+      ; (pstoken "[]" >>| fun _ -> PEmpty)
+      ; ppvar
+      ]
+  in
+  let ppt =
+    lift2
+      (fun p ps ->
+        match ps with
+        | [] -> p
+        | _ -> PCons (p :: ps))
+      ppt
+      (many (pstoken "::" *> ppt))
+  in
+  let ppt =
+    lift2
+      (fun p ps ->
+        match ps with
+        | [] -> p
+        | _ -> POr (p :: ps))
+      ppt
+      (many (pstoken "|" *> ppt))
+  in
+  ppt
+;;
+
+let pmatch pexpr =
+  let pcase ppattern pexpr =
+    lift2 (fun p e -> p, e) (pstoken "|" *> ppattern) (pstoken "->" *> pexpr)
+  in
+  lift2
+    (fun expr cases -> EMatch (expr, cases))
+    (pstoken "match" *> pexpr <* pstoken "with")
+    (many1 (pcase ppattern pexpr))
 ;;
 
 let pebinop chain1 e pbinop = chain1 e (pbinop >>| fun op e1 e2 -> EBinop (op, e1, e2))
@@ -168,7 +213,7 @@ let pexpr =
     | e :: [] -> e
     | _ -> ETuple x
   in
-  choice [ plet pexpr; pbranch pexpr; pe ]
+  choice [ plet pexpr; pbranch pexpr; pmatch pexpr; pe ]
 ;;
 
 let parse = parse_string ~consume:Consume.All (many1 (plet pexpr) <* pspaces)
