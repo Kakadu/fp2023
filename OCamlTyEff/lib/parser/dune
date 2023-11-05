@@ -1,7 +1,9 @@
+(include_subdirs unqualified)
+
 (library
  (name parser)
  (public_name OCamlTyEff.Parser)
- (modules common expr pattern structure parser)
+ (modules common expr pattern structure parser commont patternt exprt)
  (libraries base angstrom ast)
  (preprocess
   (pps ppx_expect ppx_deriving.eq))
