@@ -40,16 +40,16 @@ let identifier =
 ;;
 
 let register =
-  ws*> 
-  choice
-    [ string "ebx" *> return (Register "ebx")
-    ; string "eax" *> return (Register "eax")
-    ; (string "r"
-       *> take_while1 (function
-         | '0' .. '9' -> true
-         | _ -> false)
-       >>= fun n -> return (Register ("r" ^ n)))
-    ]
+  ws
+  *> choice
+       [ string "ebx" *> return (Register "ebx")
+       ; string "eax" *> return (Register "eax")
+       ; (string "r"
+          *> take_while1 (function
+            | '0' .. '9' -> true
+            | _ -> false)
+          >>= fun n -> return (Register ("r" ^ n)))
+       ]
 ;;
 
 let shared_variable =
@@ -96,21 +96,25 @@ let parse str show_ast =
 
 let parse_string p s = Angstrom.parse_string ~consume:Consume.All p s
 
-let%expect_test "parse_register" = 
-parse "eax<-0" Ast.show_ast;
+let%expect_test "parse_register" =
+  parse "eax<-0" Ast.show_ast;
   [%expect {| [[(None, (Ast.Assign ((Ast.Register "eax"), (Ast.Constant 0))), None)]] |}]
+;;
 
-let%expect_test "parse_shared_variable" = 
-parse "x<-eax" Ast.show_ast;
-  [%expect {|
+let%expect_test "parse_shared_variable" =
+  parse "x<-eax" Ast.show_ast;
+  [%expect
+    {|
     [[(None,
        (Ast.Write ((Ast.SharedVariable "x"), (Ast.Read (Ast.Register "eax")))),
        None)]
-      ] |}]  
-      
+      ] |}]
+;;
+
 let%expect_test "parse_simple_helloworld" =
-parse "x<-60 ||| y<-90 smp ||| smp r1<-x ||| r2<-y" Ast.show_ast;
-  [%expect {|
+  parse "x<-60 ||| y<-90 smp ||| smp r1<-x ||| r2<-y" Ast.show_ast;
+  [%expect
+    {|
     [[(None, (Ast.Write ((Ast.SharedVariable "x"), (Ast.Constant 60))), None);
        (None, (Ast.Write ((Ast.SharedVariable "y"), (Ast.Constant 90))),
         (Some Ast.Barrier));
@@ -124,3 +128,4 @@ parse "x<-60 ||| y<-90 smp ||| smp r1<-x ||| r2<-y" Ast.show_ast;
         None)
        ]
       ] |}]
+;;
