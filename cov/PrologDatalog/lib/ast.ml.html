@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8"/>
     <title>ast.ml &mdash; Coverage report</title>
-    <meta name="description" content="0.00% coverage in lib/ast.ml">
+    <meta name="description" content="45.71% coverage in lib/ast.ml">
     <link rel="stylesheet" href="../coverage.css"/>
     <script src="../highlight.pack.js"></script>
     <script>hljs.initHighlightingOnLoad();</script>
@@ -15,28 +15,22 @@
           <span class="dirname">lib/</span>ast.ml
         </a>
       </h1>
-      <h2>0.00%</h2>
+      <h2>45.71%</h2>
     </div>
     <div id="navbar">
-      <span class="unvisited" style="top:17.86%"></span>
-      <span class="unvisited" style="top:21.43%"></span>
-      <span class="unvisited" style="top:25.00%"></span>
-      <span class="unvisited" style="top:32.14%"></span>
+      <span class="some-visited" style="top:17.86%"></span>
+      <span class="some-visited" style="top:21.43%"></span>
+      <span class="some-visited" style="top:25.00%"></span>
       <span class="unvisited" style="top:35.71%"></span>
       <span class="unvisited" style="top:39.29%"></span>
-      <span class="unvisited" style="top:42.86%"></span>
-      <span class="unvisited" style="top:50.00%"></span>
       <span class="unvisited" style="bottom:46.43%"></span>
       <span class="unvisited" style="bottom:42.86%"></span>
-      <span class="unvisited" style="bottom:39.29%"></span>
-      <span class="unvisited" style="bottom:32.14%"></span>
       <span class="unvisited" style="bottom:28.57%"></span>
-      <span class="unvisited" style="bottom:25.00%"></span>
+      <span class="some-visited" style="bottom:25.00%"></span>
       <span class="unvisited" style="bottom:21.43%"></span>
       <span class="unvisited" style="bottom:17.86%"></span>
-      <span class="unvisited" style="bottom:14.29%"></span>
-      <span class="unvisited" style="bottom:7.14%"></span>
-      <span class="unvisited" style="bottom:0.00%"></span>
+      <span class="some-visited" style="bottom:14.29%"></span>
+      <span class="some-visited" style="bottom:0.00%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -45,30 +39,30 @@
 <a id="L2"></a><span > </span>
 <a id="L3"></a><span > </span>
 <a id="L4"></a><span > </span>
-<a id="L5"></a><span class="unvisited"> </span>
-<a id="L6"></a><span class="unvisited"> </span>
-<a id="L7"></a><span class="unvisited"> </span>
+<a id="L5"></a><span class="some-visited"> </span>
+<a id="L6"></a><span class="some-visited"> </span>
+<a id="L7"></a><span class="some-visited"> </span>
 <a id="L8"></a><span > </span>
-<a id="L9"></a><span class="unvisited"> </span>
+<a id="L9"></a><span class="visited"> </span>
 <a id="L10"></a><span class="unvisited"> </span>
 <a id="L11"></a><span class="unvisited"> </span>
-<a id="L12"></a><span class="unvisited"> </span>
+<a id="L12"></a><span class="visited"> </span>
 <a id="L13"></a><span > </span>
-<a id="L14"></a><span class="unvisited"> </span>
+<a id="L14"></a><span class="visited"> </span>
 <a id="L15"></a><span class="unvisited"> </span>
 <a id="L16"></a><span class="unvisited"> </span>
-<a id="L17"></a><span class="unvisited"> </span>
+<a id="L17"></a><span class="visited"> </span>
 <a id="L18"></a><span > </span>
-<a id="L19"></a><span class="unvisited"> </span>
+<a id="L19"></a><span class="visited"> </span>
 <a id="L20"></a><span class="unvisited"> </span>
-<a id="L21"></a><span class="unvisited"> </span>
+<a id="L21"></a><span class="some-visited"> </span>
 <a id="L22"></a><span class="unvisited"> </span>
 <a id="L23"></a><span class="unvisited"> </span>
-<a id="L24"></a><span class="unvisited"> </span>
+<a id="L24"></a><span class="some-visited"> </span>
 <a id="L25"></a><span > </span>
-<a id="L26"></a><span class="unvisited"> </span>
+<a id="L26"></a><span class="visited"> </span>
 <a id="L27"></a><span > </span>
-<a id="L28"></a><span class="unvisited"> </span>
+<a id="L28"></a><span class="some-visited"> </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -106,30 +100,30 @@
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-<span data-count="0">t</span>ype name = <span data-count="0">s</span>tring [@@deriving eq, show { with_path = false }]
-<span data-count="0">t</span>ype num = <span data-count="0">i</span>nt [@@deriving eq, show { with_path = false }]
-<span data-count="0">t</span>ype oper = <span data-count="0">s</span>tring [@@deriving eq, show { with_path = false }]
+<span data-count="0">t</span>ype name = <span data-count="3">s</span>tring [@@deriving eq, show { with_path = false }]
+<span data-count="0">t</span>ype num = <span data-count="4">i</span>nt [@@deriving eq, show { with_path = false }]
+<span data-count="0">t</span>ype oper = <span data-count="9">s</span>tring [@@deriving eq, show { with_path = false }]
 
-<span data-count="0">t</span>ype atom =
+<span data-count="48">t</span>ype atom =
   <span data-count="0">|</span> Name of nam<span data-count="0">e</span>
   <span data-count="0">|</span> Oper of ope<span data-count="0">r</span>
-[@@deriving eq, show { with_path = false }<span data-count="0">]</span>
+[@@deriving eq, show { with_path = false }<span data-count="24">]</span>
 
-<span data-count="0">t</span>ype const =
+<span data-count="16">t</span>ype const =
   <span data-count="0">|</span> Num of nu<span data-count="0">m</span>
   <span data-count="0">|</span> Atom of ato<span data-count="0">m</span>
-[@@deriving eq, show { with_path = false }<span data-count="0">]</span>
+[@@deriving eq, show { with_path = false }<span data-count="8">]</span>
 
-<span data-count="0">t</span>ype term =
+<span data-count="166">t</span>ype term =
   <span data-count="0">|</span> Const of cons<span data-count="0">t</span>
-  <span data-count="0">|</span> Var of strin<span data-count="0">g</span>
+  <span data-count="0">|</span> Var of strin<span data-count="10">g</span>
   <span data-count="0">|</span> Relation of
       { <span data-count="0">a</span>tom : atom
-      <span data-count="0">;</span> <span data-count="0">t</span>erms : <span data-count="0">t</span>erm lis<span data-count="0">t</span>
+      <span data-count="0">;</span> <span data-count="0">t</span>erms : <span data-count="108">t</span>erm lis<span data-count="24">t</span>
       }
-[@@deriving eq, show { with_path = false }<span data-count="0">]</span>
+[@@deriving eq, show { with_path = false }<span data-count="104">]</span>
 
-<span data-count="0">t</span>ype many_term = <span data-count="0">M</span>any_term of <span data-count="0">t</span>erm lis<span data-count="0">t</span> [@@deriving eq, show { with_path = false }<span data-count="0">]</span>
+<span data-count="6">t</span>ype many_term = <span data-count="0">M</span>any_term of <span data-count="9">t</span>erm lis<span data-count="2">t</span> [@@deriving eq, show { with_path = false }<span data-count="4">]</span>
 </code></pre>
       </div>
     </div>
