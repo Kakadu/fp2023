@@ -1,4 +1,4 @@
-(** Copyright 2023-2024 Alexandra Lanovaya*)
+(** Copyright 2023-2024, Alexandra Lanovaya*)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
@@ -21,12 +21,12 @@ let integer =
     | _ -> false)
   <* ws
   >>= fun int_str ->
-  try return (int_of_string int_str) with
-  | _ -> fail "Invalid integer"
+  match int_of_string int_str with
+  | exception _ -> fail "Invalid integer"
+  | n -> return n
 ;;
 
-let is_reserved name =
-  match name with
+let is_reserved = function
   | "eax" | "ebx" | "r1" | "r2" | "r3" | "r4" | "r5" | "r6" | "r7" | "r8" | "r9" -> true
   | _ -> false
 ;;
@@ -94,7 +94,7 @@ let parse str show_ast =
   | Error msg -> failwith msg
 ;;
 
-let parse_string p s = Angstrom.parse_string ~consume:Consume.All p s
+let parse_prog str = parse str Ast.show_ast
 
 let%expect_test "parse_register" =
   parse "eax<-0" Ast.show_ast;
