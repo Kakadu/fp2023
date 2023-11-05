@@ -1,0 +1,9 @@
+(library
+ (name ocaml_with_effects_lib)
+ (public_name OCamlWithEffects.Lib)
+ (modules Parser Ast)
+ (libraries base angstrom)
+ (preprocess
+  (pps ppx_deriving.show ppx_deriving.eq))
+ (instrumentation
+  (backend bisect_ppx)))

@@ -1,0 +1,35 @@
+(lang dune 3.7)
+
+(generate_opam_files true)
+
+(cram enable)
+
+(license LGPL-3.0-or-later)
+
+(authors "Averin Pavel")
+
+(maintainers "Averin Pavel")
+
+
+(bug_reports "FIXME where to put bug reports about the code")
+
+(homepage "FIXME Homepage")
+
+(package
+ (name Python) ; FIXME and regenerate .opam file using 'dune build @install'
+ (synopsis "FIXME An interpreter for Python")
+ (description
+  "FIXME. A longer description, for example, which are the most interesing features being supported, etc.")
+ (version 0.1)
+ (depends
+  dune
+  angstrom
+  (ppx_inline_test :with-test)
+  ppx_expect
+  ppx_deriving
+  bisect_ppx
+  (odoc :with-doc)
+  (ocamlformat :build)
+  ; base
+  ; After adding dependencies to 'dune' files and the same dependecies here too
+  ))
