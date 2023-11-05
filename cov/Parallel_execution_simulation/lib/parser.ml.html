@@ -18,13 +18,13 @@
       <h2>83.48%</h2>
     </div>
     <div id="navbar">
-      <span class="some-visited" style="top:8.73%"></span>
-      <span class="unvisited" style="top:19.84%"></span>
-      <span class="some-visited" style="top:23.81%"></span>
-      <span class="some-visited" style="top:29.37%"></span>
-      <span class="some-visited" style="bottom:35.71%"></span>
-      <span class="unvisited" style="bottom:25.40%"></span>
-      <span class="unvisited" style="bottom:23.02%"></span>
+      <span class="some-visited" style="top:8.40%"></span>
+      <span class="unvisited" style="top:19.08%"></span>
+      <span class="some-visited" style="top:22.90%"></span>
+      <span class="some-visited" style="top:28.24%"></span>
+      <span class="some-visited" style="bottom:38.17%"></span>
+      <span class="unvisited" style="bottom:28.24%"></span>
+      <span class="unvisited" style="bottom:25.95%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -71,7 +71,7 @@
 <a id="L40"></a><span > </span>
 <a id="L41"></a><span > </span>
 <a id="L42"></a><span > </span>
-<a id="L43"></a><span class="visited"> </span>
+<a id="L43"></a><span > </span>
 <a id="L44"></a><span class="visited"> </span>
 <a id="L45"></a><span class="visited"> </span>
 <a id="L46"></a><span class="visited"> </span>
@@ -132,19 +132,19 @@
 <a id="L101"></a><span class="visited"> </span>
 <a id="L102"></a><span > </span>
 <a id="L103"></a><span > </span>
-<a id="L104"></a><span class="visited"> </span>
+<a id="L104"></a><span > </span>
 <a id="L105"></a><span class="visited"> </span>
-<a id="L106"></a><span > </span>
+<a id="L106"></a><span class="visited"> </span>
 <a id="L107"></a><span > </span>
 <a id="L108"></a><span > </span>
-<a id="L109"></a><span class="visited"> </span>
+<a id="L109"></a><span > </span>
 <a id="L110"></a><span > </span>
-<a id="L111"></a><span > </span>
-<a id="L112"></a><span class="visited"> </span>
-<a id="L113"></a><span class="visited"> </span>
+<a id="L111"></a><span class="visited"> </span>
+<a id="L112"></a><span > </span>
+<a id="L113"></a><span > </span>
 <a id="L114"></a><span > </span>
-<a id="L115"></a><span > </span>
-<a id="L116"></a><span > </span>
+<a id="L115"></a><span class="visited"> </span>
+<a id="L116"></a><span class="visited"> </span>
 <a id="L117"></a><span > </span>
 <a id="L118"></a><span > </span>
 <a id="L119"></a><span > </span>
@@ -154,7 +154,12 @@
 <a id="L123"></a><span > </span>
 <a id="L124"></a><span > </span>
 <a id="L125"></a><span > </span>
-<a id="L126"></a><span class="visited"> </span>
+<a id="L126"></a><span > </span>
+<a id="L127"></a><span > </span>
+<a id="L128"></a><span > </span>
+<a id="L129"></a><span > </span>
+<a id="L130"></a><span class="visited"> </span>
+<a id="L131"></a><span > </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -285,6 +290,11 @@
 <a href="#L124">124</a>
 <a href="#L125">125</a>
 <a href="#L126">126</a>
+<a href="#L127">127</a>
+<a href="#L128">128</a>
+<a href="#L129">129</a>
+<a href="#L130">130</a>
+<a href="#L131">131</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2023-2024 Alexandra Lanovaya*)
 
@@ -328,16 +338,16 @@ let identifier =
 ;;
 
 let register =
-  ws*<span data-count="2">&gt;</span> 
-  choic<span data-count="2">e</span>
-    [ strin<span data-count="2">g</span> "ebx" *<span data-count="2">&gt;</span> retur<span data-count="2">n</span> (Register "ebx")
-    ; strin<span data-count="2">g</span> "eax" *<span data-count="2">&gt;</span> retur<span data-count="2">n</span> (Register "eax")
-    ; (strin<span data-count="2">g</span> "r"
-       *<span data-count="2">&gt;</span> take_while<span data-count="2">1</span> (function
-         | <span data-count="4">'</span>0' .. '9' -&gt; true
-         | <span data-count="4">_</span> -&gt; false)
-       &gt;&gt;<span data-count="2">=</span> fun n -&gt; <span data-count="4">r</span>eturn (Register ("r" ^ n)))
-    ]
+  ws
+  *<span data-count="2">&gt;</span> choic<span data-count="2">e</span>
+       [ strin<span data-count="2">g</span> "ebx" *<span data-count="2">&gt;</span> retur<span data-count="2">n</span> (Register "ebx")
+       ; strin<span data-count="2">g</span> "eax" *<span data-count="2">&gt;</span> retur<span data-count="2">n</span> (Register "eax")
+       ; (strin<span data-count="2">g</span> "r"
+          *<span data-count="2">&gt;</span> take_while<span data-count="2">1</span> (function
+            | <span data-count="4">'</span>0' .. '9' -&gt; true
+            | <span data-count="4">_</span> -&gt; false)
+          &gt;&gt;<span data-count="2">=</span> fun n -&gt; <span data-count="4">r</span>eturn (Register ("r" ^ n)))
+       ]
 ;;
 
 let shared_variable =
@@ -384,21 +394,25 @@ let parse str show_ast =
 
 let parse_string p s = <span data-count="0">A</span>ngstrom.parse_string ~consume:Consume.All p s
 
-let%expect_test "parse_register" = 
-<span data-count="1">p</span>arse "eax&lt;-0" Ast.show_ast;
+let%expect_test "parse_register" =
+  <span data-count="1">p</span>arse "eax&lt;-0" Ast.show_ast;
   <span data-count="1">[</span>%expect {| [[(None, (Ast.Assign ((Ast.Register "eax"), (Ast.Constant 0))), None)]] |}<span data-count="5">]</span>
+;;
 
-let%expect_test "parse_shared_variable" = 
-<span data-count="1">p</span>arse "x&lt;-eax" Ast.show_ast;
-  <span data-count="1">[</span>%expect {|
+let%expect_test "parse_shared_variable" =
+  <span data-count="1">p</span>arse "x&lt;-eax" Ast.show_ast;
+  <span data-count="1">[</span>%expect
+    {|
     [[(None,
        (Ast.Write ((Ast.SharedVariable "x"), (Ast.Read (Ast.Register "eax")))),
        None)]
-      ] |}<span data-count="5">]</span>  
-      
+      ] |}<span data-count="5">]</span>
+;;
+
 let%expect_test "parse_simple_helloworld" =
-<span data-count="1">p</span>arse "x&lt;-60 ||| y&lt;-90 smp ||| smp r1&lt;-x ||| r2&lt;-y" Ast.show_ast;
-  <span data-count="1">[</span>%expect {|
+  <span data-count="1">p</span>arse "x&lt;-60 ||| y&lt;-90 smp ||| smp r1&lt;-x ||| r2&lt;-y" Ast.show_ast;
+  <span data-count="1">[</span>%expect
+    {|
     [[(None, (Ast.Write ((Ast.SharedVariable "x"), (Ast.Constant 60))), None);
        (None, (Ast.Write ((Ast.SharedVariable "y"), (Ast.Constant 90))),
         (Some Ast.Barrier));
@@ -412,6 +426,7 @@ let%expect_test "parse_simple_helloworld" =
         None)
        ]
       ] |}<span data-count="5">]</span>
+;;
 </code></pre>
       </div>
     </div>
