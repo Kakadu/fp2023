@@ -7,7 +7,6 @@
   (backend bisect_ppx))
  (preprocess
   (pps
-   ppx_let
    ppx_variants_conv
    ppx_expect
    ppx_deriving.show
