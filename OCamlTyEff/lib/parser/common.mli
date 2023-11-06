@@ -15,14 +15,11 @@ val pp : (Format.formatter -> 'a -> unit) -> 'a t -> string -> unit
 val ws : unit t
 (** skip whitespaces *)
 
-val is_core_operator_char : char -> bool
-(** core-operator-char ::= \{$ | & | * | + | - | / | = | > | @ | ^ | \| \} *)
-
-val is_operator_char : char -> bool
-(** operator-char ::= \{~ | ! | ? | core-operator-char | % | < | : | .\} *)
-
 val peek_custom_infix_operator_name : string t
 (** 
+  core-operator-char ::= \{ $ | & | * | + | - | / | = | > | @ | ^ | | \}
+  operator-char ::= \{ ~ | ! | ? | core-operator-char | % | < | : | . \}
+
   infix-symbol ::= (core-operator-char | % | <) \{ operator-char \} 
 *)
 
