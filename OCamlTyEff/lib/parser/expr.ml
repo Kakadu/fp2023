@@ -132,8 +132,6 @@ let peek_infix_op disabled_op =
 (**
    Set precedence and associativity for operators.
    https://v2.ocaml.org/manual/expr.html#ss:precedence-and-associativity
-
-   Used in Pratt parsing method
 *)
 let get_infix_binding_power = function
   | IOpApply ->
@@ -176,26 +174,27 @@ let get_prefix_binding_power = function
   | POpMinus ->
       95 (* a bit lower than application precedence *)
 
+let parse_single_exp pexp =
+  ws
+  *> choice
+       [ parse_exp_ident
+       ; parse_exp_const
+       ; parse_exp_constr
+       ; char '(' *> pexp None <* ws <* char ')'
+       ; parse_exp_function (pexp (Some (IOpCustom (Ident "|"))))
+         (* disable | as it's used as cases separator *)
+       ; parse_exp_fun (pexp None)
+       ; parse_exp_list (pexp (Some IOpSeq))
+         (* disable ; as it's a separator in lists *)
+       ; parse_exp_let (pexp None)
+       ; parse_exp_ite (pexp None) (pexp (Some IOpSeq))
+         (* disable ; in [then] and [else] blocks to maintain correct precedence *)
+       ; parse_exp_match (pexp None) (pexp (Some (IOpCustom (Ident "|"))))
+         (* disable | in [with] block as it's used as cases separator *) ]
+
 let parse_expression =
-  let parse_single_exp pexp =
-    ws
-    *> choice
-         [ parse_exp_ident
-         ; parse_exp_const
-         ; parse_exp_constr
-         ; parse_exp_function (pexp (Some (IOpCustom (Ident "|"))))
-         ; parse_exp_fun (pexp None)
-         ; char '(' *> pexp None <* ws <* char ')'
-           (* disable ; as it's a separator in lists *)
-         ; parse_exp_list (pexp (Some IOpSeq))
-         ; parse_exp_let (pexp None)
-           (* disable ; in [then] and [else] blocks to maintain correct precedence *)
-         ; parse_exp_ite (pexp None) (pexp (Some IOpSeq))
-           (* disable | in [with] block as it's used as cases separator *)
-         ; parse_exp_match (pexp None) (pexp (Some (IOpCustom (Ident "|")))) ]
-  in
-  let rec parse_ops disabled_op =
-    let infix_fold_fun acc (op, rhs) =
+  let rec pexp disabled_op =
+    let fold_infix acc (op, rhs) =
       match op with
       | IOpApply -> (
         match acc with
@@ -218,7 +217,7 @@ let parse_expression =
       | IOpCustom op ->
           Exp_apply (Exp_apply (Exp_ident op, acc), rhs)
     in
-    let apply_prefix_op op exp =
+    let apply_prefix op exp =
       Exp_apply
         ( Exp_ident
             ( match op with
@@ -231,10 +230,15 @@ let parse_expression =
         , exp )
     in
     fix (fun _ ->
-        parse_infix_prefix
-          ~parse_operand:(parse_single_exp parse_ops)
-          ~peek_infix_op:(peek_infix_op disabled_op)
-          ~get_infix_binding_power ~infix_fold_fun ~parse_prefix_op
-          ~get_prefix_binding_power ~apply_prefix_op )
+        parse_operators
+          ~infix:
+            { peek= peek_infix_op disabled_op
+            ; get_binding_power= get_infix_binding_power
+            ; fold= fold_infix }
+          ~prefix:
+            { parse= parse_prefix_op
+            ; get_binding_power= get_prefix_binding_power
+            ; apply= apply_prefix }
+          (parse_single_exp pexp) )
   in
-  parse_ops None
+  pexp None

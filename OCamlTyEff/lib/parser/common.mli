@@ -51,15 +51,50 @@ val parse_let_binding :
   [let rec ValName1 PArg1 = E1 and P1 = E2 and ...]
 *)
 
-type 'a infix_operator = {op: 'a; op_length: int}
+(**
+  Helpers needed to parse expressions with prefix operators
 
-val parse_infix_prefix :
-     parse_operand:'exp t
-  -> peek_infix_op:'infix infix_operator t
-  -> get_infix_binding_power:('infix -> int * int)
-  -> infix_fold_fun:('exp -> 'infix * 'exp -> 'exp)
-  -> parse_prefix_op:'prefix t
-  -> get_prefix_binding_power:('prefix -> int)
-  -> apply_prefix_op:('prefix -> 'exp -> 'exp)
-  -> 'exp t
-(** Parse expressions with infix and prefix operators using Pratt parsing *)
+  Binding power of the prefix operator is its precedence (expressed as positive integer)
+  relative to other operators (both prefix and infix).
+  Higher number means higher precedence
+*)
+type ('oprnd, 'op) prefix_helpers =
+  {parse: 'op t; get_binding_power: 'op -> int; apply: 'op -> 'oprnd -> 'oprnd}
+
+type 'op infix_operator = {op: 'op; op_length: int}
+
+(**
+  Helpers needed to parse expressions with infix operators
+
+  Binding power of the infix operator sets its precedence and associativity
+  relative to other operators (both prefix and infix)
+
+  Binding power is two positive integers representing left and right bps of infix operators.
+  If left bp is higher than right bp then operator is right-associative.
+  If right bp is higher than left bp then operator is left-associative.
+  Higher numbers overall set higher precedence relative to other operators
+
+  E.g. infix left-associative (10, 11)
+  has higher precedence than infix right-associative (8, 7)
+  which has higher precedence than prefix with bp of 5
+
+  {!fold} is used to fold expressions with infix ops
+  into one bigger expression of type 'oprnd.
+  The first argument is accumulator
+  (initialized with left-hand side of the first operator expression to fold).
+  The second argument is (operator * right-hand side of corresponding operator expression)
+*)
+type ('oprnd, 'op) infix_helpers =
+  { peek: 'op infix_operator t
+  ; get_binding_power: 'op -> int * int
+  ; fold: 'oprnd -> 'op * 'oprnd -> 'oprnd }
+
+val parse_operators :
+     ?prefix:('oprnd, 'prefix_op) prefix_helpers
+  -> ?infix:('oprnd, 'infix_op) infix_helpers
+  -> 'oprnd t
+  -> 'oprnd t
+(**
+  Parse expressions with infix and prefix operators.
+  See {!prefix_helpers} and {!infix_helpers} documentation for more information
+*)

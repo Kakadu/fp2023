@@ -78,7 +78,7 @@ let get_infix_binding_power = function
       (11, 10)
 
 let parse_pattern =
-  let infix_fold_fun acc (op, rhs) =
+  let fold_infix acc (op, rhs) =
     match op with
     | OpOr ->
         Pat_or (acc, rhs)
@@ -92,8 +92,9 @@ let parse_pattern =
         Pat_construct (Ident "::", Some (Pat_tuple [acc; rhs]))
   in
   fix (fun ppat ->
-      parse_infix_prefix ~parse_operand:(parse_single_pat ppat) ~peek_infix_op
-        ~get_infix_binding_power ~infix_fold_fun
-        ~parse_prefix_op:(fail "no prefix ops in patterns")
-        ~get_prefix_binding_power:(fun _ -> assert false)
-        ~apply_prefix_op:(fun _ -> assert false) )
+      parse_operators
+        ~infix:
+          { peek= peek_infix_op
+          ; get_binding_power= get_infix_binding_power
+          ; fold= fold_infix }
+        (parse_single_pat ppat) )

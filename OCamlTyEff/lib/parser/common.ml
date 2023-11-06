@@ -240,36 +240,45 @@ let parse_bindings pexp ppat =
 let parse_let_binding pexp ppat =
   skip_let_keyword *> both parse_rec_flag (parse_bindings pexp ppat)
 
-(* ======= Infix & prefix parsing ======= *)
+(* ======= Prefix & infix operators parsing ======= *)
 
-type 'a infix_operator = {op: 'a; op_length: int}
+type ('oprnd, 'op) prefix_helpers =
+  {parse: 'op t; get_binding_power: 'op -> int; apply: 'op -> 'oprnd -> 'oprnd}
 
-let parse_infix_prefix ~parse_operand ~peek_infix_op ~get_infix_binding_power
-    ~infix_fold_fun ~parse_prefix_op ~get_prefix_binding_power ~apply_prefix_op
-    =
+type 'op infix_operator = {op: 'op; op_length: int}
+
+type ('oprnd, 'op) infix_helpers =
+  { peek: 'op infix_operator t
+  ; get_binding_power: 'op -> int * int
+  ; fold: 'oprnd -> 'op * 'oprnd -> 'oprnd }
+
+let parse_operators ?prefix ?infix parse_operand =
   (*
      Pratt parsing
      https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html
   *)
   let rec helper min_bp =
     let* lhs =
-      option None (ws *> parse_prefix_op >>| Option.some)
-      >>= function
-      | None ->
-          parse_operand
-      | Some op ->
-          let r_bp = get_prefix_binding_power op in
-          let* rhs = helper r_bp in
-          return (apply_prefix_op op rhs)
+      (* check if {prefix} supplied *)
+      Option.value_map prefix ~default:parse_operand ~f:(fun prefix ->
+          option None (ws *> prefix.parse >>| Option.some)
+          >>= fun op ->
+          (* check if prefix op parsed successfully *)
+          Option.value_map op ~default:parse_operand ~f:(fun op ->
+              let r_bp = prefix.get_binding_power op in
+              let* rhs = helper r_bp in
+              return (prefix.apply op rhs) ) )
     in
-    many
-      (let* {op; op_length} = ws *> peek_infix_op in
-       let l_bp, r_bp = get_infix_binding_power op in
-       if l_bp < min_bp then fail "found op with lower binding power"
-       else
-         advance op_length
-         *> let* rhs = helper r_bp in
-            return (op, rhs) )
-    >>| fun results -> List.fold_left ~init:lhs ~f:infix_fold_fun results
+    (* check if {infix} supplied *)
+    Option.value_map infix ~default:(return lhs) ~f:(fun infix ->
+        many
+          (let* {op; op_length} = ws *> infix.peek in
+           let l_bp, r_bp = infix.get_binding_power op in
+           if l_bp < min_bp then fail "found op with lower binding power"
+           else
+             advance op_length
+             *> let* rhs = helper r_bp in
+                return (op, rhs) )
+        >>| fun results -> List.fold_left results ~init:lhs ~f:infix.fold )
   in
   helper 0
