@@ -13,7 +13,7 @@ let pp string =
   | None ->
       Stdlib.print_endline "syntax error"
 
-let%expect_test "parse_let_binding_pattern2" =
+let%expect_test "parse_let_binding_pattern1" =
   pp "let ft::sc::tr = sc" ;
   [%expect
     {|
@@ -31,7 +31,7 @@ let%expect_test "parse_let_binding_pattern2" =
         ))
       ] |}]
 
-let%expect_test "parse_let_binding_pattern1" =
+let%expect_test "parse_let_binding_pattern2" =
   pp "let (f, s) = (f + s, f - s)" ;
   [%expect
     {|
@@ -104,7 +104,7 @@ let%expect_test "parse_comments" =
         ))
       ] |}]
 
-let%expect_test "parse_let_rec_without_whitespaces" =
+let%expect_test "parse_let_rec_without_whitespaces1" =
   pp "letrec f n = n + 1" ;
   [%expect
     {|
@@ -120,6 +120,14 @@ let%expect_test "parse_let_rec_without_whitespaces" =
               (Exp_apply ((Exp_ident (Ident "+")), (Exp_ident (Ident "n")))),
               (Exp_constant (Const_integer 1))))
            )))
+      ] |}]
+
+let%expect_test "parse_let_rec_without_whitespaces2" =
+  pp "let reca = 1" ;
+  [%expect
+    {|
+    [(Str_value (Nonrecursive,
+        [{ pat = (Pat_var "reca"); expr = (Exp_constant (Const_integer 1)) }]))
       ] |}]
 
 let%expect_test "parse_fact" =
