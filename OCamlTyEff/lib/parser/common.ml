@@ -15,8 +15,6 @@ let pp printer parser str =
 
 let skip_whitespaces = skip_while Char.is_whitespace
 
-let skip_whitespaces1 = take_while1 Char.is_whitespace *> return ()
-
 let parse_comments =
   skip_whitespaces *> string "(*"
   *> many_till any_char (string "*)")
@@ -25,6 +23,7 @@ let parse_comments =
 let ws = many parse_comments *> skip_whitespaces
 
 let ws1 =
+  let skip_whitespaces1 = take_while1 Char.is_whitespace *> return () in
   (skip_whitespaces1 *> many parse_comments <|> many1 parse_comments)
   *> return ()
 
@@ -218,7 +217,7 @@ let parse_const = choice [parse_char; parse_string; parse_int]
 let skip_let_keyword = ws *> string "let"
 
 let parse_rec_flag =
-  ws1 *> option Nonrecursive (string "rec" *> return Recursive)
+  ws1 *> option Nonrecursive (string "rec" *> ws1 *> return Recursive)
 
 (**
   [P1 = E1 and P2 = E2 and ...]
