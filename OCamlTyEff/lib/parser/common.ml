@@ -227,8 +227,7 @@ let parse_bindings pexp ppat =
   let parse_binding =
     let parse_fun_binding =
       lift3
-        (fun name args exp ->
-          {pat= Pat_var name; expr= Exp_function (args, Function_body exp)} )
+        (fun name args exp -> {pat= Pat_var name; expr= Exp_fun (args, exp)})
         (ws *> parse_value_name)
         (ws *> sep_by1 ws ppat)
         (ws *> char '=' *> pexp)

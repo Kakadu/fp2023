@@ -7,6 +7,26 @@ open Ast
 open Common
 open Expr
 
+let%expect_test "parse_function_pattern_matching" =
+  pp pp_expression parse_expression "function | a -> true | b -> false" ;
+  [%expect
+    {|
+    (Exp_function
+       [{ left = (Pat_var "a"); right = (Exp_construct ((Ident "true"), None)) };
+         { left = (Pat_var "b"); right = (Exp_construct ((Ident "false"), None))
+           }
+         ]) |}]
+
+let%expect_test "parse_lambda_fun" =
+  pp pp_expression parse_expression "fun x y -> x + y" ;
+  [%expect
+    {|
+    (Exp_fun ([(Pat_var "x"); (Pat_var "y")],
+       (Exp_apply (
+          (Exp_apply ((Exp_ident (Ident "+")), (Exp_ident (Ident "x")))),
+          (Exp_ident (Ident "y"))))
+       )) |}]
+
 let%expect_test "parse_custom_operator" =
   pp pp_expression parse_expression "a >>= b ++ c ** d !+ e" ;
   [%expect

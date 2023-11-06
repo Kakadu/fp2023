@@ -58,12 +58,10 @@ let%expect_test "parse_custom_operator1" =
     [(Str_value (Nonrecursive,
         [{ pat = (Pat_var ">>=");
            expr =
-           (Exp_function ([(Pat_var "a"); (Pat_var "b")],
-              (Function_body
-                 (Exp_apply (
-                    (Exp_apply ((Exp_ident (Ident "**")), (Exp_ident (Ident "a"))
-                       )),
-                    (Exp_ident (Ident "b")))))
+           (Exp_fun ([(Pat_var "a"); (Pat_var "b")],
+              (Exp_apply (
+                 (Exp_apply ((Exp_ident (Ident "**")), (Exp_ident (Ident "a")))),
+                 (Exp_ident (Ident "b"))))
               ))
            }
           ]
@@ -77,12 +75,10 @@ let%expect_test "parse_custom_operator2" =
     [(Str_value (Nonrecursive,
         [{ pat = (Pat_var "++");
            expr =
-           (Exp_function ([(Pat_var "a"); (Pat_var "b")],
-              (Function_body
-                 (Exp_apply (
-                    (Exp_apply ((Exp_ident (Ident "+")), (Exp_ident (Ident "a"))
-                       )),
-                    (Exp_ident (Ident "b")))))
+           (Exp_fun ([(Pat_var "a"); (Pat_var "b")],
+              (Exp_apply (
+                 (Exp_apply ((Exp_ident (Ident "+")), (Exp_ident (Ident "a")))),
+                 (Exp_ident (Ident "b"))))
               ))
            }
           ]
@@ -98,12 +94,10 @@ let%expect_test "parse_comments" =
     [(Str_value (Recursive,
         [{ pat = (Pat_var "f");
            expr =
-           (Exp_function ([(Pat_var "n")],
-              (Function_body
-                 (Exp_apply (
-                    (Exp_apply ((Exp_ident (Ident "+")), (Exp_ident (Ident "n"))
-                       )),
-                    (Exp_constant (Const_integer 1)))))
+           (Exp_fun ([(Pat_var "n")],
+              (Exp_apply (
+                 (Exp_apply ((Exp_ident (Ident "+")), (Exp_ident (Ident "n")))),
+                 (Exp_constant (Const_integer 1))))
               ))
            }
           ]
@@ -135,25 +129,24 @@ let%expect_test "parse_fact" =
     [(Str_value (Recursive,
         [{ pat = (Pat_var "fact");
            expr =
-           (Exp_function ([(Pat_var "n")],
-              (Function_body
-                 (Exp_ifthenelse (
-                    (Exp_apply (
-                       (Exp_apply ((Exp_ident (Ident "<")),
-                          (Exp_ident (Ident "n")))),
-                       (Exp_constant (Const_integer 2)))),
-                    (Exp_constant (Const_integer 1)),
-                    (Some (Exp_apply (
-                             (Exp_apply ((Exp_ident (Ident "*")),
-                                (Exp_ident (Ident "n")))),
-                             (Exp_apply ((Exp_ident (Ident "fact")),
-                                (Exp_apply (
-                                   (Exp_apply ((Exp_ident (Ident "-")),
-                                      (Exp_ident (Ident "n")))),
-                                   (Exp_constant (Const_integer 1))))
-                                ))
-                             )))
-                    )))
+           (Exp_fun ([(Pat_var "n")],
+              (Exp_ifthenelse (
+                 (Exp_apply (
+                    (Exp_apply ((Exp_ident (Ident "<")), (Exp_ident (Ident "n"))
+                       )),
+                    (Exp_constant (Const_integer 2)))),
+                 (Exp_constant (Const_integer 1)),
+                 (Some (Exp_apply (
+                          (Exp_apply ((Exp_ident (Ident "*")),
+                             (Exp_ident (Ident "n")))),
+                          (Exp_apply ((Exp_ident (Ident "fact")),
+                             (Exp_apply (
+                                (Exp_apply ((Exp_ident (Ident "-")),
+                                   (Exp_ident (Ident "n")))),
+                                (Exp_constant (Const_integer 1))))
+                             ))
+                          )))
+                 ))
               ))
            }
           ]
