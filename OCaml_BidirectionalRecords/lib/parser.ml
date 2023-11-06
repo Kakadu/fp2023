@@ -6,10 +6,6 @@ open Angstrom
 open Base
 open Ast
 
-(* parse *)
-
-let parse p s = parse_string ~consume:Consume.All p s
-
 (* helpers *)
 
 let is_keyword = function

@@ -1,9 +1,10 @@
 (library
  (name ocaml_birecords)
  (public_name OCaml_BidirectionalRecords.Lib)
- (modules Ast Parser)
+ (modules Ast Parser Tests)
  (libraries base angstrom)
- (preprocess
-  (pps ppx_deriving.show))
  (instrumentation
-  (backend bisect_ppx)))
+  (backend bisect_ppx))
+ (preprocess
+  (pps ppx_deriving.show ppx_inline_test ppx_expect))
+ (inline_tests))

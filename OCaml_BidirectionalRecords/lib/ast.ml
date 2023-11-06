@@ -1,4 +1,4 @@
-type id = string
+type id = string [@@deriving show]
 
 type ty =
   | TInt
@@ -8,11 +8,13 @@ type ty =
   | TTuple of ty list
   | Unspecified
   | UserDefined of id
+[@@deriving show]
 
 type ty_bind =
   { name : id
   ; ty : ty
   }
+[@@deriving show]
 
 type const =
   | Bool of bool
@@ -21,6 +23,7 @@ type const =
   | String of string
   | Nil
   | Unit
+[@@deriving show]
 
 type binop =
   | Plus
@@ -36,11 +39,13 @@ type binop =
   | Ltq (*  <= *)
   | Gt (*  > *)
   | Gtq (*  >= *)
+[@@deriving show]
 
 type unop =
   | UNot (** not a *)
   | UMinus (*  -5 *)
   | UPlus
+[@@deriving show]
 
 type pattern =
   | PVar of ty_bind
@@ -48,10 +53,12 @@ type pattern =
   | PCons of pattern * pattern list (** PCons (p1,p2) is p1::p2 *)
   | PAny (* _ *)
   | PTuple of pattern list
+[@@deriving show]
 
 type rec_flag =
   | Rec
   | NonRec
+[@@deriving show]
 
 type expr =
   | EVar of ty_bind
@@ -66,5 +73,6 @@ type expr =
   | EApp of expr * expr (**  App (f,e) is application f e *)
   | EMatch of expr * (pattern * expr)
   | EUnit
+[@@deriving show]
 
-type record = ty_bind list
+type record = ty_bind list [@@deriving show]
