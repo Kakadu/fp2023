@@ -69,6 +69,16 @@ let parse_exp_match pexp_match pexp_with =
     (string "match" *> pexp_match)
     (ws *> string "with" *> ws *> parse_match_cases pexp_with)
 
+let parse_exp_fun pexp =
+  lift2
+    (fun args exp -> Exp_fun (args, exp))
+    (string "fun" *> sep_by1 ws parse_pattern)
+    (ws *> string "->" *> pexp)
+
+let parse_exp_function pexp =
+  string "function" *> ws *> parse_match_cases pexp
+  >>| fun cases -> Exp_function cases
+
 (* ======= Operators parsing ======= *)
 
 type expr_infix_op =
@@ -173,6 +183,8 @@ let parse_expression =
          [ parse_exp_ident
          ; parse_exp_const
          ; parse_exp_constr
+         ; parse_exp_function (pexp (Some (IOpCustom (Ident "|"))))
+         ; parse_exp_fun (pexp None)
          ; char '(' *> pexp None <* ws <* char ')'
            (* disable ; as it's a separator in lists *)
          ; parse_exp_list (pexp (Some IOpSeq))
