@@ -15,6 +15,7 @@ let parse_pat_var = parse_value_name >>| fun name -> Pat_var name
 
 let parse_pat_const = parse_const >>| fun const -> Pat_constant const
 
+(** [a; b; c] *)
 let parse_pat_list ppat =
   let parse_list =
     sep_by (ws *> char ';') ppat
@@ -51,7 +52,7 @@ let parse_single_pat ppat =
 type pat_infix_op = OpOr | OpTuple | OpList
 
 let peek_infix_op =
-  let peek_tuple_or_ops =
+  let peek_or_tuple_ops =
     peek_char_fail
     >>= function
     | '|' ->
@@ -67,7 +68,7 @@ let peek_infix_op =
     if String.equal s "::" then return {op= OpList; op_length= 2}
     else fail "not a pattern list operator"
   in
-  peek_tuple_or_ops <|> peek_list_op
+  peek_or_tuple_ops <|> peek_list_op
 
 let get_infix_binding_power = function
   | OpOr ->
