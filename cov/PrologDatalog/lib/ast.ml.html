@@ -18,10 +18,10 @@
       <h2>80.00%</h2>
     </div>
     <div id="navbar">
-      <span class="some-visited" style="top:17.24%"></span>
-      <span class="some-visited" style="top:20.69%"></span>
-      <span class="some-visited" style="top:24.14%"></span>
-      <span class="some-visited" style="top:27.59%"></span>
+      <span class="some-visited" style="top:18.18%"></span>
+      <span class="some-visited" style="top:24.24%"></span>
+      <span class="some-visited" style="top:27.27%"></span>
+      <span class="some-visited" style="top:30.30%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -30,31 +30,35 @@
 <a id="L2"></a><span > </span>
 <a id="L3"></a><span > </span>
 <a id="L4"></a><span > </span>
-<a id="L5"></a><span class="some-visited"> </span>
+<a id="L5"></a><span > </span>
 <a id="L6"></a><span class="some-visited"> </span>
-<a id="L7"></a><span class="some-visited"> </span>
+<a id="L7"></a><span > </span>
 <a id="L8"></a><span class="some-visited"> </span>
-<a id="L9"></a><span > </span>
-<a id="L10"></a><span class="visited"> </span>
+<a id="L9"></a><span class="some-visited"> </span>
+<a id="L10"></a><span class="some-visited"> </span>
 <a id="L11"></a><span > </span>
 <a id="L12"></a><span > </span>
 <a id="L13"></a><span class="visited"> </span>
 <a id="L14"></a><span > </span>
-<a id="L15"></a><span class="visited"> </span>
-<a id="L16"></a><span > </span>
+<a id="L15"></a><span > </span>
+<a id="L16"></a><span class="visited"> </span>
 <a id="L17"></a><span > </span>
 <a id="L18"></a><span class="visited"> </span>
 <a id="L19"></a><span > </span>
-<a id="L20"></a><span class="visited"> </span>
-<a id="L21"></a><span > </span>
+<a id="L20"></a><span > </span>
+<a id="L21"></a><span class="visited"> </span>
 <a id="L22"></a><span > </span>
 <a id="L23"></a><span > </span>
-<a id="L24"></a><span > </span>
-<a id="L25"></a><span class="visited"> </span>
+<a id="L24"></a><span class="visited"> </span>
+<a id="L25"></a><span > </span>
 <a id="L26"></a><span > </span>
-<a id="L27"></a><span class="visited"> </span>
+<a id="L27"></a><span > </span>
 <a id="L28"></a><span > </span>
 <a id="L29"></a><span class="visited"> </span>
+<a id="L30"></a><span > </span>
+<a id="L31"></a><span class="visited"> </span>
+<a id="L32"></a><span > </span>
+<a id="L33"></a><span class="visited"> </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -88,16 +92,23 @@
 <a href="#L27">27</a>
 <a href="#L28">28</a>
 <a href="#L29">29</a>
+<a href="#L30">30</a>
+<a href="#L31">31</a>
+<a href="#L32">32</a>
+<a href="#L33">33</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2023-2024, Pogorelov Ilya *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
+(**base elements of Prolog*)
 <span data-count="0">t</span>ype name = <span data-count="3">s</span>tring [@@deriving show { with_path = false }]
+
 <span data-count="0">t</span>ype num = <span data-count="4">i</span>nt [@@deriving show { with_path = false }]
 <span data-count="0">t</span>ype oper = <span data-count="9">s</span>tring [@@deriving show { with_path = false }]
 <span data-count="0">t</span>ype var = <span data-count="10">s</span>tring [@@deriving show { with_path = false }]
 
+(**Simple objects of Prolog*)
 <span data-count="48">t</span>ype atom =
   | Name of name
   | Oper of oper
@@ -108,6 +119,7 @@
   | Atom of atom
 [@@deriving show { with_path = false }<span data-count="8">]</span>
 
+(**Structures of Prolog*)
 <span data-count="176">t</span>ype term =
   | Const of const
   | Var of var
