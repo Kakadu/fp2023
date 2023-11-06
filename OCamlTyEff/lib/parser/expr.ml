@@ -63,18 +63,21 @@ let parse_match_cases pexp =
   option () (char '|' *> return ()) (* skip | if there *)
   *> sep_by1 (ws *> char '|' *> ws) parse_case
 
+(** [match E0 with P1 -> E1 | ... | Pn -> En] *)
 let parse_exp_match pexp_match pexp_with =
   lift2
     (fun exp cases -> Exp_match (exp, cases))
     (string "match" *> pexp_match)
     (ws *> string "with" *> ws *> parse_match_cases pexp_with)
 
+(** [fun P1 ... Pn -> E] *)
 let parse_exp_fun pexp =
   lift2
     (fun args exp -> Exp_fun (args, exp))
     (string "fun" *> sep_by1 ws parse_pattern)
     (ws *> string "->" *> pexp)
 
+(** [function P1 -> E1 | ... | Pn -> En] *)
 let parse_exp_function pexp =
   string "function" *> ws *> parse_match_cases pexp
   >>| fun cases -> Exp_function cases

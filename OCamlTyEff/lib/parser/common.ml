@@ -85,6 +85,7 @@ let parse_custom_operator_name =
 (* ======= Value names ======= *)
 
 let is_keyword = function
+  (* https://v2.ocaml.org/releases/5.1/htmlman/lex.html#sss:keywords *)
   | "and"
   | "as"
   | "assert"
