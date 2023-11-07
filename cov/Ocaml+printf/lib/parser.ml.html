@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8"/>
     <title>parser.ml &mdash; Coverage report</title>
-    <meta name="description" content="85.32% coverage in lib/parser.ml">
+    <meta name="description" content="84.92% coverage in lib/parser.ml">
     <link rel="stylesheet" href="../coverage.css"/>
     <script src="../highlight.pack.js"></script>
     <script>hljs.initHighlightingOnLoad();</script>
@@ -15,10 +15,11 @@
           <span class="dirname">lib/</span>parser.ml
         </a>
       </h1>
-      <h2>85.32%</h2>
+      <h2>84.92%</h2>
     </div>
     <div id="navbar">
       <span class="some-visited" style="top:4.09%"></span>
+      <span class="unvisited" style="top:8.64%"></span>
       <span class="unvisited" style="top:14.55%"></span>
       <span class="unvisited" style="top:15.45%"></span>
       <span class="unvisited" style="top:15.91%"></span>
@@ -76,7 +77,7 @@
 <a id="L16"></a><span > </span>
 <a id="L17"></a><span > </span>
 <a id="L18"></a><span > </span>
-<a id="L19"></a><span class="visited"> </span>
+<a id="L19"></a><span class="unvisited"> </span>
 <a id="L20"></a><span class="visited"> </span>
 <a id="L21"></a><span > </span>
 <a id="L22"></a><span > </span>
@@ -511,25 +512,25 @@ open Angstrom
 open Ast
 
 let is_whitespace = function
-  | <span data-count="404">'</span> ' | <span data-count="0">'</span>\t' | <span data-count="28">'</span>\n' | <span data-count="0">'</span>\r' -&gt; true
-  | <span data-count="475">_</span> -&gt; false
+  | <span data-count="371">'</span> ' | <span data-count="0">'</span>\t' | <span data-count="28">'</span>\n' | <span data-count="0">'</span>\r' -&gt; true
+  | <span data-count="440">_</span> -&gt; false
 ;;
 
 let is_low_letter = function
-  | <span data-count="225">'</span>a' .. 'z' -&gt; true
-  | <span data-count="243">_</span> -&gt; false
+  | <span data-count="181">'</span>a' .. 'z' -&gt; true
+  | <span data-count="192">_</span> -&gt; false
 ;;
 
 let is_up_letter = function
-  | <span data-count="1">'</span>A' .. 'Z' -&gt; true
-  | <span data-count="239">_</span> -&gt; false
+  | <span data-count="0">'</span>A' .. 'Z' -&gt; true
+  | <span data-count="190">_</span> -&gt; false
 ;;
 
-let is_letter c = <span data-count="437">i</span>s_low_lette<span data-count="437">r</span> <span data-count="197">c</span> || is_up_letter c
+let is_letter c = <span data-count="347">i</span>s_low_lette<span data-count="347">r</span> <span data-count="157">c</span> || is_up_letter c
 
 let is_digit = function
-  | <span data-count="58">'</span>0' .. '9' -&gt; true
-  | <span data-count="181">_</span> -&gt; false
+  | <span data-count="29">'</span>0' .. '9' -&gt; true
+  | <span data-count="161">_</span> -&gt; false
 ;;
 
 (* maybe not all cases are considered for now *)
@@ -547,40 +548,40 @@ let is_keyword = function
   | <span data-count="0">"</span>rec"
   | <span data-count="2">"</span>then"
   | <span data-count="0">"</span>true" -&gt; true
-  | <span data-count="62">_</span> -&gt; false
+  | <span data-count="52">_</span> -&gt; false
 ;;
 
 let take_whitespaces = take_whil<span data-count="4">e</span> is_whitespace
 let take_whitespaces1 = take_while<span data-count="4">1</span> is_whitespace
-let token = take_while<span data-count="4">1</span> (fun c -&gt; <span data-count="283">i</span>s_lette<span data-count="283">r</span> <span data-count="109">c</span> || is_digi<span data-count="174">t</span> <span data-count="42">c</span> || c = '_<span data-count="4">'</span>)
+let token = take_while<span data-count="4">1</span> (fun c -&gt; <span data-count="233">i</span>s_lette<span data-count="233">r</span> <span data-count="92">c</span> || is_digi<span data-count="141">t</span> <span data-count="19">c</span> || c = '_<span data-count="2">'</span>)
 
 let valname =
   token
   &gt;&gt;<span data-count="4">=</span> (fun s -&gt;
-        <span data-count="36">i</span>f is_keyword s
+        <span data-count="31">i</span>f is_keyword s
         then <span data-count="5">f</span>ail "name of value expected"
-        else <span data-count="31">(</span>
+        else <span data-count="26">(</span>
           match s.[0] with
-          | <span data-count="31">c</span> when (not (is_keywor<span data-count="31">d</span> s)) &amp;&amp; <span data-count="31">(</span>is_low_lette<span data-count="31">r</span> <span data-count="28">c</span> || c = '_<span data-count="3">'</span>) -&gt; <span data-count="31">r</span>eturn s
+          | <span data-count="26">c</span> when (not (is_keywor<span data-count="26">d</span> s)) &amp;&amp; <span data-count="26">(</span>is_low_lette<span data-count="26">r</span> <span data-count="24">c</span> || c = '_<span data-count="2">'</span>) -&gt; <span data-count="26">r</span>eturn s
           | <span data-count="0">_</span> -&gt; fail "name of value expected"))
-  &gt;&gt;<span data-count="4">|</span> fun s -&gt; <span data-count="31">L</span>CIdent s
+  &gt;&gt;<span data-count="4">|</span> fun s -&gt; <span data-count="26">L</span>CIdent s
 ;;
 
-let expr_valname = take_whitespaces *<span data-count="4">&gt;</span> valname &gt;&gt;<span data-count="4">|</span> fun x -&gt; <span data-count="15">E</span>xpr_val x
+let expr_valname = take_whitespaces *<span data-count="4">&gt;</span> valname &gt;&gt;<span data-count="4">|</span> fun x -&gt; <span data-count="10">E</span>xpr_val x
 
 let const_integer =
   token
   &gt;&gt;<span data-count="4">=</span> fun s -&gt;
-  <span data-count="42">l</span>et cons x = <span data-count="25">I</span>nt x in
-  try int_of_string s |&gt; <span data-count="25">c</span>ons |&gt; <span data-count="25">r</span>etur<span data-count="25">n</span> with
-  | <span data-count="17">F</span>ailure _ -&gt; fail "integer expected"
+  <span data-count="33">l</span>et cons x = <span data-count="18">I</span>nt x in
+  try int_of_string s |&gt; <span data-count="18">c</span>ons |&gt; <span data-count="18">r</span>etur<span data-count="18">n</span> with
+  | <span data-count="15">F</span>ailure _ -&gt; fail "integer expected"
 ;;
 
-let expr_integer = take_whitespaces *<span data-count="4">&gt;</span> const_integer &gt;&gt;<span data-count="4">|</span> fun x -&gt; <span data-count="25">E</span>xpr_const x
+let expr_integer = take_whitespaces *<span data-count="4">&gt;</span> const_integer &gt;&gt;<span data-count="4">|</span> fun x -&gt; <span data-count="18">E</span>xpr_const x
 
 (* fails if s with characters after that can be interpreted by OCaml as user-defined operator *)
 let op_parse_helper s =
-  <span data-count="50">l</span>et second_operator_char = function
+  <span data-count="48">l</span>et second_operator_char = function
     | <span data-count="0">'</span>$'
     | <span data-count="0">'</span>&amp;'
     | <span data-count="0">'</span>*'
@@ -599,17 +600,17 @@ let op_parse_helper s =
     | <span data-count="0">'</span>:'
     | <span data-count="0">'</span>?'
     | <span data-count="0">'</span>~' -&gt; true
-    | <span data-count="24">_</span> -&gt; false
+    | <span data-count="21">_</span> -&gt; false
   in
-  strin<span data-count="50">g</span> s *<span data-count="50">&gt;</span> peek_char
+  strin<span data-count="48">g</span> s *<span data-count="48">&gt;</span> peek_char
   &gt;&gt;= function
-  | <span data-count="26">S</span>ome x when second_operator_cha<span data-count="26">r</span> x -&gt; <span data-count="2">f</span>ail "unsopported operator"
-  | <span data-count="24">_</span> -&gt; return ""
+  | <span data-count="23">S</span>ome x when second_operator_cha<span data-count="23">r</span> x -&gt; <span data-count="2">f</span>ail "unsopported operator"
+  | <span data-count="21">_</span> -&gt; return ""
 ;;
 
 let left_bracket = take_whitespaces *<span data-count="4">&gt;</span> cha<span data-count="4">r</span> '('
 let right_bracket = take_whitespaces *<span data-count="4">&gt;</span> cha<span data-count="4">r</span> ')'
-let parenthesis p = <span data-count="4">l</span>eft_bracket *<span data-count="4">&gt;</span> take_whitespaces *<span data-count="4">&gt;</span> p &lt;* right_bracket
+let parenthesis p = <span data-count="2">l</span>eft_bracket *<span data-count="2">&gt;</span> take_whitespaces *<span data-count="2">&gt;</span> p &lt;* right_bracket
 
 let mul =
   take_whitespaces *<span data-count="4">&gt;</span> op_parse_helpe<span data-count="4">r</span> "*" *<span data-count="4">&gt;</span> retur<span data-count="4">n</span> (fun e1 e2 -&gt; <span data-count="4">B</span>in_op (Mul, e1, e2))
@@ -650,8 +651,8 @@ let rel =
 ;;
 
 let keyword s =
-  <span data-count="13">t</span>ake_whitespaces *<span data-count="13">&gt;</span> take_whil<span data-count="13">e</span> (fun c -&gt; <span data-count="128">i</span>s_lette<span data-count="128">r</span> <span data-count="72">c</span> || is_digi<span data-count="56">t</span> <span data-count="16">c</span> || c == '_<span data-count="0">'</span>)
-  &gt;&gt;= fun res -&gt; <span data-count="46">i</span>f res = s then <span data-count="19">r</span>eturn s else <span data-count="27">f</span>ail "keyword expected"
+  <span data-count="10">t</span>ake_whitespaces *<span data-count="10">&gt;</span> take_whil<span data-count="10">e</span> (fun c -&gt; <span data-count="88">i</span>s_lette<span data-count="88">r</span> <span data-count="48">c</span> || is_digi<span data-count="40">t</span> <span data-count="10">c</span> || c == '_<span data-count="0">'</span>)
+  &gt;&gt;= fun res -&gt; <span data-count="35">i</span>f res = s then <span data-count="13">r</span>eturn s else <span data-count="22">f</span>ail "keyword expected"
 ;;
 
 let keyword1 s =
@@ -665,22 +666,22 @@ let chainl1 e op =
 ;;
 
 let unary_op expr_item_parser =
-  <span data-count="3">f</span>ix (fun cur_expr -&gt;
-    <span data-count="3">t</span>ake_whitespaces
-    *&gt; choic<span data-count="3">e</span>
-         [ (op_parse_helpe<span data-count="3">r</span> "+" *<span data-count="3">&gt;</span> cur_expr &gt;&gt;<span data-count="3">|</span> fun e -&gt; <span data-count="4">U</span>n_op (Un_plus, e))
-         ; (op_parse_helpe<span data-count="3">r</span> "-" *<span data-count="3">&gt;</span> cur_expr &gt;&gt;<span data-count="3">|</span> fun e -&gt; <span data-count="2">U</span>n_op (Un_minus, e))
+  <span data-count="2">f</span>ix (fun cur_expr -&gt;
+    <span data-count="2">t</span>ake_whitespaces
+    *&gt; choic<span data-count="2">e</span>
+         [ (op_parse_helpe<span data-count="2">r</span> "+" *<span data-count="2">&gt;</span> cur_expr &gt;&gt;<span data-count="2">|</span> fun e -&gt; <span data-count="2">U</span>n_op (Un_plus, e))
+         ; (op_parse_helpe<span data-count="2">r</span> "-" *<span data-count="2">&gt;</span> cur_expr &gt;&gt;<span data-count="2">|</span> fun e -&gt; <span data-count="1">U</span>n_op (Un_minus, e))
          ; expr_item_parser
          ])
 ;;
 
 let if_then_else expr_item_parser =
-  <span data-count="3">f</span>ix (fun cur_expr -&gt;
-    <span data-count="3">l</span>ift<span data-count="3">3</span>
-      (fun e1 e2 e3 -&gt; <span data-count="4">I</span>TE (e1, e2, e3))
-      (keywor<span data-count="3">d</span> "if" *<span data-count="3">&gt;</span> cur_expr)
-      (keywor<span data-count="3">d</span> "then" *<span data-count="3">&gt;</span> cur_expr)
-      (keywor<span data-count="3">d</span> "else" *<span data-count="3">&gt;</span> cur_expr)
+  <span data-count="2">f</span>ix (fun cur_expr -&gt;
+    <span data-count="2">l</span>ift<span data-count="2">3</span>
+      (fun e1 e2 e3 -&gt; <span data-count="2">I</span>TE (e1, e2, e3))
+      (keywor<span data-count="2">d</span> "if" *<span data-count="2">&gt;</span> cur_expr)
+      (keywor<span data-count="2">d</span> "then" *<span data-count="2">&gt;</span> cur_expr)
+      (keywor<span data-count="2">d</span> "else" *<span data-count="2">&gt;</span> cur_expr)
     &lt;|&gt; expr_item_parser)
 ;;
 
@@ -722,7 +723,7 @@ let program_parser : program t =
   <span data-count="4">m</span>any<span data-count="4">1</span> (empty_decl *<span data-count="4">&gt;</span> decl &lt;<span data-count="4">*</span> empty_decl) &lt;<span data-count="4">*</span> take_whitespaces
 ;;
 
-let parse s = <span data-count="1">p</span>arse_string ~consume:All program_parser s
+let parse_program s = <span data-count="5">p</span>arse_string ~consume:All program_parser s
 </code></pre>
       </div>
     </div>
