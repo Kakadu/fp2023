@@ -55,7 +55,12 @@ let d_sign =
   | Some '+' -> advance 1 *> return '+'
   | Some '-' -> advance 1 *> return '-'
   | Some x when is_digit x -> return '+'
-  | _ -> fail "Incorrect string for digit parsing"
+  | Some er ->
+    fail
+      (String.concat
+         "\""
+         [ "Invalid char "; String.make 1 er; " occured while parsing the digit sign" ])
+  | _ -> fail "Can't parse sign of digit"
 ;;
 
 let digit =
@@ -78,18 +83,49 @@ let str =
   | Some chr when is_string_char chr ->
     advance 1 *> take_while (fun c -> not (is_string_char c))
     >>= fun s -> return (String s) <* char chr
+  | Some er ->
+    fail
+      (String.concat
+         "\""
+         [ "Invalid char "; String.make 1 er; " occured while parsing the string" ])
   | _ -> fail "Can't parse string"
 ;;
 
 (* --- names --- *)
 
+let dot =
+  peek_char
+  >>= function
+  | Some c when c = '.' -> advance 1 *> return true
+  | _ -> return false
+;;
+
 let name =
   (peek_char
    >>= function
    | Some x when is_letter x -> return (String.make 1 x)
-   | _ -> fail "Names must begin with a letter of the Latin alphabet")
+   | Some er ->
+     fail
+       (String.concat
+          "\""
+          [ "Invalid name "
+          ; String.make 1 er
+          ; ". Names must begin with a letter of the Latin alphabet"
+          ])
+   | _ -> fail "Can't parse name")
   *> take_while is_name
-  >>| fun str -> Name str
+;;
+
+let table_name = name >>= fun str -> return (Name str)
+
+(* [table.name] *)
+let column_name =
+  name
+  >>= fun l ->
+  dot
+  >>= function
+  | true -> name >>= fun r -> return (Name (l ^ "." ^ r))
+  | false -> return (Name l)
 ;;
 
 (** --- Bool --- *)
@@ -100,10 +136,11 @@ let bool =
   match String.lowercase_ascii r with
   | "true" -> return (Bool true)
   | "false" -> return (Bool false)
-  | _ -> fail "Can't parse bool"
+  | er ->
+    fail (String.concat "\"" [ "Invalid string "; er; " occured while parsing the bool" ])
 ;;
 
-let value = digit <|> bool <|> name <|> str
+let value = digit <|> bool <|> str <|> column_name
 
 (* --- Spaces --- *)
 let space = skip_while is_space
@@ -132,12 +169,30 @@ let l_not = op "NOT" *> return (fun x -> Unary_operation (Not, x))
 
 (* --- Compare --- *)
 
-let eq = op "=" *> return (fun x y -> Binary_operation (Equal, x, y))
-let neq = (op "!=" <|> op "<>") *> return (fun x y -> Binary_operation (Not_Equal, x, y))
-let gr = op ">" *> return (fun x y -> Binary_operation (Greater_Than, x, y))
-let ls = op "<" *> return (fun x y -> Binary_operation (Less_Than, x, y))
-let greq = op ">=" *> return (fun x y -> Binary_operation (Greater_Than_Or_Equal, x, y))
-let lseq = op "<=" *> return (fun x y -> Binary_operation (Less_Than_Or_Equal, x, y))
+let eq = op "=" *> return (fun x y -> Binary_operation (Compare Equal, x, y))
+
+let neq =
+  (op "!=" <|> op "<>") *> return (fun x y -> Binary_operation (Compare Not_Equal, x, y))
+;;
+
+let gr = op ">" *> return (fun x y -> Binary_operation (Compare Greater_Than, x, y))
+let ls = op "<" *> return (fun x y -> Binary_operation (Compare Less_Than, x, y))
+
+let greq =
+  op ">=" *> return (fun x y -> Binary_operation (Compare Greater_Than_Or_Equal, x, y))
+;;
+
+let lseq =
+  op "<=" *> return (fun x y -> Binary_operation (Compare Less_Than_Or_Equal, x, y))
+;;
+
+(* --- joins --- *)
+
+let join_inner = op "INNER JOIN" *> return Inner
+let join_left = op "LEFT JOIN" *> return Left
+let join_right = op "RIGHT JOIN" *> return Right
+let join_full = (op "FULL JOIN" <|> op "FULL OUTER JOIN") *> return Full
+let joins = join_full <|> join_inner <|> join_left <|> join_right
 
 (* --- Priorities --- *)
 
@@ -153,11 +208,11 @@ let chainl1 e op =
   e >>= fun init -> go init
 ;;
 
-let const (v : value t) = v >>| fun r -> Const r
+let expr_of_value (v : value t) = v >>| fun r -> Const r
 
 let arithm =
   fix (fun ar ->
-    let pars = parens ar <|> const value in
+    let pars = parens ar <|> expr_of_value value in
     let term1 = chainl1 pars ar_pr_high in
     let term2 = chainl1 term1 ar_pr_med in
     chainl1 term2 ar_pr_low)
@@ -173,7 +228,6 @@ let cmp =
 
 (* ### Logic ### *)
 
-(* TODO: NOT PARS *)
 let logic =
   fix (fun logic ->
     let term1 = parens logic <|> bspace cmp in
@@ -181,7 +235,7 @@ let logic =
     chainl1 term2 l_or)
 ;;
 
-(** ### expr ### *)
+(** ### SELECT exprs ### *)
 let expr_p = logic
 
 let select_p =
@@ -191,35 +245,71 @@ let select_p =
         (bspace peek_char
          >>= fun c ->
          match c with
-         | Some '*' -> advance 1 *> return All_Columns
-         | Some _ | None -> fail "Can't parse All Columns")
-      ; (expr_p >>| fun r -> Expr r)
+         | Some '*' -> advance 1 *> return Asterisk
+         | Some _ | None -> fail "Can't parse (*)")
+      ; (expr_p >>| fun r -> Expression r)
       ]
   in
   sep_by1 (bspace (char ',')) choice_pars
 ;;
 
-(* Statements parser*)
-let statement_parser =
-  let string_of_value = function
-    | String x | Name x -> x
-    | _ -> raise (Parse_error "Incorrect table name")
-  in
-  let sfw_pars =
-    bspace (string "SELECT") *> select_p
-    >>= fun exprs ->
-    bspace (string "FROM") *> name
-    >>= fun table_name ->
-    bspace (string "WHERE") *> rspace expr_p
-    >>= fun expr ->
-    return (Select { exprs; table = string_of_value table_name; condition = Some expr })
-  in
-  let sf_pars =
-    bspace (string "SELECT") *> select_p
-    >>= fun exprs ->
-    bspace (string "FROM") *> rspace name
-    >>= fun table_name ->
-    return (Select { exprs; table = string_of_value table_name; condition = None })
-  in
-  choice [ sfw_pars; sf_pars ]
+(* ### JOIN ### *)
+
+let string_of_value_p p =
+  p
+  >>| function
+  | String x | Name x -> x
+  | _ -> raise (Parse_error "Incorrect table name")
+;;
+
+let join_statement =
+  lift3
+    (fun l op r -> { join = op; table_left = l; table_right = r })
+    (string_of_value_p (lspace table_name))
+    (bspace joins)
+    (string_of_value_p (rspace table_name))
+;;
+
+(*ON field1 = field2 *)
+let join_on = op "ON" *> chainl1 (expr_of_value (bspace value)) cmp_op
+let join = join_statement >>= fun st -> join_on >>| fun cmp -> Join (st, cmp)
+
+let string_of_expr = function
+  | Const x -> x
+  | _ -> raise (Parse_error "Incorrect value")
+;;
+
+let string_of_value = function
+  | String x | Name x -> x
+  | _ -> raise (Parse_error "Incorrect table name")
+;;
+
+let from = join <|> (expr_p >>| fun r -> Table (string_of_value (string_of_expr r)))
+
+(* ### Request parser ### *)
+
+(* Optional words parser *)
+let opt_word (w : string) (p : 'a t) =
+  let n = String.length w in
+  peek_string n
+  >>= function
+  | r when r = w -> advance n *> p >>| fun r -> Some r
+  | r when r <> w -> advance n *> return None
+  | _ -> fail (String.concat "\"" [ "Error occured during parsing word "; w; " :<" ])
+;;
+
+let word (w : string) (p : 'a t) =
+  opt_word w p
+  >>= function
+  | Some x -> return x
+  | _ -> fail (String.concat "\"" [ "Can't parse special word "; w; " :<" ])
+;;
+
+let parse =
+  bspace (word "SELECT" (bspace select_p))
+  >>= fun exprs ->
+  bspace (word "FROM" (bspace from))
+  >>= fun from_st ->
+  bspace (opt_word "WHERE" (bspace expr_p))
+  >>= fun expr -> return { select = exprs; from = from_st; where = expr }
 ;;

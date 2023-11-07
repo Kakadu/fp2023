@@ -32,15 +32,14 @@ let assert_raise parser input =
   | _ -> true
 ;;
 
-(* --- Value --- *)
-
 (* String *)
 let%test _ = assert_equal value "\'1a2b3c 7\'" (String "1a2b3c 7")
 let%test _ = assert_equal value "\"1a2b3c 7\"" (String "1a2b3c 7")
 let%test _ = assert_raise value "\"1a2b3c 7\'"
 
 (* Name *)
-let%test _ = assert_equal value "User" (Name "User")
+let%test _ = assert_eq_output show_value value "User" (Name "User")
+let%test _ = assert_equal value "table1.age" (Name "table1.age")
 let%test _ = assert_raise value "1name"
 
 (* Bool *)
@@ -61,6 +60,37 @@ let%test _ = assert_raise value "-12a3"
 
 (* Parens *)
 let%test _ = assert_equal (parens value) "( true)" (Bool true)
+
+(* Join *)
+
+let%test _ =
+  assert_equal
+    join_statement
+    "table1 INNER JOIN table2"
+    { join = Inner; table_left = "table1"; table_right = "table2" }
+;;
+
+let%test _ =
+  assert_equal
+    join_on
+    "ON table1.column_name = table2.column_name"
+    (Binary_operation
+       ( Compare Equal
+       , Const (Name "table1.column_name")
+       , Const (Name "table2.column_name") ))
+;;
+
+let%test _ =
+  assert_equal
+    join
+    "table1 FULL OUTER JOIN table2 ON table1.column_name >= table2.column_name"
+    (Join
+       ( { join = Full; table_left = "table1"; table_right = "table2" }
+       , Binary_operation
+           ( Compare Greater_Than_Or_Equal
+           , Const (Name "table1.column_name")
+           , Const (Name "table2.column_name") ) ))
+;;
 
 (* Arithm *)
 
@@ -128,7 +158,7 @@ let%test _ =
     cmp
     "1 + 1 != 2.5 + 2"
     (Binary_operation
-       ( Not_Equal
+       ( Compare Not_Equal
        , Binary_operation (Add, Const (Digit 1), Const (Digit 1))
        , Binary_operation (Add, Const (Float_Digit 2.5), Const (Digit 2)) ))
 ;;
@@ -138,9 +168,9 @@ let%test _ =
     cmp
     "1 = 2 - 1 = 0 + 1"
     (Binary_operation
-       ( Equal
+       ( Compare Equal
        , Binary_operation
-           ( Equal
+           ( Compare Equal
            , Const (Digit 1)
            , Binary_operation (Substract, Const (Digit 2), Const (Digit 1)) )
        , Binary_operation (Add, Const (Digit 0), Const (Digit 1)) ))
@@ -152,24 +182,43 @@ let%test _ =
     "1 = 2 AND 0 = 1"
     (Binary_operation
        ( And
-       , Binary_operation (Equal, Const (Digit 1), Const (Digit 2))
-       , Binary_operation (Equal, Const (Digit 0), Const (Digit 1)) ))
+       , Binary_operation (Compare Equal, Const (Digit 1), Const (Digit 2))
+       , Binary_operation (Compare Equal, Const (Digit 0), Const (Digit 1)) ))
 ;;
 
 let%test _ =
-  assert_equal
+  assert_eq_output
+    show_expr
     logic
     "\'123\' = 2 AND ID > 1 OR 1 + 1 = 2"
     (Binary_operation
        ( Or
        , Binary_operation
            ( And
-           , Binary_operation (Equal, Const (String "123"), Const (Digit 2))
-           , Binary_operation (Greater_Than, Const (Name "ID"), Const (Digit 1)) )
+           , Binary_operation (Compare Equal, Const (String "123"), Const (Digit 2))
+           , Binary_operation (Compare Greater_Than, Const (Name "ID"), Const (Digit 1))
+           )
        , Binary_operation
-           ( Equal
+           ( Compare Equal
            , Binary_operation (Add, Const (Digit 1), Const (Digit 1))
            , Const (Digit 2) ) ))
+;;
+
+let%test _ =
+  assert_eq_output
+    show_request
+    parse
+    "SELECT name, age, phone_number FROM User WHERE age > 18"
+    { select =
+        [ Expression (Const (Name "name"))
+        ; Expression (Const (Name "age"))
+        ; Expression (Const (Name "phone_number"))
+        ]
+    ; from = Table "User"
+    ; where =
+        Some
+          (Binary_operation (Compare Greater_Than, Const (Name "age"), Const (Digit 18)))
+    }
 ;;
 
 let%test _ = assert_raise arithm "-2 x 2"
