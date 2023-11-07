@@ -22,10 +22,9 @@ WIP
 
     -   [x] integer, char constants
     -   [x] string constants `"helo world"`
-    -   [ ] string constants `{|hello world|}`
-    -   [ ] float constants
-    -   [ ] `()` constant
-    -   [ ] boolean constants
+    -   [x] string constants `{|hello world|}`
+    -   [x] `()` constant
+    -   [x] boolean constants
 
 -   Expressions
 
@@ -33,14 +32,14 @@ WIP
     -   [x] constants
     -   [x] `let .. in` value bindings
     -   [x] `if .. then .. else ..`
-    -   [ ] anonymous functions
-        -   [ ] `fun x y -> ..`
-        -   [ ] `function`
+    -   [x] anonymous functions
+        -   [x] `fun x y -> ..`
+        -   [x] `function`
     -   [x] lists
         -   [x] `[a; b; c]`
         -   [x] `::`, `[]` constructors
     -   [x] `match .. with ..`
-    -   [x] constructors' application (`None`, `Some x`)
+    -   [x] constructors' application `None`, `Some x`, `Cons (hd, tl)`, etc.
     -   [x] tuples `a, b, c`
     -   [x] sequences `a; b; c`
     -   [x] prefix and infix operators
@@ -54,10 +53,10 @@ WIP
     -   [x] constants
     -   [x] tuples `a, b`
     -   [x] or `a | b | c`
-    -   [x] constructors' application `None`, `Some x`, `Cons (hd, tl)`
-    -   [ ] lists
+    -   [x] constructors' application `None`, `Some x`, `Cons (hd, tl)`, etc.
+    -   [x] lists
         -   [x] `::` constructor
-        -   [ ] `[a;b;c]`
+        -   [x] `[a; b; c]`
 
 ### Type checker
 
