@@ -64,6 +64,7 @@ let chainl1 e op =
 (** Types constructor *)
 
 let fint x =  FInt x
+let ffloat x = FFloat x
 let fbool x = FBool x
 let fstring x = FString x
 let fnil = FNil
@@ -86,14 +87,31 @@ let parse_fbool =
 ;;
 
 let parse_fstring =
-  lift
-    (fun s -> fstring s)
-    (quotes @@ take_while (fun c -> not (Char.equal c '"')))
+  lift (fun s -> fstring s)
+  (quotes @@ take_while (fun c -> not (Char.equal c '"')))
+;;
+
+
+let parse_sign_float =
+  choice [ stoken "+" *> return 1.0; stoken "-" *> return (-1.0); return 1.0 ]
+;;
+
+let parse_ffloat =
+  let parse_digit = take_while1 digit in
+  let parse_decimal = stoken "." *> take_while1 digit 
+  in lift3 (fun s int_part fraction_part ->
+    let float_value = float_of_string (int_part ^ "." ^ fraction_part) in
+    ffloat (s *. float_value))
+  parse_sign_float
+  parse_digit
+  parse_decimal
 ;;
 
 let parse_fnil = stoken "[]" *> return fnil
 let parse_funit = stoken "()" *> return funit
-let parse_types = parse_fint <|> parse_fbool <|> parse_fstring <|> parse_fnil <|> parse_funit
+
+let parse_types = parse_ffloat <|> parse_fint <|> parse_fbool <|> parse_fstring <|> parse_fnil <|> parse_funit
+
 
 (** Ident parse *)
 
