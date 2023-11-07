@@ -49,15 +49,22 @@ let take_whitespaces = take_while is_whitespace
 let take_whitespaces1 = take_while1 is_whitespace
 let token = take_while1 (fun c -> is_letter c || is_digit c || c = '_')
 
+let keyword s =
+  take_whitespaces *> token
+  >>= fun res -> if res = s then return s else fail "keyword expected"
+;;
+
+let whitespace1_keyword s =
+  take_whitespaces1 *> token
+  >>= fun res -> if res = s then return s else fail "keyword expected"
+;;
+
 let valname =
   token
   >>= (fun s ->
-        if is_keyword s
-        then fail "name of value expected"
-        else (
-          match s.[0] with
-          | c when (not (is_keyword s)) && (is_low_letter c || c = '_') -> return s
-          | _ -> fail "name of value expected"))
+        match s.[0] with
+        | c when (not (is_keyword s)) && (is_low_letter c || c = '_') -> return s
+        | _ -> fail "name of value expected")
   >>| fun s -> LCIdent s
 ;;
 
@@ -72,6 +79,16 @@ let const_integer =
 ;;
 
 let expr_integer = take_whitespaces *> const_integer >>| fun x -> Expr_const x
+
+let const_bool =
+  token
+  >>= function
+  | "false" -> return (Bool false)
+  | "true" -> return (Bool true)
+  | _ -> fail "Bool constant expected"
+;;
+
+let expr_bool = take_whitespaces *> const_bool >>| fun x -> Expr_const x
 
 (* fails if s with characters after that can be interpreted by OCaml as user-defined operator *)
 let op_parse_helper s =
@@ -144,20 +161,20 @@ let rel =
   choice [ eq; neq; less; leq; gre; geq ]
 ;;
 
-let keyword s =
-  take_whitespaces *> take_while (fun c -> is_letter c || is_digit c || c == '_')
-  >>= fun res -> if res = s then return s else fail "keyword expected"
+let and_op =
+  take_whitespaces *> op_parse_helper "&&" *> return (fun e1 e2 -> Bin_op (And, e1, e2))
 ;;
 
-let keyword1 s =
-  take_whitespaces1 *> take_while (fun c -> is_letter c || is_digit c || c == '_')
-  >>= fun res -> if res = s then return s else fail "keyword expected"
+let or_op =
+  take_whitespaces *> op_parse_helper "||" *> return (fun e1 e2 -> Bin_op (Or, e1, e2))
 ;;
 
 let chainl1 e op =
   let rec go acc = lift2 (fun f x -> f acc x) op e >>= go <|> return acc in
   e >>= fun init -> go init
 ;;
+
+let rec chainr1 e op = e >>= fun a -> op >>= (fun f -> chainr1 e op >>| f a) <|> return a
 
 let unary_op expr_item_parser =
   fix (fun cur_expr ->
@@ -181,12 +198,16 @@ let if_then_else expr_item_parser =
 
 let expr =
   fix (fun cur_expr ->
-    let cur_expr = expr_integer <|> expr_valname <|> parenthesis cur_expr in
+    let cur_expr =
+      choice [ expr_integer; expr_valname; expr_bool; parenthesis cur_expr ]
+    in
     let cur_expr = chainl1 cur_expr (return (fun e1 e2 -> App (e1, e2))) in
     let cur_expr = unary_op cur_expr in
     let cur_expr = chainl1 cur_expr (mul <|> div) in
     let cur_expr = chainl1 cur_expr (add <|> sub) in
     let cur_expr = chainl1 cur_expr rel in
+    let cur_expr = chainr1 cur_expr and_op in
+    let cur_expr = chainr1 cur_expr or_op in
     let cur_expr = if_then_else cur_expr in
     cur_expr)
 ;;
@@ -205,7 +226,7 @@ let decl =
   keyword "let"
   *> lift3
        (fun rec_flag name expr -> Let_decl (rec_flag, name, expr))
-       (option false (keyword1 "rec" >>| fun s -> String.equal s "rec"))
+       (option false (whitespace1_keyword "rec" >>| fun s -> String.equal s "rec"))
        (take_whitespaces1 *> valname)
        (take_whitespaces *> op_parse_helper "=" *> expr <|> take_whitespaces1 *> fun_args)
   <* take_whitespaces
@@ -217,4 +238,4 @@ let program_parser : program t =
   many1 (empty_decl *> decl <* empty_decl) <* take_whitespaces
 ;;
 
-let parse s = parse_string ~consume:All program_parser s
+let parse_program s = parse_string ~consume:All program_parser s
