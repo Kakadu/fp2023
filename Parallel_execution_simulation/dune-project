@@ -2,23 +2,19 @@
 
 (generate_opam_files true)
 
-(cram enable)
-
 (license LGPL-3.0-or-later)
 
-(authors "FIXME Vasya Pupkin")
+(authors "Alexandra Lanovaya")
 
-(maintainers "FIXME Vasya Pupkin")
+(maintainers "https://github.com/ALanovaya")
 
-(bug_reports "FIXME where to put bug reports about the code")
-
-(homepage "FIXME Homepage")
+(homepage "https://github.com/ALanovaya/fp2023")
 
 (package
- (name Lambda) ; FIXME and regenerate .opam file using 'dune build @install'
- (synopsis "FIXME An interpreter for language")
+ (name Parallel_execution_simulation)
+ (synopsis "Parallel execution simulation interpeter")
  (description
-  "FIXME. A longer description, for example, which are the most interesing features being supported, etc.")
+  "Something is supported... but in december...")
  (version 0.1)
  (depends
   dune
@@ -26,9 +22,9 @@
   (ppx_inline_test :with-test)
   ppx_expect
   ppx_deriving
+  ppx_variants_conv
   bisect_ppx
   (odoc :with-doc)
   (ocamlformat :build)
-  ; base
-  ; After adding dependencies to 'dune' files and the same dependecies here too
-  ))
+  base
+ ))
