@@ -76,6 +76,8 @@ type expr =
   | ELet of rec_flag * ty_bind * expr * expr (** Let (x,e,e') is let x = e in e' *)
   | EApp of expr * expr (**  App (f,e) is application f e *)
   | EMatch of expr * (pattern * expr)
+  | EUnit
 [@@deriving show]
 
 type record = ty_bind list [@@deriving show]
+type decl = rec_flag * ty_bind * expr [@@deriving show]
