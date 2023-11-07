@@ -1,3 +1,7 @@
+(** Copyright 2021-2023, ksenmel *)
+
+(** SPDX-License-Identifier: LGPL-3.0-or-later *)
+
 open Angstrom
 open Parser
 
