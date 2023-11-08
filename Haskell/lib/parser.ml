@@ -207,6 +207,9 @@ let pexpr =
     >>= fun then_branch ->
     pexpr >>| fun else_branch -> ExprIf (cond, then_branch, else_branch)
   in
+  let plambda =
+    pstoken "\\" *> lift2 expr_fun (many ppat) (pstoken "->" *> ptoken pexpr)
+  in
   (* let pcase =
      pstoken "case" *> ptoken pexpr
      <* pstoken1 "of"
@@ -219,7 +222,7 @@ let pexpr =
      >>= fun pat -> parse_expr <* space >>| fun result_expr -> pat, result_expr)
      >>| fun branches -> Case (case_expr, branches)
      in *)
-  choice ~failure_msg:"Parsing error: can't parse expressions" [ pif; pebinop ]
+  choice ~failure_msg:"Parsing error: can't parse expressions" [ pif; pebinop; plambda ]
 ;;
 
 let pdecl =
