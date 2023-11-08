@@ -13,7 +13,7 @@ let ptest parser printer s =
 ;;
 
 let%expect_test _ =
-  ptest pexpr pp_expr "1 + 2 - 3 * 4 + (-5) / 6 * 7 - 8 * 9";
+  ptest pexpr pp_expr {|1 + 2 - 3 * 4 + (-5) / 6 * 7 - 8 * 9|};
   [%expect
     {|
       (ExprBinOp (Sub,
@@ -30,7 +30,7 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  ptest pdecl pp_decl "x = (1, 2)";
+  ptest pdecl pp_decl {|x = (1, 2)|};
   [%expect
     {|
     (DeclLet
@@ -38,7 +38,7 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  ptest pdecl pp_decl "fact n = if (n < 2) then 1 else fact (n - 1) * n";
+  ptest pdecl pp_decl {|fact n = if (n < 2) then 1 else fact (n - 1) * n|};
   [%expect
     {| 
     (DeclLet
@@ -55,7 +55,7 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  ptest pdecl pp_decl "x = [1, 2]";
+  ptest pdecl pp_decl {|x = [1, 2]|};
   [%expect
     {|
     (DeclLet
@@ -65,7 +65,7 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  ptest pdecl pp_decl "(x, y, z, (a, b)) = (1, 2, 3, (4, 5))";
+  ptest pdecl pp_decl {|(x, y, z, (a, b)) = (1, 2, 3, (4, 5))|};
   [%expect
     {|
     (DeclLet
@@ -78,7 +78,7 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  ptest pexpr pp_expr "1 : 2 : 3 : [4, 5, 6]";
+  ptest pexpr pp_expr {|1 : 2 : 3 : [4, 5, 6]|};
   [%expect
     {|
     (ExprCons ((ExprLit (LitInt 1)),
@@ -91,4 +91,10 @@ let%expect_test _ =
              ))
           ))
        )) |}]
+;;
+
+let%expect_test _ =
+  ptest plit pp_lit {|"hello "|};
+  [%expect {|
+    (LitString "hello ") |}]
 ;;
