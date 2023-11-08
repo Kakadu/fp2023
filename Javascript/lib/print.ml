@@ -8,6 +8,9 @@ let pp_ok ?(parser) str =
   Format.printf "%a" pp_statement @@ Result.get_ok(parse ?parser str)
 ;;
 
-let pp_error str = match Result.get_error(parse str) with
+let pp_result_error result = match Result.get_error result with
   | `ParsingError s -> Format.eprintf "%s" s
+;;
+
+let pp_error str = pp_result_error @@ parse str
 ;;

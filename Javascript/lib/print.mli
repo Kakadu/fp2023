@@ -3,4 +3,6 @@
 
 val pp_ok: ?parser:Ast.statement Angstrom.t -> string -> unit
 
+val pp_result_error: ('a, [< `ParsingError of string ]) result -> unit
+
 val pp_error: string -> unit
