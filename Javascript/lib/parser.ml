@@ -124,6 +124,7 @@ let some n = Some n
 let number n = Number n
 let const c = Const c
 let var v = Var v
+let expression e = Expression e
 let fun_call name args = FunctionCall(name, args)
 
 let parse_number = 
@@ -173,8 +174,8 @@ let parse_list_of_mini_expressions parsed_list =
     | _ as a -> head @ a in
     (*TODO: think how to replace @ operator and mb rewrite all expr parser*)
   match for_every_op analize_bin_op parsed_list with
-  | [a] -> a
-  | _ -> assert false
+  | [a] -> return a
+  | _ -> fail "fail when parse mini expression"
 (*TODO: error*)
 
 let rec parse_arguments = fun () ->
@@ -182,13 +183,13 @@ let rec parse_arguments = fun () ->
 
 and parse_expression = fun () ->
   fix(fun self ->
-    many(token (choice [
+    many1(token (choice [
       parens self;
       all_op_parser >>| uop;
       parse_number >>| const;
       lift2 fun_call valid_identifier (parse_arguments ());
       valid_identifier >>| var
-    ])) >>| parse_list_of_mini_expressions)
+    ])) >>= parse_list_of_mini_expressions)
    <?> "incorrect expression"
 (*TODO: correct next statement recognise and stop ("let a = 3 + 4 \n 5 + 6") (scan?) (I've tried and failed)*)
   
@@ -230,23 +231,23 @@ and parse_block_or_stm = fun () ->
 
 and if_parser = fun () ->
   token @@ parens (parse_expression ()) >>= fun condition ->
-   parse_block_or_stm () >>= fun then_stm ->
-    ((token_str "else" *> token1(parse_block_or_stm () >>| some)) <|> return None)
+   parse_block_or_stm () <?> "invalid then statement" >>= fun then_stm ->
+    ((token_str "else" *> token1(parse_block_or_stm () >>| some)) <|> return None) <?> "invalid else statement"
      >>| fun else_stm ->
       If (condition, then_stm, else_stm)
 
 and parse_stm = fun () ->
-  token (read_word >>= 
+  token (
+    parse_empty_stm <|>
+    (parse_expression () >>| expression) <|>
+    (read_word >>= 
     (fun word -> match word with
       | "let" | "const" -> token1 @@ var_parser word <?> "wrong var statement"
       | "function" -> token1 @@ func_parser () <?> "wrong function statement"
       | "if" -> token1 @@ if_parser () <?> "wrong if statement"
-      | "return" -> token @@ parse_return <?> "wrong return statement"
-      | _ -> parse_empty_stm <?> "incorrect statement"
-    ) 
-    (* <|> (many any_char >>| (fun a -> DebugStm (chars2string a)))  *)
-    (* For Debug *)
-     <* empty)
+      | "return" -> token parse_return <?> "wrong return statement"
+      | _ -> fail @@ "there is an invalid keyword: \""^word^"\""
+    ))) <* empty <?> "incorrect statement"
 
 and parse_statements stopper =
     many_till (parse_stm ()) stopper
