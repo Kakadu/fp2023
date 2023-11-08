@@ -102,10 +102,8 @@ let pname =
 (* Literals *)
 
 let pint = lit_int <$> ptoken @@ take_while1 is_digit
-
-(*todo: between*)
-let pstring = lit_str <$> ptoken @@ (char '"' *> take_till (Char.equal '"')) <* char '"'
-let pchar = lit_char <$> ptoken @@ (char '\'' *> any_char) <* char '\''
+let pstring = lit_str <$> ptoken @@ between "\"" "\"" (take_till (Char.equal '"'))
+let pchar = lit_char <$> ptoken @@ between "\'" "\'" any_char
 let plit = choice [ pint; pstring; pchar ]
 
 (* Patterns *)
@@ -135,7 +133,9 @@ let ppat =
     | [ x ] -> x
     | elems -> pat_tuple elems
   in
-  choice [ ppnil; pptuple; pplit; ppvar; pwild ]
+  choice
+    ~failure_msg:"Parsing error: can't parse pattern"
+    [ ppnil; pptuple; pplit; ppvar; pwild ]
 ;;
 
 (* Expressions *)
@@ -219,13 +219,13 @@ let pexpr =
      >>= fun pat -> parse_expr <* space >>| fun result_expr -> pat, result_expr)
      >>| fun branches -> Case (case_expr, branches)
      in *)
-  choice [ pif; pebinop ]
+  choice ~failure_msg:"Parsing error: can't parse expressions" [ pif; pebinop ]
 ;;
 
 let pdecl =
   lift2 dec_let (ptoken ppat) (lift2 expr_fun (many ppat) (pstoken "=" *> ptoken pexpr))
-  <* pspaces
+  <* pwspaces
 ;;
 
-let pprog : prog t = many1 (ptoken pdecl <* ptoken @@ many @@ pstoken ";;")
+let pprog : prog t = many1 (ptoken pdecl <* ptoken @@ many @@ take_while1 is_eol)
 let parse s = parse_string ~consume:All pprog s
