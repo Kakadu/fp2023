@@ -98,3 +98,39 @@ let%expect_test _ =
   [%expect {|
     (LitString "hello ") |}]
 ;;
+
+let%expect_test _ =
+  ptest pexpr pp_expr {|\x y z -> x + y + z + 1|};
+  [%expect
+    {|
+    (ExprFunc
+       ((PatVar "x"),
+        (ExprFunc
+           ((PatVar "y"),
+            (ExprFunc
+               ((PatVar "z"),
+                (ExprBinOp (Add,
+                   (ExprBinOp (Add,
+                      (ExprBinOp (Add, (ExprVar "x"), (ExprVar "y"))),
+                      (ExprVar "z"))),
+                   (ExprLit (LitInt 1)))))))))) |}]
+;;
+
+let%expect_test _ =
+  ptest pdecl pp_decl {|fun a b =\x ->\y -> x + y + 1|};
+  [%expect
+    {|
+    (DeclLet
+       ((PatVar "fun"),
+        (ExprFunc
+           ((PatVar "a"),
+            (ExprFunc
+               ((PatVar "b"),
+                (ExprFunc
+                   ((PatVar "x"),
+                    (ExprFunc
+                       ((PatVar "y"),
+                        (ExprBinOp (Add,
+                           (ExprBinOp (Add, (ExprVar "x"), (ExprVar "y"))),
+                           (ExprLit (LitInt 1)))))))))))))) |}]
+;;
