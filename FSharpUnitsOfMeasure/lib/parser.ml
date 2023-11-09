@@ -73,7 +73,7 @@ let funit = FUnit
 (** Types parse *)
 
 let parse_sign =
-  choice [ stoken "+" *> return 1; stoken "-" *> return (-1); stoken "" *> return 1 ]
+  choice [ stoken "+" *> return 1; stoken "-" *> return (-1); stoken "" *> return 1 ] <* take_empty
 ;;
 
 let parse_fint =
@@ -90,7 +90,6 @@ let parse_fstring =
   lift (fun s -> fstring s)
   (quotes @@ take_while (fun c -> not (Char.equal c '"')))
 ;;
-
 
 let parse_sign_float =
   choice [ stoken "+" *> return 1.0; stoken "-" *> return (-1.0); return 1.0 ]
@@ -119,15 +118,31 @@ let parse_id =
   take_empty *> take_while1 ident_symbol
   >>= fun res ->
   if String.length res == 0
-  then fail "Not identifier"
+    then fail "Not identifier"
   else if keywords res
-  then fail "You can not use keywords as vars"
+    then fail "You can not use keywords as vars"
   else if Char.is_digit @@ String.get res 0
-  then fail "Identifier first sumbol is letter, not digit"
+    then fail "Identifier first sumbol is letter, not digit"
+  else if Char.is_uppercase @@ String.get res 0
+    then fail "Identifier first sumbol is not small letter"
   else return res
 ;;
 
-(** Expression constructors *)
+(** Pattern constructor *)
+
+let pwild = PWild
+let pconst x = PConst x
+let pvar x = PVar x
+let ptuple z = PTuple z
+let pcons ht tl = PCons (ht, tl)
+
+(** Pattern parse *)
+
+let parse_pconst = parse_types >>| fun x -> PConst x
+let parse_pvar = parse_id >>| fun x -> PVar x
+let parse_pwild = stoken "_" *> return pwild
+
+(** Expression constructor *)
 
 let eifelse i t e = EIfElse (i, t, e)
 let elet name body = ELet (name, body)
@@ -139,9 +154,9 @@ let evar x = EVar x
 (** Expression parse *)
 
 let parse_evar = evar <$> parse_id
-let parse_etypes = parse_types >>| fun x -> ETypes x
-let parse_arg = many @@ parens_or_not parse_evar
-let parse_arg1 = many1 @@ parens_or_not parse_evar
+let parse_etypes = parse_types >>| fun x -> EConst x
+let parse_arg = many @@ parens_or_not parse_pvar
+let parse_arg1 = many1 @@ parens_or_not parse_pvar
 
 type edispatch =
   {
@@ -157,9 +172,9 @@ type edispatch =
 
 let eifelse i expr = 
   take_empty *> lift3 eifelse
-      (stoken "if" *> i)
-      (stoken "then" *> expr)
-      (stoken "else" *> expr)
+    (stoken "if" *> i)
+    (stoken "then" *> expr)
+    (stoken "else" *> expr)
 ;;
 
 let construct_efun arg body =
@@ -174,15 +189,14 @@ let parse_rec =
 ;;
 
 let eletfun parse_expr =
-  take_empty
-  *> lift4
-        (fun r name arg body ->
-          let body = construct_efun arg body 
-          in if r then eletrec name body else elet name body)
-        parse_rec
-        parse_id
-        parse_arg
-        (stoken "=" *> parse_expr)
+  take_empty *> lift4
+    (fun r name arg body ->
+      let body = construct_efun arg body 
+      in if r then eletrec name body else elet name body)
+    parse_rec
+    parse_id
+    parse_arg
+    (stoken "=" *> parse_expr)
 ;;
 
 (** Binary operations constructors *)
@@ -230,20 +244,20 @@ let parse_binaryop expr =
   in let expr = chainl1 expr lvl3
   in let expr = chainl1 expr lvl4
   in let expr = chainl1 expr lvl5 
-  in chainl1 expr lvl6
+  in chainl1 expr lvl6 <* take_empty
 ;;
 
 let parse_eapp parse_expr =
   take_empty *> lift2
     (fun expr l -> let res = List.fold_left ~f:eapp ~init:expr l 
     in res)
-    parse_expr (many (token1 parse_expr))
+    parse_expr (many (token parse_expr))
 ;;
 
 let pack =
   let etypes _ = parse_etypes 
   in let evar _ = parse_evar 
-  in let lets pack = choice [ pack.elet pack; pack.eletrec pack ] <* take_empty
+  in let lets pack = choice [ pack.elet pack; pack.eletrec pack ]
   in let expression pack = choice 
     [
       lets pack;
