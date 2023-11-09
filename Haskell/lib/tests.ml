@@ -134,3 +134,32 @@ let%expect_test _ =
                            (ExprBinOp (Add, (ExprVar "x"), (ExprVar "y"))),
                            (ExprLit (LitInt 1)))))))))))))) |}]
 ;;
+
+let%expect_test _ =
+  ptest pdecl pp_decl {|f = let x = 3 in let y = 2 in x + y|};
+  [%expect
+    {|
+    (DeclLet
+       ((PatVar "f"),
+        (ExprLet ([((PatVar "x"), (ExprLit (LitInt 3)))],
+           (ExprLet ([((PatVar "y"), (ExprLit (LitInt 2)))],
+              (ExprBinOp (Add, (ExprVar "x"), (ExprVar "y")))))
+           )))) |}]
+;;
+
+let%expect_test _ =
+  ptest pdecl pp_decl {|
+  f = 
+   let x = 3
+       y = 5
+       z = 7
+   in x + y + z |};
+  [%expect
+    {|
+    (DeclLet
+       ((PatVar "f"),
+        (ExprLet ([((PatVar "x"), (ExprLit (LitInt 3)))],
+           (ExprLet ([((PatVar "y"), (ExprLit (LitInt 2)))],
+              (ExprBinOp (Add, (ExprVar "x"), (ExprVar "y")))))
+           )))) |}]
+;;
