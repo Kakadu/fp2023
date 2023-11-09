@@ -28,8 +28,16 @@ type binary_op =
   | Greq (** >= *)
 [@@deriving show { with_path = false }]
 
+type pattern = 
+  | PWild (** _ *)
+  | PConst of types (** constant pattern *)
+  | PVar of id (** varuable pattern*)
+  | PTuple of pattern list (** tuple pattern: (z, v) *)
+  | PCons of pattern * pattern (** hd::tl pattern*)
+[@@deriving show { with_path = false }]
+
 type expression = 
-  | ETypes of types
+  | EConst of types
   | EVar of id
   | EBinaryOp of binary_op
   | EList of expression * expression
@@ -37,6 +45,8 @@ type expression =
   | EApp of expression * expression
   | EIfElse of expression * expression * expression
   | ELet of id * expression
+  | ELetIn of id * expression * expression
   | ELetRec of id * expression
-  | EFun of expression * expression 
+  | ELetRecIn of id * expression * expression
+  | EFun of pattern * expression 
 [@@deriving show { with_path = false }]
