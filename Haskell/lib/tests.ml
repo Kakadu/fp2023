@@ -158,8 +158,11 @@ let%expect_test _ =
     {|
     (DeclLet
        ((PatVar "f"),
-        (ExprLet ([((PatVar "x"), (ExprLit (LitInt 3)))],
-           (ExprLet ([((PatVar "y"), (ExprLit (LitInt 2)))],
-              (ExprBinOp (Add, (ExprVar "x"), (ExprVar "y")))))
+        (ExprLet (
+           [((PatVar "x"), (ExprLit (LitInt 3)));
+             ((PatVar "y"), (ExprLit (LitInt 5)));
+             ((PatVar "z"), (ExprLit (LitInt 7)))],
+           (ExprBinOp (Add, (ExprBinOp (Add, (ExprVar "x"), (ExprVar "y"))),
+              (ExprVar "z")))
            )))) |}]
 ;;

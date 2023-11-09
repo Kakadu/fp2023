@@ -1,12 +1,13 @@
 (library
  (name haskellLib)
  (public_name Haskell.lib)
- (modules Parser Ast)
+ (modules Parser Ast Inferencer Typedtree)
  (libraries base angstrom ppx_show.runtime)
  (instrumentation
   (backend bisect_ppx))
  (preprocess
-  (pps ppx_deriving.show)))
+  (pps ppx_expect ppx_deriving.show))
+  (inline_tests))
 
 (library
  (name tests)
