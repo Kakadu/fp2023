@@ -61,19 +61,14 @@ let parse_white_space = take_while is_whitespace
 let parse_white_space1 = take_while1 is_whitespace
 let parse_token s = parse_white_space *> s
 let parse_token1 s = parse_white_space1 *> s
-let parse_trim s = parse_white_space *> s <* parse_white_space
 let pstrtoken s = parse_white_space *> string s
 let pstrtoken1 s = parse_white_space1 *> string s
 let parens p = pstrtoken "(" *> p <* pstrtoken ")"
-let verticalbar p = pstrtoken "|" *> p
-let parens_or_not p = p <|> parens p
 
 let chainl1 e op =
   let rec go acc = lift2 (fun f x -> f acc x) op e >>= go <|> return acc in
   e >>= fun init -> go init
 ;;
-
-let rec chainr1 e op = e >>= fun a -> op >>= (fun f -> chainr1 e op >>| f a) <|> return a
 
 (* Const parsers *)
 
@@ -81,9 +76,15 @@ let parse_bool =
   string "true" >>| (fun _ -> CBool true) <|> (string "false" >>| fun _ -> CBool false)
 ;;
 
-let parse_pos_int = take_while1 is_digit >>| fun b -> CInt (int_of_string b)
-let parse_neg_int = char '-' *> take_while1 is_digit >>| fun b -> CInt (-int_of_string b)
-let parse_int = parse_pos_int <|> parse_neg_int
+(* let parse_pos_int = take_while1 is_digit >>| fun b -> CInt (int_of_string b)
+   let parse_neg_int = char '-' *> take_while1 is_digit >>| fun b -> CInt (-int_of_string b)
+   let parse_int = parse_pos_int <|> parse_neg_int *)
+
+let parse_int =
+  let ps = parse_token (option "" (pstrtoken "-" <|> pstrtoken "+")) in
+  let pd = take_while1 is_digit in
+  lift2 (fun sign digit -> CInt (Int.of_string @@ sign ^ digit)) ps pd
+;;
 
 let parse_str =
   char '"' *> take_while (fun a -> a != '"') <* char '"' >>| fun a -> CString a
@@ -122,8 +123,8 @@ let parse_var = (fun v -> Var v) <$> p_var
 let parse_tuple parser =
   lift2
     (fun a b -> Tuple (a :: b))
-    (parser <* pstrtoken ",")
-    (sep_by1 (pstrtoken ",") parser)
+    (parse_token @@ parser)
+    (many1 (pstrtoken "," *> parser))
 ;;
 
 let parse_list ps =
@@ -143,10 +144,7 @@ let pack =
     choice [ pack.value pack; pack.list pack; parens @@ pack.tuple pack ]
   in
   let value pack =
-    fix
-    @@ fun _ ->
-    parse_white_space
-    *> (parse_wild <|> parse_Const <|> parse_var <|> parens @@ pack.value pack)
+    fix @@ fun _ -> parse_wild <|> parse_Const <|> parse_var <|> parens @@ pack.value pack
   in
   let tuple pack =
     fix @@ fun _ -> parse_tuple (parse pack <|> parens @@ pack.tuple pack)
@@ -156,7 +154,6 @@ let pack =
 ;;
 
 let pat = pack.pattern pack
-let pargs = choice [ pack.list pack; pack.value pack ]
 
 (* Parse expr *)
 
@@ -167,15 +164,7 @@ let pcomp = pop ">=" GEq <|> pop ">" Gre <|> pop "<=" LEq <|> pop "<" Less
 let peq = pop "=" Eq <|> pop "<>" NEq
 let pconj = pop "&&" And
 let pdisj = pop "||" Or
-let constr_econst e = ConstExpr e
-let constr_ebinop op e1 e2 = BinExpr (op, e1, e2)
-let constr_evar id = VarExpr id
-let constr_elist l = ListExpr l
-let constr_etuple t = TupleExpr t
-let constr_eif e1 e2 e3 = IfExpr (e1, e2, e3)
 let constr_efun pl e = List.fold_right ~init:e ~f:(fun p e -> FunExpr (p, e)) pl
-let constr_elet r f = LetExpr (r, f)
-let constr_ereclet r f = LetRecExpr (r, f)
 let constr_eapp f args = List.fold_left ~init:f ~f:(fun f arg -> AppExpr (f, arg)) args
 let parse_econst = (fun v -> ConstExpr v) <$> parse_const
 let parse_evar = (fun v -> VarExpr v) <$> p_var
@@ -183,14 +172,14 @@ let pfun_args = fix @@ fun p -> many (pack.list pack <|> pack.value pack) <|> pa
 let pfun_args1 = fix @@ fun p -> many1 (pack.list pack <|> pack.value pack) <|> parens p
 
 let parse_list_expr ps =
-  (fun v -> ListExpr v) <$> (pstrtoken "[" *> sep_by1 (pstrtoken ";") ps <* pstrtoken "]")
+  (fun v -> ListExpr v) <$> pstrtoken "[" *> sep_by1 (pstrtoken ";") ps <* pstrtoken "]"
 ;;
 
-let parse_tuple_expr ps =
-  (fun v -> TupleExpr v)
-  <$> (pstrtoken "(" *> sep_by1 (pstrtoken ",") ps
-       <* pstrtoken ")"
-       <|> sep_by1 (pstrtoken ",") ps)
+let parse_tuple_expr parser =
+  lift2
+    (fun a b -> TupleExpr (a :: b))
+    (parser <* pstrtoken ",")
+    (sep_by1 (pstrtoken ",") parser)
 ;;
 
 let plet_body pargs pexpr =
@@ -209,48 +198,59 @@ type edispatch =
   ; let_e : edispatch -> expr t
   ; app_e : edispatch -> expr t
   ; if_e : edispatch -> expr t
-  ; expr : edispatch -> expr t
+  ; expr_parsers : edispatch -> expr t
   }
-
-let parens_only ps = parens @@ choice ps
 
 let pack =
   let expr_parsers pack =
     choice
       [ pack.op_e pack
       ; pack.tuple_e pack
-      ; pack.list_e pack
       ; pack.app_e pack
+      ; pack.list_e pack
+      ; pack.if_e pack
       ; pack.fun_e pack
       ; pack.let_e pack
-      ; pack.if_e pack
       ]
   in
-  let expr pack = expr_parsers pack in
   let const_e pack = fix @@ fun _ -> parse_econst <|> parens @@ pack.const_e pack in
   let var_e pack = fix @@ fun _ -> parse_evar <|> parens @@ pack.var_e pack in
   let value_e pack = fix @@ fun _ -> pack.const_e pack <|> pack.var_e pack in
   let op_parsers pack =
     choice
       [ pack.list_e pack
+      ; pack.let_e pack
       ; pack.app_e pack
-      ; parens_only [ pack.tuple_e pack; pack.op_e pack ]
-      ; pack.var_e pack
-      ; pack.const_e pack
+      ; parens @@ choice [ pack.tuple_e pack; pack.op_e pack ]
+      ; pack.value_e pack
       ]
   in
   let parse_if_state pack =
     pack.op_e pack <|> pack.let_e pack <|> pack.app_e pack <|> pack.if_e pack
   in
-  let list_parsers pack = pack.value_e pack <|> pack.list_e pack <|> pack.tuple_e pack in
+  let list_parsers pack =
+    choice
+      [ pack.op_e pack
+      ; pack.list_e pack
+      ; pack.if_e pack
+      ; pack.app_e pack
+      ; parens @@ choice [ pack.fun_e pack; pack.let_e pack ]
+      ]
+  in
   let tuple_parsers pack =
-    pack.value_e pack <|> pack.list_e pack <|> parens @@ pack.tuple_e pack
+    choice
+      [ pack.op_e pack
+      ; pack.list_e pack
+      ; pack.let_e pack
+      ; pack.app_e pack
+      ; parens @@ choice [ pack.fun_e pack; pack.tuple_e pack; pack.if_e pack ]
+      ]
   in
   let app_args_parsers pack =
     choice
       [ pack.list_e pack
-      ; parens_only
-          [ pack.op_e pack; pack.tuple_e pack; pack.fun_e pack; pack.app_e pack ]
+      ; parens
+        @@ choice [ pack.op_e pack; pack.tuple_e pack; pack.fun_e pack; pack.app_e pack ]
       ; pack.var_e pack
       ; pack.const_e pack
       ]
@@ -263,38 +263,44 @@ let pack =
     let comp = chainl1 add pcomp in
     let eq = chainl1 comp peq in
     let conj = chainl1 eq pconj in
-    chainl1 conj pdisj <|> parens (pack.op_e pack)
+    chainl1 conj pdisj <|> parens (pack.op_e pack) <* parse_white_space
   in
   let if_e pack =
     fix
     @@ fun _ ->
     lift3
-      constr_eif
+      (fun e1 e2 e3 -> IfExpr (e1, e2, e3))
       (pstrtoken "if" *> parse_if_state pack)
-      (pstrtoken1 "then" *> expr pack)
-      (pstrtoken1 "else" *> expr pack)
+      (pstrtoken "then" *> expr_parsers pack)
+      (pstrtoken "else" *> expr_parsers pack)
     <|> parens @@ pack.if_e pack
   in
   let list_e pack =
-    fix @@ fun _ -> parse_list_expr (list_parsers pack <|> parens @@ pack.list_e pack)
+    fix @@ fun _ -> parse_list_expr (list_parsers pack) <|> parens @@ pack.list_e pack
   in
   let tuple_e pack =
-    fix @@ fun _ -> parse_tuple_expr (tuple_parsers pack <|> parens @@ pack.tuple_e pack)
+    fix @@ fun _ -> parse_tuple_expr (tuple_parsers pack) <|> parens @@ pack.tuple_e pack
   in
   let let_e_without_rec pack =
     fix
     @@ fun _ ->
-    lift2 constr_elet (pstrtoken "let" *> p_var) (plet_body pfun_args (expr pack))
+    lift2
+      (fun a b -> LetExpr (a, b))
+      (pstrtoken "let" *> p_var)
+      (plet_body pfun_args (expr_parsers pack))
   in
   let let_e_with_rec pack =
     fix
     @@ fun _ ->
-    lift2 constr_ereclet (pstrtoken "let rec" *> p_var) (plet_body pfun_args (expr pack))
+    lift2
+      (fun a b -> LetRecExpr (a, b))
+      (pstrtoken "let rec" *> p_var)
+      (plet_body pfun_args (expr_parsers pack))
   in
   let fun_e pack =
     fix
     @@ fun _ ->
-    lift2 constr_efun (pstrtoken "fun" *> pfun_args1) (pstrtoken "->" *> expr pack)
+    lift2 constr_efun (pstrtoken "fun" *> pfun_args1) (pstrtoken "->" *> expr_parsers pack)
     <|> parens @@ pack.fun_e pack
   in
   let app_e pack =
@@ -302,7 +308,7 @@ let pack =
     @@ fun _ ->
     lift2
       constr_eapp
-      (pack.var_e pack <|> parens_only [ pack.fun_e pack; pack.app_e pack ])
+      (pack.var_e pack <|> parens @@ choice [ pack.fun_e pack; pack.app_e pack ])
       (many1 (parse_token1 @@ app_args_parsers pack))
     <|> parens @@ pack.app_e pack
   in
@@ -311,12 +317,24 @@ let pack =
     @@ fun _ ->
     let_e_without_rec pack <|> let_e_with_rec pack <|> parens @@ pack.let_e pack
   in
-  { var_e; const_e; op_e; list_e; tuple_e; fun_e; let_e; app_e; value_e; if_e; expr }
+  { var_e
+  ; const_e
+  ; op_e
+  ; list_e
+  ; tuple_e
+  ; fun_e
+  ; let_e
+  ; app_e
+  ; value_e
+  ; if_e
+  ; expr_parsers
+  }
 ;;
 
-let parse = pack.expr pack
+let parse = pack.expr_parsers pack
 
 (* TESTS *)
+
 let start_test parser show input =
   let res = start_parsing parser input in
   match res with
@@ -400,6 +418,10 @@ let%expect_test _ =
   [%expect {| (Var "varn1ame") |}]
 ;;
 
+let parse_pos_int = take_while1 is_digit >>| fun b -> CInt (int_of_string b)
+let parse_neg_int = char '-' *> take_while1 is_digit >>| fun b -> CInt (-int_of_string b)
+let parse_int = parse_pos_int <|> parse_neg_int
+
 let%expect_test _ =
   let test = "1varname" in
   start_test parse_var show_pattern test;
@@ -479,12 +501,43 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
+  let test = "  z <= v  " in
+  start_test parse show_expr test;
+  [%expect {| (BinExpr (LEq, (VarExpr "z"), (VarExpr "v"))) |}]
+;;
+
+let%expect_test _ =
+  let test = "(1+2)+(1*3/3)" in
+  start_test parse show_expr test;
+  [%expect
+    {|
+    (BinExpr (Add, (BinExpr (Add, (ConstExpr (CInt 1)), (ConstExpr (CInt 2)))),
+       (BinExpr (Div,
+          (BinExpr (Mul, (ConstExpr (CInt 1)), (ConstExpr (CInt 3)))),
+          (ConstExpr (CInt 3))))
+       )) |}]
+;;
+
+let%expect_test _ =
   let test = "1 + 3 * 4" in
   start_test parse show_expr test;
   [%expect
     {|
     (BinExpr (Add, (ConstExpr (CInt 1)),
        (BinExpr (Mul, (ConstExpr (CInt 3)), (ConstExpr (CInt 4)))))) |}]
+;;
+
+let%expect_test _ =
+  let test = "f x" in
+  start_test parse show_expr test;
+  [%expect {|
+    (AppExpr ((VarExpr "f"), (VarExpr "x"))) |}]
+;;
+
+let%expect_test _ =
+  let test = "1 * 2  " in
+  start_test parse show_expr test;
+  [%expect {| (BinExpr (Mul, (ConstExpr (CInt 1)), (ConstExpr (CInt 2)))) |}]
 ;;
 
 let%expect_test _ =
@@ -543,4 +596,19 @@ let%expect_test _ =
              ))
           ))
        )) |}]
+;;
+
+let%expect_test _ =
+  let test = "g x 1 [1;2] y z" in
+  start_test parse show_expr test;
+  [%expect
+    {|
+      (AppExpr (
+         (AppExpr (
+            (AppExpr (
+               (AppExpr ((AppExpr ((VarExpr "g"), (VarExpr "x"))),
+                  (ConstExpr (CInt 1)))),
+               (ListExpr [(ConstExpr (CInt 1)); (ConstExpr (CInt 2))]))),
+            (VarExpr "y"))),
+         (VarExpr "z"))) |}]
 ;;
