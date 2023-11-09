@@ -45,12 +45,13 @@ and expr =
   | ExprCons of expr * expr (** List construction [x:xs] *)
   | ExprNil (** Empty list [[]] *)
   | ExprCase of expr * alt list (** Case expression [case (m,ys) of
-                            (0,_)       ->  []
+                          (0,_)       ->  []
                             (_,[])      ->  []
                             (n,x:xs)    ->  x : take (n-1) xs] *)
   | ExprBinOp of bin_op * expr * expr (** Binary operation [a + b] *)
   | ExprUnOp of un_op * expr (** Unary operation [not a] *)
   | ExprLet of binding list * expr (** Local binding [let x = 1 in x + 2] *)
+  | ExprWhere of binding list * expr (** Local binding [where y = 2] *)
 [@@deriving show { with_path = false }]
 
 (** Type representing possible patterns in pattern-matching. *)
@@ -74,9 +75,9 @@ and lit =
 [@@deriving show { with_path = false }]
 
 (** Type representing a single declaration. *)
-and decl = DeclLet of binding  (** Let binding declaration [let x = 5] *)
+and decl = DeclLet of binding  (** Let binding declaration [x = 5] *)
 [@@deriving show { with_path = false }]
 
 (** Type representing a whole program as a series of declarations. *)
-and prog = decl list  (** Series of declarations [let x = 5; let y = 3] *)
+and prog = decl list  (** Series of declarations [x = 5; y = 3] *)
 [@@deriving show { with_path = false }]

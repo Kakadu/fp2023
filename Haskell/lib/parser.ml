@@ -55,8 +55,8 @@ let pwspaces = take_while is_ws
 let pwspaces1 = take_while1 is_ws
 let pspaces = take_while (fun c -> is_ws c || is_eol c)
 let pspaces1 = take_while1 (fun c -> is_ws c || is_eol c)
-let ptoken p = pwspaces *> p
-let ptoken1 p = pwspaces1 *> p
+let ptoken p = pspaces *> p
+let ptoken1 p = pspaces1 *> p
 let pstoken s = ptoken (string s)
 let pstoken1 s = ptoken1 (string s)
 let between l r p = pstoken l *> p <* pstoken r
@@ -74,19 +74,19 @@ let expr_app o1 o2 = ExprApp (o1, o2)
 let expr_cons e1 e2 = ExprCons (e1, e2)
 let expr_list l = List.fold_right (fun e1 e2 -> ExprCons (e1, e2)) l ExprNil
 let expr_nil _ = ExprNil
+let expr_let dl e = ExprLet (dl, e)
 let pat_var pat = PatVar pat
 let pat_lit lit = PatLit lit
 let pat_wild _ = PatWild
 let pat_nil _ = PatNil
 let pat_cons l = List.fold_right (fun e1 e2 -> PatCons (e1, e2)) l PatNil
-
-(* let pat_list l = PatList l *)
 let pat_tuple l = PatTuple l
 let dec_let pat expr = DeclLet (pat, expr)
+let bind p e = p, e
 
 let pname =
-  ptoken
-  @@ lift2
+  pwspaces
+  *> lift2
        (fun hd tl -> String.make 1 hd ^ tl)
        (satisfy (fun ch -> ch = '_' || is_alpha ch))
        (take_while (fun ch ->
@@ -199,30 +199,34 @@ let pexpr =
   let pif =
     pstoken "if" *> pexpr
     <* pstoken1 "then"
-    <* pwspaces1
+    <* pspaces1
     >>= fun cond ->
     pexpr
     <* pstoken1 "else"
-    <* pwspaces1
+    <* pspaces1
     >>= fun then_branch ->
     pexpr >>| fun else_branch -> ExprIf (cond, then_branch, else_branch)
   in
   let plambda =
     pstoken "\\" *> lift2 expr_fun (many ppat) (pstoken "->" *> ptoken pexpr)
   in
-  (* let pcase =
-     pstoken "case" *> ptoken pexpr
-     <* pstoken1 "of"
-     <* pspaces1
-     >>= fun caseexpr ->
-     many1
-     (ppat
-     <* string "->"
-     <* space
-     >>= fun pat -> parse_expr <* space >>| fun result_expr -> pat, result_expr)
-     >>| fun branches -> Case (case_expr, branches)
-     in *)
-  choice ~failure_msg:"Parsing error: can't parse expressions" [ pif; pebinop; plambda ]
+  let plocbind =
+    let pbinds =
+      let pbind =
+        lift2
+          bind
+          (ptoken ppat)
+          (lift2 expr_fun (many ppat) (pstoken "=" *> ptoken pexpr))
+        <* pwspaces
+      in
+      pstoken "let" *> many1 (ptoken pbind <* ptoken @@ many @@ take_while1 is_eol)
+      <* pstoken "in"
+    in
+    lift2 expr_let pbinds pexpr
+  in
+  choice
+    ~failure_msg:"Parsing error: can't parse expression"
+    [ plocbind; pif; pebinop; plambda ]
 ;;
 
 let pdecl =
