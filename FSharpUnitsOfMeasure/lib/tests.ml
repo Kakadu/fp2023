@@ -8,16 +8,26 @@ let parsed_result str parser show =
   | Error e -> Format.printf "%s" e
 ;;
 
-(** Types test*)
+(** Types test *)
 
 let%expect_test _ =
-  parsed_result "777" parse_types show_types;
-  [%expect {| (FInt 777) |}]
+parsed_result "777" parse_types show_types;
+[%expect {| (FInt 777) |}]
 ;;
 
 let%expect_test _ =
-  parsed_result "-777" parse_types show_types;
-  [%expect {| (FInt -777) |}]
+parsed_result "-777" parse_types show_types;
+[%expect {| (FInt -777) |}]
+;;
+
+let%expect_test _ =
+  parsed_result "777.777" parse_types show_types;
+  [%expect {| (FFloat 777.777) |}]
+;;
+
+let%expect_test _ =
+  parsed_result "-777.777" parse_types show_types;
+  [%expect {| (FFloat -777.777) |}]
 ;;
 
 let%expect_test _ =
@@ -45,26 +55,144 @@ let%expect_test _ =
   [%expect {| FNil |}]
 ;;
 
+(** Expressions with binary operations test *)
+
+let%expect_test _ =
+  parsed_result "1 + 2" parse_expression show_expression;
+  [%expect {| (EApp ((EBinaryOp Add), (EApp ((EConst (FInt 1)), (EConst (FInt 2)))))) |}]
+;;
+
+let%expect_test _ =
+  parsed_result "1 - 2" parse_expression show_expression;
+  [%expect {| (EApp ((EBinaryOp Sub), (EApp ((EConst (FInt 1)), (EConst (FInt 2)))))) |}]
+;;
+
+let%expect_test _ =
+  parsed_result "z * v" parse_expression show_expression;
+  [%expect {| (EApp ((EBinaryOp Mul), (EApp ((EVar "z"), (EVar "v"))))) |}]
+;;
+
+let%expect_test _ =
+  parsed_result "z / v" parse_expression show_expression;
+  [%expect {| (EApp ((EBinaryOp Div), (EApp ((EVar "z"), (EVar "v"))))) |}]
+;;
+
+let%expect_test _ =
+  parsed_result "z % v" parse_expression show_expression;
+  [%expect {| (EApp ((EBinaryOp Mod), (EApp ((EVar "z"), (EVar "v"))))) |}]
+;;
+
+let%expect_test _ =
+  parsed_result "z && v" parse_expression show_expression;
+  [%expect {| (EApp ((EBinaryOp And), (EApp ((EVar "z"), (EVar "v"))))) |}]
+;;
+
+let%expect_test _ =
+  parsed_result "z || v" parse_expression show_expression;
+  [%expect {| (EApp ((EBinaryOp Or), (EApp ((EVar "z"), (EVar "v"))))) |}]
+;;
+
+let%expect_test _ =
+  parsed_result "z = v" parse_expression show_expression;
+  [%expect {| (EApp ((EBinaryOp Eq), (EApp ((EVar "z"), (EVar "v"))))) |}]
+;;
+
+let%expect_test _ =
+  parsed_result "z < v" parse_expression show_expression;
+  [%expect {| (EApp ((EBinaryOp Less), (EApp ((EVar "z"), (EVar "v"))))) |}]
+;;
+
+let%expect_test _ =
+  parsed_result "z > v" parse_expression show_expression;
+  [%expect {| (EApp ((EBinaryOp Gre), (EApp ((EVar "z"), (EVar "v"))))) |}]
+;;
+
+let%expect_test _ =
+  parsed_result "z <= v" parse_expression show_expression;
+  [%expect {| (EApp ((EBinaryOp Leq), (EApp ((EVar "z"), (EVar "v"))))) |}]
+;;
+
+let%expect_test _ =
+  parsed_result "z >= v" parse_expression show_expression;
+  [%expect {| (EApp ((EBinaryOp Greq), (EApp ((EVar "z"), (EVar "v"))))) |}]
+;;
+
+let%expect_test _ =
+  parsed_result "1     *    2" parse_expression show_expression;
+  [%expect {| (EApp ((EBinaryOp Mul), (EApp ((EConst (FInt 1)), (EConst (FInt 2)))))) |}]
+;;
+
+let%expect_test _ =
+  parsed_result "1     *    +2" parse_expression show_expression;
+  [%expect {| (EApp ((EBinaryOp Mul), (EApp ((EConst (FInt 1)), (EConst (FInt 2)))))) |}]
+;;
+
+let%expect_test _ =
+  parsed_result "    1     *    +   2    " parse_expression show_expression;
+  [%expect {| (EApp ((EBinaryOp Mul), (EApp ((EConst (FInt 1)), (EConst (FInt 2)))))) |}]
+;;
+
+let%expect_test _ =
+  parsed_result "1     *   -2" parse_expression show_expression;
+  [%expect {| (EApp ((EBinaryOp Mul), (EApp ((EConst (FInt 1)), (EConst (FInt -2)))))) |}]
+;;
+
+let%expect_test _ =
+  parsed_result "1     *   -         2" parse_expression show_expression;
+  [%expect {| (EApp ((EBinaryOp Mul), (EApp ((EConst (FInt 1)), (EConst (FInt -2)))))) |}]
+;;
+
+let%expect_test _ =
+  parsed_result "     1     *   -         2      " parse_expression show_expression;
+  [%expect {| (EApp ((EBinaryOp Mul), (EApp ((EConst (FInt 1)), (EConst (FInt -2)))))) |}]
+;;
+
+let%expect_test _ =
+  parsed_result "z * (v / y)" parse_expression show_expression;
+  [%expect 
+  {| 
+  (EApp ((EBinaryOp Mul),
+     (EApp ((EVar "z"),
+        (EApp ((EBinaryOp Div), (EApp ((EVar "v"), (EVar "y")))))))
+     )) 
+     |}]
+;;
+
+let%expect_test _ =
+  parsed_result "(z && v) || x" parse_expression show_expression;
+  [%expect 
+  {|
+     (EApp ((EBinaryOp Or),
+        (EApp ((EApp ((EBinaryOp And), (EApp ((EVar "z"), (EVar "v"))))),
+           (EVar "x")))
+        )) 
+        |}]
+;;
+
 (** Factorial test *)
 
 let%expect_test _ =
-  parsed_result "let rec fact n = if n = 1 then 1 else n * (fact (n - 1))" parse_expression show_expression;
+  parsed_result "let rec fact n = if n = 1 then 1 else n * (fact ( n - 1 ))" parse_expression show_expression;
   [%expect
   {|
   (ELetRec ("fact",
-     (EFun ((EVar "n"),
+     (EFun ((PVar "n"),
         (EIfElse (
-           (EApp ((EBinaryOp Eq), (EApp ((EVar "n"), (ETypes (FInt 1)))))),
-           (ETypes (FInt 1)),
+           (EApp ((EBinaryOp Eq), (EApp ((EVar "n"), (EConst (FInt 1)))))),
+           (EConst (FInt 1)),
            (EApp ((EBinaryOp Mul),
               (EApp ((EVar "n"),
                  (EApp ((EVar "fact"),
                     (EApp ((EBinaryOp Sub),
-                       (EApp ((EVar "n"), (ETypes (FInt 1))))))
+                       (EApp ((EVar "n"), (EConst (FInt 1))))))
                     ))
                  ))
               ))
            ))
         ))
-     )) |}]
+     )) 
+     |}]
 ;;
+
+
+
