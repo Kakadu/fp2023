@@ -53,16 +53,9 @@ type join_type =
   | Full
 [@@deriving show { with_path = false }]
 
-type join_statement =
-  { join : join_type
-  ; table_left : name
-  ; table_right : name
-  }
-[@@deriving show { with_path = false }]
-
 type from_statement =
   | Table of name
-  | Join of join_statement * expr
+  | Join of join_type * from_statement * name * expr (* {<table1> | JOIN} JOIN <table1> ON <expr> *)
 [@@deriving show { with_path = false }]
 
 type request =

@@ -43,7 +43,7 @@ answer is correct
     [(Expression (Const (Name "table1.name")));
       (Expression (Const (Name "table2.age")))];
     from =
-    (Join ({ join = Full; table_left = "table1"; table_right = "table2" },
+    (Join (Full, (Table "table1"), "table2",
        (Binary_operation ((Compare Equal), (Const (Name "table1.ID")),
           (Const (Name "table2.ID"))))
        ));

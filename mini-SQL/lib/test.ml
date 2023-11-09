@@ -65,31 +65,9 @@ let%test _ = assert_equal (parens value) "( true)" (Bool true)
 
 let%test _ =
   assert_equal
-    join_statement
-    "table1 INNER JOIN table2"
-    { join = Inner; table_left = "table1"; table_right = "table2" }
-;;
-
-let%test _ =
-  assert_equal
-    join_on
-    "ON table1.column_name = table2.column_name"
-    (Binary_operation
-       ( Compare Equal
-       , Const (Name "table1.column_name")
-       , Const (Name "table2.column_name") ))
-;;
-
-let%test _ =
-  assert_equal
     join
     "table1 FULL OUTER JOIN table2 ON table1.column_name >= table2.column_name"
-    (Join
-       ( { join = Full; table_left = "table1"; table_right = "table2" }
-       , Binary_operation
-           ( Compare Greater_Than_Or_Equal
-           , Const (Name "table1.column_name")
-           , Const (Name "table2.column_name") ) ))
+    (Join (Full, Table "table1", "table2", Binary_operation (Compare Greater_Than_Or_Equal, Const (Name "table1.column_name" ), Const (Name "table2.column_name" ))))
 ;;
 
 (* Arithm *)

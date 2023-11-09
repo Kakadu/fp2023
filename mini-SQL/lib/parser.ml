@@ -38,6 +38,17 @@ let is_condition_op = function
   | _ -> false
 ;;
 
+let expr_of_value (v : value) = Const v
+
+let string_of_value = function
+  | String x | Name x -> x
+  | _ -> raise (Parse_error "Incorrect table name")
+;;
+let value_of_expr = function
+  | Const x -> x
+  | _ -> raise (Parse_error "Incorrect value")
+;;
+
 (* #### Basic parsers ### *)
 
 (* --- nums --- *)
@@ -208,11 +219,9 @@ let chainl1 e op =
   e >>= fun init -> go init
 ;;
 
-let expr_of_value (v : value t) = v >>| fun r -> Const r
-
 let arithm =
   fix (fun ar ->
-    let pars = parens ar <|> expr_of_value value in
+    let pars = parens ar <|> (value >>| expr_of_value) in
     let term1 = chainl1 pars ar_pr_high in
     let term2 = chainl1 term1 ar_pr_med in
     chainl1 term2 ar_pr_low)
@@ -255,36 +264,18 @@ let select_p =
 
 (* ### JOIN ### *)
 
-let string_of_value_p p =
-  p
-  >>| function
-  | String x | Name x -> x
-  | _ -> raise (Parse_error "Incorrect table name")
-;;
+let on_p = op "ON" *> chainl1 ((bspace value) >>| expr_of_value) cmp_op
 
-let join_statement =
-  lift3
-    (fun l op r -> { join = op; table_left = l; table_right = r })
-    (string_of_value_p (lspace table_name))
+let join =
+  lift4
+    (fun l op r ex -> Join (op, l, r, ex))
+    ((lspace table_name) >>| string_of_value >>| fun x -> Table x)
     (bspace joins)
-    (string_of_value_p (rspace table_name))
+    ((rspace table_name) >>| string_of_value)
+    (rspace on_p)
 ;;
 
-(*ON field1 = field2 *)
-let join_on = op "ON" *> chainl1 (expr_of_value (bspace value)) cmp_op
-let join = join_statement >>= fun st -> join_on >>| fun cmp -> Join (st, cmp)
-
-let string_of_expr = function
-  | Const x -> x
-  | _ -> raise (Parse_error "Incorrect value")
-;;
-
-let string_of_value = function
-  | String x | Name x -> x
-  | _ -> raise (Parse_error "Incorrect table name")
-;;
-
-let from = join <|> (expr_p >>| fun r -> Table (string_of_value (string_of_expr r)))
+let from = join <|> (expr_p >>| fun r -> Table (string_of_value (value_of_expr r)))
 
 (* ### Request parser ### *)
 
