@@ -151,19 +151,19 @@ let ppattern =
   in
   let ppt =
     lift2
-      (fun p ps ->
+      (fun p1 ps ->
         match ps with
-        | [] -> p
-        | _ -> PCons (p :: ps))
+        | h :: tl -> PCons (p1, h, tl)
+        | _ -> p1)
       ppt
       (many (pstoken "::" *> ppt))
   in
   let ppt =
     lift2
-      (fun p ps ->
+      (fun p1 ps ->
         match ps with
-        | [] -> p
-        | _ -> POr (p :: ps))
+        | h :: tl -> POr (p1, h, tl)
+        | _ -> p1)
       ppt
       (many (pstoken "|" *> ppt))
   in
@@ -207,11 +207,13 @@ let pexpr =
   let pe = plbinop pe (padd <|> psub) in
   let pe = plbinop pe (choice [ peq; pneq; ples; pleq; pgre; pgeq ]) in
   let pe =
-    sep_by1 (pstoken ",") pe
-    >>| fun x ->
-    match x with
-    | e :: [] -> e
-    | _ -> ETuple x
+    lift2
+      (fun e1 es ->
+        match es with
+        | h :: tl -> ETuple (e1, h, tl)
+        | _ -> e1)
+      pe
+      (many (pstoken "," *> pe))
   in
   choice [ plet pexpr; pbranch pexpr; pmatch pexpr; pe ]
 ;;

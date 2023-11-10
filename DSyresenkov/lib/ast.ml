@@ -34,8 +34,8 @@ type pattern =
   | PEmpty (** | [] -> ... *)
   | PConst of const (** | const -> ... *)
   | PVar of id (** | varname -> ... *)
-  | PCons of pattern list (** | p1 :: p2 -> ... *)
-  | POr of pattern list (** | p1 | p2 | p3 -> ... *)
+  | PCons of pattern * pattern * pattern list (** | p1 :: p2 -> ... *)
+  | POr of pattern * pattern * pattern list (** | p1 | p2 | p3 -> ... *)
 [@@deriving show { with_path = false }]
 
 type is_rec =
@@ -48,8 +48,9 @@ type expr =
   | EConst of const (** Consts *)
   | EVar of id (** Variables with their names *)
   | EBinop of binop * expr * expr (** e1 binop e2 *)
-  | ETuple of expr list (** Tuples of 2 or more elements, separeted by ',' *)
-  | EList of expr list (** Lists [1; 2; 3], ...*)
+  | ETuple of expr * expr * expr list
+  (** Tuples of 2 or more elements, separeted by ',' *)
+  | EList of expr list (** Lists [1; 2; 3], ... *)
   | EBranch of expr * expr * expr (** if [cond] then [a] else [b] *)
   | EMatch of expr * (pattern * expr) list (** match [x] with | [p1] -> [e1] | ... *)
   | ELet of is_rec * id * expr * expr (** let rec f *)
