@@ -58,17 +58,39 @@ let%test _ = assert_equal value "10.015" (Float_Digit 10.015)
 let%test _ = assert_equal value "8." (Float_Digit 8.)
 let%test _ = assert_raise value "-12a3"
 
-(* Parens *)
-let%test _ = assert_equal (parens value) "( true)" (Bool true)
-
 (* Join *)
 
 let%test _ =
   assert_equal
     join
     "table1 FULL OUTER JOIN table2 ON table1.column_name >= table2.column_name"
-    (Join (Full, Table "table1", "table2", Binary_operation (Compare Greater_Than_Or_Equal, Const (Name "table1.column_name" ), Const (Name "table2.column_name" ))))
+    (Join {jtype = Full; left = Table "table1"; table = "table2"; on = (Binary_operation (Greater_Than_Or_Equal, Const (Name "table1.column_name" ), Const (Name "table2.column_name" )))})
 ;;
+
+let%test _ = 
+  assert_raise
+  on_p
+  "ON table1+table2"
+
+  let%test _ =
+  assert_equal
+    join
+    "(table1 FULL OUTER JOIN table2 ON table1.column_name >= table2.column_name) INNER JOIN table3 ON table2.column_name = table3.column_name"
+    (Join {jtype = Inner;
+    left =
+    Join {jtype = Full; left = (Table "table1"); table = "table2";
+      on =
+      (Binary_operation (Greater_Than_Or_Equal,
+         (Const (Name "table1.column_name")),
+         (Const (Name "table2.column_name"))))};
+    table = "table3";
+    on =
+    (Binary_operation (Equal, (Const (Name "table2.column_name")),
+       (Const (Name "table3.column_name"))))})
+;;
+
+let%test _ = assert_equal on_p "ON table1=table2" (Binary_operation(Equal, Const (Name "table1"), Const (Name "table2")))
+
 
 (* Arithm *)
 
@@ -136,7 +158,7 @@ let%test _ =
     cmp
     "1 + 1 != 2.5 + 2"
     (Binary_operation
-       ( Compare Not_Equal
+       ( Not_Equal
        , Binary_operation (Add, Const (Digit 1), Const (Digit 1))
        , Binary_operation (Add, Const (Float_Digit 2.5), Const (Digit 2)) ))
 ;;
@@ -146,9 +168,9 @@ let%test _ =
     cmp
     "1 = 2 - 1 = 0 + 1"
     (Binary_operation
-       ( Compare Equal
+       ( Equal
        , Binary_operation
-           ( Compare Equal
+           ( Equal
            , Const (Digit 1)
            , Binary_operation (Substract, Const (Digit 2), Const (Digit 1)) )
        , Binary_operation (Add, Const (Digit 0), Const (Digit 1)) ))
@@ -160,8 +182,8 @@ let%test _ =
     "1 = 2 AND 0 = 1"
     (Binary_operation
        ( And
-       , Binary_operation (Compare Equal, Const (Digit 1), Const (Digit 2))
-       , Binary_operation (Compare Equal, Const (Digit 0), Const (Digit 1)) ))
+       , Binary_operation (Equal, Const (Digit 1), Const (Digit 2))
+       , Binary_operation (Equal, Const (Digit 0), Const (Digit 1)) ))
 ;;
 
 let%test _ =
@@ -173,11 +195,11 @@ let%test _ =
        ( Or
        , Binary_operation
            ( And
-           , Binary_operation (Compare Equal, Const (String "123"), Const (Digit 2))
-           , Binary_operation (Compare Greater_Than, Const (Name "ID"), Const (Digit 1))
+           , Binary_operation (Equal, Const (String "123"), Const (Digit 2))
+           , Binary_operation (Greater_Than, Const (Name "ID"), Const (Digit 1))
            )
        , Binary_operation
-           ( Compare Equal
+           ( Equal
            , Binary_operation (Add, Const (Digit 1), Const (Digit 1))
            , Const (Digit 2) ) ))
 ;;
@@ -195,7 +217,7 @@ let%test _ =
     ; from = Table "User"
     ; where =
         Some
-          (Binary_operation (Compare Greater_Than, Const (Name "age"), Const (Digit 18)))
+          (Binary_operation (Greater_Than, Const (Name "age"), Const (Digit 18)))
     }
 ;;
 

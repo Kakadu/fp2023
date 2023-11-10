@@ -27,12 +27,12 @@ answer is correct
     where =
     (Some (Binary_operation (And,
              (Binary_operation (Or,
-                (Binary_operation ((Compare Equal), (Const (Name "age")),
+                (Binary_operation (Equal, (Const (Name "age")),
                    (Const (Digit 25)))),
-                (Binary_operation ((Compare Equal), (Const (Name "age")),
+                (Binary_operation (Equal, (Const (Name "age")),
                    (Const (Digit 27))))
                 )),
-             (Binary_operation ((Compare Greater_Than), (Const (Name "ID")),
+             (Binary_operation (Greater_Than, (Const (Name "ID")),
                 (Const (Digit 10))))
              )))
     }
@@ -43,11 +43,34 @@ answer is correct
     [(Expression (Const (Name "table1.name")));
       (Expression (Const (Name "table2.age")))];
     from =
-    (Join (Full, (Table "table1"), "table2",
-       (Binary_operation ((Compare Equal), (Const (Name "table1.ID")),
-          (Const (Name "table2.ID"))))
-       ));
+    Join {jtype = Full; left = (Table "table1"); table = "table2";
+      on =
+      (Binary_operation (Equal, (Const (Name "table1.ID")),
+         (Const (Name "table2.ID"))))};
     where =
-    (Some (Binary_operation ((Compare Greater_Than),
-             (Const (Name "table2.age")), (Const (Digit 10)))))
+    (Some (Binary_operation (Greater_Than, (Const (Name "table2.age")),
+             (Const (Digit 10)))))
+    }
+
+  $ ./demoParse.exe <<-EOF
+  > SELECT (Company.name), (Trip.town_from) , Trip.town_to, Pass_in_trip.place FROM ((Company INNER JOIN Trip ON Company.id=Trip.company) INNER JOIN Pass_in_trip ON Trip.id = Pass_in_trip.trip) WHERE Company.id > 0
+  Parse result: { select =
+    [(Expression (Const (Name "Company.name")));
+      (Expression (Const (Name "Trip.town_from")));
+      (Expression (Const (Name "Trip.town_to")));
+      (Expression (Const (Name "Pass_in_trip.place")))];
+    from =
+    Join {jtype = Inner;
+      left =
+      Join {jtype = Inner; left = (Table "Company"); table = "Trip";
+        on =
+        (Binary_operation (Equal, (Const (Name "Company.id")),
+           (Const (Name "Trip.company"))))};
+      table = "Pass_in_trip";
+      on =
+      (Binary_operation (Equal, (Const (Name "Trip.id")),
+         (Const (Name "Pass_in_trip.trip"))))};
+    where =
+    (Some (Binary_operation (Greater_Than, (Const (Name "Company.id")),
+             (Const (Digit 0)))))
     }

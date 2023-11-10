@@ -180,21 +180,21 @@ let l_not = op "NOT" *> return (fun x -> Unary_operation (Not, x))
 
 (* --- Compare --- *)
 
-let eq = op "=" *> return (fun x y -> Binary_operation (Compare Equal, x, y))
+let eq = op "=" *> return (fun x y -> Binary_operation (Equal, x, y))
 
 let neq =
-  (op "!=" <|> op "<>") *> return (fun x y -> Binary_operation (Compare Not_Equal, x, y))
+  (op "!=" <|> op "<>") *> return (fun x y -> Binary_operation (Not_Equal, x, y))
 ;;
 
-let gr = op ">" *> return (fun x y -> Binary_operation (Compare Greater_Than, x, y))
-let ls = op "<" *> return (fun x y -> Binary_operation (Compare Less_Than, x, y))
+let gr = op ">" *> return (fun x y -> Binary_operation (Greater_Than, x, y))
+let ls = op "<" *> return (fun x y -> Binary_operation (Less_Than, x, y))
 
 let greq =
-  op ">=" *> return (fun x y -> Binary_operation (Compare Greater_Than_Or_Equal, x, y))
+  op ">=" *> return (fun x y -> Binary_operation (Greater_Than_Or_Equal, x, y))
 ;;
 
 let lseq =
-  op "<=" *> return (fun x y -> Binary_operation (Compare Less_Than_Or_Equal, x, y))
+  op "<=" *> return (fun x y -> Binary_operation (Less_Than_Or_Equal, x, y))
 ;;
 
 (* --- joins --- *)
@@ -264,18 +264,20 @@ let select_p =
 
 (* ### JOIN ### *)
 
+(* pars "ON table1 <cmp> table2" *)
 let on_p = op "ON" *> chainl1 ((bspace value) >>| expr_of_value) cmp_op
 
 let join =
-  lift4
-    (fun l op r ex -> Join (op, l, r, ex))
-    ((lspace table_name) >>| string_of_value >>| fun x -> Table x)
-    (bspace joins)
-    ((rspace table_name) >>| string_of_value)
-    (rspace on_p)
+  fix (fun join -> 
+    lift4
+  (fun l op r ex -> Join { jtype = op; left = l; table = r; on = ex })
+  (bspace (parens join) <|> ((lspace table_name) >>| string_of_value >>| fun x -> Table x))
+  (bspace joins)
+  ((rspace table_name) >>| string_of_value)
+  (rspace on_p))
 ;;
 
-let from = join <|> (expr_p >>| fun r -> Table (string_of_value (value_of_expr r)))
+let from = (parens join) <|> join <|> (expr_p >>| fun r -> Table (string_of_value (value_of_expr r)))
 
 (* ### Request parser ### *)
 
@@ -298,9 +300,9 @@ let word (w : string) (p : 'a t) =
 
 let parse =
   bspace (word "SELECT" (bspace select_p))
-  >>= fun exprs ->
+  >>= fun s_expr ->
   bspace (word "FROM" (bspace from))
-  >>= fun from_st ->
+  >>= fun f_st ->
   bspace (opt_word "WHERE" (bspace expr_p))
-  >>= fun expr -> return { select = exprs; from = from_st; where = expr }
+  >>= fun w_expr -> return { select = s_expr; from = f_st; where = w_expr }
 ;;
