@@ -151,7 +151,7 @@ let bool =
     fail (String.concat "\"" [ "Invalid string "; er; " occured while parsing the bool" ])
 ;;
 
-let value = digit <|> bool <|> str <|> column_name
+let value_p = digit <|> bool <|> str <|> column_name
 
 (* --- Spaces --- *)
 let space = skip_while is_space
@@ -219,9 +219,9 @@ let chainl1 e op =
   e >>= fun init -> go init
 ;;
 
-let arithm =
+let arithm_p =
   fix (fun ar ->
-    let pars = parens ar <|> (value >>| expr_of_value) in
+    let pars = parens ar <|> (value_p >>| expr_of_value) in
     let term1 = chainl1 pars ar_pr_high in
     let term2 = chainl1 term1 ar_pr_med in
     chainl1 term2 ar_pr_low)
@@ -229,23 +229,24 @@ let arithm =
 
 (*### Compare ###*)
 
-let cmp =
+let cmp_p =
   fix (fun cmp ->
-    let pars = parens cmp <|> bspace arithm in
+    let pars = parens cmp <|> bspace arithm_p in
     chainl1 pars cmp_op)
 ;;
 
 (* ### Logic ### *)
 
-let logic =
-  fix (fun logic ->
-    let term1 = parens logic <|> bspace cmp in
+let logic_p =
+  fix (fun logic -> 
+    let not = l_not <* space <*> logic in not <|>
+    (let term1 = parens logic <|> bspace cmp_p in
     let term2 = chainl1 term1 l_and in
-    chainl1 term2 l_or)
+    chainl1 term2 l_or))
 ;;
 
 (** ### SELECT exprs ### *)
-let expr_p = logic
+let expr_p = logic_p
 
 let select_p =
   let choice_pars =
@@ -265,9 +266,9 @@ let select_p =
 (* ### JOIN ### *)
 
 (* pars "ON table1 <cmp> table2" *)
-let on_p = op "ON" *> chainl1 ((bspace value) >>| expr_of_value) cmp_op
+let on_p = op "ON" *> chainl1 ((bspace value_p) >>| expr_of_value) cmp_op
 
-let join =
+let join_p =
   fix (fun join -> 
     lift4
   (fun l op r ex -> Join { jtype = op; left = l; table = r; on = ex })
@@ -277,18 +278,16 @@ let join =
   (rspace on_p))
 ;;
 
-let from = (parens join) <|> join <|> (expr_p >>| fun r -> Table (string_of_value (value_of_expr r)))
+let from_p = (parens join_p) <|> join_p <|> (expr_p >>| fun r -> Table (string_of_value (value_of_expr r)))
 
 (* ### Request parser ### *)
 
 (* Optional words parser *)
 let opt_word (w : string) (p : 'a t) =
-  let n = String.length w in
-  peek_string n
+ take_while (fun c -> not (is_space c))
   >>= function
-  | r when r = w -> advance n *> p >>| fun r -> Some r
-  | r when r <> w -> advance n *> return None
-  | _ -> fail (String.concat "\"" [ "Error occured during parsing word "; w; " :<" ])
+  | r when r = w -> p >>| fun r -> Some r
+  | _ -> return None
 ;;
 
 let word (w : string) (p : 'a t) =
@@ -301,7 +300,7 @@ let word (w : string) (p : 'a t) =
 let parse =
   bspace (word "SELECT" (bspace select_p))
   >>= fun s_expr ->
-  bspace (word "FROM" (bspace from))
+  bspace (word "FROM" (bspace from_p))
   >>= fun f_st ->
   bspace (opt_word "WHERE" (bspace expr_p))
   >>= fun w_expr -> return { select = s_expr; from = f_st; where = w_expr }

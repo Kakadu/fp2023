@@ -1,14 +1,14 @@
 (** SQL-values parser *)
-val value : Ast.value Angstrom.t
+val value_p : Ast.value Angstrom.t
 
 (** Arithm epxprs parser *)
-val arithm : Ast.expr Angstrom.t
+val arithm_p : Ast.expr Angstrom.t
 
 (** Compare expressions parser *)
-val cmp : Ast.expr Angstrom.t
+val cmp_p : Ast.expr Angstrom.t
 
 (** Logic expressions parser *)
-val logic : Ast.expr Angstrom.t
+val logic_p : Ast.expr Angstrom.t
 
 (** Expressions parser *)
 val expr_p : Ast.expr Angstrom.t
@@ -20,10 +20,10 @@ val select_p : Ast.select_statement list Angstrom.t
 val on_p : Ast.expr Angstrom.t
 
 (** JOIN-statement parser *)
-val join : Ast.from_statement Angstrom.t
+val join_p : Ast.from_statement Angstrom.t
 
 (** FROM-statement parser *)
-val from : Ast.from_statement Angstrom.t
+val from_p : Ast.from_statement Angstrom.t
 
 (** SQL-statements parser *)
 val parse : Ast.request Angstrom.t

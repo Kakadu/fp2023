@@ -33,36 +33,36 @@ let assert_raise parser input =
 ;;
 
 (* String *)
-let%test _ = assert_equal value "\'1a2b3c 7\'" (String "1a2b3c 7")
-let%test _ = assert_equal value "\"1a2b3c 7\"" (String "1a2b3c 7")
-let%test _ = assert_raise value "\"1a2b3c 7\'"
+let%test _ = assert_equal value_p "\'1a2b3c 7\'" (String "1a2b3c 7")
+let%test _ = assert_equal value_p "\"1a2b3c 7\"" (String "1a2b3c 7")
+let%test _ = assert_raise value_p "\"1a2b3c 7\'"
 
 (* Name *)
-let%test _ = assert_eq_output show_value value "User" (Name "User")
-let%test _ = assert_equal value "table1.age" (Name "table1.age")
-let%test _ = assert_raise value "1name"
+let%test _ = assert_eq_output show_value value_p "User" (Name "User")
+let%test _ = assert_equal value_p "table1.age" (Name "table1.age")
+let%test _ = assert_raise value_p "1name"
 
 (* Bool *)
-let%test _ = assert_equal value "True" (Bool true)
-let%test _ = assert_equal value "true" (Bool true)
-let%test _ = assert_equal value "False" (Bool false)
-let%test _ = assert_equal value "false" (Bool false)
+let%test _ = assert_equal value_p "True" (Bool true)
+let%test _ = assert_equal value_p "true" (Bool true)
+let%test _ = assert_equal value_p "False" (Bool false)
+let%test _ = assert_equal value_p "false" (Bool false)
 
 (* Digit *)
-let%test _ = assert_equal value "10" (Digit 10)
-let%test _ = assert_equal value "+10" (Digit 10)
-let%test _ = assert_equal value "-10" (Digit (-10))
-let%test _ = assert_equal value "+10.5" (Float_Digit 10.5)
-let%test _ = assert_equal value "-10.0000" (Float_Digit (-10.0))
-let%test _ = assert_equal value "10.015" (Float_Digit 10.015)
-let%test _ = assert_equal value "8." (Float_Digit 8.)
-let%test _ = assert_raise value "-12a3"
+let%test _ = assert_equal value_p "10" (Digit 10)
+let%test _ = assert_equal value_p "+10" (Digit 10)
+let%test _ = assert_equal value_p "-10" (Digit (-10))
+let%test _ = assert_equal value_p "+10.5" (Float_Digit 10.5)
+let%test _ = assert_equal value_p "-10.0000" (Float_Digit (-10.0))
+let%test _ = assert_equal value_p "10.015" (Float_Digit 10.015)
+let%test _ = assert_equal value_p "8." (Float_Digit 8.)
+let%test _ = assert_raise value_p "-12a3"
 
 (* Join *)
 
 let%test _ =
   assert_equal
-    join
+    join_p
     "table1 FULL OUTER JOIN table2 ON table1.column_name >= table2.column_name"
     (Join {jtype = Full; left = Table "table1"; table = "table2"; on = (Binary_operation (Greater_Than_Or_Equal, Const (Name "table1.column_name" ), Const (Name "table2.column_name" )))})
 ;;
@@ -74,7 +74,7 @@ let%test _ =
 
   let%test _ =
   assert_equal
-    join
+    join_p
     "(table1 FULL OUTER JOIN table2 ON table1.column_name >= table2.column_name) INNER JOIN table3 ON table2.column_name = table3.column_name"
     (Join {jtype = Inner;
     left =
@@ -92,50 +92,50 @@ let%test _ =
 let%test _ = assert_equal on_p "ON table1=table2" (Binary_operation(Equal, Const (Name "table1"), Const (Name "table2")))
 
 
-(* Arithm *)
+(* arithm_p *)
 
 let%test _ =
-  assert_equal arithm "2+2" (Binary_operation (Add, Const (Digit 2), Const (Digit 2)))
+  assert_equal arithm_p "2+2" (Binary_operation (Add, Const (Digit 2), Const (Digit 2)))
 ;;
 
 let%test _ =
   assert_equal
-    arithm
+    arithm_p
     "( 2 + 2)"
     (Binary_operation (Add, Const (Digit 2), Const (Digit 2)))
 ;;
 
 let%test _ =
   assert_equal
-    arithm
+    arithm_p
     "2 / -2"
     (Binary_operation (Divide, Const (Digit 2), Const (Digit (-2))))
 ;;
 
 let%test _ =
   assert_equal
-    arithm
+    arithm_p
     "-2 - -2"
     (Binary_operation (Substract, Const (Digit (-2)), Const (Digit (-2))))
 ;;
 
 let%test _ =
   assert_equal
-    arithm
+    arithm_p
     "-2 * +2"
     (Binary_operation (Multiply, Const (Digit (-2)), Const (Digit 2)))
 ;;
 
 let%test _ =
   assert_equal
-    arithm
+    arithm_p
     "123 % 10"
     (Binary_operation (Modulo, Const (Digit 123), Const (Digit 10)))
 ;;
 
 let%test _ =
   assert_equal
-    arithm
+    arithm_p
     "(1 + 1) * 2"
     (Binary_operation
        ( Multiply
@@ -145,7 +145,7 @@ let%test _ =
 
 let%test _ =
   assert_equal
-    arithm
+    arithm_p
     "(1 + 1) * (123 % 10)"
     (Binary_operation
        ( Multiply
@@ -153,9 +153,11 @@ let%test _ =
        , Binary_operation (Modulo, Const (Digit 123), Const (Digit 10)) ))
 ;;
 
+(* logic *)
+
 let%test _ =
   assert_equal
-    cmp
+    cmp_p
     "1 + 1 != 2.5 + 2"
     (Binary_operation
        ( Not_Equal
@@ -165,7 +167,7 @@ let%test _ =
 
 let%test _ =
   assert_equal
-    cmp
+    cmp_p
     "1 = 2 - 1 = 0 + 1"
     (Binary_operation
        ( Equal
@@ -178,7 +180,7 @@ let%test _ =
 
 let%test _ =
   assert_equal
-    logic
+    logic_p
     "1 = 2 AND 0 = 1"
     (Binary_operation
        ( And
@@ -189,7 +191,14 @@ let%test _ =
 let%test _ =
   assert_eq_output
     show_expr
-    logic
+    logic_p
+    "NOT 0 = 1"
+    (Unary_operation (Not, (Binary_operation (Equal, (Const (Digit 0)), (Const (Digit 1))))))
+;;
+
+let%test _ =
+  assert_equal
+    logic_p
     "\'123\' = 2 AND ID > 1 OR 1 + 1 = 2"
     (Binary_operation
        ( Or
@@ -221,4 +230,4 @@ let%test _ =
     }
 ;;
 
-let%test _ = assert_raise arithm "-2 x 2"
+let%test _ = assert_raise arithm_p "-2 x 2"

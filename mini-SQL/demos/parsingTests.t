@@ -8,6 +8,10 @@ input and output into this file. In this case it will be easier to check that
 answer is correct
 
   $ ./demoParse.exe <<-EOF
+  > SELECT * FROM table
+  Parse result: { select = [Asterisk]; from = (Table "table"); where = None }
+
+  $ ./demoParse.exe <<-EOF
   > SELECT * FROM table WHERE True
   Parse result: { select = [Asterisk]; from = (Table "table");
     where = (Some (Const (Bool true))) }
