@@ -97,59 +97,67 @@ type expr =
   | EMethod_invoke of expr * params (* method(a, b, c) | Class.method(a, b, c) *)
   (*  *)
   | EBin_op of bin_op * expr * expr
+  | EPoint_access of expr * expr (* access by point e.g. A.run() *)
   | EUn_op of un_op * expr
-  | EMember_ident of expr * expr (* access by point e.g. A.run() *)
-  (* TODO: | Cast of assignable_type * expr *)
-  (*  *)
-  | EClass_decl of class_sign
-  | EDecl of type_ * ident
-  | EAssign of expr * expr
-  | Steps of expr list (* sequence of actions inside {...} *)
-  (*  *)
-  | EIf_else of expr * expr * expr option
-  | EReturn of expr option
-  | EBreak
-(* TODO:| EWhile *)
-(* TODO:| EFor *)
-(* TODO:| ETry_catch_fin *)
-(* TODO:| ESwitch *)
-[@@deriving show { with_path = false }, eq]
+(*  *)
+(* TODO: | Cast of assignable_type * expr *)
 
-and args = Args of expr list [@@deriving show { with_path = false }, eq]
 and params = Params of expr list [@@deriving show { with_path = false }, eq]
 
-and fild_sign =
+type var_decl = Var_decl of type_ * ident [@@deriving show { with_path = false }, eq]
+type args = Args of var_decl list [@@deriving show { with_path = false }, eq]
+
+type statement =
+  | SExpr of expr
+  | Steps of statement list (* sequence of actions inside {...} *)
+  | SIf_else of expr * statement * statement option
+  | SDecl of var_decl * expr option
+  | SReturn of expr option
+  | SBreak
+[@@deriving show { with_path = false }, eq]
+
+(* TODO:| SWhile *)
+(* TODO:| SFor *)
+(* TODO:| STry_catch_fin + throw...*)
+(* TODO:| Switch *)
+type fild_sign =
   { f_modif : fild_modifier option
   ; f_type : var_type
   ; f_id : ident
   ; f_val : expr option
   }
+[@@deriving show { with_path = false }, eq]
 
-and method_sign =
+type method_sign =
   { m_modif : method_modifier option
   ; m_type : meth_type
   ; m_id : ident
   ; m_args : args
   }
+[@@deriving show { with_path = false }, eq]
 
-and constructor_sign =
+type constructor_sign =
   { con_modif : access_modifier option
   ; con_id : ident
   ; con_args : args
   ; base_params : params option
   }
+[@@deriving show { with_path = false }, eq]
 
-and class_member =
+type class_member =
   | Fild of fild_sign
-  | Main of method_sign * expr (* expr - Steps *)
-  | Method of method_sign * expr (* expr - Steps *)
-  | Constructor of constructor_sign * expr (* expr - Steps *)
+  | Main of statement
+  | Method of method_sign * statement (* statment - Steps *)
+  | Constructor of constructor_sign * statement (* statment - Steps *)
+[@@deriving show { with_path = false }, eq]
 
-and class_sign =
-  { cl_modif : access_modifier option
+type class_decl =
+  {
+    cl_modif : access_modifier option
   ; cl_id : ident
   ; parent : ident option
   ; cl_mems : class_member list
   }
+[@@deriving show { with_path = false }, eq]
 
-type tast = class_sign list [@@deriving show { with_path = false }, eq]
+type tast = Ast of class_decl list [@@deriving show { with_path = false }, eq]
