@@ -164,6 +164,56 @@ jobs:
             -issue ${{ env.CI_PULL_REQUEST }} \
             -repo fp2023 -user Kakadu
 
+      - shell: bash
+        run: echo "LINTER_RESOLUTION=$(bash .github/check_rdjson.sh lints.rdjsonl)" >> $GITHUB_ENV
+
+      - name: Tag PR as FEW linter complains
+        if: ${{ env.LINTER_RESOLUTION == 'FEW' }}
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.addLabels({
+              issue_number: ${{ env.CI_PULL_REQUEST }},
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: ["A_FEW_LINTS"]
+            })
+            github.rest.issues.deleteLabel({
+              issue_number: ${{ env.CI_PULL_REQUEST }},
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: ["TOO_MANY_LINTS"]
+            })
+
+      - name: Tag PR as TOOMANY linter complains
+        if: ${{ env.LINTER_RESOLUTION == 'TOOMANY' }}
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.addLabels({
+              issue_number: ${{ env.CI_PULL_REQUEST }},
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: ["TOO_MANY_LINTS"]
+            })
+            github.rest.issues.deleteLabel({
+              issue_number: ${{ env.CI_PULL_REQUEST }},
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: ["A_FEW_LINTS"]
+            })
+
+      - name: Tag PR as TOOMANY linter complains
+        if: ${{ env.LINTER_RESOLUTION == 'OK' }}
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.deleteLabel({
+              issue_number: ${{ env.CI_PULL_REQUEST }},
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: ["A_FEW_LINTS", "TOO_MANY_LINTS"]
+            })
 
   ###################################################################################################
   upload_docs:
@@ -265,6 +315,7 @@ jobs:
             -repo fp2023 -user Kakadu
 
 
+
   upload_coverage:
     runs-on: ubuntu-latest
     if: ${{( github.event.workflow_run.event == 'pull_request') && (github.event.workflow_run.conclusion == 'success') }}
@@ -345,10 +396,10 @@ jobs:
       #      -X DELETE -H "Accept: application/vnd.github+json" \
       #      -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
       #      -H "X-GitHub-Api-Version: 2022-11-28"
-# I tried to remove manually but it doesn't work
-# { "message": "Not Found",
-#  "documentation_url": "https://docs.github.com/rest/pulls/comments#delete-a-review-comment-for-a-pull-request"
-#}
+      # I tried to remove manually but it doesn't work
+      # { "message": "Not Found",
+      #  "documentation_url": "https://docs.github.com/rest/pulls/comments#delete-a-review-comment-for-a-pull-request"
+      #}
 
       - name: Read file contents
         id: read-escaped-markdown

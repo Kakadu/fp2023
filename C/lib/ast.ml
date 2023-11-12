@@ -4,7 +4,7 @@
 
 open Stdint
 
-type name = string [@@deriving show { with_path = false }]
+type name = string [@@deriving show {with_path= false}]
 
 type types =
   | ID_int
@@ -20,9 +20,9 @@ type types =
   | ID_double
   | Pointer of types
   | Array of int option * types
-[@@deriving show { with_path = false }]
+[@@deriving show {with_path= false}]
 
-type arg = Arg of types * name [@@deriving show { with_path = false }]
+type arg = Arg of types * name [@@deriving show {with_path= false}]
 
 type bin_op =
   | Add
@@ -38,17 +38,19 @@ type bin_op =
   | GrowOrEqual
   | Or
   | And
-[@@deriving show { with_path = false }]
+  | Lshift
+  | Rshift
+[@@deriving show {with_path= false}]
 
 type un_op =
-  | Not
-  | Plus
-  | Minus
-  | Address
-  | Dereference
-  | Pref_increment
-  | Pref_decrement
-[@@deriving show { with_path = false }]
+  | Not  (** !a *)
+  | Plus  (** +a *)
+  | Minus  (** -(--a) *)
+  | Address  (** &a *)
+  | Dereference  (** *a *)
+  | Pref_increment  (** ++a *)
+  | Pref_decrement  (** --a *)
+[@@deriving show {with_path= false}]
 
 type values =
   | V_int of int
@@ -62,39 +64,38 @@ type values =
   | V_float of float
   | V_null
   | V_void
-  | V_array of expr list
-[@@deriving show { with_path = false }]
+[@@deriving show {with_path= false}]
 
-and expr =
+type expr =
   | Unary_expr of un_op * expr
   | Bin_expr of bin_op * expr * expr
   | Const of values
-  | Type of types (** sizeof(int) *)
-  | Func_call of name * expr list
-  | Var_name of name (** return <var_name>*)
-  | Cast of types * expr (** (int) a *)
-  | Index of name * expr
-[@@deriving show { with_path = false }]
+  | Type of types  (** sizeof(int) *)
+  | Func_call of name * expr list  (** factorial(1, 2 + 3, 5 > 7) *)
+  | Var_name of name  (** return <var_name>*)
+  | Cast of types * expr  (** (int) a *)
+  | Index of expr * expr  (** a[1][2] => Index(Index(Var_name(a), 1), 2) *)
+  | Array_value of expr list
+[@@deriving show {with_path= false}]
 
-type statements =
-  | Var_decl of types * name * expr option
-  | Assign of expr * statements (** int n = b = 4*)
-  | AssignBin of bin_op * expr * statements (** int n = b += 4 *)
+type statement =
+  | Var_decl of types * name * statement option  (** int **b[1][2]; *)
+  | Assign of expr * statement  (** int n = b = 4*)
   | Expression of expr
   | Return of expr
-  | Compound of statements list (** {n = 4; { n = 3;...} here n = 4 }*)
-  | While of expr * statements
-  | For of statements option * expr option * expr option * statements
-      (** init?; cond?; upd? *)
-  | If of expr * statements
-  | If_else of expr * statements * statements
+  | Compound of statement list  (** { n = 4; { n = 3;...} here n = 4 } *)
+  | While of expr * statement
+  | For of statement option * expr option * expr option * statement
+    (** for (init?; cond?; upd?) { expr list } *)
+  | If of expr * statement
+  | If_else of expr * statement * statement
   | Break
   | Continue
-[@@deriving show { with_path = false }]
+[@@deriving show {with_path= false}]
 
-and prog =
+type prog =
   | My_programm of prog list
-  | Func_def of prog * statements
+  | Func_def of prog * statement
   | Func_decl of types * name * arg list
-  | Top_var_decl of types * name * expr option
-[@@deriving show { with_path = false }]
+  | Top_var_decl of types * name * statement option
+[@@deriving show {with_path= false}]
