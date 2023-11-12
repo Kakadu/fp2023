@@ -8,8 +8,4 @@
 
 (cram
  (applies_to parsingTests)
- (deps
-  ./demoParse.exe
-  ./factorial.cs
-  ;
-  ))
+ (deps ./demoParse.exe))

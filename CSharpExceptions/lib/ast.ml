@@ -152,8 +152,7 @@ type class_member =
 [@@deriving show { with_path = false }, eq]
 
 type class_decl =
-  {
-    cl_modif : access_modifier option
+  { cl_modif : access_modifier option
   ; cl_id : ident
   ; parent : ident option
   ; cl_mems : class_member list
