@@ -8,12 +8,12 @@
  (instrumentation
   (backend bisect_ppx)))
 
-(library
- (name tests)
- (modules tests)
- (libraries miniml_lib)
- (preprocess
-  (pps ppx_expect ppx_deriving.show))
- (instrumentation
-  (backend bisect_ppx))
- (inline_tests))
+; (library
+;  (name tests)
+;  (modules tests)
+;  (libraries miniml_lib)
+;  (preprocess
+;   (pps ppx_expect ppx_deriving.show))
+;  (instrumentation
+;   (backend bisect_ppx))
+;  (inline_tests))

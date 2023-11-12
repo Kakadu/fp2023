@@ -180,6 +180,13 @@ let pmatch pexpr =
     (many1 (pcase ppattern pexpr))
 ;;
 
+let pfun pexpr =
+  let rec pbody pexpr =
+    pid >>= fun id -> pbody pexpr <|> pstoken "->" *> pexpr >>| fun e -> EFun (id, e)
+  in
+  pstoken "fun" *> pbody pexpr
+;;
+
 let pebinop chain1 e pbinop = chain1 e (pbinop >>| fun op e1 e2 -> EBinop (op, e1, e2))
 let plbinop = pebinop chainl1
 let padd = pstoken "+" *> return Add
@@ -215,7 +222,7 @@ let pexpr =
       pe
       (many (pstoken "," *> pe))
   in
-  choice [ plet pexpr; pbranch pexpr; pmatch pexpr; pe ]
+  choice [ plet pexpr; pbranch pexpr; pmatch pexpr; pfun pexpr; pe ]
 ;;
 
 let parse = parse_string ~consume:Consume.All (many1 (plet pexpr) <* pspaces)
