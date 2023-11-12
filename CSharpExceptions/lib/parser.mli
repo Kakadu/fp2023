@@ -4,41 +4,43 @@
 
 (** {2 Modifier parsers} *)
 
-val p_access_modifier : Ast.access_modifier Angstrom.t
-val p_method_modifier : Ast.method_modifier Angstrom.t
-val p_fild_modifier : Ast.fild_modifier Angstrom.t
+open Angstrom
+
+val p_access_modifier : Ast.access_modifier t
+val p_method_modifier : Ast.method_modifier t
+val p_fild_modifier : Ast.fild_modifier t
 
 (** {2 Assignable type parsers} *)
 
-val ep_number : Ast.expr Angstrom.t
-val ep_char : Ast.expr Angstrom.t
-val ep_string : Ast.expr Angstrom.t
-val ep_bool : Ast.expr Angstrom.t
-val ep_identifier : Ast.expr Angstrom.t
-val ep_value : Ast.expr Angstrom.t
+val ep_number : Ast.expr t
+val ep_char : Ast.expr t
+val ep_string : Ast.expr t
+val ep_bool : Ast.expr t
+val ep_identifier : Ast.expr t
+val ep_value : Ast.expr t
 
 (** {2 Language constructs parsers} *)
 
-val ep_member_ident : Ast.expr Angstrom.t
-val ep_method_member : Ast.class_member Angstrom.t
-val ep_var_decl : Ast.expr Angstrom.t
-val ep_operation : Ast.expr Angstrom.t
-val ep_assign : Ast.expr Angstrom.t
-val ep_method_invoke : Ast.expr Angstrom.t
-val ep_eAssign_eDecl : Ast.expr Angstrom.t
-val ep_break : Ast.expr Angstrom.t
-val ep_return : Ast.expr Angstrom.t
-val ep_steps : Ast.expr Angstrom.t
-val ep_brunch_loop : Ast.expr Angstrom.t
+val ep_member_ident : Ast.expr t
+val ep_method_member : Ast.class_member t
+val ep_var_decl : Ast.var_decl t
+val ep_operation : Ast.expr t
+val ep_assign : Ast.expr t
+val ep_method_invoke : Ast.expr t
+val ep_decl : Ast.statement t
+val ep_break : Ast.statement t
+val ep_return : Ast.statement t
+val ep_steps : Ast.statement t
+val ep_brunch_loop : Ast.statement t
 
 (** {2 Main parsers} *)
 
-val ep_class_members : Ast.class_member list Angstrom.t
-val ep_class : Ast.class_sign Angstrom.t
-val ep_classes : Ast.tast Angstrom.t
+val ep_class_members : Ast.class_member list t
+val ep_class : Ast.class_decl t
+val ep_classes : Ast.tast t
 
 (** [parse s] - this parser will read the string s and return the result *)
 val parse_ast : string -> (Ast.tast, string) result
 
-val parse_until_true : 'a Angstrom.t -> string -> ('a, string) result
-val parse_option : string -> p:'a Angstrom.t -> 'a option
+val parse_until_true : 'a t -> string -> ('a, string) result
+val parse_option : string -> p:'a t -> 'a option

@@ -186,19 +186,20 @@ let p_method_type =
 
 let ep_spaces prs = skip_spaces *> prs
 let ep_parens prs = ep_spaces @@ (char '(' *> prs) <* ep_spaces @@ char ')'
+let val_to_expr prs = ep_spaces prs >>| fun x -> EConst x
+let expr_to_statment expr = expr >>| fun x -> SExpr x
 let ep_figure_parens prs = ep_spaces @@ (char '{' *> prs) <* ep_spaces @@ char '}'
-let convert_val_to_expr prs = ep_spaces prs >>| fun x -> EConst x
-let ep_number = convert_val_to_expr p_number
-let ep_char = convert_val_to_expr p_char
-let ep_string = convert_val_to_expr p_string
-let ep_bool = convert_val_to_expr p_bool
+let ep_number = val_to_expr p_number
+let ep_char = val_to_expr p_char
+let ep_string = val_to_expr p_string
+let ep_bool = val_to_expr p_bool
 let ep_identifier = ep_spaces p_ident >>= fun x -> return (EIdentifier x)
 
 let ep_value =
   choice ?failure_msg:(Some "Not a value") [ ep_bool; ep_char; ep_number; ep_string ]
 ;;
 
-let ep_dot = ep_spaces @@ (char '.' *> return (fun e1 e2 -> EMember_ident (e1, e2)))
+let ep_dot = ep_spaces @@ (char '.' *> return (fun e1 e2 -> EPoint_access (e1, e2)))
 let ep_member_ident = chainr1 ep_identifier ep_dot
 
 let ep_list_from_ ep_arg =
@@ -218,7 +219,7 @@ let ep_method_fild_ ep_arg =
   ep_member_ident >>= fun id -> ep_invoke_ id ep_arg <|> return id
 ;;
 
-let ep_var_decl_ tp = skip_spaces1 *> p_ident >>| fun id -> EDecl (TVariable tp, id)
+let ep_var_decl_ tp = skip_spaces1 *> p_ident >>| fun id -> Var_decl (TVariable tp, id)
 
 let ep_var_type_ =
   ep_spaces
@@ -261,7 +262,9 @@ let ( -<< ) lvl ps_list = chainr1 lvl (choice ps_list)
 
 let ep_operation =
   fix (fun expr ->
-    let lvl1 = choice [ ep_parens expr; ep_value; ep_method_fild_ expr ] in
+    let lvl1 =
+      choice [ (* TODO: ep_cast expr ;*) ep_parens expr; ep_value; ep_method_fild_ expr ]
+    in
     let lvl2 = lvl1 >- [ ep_un_minus; ep_new; ep_not ] in
     let lvl3 = lvl2 >>- [ ( *^ ); ( /^ ); ( %^ ) ] in
     let lvl4 = lvl3 >>- [ ( +^ ); ( -^ ) ] in
@@ -275,23 +278,19 @@ let ep_operation =
 let ep_assign = lift3 (fun ident eq ex -> eq ident ex) ep_identifier ( =^ ) ep_operation
 let ep_method_invoke = ep_method_invoke_ ep_operation
 
-let ep_eAssign_eDecl =
-  choice
-    ?failure_msg:(Some "Not a declaration or assignment")
-    [ lift2
-        (fun decl value -> EAssign (decl, value))
-        ep_var_decl
-        (ep_spaces (char '=') *> ep_operation)
-    ; ep_var_decl
-    ]
+let ep_decl =
+  lift2
+    (fun dcl e -> SDecl (dcl, e))
+    ep_var_decl
+    (option None (ep_spaces (char '=') *> ep_operation >>| fun e -> Some e))
 ;;
 
 let ep_keyword_ kw = ep_spaces @@ read_as_token kw
-let ep_break = ep_keyword_ "break" *> return EBreak
+let ep_break = ep_keyword_ "break" *> return SBreak
 
 let ep_return =
   lift2
-    (fun _ ex -> EReturn ex)
+    (fun _ ex -> SReturn ex)
     (ep_keyword_ "return")
     (ep_operation >>= (fun x -> return (Some x)) <|> return None)
 ;;
@@ -314,7 +313,7 @@ let ep_else_cond_ ep_body ep_ifls =
 let ep_if_else_ ep_body =
   fix (fun if_else ->
     let else_ = ep_else_cond_ ep_body if_else in
-    lift3 (fun cond body else_ -> EIf_else (cond, body, else_)) ep_if_cond_ ep_body else_)
+    lift3 (fun cond body else_ -> SIf_else (cond, body, else_)) ep_if_cond_ ep_body else_)
 ;;
 
 let ep_brunch_loop_ ep_body =
@@ -335,9 +334,9 @@ let ep_steps =
     let op_step = ep_semicolon_ in
     let body_step =
       choice
-        [ step ep_eAssign_eDecl
-        ; step ep_method_invoke
-        ; step ep_assign
+        [ step ep_decl
+        ; step @@ expr_to_statment ep_method_invoke
+        ; step @@ expr_to_statment ep_assign
         ; step ep_break
         ; step ep_return
         ; op_step @@ ep_brunch_loop_ steps
@@ -384,17 +383,42 @@ let ep_fild_sign =
   <* ep_spaces @@ char ';'
 ;;
 
-let is_main (m_sign : method_sign) =
+let maybe_main_ (m_sign : method_sign) =
   match m_sign.m_id with
   | Id "Main" -> true
   | _ -> false
 ;;
 
+let is_main_type_ = function
+  | Void | TReturn (TNot_Nullable TInt) -> true
+  | _ -> false
+;;
+
+let is_main_mod_ = function
+  | Some MStatic -> true
+  | _ -> false
+;;
+
+let is_main_args_ = function
+  | Args x -> List.is_empty x
+;;
+
+let is_main_ = function
+  | { m_modif; m_type; m_args; _ }
+    when is_main_mod_ m_modif && is_main_type_ m_type && is_main_args_ m_args -> true
+  | _ -> false
+;;
+
 let ep_method_member =
   ep_method_sign
+  >>= fun mt ->
+  lift2 (fun mt bd -> Method (mt, bd)) (return mt) ep_steps
   >>= function
-  | mt when is_main mt -> lift2 (fun mt bd -> Main (mt, bd)) (return mt) ep_steps
-  | mt -> lift2 (fun mt bd -> Method (mt, bd)) (return mt) ep_steps
+  | Method (m, body) when maybe_main_ m ->
+    (match is_main_ m with
+     | true -> return (Main body)
+     | false -> fail "")
+  | m -> return m
 ;;
 
 let ep_constructor_member_ =
@@ -419,7 +443,7 @@ let ep_class =
     ep_class_members
 ;;
 
-let ep_classes : tast t = many ep_class
+let ep_classes : tast t = many ep_class <* skip_spaces >>| fun cls -> Ast cls
 
 let parse_option str ~p =
   match parse_string p ~consume:Angstrom.Consume.All str with
