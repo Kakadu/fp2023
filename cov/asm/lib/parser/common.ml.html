@@ -162,10 +162,10 @@
 <a href="#L64">64</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2023-2024, Vadim Yakshigulov *)
+
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
 open Angstrom
-
 open Ast
 
 let is_space = function
@@ -209,7 +209,7 @@ let spaces = skip_man<span data-count="2">y</span> space &lt;?<span data-count="
 let trim p = <span data-count="12">s</span>paces *<span data-count="12">&gt;</span> p &lt;* spaces
 let comma = tri<span data-count="2">m</span> (cha<span data-count="2">r</span> ',') &lt;?<span data-count="2">&gt;</span> "comma"
 let comment = cha<span data-count="2">r</span> ';' *<span data-count="2">&gt;</span> skip_whil<span data-count="2">e</span> (fun c -&gt; <span data-count="0">n</span>ot (is_end_of_lin<span data-count="0">e</span> c)) &lt;?<span data-count="2">&gt;</span> "comment"
-let between t1 t2 e1 = <span data-count="4">t</span>1 *<span data-count="4">&gt;</span> (tri<span data-count="4">m</span> e1) &lt;* t2
+let between t1 t2 e1 = <span data-count="4">t</span>1 *<span data-count="4">&gt;</span> tri<span data-count="4">m</span> e1 &lt;* t2
 
 let skip_empty_lines =
   skip_man<span data-count="2">y</span> (space &lt;|<span data-count="2">&gt;</span> end_of_line &lt;|<span data-count="2">&gt;</span> comment) &lt;?<span data-count="2">&gt;</span> "skip_empty_lines"
