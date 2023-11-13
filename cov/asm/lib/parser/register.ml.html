@@ -156,11 +156,11 @@ let parse_64_register =
 let between_brackets parser = <span data-count="4">b</span>etwee<span data-count="4">n</span> (cha<span data-count="4">r</span> '[') (cha<span data-count="4">r</span> ']') parser &lt;?&gt; "between_brackets"
 
 let parse_32_register_ref =
-  between_bracket<span data-count="2">s</span> parse_32_register &gt;&gt;<span data-count="2">|</span> registerref &lt;?<span data-count="2">&gt;</span> "parse_32_register_ref"
+  between_bracket<span data-count="2">s</span> parse_32_register &gt;&gt;<span data-count="2">|</span> register_ref &lt;?<span data-count="2">&gt;</span> "parse_32_register_ref"
 ;;
 
 let parse_64_register_ref =
-  between_bracket<span data-count="2">s</span> parse_64_register &gt;&gt;<span data-count="2">|</span> registerref &lt;?<span data-count="2">&gt;</span> "parse_64_register_ref"
+  between_bracket<span data-count="2">s</span> parse_64_register &gt;&gt;<span data-count="2">|</span> register_ref &lt;?<span data-count="2">&gt;</span> "parse_64_register_ref"
 ;;
 </code></pre>
       </div>

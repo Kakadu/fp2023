@@ -111,7 +111,7 @@ open Common
 open Register
 open Immediate
 
-let parse_lable_ref = labelref &lt;$<span data-count="2">&gt;</span> label_name
+let parse_lable_ref = label_ref &lt;$<span data-count="2">&gt;</span> label_name
 let parse_reg_32 = reg_32 &lt;$<span data-count="2">&gt;</span> parse_32_register
 let parse_reg_64 = reg_64 &lt;$<span data-count="2">&gt;</span> parse_64_register
 let parse_imm_a = imm_a &lt;$<span data-count="2">&gt;</span> parse_immidiate

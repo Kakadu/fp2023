@@ -117,7 +117,7 @@ let parse_decimal =
   &lt;?<span data-count="2">&gt;</span> "parse_decimal"
 ;;
 
-let parse_immidiate = immint &lt;$<span data-count="2">&gt;</span> (parse_hex &lt;|<span data-count="2">&gt;</span> parse_decimal) &lt;?<span data-count="2">&gt;</span> "parse_imm_int"
+let parse_immidiate = imm_int &lt;$<span data-count="2">&gt;</span> (parse_hex &lt;|<span data-count="2">&gt;</span> parse_decimal) &lt;?<span data-count="2">&gt;</span> "parse_imm_int"
 </code></pre>
       </div>
     </div>

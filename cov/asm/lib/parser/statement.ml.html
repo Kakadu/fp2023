@@ -113,7 +113,7 @@ open Directive
 open Angstrom
 open Operand
 
-let parse_label_decl = labeldecl &lt;$<span data-count="2">&gt;</span> label_name &lt;<span data-count="2">*</span> cha<span data-count="2">r</span> ':'
+let parse_label_decl = label_decl &lt;$<span data-count="2">&gt;</span> label_name &lt;<span data-count="2">*</span> cha<span data-count="2">r</span> ':'
 
 let parse_instruction =
   let gen_instruction mnemonic choices =
