@@ -12,9 +12,24 @@ type constant =
       (** Constant string such as ["constant"] or [{|other constant|}] *)
 [@@deriving show {with_path= false}]
 
-(* ======= Patterns ======= *)
+(* ======= Types ======= *)
 
-type pattern =
+type typ =
+  | Typ_var of string  (** A type variable such as ['a] *)
+  | Typ_arrow of typ * typ  (** [Typ_arrow(T1, T2)] represents [T1 -> T2] *)
+  | Typ_tuple of typ list
+      (** [Typ_tuple([T1 ; ... ; Tn])] represents [T1 * ... * Tn].
+          Invariant: [n >= 2].
+        *)
+  | Typ_constr of ident * typ list
+      (** [Typ_constr(ident, l)] represents:
+          - [tconstr]               when [l=[]],
+          - [T tconstr]             when [l=[T]],
+          - [(T1, ..., Tn) tconstr] when [l=[T1 ; ... ; Tn]].
+        *)
+
+(* ======= Patterns ======= *)
+and pattern =
   | Pat_any  (** The pattern [_] *)
   | Pat_var of string  (** A variable pattern such as [x] *)
   | Pat_constant of constant
@@ -22,6 +37,7 @@ type pattern =
   | Pat_tuple of pattern list
       (** Patterns [(P1, ..., Pn)]. Invariant: [n >= 2] *)
   | Pat_or of pattern * pattern  (** Pattern [P1 | P2] *)
+  | Pat_constraint of pattern * typ  (** Pattern [(P : T)] *)
   | Pat_construct of ident * pattern option
       (** [Pat_construct(C, args)] represents:
           - [C]   when [args] is [None]
@@ -30,8 +46,7 @@ type pattern =
 [@@deriving show {with_path= false}]
 
 (* ======= Expressions ======= *)
-
-type rec_flag =
+and rec_flag =
   | Recursive  (** Recursive value binding *)
   | Nonrecursive  (** Nonrecursive value binding *)
 [@@deriving show {with_path= false}]
@@ -75,6 +90,7 @@ and expression =
         *)
   | Exp_ifthenelse of expression * expression * expression option
       (** [if E1 then E2 else E3] *)
+  | Exp_constraint of expression * typ  (** [(E : T)] *)
   | Exp_sequence of expression * expression  (** [E1; E2] *)
 [@@deriving show {with_path= false}]
 
