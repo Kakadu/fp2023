@@ -100,7 +100,6 @@ type expr =
   | EPoint_access of expr * expr (* access by point e.g. A.run() *)
   | EUn_op of un_op * expr
 (*  *)
-(* TODO: | Cast of assignable_type * expr *)
 
 and params = Params of expr list [@@deriving show { with_path = false }]
 
@@ -109,17 +108,26 @@ type args = Args of var_decl list [@@deriving show { with_path = false }]
 
 type statement =
   | SExpr of expr
-  | Steps of statement list (* sequence of actions inside {...} *)
+  | Steps of statement list (* sequence of actions inside {...} TODO: вынести *)
   | SIf_else of expr * statement * statement option
   | SDecl of var_decl * expr option
   | SReturn of expr option
+  | SThrow of expr option
   | SBreak
+  | SWhile of expr * statement
+  | SFor of
+      { f_init_p : statement option
+      ; f_cond_p : expr option
+      ; f_iter_p : expr option
+      ; f_body : statement
+      }
+  | STry_catch_fin of
+      { try_s : statement
+      ; catch_s : ((var_decl * expr option) option * statement) option
+      ; finally_s : statement option
+      }
 [@@deriving show { with_path = false }]
 
-(* TODO:| SWhile *)
-(* TODO:| SFor *)
-(* TODO:| STry_catch_fin + throw...*)
-(* TODO:| Switch *)
 type fild_sign =
   { f_modif : fild_modifier option
   ; f_type : var_type

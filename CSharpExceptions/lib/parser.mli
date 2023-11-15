@@ -32,6 +32,7 @@ val ep_break : Ast.statement t
 val ep_return : Ast.statement t
 val ep_steps : Ast.statement t
 val ep_brunch_loop : Ast.statement t
+val ep_try_catch_fin : Ast.statement t
 
 (** {2 Main parsers} *)
 
