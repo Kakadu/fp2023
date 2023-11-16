@@ -158,8 +158,11 @@ let parse_lowercase_ident =
           false )
   in
   lift2 String.( ^ ) parse_first parse_rest
+  >>= fun name ->
+  if not (is_keyword name) then return name
+  else fail (name ^ " keyword can't be used as ident")
 
-let parse_uppercase_ident =
+let parse_capitalized_ident =
   let parse_first =
     satisfy (function 'A' .. 'Z' -> true | _ -> false) >>| String.of_char
   in
@@ -175,14 +178,11 @@ let parse_uppercase_ident =
 let parse_constr_name =
   let parse_bool_constr = string "true" <|> string "false" in
   let parse_unit_constr = string "()" in
-  choice [parse_uppercase_ident; parse_bool_constr; parse_unit_constr]
+  choice [parse_capitalized_ident; parse_bool_constr; parse_unit_constr]
 
 let parse_value_name =
   parse_lowercase_ident
   <|> (char '(' *> ws *> parse_custom_operator_name <* ws <* char ')')
-  >>= fun name ->
-  if not (is_keyword name) then return name
-  else fail (name ^ " keyword can't be used as value name")
 
 (* ======= Constants ======= *)
 
@@ -214,16 +214,11 @@ let parse_const = choice [parse_char; parse_string; parse_int]
 
 (* ======= Value bindings ======= *)
 
-let skip_let_keyword = ws *> string "let"
-
-let parse_rec_flag =
-  ws1 *> option Nonrecursive (string "rec" *> ws1 *> return Recursive)
-
 (**
   [P1 = E1 and P2 = E2 and ...]
   [ValName1 PArg1 = E1 and P1 = E2 and ...]
 *)
-let parse_bindings pexp ppat =
+let parse_value_bindings pexp ppat =
   let parse_binding =
     let parse_fun_binding =
       lift3
@@ -238,7 +233,10 @@ let parse_bindings pexp ppat =
   sep_by1 (ws *> string "and") parse_binding
 
 let parse_let_binding pexp ppat =
-  skip_let_keyword *> both parse_rec_flag (parse_bindings pexp ppat)
+  let parse_rec_flag =
+    ws1 *> option Nonrecursive (string "rec" *> ws1 *> return Recursive)
+  in
+  ws *> string "let" *> both parse_rec_flag (parse_value_bindings pexp ppat)
 
 (* ======= Prefix & infix operators parsing ======= *)
 
