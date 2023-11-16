@@ -29,15 +29,20 @@ val parse_custom_prefix_operator_name : string t
                     | (? | ~) \{ operator-char \}+
 *)
 
-val parse_value_name : string t
+val parse_lowercase_ident : string t
 (**
-  value-name ::= (a..z | _) \{ A..Z | a..z | 0..9 | _ | ' \}
-                 | (prefix-symbol ∣ infix-symbol) 
+  lowercase-ident ::= (a..z | _) \{ A..Z | a..z | 0..9 | _ | ' \}
   must not be keyword
 *)
 
+val parse_capitalized_ident : string t
+(** capitalized-ident ::= (A..Z) \{ A..Z | a..z | 0..9 | _ | ' \} *)
+
+val parse_value_name : string t
+(** value-name ::= lowercase-ident | (prefix-symbol) | (infix-symbol) *)
+
 val parse_constr_name : string t
-(** constr-name ::= (A..Z) \{ A..Z | a..z | 0..9 | _ | ' \} *)
+(** constr-name ::= capitalized-ident | true | false | () *)
 
 val parse_const : constant t
 
