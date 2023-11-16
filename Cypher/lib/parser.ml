@@ -56,8 +56,9 @@ let skip_spaces_after p =
 let check_after p cond =
   p
   <* (satisfy (fun c -> not @@ cond c)
-      <|> return '!'
-      >>= fun c -> if c != '!' then fail "Incorrect symbol" else return '!')
+      <|> return @@ Char.chr 0
+      >>= fun c ->
+      if c != Char.chr 0 then fail "Incorrect symbol" else return @@ Char.chr 0)
 ;;
 
 let parens p = skip_spaces (char '(') *> p <* skip_spaces (char ')')
