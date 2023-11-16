@@ -27,6 +27,7 @@ type typ =
           - [T tconstr]             when [l=[T]],
           - [(T1, ..., Tn) tconstr] when [l=[T1 ; ... ; Tn]].
         *)
+[@@deriving show {with_path= false}]
 
 (* ======= Patterns ======= *)
 and pattern =
