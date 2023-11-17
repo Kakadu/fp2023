@@ -189,12 +189,41 @@ let%test _ =
 ;;
 
 let%test _ =
-  assert_eq_output
-    show_expr
+assert_equal
     logic_p
-    "NOT 0 = 1"
-    (Unary_operation (Not, (Binary_operation (Equal, (Const (Digit 0)), (Const (Digit 1))))))
+    "NOT true"
+    (Unary_operation (Not, (Const (Bool true))))
 ;;
+
+let%test _ =
+assert_equal
+    logic_p
+    "NOT true AND NOT false"
+    (Binary_operation (And, (Unary_operation (Not, (Const (Bool true)))),
+   (Unary_operation (Not, (Const (Bool false))))))
+;;
+
+let%test _ = 
+  assert_equal
+  logic_p
+  "NOT 1 = 1 AND 1 + 1 = 2"
+  (Binary_operation (And,
+   (Unary_operation (Not,
+      (Binary_operation (Equal, (Const (Digit 1)), (Const (Digit 1)))))),
+   (Binary_operation (Equal,
+      (Binary_operation (Add, (Const (Digit 1)), (Const (Digit 1)))),
+      (Const (Digit 2))))
+   ))
+
+  let%test _ = 
+  assert_equal
+  logic_p
+  "1 + 1 = 2"
+  (Binary_operation (Equal,
+   (Binary_operation (Add, (Const (Digit 1)), (Const (Digit 1)))),
+   (Const (Digit 2))))
+
+
 
 let%test _ =
   assert_equal

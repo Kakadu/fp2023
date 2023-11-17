@@ -236,13 +236,15 @@ let cmp_p =
 ;;
 
 (* ### Logic ### *)
-
+let chainun e op =
+  let rec go acc = lift (fun f -> f acc) op >>= go <|> return acc 
+in (op <*> e) <|> e >>= fun init -> go init
 let logic_p =
-  fix (fun logic -> 
-    let not = l_not <* space <*> logic in not <|>
-    (let term1 = parens logic <|> bspace cmp_p in
+  fix (fun logic ->
+    let pars = parens logic <|> bspace cmp_p in
+    let term1 = chainun pars l_not in  
     let term2 = chainl1 term1 l_and in
-    chainl1 term2 l_or))
+    chainl1 term2 l_or)
 ;;
 
 (** ### SELECT exprs ### *)

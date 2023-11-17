@@ -17,6 +17,31 @@ answer is correct
     where = (Some (Const (Bool true))) }
 
   $ ./demoParse.exe <<-EOF
+  > SELECT ID, name, age, money FROM table WHERE NOT ID = 10 AND age < 100 OR NOT age % 10 = 5
+  Parse result: { select =
+    [(Expression (Const (Name "ID"))); (Expression (Const (Name "name")));
+      (Expression (Const (Name "age"))); (Expression (Const (Name "money")))];
+    from = (Table "table");
+    where =
+    (Some (Binary_operation (Or,
+             (Binary_operation (And,
+                (Unary_operation (Not,
+                   (Binary_operation (Equal, (Const (Name "ID")),
+                      (Const (Digit 10))))
+                   )),
+                (Binary_operation (Less_Than, (Const (Name "age")),
+                   (Const (Digit 100))))
+                )),
+             (Unary_operation (Not,
+                (Binary_operation (Equal,
+                   (Binary_operation (Modulo, (Const (Name "age")),
+                      (Const (Digit 10)))),
+                   (Const (Digit 5))))
+                ))
+             )))
+    }
+
+  $ ./demoParse.exe <<-EOF
   > SELECT *, *, Name, age, 21 - 15 * 2 FROM table WHERE (age = 25 OR age = 27) AND ID > 10
   Parse result: { select =
     [Asterisk; Asterisk; (Expression (Const (Name "Name")));
