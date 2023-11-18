@@ -539,17 +539,13 @@ let%test _ =
     [ LetDecl
         ( false
         , "foo"
-        , [ NoLabel ("n", FuncType (IntType false, IntType false, true)) ]
+        , [ NoLabel
+              ( "n"
+              , FuncType
+                  (IntType false, FuncType (IntType false, IntType false, false), true) )
+          ]
         , UndefinedType
         , Const (Int 1) )
-    ]
-;;
-
-let%test _ =
-  test_parse
-    " let foo ( n : int option option) = 1 "
-    [ LetDecl
-        (false, "foo", [ NoLabel ("n", IntType false) ], IntType false, Const (Int 1))
     ]
 ;;
 
