@@ -1,7 +1,7 @@
 (library
  (name LabeledOptionalArgs_lib)
  (public_name Ocaml+LabeledAndOptionalArgs.Lib)
- (modules Ast Parser)
+ (modules Ast Parser Tests)
  (libraries base angstrom)
  (inline_tests)
  (preprocess
