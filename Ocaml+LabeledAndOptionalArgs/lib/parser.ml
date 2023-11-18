@@ -1,3 +1,7 @@
+(** Copyright 2021-2023, LeonidElkin *)
+
+(** SPDX-License-Identifier: LGPL-3.0-or-later *)
+
 open Angstrom
 open Ast
 open Base
@@ -115,16 +119,50 @@ let is_quote = function
   | _ -> false
 ;;
 
+let is_func_type d =
+  match d with
+  | FuncType (_, _, true) -> true
+  | _ -> false
+;;
+
 let is_char c = is_char_up c || is_char_lr c
 let is_correct_first_letter c = is_char_lr c || is_underscore c
 let is_correct_var_name c = is_char c || is_digit c || is_underscore c || is_apostrophe c
 let remove_spaces = take_while is_space
 let remove_between p = remove_spaces *> p <* remove_spaces
-let check_word s = remove_between (string s)
-let check_char c = remove_between (char c)
+let check_word s = remove_spaces *> string s
+let check_char c = remove_spaces *> char c
 let remove_brackets p = check_char '(' *> p <* check_char ')'
 let remove_lots_of_brackets p = many (check_char '(') *> p <* many (check_char ')')
-let remove_lots_of_brackets1 p = many1 (check_char '(') *> p <* many1 (check_char ')')
+
+let digits_parse =
+  remove_between (take_while1 is_digit >>= fun s -> return (Int (Int.of_string s)))
+;;
+
+let bool_parse =
+  check_word "true"
+  >>= fun _ -> return (Bool true) <|> (check_word "false" >>= fun _ -> return (Bool false))
+;;
+
+let char_parse =
+  check_char '\'' *> any_char >>= fun c -> return (Char c) <* check_char '\''
+;;
+
+let string_parse =
+  check_char '\"' *> take_till is_quote >>= fun s -> return (String s) <* check_char '\"'
+;;
+
+let const_parse p =
+  choice
+    [ remove_brackets p
+    ; (digits_parse >>= fun c -> return (Const c))
+    ; (bool_parse >>= fun c -> return (Const c))
+    ; (char_parse >>= fun c -> return (Const c))
+    ; (string_parse >>= fun c -> return (Const c))
+    ]
+;;
+
+let arg_const_parse = choice [ digits_parse; bool_parse; char_parse; string_parse ]
 
 let check_name =
   remove_between
@@ -132,28 +170,58 @@ let check_name =
      >>= fun c -> take_while is_correct_var_name >>| fun s -> Char.escaped c ^ s)
 ;;
 
+let var_check =
+  check_name >>= fun s -> if is_keyword s then fail "Invalid var" else return s
+;;
+
 let base_types t =
   choice
     [ remove_brackets t
-    ; check_word "unit" *> return UnitType
-    ; check_word "int" *> return IntType
-    ; check_word "bool" *> return BoolType
-    ; check_word "char" *> return CharType
-    ; check_word "string" *> return StringType
+    ; check_word "unit" *> check_word "option" *> return (UnitType true)
+    ; check_word "int" *> check_word "option" *> return (IntType true)
+    ; check_word "bool" *> check_word "option" *> return (BoolType true)
+    ; check_word "char" *> check_word "option" *> return (CharType true)
+    ; check_word "string" *> check_word "option" *> return (StringType true)
+    ; check_word "unit" *> return (UnitType false)
+    ; check_word "int" *> return (IntType false)
+    ; check_word "bool" *> return (BoolType false)
+    ; check_word "char" *> return (CharType false)
+    ; check_word "string" *> return (StringType false)
     ]
 ;;
 
-let list_type arg = arg >>= fun t -> check_word "list" >>= fun _ -> return (ListType t)
+let list_type arg =
+  arg
+  >>= fun t ->
+  check_word "list" *> check_word "option"
+  >>= (fun _ -> return (ListType (t, true)))
+  <|> (check_word "list" >>= fun _ -> return (ListType (t, false)))
+;;
 
 let tuple_type t =
   sep_by1 (check_char '*') t
   >>= fun l ->
+  (check_word "option"
+   *>
+   match l with
+   | [ _ ] -> fail "Isn't tuple_type function responsive"
+   | _ -> return (TupleType (l, true)))
+  <|>
   match l with
   | [ x ] -> return x
-  | _ -> return (TupleType l)
+  | _ -> return (TupleType (l, false))
 ;;
 
-let fun_type = check_word "->" *> return (fun t1 t2 -> FuncType (t1, t2))
+let fun_type t =
+  chainr1 t (check_word "->" *> return (fun t1 t2 -> FuncType (t1, t2, true)))
+  >>= (fun e ->
+        check_word "option"
+        *>
+        match e with
+        | FuncType (t1, t2, _) -> return (FuncType (t1, t2, true))
+        | _ -> fail "")
+  <|> chainr1 t (check_word "->" *> return (fun t1 t2 -> FuncType (t1, t2, false)))
+;;
 
 let type_parse =
   fix
@@ -161,57 +229,81 @@ let type_parse =
   let t = base_types p in
   let t = list_type t <|> t in
   let t = tuple_type t <|> t in
-  chainr1 t fun_type
+  fun_type t
 ;;
 
 let arg_parse =
-  remove_lots_of_brackets
-    (check_name
-     >>= fun n ->
-     check_char ':' *> type_parse
-     >>= (fun t -> return (n, t))
-     <|> return (n, UndefinedType))
+  fix
+  @@ fun p ->
+  remove_brackets p
+  <|> (check_name
+       >>= fun n ->
+       check_char ':' *> type_parse
+       >>= (fun t -> return (n, t))
+       <|> return (n, UndefinedType))
+;;
+
+let labeled_arg_parse =
+  fix
+  @@ fun p ->
+  let helper n =
+    fix
+    @@ fun f ->
+    remove_brackets
+      (var_check
+       >>= fun sn ->
+       check_char ':' *> type_parse
+       >>= (fun t -> return (n, sn, t))
+       <|> return (n, sn, UndefinedType))
+    <|> remove_brackets f
+  in
+  choice
+    [ (check_name
+       >>= fun n ->
+       check_char ':' *> check_name >>= fun sn -> return (n, sn, UndefinedType))
+    ; (check_name >>= fun n -> check_char ':' *> helper n)
+    ; remove_brackets
+        (check_name >>= fun n -> check_char ':' *> type_parse >>= fun t -> return (n, n, t)
+        )
+    ; remove_brackets p
+    ; (check_name >>= fun n -> return (n, n, UndefinedType))
+    ]
+;;
+
+let optional_arg_parse =
+  fix
+  @@ fun p ->
+  let helper n =
+    fix
+    @@ fun f ->
+    remove_brackets f
+    <|> (arg_const_parse
+         >>= fun c ->
+         check_char ':' *> type_parse
+         >>= (fun t -> return (n, Some c, t))
+         <|> return (n, Some c, UndefinedType))
+  in
+  choice
+    [ remove_brackets (check_name >>= fun n -> check_char '=' *> helper n)
+    ; remove_brackets
+        (check_name
+         >>= fun n -> check_char ':' *> type_parse >>= fun t -> return (n, None, t))
+    ; remove_brackets p
+    ; (check_name >>= fun n -> return (n, None, UndefinedType))
+    ]
 ;;
 
 let check_label =
   remove_spaces
-  *> (arg_parse
-      >>| (fun (n, t) -> NoLabel (n, t))
-      <|> (check_char '?' *> arg_parse >>| fun (n, t) -> Optional (n, t))
-      <|> (check_char '~' *> arg_parse >>| fun (n, t) -> Label (n, t)))
-;;
-
-let var_check =
-  check_name >>= fun s -> if is_keyword s then fail "Invalid var" else return (Var s)
+  *> choice
+       [ (check_char '~' *> labeled_arg_parse >>| fun (n, sn, t) -> Label (n, sn, t))
+       ; (check_char '?' *> optional_arg_parse >>| fun (n, c, t) -> Optional (n, c, t))
+       ; (arg_parse >>| fun (n, t) -> NoLabel (n, t))
+       ]
 ;;
 
 let args_parse = many check_label
-let var_parse p = remove_brackets p <|> var_check
-
-let digits_parse =
-  remove_between (take_while1 is_digit >>= fun s -> return (Const (Int (Int.of_string s))))
-;;
-
-let bool_parse =
-  check_word "true"
-  >>= fun _ ->
-  return (Const (Bool true))
-  <|> (check_word "false" >>= fun _ -> return (Const (Bool false)))
-;;
-
-let char_parse =
-  check_char '\'' *> any_char >>= fun c -> return (Const (Char c)) <* check_char '\''
-;;
-
-let string_parse =
-  check_char '\"' *> take_till is_quote
-  >>= fun s -> return (Const (String s)) <* check_char '\"'
-;;
-
-let const_parse p =
-  choice [ remove_brackets p; digits_parse; bool_parse; char_parse; string_parse ]
-;;
-
+let var_parse p = remove_brackets p <|> (var_check >>| fun s -> Var s)
 let base_expr p = const_parse p <|> var_parse p
 
 let if_then_else_parse p =
@@ -303,7 +395,7 @@ let bin_op_parse expr =
   expr
 ;;
 
-let aply_parse e = chainl1 e (return (fun e1 e2 -> Apply (e1, e2)))
+let apply_parse e = chainl1 e (return (fun e1 e2 -> Apply (e1, e2)))
 let fun_decl = check_char ':' *> type_parse <|> return UndefinedType
 
 let fun_parse e =
@@ -327,7 +419,7 @@ let expr_parse =
   fix
   @@ fun p ->
   let expr = base_expr p in
-  let expr = aply_parse expr <|> expr in
+  let expr = apply_parse expr <|> expr in
   let expr = bin_op_parse expr <|> expr in
   let expr = if_then_else_parse expr <|> expr in
   let expr = fun_parse expr <|> expr in
@@ -335,7 +427,7 @@ let expr_parse =
   expr
 ;;
 
-let parse_program = many (let_parse expr_parse let_decl)
+let parse_program = many (let_parse expr_parse let_decl) <* remove_spaces
 let parse str = Angstrom.parse_string parse_program ~consume:Angstrom.Consume.All str
 
 (*-------TESTS-------*)
@@ -357,8 +449,8 @@ let%test _ =
     [ LetDecl
         ( true
         , "fact"
-        , [ NoLabel ("n", IntType) ]
-        , IntType
+        , [ NoLabel ("n", IntType false) ]
+        , IntType false
         , IfThenElse
             ( BinOp (Less, Var "n", Const (Int 1))
             , Const (Int 1)
@@ -396,10 +488,148 @@ let%test _ =
     [ LetDecl
         ( false
         , "foo"
-        , [ NoLabel ("n", TupleType [ IntType; ListType StringType; BoolType; CharType ])
+        , [ NoLabel
+              ( "n"
+              , TupleType
+                  ( [ IntType false
+                    ; ListType (StringType false, false)
+                    ; BoolType false
+                    ; CharType false
+                    ]
+                  , false ) )
           ]
         , UndefinedType
         , Const (Int 1) )
+    ]
+;;
+
+let%test _ =
+  test_parse
+    " let foo ( n: int option * string option list option * bool option * char option ) \
+     = 1 "
+    [ LetDecl
+        ( false
+        , "foo"
+        , [ NoLabel
+              ( "n"
+              , TupleType
+                  ( [ IntType true
+                    ; ListType (StringType true, true)
+                    ; BoolType true
+                    ; CharType true
+                    ]
+                  , false ) )
+          ]
+        , UndefinedType
+        , Const (Int 1) )
+    ]
+;;
+
+let%test _ =
+  test_parse
+    " let foo ((((n : (((((int))))))))) = 1 "
+    [ LetDecl
+        (false, "foo", [ NoLabel ("n", IntType false) ], UndefinedType, Const (Int 1))
+    ]
+;;
+
+let%test _ =
+  test_parse
+    " let foo ( n : (int -> int -> int) option) = 1 "
+    [ LetDecl
+        ( false
+        , "foo"
+        , [ NoLabel ("n", FuncType (IntType false, IntType false, true)) ]
+        , UndefinedType
+        , Const (Int 1) )
+    ]
+;;
+
+let%test _ =
+  test_parse
+    " let foo ( n : int option option) = 1 "
+    [ LetDecl
+        (false, "foo", [ NoLabel ("n", IntType false) ], IntType false, Const (Int 1))
+    ]
+;;
+
+let%test _ =
+  test_parse
+    " let foo ?(n = 1) = 1 "
+    [ LetDecl
+        ( false
+        , "foo"
+        , [ Optional ("n", Some (Int 1), UndefinedType) ]
+        , UndefinedType
+        , Const (Int 1) )
+    ]
+;;
+
+let%test _ =
+  test_parse
+    " let foo ?(n = (1 : int)) = 1 "
+    [ LetDecl
+        ( false
+        , "foo"
+        , [ Optional ("n", Some (Int 1), IntType false) ]
+        , UndefinedType
+        , Const (Int 1) )
+    ]
+;;
+
+let%test _ =
+  test_parse
+    " let foo ?n = 1 "
+    [ LetDecl
+        ( false
+        , "foo"
+        , [ Optional ("n", None, UndefinedType) ]
+        , UndefinedType
+        , Const (Int 1) )
+    ]
+;;
+
+let%test _ =
+  test_parse
+    " let foo ?( n : int) = 1 "
+    [ LetDecl
+        ( false
+        , "foo"
+        , [ Optional ("n", None, IntType false) ]
+        , UndefinedType
+        , Const (Int 1) )
+    ]
+;;
+
+let%test _ =
+  test_parse
+    " let foo ~x = 1 "
+    [ LetDecl
+        (false, "foo", [ Label ("x", "x", UndefinedType) ], UndefinedType, Const (Int 1))
+    ]
+;;
+
+let%test _ =
+  test_parse
+    " let foo ~x:x1 = 1 "
+    [ LetDecl
+        (false, "foo", [ Label ("x", "x1", UndefinedType) ], UndefinedType, Const (Int 1))
+    ]
+;;
+
+let%test _ =
+  test_parse
+    " let foo ~(x:int) = 1 "
+    [ LetDecl
+        (false, "foo", [ Label ("x", "x", IntType false) ], UndefinedType, Const (Int 1))
+    ]
+;;
+
+let%test _ =
+  test_parse
+    " let foo ~(x:(x1:int)) = 1 "
+    [ LetDecl
+        (false, "foo", [ Label ("x", "x1", IntType false) ], UndefinedType, Const (Int 1))
     ]
 ;;
 
@@ -411,8 +641,15 @@ let%test _ =
         , "foo"
         , [ NoLabel
               ( "n"
-              , ListType (TupleType [ IntType; ListType StringType; BoolType; CharType ])
-              )
+              , ListType
+                  ( TupleType
+                      ( [ IntType false
+                        ; ListType (StringType false, false)
+                        ; BoolType false
+                        ; CharType false
+                        ]
+                      , false )
+                  , false ) )
           ]
         , UndefinedType
         , Const (Int 1) )
@@ -429,18 +666,29 @@ let%test _ =
         , [ NoLabel
               ( "n"
               , ListType
-                  (TupleType
-                     [ ListType
-                         (TupleType
-                            [ IntType
-                            ; ListType
-                                (TupleType [ StringType; BoolType; CharType; IntType ])
-                            ; BoolType
-                            ; CharType
-                            ])
-                     ; StringType
-                     ; BoolType
-                     ]) )
+                  ( TupleType
+                      ( [ ListType
+                            ( TupleType
+                                ( [ IntType false
+                                  ; ListType
+                                      ( TupleType
+                                          ( [ StringType false
+                                            ; BoolType false
+                                            ; CharType false
+                                            ; IntType false
+                                            ]
+                                          , false )
+                                      , false )
+                                  ; BoolType false
+                                  ; CharType false
+                                  ]
+                                , false )
+                            , false )
+                        ; StringType false
+                        ; BoolType false
+                        ]
+                      , false )
+                  , false ) )
           ]
         , UndefinedType
         , Const (Int 1) )
@@ -507,5 +755,41 @@ let%test _ =
     " let foo1 = true let foo2 = \"lets'go\""
     [ LetDecl (false, "foo1", [], UndefinedType, Const (Bool true))
     ; LetDecl (false, "foo2", [], UndefinedType, Const (String "lets'go"))
+    ]
+;;
+
+let%test _ =
+  test_parse
+    " let foo x = if x = 2 then x - 1 else x / 2"
+    [ LetDecl
+        ( false
+        , "foo"
+        , [ NoLabel ("x", UndefinedType) ]
+        , UndefinedType
+        , IfThenElse
+            ( BinOp (Eq, Var "x", Const (Int 2))
+            , BinOp (Dash, Var "x", Const (Int 1))
+            , BinOp (Slash, Var "x", Const (Int 2)) ) )
+    ]
+;;
+
+let%test _ =
+  test_parse
+    " let foo x = if x <> 2 && x >= 3 || x <= 8 then x - 1 else x * 2"
+    [ LetDecl
+        ( false
+        , "foo"
+        , [ NoLabel ("x", UndefinedType) ]
+        , UndefinedType
+        , IfThenElse
+            ( BinOp
+                ( Or
+                , BinOp
+                    ( And
+                    , BinOp (Neq, Var "x", Const (Int 2))
+                    , BinOp (Greaterq, Var "x", Const (Int 3)) )
+                , BinOp (Lessq, Var "x", Const (Int 8)) )
+            , BinOp (Dash, Var "x", Const (Int 1))
+            , BinOp (Asterisk, Var "x", Const (Int 2)) ) )
     ]
 ;;
