@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>demoParse.ml &mdash; Coverage report</title>
+    <meta name="description" content="60.00% coverage in demos/demoParse.ml">
+    <link rel="stylesheet" href="../coverage.css"/>
+    <script src="../highlight.pack.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+  </head>
+  <body>
+    <div id="header">
+      <h1>
+        <a href="../index.html">
+          <span class="dirname">demos/</span>demoParse.ml
+        </a>
+      </h1>
+      <h2>60.00%</h2>
+    </div>
+    <div id="navbar">
+      <span class="unvisited" style="bottom:8.33%"></span>
+    </div>
+    <div id="report">
+      <div id="lines-layer">
+        <pre>
+<a id="L1"></a><span > </span>
+<a id="L2"></a><span > </span>
+<a id="L3"></a><span > </span>
+<a id="L4"></a><span > </span>
+<a id="L5"></a><span > </span>
+<a id="L6"></a><span > </span>
+<a id="L7"></a><span > </span>
+<a id="L8"></a><span > </span>
+<a id="L9"></a><span class="visited"> </span>
+<a id="L10"></a><span class="visited"> </span>
+<a id="L11"></a><span class="unvisited"> </span>
+<a id="L12"></a><span > </span>
+</pre>
+      </div>
+      <div id="text-layer">
+        <pre id="line-numbers">
+<a href="#L1"> 1</a>
+<a href="#L2"> 2</a>
+<a href="#L3"> 3</a>
+<a href="#L4"> 4</a>
+<a href="#L5"> 5</a>
+<a href="#L6"> 6</a>
+<a href="#L7"> 7</a>
+<a href="#L8"> 8</a>
+<a href="#L9"> 9</a>
+<a href="#L10">10</a>
+<a href="#L11">11</a>
+<a href="#L12">12</a>
+</pre>
+<pre><code class="ocaml">(** Copyright 2021-2022, Kakadu and contributors *)
+
+(** SPDX-License-Identifier: CC0-1.0 *)
+
+open Lambda_lib
+
+let () =
+  let s = Stdio.In_channel.input_all Stdlib.stdin in
+  <span data-count="1">m</span>atch Lambda_lib.Parser.parse s with
+  | <span data-count="1">R</span>esult.Ok ast -&gt; Format.print<span data-count="1">f</span> "%a\n%!" Printast.pp_named ast
+  | <span data-count="0">E</span>rror _ -&gt; Format.print<span data-count="0">f</span> "Some error"
+;;
+</code></pre>
+      </div>
+    </div>
+    <script src="../coverage.js"></script>
+  </body>
+</html>
