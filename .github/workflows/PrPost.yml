@@ -172,17 +172,11 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            github.rest.issues.addLabels({
+            github.rest.issues.setLabels({
               issue_number: ${{ env.CI_PULL_REQUEST }},
               owner: context.repo.owner,
               repo: context.repo.repo,
               labels: ["A_FEW_LINTS"]
-            })
-            github.rest.issues.deleteLabel({
-              issue_number: ${{ env.CI_PULL_REQUEST }},
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              labels: ["TOO_MANY_LINTS"]
             })
 
       - name: Tag PR as TOOMANY linter complains
@@ -190,29 +184,23 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            github.rest.issues.addLabels({
+            github.rest.issues.setLabels({
               issue_number: ${{ env.CI_PULL_REQUEST }},
               owner: context.repo.owner,
               repo: context.repo.repo,
               labels: ["TOO_MANY_LINTS"]
             })
-            github.rest.issues.deleteLabel({
-              issue_number: ${{ env.CI_PULL_REQUEST }},
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              labels: ["A_FEW_LINTS"]
-            })
 
-      - name: Tag PR as TOOMANY linter complains
+      - name: Tag PR as OK linter complains
         if: ${{ env.LINTER_RESOLUTION == 'OK' }}
         uses: actions/github-script@v6
         with:
           script: |
-            github.rest.issues.deleteLabel({
+            github.rest.issues.setLabels({
               issue_number: ${{ env.CI_PULL_REQUEST }},
               owner: context.repo.owner,
               repo: context.repo.repo,
-              labels: ["A_FEW_LINTS", "TOO_MANY_LINTS"]
+              labels: []
             })
 
   ###################################################################################################
