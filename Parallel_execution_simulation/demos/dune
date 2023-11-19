@@ -1,0 +1,7 @@
+(executable
+ (name demoParser)
+ (modules demoParser)
+ (public_name Parallel_execution_simulation.demos)
+ (libraries Parallel_execution_simulation.lib stdio)
+ (instrumentation
+  (backend bisect_ppx)))

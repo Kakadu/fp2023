@@ -1,0 +1,10 @@
+(library
+ (name ocaml_pv)
+ (public_name OCaml+PolymorphicVariants.Lib)
+ (modules Ast Parser)
+ (inline_tests)
+ (libraries base angstrom)
+ (preprocess
+  (pps ppx_expect ppx_deriving.show))
+ (instrumentation
+  (backend bisect_ppx)))

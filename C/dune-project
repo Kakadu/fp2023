@@ -1,0 +1,33 @@
+(lang dune 3.7)
+
+(generate_opam_files true)
+
+(cram enable)
+
+(license LGPL-3.0-or-later)
+
+(authors "Pavlushkin Dmitrii Vladimirovich")
+
+(maintainers "st106768@student.spbu.ru")
+
+(bug_reports "FIXME where to put bug reports about the code")
+
+(homepage "https://github.com/PavlushaSource")
+
+(package
+ (name C)
+ (synopsis "Interpreter of the C language")
+ (description
+  "FIXME. A longer description, for example, which are the most interesing features being supported, etc.")
+ (version 0.1)
+ (depends
+  dune
+  angstrom
+  stdint
+  (ppx_inline_test :with-test)
+  ppx_expect
+  ppx_deriving
+  bisect_ppx
+  (odoc :with-doc)
+  (ocamlformat :build)
+  ))

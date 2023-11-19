@@ -1,0 +1,30 @@
+(lang dune 3.7)
+
+(generate_opam_files true)
+
+(license LGPL-3.0-or-later)
+
+(authors "Alexandra Lanovaya")
+
+(maintainers "https://github.com/ALanovaya")
+
+(homepage "https://github.com/ALanovaya/fp2023")
+
+(package
+ (name Parallel_execution_simulation)
+ (synopsis "Parallel execution simulation interpeter")
+ (description
+  "Something is supported... but in december...")
+ (version 0.1)
+ (depends
+  dune
+  angstrom
+  (ppx_inline_test :with-test)
+  ppx_expect
+  ppx_deriving
+  ppx_variants_conv
+  bisect_ppx
+  (odoc :with-doc)
+  (ocamlformat :build)
+  base
+ ))

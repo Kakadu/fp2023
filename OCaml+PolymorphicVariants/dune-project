@@ -1,0 +1,32 @@
+(lang dune 3.7)
+
+(generate_opam_files true)
+
+(cram enable)
+
+(license LGPL-3.0-or-later)
+
+(authors "Nikita Nemakin")
+
+(maintainers "Nikita Nemakin")
+
+(bug_reports "nikita.nemakin@yandex.ru")
+
+(homepage "")
+
+(package
+ (name OCaml+PolymorphicVariants)
+ (synopsis "An interpreter for OCaml with polymorphic variants")
+ (description
+  "A longer description, for example, which are the most interesing features being supported, etc.")
+ (version 0.1)
+ (depends
+  dune
+  angstrom
+  (ppx_inline_test :with-test)
+  ppx_expect
+  ppx_deriving
+  bisect_ppx
+  (odoc :with-doc)
+  (ocamlformat :build)
+  base))

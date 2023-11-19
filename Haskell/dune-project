@@ -1,0 +1,34 @@
+(lang dune 3.7)
+
+(generate_opam_files true)
+
+(cram enable)
+
+(license LGPL-3.0-or-later)
+
+(authors "Danil Parfyonov")
+
+(maintainers "Danil Parfyonov")
+
+(bug_reports "github.com/ancavar/fp2023/issues")
+
+(homepage "github.com/ancavar/fp2023/issues")
+
+(package
+ (name Haskell)
+ (synopsis "An interpreter for Haskell")
+ (description
+  "haskell is being supported pogchamp times 3 fire emoji times 3.")
+ (version 0.1)
+ (depends
+  dune
+  angstrom
+  (ppx_inline_test :with-test)
+  ppx_expect
+  ppx_deriving
+  bisect_ppx
+  (odoc :with-doc)
+  (ocamlformat :build)
+  ; base
+  ; After adding dependencies to 'dune' files and the same dependecies here too
+  ))

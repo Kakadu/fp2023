@@ -1,0 +1,19 @@
+(executable
+ (name demoFact)
+ (modules demoFact)
+ (public_name demoFact)
+ (libraries C_lib)
+ (instrumentation
+  (backend bisect_ppx)))
+
+(executable
+ (name demoBinarySearch)
+ (modules demoBinarySearch)
+ (public_name demoBinarySearch)
+ (libraries C_lib)
+ (instrumentation
+  (backend bisect_ppx)))
+
+(cram
+ (applies_to parsingTests)
+ (deps %{bin:demoFact} %{bin:demoBinarySearch}))

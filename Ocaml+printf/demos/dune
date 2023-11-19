@@ -1,0 +1,10 @@
+(executable
+ (name demoParse)
+ (modules demoParse)
+ (public_name demoParse)
+ (libraries ocaml_printf_lib stdio)
+ (instrumentation
+  (backend bisect_ppx)))
+
+(cram
+ (deps %{bin:demoParse}))

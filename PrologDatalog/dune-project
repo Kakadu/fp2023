@@ -1,0 +1,35 @@
+(lang dune 3.7)
+
+(generate_opam_files true)
+
+(cram enable)
+
+(license LGPL-3.0-or-later)
+
+(authors "Ilya Pogorelov")
+
+(maintainers "Ilya Pogorelov")
+
+(bug_reports
+ "You can report about bugs in the code to this email: ilya_pogorelov_04@mail.ru")
+
+(homepage "https://github.com/twotwozeronine/fp2023")
+
+(package
+ (name PrologDatalog) ; FIXME and regenerate .opam file using 'dune build @install'
+ (synopsis "An interpreter for language Prolog")
+ (description
+  "Prolog interpreter on Ocaml language. Implementation of base Prolog functionality")
+ (version 0.1)
+ (depends
+  dune
+  angstrom
+  (ppx_inline_test :with-test)
+  ppx_expect
+  ppx_deriving
+  bisect_ppx
+  (odoc :with-doc)
+  (ocamlformat :build)
+  ; base
+  ; After adding dependencies to 'dune' files and the same dependecies here too
+  ))

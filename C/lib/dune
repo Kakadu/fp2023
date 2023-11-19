@@ -1,0 +1,10 @@
+(library
+ (name C_lib)
+ (public_name C.Lib)
+ (modules Ast Parser)
+ (libraries base angstrom stdint)
+ (inline_tests)
+ (preprocess
+  (pps ppx_deriving.show ppx_inline_test ppx_expect))
+ (instrumentation
+  (backend bisect_ppx)))

@@ -1,0 +1,10 @@
+(executable
+ (name demoParse)
+ (modules demoParse)
+ (public_name demoParse)
+ (libraries OCaml+PolymorphicVariants.Lib)
+ (instrumentation
+  (backend bisect_ppx)))
+
+(cram
+ (deps %{bin:demoParse}))
