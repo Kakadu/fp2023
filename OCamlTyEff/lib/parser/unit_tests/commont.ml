@@ -6,15 +6,15 @@ open! Base
 open Ast
 open Common
 
-let%expect_test "parse_pat_bool1" =
+let%expect_test "parse_bool1" =
   pp Stdlib.Format.pp_print_string parse_constr_name "true" ;
   [%expect {| true |}]
 
-let%expect_test "parse_pat_bool2" =
+let%expect_test "parse_bool2" =
   pp Stdlib.Format.pp_print_string parse_constr_name "false" ;
   [%expect {| false |}]
 
-let%expect_test "parse_pat_unit" =
+let%expect_test "parse_unit" =
   pp Stdlib.Format.pp_print_string parse_constr_name "()" ;
   [%expect {| () |}]
 
