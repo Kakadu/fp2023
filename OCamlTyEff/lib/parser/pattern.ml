@@ -52,7 +52,7 @@ let parse_single_pat ppat =
 type pat_infix_op = OpOr | OpTuple | OpList
 
 let peek_infix_op =
-  let peek_or_tuple_ops =
+  let peek_1char_op =
     peek_char_fail
     >>= function
     | '|' ->
@@ -62,14 +62,17 @@ let peek_infix_op =
     | _ ->
         fail "not a pattern infix operator"
   in
-  let peek_list_op =
+  let peek_2chars_op =
     peek_string 2
-    >>= fun s ->
-    if String.equal s "::" then return {op= OpList; op_length= 2}
-    else fail "not a pattern list operator"
+    >>= function
+    | "::" ->
+        return {op= OpList; op_length= 2}
+    | _ ->
+        fail "not a pattern infix operator"
   in
-  peek_or_tuple_ops <|> peek_list_op
+  peek_1char_op <|> peek_2chars_op
 
+(** Set precedence and associativity for infix operators *)
 let get_infix_binding_power = function
   | OpOr ->
       (1, 2)

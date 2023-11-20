@@ -97,35 +97,32 @@ type expr_infix_op =
    Fail if [disabled_op] found
 *)
 let peek_infix_op disabled_op =
-  let peek_list_operator =
+  let peek_1char_op =
+    peek_char_fail
+    >>= function
+    | ';' ->
+        return {op= IOpSeq; op_length= 1}
+    | ',' ->
+        return {op= IOpTuple; op_length= 1}
+    | _ ->
+        fail "not an infix operator"
+  in
+  let peek_2chars_op =
     peek_string 2
-    >>= fun s ->
-    if String.equal s "::" then return {op= IOpList; op_length= 2}
-    else fail "not a list operator"
+    >>= function
+    | "::" ->
+        return {op= IOpList; op_length= 2}
+    | _ ->
+        fail "not an infix operator"
   in
-  let peek_seq_operator =
-    peek_char_fail
-    >>= fun c ->
-    if Char.equal c ';' then return {op= IOpSeq; op_length= 1}
-    else fail "not a seq operator"
-  in
-  let peek_tuple_operator =
-    peek_char_fail
-    >>= fun c ->
-    if Char.equal c ',' then return {op= IOpTuple; op_length= 1}
-    else fail "not a tuple operator"
-  in
-  let peek_custom_infix_op =
+  let peek_custom_op =
     peek_custom_infix_operator_name
     >>| fun name -> {op= IOpCustom (Ident name); op_length= String.length name}
   in
   option
-    {op= IOpApply; op_length= 0} (* application operator is 0 chars long *)
-    ( choice
-        [ peek_custom_infix_op
-        ; peek_list_operator
-        ; peek_seq_operator
-        ; peek_tuple_operator ]
+    (* default to application operator which is 0 chars long *)
+    {op= IOpApply; op_length= 0}
+    ( choice [peek_custom_op; peek_1char_op; peek_2chars_op]
     >>= fun op ->
     (* fail if disabled_op was passed and found *)
     Option.value_map disabled_op ~default:(return op) ~f:(fun disabled_op ->
@@ -133,7 +130,7 @@ let peek_infix_op disabled_op =
         else return op ) )
 
 (**
-   Set precedence and associativity for operators.
+   Set precedence and associativity for infix operators
    https://v2.ocaml.org/manual/expr.html#ss:precedence-and-associativity
 *)
 let get_infix_binding_power = function
@@ -164,13 +161,15 @@ let get_infix_binding_power = function
 type expr_prefix_op = POpPlus | POpMinus | POpCustom of ident
 
 let parse_prefix_op =
-  let parse_prefix_plus = char '+' *> return POpPlus in
-  let parse_prefix_minus = char '-' *> return POpMinus in
-  let parse_custom_prefix_op =
-    parse_custom_prefix_operator_name >>| fun id -> POpCustom (Ident id)
+  let parse_1char_op =
+    char '+' *> return POpPlus <|> char '-' *> return POpMinus
   in
-  choice [parse_prefix_minus; parse_prefix_plus; parse_custom_prefix_op]
+  let parse_custom_op =
+    parse_custom_prefix_operator_name >>| fun name -> POpCustom (Ident name)
+  in
+  choice [parse_1char_op; parse_custom_op]
 
+(** Set precedence and associativity for prefix operators *)
 let get_prefix_binding_power = function
   | POpPlus | POpCustom _ ->
       500 (* highest precedence *)
