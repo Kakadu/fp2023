@@ -2,11 +2,6 @@
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-(*
-   TODO:
-   1. Implenent standart IO funtions
-*)
-
 (** Identifiers for variables and functions names *)
 type id = string [@@deriving show { with_path = false }]
 

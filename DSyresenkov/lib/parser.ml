@@ -8,9 +8,8 @@
    Todo:
    1. Implement unary operators
    2. Think about type annotations support
-   3. Implement match parsing
-   4. Think about supporting list a :: b syntax
-   5. Add comments parser
+   3. Think about supporting list a :: b syntax
+   4. Add comments parser
 *)
 
 (*
@@ -23,10 +22,10 @@ open Angstrom
 open Base
 open Ast
 
-let pp printer parser str =
-  Stdlib.Format.printf "%a" printer
-  @@ Result.ok_or_failwith
-  @@ parse_string ~consume:Consume.All parser str
+let pp printer parser input =
+  match parse_string ~consume:Consume.All parser input with
+  | Result.Ok res -> Stdlib.Format.printf "%a" printer res
+  | _ -> Stdlib.print_endline "Failed to parse"
 ;;
 
 let is_space = function
@@ -212,7 +211,7 @@ let pexpr =
   in
   let pe = plbinop pe (pmul <|> pdiv) in
   let pe = plbinop pe (padd <|> psub) in
-  let pe = plbinop pe (choice [ peq; pneq; ples; pleq; pgre; pgeq ]) in
+  let pe = plbinop pe (choice [ peq; pneq; pgeq; pleq; ples; pgre ]) in
   let pe =
     lift2
       (fun e1 es ->
@@ -226,3 +225,64 @@ let pexpr =
 ;;
 
 let parse = parse_string ~consume:Consume.All (many1 (plet pexpr) <* pspaces)
+
+(** Tests *)
+
+let%expect_test _ =
+  pp pp_expr (plet pexpr) "let f x = x";
+  [%expect {| (ELet (NonRec, "f", (EFun ("x", (EVar "x"))), EUnit)) |}]
+;;
+
+let%expect_test _ =
+  pp pp_expr (pbranch pexpr) "if f x then x else 0";
+  [%expect
+    {| (EBranch ((EApp ((EVar "f"), (EVar "x"))), (EVar "x"), (EConst (CInt 0)))) |}]
+;;
+
+let%expect_test _ =
+  pp pp_expr (plist pexpr) "[1 + 2; 1 * 2; 1 - 2; 1 / 2]";
+  [%expect
+    {| 
+    (EList
+       [(EBinop (Add, (EConst (CInt 1)), (EConst (CInt 2))));
+         (EBinop (Mul, (EConst (CInt 1)), (EConst (CInt 2))));
+         (EBinop (Sub, (EConst (CInt 1)), (EConst (CInt 2))));
+         (EBinop (Div, (EConst (CInt 1)), (EConst (CInt 2))))]) 
+    |}]
+;;
+
+let%expect_test _ =
+  pp
+    pp_expr
+    (pmatch pexpr)
+    {|match x with | h1 :: h2 :: tl -> if h1 >= h2 then h1 else h2 | h1 :: [] -> h1 | _ -> 0|};
+  [%expect
+    {|
+        (EMatch ((EVar "x"),
+           [((PCons ((PVar "h1"), (PVar "h2"), [(PVar "tl")])),
+             (EBranch ((EBinop (Geq, (EVar "h1"), (EVar "h2"))), (EVar "h1"),
+                (EVar "h2"))));
+             ((PCons ((PVar "h1"), PEmpty, [])), (EVar "h1"));
+             (PWild, (EConst (CInt 0)))]
+           )) 
+    |}]
+;;
+
+let%expect_test _ =
+  pp pp_expr pexpr "[1; 2], [3; 4]";
+  [%expect
+    {|
+    (ETuple ((EList [(EConst (CInt 1)); (EConst (CInt 2))]),
+       (EList [(EConst (CInt 3)); (EConst (CInt 4))]), [])) 
+    |}]
+;;
+
+let%expect_test _ =
+  pp pp_expr pexpr "[1, 2, 3; 4, 5, 6]";
+  [%expect
+    {|
+    (EList
+       [(ETuple ((EConst (CInt 1)), (EConst (CInt 2)), [(EConst (CInt 3))]));
+         (ETuple ((EConst (CInt 4)), (EConst (CInt 5)), [(EConst (CInt 6))]))]) 
+    |}]
+;;
