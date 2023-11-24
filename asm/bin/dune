@@ -2,7 +2,7 @@
  (name demoParser)
  (modules demoParser)
  (public_name asm.demos)
- (libraries asm.lib stdio)
+ (libraries asm.Parser stdio)
  (instrumentation
   (backend bisect_ppx)))
 

@@ -1,15 +1,14 @@
-### An implementaion of Lambda mini-language
+### An implementaion of NASM mini-language
 
-This is a homework for functional programming course.
+License: LGPL for implementation code + WTFPL for test examples in nasm-like language
 
-License: LGPL for implementation code + WTFPL for test examles in nasm-language
-
-Author: Vadim Yakshigulov (toadharvard@gmail.com)
+Author: Vadim Yakshigulov (vadim.iakshigulov@gmail.com)
 
 Features done (append only):
 
-- parser, ast
+- parser
+- ast
 
 Features in progress (and TODOs):
 
-- TODO: improve parser and ast
+- TODO: improve parser
