@@ -89,7 +89,7 @@ type expr_infix_op =
   | IOpList
   | IOpTuple
   | IOpApply
-  | IOpCustom of ident
+  | IOpCustom of Ident.t
 [@@deriving eq]
 
 (**
@@ -158,7 +158,7 @@ let get_infix_binding_power = function
       else if is_equal "||" then (66, 65)
       else assert false
 
-type expr_prefix_op = POpPlus | POpMinus | POpCustom of ident
+type expr_prefix_op = POpPlus | POpMinus | POpCustom of Ident.t
 
 let parse_prefix_op =
   let parse_1char_op =

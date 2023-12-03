@@ -20,4 +20,12 @@
  (name OCamlTyEff)
  (synopsis "OCaml interpreter with support for typed effects")
  (description "OCaml interpreter with support for typed effects")
- (depends ocaml dune base angstrom ppx_deriving ppx_expect bisect_ppx))
+ (depends
+  ocaml
+  dune
+  base
+  angstrom
+  ppx_deriving
+  ppx_expect
+  ppx_sexp_conv
+  bisect_ppx))
