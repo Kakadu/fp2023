@@ -5,7 +5,7 @@ type t =
   | Ty_arr of t * t
   | Ty_tuple of t list
   | Ty_con of Ast.Ident.t * t list
-[@@deriving show {with_path= false}]
+[@@deriving ord, sexp_of, show {with_path= false}]
 
 let rec vars = function
   | Ty_var x ->

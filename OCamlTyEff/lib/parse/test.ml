@@ -9,7 +9,7 @@ open Ast
 let pp string =
   match Parse.parse string with
   | Some str ->
-      Stdlib.Format.printf "%a" pp_structure str
+      pp_structure Stdlib.Format.std_formatter str
   | None ->
       Stdlib.print_endline "syntax error"
 
