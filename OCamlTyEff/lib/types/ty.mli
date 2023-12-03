@@ -18,3 +18,5 @@ val pp : Format.formatter -> t -> unit
 
 val show : t -> string
 
+val vars : t -> VarSet.t
+(** Type variables occuring in type *)
