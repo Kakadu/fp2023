@@ -18,33 +18,33 @@
       <h2>30.19%</h2>
     </div>
     <div id="navbar">
-      <span class="some-visited" style="top:10.53%"></span>
-      <span class="unvisited" style="top:12.28%"></span>
-      <span class="unvisited" style="top:19.30%"></span>
-      <span class="unvisited" style="top:21.05%"></span>
-      <span class="unvisited" style="top:28.07%"></span>
-      <span class="unvisited" style="top:29.82%"></span>
-      <span class="unvisited" style="top:31.58%"></span>
-      <span class="unvisited" style="top:33.33%"></span>
-      <span class="unvisited" style="top:35.09%"></span>
-      <span class="unvisited" style="top:36.84%"></span>
-      <span class="unvisited" style="top:38.60%"></span>
-      <span class="unvisited" style="top:40.35%"></span>
-      <span class="unvisited" style="top:42.11%"></span>
-      <span class="unvisited" style="top:43.86%"></span>
-      <span class="unvisited" style="top:45.61%"></span>
-      <span class="unvisited" style="top:47.37%"></span>
-      <span class="some-visited" style="bottom:47.37%"></span>
-      <span class="unvisited" style="bottom:26.32%"></span>
-      <span class="unvisited" style="bottom:24.56%"></span>
-      <span class="unvisited" style="bottom:22.81%"></span>
-      <span class="unvisited" style="bottom:21.05%"></span>
-      <span class="unvisited" style="bottom:19.30%"></span>
-      <span class="unvisited" style="bottom:17.54%"></span>
-      <span class="unvisited" style="bottom:15.79%"></span>
-      <span class="unvisited" style="bottom:14.04%"></span>
-      <span class="some-visited" style="bottom:8.77%"></span>
-      <span class="some-visited" style="bottom:5.26%"></span>
+      <span class="some-visited" style="top:10.34%"></span>
+      <span class="unvisited" style="top:12.07%"></span>
+      <span class="unvisited" style="top:18.97%"></span>
+      <span class="unvisited" style="top:20.69%"></span>
+      <span class="unvisited" style="top:27.59%"></span>
+      <span class="unvisited" style="top:29.31%"></span>
+      <span class="unvisited" style="top:31.03%"></span>
+      <span class="unvisited" style="top:32.76%"></span>
+      <span class="unvisited" style="top:34.48%"></span>
+      <span class="unvisited" style="top:36.21%"></span>
+      <span class="unvisited" style="top:37.93%"></span>
+      <span class="unvisited" style="top:39.66%"></span>
+      <span class="unvisited" style="top:41.38%"></span>
+      <span class="unvisited" style="top:43.10%"></span>
+      <span class="unvisited" style="top:44.83%"></span>
+      <span class="unvisited" style="top:46.55%"></span>
+      <span class="some-visited" style="bottom:48.28%"></span>
+      <span class="unvisited" style="bottom:27.59%"></span>
+      <span class="unvisited" style="bottom:25.86%"></span>
+      <span class="unvisited" style="bottom:24.14%"></span>
+      <span class="unvisited" style="bottom:22.41%"></span>
+      <span class="unvisited" style="bottom:20.69%"></span>
+      <span class="unvisited" style="bottom:18.97%"></span>
+      <span class="unvisited" style="bottom:15.52%"></span>
+      <span class="unvisited" style="bottom:13.79%"></span>
+      <span class="some-visited" style="bottom:8.62%"></span>
+      <span class="some-visited" style="bottom:5.17%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -96,16 +96,17 @@
 <a id="L45"></a><span class="unvisited"> </span>
 <a id="L46"></a><span class="unvisited"> </span>
 <a id="L47"></a><span class="unvisited"> </span>
-<a id="L48"></a><span class="unvisited"> </span>
+<a id="L48"></a><span > </span>
 <a id="L49"></a><span class="unvisited"> </span>
-<a id="L50"></a><span > </span>
+<a id="L50"></a><span class="unvisited"> </span>
 <a id="L51"></a><span > </span>
-<a id="L52"></a><span class="some-visited"> </span>
-<a id="L53"></a><span > </span>
-<a id="L54"></a><span class="some-visited"> </span>
-<a id="L55"></a><span class="visited"> </span>
-<a id="L56"></a><span > </span>
-<a id="L57"></a><span class="visited"> </span>
+<a id="L52"></a><span > </span>
+<a id="L53"></a><span class="some-visited"> </span>
+<a id="L54"></a><span > </span>
+<a id="L55"></a><span class="some-visited"> </span>
+<a id="L56"></a><span class="visited"> </span>
+<a id="L57"></a><span > </span>
+<a id="L58"></a><span class="visited"> </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -167,37 +168,38 @@
 <a href="#L55">55</a>
 <a href="#L56">56</a>
 <a href="#L57">57</a>
+<a href="#L58">58</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2023, aartdem *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
 <span data-count="54">t</span>ype const =
-  <span data-count="0">|</span> Int of in<span data-count="18">t</span> (**  1 *)
-  <span data-count="0">|</span> Bool of boo<span data-count="0">l</span> (** true *)
+  <span data-count="0">|</span> Int of in<span data-count="18">t</span> (** [1] *)
+  <span data-count="0">|</span> Bool of boo<span data-count="0">l</span> (** [true] *)
 [@@deriving eq, show { with_path = false }]
 
 <span data-count="3">t</span>ype un_op =
-  <span data-count="0">|</span> Un_plus (**  + *)
-  <span data-count="0">|</span> Un_minus (**  - *)
+  <span data-count="0">|</span> Un_plus (** [+] *)
+  <span data-count="0">|</span> Un_minus (** [-] *)
 [@@deriving eq, show { with_path = false }]
 
 <span data-count="15">t</span>ype bin_op =
-  <span data-count="0">|</span> Add (** +  *)
-  <span data-count="0">|</span> Sub (** -  *)
-  <span data-count="0">|</span> Mul (** * *)
-  <span data-count="0">|</span> Div (** / *)
-  <span data-count="0">|</span> Eq (** = *)
-  <span data-count="0">|</span> Neq (** &lt;&gt; *)
-  <span data-count="0">|</span> Leq (** &lt;= *)
-  <span data-count="0">|</span> Geq (** &gt;= *)
-  <span data-count="0">|</span> Gre (**  &gt; *)
-  <span data-count="0">|</span> Less (** &lt; *)
-  <span data-count="0">|</span> And (** &amp;&amp; *)
-  <span data-count="0">|</span> Or (** || *)
+  <span data-count="0">|</span> Add (** [+] *)
+  <span data-count="0">|</span> Sub (** [-] *)
+  <span data-count="0">|</span> Mul (** [*] *)
+  <span data-count="0">|</span> Div (** [/] *)
+  <span data-count="0">|</span> Eq (** [=] *)
+  <span data-count="0">|</span> Neq (** [&lt;&gt;] *)
+  <span data-count="0">|</span> Leq (** [&lt;=] *)
+  <span data-count="0">|</span> Geq (** [&gt;=] *)
+  <span data-count="0">|</span> Gre (**  [&gt;] *)
+  <span data-count="0">|</span> Less (** [&lt;] *)
+  <span data-count="0">|</span> And (** [&amp;&amp;] *)
+  <span data-count="0">|</span> Or (** [||] *)
 [@@deriving eq, show { with_path = false }]
 
-<span data-count="78">t</span>ype val_name = <span data-count="0">L</span>CIdent of strin<span data-count="26">g</span> (** variable_name1 *)
+<span data-count="78">t</span>ype val_name = <span data-count="0">L</span>CIdent of strin<span data-count="26">g</span> (** [variable_name1] *)
 [@@deriving eq, show { with_path = false }]
 
 (* not supported now (for factorail) *)
@@ -209,19 +211,20 @@ type pattern =
   | Pat_cons
 
 <span data-count="367">t</span>ype expr =
-  <span data-count="0">|</span> Expr_const of cons<span data-count="0">t</span> (**         1 *)
-  <span data-count="0">|</span> Un_op of un_op * exp<span data-count="0">r</span> (**         +1 *)
-  <span data-count="0">|</span> Bin_op of bin_op * expr * exp<span data-count="0">r</span> (**       2 + 2 *)
-  <span data-count="0">|</span> Expr_val of val_nam<span data-count="0">e</span> (**        val1 *)
-  <span data-count="0">|</span> ITE of expr * expr * exp<span data-count="0">r</span> (** if a then b else c *)
-  <span data-count="0">|</span> Fun of val_name * exp<span data-count="0">r</span> (** fun inc x -&gt; x + 1 *) (* val_name will change to pattern *)
-  <span data-count="0">|</span> App of expr * exp<span data-count="0">r</span> (**        f x *)
-  <span data-count="0">|</span> Expr_let of decl * exp<span data-count="0">r</span> (**   let a = 1 in b *)
+  <span data-count="0">|</span> Expr_const of cons<span data-count="0">t</span> (** [1] *)
+  <span data-count="0">|</span> Un_op of un_op * exp<span data-count="0">r</span> (** [-1] *)
+  <span data-count="0">|</span> Bin_op of bin_op * expr * exp<span data-count="0">r</span> (** [2 + 2] *)
+  <span data-count="0">|</span> Expr_val of val_nam<span data-count="0">e</span> (** [val1] *)
+  <span data-count="0">|</span> ITE of expr * expr * exp<span data-count="0">r</span> (** [if a then b else c] *)
+  <span data-count="0">|</span> Fun of val_name * exp<span data-count="0">r</span> (** [fun inc x -&gt; x + 1] *)
+    (* val_name will change to pattern *)
+  <span data-count="0">|</span> App of expr * exp<span data-count="0">r</span> (** [f x] *)
+  <span data-count="0">|</span> Expr_let of decl * exp<span data-count="0">r</span> (** [let a = 1 in b] *)
 [@@deriving eq, show { with_path = false }]
 
 <span data-count="0">a</span>nd decl = <span data-count="14">b</span>oo<span data-count="7">l</span> * val_name * exp<span data-count="304">r</span>
 
-<span data-count="28">t</span>ype let_decl = <span data-count="0">L</span>et_decl of dec<span data-count="0">l</span> (** let x = 1 *)
+<span data-count="28">t</span>ype let_decl = <span data-count="0">L</span>et_decl of dec<span data-count="0">l</span> (** [let x = 1] *)
 [@@deriving eq, show { with_path = false }<span data-count="14">]</span>
 
 <span data-count="7">t</span>ype program = <span data-count="33">l</span>et_decl lis<span data-count="7">t</span> [@@deriving eq, show { with_path = false }<span data-count="14">]</span>
