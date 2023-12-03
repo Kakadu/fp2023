@@ -3,17 +3,7 @@
 (library
  (name parser)
  (public_name OCamlTyEff.Parser)
- (modules
-  parser
-  common
-  expr
-  pattern
-  typ
-  structure
-  commont
-  patternt
-  exprt
-  typt)
+ (modules parser common expr pattern structure commont patternt exprt)
  (libraries base angstrom ast)
  (preprocess
   (pps ppx_expect ppx_deriving.eq))
