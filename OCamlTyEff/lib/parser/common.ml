@@ -155,7 +155,7 @@ let parse_string =
     char '{' *> ident
     >>= fun id ->
     char '|' *> many_till any_char (string ("|" ^ id ^ "}"))
-    >>| fun s -> Const_string (String.of_list s)
+    >>| fun s -> Const_string (String.of_char_list s)
   in
   let parse_string_literal2 =
     (* ["hello world"] *)
