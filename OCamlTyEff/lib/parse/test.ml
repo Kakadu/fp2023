@@ -7,7 +7,7 @@ open Ast
 
 (** Parse string and pretty print the output *)
 let pp string =
-  match Parser.parse string with
+  match Parse.parse string with
   | Some str ->
       Stdlib.Format.printf "%a" pp_structure str
   | None ->
