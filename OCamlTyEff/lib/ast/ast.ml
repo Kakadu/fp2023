@@ -2,8 +2,8 @@
 
 (** SPDX-License-Identifier: MIT *)
 
-type ident = Ident of string  (** Identifiers *)
-[@@deriving show {with_path= false}, eq]
+open! Base
+module Ident = Ident
 
 type constant =
   | Const_integer of int  (** Integer such as [25] *)
@@ -39,7 +39,7 @@ and pattern =
       (** Patterns [(P1, ..., Pn)]. Invariant: [n >= 2] *)
   | Pat_or of pattern * pattern  (** Pattern [P1 | P2] *)
   | Pat_constraint of pattern * typ  (** Pattern [(P : T)] *)
-  | Pat_construct of ident * pattern option
+  | Pat_construct of Ident.t * pattern option
       (** [Pat_construct(C, args)] represents:
           - [C]   when [args] is [None]
           - [C P] when [args] is [Some P]
@@ -60,7 +60,7 @@ and case = {left: pattern; right: expression}
 [@@deriving show {with_path= false}]
 
 and expression =
-  | Exp_ident of ident  (** Identifiers such as [x], [fact] *)
+  | Exp_ident of Ident.t  (** Identifiers such as [x], [fact] *)
   | Exp_constant of constant
       (** Expression constant such as [1], ['a'], ["hello"], [1.5] *)
   | Exp_let of rec_flag * value_binding list * expression
@@ -83,7 +83,7 @@ and expression =
       (** [match E0 with P1 -> E1 | ... | Pn -> En]. Invariant: [n >= 1] *)
   | Exp_tuple of expression list
       (** Expressions [(E1, ..., En)]. Invariant: [n >= 2] *)
-  | Exp_construct of ident * expression option
+  | Exp_construct of Ident.t * expression option
       (** [Exp_construct(C, exp)] represents:
           - [C]               when [exp] is [None],
           - [C E]             when [exp] is [Some E],
