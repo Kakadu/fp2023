@@ -1,4 +1,4 @@
-(** Copyright 2021-2023, Vitaliy Dyachkov *)
+(** Copyright 2023-2024, Vitaliy Dyachkov *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
@@ -39,10 +39,13 @@ type expr =
   | VarExpr of name
   | ListExpr of expr list
   | TupleExpr of expr list
-  | BinExpr of bin_op * expr * expr
-  | IfExpr of expr * expr * expr
-  | LetExpr of name * expr
-  | LetRecExpr of name * expr
-  | AppExpr of expr * expr
-  | FunExpr of pattern * expr
+  | BinExpr of bin_op * expr * expr (* 1 + 5 - 3*)
+  | IfExpr of expr * expr * expr (* if a then b else c *)
+  | LetExpr of name * expr (* let sq x = x * x *)
+  | LetInExpr of expr * expr (* let pr = ... in let sq = ....*)
+  | AppExpr of expr * expr (* sq 5 *)
+  | FunExpr of pattern * expr (* fun x -> x * x *)
+  | MatchExpr of expr * (pattern * expr) list
 [@@deriving show { with_path = false }]
+
+and program = expr list [@@deriving show { with_path = false }]

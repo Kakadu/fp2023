@@ -2,8 +2,9 @@
 opam-version: "2.0"
 version: "0.1"
 synopsis: "An interpreter for FSharp"
-description:
-  "FIXME. A longer description, for example, which are the most interesing features being supported, etc."
+description: """
+F# language interpreter, capable of interpreting binary operations, s1mple, 
+  recursive and nested functions. Support for active patterns will be added later"""
 maintainer: ["https://github.com/YazoonDinalt"]
 authors: ["Vitaliy Dyachkov"]
 license: "LGPL-3.0-or-later"
