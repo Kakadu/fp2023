@@ -2,14 +2,13 @@
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-(* Type inference (unification).
-   For better understanding see:
-   * Kakadu implementation of miniml langauge inferencer
-   [here](https://gitlab.com/Kakadu/fp2020course-materials/-/blob/master/code/miniml/inferencer.ml) *)
+(** Type inference (unification).
+    For better understanding see:
+    * Kakadu implementation of miniml language inferencer
+    [here](https://gitlab.com/Kakadu/fp2020course-materials/-/blob/master/code/miniml/inferencer.ml) *)
 
 open Base
 open Typedtree
-module Format = Caml.Format
 
 type error =
   [ `Occurs_check
@@ -18,7 +17,6 @@ type error =
   | `Empty_pattern
   | `Empty_input
   | `NotReachable
-  | `NotImplemented
   ]
 
 let pp_error ppf : error -> _ = function
@@ -28,14 +26,13 @@ let pp_error ppf : error -> _ = function
     Format.fprintf
       ppf
       "Typechecker error: unification failed on %a and %a"
-      Pprinttypedtree.pp_typ_letter
+      Pprinttypedtree.pp_typ_binder
       l
-      Pprinttypedtree.pp_typ_letter
+      Pprinttypedtree.pp_typ_binder
       r
   | `Empty_pattern -> Format.fprintf ppf "Typechecker error: empty pattern"
   | `Empty_input -> Format.fprintf ppf "Typechecker error: empty pattern"
   | `NotReachable -> Format.fprintf ppf "This not reacheable"
-  | `NotImplemented -> Format.fprintf ppf "This not implemented"
 ;;
 
 module R : sig
@@ -49,13 +46,13 @@ module R : sig
     val ( let* ) : 'a 'b. 'a t -> ('a -> 'b t) -> 'b t
   end
 
-  (** Creation of a fresh name from internal state *)
+
   val fresh : int t
 
-  (** Running a transformer: getting the inner result value *)
+
   val run : 'a t -> ('a, error) Result.t
 end = struct
-  (* A compositon: State monad after Result monad *)
+
   type 'a t = int -> int * ('a, error) Result.t
 
   let ( >>= ) : 'a 'b. 'a t -> ('a -> 'b t) -> 'b t =
@@ -129,17 +126,11 @@ module Subst : sig
   val pp : Format.formatter -> t -> unit
   val empty : t
   val singleton : fresh -> typ -> t R.t
-
-  (** Getting value from substitution. May raise [Not_found] *)
   val find_exn : fresh -> t -> typ
-
   val find : fresh -> t -> typ option
   val apply : t -> typ -> typ
   val unify : typ -> typ -> t R.t
-
-  (** Compositon of substitutions *)
   val compose : t -> t -> t R.t
-
   val compose_all : t list -> t R.t
   val remove : t -> fresh -> t
 end = struct
@@ -257,20 +248,10 @@ type scheme = S of binder_set * typ [@@deriving show { with_path = false }]
 module Scheme = struct
   type t = scheme
 
-  let occurs_in v = function
-    | S (names, typ) -> (not (VarSet.mem v names)) && Type.occurs_in v typ
-  ;;
-
-  let free_vars = function
-    | S (names, typ) -> VarSet.diff (Type.free_vars typ) names
-  ;;
-
   let apply sub (S (names, typ)) =
     let s2 = VarSet.fold (fun k s -> Subst.remove s k) names sub in
     S (names, Subst.apply s2 typ)
   ;;
-
-  let pp = pp_scheme
 end
 
 type environment = (string * scheme) list
@@ -279,24 +260,8 @@ module TypeEnv = struct
   type t = environment
 
   let extend e h = h :: e
-  let extend_x env id scheme = Base.Map.update env id ~f:(fun _ -> scheme)
   let empty = []
-
-  let free_vars : t -> VarSet.t =
-    List.fold_left ~init:VarSet.empty ~f:(fun acc (_, scheme) ->
-      VarSet.union acc (Scheme.free_vars scheme))
-  ;;
-
   let apply subst env = List.Assoc.map env ~f:(Scheme.apply subst)
-
-  let pp ppf xs =
-    Caml.Format.fprintf ppf "{| ";
-    List.iter xs ~f:(fun (n, s) -> Caml.Format.fprintf ppf "%s -> %a; " n pp_scheme s);
-    Caml.Format.fprintf ppf "|}%!"
-  ;;
-
-  let find_exn name xs = List.Assoc.find_exn ~equal:String.equal xs name
-  let available_bindings env = List.Assoc.map env ~f:(fun (S (_, ty)) -> ty)
 end
 
 open R
@@ -316,25 +281,12 @@ let instantiate : scheme -> typ R.t =
     (return ty)
 ;;
 
-let generalize : TypeEnv.t -> Type.t -> Scheme.t =
-  fun env ty ->
-  let free = VarSet.diff (Type.free_vars ty) (TypeEnv.free_vars env) in
-  S (free, ty)
-;;
-
 let lookup_env var env =
   match List.Assoc.find_exn env ~equal:String.equal var with
   | (exception Caml.Not_found) | (exception Not_found_s _) -> fail (`No_variable var)
   | scheme ->
     let* ans = instantiate scheme in
     return (Subst.empty, ans)
-;;
-
-let pp_env subst ppf env =
-  let env : TypeEnv.t =
-    List.map ~f:(fun (k, S (args, v)) -> k, S (args, Subst.apply subst v)) env
-  in
-  TypeEnv.pp ppf env
 ;;
 
 let infer =
@@ -497,8 +449,6 @@ let check_types env program =
   helper env program
 ;;
 
-let get_available_bindings env = TypeEnv.available_bindings env
-
 let check_types ?(env : environment = empty) e =
   Result.map (run (check_types env e)) ~f:Fun.id
 ;;
@@ -557,7 +507,7 @@ let%expect_test _ =
 
 let run_infer = function
   | Result.Error e -> Format.printf "Error: %a%!" pp_error e
-  | Result.Ok (_, typed) -> Format.printf "%a%!" Pprinttypedtree.pp_typ_letter typed
+  | Result.Ok (_, typed) -> Format.printf "%a%!" Pprinttypedtree.pp_typ_binder typed
 ;;
 
 let%expect_test _ =

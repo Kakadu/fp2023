@@ -5,9 +5,8 @@
 open Angstrom
 open Ast
 open Base
-module Format = Caml.Format
 
-(* Start parse func *)
+(** Start parse func *)
 
 let start_parsing parser string = parse_string ~consume:All parser string
 

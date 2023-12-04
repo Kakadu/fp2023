@@ -16,11 +16,11 @@ end
 
 (** Represent the type of expression *)
 type typ =
-  | Prim of string (** Represents available ground types *)
-  | Ty_var of binder (** Represents 'a, 'b types *)
-  | Arrow of typ * typ (** Represents function type: 'a -> 'a *)
-  | List of typ (** Represents list type: int list *)
-  | Tuple of typ list (** Represents typle type: [int, string] means (int, string) *)
+  | Prim of string (** Available ground types *)
+  | Ty_var of binder (** 'a, 'b types *)
+  | Arrow of typ * typ (** Function type: 'a -> 'a *)
+  | List of typ (** List type: int list *)
+  | Tuple of typ list (** Typle type: [int, string] means (int, string) *)
 [@@deriving show { with_path = false }]
 
 (** Type constructors *)
