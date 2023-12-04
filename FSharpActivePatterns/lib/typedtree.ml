@@ -14,7 +14,6 @@ module VarSetInit = struct
   ;;
 end
 
-
 (** Represent the type of expression *)
 type typ =
   | Prim of string (** Represents available ground types *)
@@ -27,6 +26,6 @@ type typ =
 (** Type constructors *)
 
 let arrow l r = Arrow (l, r)
-let list_typ x = List x 
+let list_typ x = List x
 let tuple_typ x = Tuple x
 let ( @-> ) = arrow

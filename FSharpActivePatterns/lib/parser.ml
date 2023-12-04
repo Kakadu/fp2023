@@ -182,7 +182,6 @@ type edispatch =
   ; tuple_e : edispatch -> expr t
   ; fun_e : edispatch -> expr t
   ; let_e : edispatch -> expr t
-  ; letIn_e : edispatch -> expr t
   ; app_e : edispatch -> expr t
   ; if_e : edispatch -> expr t
   ; matching_e : edispatch -> expr t
@@ -201,7 +200,6 @@ let pack =
       [ pack.fun_e pack
       ; pack.if_e pack
       ; pack.list_e pack
-      ; pack.letIn_e pack
       ; pack.let_e pack
       ; pack.app_e pack
       ; parens @@ choice [ pack.tuple_e pack; pack.bin_e pack ]
@@ -271,11 +269,6 @@ let pack =
       (pstrtoken "fun" *> parse_fun_args)
       (pstrtoken "->" *> expr_parsers pack)
   in
-  let letIn_e pack =
-    fix
-    @@ fun _ ->
-    lift2 (fun a b -> LetInExpr (a, b)) (let_e pack) (pstrtoken "in" *> expr_parsers pack)
-  in
   let app_e pack =
     fix
     @@ fun _ ->
@@ -284,7 +277,7 @@ let pack =
       (value_e <|> parens @@ choice [ fun_e pack; pack.app_e pack ])
       (many1 (parse_token1 @@ app_args_parsers pack))
   in
-  { list_e; tuple_e; fun_e; let_e; app_e; if_e; expr_parsers; letIn_e; matching_e; bin_e }
+  { list_e; tuple_e; fun_e; let_e; app_e; if_e; expr_parsers; matching_e; bin_e }
 ;;
 
 let parse = pack.expr_parsers pack
@@ -444,22 +437,6 @@ let%expect_test _ =
                (ListExpr [(ConstExpr (CInt 1)); (ConstExpr (CInt 2))]))),
             (VarExpr "y"))),
          (VarExpr "z"))) |}]
-;;
-
-let%expect_test _ =
-  let test = "let mult x = fun y -> x * y in mult 5 10" in
-  start_test parse show_expr test;
-  [%expect
-    {|
-      (LetInExpr (
-         (LetExpr ("mult",
-            (FunExpr ((Var "x"),
-               (FunExpr ((Var "y"), (BinExpr (Mul, (VarExpr "x"), (VarExpr "y")))))
-               ))
-            )),
-         (AppExpr ((AppExpr ((VarExpr "mult"), (ConstExpr (CInt 5)))),
-            (ConstExpr (CInt 10))))
-         )) |}]
 ;;
 
 let%expect_test _ =
