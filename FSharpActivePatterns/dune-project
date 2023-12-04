@@ -15,10 +15,10 @@
 (homepage "https://github.com/YazoonDinalt/fp2023")
 
 (package
- (name FSharpActivePatterns) ; FIXME and regenerate .opam file using 'dune build @install'
+ (name FSharpActivePatterns)
  (synopsis "An interpreter for FSharp")
  (description
-  "FIXME. A longer description, for example, which are the most interesing features being supported, etc.")
+  "F# language interpreter, capable of interpreting binary operations, s1mple, \n  recursive and nested functions. Support for active patterns will be added later")
  (version 0.1)
  (depends
   dune
@@ -29,6 +29,4 @@
   bisect_ppx
   (odoc :with-doc)
   (ocamlformat :build)
-  base
-  ; After adding dependencies to 'dune' files and the same dependecies here too
-  ))
+  base))
