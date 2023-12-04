@@ -4,7 +4,6 @@
 
 open Ast
 open Base
-module Format = Caml.Format
 
 module type MonadFail = sig
   include Base.Monad.S2
