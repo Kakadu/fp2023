@@ -25,6 +25,8 @@
   dune
   base
   angstrom
+  (monads
+   (= dev))
   ppx_deriving
   ppx_expect
   ppx_sexp_conv
