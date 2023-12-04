@@ -213,14 +213,6 @@ end = struct
     return @@ VLet (name, func_body)
   ;;
 
-  let inter_letIn elet body eval env =
-    match elet with
-    | LetExpr (f, _) ->
-      let* v_let = eval elet env in
-      eval body (add_bind env f v_let)
-    | _ -> fail Unreachable
-  ;;
-
   let inter_match expr_match cases eval env =
     let* val_match = eval expr_match env in
     let rec eval_match = function
@@ -245,7 +237,6 @@ end = struct
     | FunExpr (pat, expr) -> return @@ VFun (pat, expr, Map.to_alist env)
     | AppExpr (func, arg) -> inter_app func arg eval env
     | LetExpr (name, body) -> inter_let name body eval env
-    | LetInExpr (elet, body) -> inter_letIn elet body eval env
     | MatchExpr (expr_match, cases) -> inter_match expr_match cases eval env
   ;;
 
@@ -417,60 +408,5 @@ let test =
 let%test _ =
   match eval_program test with
   | Ok (VInt 42) -> true
-  | _ -> false
-;;
-
-let test =
-  [ LetInExpr
-      ( LetExpr
-          ( "sum"
-          , FunExpr (Var "x", FunExpr (Var "y", BinExpr (Add, VarExpr "x", VarExpr "y")))
-          )
-      , AppExpr (AppExpr (VarExpr "sum", ConstExpr (CInt 10)), ConstExpr (CInt 5)) )
-  ]
-;;
-
-let%test _ =
-  match eval_program test with
-  | Ok (VInt 15) -> true
-  | _ -> false
-;;
-
-let test =
-  [ LetInExpr
-      ( LetExpr
-          ( "fact"
-          , FunExpr
-              ( Var "x"
-              , IfExpr
-                  ( BinExpr (LEq, VarExpr "x", ConstExpr (CInt 1))
-                  , ConstExpr (CInt 1)
-                  , BinExpr
-                      ( Mul
-                      , AppExpr
-                          (VarExpr "fact", BinExpr (Sub, VarExpr "x", ConstExpr (CInt 1)))
-                      , VarExpr "x" ) ) ) )
-      , AppExpr (VarExpr "fact", ConstExpr (CInt 5)) )
-  ]
-;;
-
-let%test _ =
-  match eval_program test with
-  | Ok (VInt 120) -> true
-  | _ -> false
-;;
-
-let test =
-  [ LetInExpr
-      ( LetExpr ("sr", FunExpr (Var "a", BinExpr (Add, VarExpr "a", VarExpr "a")))
-      , LetInExpr
-          ( LetExpr ("sq", FunExpr (Var "a", BinExpr (Mul, VarExpr "a", VarExpr "a")))
-          , AppExpr (VarExpr "sq", ConstExpr (CInt 5)) ) )
-  ]
-;;
-
-let%test _ =
-  match eval_program test with
-  | Ok (VInt 25) -> true
   | _ -> false
 ;;

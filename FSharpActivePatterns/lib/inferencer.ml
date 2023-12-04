@@ -419,8 +419,6 @@ let infer =
       let env = TypeEnv.extend env (name, S (VarSet.empty, tv)) in
       let* s, t = helper env e in
       return (s, t)
-    | LetInExpr (_let_expr, _in_expr) -> fail `NotImplemented
-  
     | FunExpr (arg, e) ->
       let* env, t1 = pattern_helper env arg in
       let* s, t2 = helper env e in
@@ -483,7 +481,6 @@ let check_type env expr =
   | LetExpr (name, _) ->
     let env = TypeEnv.extend env (name, S (VarSet.empty, typ)) in
     return (env, typ)
-  | LetInExpr (_, _) -> fail `Empty_pattern
   | _ -> return (env, typ)
 ;;
 
@@ -664,25 +661,6 @@ let%expect_test _ =
   in
   [%expect {| (int -> int) |}]
 ;;
-
-let%expect_test _ =
-  let open Ast in
-  let _ =
-    let e =
-      [ LetInExpr
-          ( LetExpr
-              ( "mult"
-              , FunExpr
-                  (Var "x", FunExpr (Var "y", BinExpr (Mul, VarExpr "x", VarExpr "y"))) )
-          , AppExpr (AppExpr (VarExpr "mult", ConstExpr (CInt 5)), ConstExpr (CInt 10)) )
-      ]
-    in
-    check_types e |> run_infer
-  in
-  [%expect {| Error: This not implemented |}]
-;;
-
-(*TODO: Не работают LetIn функции, надо исправить, может не забуду*)
 
 let%expect_test _ =
   let open Ast in
