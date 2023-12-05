@@ -20,7 +20,7 @@ type value =
   | VList of value list
   | VTuple of value list
   | VFun of pattern * expr * (name * value) list
-  | VLet of name * value
+  | VLet of bool * activetype * value
 [@@deriving show { with_path = false }]
 
 let is_constr = function
@@ -39,6 +39,7 @@ type interpret_error =
   | EmptyProgram
   | TypeError
   | Unreachable
+  | NotImplemented
 
 let pp_interpret_error fmt = function
   | Division_by_zero -> Format.fprintf fmt "Exception: Division_by_zero."
@@ -52,6 +53,7 @@ let pp_interpret_error fmt = function
   | TypeError -> Format.fprintf fmt "Error: type mismatch, a different type was expected"
   | Unreachable ->
     Format.fprintf fmt "Error: Unreachable error... Something went wrong..."
+  | NotImplemented -> Format.fprintf fmt "This feature has not yet been implemented"
 ;;
 
 module Environment (M : MonadFail) = struct
@@ -186,32 +188,6 @@ end = struct
     | _ -> fail TypeError
   ;;
 
-  let inter_app func arg eval env =
-    let* fun_to_apply = eval func env in
-    match fun_to_apply with
-    | VFun (pat, expr, fun_env) ->
-      let* arg_to_apply = eval arg env in
-      let* res = bind_fun_params ~env (pat, arg_to_apply) in
-      eval expr (add_binds (add_binds empty fun_env) res)
-    | VLet (name, VFun (pat, expr, fun_env)) ->
-      let* arg_to_apply = eval arg env in
-      let* res = bind_fun_params ~env (pat, arg_to_apply) in
-      eval
-        expr
-        (add_binds
-           (add_bind
-              (add_binds empty fun_env)
-              name
-              (VLet (name, VFun (pat, expr, fun_env))))
-           res)
-    | _ -> fail TypeError
-  ;;
-
-  let inter_let name body eval env =
-    let* func_body = eval body env in
-    return @@ VLet (name, func_body)
-  ;;
-
   let inter_match expr_match cases eval env =
     let* val_match = eval expr_match env in
     let rec eval_match = function
@@ -234,8 +210,8 @@ end = struct
     | TupleExpr t -> inter_tuple t eval env
     | IfExpr (cond, e_then, e_else) -> inter_if cond e_then e_else eval env
     | FunExpr (pat, expr) -> return @@ VFun (pat, expr, Map.to_alist env)
-    | AppExpr (func, arg) -> inter_app func arg eval env
-    | LetExpr (name, body) -> inter_let name body eval env
+    | AppExpr (_func, _arg) -> fail NotImplemented
+    | LetExpr (_bool, _name, _body) -> fail NotImplemented
     | MatchExpr (expr_match, cases) -> inter_match expr_match cases eval env
   ;;
 
@@ -247,7 +223,7 @@ end = struct
         let* eval_h = eval h env in
         let eval_env =
           match h with
-          | LetExpr (f, _) when not @@ String.equal f "_" -> add_bind env f eval_h
+          | LetExpr (_, Name f, _) when not @@ String.equal f "_" -> add_bind env f eval_h
           | _ -> env
         in
         helper eval_env tl
@@ -299,98 +275,6 @@ let test =
           (Div, BinExpr (Sub, ConstExpr (CInt 10), ConstExpr (CInt 5)), ConstExpr (CInt 5))
       )
   ]
-;;
-
-let%test _ =
-  match eval_program test with
-  | Ok (VInt 29) -> true
-  | _ -> false
-;;
-
-let test =
-  [ LetExpr ("sq", FunExpr (Var "x", BinExpr (Mul, VarExpr "x", VarExpr "x")))
-  ; AppExpr (VarExpr "sq", ConstExpr (CInt 5))
-  ]
-;;
-
-let%test _ =
-  match eval_program test with
-  | Ok (VInt 25) -> true
-  | _ -> false
-;;
-
-let test =
-  [ LetExpr ("plusone", FunExpr (Var "x", BinExpr (Add, VarExpr "x", ConstExpr (CInt 1))))
-  ; AppExpr (VarExpr "plusone", ConstExpr (CInt 3))
-  ]
-;;
-
-let%test _ =
-  match eval_program test with
-  | Ok (VInt 4) -> true
-  | _ -> false
-;;
-
-let test =
-  [ LetExpr
-      ( "sum"
-      , FunExpr (Var "x", FunExpr (Var "y", BinExpr (Add, VarExpr "x", VarExpr "y"))) )
-  ; AppExpr
-      ( AppExpr
-          ( VarExpr "sum"
-          , AppExpr (AppExpr (VarExpr "sum", ConstExpr (CInt 700)), ConstExpr (CInt 70))
-          )
-      , ConstExpr (CInt 7) )
-  ]
-;;
-
-let%test _ =
-  match eval_program test with
-  | Ok (VInt 777) -> true
-  | _ -> false
-;;
-
-let test =
-  [ LetExpr
-      ( "check"
-      , FunExpr
-          ( Var "x"
-          , IfExpr
-              ( BinExpr (Eq, VarExpr "x", ConstExpr (CInt 1))
-              , BinExpr (Add, VarExpr "x", ConstExpr (CInt 1))
-              , BinExpr (Sub, VarExpr "x", ConstExpr (CInt 1)) ) ) )
-  ; AppExpr (VarExpr "check", ConstExpr (CInt 5))
-  ]
-;;
-
-let%test _ =
-  match eval_program test with
-  | Ok (VInt 4) -> true
-  | _ -> false
-;;
-
-let test =
-  [ LetExpr
-      ( "fact"
-      , FunExpr
-          ( Var "n"
-          , IfExpr
-              ( BinExpr (Eq, VarExpr "n", ConstExpr (CInt 1))
-              , ConstExpr (CInt 1)
-              , BinExpr
-                  ( Mul
-                  , VarExpr "n"
-                  , AppExpr
-                      (VarExpr "fact", BinExpr (Sub, VarExpr "n", ConstExpr (CInt 1))) )
-              ) ) )
-  ; AppExpr (VarExpr "fact", ConstExpr (CInt 5))
-  ]
-;;
-
-let%test _ =
-  match eval_program test with
-  | Ok (VInt 120) -> true
-  | _ -> false
 ;;
 
 let test =

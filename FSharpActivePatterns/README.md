@@ -7,15 +7,13 @@ License: LGPL for implementation code + WTFPL for test examles in miniLanguage
 Author: Vitaliy Dyachkov, vitaliy.dyach@gmail.com
 
 Functions performed:
-- Parser
-- Interpreter of non-recursive functions
-- Interpreter of recursive functions
-- Interpreter of nested functions
-- Type checker without LetIn 
+- Parser of Binary operations, functions, lists, tuples and active patterns
+- Interpreter without Let and App 
+- Type checker without Case and Let 
 
 Features under development:
-- Type checker LetIn 
-- Ability to describe and use active patterns
+- Interpreter Let and App 
+- Type checker Case and Let 
 
 (TODO: Поменять readme, может даже не забуду)
 ##### Замечания по стилю кодирования
