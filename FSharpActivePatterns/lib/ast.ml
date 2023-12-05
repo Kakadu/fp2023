@@ -32,6 +32,12 @@ type pattern =
   | Var of name
   | Tuple of pattern list (** a, b *)
   | List of pattern list (** [1;2;3] *)
+  | Case of name * pattern list (** Some x *)
+[@@deriving show { with_path = false }]
+
+type activetype =
+  | Name of name
+  | ActivePaterns of name list
 [@@deriving show { with_path = false }]
 
 type expr =
@@ -41,7 +47,7 @@ type expr =
   | TupleExpr of expr list
   | BinExpr of bin_op * expr * expr (** 1 + 5 - 3*)
   | IfExpr of expr * expr * expr (** if a then b else c *)
-  | LetExpr of name * expr (** let sq x = x * x *)
+  | LetExpr of bool * activetype * expr (** let sq x = x * x *)
   | AppExpr of expr * expr (** sq 5 *)
   | FunExpr of pattern * expr (** fun x -> x * x *)
   | MatchExpr of expr * (pattern * expr) list

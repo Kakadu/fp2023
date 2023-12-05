@@ -17,6 +17,11 @@ let is_char = function
   | _ -> false
 ;;
 
+let is_bchar = function
+  | 'A' .. 'Z' -> true
+  | _ -> false
+;;
+
 let is_digit = function
   | '0' .. '9' -> true
   | _ -> false
@@ -96,9 +101,16 @@ let var cond =
 
 let p_var =
   let is_entry = function
-    | c -> is_char c || is_underscore c || is_digit c
+    | c -> is_char c || is_bchar c || is_underscore c || is_digit c
   in
   var is_entry
+;;
+
+let p_var_case =
+  let is_constr_entry = function
+    | c -> is_bchar c || is_char c
+  in
+  var is_constr_entry
 ;;
 
 (* Pattern parsers*)
@@ -118,26 +130,37 @@ let parse_list ps =
   (fun v -> List v) <$> (pstrtoken "[" *> sep_by1 (pstrtoken ";") ps <* pstrtoken "]")
 ;;
 
+let parse_cases ps =
+  lift2
+    (fun id args -> Case (id, args))
+    (parse_token p_var_case)
+    (sep_by (pstrtoken "|") ps)
+;;
+
 type pdispatch =
   { value : pdispatch -> pattern t
   ; tuple : pdispatch -> pattern t
   ; list : pdispatch -> pattern t
   ; pattern : pdispatch -> pattern t
+  ; case : pdispatch -> pattern t
   }
 
 let pack =
-  let pattern pack = choice [ pack.tuple pack; pack.list pack; pack.value pack ] in
+  let pattern pack =
+    choice [ pack.tuple pack; pack.case pack; pack.list pack; pack.value pack ]
+  in
   let parse pack =
     choice [ pack.value pack; pack.list pack; parens @@ pack.tuple pack ]
   in
   let value pack =
-    fix @@ fun _ -> parse_wild <|> parse_Const <|> parse_var <|> parens @@ pack.value pack
+    fix @@ fun _ -> parse_wild <|> parse_var <|> parse_Const <|> parens @@ pack.value pack
   in
   let tuple pack =
     fix @@ fun _ -> parse_tuple (parse pack <|> parens @@ pack.tuple pack)
   in
+  let case pack = fix @@ fun _ -> parse_cases (parse pack <|> parens @@ pack.case pack) in
   let list pack = fix @@ fun _ -> parse_list (parse pack <|> parens @@ pack.list pack) in
-  { value; tuple; list; pattern }
+  { value; tuple; list; pattern; case }
 ;;
 
 let pat = pack.pattern pack
@@ -176,6 +199,10 @@ let plet_body pargs pexpr =
   >>= fun args -> pstrtoken "=" *> pexpr >>| fun expr -> constr_efun args expr
 ;;
 
+let parse_fun_args =
+  fix @@ fun p -> many1 (pack.list pack <|> pack.value pack) <|> parens p
+;;
+
 type edispatch =
   { list_e : edispatch -> expr t
   ; tuple_e : edispatch -> expr t
@@ -189,9 +216,6 @@ type edispatch =
   }
 
 let pack =
-  let parse_fun_args =
-    fix @@ fun p -> many1 (pack.list pack <|> pack.value pack) <|> parens p
-  in
   let expr_parsers pack = pack.bin_e pack <|> pack.matching_e pack in
   let value_e = fix @@ fun _ -> parse_evar <|> parse_econst in
   let op_parsers pack =
@@ -201,8 +225,8 @@ let pack =
       ; pack.list_e pack
       ; pack.let_e pack
       ; pack.app_e pack
-      ; parens @@ choice [ pack.tuple_e pack; pack.bin_e pack ]
       ; value_e
+      ; parens @@ choice [ pack.tuple_e pack; pack.bin_e pack ]
       ]
   in
   let app_args_parsers pack =
@@ -252,12 +276,14 @@ let pack =
   in
   let list_e pack = fix @@ fun _ -> parse_list_expr (expr_parsers pack) in
   let tuple_e pack = fix @@ fun _ -> parse_tuple_expr (expr_parsers pack) in
+  let let_with = pstrtoken "(|" *> sep_by (pstrtoken "|") p_var <* pstrtoken "|)" in
   let let_e pack =
     fix
     @@ fun _ ->
-    lift2
-      (fun a b -> LetExpr (a, b))
-      (pstrtoken "let" *> pstrtoken "rec" *> p_var <|> pstrtoken "let" *> p_var)
+    lift3
+      (fun a b c -> LetExpr (a, b, c))
+      (pstrtoken "let" *> option false (pstrtoken "rec" >>| fun _ -> true))
+      (p_var >>| (fun a -> Name a) <|> (let_with >>| fun a -> ActivePaterns a))
       (plet_body parse_fun_args (expr_parsers pack))
   in
   let fun_e pack =
@@ -346,12 +372,25 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
+  let test = "a,b,c" in
+  start_test pat show_pattern test;
+  [%expect {| (Tuple [(Var "a"); (Var "b"); (Var "c")]) |}]
+;;
+
+let%expect_test _ =
   let test = "[((1));2;3]" in
   start_test pat show_pattern test;
   [%expect {| (List [(Const (CInt 1)); (Const (CInt 2)); (Const (CInt 3))]) |}]
 ;;
 
 (* Test expr *)
+
+let%expect_test _ =
+  let test = "[1;2; 3]" in
+  start_test parse show_expr test;
+  [%expect
+    {| (ListExpr [(ConstExpr (CInt 1)); (ConstExpr (CInt 2)); (ConstExpr (CInt 3))]) |}]
+;;
 
 let%expect_test _ =
   let test = "[1;2; 3]" in
@@ -392,7 +431,7 @@ let%expect_test _ =
   start_test parse show_expr test;
   [%expect
     {|
-    (LetExpr ("f",
+    (LetExpr (false, (Name "f"),
        (FunExpr ((Var "x"), (BinExpr (Add, (VarExpr "x"), (VarExpr "x"))))))) |}]
 ;;
 
@@ -401,7 +440,7 @@ let%expect_test _ =
   start_test parse show_expr test;
   [%expect
     {|
-    (LetExpr ("f",
+    (LetExpr (true, (Name "f"),
        (FunExpr ((Var "x"), (BinExpr (Mul, (VarExpr "f"), (VarExpr "x"))))))) |}]
 ;;
 
@@ -410,7 +449,7 @@ let%expect_test _ =
   start_test parse show_expr test;
   [%expect
     {|
-    (LetExpr ("fact",
+    (LetExpr (true, (Name "fact"),
        (FunExpr ((Var "n"),
           (IfExpr ((BinExpr (Eq, (VarExpr "n"), (ConstExpr (CInt 1)))),
              (ConstExpr (CInt 1)),
@@ -445,4 +484,47 @@ let%expect_test _ =
     {|
     (MatchExpr ((ConstExpr (CInt 2)),
        [((Const (CInt 1)), (ConstExpr (CInt 2))); (Wild, (ConstExpr (CInt 5)))])) |}]
+;;
+
+let%expect_test _ =
+  let test = "match x with Some x -> x | None  -> 0" in
+  start_test parse show_expr test;
+  [%expect
+    {|
+    (MatchExpr ((VarExpr "x"),
+       [((Case ("Some", [(Var "x")])), (VarExpr "x"));
+         ((Case ("None", [])), (ConstExpr (CInt 0)))]
+       )) |}]
+;;
+
+let%expect_test _ =
+  let test = "let rec (|Even|) input = if input % 2 = 0 then 1 else 3" in
+  start_test parse show_expr test;
+  [%expect
+    {|
+    (LetExpr (true, (ActivePaterns ["Even"]),
+       (FunExpr ((Var "input"),
+          (IfExpr (
+             (BinExpr (Eq,
+                (BinExpr (Mod, (VarExpr "input"), (ConstExpr (CInt 2)))),
+                (ConstExpr (CInt 0)))),
+             (ConstExpr (CInt 1)), (ConstExpr (CInt 3))))
+          ))
+       )) |}]
+;;
+
+let%expect_test _ =
+  let test = "let rec (|Even|Odd|) input = if input % 2 = 0 then 1 else 3" in
+  start_test parse show_expr test;
+  [%expect
+    {|
+    (LetExpr (true, (ActivePaterns ["Even"; "Odd"]),
+       (FunExpr ((Var "input"),
+          (IfExpr (
+             (BinExpr (Eq,
+                (BinExpr (Mod, (VarExpr "input"), (ConstExpr (CInt 2)))),
+                (ConstExpr (CInt 0)))),
+             (ConstExpr (CInt 1)), (ConstExpr (CInt 3))))
+          ))
+       )) |}]
 ;;
