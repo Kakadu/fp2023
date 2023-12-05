@@ -51,7 +51,7 @@ type expr =
   | AppExpr of expr * expr (** sq 5 *)
   | FunExpr of pattern * expr (** fun x -> x * x *)
   | MatchExpr of expr * (pattern * expr) list
-  | CaseExpr of name * expr list 
+  | CaseExpr of name * expr list
 [@@deriving show { with_path = false }]
 
 and program = expr list [@@deriving show { with_path = false }]

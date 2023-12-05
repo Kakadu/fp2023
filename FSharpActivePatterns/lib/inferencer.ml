@@ -586,28 +586,6 @@ let%expect_test _ =
   [%expect {| int |}]
 ;;
 
-(* let%expect_test _ =
-  let open Ast in
-  let _ =
-    let e =
-      [ LetExpr ("f", FunExpr (Var "x", BinExpr (Add, VarExpr "x", VarExpr "x"))) ]
-    in
-    check_types e |> run_infer
-  in
-  [%expect {| (int -> int) |}]
-;;
-
-let%expect_test _ =
-  let open Ast in
-  let _ =
-    let e =
-      [ LetExpr ("f", FunExpr (Var "x", BinExpr (Mul, VarExpr "f", VarExpr "x"))) ]
-    in
-    check_types e |> run_infer
-  in
-  [%expect {| (int -> int) |}]
-;; *)
-
 let%expect_test _ =
   let open Ast in
   let _ =
