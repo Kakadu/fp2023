@@ -404,6 +404,7 @@ let infer =
       let t1 = list_typ t1 in
       let* subst = Subst.compose_all [ s1 ] in
       return (subst, Subst.apply subst t1)
+    | CaseExpr (_id, _cases) -> fail `NotImplemented
     | TupleExpr tuple ->
       let* s, t =
         List.fold

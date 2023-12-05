@@ -101,7 +101,7 @@ let var cond =
 
 let p_var =
   let is_entry = function
-    | c -> is_char c || is_bchar c || is_underscore c || is_digit c
+    | c -> is_char c || is_underscore c || is_digit c
   in
   var is_entry
 ;;
@@ -194,6 +194,13 @@ let parse_tuple_expr parser =
     (sep_by1 (pstrtoken ",") parser)
 ;;
 
+let parse_cases_expr ps =
+  lift2
+    (fun id args -> CaseExpr (id, args))
+    (parse_token p_var_case)
+    (sep_by (pstrtoken "|") ps)
+;;
+
 let plet_body pargs pexpr =
   parse_token1 pargs
   >>= fun args -> pstrtoken "=" *> pexpr >>| fun expr -> constr_efun args expr
@@ -213,6 +220,7 @@ type edispatch =
   ; matching_e : edispatch -> expr t
   ; bin_e : edispatch -> expr t
   ; expr_parsers : edispatch -> expr t
+  ; case_e : edispatch -> expr t
   }
 
 let pack =
@@ -226,6 +234,7 @@ let pack =
       ; pack.let_e pack
       ; pack.app_e pack
       ; value_e
+      ; pack.case_e pack
       ; parens @@ choice [ pack.tuple_e pack; pack.bin_e pack ]
       ]
   in
@@ -265,6 +274,9 @@ let pack =
        let cases = lift2 (fun h tl -> h :: tl) (case1 <|> case2) (many case2) in
        cases)
   in
+  let case_e pack =
+    fix @@ fun _ -> parse_cases_expr (expr_parsers pack <|> parens @@ pack.case_e pack)
+  in
   let if_e pack =
     fix
     @@ fun _ ->
@@ -276,13 +288,13 @@ let pack =
   in
   let list_e pack = fix @@ fun _ -> parse_list_expr (expr_parsers pack) in
   let tuple_e pack = fix @@ fun _ -> parse_tuple_expr (expr_parsers pack) in
-  let let_with = pstrtoken "(|" *> sep_by (pstrtoken "|") p_var <* pstrtoken "|)" in
+  let let_with = pstrtoken "(|" *> sep_by (pstrtoken "|") p_var_case <* pstrtoken "|)" in
   let let_e pack =
     fix
     @@ fun _ ->
     lift3
       (fun a b c -> LetExpr (a, b, c))
-      (pstrtoken "let" *> option false (pstrtoken "rec" >>| fun _ -> true))
+      (pstrtoken "let" *> option false ((parse_token (string "rec") <* parse_white_space1) >>| fun _ -> true))
       (p_var >>| (fun a -> Name a) <|> (let_with >>| fun a -> ActivePaterns a))
       (plet_body parse_fun_args (expr_parsers pack))
   in
@@ -302,7 +314,7 @@ let pack =
       (value_e <|> parens @@ choice [ fun_e pack; pack.app_e pack ])
       (many1 (parse_token1 @@ app_args_parsers pack))
   in
-  { list_e; tuple_e; fun_e; let_e; app_e; if_e; expr_parsers; matching_e; bin_e }
+  { list_e; tuple_e; fun_e; let_e; app_e; if_e; expr_parsers; matching_e; bin_e; case_e }
 ;;
 
 let parse = pack.expr_parsers pack
@@ -433,6 +445,30 @@ let%expect_test _ =
     {|
     (LetExpr (false, (Name "f"),
        (FunExpr ((Var "x"), (BinExpr (Add, (VarExpr "x"), (VarExpr "x"))))))) |}]
+;;
+
+let%expect_test _ =
+  let test = "let (|Even|Odd|) input = if input % 2 = 0 then Even else Odd " in
+  start_test parse show_expr test;
+  [%expect
+    {|
+      (LetExpr (false, (ActivePaterns ["Even"; "Odd"]),
+         (FunExpr ((Var "input"),
+            (IfExpr (
+               (BinExpr (Eq,
+                  (BinExpr (Mod, (VarExpr "input"), (ConstExpr (CInt 2)))),
+                  (ConstExpr (CInt 0)))),
+               (CaseExpr ("Even", [])), (CaseExpr ("Odd", []))))
+            ))
+         )) |}]
+;;
+
+let%expect_test _ =
+  let test = "let recognize input = a  " in
+  start_test parse show_expr test;
+  [%expect {|
+    (LetExpr (false, (Name "recognize"), (FunExpr ((Var "input"), (VarExpr "a")))
+       )) |}]
 ;;
 
 let%expect_test _ =
