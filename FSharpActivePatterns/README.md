@@ -8,12 +8,12 @@ Author: Vitaliy Dyachkov, vitaliy.dyach@gmail.com
 
 Functions performed:
 - Parser of Binary operations, functions, lists, tuples and active patterns
-- Interpreter without CaseExpr
+- Interpreter
 - Type checker without Case and Let 
 
 Features under development:
-- Intrepret CaseExpr
-- Type checker Case and Let 
+- fix imterpret bugs with active patterns
+- Type checker with Case and Let 
 
 (TODO: Поменять readme, может даже не забуду)
 ##### Замечания по стилю кодирования

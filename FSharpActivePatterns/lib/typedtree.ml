@@ -2,7 +2,7 @@
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-type binder = int [@@deriving show { with_path = false }]
+type binder = int [@@deriving show]
 
 module VarSetInit = struct
   include Caml.Set.Make (Int)

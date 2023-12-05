@@ -69,7 +69,10 @@ let chainl1 e op =
 (* Const parsers *)
 
 let parse_bool =
-  (fun _ -> CBool true) <$> string "true" <|> ((fun _ -> CBool true) <$> string "false")
+  parse_white_space
+  *> ((fun _ -> CBool true)
+      <$> string "true"
+      <|> ((fun _ -> CBool true) <$> string "false"))
 ;;
 
 let parse_int =
@@ -153,7 +156,7 @@ let pack =
     choice [ pack.value pack; pack.list pack; parens @@ pack.tuple pack ]
   in
   let value pack =
-    fix @@ fun _ -> parse_wild <|> parse_var <|> parse_Const <|> parens @@ pack.value pack
+    fix @@ fun _ -> parse_wild <|> parse_Const <|> parse_var <|> parens @@ pack.value pack
   in
   let tuple pack =
     fix @@ fun _ -> parse_tuple (parse pack <|> parens @@ pack.tuple pack)
@@ -294,7 +297,9 @@ let pack =
     @@ fun _ ->
     lift3
       (fun a b c -> LetExpr (a, b, c))
-      (pstrtoken "let" *> option false ((parse_token (string "rec") <* parse_white_space1) >>| fun _ -> true))
+      (pstrtoken "let"
+       *> option false (parse_token (string "rec") <* parse_white_space1 >>| fun _ -> true)
+      )
       (p_var >>| (fun a -> Name a) <|> (let_with >>| fun a -> ActivePaterns a))
       (plet_body parse_fun_args (expr_parsers pack))
   in
@@ -466,7 +471,8 @@ let%expect_test _ =
 let%expect_test _ =
   let test = "let recognize input = a  " in
   start_test parse show_expr test;
-  [%expect {|
+  [%expect
+    {|
     (LetExpr (false, (Name "recognize"), (FunExpr ((Var "input"), (VarExpr "a")))
        )) |}]
 ;;
@@ -534,33 +540,12 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  let test = "let rec (|Even|) input = if input % 2 = 0 then 1 else 3" in
+  let test = "match x with Some x -> true | None  -> false" in
   start_test parse show_expr test;
   [%expect
     {|
-    (LetExpr (true, (ActivePaterns ["Even"]),
-       (FunExpr ((Var "input"),
-          (IfExpr (
-             (BinExpr (Eq,
-                (BinExpr (Mod, (VarExpr "input"), (ConstExpr (CInt 2)))),
-                (ConstExpr (CInt 0)))),
-             (ConstExpr (CInt 1)), (ConstExpr (CInt 3))))
-          ))
-       )) |}]
-;;
-
-let%expect_test _ =
-  let test = "let rec (|Even|Odd|) input = if input % 2 = 0 then 1 else 3" in
-  start_test parse show_expr test;
-  [%expect
-    {|
-    (LetExpr (true, (ActivePaterns ["Even"; "Odd"]),
-       (FunExpr ((Var "input"),
-          (IfExpr (
-             (BinExpr (Eq,
-                (BinExpr (Mod, (VarExpr "input"), (ConstExpr (CInt 2)))),
-                (ConstExpr (CInt 0)))),
-             (ConstExpr (CInt 1)), (ConstExpr (CInt 3))))
-          ))
-       )) |}]
+      (MatchExpr ((VarExpr "x"),
+         [((Case ("Some", [(Var "x")])), (ConstExpr (CBool true)));
+           ((Case ("None", [])), (ConstExpr (CBool true)))]
+         )) |}]
 ;;

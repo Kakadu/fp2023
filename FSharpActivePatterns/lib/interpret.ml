@@ -19,10 +19,13 @@ type value =
   | VInt of int
   | VList of value list
   | VTuple of value list
-  | VLetWAPat of name * value (* without active patterns*)
-  | VLetAPat of name list * value
+  | VLetWAPat of name * value (* without active patterns *)
+  | VLetAPat of name list * value (* with active patterns *)
   | VFun of pattern * expr * (name * value) list
-[@@deriving show { with_path = false }]
+  | VCases of name * value
+  | VSome of value
+  | VNone
+[@@deriving show]
 
 let is_constr = function
   | 'A' .. 'Z' -> true
@@ -219,7 +222,19 @@ end = struct
     | AppExpr (func, arg) -> inter_app func arg eval env
     | LetExpr (bool, name, body) -> inter_let bool name body eval env
     | MatchExpr (expr_match, cases) -> inter_match expr_match cases eval env
-    | CaseExpr (_id, _case) -> fail NotImplemented
+    | CaseExpr (constr_id, args) ->
+      (match constr_id, args with
+       | "Some", arg :: [] ->
+         let* opt_val = eval arg env in
+         return @@ VSome opt_val
+       | "None", [] -> return VNone
+       | _, [] -> return @@ VCases (constr_id, VNone)
+       | _, arg :: [] ->
+         let* arg_val = eval arg env in
+         (match arg_val with
+          | VCases _ -> fail TypeError
+          | _ -> return @@ VCases (constr_id, VSome arg_val))
+       | _ -> fail TypeError)
   ;;
 
   let eval_program (program : expr list) : (value, interpret_error) t =
@@ -310,5 +325,49 @@ let test =
 let%test _ =
   match eval_program test with
   | Ok (VInt 10) -> true
+  | _ -> false
+;;
+
+let test =
+  [ LetExpr
+      ( true
+      , Name "fact"
+      , FunExpr
+          ( Var "n"
+          , IfExpr
+              ( BinExpr (Eq, VarExpr "n", ConstExpr (CInt 1))
+              , ConstExpr (CInt 1)
+              , BinExpr
+                  ( Mul
+                  , VarExpr "n"
+                  , AppExpr
+                      (VarExpr "fact", BinExpr (Sub, VarExpr "n", ConstExpr (CInt 1))) )
+              ) ) )
+  ; AppExpr (VarExpr "fact", ConstExpr (CInt 5))
+  ]
+;;
+
+let%test _ =
+  match eval_program test with
+  | Ok (VInt 120) -> true
+  | _ -> false
+;;
+
+let test =
+  [ LetExpr
+      ( false
+      , Name "recognize"
+      , FunExpr
+          ( Var "input"
+          , MatchExpr
+              ( VarExpr "input"
+              , [ Const (CInt 1), ConstExpr (CInt 5); Wild, ConstExpr (CInt 20) ] ) ) )
+  ; AppExpr (VarExpr "recognize", ConstExpr (CInt 5))
+  ]
+;;
+
+let%test _ =
+  match eval_program test with
+  | Ok (VInt 20) -> true
   | _ -> false
 ;;
