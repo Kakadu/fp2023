@@ -19,8 +19,9 @@ type value =
   | VInt of int
   | VList of value list
   | VTuple of value list
+  | VLetWAPat of name * value (* without active patterns*)
+  | VLetAPat of name list * value
   | VFun of pattern * expr * (name * value) list
-  | VLet of bool * activetype * value
 [@@deriving show { with_path = false }]
 
 let is_constr = function
@@ -127,43 +128,6 @@ end = struct
     return @@ VTuple eval_list
   ;;
 
-  let compute_compare cmp_op l r =
-    let compute_cmp_op = function
-      | Less -> return Poly.( < )
-      | LEq -> return Poly.( <= )
-      | Gre -> return Poly.( > )
-      | GEq -> return Poly.( >= )
-      | Eq -> return Poly.( = )
-      | NEq -> return Poly.( <> )
-      | _ -> fail Unreachable
-    in
-    let rec is_fun_in_vlist = function
-      | [] -> false
-      | VFun _ :: _ -> true
-      | VTuple l :: tl | VList l :: tl -> is_fun_in_vlist l || is_fun_in_vlist tl
-      | _ :: tl -> is_fun_in_vlist tl
-    in
-    let eval_cmp op = function
-      | VBool l, VBool r ->
-        let* cmp = compute_cmp_op op in
-        return @@ VBool (cmp l r)
-      | VInt l, VInt r ->
-        let* cmp = compute_cmp_op op in
-        return @@ VBool (cmp l r)
-      | VString l, VString r ->
-        let* cmp = compute_cmp_op op in
-        return @@ VBool (cmp l r)
-      | VList l, VList r | VTuple l, VTuple r ->
-        if is_fun_in_vlist l || is_fun_in_vlist r
-        then fail FunctionCompare
-        else
-          let* cmp = compute_cmp_op op in
-          return @@ VBool (cmp l r)
-      | _ -> fail Unreachable
-    in
-    eval_cmp cmp_op (l, r)
-  ;;
-
   let inter_binary op l r eval env =
     let* rigth_val = eval r env in
     let* left_val = eval l env in
@@ -175,8 +139,13 @@ end = struct
     | Mul, VInt l, VInt r -> return @@ VInt (l * r)
     | Div, VInt l, VInt r -> return @@ VInt (l / r)
     | Mod, VInt l, VInt r -> return @@ VInt (l % r)
-    | And, VBool b, VBool _ | Or, VBool b, VBool _ -> return @@ VBool b
-    | cmp_op, l, r -> compute_compare cmp_op l r
+    | Less, VInt l, VInt r -> return @@ VBool (l < r)
+    | LEq, VInt l, VInt r -> return @@ VBool (l <= r)
+    | Gre, VInt l, VInt r -> return @@ VBool (l > r)
+    | GEq, VInt l, VInt r -> return @@ VBool (l >= r)
+    | Eq, VInt l, VInt r -> return @@ VBool (l = r)
+    | NEq, VInt l, VInt r -> return @@ VBool (l <> r)
+    | _ -> fail Unreachable
   ;;
 
   let inter_if cond e_then e_else eval env =
@@ -201,6 +170,43 @@ end = struct
     eval_match cases
   ;;
 
+  let inter_let bool name body eval env =
+    match bool with
+    | true ->
+      (match name with
+       | Name name ->
+         let* func_body = eval body env in
+         return @@ VLetWAPat (name, func_body)
+       | _ -> fail Unreachable)
+    | false ->
+      (match name with
+       | Name _ -> eval body env
+       | ActivePaterns a_pat ->
+         let* fun_pat = eval body env in
+         return @@ VLetAPat (a_pat, fun_pat))
+  ;;
+
+  let inter_app func arg eval env =
+    let* fun_to_apply = eval func env in
+    match fun_to_apply with
+    | VFun (pat, expr, fun_env) ->
+      let* arg_to_apply = eval arg env in
+      let* res = bind_fun_params ~env (pat, arg_to_apply) in
+      eval expr (add_binds (add_binds empty fun_env) res)
+    | VLetWAPat (name, VFun (pat, expr, fun_env)) ->
+      let* arg_to_apply = eval arg env in
+      let* res = bind_fun_params ~env (pat, arg_to_apply) in
+      eval
+        expr
+        (add_binds
+           (add_bind
+              (add_binds empty fun_env)
+              name
+              (VLetWAPat (name, VFun (pat, expr, fun_env))))
+           res)
+    | _ -> fail TypeError
+  ;;
+
   let rec eval expr env =
     match expr with
     | ConstExpr v -> return @@ inter_const v
@@ -210,9 +216,10 @@ end = struct
     | TupleExpr t -> inter_tuple t eval env
     | IfExpr (cond, e_then, e_else) -> inter_if cond e_then e_else eval env
     | FunExpr (pat, expr) -> return @@ VFun (pat, expr, Map.to_alist env)
-    | AppExpr (_func, _arg) -> fail NotImplemented
-    | LetExpr (_bool, _name, _body) -> fail NotImplemented
+    | AppExpr (func, arg) -> inter_app func arg eval env
+    | LetExpr (bool, name, body) -> inter_let bool name body eval env
     | MatchExpr (expr_match, cases) -> inter_match expr_match cases eval env
+    | CaseExpr (_id, _case) -> fail NotImplemented
   ;;
 
   let eval_program (program : expr list) : (value, interpret_error) t =
@@ -291,5 +298,17 @@ let test =
 let%test _ =
   match eval_program test with
   | Ok (VInt 42) -> true
+  | _ -> false
+;;
+
+let test =
+  [ LetExpr (false, Name "f", FunExpr (Var "x", BinExpr (Add, VarExpr "x", VarExpr "x")))
+  ; AppExpr (VarExpr "f", ConstExpr (CInt 5))
+  ]
+;;
+
+let%test _ =
+  match eval_program test with
+  | Ok (VInt 10) -> true
   | _ -> false
 ;;
