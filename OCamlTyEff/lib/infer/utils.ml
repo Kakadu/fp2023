@@ -39,3 +39,27 @@ module MakeRWSMonad (ReaderT : T) (WriterT : Monoid.S) (StateT : T) = struct
     let (ret, writer_state), state = StateM.run r init_state in
     (ret, writer_state, state)
 end
+
+module MakeSEMonad (StateT : T) (ErrorT : T) = struct
+  module ErrorM = struct
+    include Monad.Result.T1 (ErrorT) (Monad.Ident)
+    include Monad.Result.Make (ErrorT) (Monad.Ident)
+  end
+
+  include Monad.State.T1 (StateT) (ErrorM)
+  include Monad.State.Make (StateT) (ErrorM)
+
+  module State = struct
+    let get = get ()
+
+    let put = put
+  end
+
+  module Error = struct
+    let fail err = lift @@ ErrorM.fail err
+  end
+
+  let run m init_state =
+    let r = run m init_state in
+    ErrorM.run r
+end
