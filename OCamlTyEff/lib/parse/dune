@@ -12,7 +12,7 @@
   (backend bisect_ppx)))
 
 (library
- (name test)
+ (name parse_test)
  (modules test)
  (libraries base ast parse)
  (preprocess

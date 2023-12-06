@@ -3,6 +3,29 @@
 (library
  (name infer)
  (public_name OCamlTyEff.Infer)
+ (modules
+  infer
+  utils
+  assumptions
+  constraints
+  substitution
+  genMonad
+  genExpr
+  genStr
+  solveMonad
+  TyError
+  Unify
+  Solve)
  (libraries base monads types ast)
  (preprocess
   (pps ppx_deriving.show ppx_deriving.ord ppx_sexp_conv)))
+
+(library
+ (name infer_test)
+ (modules test)
+ (libraries base ast parse types infer)
+ (preprocess
+  (pps ppx_expect))
+ (inline_tests)
+ (instrumentation
+  (backend bisect_ppx)))
