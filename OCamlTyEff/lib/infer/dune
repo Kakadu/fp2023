@@ -4,5 +4,6 @@
  (name infer)
  (public_name OCamlTyEff.Infer)
  (libraries base monads types ast)
+ (modules_without_implementation tyError)
  (preprocess
   (pps ppx_deriving.show ppx_deriving.ord ppx_sexp_conv)))
