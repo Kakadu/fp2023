@@ -7,3 +7,5 @@ type t
 val empty : t
 
 val singleton : Ident.t -> Scheme.t -> t
+
+val find : t -> Ident.t -> Scheme.t option
