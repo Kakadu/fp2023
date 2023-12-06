@@ -2,4 +2,7 @@ open! Base
 open Types
 open Ast
 
-val infer_expr : Env.t -> expression -> (Ty.t, TyError.t) result
+module TyError : module type of TyError
+
+val infer_structure_item :
+  Env.t -> structure_item -> (Scheme.t * Env.t, TyError.t) result

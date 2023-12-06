@@ -1,5 +1,5 @@
 open! Base
-open GenExpr
+open GenStr
 open Solve
 open Types
 open Constraints
@@ -9,8 +9,11 @@ open SolveMonad.Solve
 open SolveMonad.Let_syntax
 open SolveMonad.Let
 
-let infer_expr env expr =
-  let (asm, ty), gen_cs = GenMonad.run (gen_expr expr) in
+(* reexport module so it can be accessed outside *)
+module TyError = TyError
+
+let infer_structure_item env str_item =
+  let (asm, ty), gen_cs = GenMonad.run (gen_str str_item) in
   let m =
     let* env_cs =
       Assumptions.fold asm ~init:(return ConstrSet.empty)
@@ -36,3 +39,11 @@ let infer_expr env expr =
     return (Sub.apply sub ty)
   in
   SolveMonad.run m
+  |> Result.map ~f:(fun ty ->
+         (* quantify all type variables *)
+         let sc = Scheme.Forall (Ty.vars ty, ty) in
+         match str_item with
+         | Str_value (_, [{pat= Pat_var name; expr= _}]) ->
+             (sc, Env.set env ~key:(Ident name) ~data:sc)
+         | _ ->
+             (sc, env) )

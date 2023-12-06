@@ -9,3 +9,5 @@ val empty : t
 val singleton : Ident.t -> Scheme.t -> t
 
 val find : t -> Ident.t -> Scheme.t option
+
+val set : t -> key:Ident.t -> data:Scheme.t -> t
