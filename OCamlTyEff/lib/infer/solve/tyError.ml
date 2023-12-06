@@ -2,9 +2,8 @@ open! Base
 open Types
 
 type t =
-  | UnificationMismatch
+  | UnificationMismatch (* XXX: better name *)
   | UnificationFail of Ty.t * Ty.t
   | UnboundVariable of string
   | OccursIn of Var.t * Ty.t
-
-val pp : Format.formatter -> t -> unit
+[@@deriving show {with_path= false}]
