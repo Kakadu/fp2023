@@ -19,6 +19,13 @@ let parse_str_let =
 
 let parse_structure : structure t =
   let parse_structure_item =
-    parse_str_let <|> (parse_expression >>| fun e -> Str_eval e)
+    (*
+       XXX: parsing of let structure items seems to require 2 passes.
+       first it tries to parse let expression, fails when doesn't find `in`,
+       then starts all over again trying to parse let structure item.
+
+       we probably should use lookahead to check for `in`
+    *)
+    parse_expression >>| (fun e -> Str_eval e) <|> parse_str_let
   in
   sep_by ws parse_structure_item <* ws
