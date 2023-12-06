@@ -550,11 +550,8 @@ let%expect_test _ =
          )) |}]
 ;;
 
-
 let%expect_test _ =
-  let test =
-    "let (|Even|Odd|) v = if v % 2 = 0 then Even else Odd "
-  in
+  let test = "let (|Even|Odd|) v = if v % 2 = 0 then Even else Odd " in
   start_test parse show_expr test;
   [%expect
     {|
@@ -570,10 +567,10 @@ let%expect_test _ =
 
 let%expect_test _ =
   let test =
-    "let myfunction v = 
-               match v with 
-                | Even -> 2 
-                | Odd -> 10           "
+    "let myfunction v = \n\
+    \               match v with \n\
+    \                | Even -> 2 \n\
+    \                | Odd -> 10           "
   in
   start_test parse show_expr test;
   [%expect
@@ -590,10 +587,7 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  let test =
-    "myfunction 5      "
-  in
+  let test = "myfunction 5      " in
   start_test parse show_expr test;
-  [%expect
-    {| (AppExpr ((VarExpr "myfunction"), (ConstExpr (CInt 5)))) |}]
+  [%expect {| (AppExpr ((VarExpr "myfunction"), (ConstExpr (CInt 5)))) |}]
 ;;
