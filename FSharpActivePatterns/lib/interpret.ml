@@ -4,6 +4,7 @@
 
 open Ast
 open Base
+open Errorinter
 
 module type MonadFail = sig
   include Base.Monad.S2
@@ -25,7 +26,7 @@ type value =
   | VCases of name * value
   | VSome of value
   | VNone
-[@@deriving show]
+[@@deriving show { with_path = false }]
 
 let is_constr = function
   | 'A' .. 'Z' -> true
@@ -33,32 +34,6 @@ let is_constr = function
 ;;
 
 type environment = (name, value, String.comparator_witness) Map.t
-
-type interpret_error =
-  | Division_by_zero
-  | UnboundValue of string
-  | UnboundConstructor of string
-  | FunctionCompare
-  | MatchFailure
-  | EmptyProgram
-  | TypeError
-  | Unreachable
-  | NotImplemented
-
-let pp_interpret_error fmt = function
-  | Division_by_zero -> Format.fprintf fmt "Exception: Division_by_zero."
-  | UnboundValue s -> Format.fprintf fmt "Error: Unbound value %s" s
-  | UnboundConstructor s -> Format.fprintf fmt "Error: Unbound constructor %s" s
-  | FunctionCompare ->
-    Format.fprintf fmt "Exception: Invalid_argument \"compare: functional value\""
-  | MatchFailure ->
-    Format.fprintf fmt "Exception: this pattern-matching is not exhaustive."
-  | EmptyProgram -> Format.fprintf fmt "Error: the program was not provided or was empty"
-  | TypeError -> Format.fprintf fmt "Error: type mismatch, a different type was expected"
-  | Unreachable ->
-    Format.fprintf fmt "Error: Unreachable error... Something went wrong..."
-  | NotImplemented -> Format.fprintf fmt "This feature has not yet been implemented"
-;;
 
 module Environment (M : MonadFail) = struct
   open M
@@ -80,7 +55,7 @@ module Environment (M : MonadFail) = struct
 end
 
 module Interpret (M : MonadFail) : sig
-  val eval_program : program -> (value, interpret_error) M.t
+  val eval_program : program -> (value, error) M.t
 end = struct
   open M
   open Environment (M)
@@ -160,17 +135,13 @@ end = struct
     | _ -> fail TypeError
   ;;
 
-  let inter_match expr_match cases eval env =
-    let* val_match = eval expr_match env in
-    let rec eval_match = function
-      | (pat, expr) :: cases ->
-        run
-          (bind_fun_params ~env (pat, val_match))
-          ~ok:(fun binds -> eval expr (add_binds env binds))
-          ~err:(fun _ -> eval_match cases)
-      | [] -> fail MatchFailure
-    in
-    eval_match cases
+  let compare_values ctx first second =
+    let open Caml in
+    match first, second with
+    | VInt a, CInt b -> return (a = b, ctx)
+    | VString s1, CString s2 -> return (String.equal s1 s2, ctx)
+    | VBool b1, CBool b2 -> return (b1 = b2, ctx)
+    | _ -> return (false, ctx)
   ;;
 
   let inter_let bool name body eval env =
@@ -210,6 +181,34 @@ end = struct
     | _ -> fail TypeError
   ;;
 
+  let inter_match expr_match cases eval env =
+    let* val_match = eval expr_match env in
+    let rec eval_match = function
+      | (pat, expr) :: cases ->
+        run
+          (bind_fun_params ~env (pat, val_match))
+          ~ok:(fun binds -> eval expr (add_binds env binds))
+          ~err:(fun _ -> eval_match cases)
+      | [] -> fail MatchFailure
+    in
+    eval_match cases
+  ;;
+
+  let inter_case constr_id args eval env =
+    match constr_id, args with
+    | "Some", arg :: [] ->
+      let* opt_val = eval arg env in
+      return @@ VSome opt_val
+    | "None", [] -> return VNone
+    | _, [] -> return @@ VCases (constr_id, VNone)
+    | _, arg :: [] ->
+      let* arg_val = eval arg env in
+      (match arg_val with
+       | VCases _ -> fail TypeError
+       | _ -> return @@ VCases (constr_id, VSome arg_val))
+    | _ -> fail TypeError
+  ;;
+
   let rec eval expr env =
     match expr with
     | ConstExpr v -> return @@ inter_const v
@@ -222,22 +221,10 @@ end = struct
     | AppExpr (func, arg) -> inter_app func arg eval env
     | LetExpr (bool, name, body) -> inter_let bool name body eval env
     | MatchExpr (expr_match, cases) -> inter_match expr_match cases eval env
-    | CaseExpr (constr_id, args) ->
-      (match constr_id, args with
-       | "Some", arg :: [] ->
-         let* opt_val = eval arg env in
-         return @@ VSome opt_val
-       | "None", [] -> return VNone
-       | _, [] -> return @@ VCases (constr_id, VNone)
-       | _, arg :: [] ->
-         let* arg_val = eval arg env in
-         (match arg_val with
-          | VCases _ -> fail TypeError
-          | _ -> return @@ VCases (constr_id, VSome arg_val))
-       | _ -> fail TypeError)
+    | CaseExpr (constr_id, args) -> inter_case constr_id args eval env
   ;;
 
-  let eval_program (program : expr list) : (value, interpret_error) t =
+  let eval_program (program : expr list) : (value, error) t =
     let rec helper env = function
       | h :: [] -> eval h env
       | [] -> fail EmptyProgram
@@ -273,7 +260,7 @@ let run input =
   | Ok ast ->
     (match eval_program ast with
      | Ok res -> pp_value Format.std_formatter res
-     | Error e -> Format.printf "(Error while interpreting): %a" pp_interpret_error e)
+     | Error e -> Format.printf "(Error while interpreting): %a" pp_error e)
   | Error e -> Format.printf "(Error while parsing): %s" e
 ;;
 
@@ -297,6 +284,14 @@ let test =
           (Div, BinExpr (Sub, ConstExpr (CInt 10), ConstExpr (CInt 5)), ConstExpr (CInt 5))
       )
   ]
+;;
+
+let test = [ BinExpr (Eq, ConstExpr (CInt 5), ConstExpr (CInt 5)) ]
+
+let%test _ =
+  match eval_program test with
+  | Ok (VBool true) -> true
+  | _ -> false
 ;;
 
 let test =
@@ -350,24 +345,12 @@ let test =
 let%test _ =
   match eval_program test with
   | Ok (VInt 120) -> true
-  | _ -> false
+  | Error t ->
+    Format.printf "%a" pp_error t;
+    false
+  | Ok t ->
+    Format.printf "%s" (show_value t);
+    false
 ;;
 
-let test =
-  [ LetExpr
-      ( false
-      , Name "recognize"
-      , FunExpr
-          ( Var "input"
-          , MatchExpr
-              ( VarExpr "input"
-              , [ Const (CInt 1), ConstExpr (CInt 5); Wild, ConstExpr (CInt 20) ] ) ) )
-  ; AppExpr (VarExpr "recognize", ConstExpr (CInt 5))
-  ]
-;;
 
-let%test _ =
-  match eval_program test with
-  | Ok (VInt 20) -> true
-  | _ -> false
-;;

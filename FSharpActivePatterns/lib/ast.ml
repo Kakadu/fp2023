@@ -32,7 +32,7 @@ type pattern =
   | Var of name
   | Tuple of pattern list (** a, b *)
   | List of pattern list (** [1;2;3] *)
-  | Case of name * pattern list (** Some x *)
+  | Case of name * pattern list
 [@@deriving show { with_path = false }]
 
 type activetype =

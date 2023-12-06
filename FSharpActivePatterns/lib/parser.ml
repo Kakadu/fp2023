@@ -549,3 +549,51 @@ let%expect_test _ =
            ((Case ("None", [])), (ConstExpr (CBool true)))]
          )) |}]
 ;;
+
+
+let%expect_test _ =
+  let test =
+    "let (|Even|Odd|) v = if v % 2 = 0 then Even else Odd "
+  in
+  start_test parse show_expr test;
+  [%expect
+    {|
+      (LetExpr (false, (ActivePaterns ["Even"; "Odd"]),
+         (FunExpr ((Var "v"),
+            (IfExpr (
+               (BinExpr (Eq, (BinExpr (Mod, (VarExpr "v"), (ConstExpr (CInt 2)))),
+                  (ConstExpr (CInt 0)))),
+               (CaseExpr ("Even", [])), (CaseExpr ("Odd", []))))
+            ))
+         )) |}]
+;;
+
+let%expect_test _ =
+  let test =
+    "let myfunction v = 
+               match v with 
+                | Even -> 2 
+                | Odd -> 10           "
+  in
+  start_test parse show_expr test;
+  [%expect
+    {|
+      (LetExpr (false, (Name "myfunction"),
+         (FunExpr ((Var "v"),
+            (MatchExpr ((VarExpr "v"),
+               [((Case ("Even", [])), (ConstExpr (CInt 2)));
+                 ((Case ("Odd", [])), (ConstExpr (CInt 10)))]
+               ))
+            ))
+         ))
+ |}]
+;;
+
+let%expect_test _ =
+  let test =
+    "myfunction 5      "
+  in
+  start_test parse show_expr test;
+  [%expect
+    {| (AppExpr ((VarExpr "myfunction"), (ConstExpr (CInt 5)))) |}]
+;;
