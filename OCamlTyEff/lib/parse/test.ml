@@ -6,7 +6,7 @@ open! Base
 open Ast
 
 (** Parse string and pretty print the output *)
-let pp string =
+let run string =
   match Parse.parse string with
   | Some str ->
       pp_structure Stdlib.Format.std_formatter str
@@ -14,7 +14,7 @@ let pp string =
       Stdlib.print_endline "syntax error"
 
 let%expect_test "parse_let_binding_pattern1" =
-  pp "let ft::sc::tr = sc" ;
+  run "let ft::sc::tr = sc" ;
   [%expect
     {|
     [(Str_value (Nonrecursive,
@@ -32,7 +32,7 @@ let%expect_test "parse_let_binding_pattern1" =
       ] |}]
 
 let%expect_test "parse_let_binding_pattern2" =
-  pp "let (f, s) = (f + s, f - s)" ;
+  run "let (f, s) = (f + s, f - s)" ;
   [%expect
     {|
     [(Str_value (Nonrecursive,
@@ -52,7 +52,7 @@ let%expect_test "parse_let_binding_pattern2" =
       ] |}]
 
 let%expect_test "parse_custom_operator1" =
-  pp "let (>>=) a b = a ** b" ;
+  run "let (>>=) a b = a ** b" ;
   [%expect
     {|
     [(Str_value (Nonrecursive,
@@ -69,7 +69,7 @@ let%expect_test "parse_custom_operator1" =
       ] |}]
 
 let%expect_test "parse_custom_operator2" =
-  pp "let (++) a b = a + b" ;
+  run "let (++) a b = a + b" ;
   [%expect
     {|
     [(Str_value (Nonrecursive,
@@ -86,7 +86,7 @@ let%expect_test "parse_custom_operator2" =
       ] |}]
 
 let%expect_test "parse_comments" =
-  pp
+  run
     "let(*sas*)rec(*firstcomment*)f n = (* second comment *) (* third \
      comment*) n + 1" ;
   [%expect
@@ -105,7 +105,7 @@ let%expect_test "parse_comments" =
       ] |}]
 
 let%expect_test "parse_let_rec_without_whitespaces1" =
-  pp "letrec f n = n + 1" ;
+  run "letrec f n = n + 1" ;
   [%expect
     {|
     [(Str_eval
@@ -123,7 +123,7 @@ let%expect_test "parse_let_rec_without_whitespaces1" =
       ] |}]
 
 let%expect_test "parse_let_rec_without_whitespaces2" =
-  pp "let reca = 1" ;
+  run "let reca = 1" ;
   [%expect
     {|
     [(Str_value (Nonrecursive,
@@ -131,7 +131,7 @@ let%expect_test "parse_let_rec_without_whitespaces2" =
       ] |}]
 
 let%expect_test "parse_fact" =
-  pp "let rec fact n = if n < 2 then 1 else n * fact (n - 1)" ;
+  run "let rec fact n = if n < 2 then 1 else n * fact (n - 1)" ;
   [%expect
     {|
     [(Str_value (Recursive,
