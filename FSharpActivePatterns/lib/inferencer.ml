@@ -9,33 +9,7 @@
 
 open Base
 open Typedtree
-
-type error =
-  [ `Occurs_check
-  | `No_variable of string
-  | `Unification_failed of typ * typ
-  | `Empty_pattern
-  | `Empty_input
-  | `NotReachable
-  | `NotImplemented
-  ]
-
-let pp_error ppf : error -> _ = function
-  | `Occurs_check -> Format.fprintf ppf "Typechecker error: occurs check failed"
-  | `No_variable s -> Format.fprintf ppf "Typechecker error: undefined variable '%s'" s
-  | `Unification_failed (l, r) ->
-    Format.fprintf
-      ppf
-      "Typechecker error: unification failed on %a and %a"
-      Pprinttypedtree.pp_typ_binder
-      l
-      Pprinttypedtree.pp_typ_binder
-      r
-  | `Empty_pattern -> Format.fprintf ppf "Typechecker error: empty pattern"
-  | `Empty_input -> Format.fprintf ppf "Typechecker error: empty pattern"
-  | `NotReachable -> Format.fprintf ppf "This not reacheable"
-  | `NotImplemented -> Format.fprintf ppf "This feature has not yet been implemented"
-;;
+open Errorinter
 
 module R : sig
   include Monad.Infix
@@ -144,7 +118,7 @@ end = struct
   ;;
 
   let empty = Map.Poly.empty
-  let mapping k v = if Type.occurs_in k v then fail `Occurs_check else return (k, v)
+  let mapping k v = if Type.occurs_in k v then fail Occurs_check else return (k, v)
 
   let singleton k v =
     let* f, t = mapping k v in
@@ -183,11 +157,11 @@ end = struct
       in
       match subs with
       | Ok res -> res
-      | Unequal_lengths -> fail (`Unification_failed (l, r))
+      | Unequal_lengths -> fail (Unification_failed (l, r))
     in
     match l, r with
     | Prim l, Prim r when String.equal l r -> return empty
-    | Prim _, Prim _ -> fail (`Unification_failed (l, r))
+    | Prim _, Prim _ -> fail (Unification_failed (l, r))
     | Ty_var a, Ty_var b when Int.equal a b -> return empty
     | Ty_var b, t | t, Ty_var b -> singleton b t
     | Arrow (l1, r1), Arrow (l2, r2) ->
@@ -196,7 +170,7 @@ end = struct
       compose subs1 subs2
     | List a, List b -> unify a b
     | Tuple a, Tuple b -> unify_lists a b
-    | _ -> fail (`Unification_failed (l, r))
+    | _ -> fail (Unification_failed (l, r))
 
   and extend key value extensible_subst =
     match Map.Poly.find extensible_subst key with
@@ -281,7 +255,7 @@ let instantiate : scheme -> typ R.t =
 
 let lookup_env var env =
   match List.Assoc.find_exn env ~equal:String.equal var with
-  | (exception Caml.Not_found) | (exception Not_found_s _) -> fail (`No_variable var)
+  | (exception Caml.Not_found) | (exception Not_found_s _) -> fail (No_variable var)
   | scheme ->
     let* ans = instantiate scheme in
     return (Subst.empty, ans)
@@ -324,7 +298,7 @@ let infer =
       let* subst = unify ty1 ty2 in
       let finenv = TypeEnv.apply subst env in
       return (finenv, Subst.apply subst ty1)
-    | Case (_a, _b) -> fail `NotImplemented
+    | Case (_a, _b) -> fail NotImplemented
   in
   let rec (helper : TypeEnv.t -> Ast.expr -> (Subst.t * typ) R.t) =
     fun env -> function
@@ -365,14 +339,14 @@ let infer =
       let* s5 = unify t2 t3 in
       let* final_subst = Subst.compose_all [ s5; s4; s3; s2; s1 ] in
       return (final_subst, Subst.apply final_subst t2)
-    | LetExpr (_, _name, _e) -> fail `NotImplemented
+    | LetExpr (_, _name, _e) -> fail NotImplemented
     | FunExpr (arg, e) ->
       let* env, t1 = pattern_helper env arg in
       let* s, t2 = helper env e in
       let typedres = Arrow (Subst.apply s t1, t2) in
       return (s, typedres)
-    | MatchExpr (cond, matches) ->
-      let* cond_sub, cond_ty = helper env cond in
+    | MatchExpr (_cond, _matches) -> fail NotImplemented
+      (*let* cond_sub, cond_ty = helper env cond in
       let env = TypeEnv.apply cond_sub env in
       let rec (matches_helper : (pattern * expr) list -> (Subst.t * typ * typ) R.t)
         = function
@@ -398,13 +372,13 @@ let infer =
       in
       let* match_sub, match_ty, _ = matches_helper matches in
       let* finalmatchsub = Subst.compose cond_sub match_sub in
-      return (finalmatchsub, Subst.apply finalmatchsub match_ty)
+      return (finalmatchsub, Subst.apply finalmatchsub match_ty)*)
     | ListExpr a ->
       let* s1, t1 = helper env (List.hd_exn a) in
       let t1 = list_typ t1 in
       let* subst = Subst.compose_all [ s1 ] in
       return (subst, Subst.apply subst t1)
-    | CaseExpr (_id, _cases) -> fail `NotImplemented
+    | CaseExpr (_id, _cases) -> fail NotImplemented
     | TupleExpr tuple ->
       let* s, t =
         List.fold
@@ -434,7 +408,7 @@ let check_type env expr =
 
 let check_types env program =
   let rec helper env = function
-    | [] -> fail `Empty_input
+    | [] -> fail Empty_input
     | hd :: [] ->
       let* env, typ = check_type env hd in
       return (env, typ)
@@ -586,19 +560,6 @@ let%expect_test _ =
   [%expect {| int |}]
 ;;
 
-let%expect_test _ =
-  let open Ast in
-  let _ =
-    let e =
-      [ MatchExpr
-          ( ConstExpr (CInt 2)
-          , [ Const (CInt 1), ConstExpr (CInt 2); Wild, ConstExpr (CInt 5) ] )
-      ]
-    in
-    check_types e |> run_infer
-  in
-  [%expect {| int |}]
-;;
 
 let%expect_test _ =
   let _ =
