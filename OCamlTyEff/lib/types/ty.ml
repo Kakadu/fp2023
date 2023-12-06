@@ -1,11 +1,22 @@
 open! Base
+open Ast
 
 type t =
   | Ty_var of Var.t
   | Ty_arr of t * t
   | Ty_tuple of t list
-  | Ty_con of Ast.Ident.t * t list
-[@@deriving ord, sexp_of, show {with_path= false}]
+  | Ty_con of Ident.t * t list
+[@@deriving eq, ord, sexp_of, show {with_path= false}]
+
+let unit = Ty_con (Ident "unit", [])
+
+let int = Ty_con (Ident "int", [])
+
+let bool = Ty_con (Ident "bool", [])
+
+let char = Ty_con (Ident "char", [])
+
+let string = Ty_con (Ident "string", [])
 
 let rec vars = function
   | Ty_var x ->
