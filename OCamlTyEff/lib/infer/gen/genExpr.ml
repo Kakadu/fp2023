@@ -17,7 +17,7 @@ let type_of_constant = function
 
 let rec gen_expr =
   let ( ! ) tv = Ty.Ty_var tv in
-  let ( --> ) ty_arg ty_res = Ty.Ty_arr (ty_arg, ty_res) in
+  let ( @> ) ty_arg ty_res = Ty.Ty_arr (ty_arg, ty_res) in
   let ( == ) t1 t2 = Constr.EqConstr (t1, t2) in
   let ( ++ ) = As.merge in
   let ( -- ) asm = List.fold ~init:asm ~f:As.remove in
@@ -47,15 +47,13 @@ let rec gen_expr =
                 As.lookup as_e arg |> List.map ~f:(fun var -> ty_arg == !var) )
           |> List.concat_no_order )
       in
-      let ty_res =
-        List.fold_right ty_args ~init:ty_e ~f:(fun acc ty -> ty --> acc)
-      in
+      let ty_res = List.fold_right ty_args ~init:ty_e ~f:( @> ) in
       return (as_e -- args, ty_res)
   | Exp_apply (e_fun, e_arg) ->
       let* as_fun, ty_fun = gen_expr e_fun in
       let* as_arg, ty_arg = gen_expr e_arg in
       let* ty_res = fresh_var >>| ( ! ) in
-      let* () = add_constrs [ty_fun == ty_arg --> ty_res] in
+      let* () = add_constrs [ty_fun == ty_arg @> ty_res] in
       return (as_fun ++ as_arg, ty_res)
   | Exp_let (Nonrecursive, bindings, e2) ->
       let name, e1 =
