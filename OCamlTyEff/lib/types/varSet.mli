@@ -13,10 +13,20 @@ val empty : t
 
 val singleton : Var.t -> t
 
+val of_list : Var.t list -> t
+
+val is_empty : t -> bool
+
 val add : t -> Var.t -> t
+
+val mem : t -> Var.t -> bool
 
 val union : t -> t -> t
 
 val union_list : t list -> t
 
+val inter : t -> t -> t
+
 val diff : t -> t -> t
+
+val fold : t -> init:'acc -> f:('acc -> Var.t -> 'acc) -> 'acc

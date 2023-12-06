@@ -1,7 +1,8 @@
 open! Base
 
 module T = struct
-  type t = Var of string [@@deriving ord, sexp_of, show {with_path= false}]
+  type t = Var of string
+  [@@deriving eq, ord, sexp_of, show {with_path= false}]
 end
 
 include T
