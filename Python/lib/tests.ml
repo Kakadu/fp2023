@@ -1,13 +1,13 @@
+(** Copyright 2021-2023, Averin Pavel *)
+
+(** SPDX-License-Identifier: LGPL-3.0-or-later *)
+
 open Ast
 open Parser
 open Interpreter
 open Eval (Result)
 
-let unpacker = function
-  | Ok x -> x
-  | _ -> failwith "Failed to unpack"
-;;
-
+let unpacker (Ok x) = x
 let env = global_env
 let%test _ = Ok (Int 5) = interpret_exp (ArithOp (Add, Const (Int 4), Const (Int 1))) env
 
@@ -199,10 +199,6 @@ let%test _ =
       (unpacker fact_env2)
 ;;
 
-let%test _ =
-  Ok None = interpret_exp (FunctionCall (Identifier "print", [ Const (Int 6003) ])) env
-;;
-
 let fact_and_print =
   get_env
     env
@@ -227,4 +223,8 @@ let fact_and_print =
            ( Identifier "print"
            , [ FunctionCall (Identifier "factorial", [ Const (Int 5) ]) ] ))
     ]
+;;
+
+let%test _ =
+  Ok None = interpret_exp (FunctionCall (Identifier "print", [ Const (Int 6003) ])) env
 ;;

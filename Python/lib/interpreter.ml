@@ -265,8 +265,7 @@ module Eval (M : MONADERROR) = struct
       | FunctionCall (identifier, exp_list) ->
         (match identifier with
          | Identifier "print" ->
-           let rec print_exp_list expression_list =
-             match expression_list with
+           let rec print_exp_list = function
              | [] -> return None
              | exp :: tl ->
                let* value = i_expr exp_or_stmt env exp in
