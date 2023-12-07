@@ -8,7 +8,7 @@ let unpacker = function
   | _ -> failwith "Failed to unpack"
 ;;
 
-let env = gloval_env
+let env = global_env
 let%test _ = Ok (Int 5) = interpret_exp (ArithOp (Add, Const (Int 4), Const (Int 1))) env
 
 let env1 =
