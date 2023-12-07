@@ -78,7 +78,7 @@ module Eval (M : MONADERROR) = struct
     }
   ;;
 
-  let gloval_env =
+  let global_env =
     { id = Identifier "global"
     ; vars = []
     ; local_envs = [ local_env ]
