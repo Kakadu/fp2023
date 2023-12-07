@@ -8,12 +8,12 @@ Author: Vitaliy Dyachkov, vitaliy.dyach@gmail.com
 
 Functions performed:
 - Parser of Binary operations, functions, lists, tuples and active patterns
-- Interpreter without Case
-- Type checker without Case and Let 
+- Interpreter without PCase
+- Type checker without Case, PCase and Let 
 
 Features under development:
-- Interpret Case
-- Type checker with Case and Let 
+- Interpret PCase
+- Type checker with Case, PCase and Let 
 
 (TODO: Поменять readme, может даже не забуду)
 ##### Замечания по стилю кодирования
@@ -25,7 +25,7 @@ Features under development:
 
   Такие суровые ограничения вводятся, чтобы замечания не игнорировались.
 
-- Иимена типов и функций -- snake_case
+- Имена типов и функций -- snake_case
 - Имена типов модулей и модулей -- CamelCase
 - Ворнинги должны быть пофикшены
 - Не стесняйтесь писать `if ... then ... else` вместо `match ... with true -> .. | false -> ...`
@@ -90,5 +90,3 @@ let x = if long_expression then true else false in ...
 ```ocaml
 let x = long_expression in ...
 ```
-
-- 1
