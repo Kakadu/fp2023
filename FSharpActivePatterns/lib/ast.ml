@@ -55,3 +55,18 @@ type expr =
 [@@deriving show { with_path = false }]
 
 and program = expr list [@@deriving show { with_path = false }]
+
+(** for interpret *)
+type value =
+  | VString of string
+  | VBool of bool
+  | VInt of int
+  | VList of value list
+  | VTuple of value list
+  | VLetWAPat of name * value (* without active patterns *)
+  | VLetAPat of name list * value (* with active patterns *)
+  | VFun of pattern * expr * (name * value) list
+  | VCases of name * value
+  | VSome of value
+  | VNone
+[@@deriving show { with_path = false }]

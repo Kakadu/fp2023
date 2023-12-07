@@ -326,8 +326,8 @@ let parse = pack.expr_parsers pack
 
 (* Parser program *)
 
-let pprogram = many1 (parse_token parse <* parse_token (many1 (pstrtoken ";;")))
-let main_parse str = start_parsing pprogram (String.strip str)
+let program = many1 (parse_token parse <* parse_token (many1 (pstrtoken ";;")))
+let main_parse str = start_parsing program (String.strip str)
 
 (* TESTS  PARSER*)
 
@@ -568,9 +568,9 @@ let%expect_test _ =
 let%expect_test _ =
   let test =
     "let myfunction v = \n\
-    \               match v with \n\
-    \                | Even -> 2 \n\
-    \                | Odd -> 10           "
+    \                   match v with \n\
+    \                    | Even -> 2 \n\
+    \                    | Odd -> 10       "
   in
   start_test parse show_expr test;
   [%expect

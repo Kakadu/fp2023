@@ -14,20 +14,6 @@ module type MonadFail = sig
   val ( let* ) : ('a, 'e) t -> ('a -> ('b, 'e) t) -> ('b, 'e) t
 end
 
-type value =
-  | VString of string
-  | VBool of bool
-  | VInt of int
-  | VList of value list
-  | VTuple of value list
-  | VLetWAPat of name * value (* without active patterns *)
-  | VLetAPat of name list * value (* with active patterns *)
-  | VFun of pattern * expr * (name * value) list
-  | VCases of name * value
-  | VSome of value
-  | VNone
-[@@deriving show { with_path = false }]
-
 let is_constr = function
   | 'A' .. 'Z' -> true
   | _ -> false
@@ -87,26 +73,37 @@ end = struct
     | Var var, app_arg -> return [ var, app_arg ]
     | Tuple pt, VTuple vt -> bind_pat_list pt vt
     | List pl, VList vl -> bind_pat_list pl vl
+    | Case (_acase_id, _acase_args), _value_to_match -> fail NotImplemented
     | _ -> fail MatchFailure
-  ;;
 
-  let inter_const = function
+  and eval expr env =
+    match expr with
+    | ConstExpr v -> return @@ inter_const v
+    | BinExpr (op, l, r) -> inter_binary op l r env
+    | VarExpr id -> find_val env id
+    | ListExpr l -> inter_list l env
+    | TupleExpr t -> inter_tuple t env
+    | IfExpr (cond, e_then, e_else) -> inter_if cond e_then e_else env
+    | FunExpr (pat, expr) -> return @@ VFun (pat, expr, Map.to_alist env)
+    | AppExpr (func, arg) -> inter_app func arg env
+    | LetExpr (bool, name, body) -> inter_let bool name body env
+    | MatchExpr (expr_match, cases) -> inter_match expr_match cases env
+    | CaseExpr (constr_id, args) -> inter_case constr_id args env
+
+  and inter_const = function
     | CBool b -> VBool b
     | CInt i -> VInt i
     | CString s -> VString s
-  ;;
 
-  let inter_list l eval env =
+  and inter_list l env =
     let* eval_list = all (List.map l ~f:(fun expr -> eval expr env)) in
     return @@ VList eval_list
-  ;;
 
-  let inter_tuple t eval env =
+  and inter_tuple t env =
     let* eval_list = all (List.map t ~f:(fun expr -> eval expr env)) in
     return @@ VTuple eval_list
-  ;;
 
-  let inter_binary op l r eval env =
+  and inter_binary op l r env =
     let* rigth_val = eval r env in
     let* left_val = eval l env in
     match op, left_val, rigth_val with
@@ -124,27 +121,16 @@ end = struct
     | Eq, VInt l, VInt r -> return @@ VBool (l = r)
     | NEq, VInt l, VInt r -> return @@ VBool (l <> r)
     | _ -> fail Unreachable
-  ;;
 
-  let inter_if cond e_then e_else eval env =
+  and inter_if cond e_then e_else env =
     let* cond_branch = eval cond env in
     match cond_branch with
     | VBool b ->
       let e = if b then e_then else e_else in
       eval e env
     | _ -> fail TypeError
-  ;;
 
-  let compare_values ctx first second =
-    let open Caml in
-    match first, second with
-    | VInt a, CInt b -> return (a = b, ctx)
-    | VString s1, CString s2 -> return (String.equal s1 s2, ctx)
-    | VBool b1, CBool b2 -> return (b1 = b2, ctx)
-    | _ -> return (false, ctx)
-  ;;
-
-  let inter_let bool name body eval env =
+  and inter_let bool name body env =
     match bool with
     | true ->
       (match name with
@@ -158,9 +144,8 @@ end = struct
        | ActivePaterns a_pat ->
          let* fun_pat = eval body env in
          return @@ VLetAPat (a_pat, fun_pat))
-  ;;
 
-  let inter_app func arg eval env =
+  and inter_app func arg env =
     let* fun_to_apply = eval func env in
     match fun_to_apply with
     | VFun (pat, expr, fun_env) ->
@@ -179,9 +164,8 @@ end = struct
               (VLetWAPat (name, VFun (pat, expr, fun_env))))
            res)
     | _ -> fail TypeError
-  ;;
 
-  let inter_match expr_match cases eval env =
+  and inter_match expr_match cases env =
     let* val_match = eval expr_match env in
     let rec eval_match = function
       | (pat, expr) :: cases ->
@@ -192,9 +176,8 @@ end = struct
       | [] -> fail MatchFailure
     in
     eval_match cases
-  ;;
 
-  let inter_case constr_id args eval env =
+  and inter_case constr_id args env =
     match constr_id, args with
     | "Some", arg :: [] ->
       let* opt_val = eval arg env in
@@ -207,21 +190,6 @@ end = struct
        | VCases _ -> fail TypeError
        | _ -> return @@ VCases (constr_id, VSome arg_val))
     | _ -> fail TypeError
-  ;;
-
-  let rec eval expr env =
-    match expr with
-    | ConstExpr v -> return @@ inter_const v
-    | BinExpr (op, l, r) -> inter_binary op l r eval env
-    | VarExpr id -> find_val env id
-    | ListExpr l -> inter_list l eval env
-    | TupleExpr t -> inter_tuple t eval env
-    | IfExpr (cond, e_then, e_else) -> inter_if cond e_then e_else eval env
-    | FunExpr (pat, expr) -> return @@ VFun (pat, expr, Map.to_alist env)
-    | AppExpr (func, arg) -> inter_app func arg eval env
-    | LetExpr (bool, name, body) -> inter_let bool name body eval env
-    | MatchExpr (expr_match, cases) -> inter_match expr_match cases eval env
-    | CaseExpr (constr_id, args) -> inter_case constr_id args eval env
   ;;
 
   let eval_program (program : expr list) : (value, error) t =
@@ -291,7 +259,12 @@ let test = [ BinExpr (Eq, ConstExpr (CInt 5), ConstExpr (CInt 5)) ]
 let%test _ =
   match eval_program test with
   | Ok (VBool true) -> true
-  | _ -> false
+  | Error t ->
+    Format.printf "%a" pp_error t;
+    false
+  | Ok t ->
+    Format.printf "%s" (show_value t);
+    false
 ;;
 
 let test =
@@ -308,7 +281,12 @@ let test =
 let%test _ =
   match eval_program test with
   | Ok (VInt 42) -> true
-  | _ -> false
+  | Error t ->
+    Format.printf "%a" pp_error t;
+    false
+  | Ok t ->
+    Format.printf "%s" (show_value t);
+    false
 ;;
 
 let test =
@@ -320,7 +298,12 @@ let test =
 let%test _ =
   match eval_program test with
   | Ok (VInt 10) -> true
-  | _ -> false
+  | Error t ->
+    Format.printf "%a" pp_error t;
+    false
+  | Ok t ->
+    Format.printf "%s" (show_value t);
+    false
 ;;
 
 let test =
