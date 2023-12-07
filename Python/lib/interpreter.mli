@@ -50,7 +50,7 @@ module Eval : functor (M : MONADERROR) -> sig
     }
 
   val local_env : environment
-  val gloval_env : environment
+  val global_env : environment
   val var_in_env : Ast.identifier -> environment -> bool
   val change_var : Ast.identifier -> Ast.value -> environment -> environment
   val change_or_add_var : environment -> var_symb -> environment
