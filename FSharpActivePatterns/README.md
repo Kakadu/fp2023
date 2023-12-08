@@ -13,10 +13,7 @@ Functions performed:
 
 Features under development:
 - Type checker: 
-  1) Let SingleChoice true 
-  2) Let MultipleChoice
-  3) Case expression
-  4) Case Pattern  
+  1) Let MultipleChoice
 
 (TODO: Поменять readme, может даже не забуду)
 ##### Замечания по стилю кодирования

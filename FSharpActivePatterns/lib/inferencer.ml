@@ -63,23 +63,31 @@ module Type = struct
     let occurs_in_list ts =
       List.fold ts ~init:false ~f:(fun acc t -> occurs_in v t || acc)
     in
+    let occurs_in_tag pvlist =
+      List.fold pvlist ~init:false ~f:(fun acc (_, l) -> occurs_in_list l || acc)
+    in
     function
     | Ty_var b -> b = v
     | Arrow (l, r) -> occurs_in v l || occurs_in v r
     | List t -> occurs_in v t
     | Tuple ts -> occurs_in_list ts
     | Prim _ -> false
+    | ActiveCases (_, ls) -> occurs_in_tag ls
   ;;
 
   let free_vars =
     let rec helper acc =
       let free_list acc ts = List.fold ts ~init:acc ~f:(fun acc t -> helper acc t) in
+      let free_tag acc pvlist =
+        List.fold pvlist ~init:acc ~f:(fun acc (_, l) -> free_list acc l)
+      in
       function
       | Ty_var b -> VarSetInit.add b acc
       | Arrow (l, r) -> helper (helper acc l) r
       | List t -> helper acc t
       | Tuple ts -> free_list acc ts
       | Prim _ -> acc
+      | ActiveCases (_, ac) -> free_tag acc ac
     in
     helper VarSetInit.empty
   ;;
@@ -299,7 +307,10 @@ let infer =
       let* subst = unify ty1 ty2 in
       let finenv = TypeEnv.apply subst env in
       return (finenv, Subst.apply subst ty1)
-    | Case (_a, _b) -> fail NotImplemented
+    | Case (name, args) ->
+      let* finenv, fintys = eval_list_helper @@ return (env, args) in
+      let* tv = fresh in
+      return (finenv, cases_typ tv [ name, fintys ])
   in
   let rec (helper : TypeEnv.t -> Ast.expr -> (Subst.t * typ) R.t) =
     fun env -> function
@@ -343,7 +354,7 @@ let infer =
       return (final_subst, Subst.apply final_subst t2)
     | LetExpr (bool, name, expr) ->
       (match name with
-       | Name let_name ->
+       | Name let_name | ActivePaterns (SingleChoice (let_name, _)) ->
          if bool
          then
            let* s, t = helper env expr in
@@ -353,21 +364,7 @@ let infer =
            let env = TypeEnv.extend env (let_name, S (VarSet.empty, tv)) in
            let* s, t = helper env expr in
            return (s, t)
-       | ActivePaterns typ ->
-         (match typ with
-          | SingleChoice (let_name, typ) ->
-            if typ
-            then fail NotImplemented
-            else if bool
-            then
-              let* s, t = helper env expr in
-              return (s, t)
-            else
-              let* tv = fresh_var in
-              let env = TypeEnv.extend env (let_name, S (VarSet.empty, tv)) in
-              let* s, t = helper env expr in
-              return (s, t)
-          | MultipleChoice _a -> fail NotImplemented))
+       | ActivePaterns (MultipleChoice _let_name) -> fail NotImplemented)
     | FunExpr (arg, e) ->
       let* env, t1 = pattern_helper env arg in
       let* s, t2 = helper env e in
@@ -406,7 +403,19 @@ let infer =
       let t1 = list_typ t1 in
       let* subst = Subst.compose_all [ s1 ] in
       return (subst, Subst.apply subst t1)
-    | CaseExpr (_id, _cases) -> fail NotImplemented
+    | CaseExpr (constructor, args) ->
+      let* s, t =
+        List.fold
+          args
+          ~init:(return (Subst.empty, []))
+          ~f:(fun acc expr ->
+            let* pv_s, pv = acc in
+            let* s, t = helper env expr in
+            let* subst = Subst.compose s pv_s in
+            return (subst, t :: pv))
+      in
+      let* fv = fresh in
+      return (s, cases_typ fv [ constructor, t ])
     | TupleExpr tuple ->
       let* s, t =
         List.fold
