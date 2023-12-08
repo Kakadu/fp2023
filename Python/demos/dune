@@ -8,6 +8,9 @@
  (instrumentation
   (backend bisect_ppx)))
 
+(cram
+ (deps %{bin:demo_fact}))
+
 (executable
  (name interpreter_test)
  (public_name interpreter_test)
