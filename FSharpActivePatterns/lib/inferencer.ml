@@ -364,6 +364,8 @@ let infer =
            let env = TypeEnv.extend env (let_name, S (VarSet.empty, tv)) in
            let* s, t = helper env expr in
            return (s, t)
+           (* Пока не полностью рабочая имплепентация множественного выбора, не очень пока что понимаю
+              это реализовать, надеюсь, сделаю это немногоп позже *)
        | ActivePaterns (MultipleChoice let_name) ->
          if bool
          then
