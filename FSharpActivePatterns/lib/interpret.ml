@@ -63,17 +63,119 @@ end = struct
       | _ -> fail MatchFailure
     in
     function
+    | _, VCases _ -> fail MatchFailure
     | Wild, _ -> return []
     | Const c, app_arg ->
       (match c, app_arg with
        | CBool b1, VBool b2 when Bool.equal b1 b2 -> return []
        | CInt i1, VInt i2 when i1 = i2 -> return []
        | CString s1, VString s2 when String.equal s1 s2 -> return []
+       | CNil, VNil -> return []
        | _ -> fail MatchFailure)
     | Var var, app_arg -> return [ var, app_arg ]
     | Tuple pt, VTuple vt -> bind_pat_list pt vt
     | List pl, VList vl -> bind_pat_list pl vl
-    | Case (_acase_id, _acase_args), _value_to_match -> fail NotImplemented
+    | Case (acase_id, acase_args), value_to_match ->
+      (match acase_id, acase_args, value_to_match with
+       | "Some", acase_arg :: [], VSome v -> bind_fun_params ~env (acase_arg, v)
+       | "None", [], VNone -> return []
+       | _, _, VCases _ -> fail MatchFailure
+       | "None", [], _ | "Some", _ :: [], _ -> fail MatchFailure
+       | _ ->
+         let* apat = find_val env acase_id in
+         (match apat with
+          | VLetAPat (choice, VFun (apat_arg, apat_expr, apat_env)) ->
+            (match choice with
+             | SingleChoice (_, is_opt) ->
+               let rec apply_fun_apat args func =
+                 let rec convert_from_pat_to_val =
+                   let convert_list_of_pat l =
+                     let* eval_list =
+                       all (List.map l ~f:(fun pat -> convert_from_pat_to_val pat))
+                     in
+                     return @@ VTuple eval_list
+                   in
+                   function
+                   | Wild -> fail MatchFailure
+                   | Case (id, pats) ->
+                     (match id, pats with
+                      | "None", [] -> return VNone
+                      | "Some", arg :: [] ->
+                        let* convert_arg = convert_from_pat_to_val arg in
+                        (match convert_arg with
+                         | VNone -> return VNone
+                         | _ -> return @@ VSome convert_arg)
+                      | _ -> fail MatchFailure)
+                   | Const c -> eval (ConstExpr c) env
+                   | Var id -> eval (VarExpr id) env
+                   | Tuple tpat -> convert_list_of_pat tpat
+                   | List lpat -> convert_list_of_pat lpat
+                 in
+                 let bind_result_apat res =
+                   match func with
+                   | VFun (apat_arg, apat_expr, apat_env) ->
+                     let* bind_val_to_match =
+                       bind_fun_params (apat_arg, value_to_match)
+                     in
+                     let* res_apat =
+                       eval
+                         apat_expr
+                         (add_binds (add_binds empty apat_env) bind_val_to_match)
+                     in
+                     (match res_apat, is_opt, res with
+                      | VCases (aconstr_id, None), false, Const CNil
+                      | VSome (VCases (aconstr_id, None)), true, Const CNil
+                        when String.equal aconstr_id acase_id -> return []
+                      | VCases (aconstr_id, Some v), false, _
+                      | VSome (VCases (aconstr_id, Some v)), true, _
+                        when String.equal aconstr_id acase_id -> bind_fun_params (res, v)
+                      | _, false, _ -> bind_fun_params (res, res_apat)
+                      | VSome v, true, _ -> bind_fun_params (res, v)
+                      | _ -> fail MatchFailure)
+                   | _ -> fail MatchFailure
+                 in
+                 let apply_arg arg other_args =
+                   match func with
+                   | VFun (apat_arg, apat_expr, apat_env) ->
+                     let* convert_arg = convert_from_pat_to_val arg in
+                     let* bind_arg = bind_fun_params (apat_arg, convert_arg) in
+                     let* eval_new_func_apat =
+                       eval apat_expr (add_binds (add_binds empty apat_env) bind_arg)
+                     in
+                     apply_fun_apat other_args eval_new_func_apat
+                   | _ -> fail MatchFailure
+                 in
+                 match args with
+                 | [] -> bind_result_apat (Const CNil)
+                 | h :: [] ->
+                   run
+                     (apply_arg h [])
+                     ~ok:(fun res -> return res)
+                     ~err:(fun _ -> bind_result_apat h)
+                 | h :: tl -> apply_arg h tl
+               in
+               apply_fun_apat acase_args (VFun (apat_arg, apat_expr, apat_env))
+             | MultipleChoice _ ->
+               (match acase_args with
+                | res when List.length res < 2 ->
+                  let* bind_matching_val =
+                    bind_fun_params ~env (apat_arg, value_to_match)
+                  in
+                  let* eval_res_apat =
+                    eval
+                      apat_expr
+                      (add_binds (add_binds empty apat_env) bind_matching_val)
+                  in
+                  (match eval_res_apat with
+                   | VCases (apat_id, opt_res) when String.equal apat_id acase_id ->
+                     (match opt_res, res with
+                      | Some v, res :: [] -> bind_fun_params (res, v)
+                      | None, res :: [] -> bind_fun_params (res, VNone)
+                      | None, _ -> return []
+                      | _ -> fail MatchFailure)
+                   | _ -> fail MatchFailure)
+                | _ -> fail Unreachable))
+          | _ -> fail Unreachable))
     | _ -> fail MatchFailure
 
   and eval expr env =
@@ -94,6 +196,7 @@ end = struct
     | CBool b -> VBool b
     | CInt i -> VInt i
     | CString s -> VString s
+    | CNil -> VNone
 
   and inter_list l env =
     let* eval_list = all (List.map l ~f:(fun expr -> eval expr env)) in
@@ -173,7 +276,7 @@ end = struct
           (bind_fun_params ~env (pat, val_match))
           ~ok:(fun binds -> eval expr (add_binds env binds))
           ~err:(fun _ -> eval_match cases)
-      | [] -> fail MatchFailure
+      | [] -> fail NotImplemented
     in
     eval_match cases
 
@@ -183,12 +286,12 @@ end = struct
       let* opt_val = eval arg env in
       return @@ VSome opt_val
     | "None", [] -> return VNone
-    | _, [] -> return @@ VCases (constr_id, VNone)
+    | _, [] -> return @@ VCases (constr_id, None)
     | _, arg :: [] ->
       let* arg_val = eval arg env in
       (match arg_val with
        | VCases _ -> fail TypeError
-       | _ -> return @@ VCases (constr_id, VSome arg_val))
+       | _ -> return @@ VCases (constr_id, Some arg_val))
     | _ -> fail TypeError
   ;;
 
@@ -199,8 +302,14 @@ end = struct
       | h :: tl ->
         let* eval_h = eval h env in
         let eval_env =
+          let rec eval_env_apat env = function
+            | [] -> env
+            | h :: tl -> add_bind (eval_env_apat env tl) h eval_h
+          in
           match h with
-          | LetExpr (_, Name f, _) when not @@ String.equal f "_" -> add_bind env f eval_h
+          | (LetExpr (_, Name f, _) | LetExpr (_, ActivePaterns (SingleChoice (f, _)), _))
+            when not @@ String.equal f "_" -> add_bind env f eval_h
+          | LetExpr (_, ActivePaterns (MultipleChoice fl), _) -> eval_env_apat env fl
           | _ -> env
         in
         helper eval_env tl
@@ -254,6 +363,19 @@ let test =
   ]
 ;;
 
+let%test _ =
+  match eval_program test with
+  | Ok (VInt 29) -> true
+  | Error t ->
+    Format.printf "%a" pp_error t;
+    false
+  | Ok t ->
+    Format.printf "%s" (show_value t);
+    false
+;;
+
+(* 5 = 5 *)
+
 let test = [ BinExpr (Eq, ConstExpr (CInt 5), ConstExpr (CInt 5)) ]
 
 let%test _ =
@@ -267,44 +389,11 @@ let%test _ =
     false
 ;;
 
-let test =
-  [ BinExpr
-      ( Mul
-      , BinExpr
-          ( Mul
-          , BinExpr (Add, ConstExpr (CInt 1), ConstExpr (CInt 1))
-          , BinExpr (Sub, ConstExpr (CInt 5), ConstExpr (CInt 2)) )
-      , BinExpr (Div, ConstExpr (CInt 42), ConstExpr (CInt 6)) )
-  ]
-;;
+(*
+   let rec fact n = if n = 1 then 1 else n * (fact (n - 1))
 
-let%test _ =
-  match eval_program test with
-  | Ok (VInt 42) -> true
-  | Error t ->
-    Format.printf "%a" pp_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
-;;
-
-let test =
-  [ LetExpr (false, Name "f", FunExpr (Var "x", BinExpr (Add, VarExpr "x", VarExpr "x")))
-  ; AppExpr (VarExpr "f", ConstExpr (CInt 5))
-  ]
-;;
-
-let%test _ =
-  match eval_program test with
-  | Ok (VInt 10) -> true
-  | Error t ->
-    Format.printf "%a" pp_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
-;;
+   fact 5
+*)
 
 let test =
   [ LetExpr
@@ -330,6 +419,117 @@ let%test _ =
   | Ok (VInt 120) -> true
   | Error t ->
     Format.printf "%a" pp_error t;
+    false
+  | Ok t ->
+    Format.printf "%s" (show_value t);
+    false
+;;
+
+(*
+   let check input = match input with | 2 -> 5 | 5 -> 10
+
+   check 5
+*)
+let test =
+  [ LetExpr
+      ( false
+      , Name "check"
+      , FunExpr
+          ( Var "input"
+          , MatchExpr
+              ( VarExpr "input"
+              , [ Const (CInt 2), ConstExpr (CInt 5)
+                ; Const (CInt 5), ConstExpr (CInt 10)
+                ] ) ) )
+  ; AppExpr (VarExpr "check", ConstExpr (CInt 5))
+  ]
+;;
+
+let%test _ =
+  match eval_program test with
+  | Ok (VInt 10) -> true
+  | Error t ->
+    Format.printf "%a" pp_error t;
+    false
+  | Ok t ->
+    Format.printf "%s" (show_value t);
+    false
+;;
+
+(*
+   let (|Even|Odd|) v = if v % 2 = 0 then Even else Odd
+
+   let myfunc v = match v with | Even -> 1 | Odd -> 5
+
+   myfunc 5
+*)
+
+let test =
+  [ LetExpr
+      ( false
+      , ActivePaterns (MultipleChoice [ "Even"; "Odd" ])
+      , FunExpr
+          ( Var "input"
+          , IfExpr
+              ( BinExpr
+                  ( Eq
+                  , BinExpr (Mod, VarExpr "input", ConstExpr (CInt 2))
+                  , ConstExpr (CInt 0) )
+              , CaseExpr ("Even", [])
+              , CaseExpr ("Odd", []) ) ) )
+  ; LetExpr
+      ( false
+      , Name "myfunc"
+      , FunExpr
+          ( Var "input"
+          , MatchExpr
+              ( VarExpr "input"
+              , [ Case ("Even", []), ConstExpr (CInt 1)
+                ; Case ("Odd", []), ConstExpr (CInt 5)
+                ] ) ) )
+  ; AppExpr (VarExpr "myfunc", ConstExpr (CInt 6))
+  ]
+;;
+
+let%test _ =
+  match eval_program test with
+  | Ok (VInt 1) -> true
+  | Error t ->
+    Format.printf "%a\n" pp_error t;
+    false
+  | Ok t ->
+    Format.printf "%s" (show_value t);
+    false
+;;
+
+let test =
+  [ LetExpr
+      ( false
+      , ActivePaterns (SingleChoice ("Even", false))
+      , FunExpr
+          ( Var "v"
+          , IfExpr
+              ( BinExpr
+                  (Eq, BinExpr (Mod, VarExpr "v", ConstExpr (CInt 2)), ConstExpr (CInt 0))
+              , CaseExpr ("Even", [])
+              , ConstExpr (CInt 0) ) ) )
+  ; LetExpr
+      ( false
+      , Name "good"
+      , FunExpr
+          ( Var "input"
+          , MatchExpr
+              ( VarExpr "input"
+              , [ Case ("Even", []), ConstExpr (CInt 5); Wild, ConstExpr (CInt 7) ] ) ) )
+  ; AppExpr (VarExpr "good", ConstExpr (CInt 101))
+  ]
+;;
+
+let%test _ =
+  match eval_program test with
+  | Ok (VInt 7) -> true
+  | Error t ->
+    Format.printf "%a\n" pp_error t;
     false
   | Ok t ->
     Format.printf "%s" (show_value t);

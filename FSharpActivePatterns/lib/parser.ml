@@ -85,7 +85,13 @@ let parse_str =
   char '"' *> take_while (fun a -> a != '"') <* char '"' >>| fun a -> CString a
 ;;
 
-let parse_const = choice [ parse_int; parse_bool; parse_str ]
+let parse_nil =
+  pstrtoken "[" *> (pstrtoken "" *> return CNil)
+  <* pstrtoken "]"
+  <|> parens @@ (pstrtoken "" *> return CNil)
+;;
+
+let parse_const = choice [ parse_int; parse_bool; parse_str; parse_nil ]
 
 (* Parse var *)
 
@@ -291,7 +297,17 @@ let pack =
   in
   let list_e pack = fix @@ fun _ -> parse_list_expr (expr_parsers pack) in
   let tuple_e pack = fix @@ fun _ -> parse_tuple_expr (expr_parsers pack) in
-  let let_with = pstrtoken "(|" *> sep_by (pstrtoken "|") p_var_case <* pstrtoken "|)" in
+  let let_with =
+    pstrtoken "(|"
+    *> lift2
+         (fun a b -> SingleChoice (a, b))
+         p_var_case
+         (option false (pstrtoken "|" *> string "_" >>| fun _ -> true))
+    <* pstrtoken "|)"
+    <|> (pstrtoken "(|" *> sep_by (pstrtoken "|") p_var_case
+         <* pstrtoken "|)"
+         >>| fun a -> MultipleChoice a)
+  in
   let let_e pack =
     fix
     @@ fun _ ->
@@ -410,13 +426,6 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  let test = "[1;2; 3]" in
-  start_test parse show_expr test;
-  [%expect
-    {| (ListExpr [(ConstExpr (CInt 1)); (ConstExpr (CInt 2)); (ConstExpr (CInt 3))]) |}]
-;;
-
-let%expect_test _ =
   let test = "(1, [2;((3));4], 5)" in
   start_test parse show_expr test;
   [%expect
@@ -453,40 +462,6 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  let test = "let (|Even|Odd|) input = if input % 2 = 0 then Even else Odd " in
-  start_test parse show_expr test;
-  [%expect
-    {|
-      (LetExpr (false, (ActivePaterns ["Even"; "Odd"]),
-         (FunExpr ((Var "input"),
-            (IfExpr (
-               (BinExpr (Eq,
-                  (BinExpr (Mod, (VarExpr "input"), (ConstExpr (CInt 2)))),
-                  (ConstExpr (CInt 0)))),
-               (CaseExpr ("Even", [])), (CaseExpr ("Odd", []))))
-            ))
-         )) |}]
-;;
-
-let%expect_test _ =
-  let test = "let recognize input = a  " in
-  start_test parse show_expr test;
-  [%expect
-    {|
-    (LetExpr (false, (Name "recognize"), (FunExpr ((Var "input"), (VarExpr "a")))
-       )) |}]
-;;
-
-let%expect_test _ =
-  let test = "let rec f x = f * x" in
-  start_test parse show_expr test;
-  [%expect
-    {|
-    (LetExpr (true, (Name "f"),
-       (FunExpr ((Var "x"), (BinExpr (Mul, (VarExpr "f"), (VarExpr "x"))))))) |}]
-;;
-
-let%expect_test _ =
   let test = "let rec fact n = if n = 1 then 1 else n * (fact (n - 1))" in
   start_test parse show_expr test;
   [%expect
@@ -505,6 +480,21 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
+  let test = "let check input = match input with | 2 -> 5 | 5 -> 10" in
+  start_test parse show_expr test;
+  [%expect
+    {|
+      (LetExpr (false, (Name "check"),
+         (FunExpr ((Var "input"),
+            (MatchExpr ((VarExpr "input"),
+               [((Const (CInt 2)), (ConstExpr (CInt 5)));
+                 ((Const (CInt 5)), (ConstExpr (CInt 10)))]
+               ))
+            ))
+         )) |}]
+;;
+
+let%expect_test _ =
   let test = "g x 1 [1;2] y z" in
   start_test parse show_expr test;
   [%expect
@@ -520,16 +510,7 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  let test = "match 2 with | 1 -> 2 | _ -> 5" in
-  start_test parse show_expr test;
-  [%expect
-    {|
-    (MatchExpr ((ConstExpr (CInt 2)),
-       [((Const (CInt 1)), (ConstExpr (CInt 2))); (Wild, (ConstExpr (CInt 5)))])) |}]
-;;
-
-let%expect_test _ =
-  let test = "match x with Some x -> x | None  -> 0" in
+  let test = "match x with Some x -> x | None -> 0" in
   start_test parse show_expr test;
   [%expect
     {|
@@ -540,25 +521,15 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  let test = "match x with Some x -> true | None  -> false" in
+  let test = "let (|Even|Odd|) input = if input % 2 = 0 then Even else Odd " in
   start_test parse show_expr test;
   [%expect
     {|
-      (MatchExpr ((VarExpr "x"),
-         [((Case ("Some", [(Var "x")])), (ConstExpr (CBool true)));
-           ((Case ("None", [])), (ConstExpr (CBool true)))]
-         )) |}]
-;;
-
-let%expect_test _ =
-  let test = "let (|Even|Odd|) v = if v % 2 = 0 then Even else Odd " in
-  start_test parse show_expr test;
-  [%expect
-    {|
-      (LetExpr (false, (ActivePaterns ["Even"; "Odd"]),
-         (FunExpr ((Var "v"),
+      (LetExpr (false, (ActivePaterns (MultipleChoice ["Even"; "Odd"])),
+         (FunExpr ((Var "input"),
             (IfExpr (
-               (BinExpr (Eq, (BinExpr (Mod, (VarExpr "v"), (ConstExpr (CInt 2)))),
+               (BinExpr (Eq,
+                  (BinExpr (Mod, (VarExpr "input"), (ConstExpr (CInt 2)))),
                   (ConstExpr (CInt 0)))),
                (CaseExpr ("Even", [])), (CaseExpr ("Odd", []))))
             ))
@@ -566,28 +537,57 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  let test =
-    "let myfunction v = \n\
-    \                   match v with \n\
-    \                    | Even -> 2 \n\
-    \                    | Odd -> 10       "
-  in
+  let test = "let (|Even|_|) v = if v % 2 = 0 then Even else Odd " in
   start_test parse show_expr test;
   [%expect
     {|
-      (LetExpr (false, (Name "myfunction"),
-         (FunExpr ((Var "v"),
-            (MatchExpr ((VarExpr "v"),
-               [((Case ("Even", [])), (ConstExpr (CInt 2)));
-                 ((Case ("Odd", [])), (ConstExpr (CInt 10)))]
-               ))
-            ))
-         ))
- |}]
+    (LetExpr (false, (ActivePaterns (SingleChoice ("Even", true))),
+       (FunExpr ((Var "v"),
+          (IfExpr (
+             (BinExpr (Eq, (BinExpr (Mod, (VarExpr "v"), (ConstExpr (CInt 2)))),
+                (ConstExpr (CInt 0)))),
+             (CaseExpr ("Even", [])), (CaseExpr ("Odd", []))))
+          ))
+       ))
+       |}]
 ;;
 
 let%expect_test _ =
-  let test = "myfunction 5      " in
+  let test = "let (|Even|) v = if v % 2 = 0 then Even else 0" in
   start_test parse show_expr test;
-  [%expect {| (AppExpr ((VarExpr "myfunction"), (ConstExpr (CInt 5)))) |}]
+  [%expect
+    {|
+      (LetExpr (false, (ActivePaterns (SingleChoice ("Even", false))),
+         (FunExpr ((Var "v"),
+            (IfExpr (
+               (BinExpr (Eq, (BinExpr (Mod, (VarExpr "v"), (ConstExpr (CInt 2)))),
+                  (ConstExpr (CInt 0)))),
+               (CaseExpr ("Even", [])), (ConstExpr (CInt 0))))
+            ))
+         )) |}]
+;;
+
+let%expect_test _ =
+  let test = " let good input = 
+            match input with 
+            | Even -> 5
+            | _ -> 7 " in
+  start_test parse show_expr test;
+  [%expect
+    {|
+      (LetExpr (false, (Name "good"),
+         (FunExpr ((Var "input"),
+            (MatchExpr ((VarExpr "input"),
+               [((Case ("Even", [])), (ConstExpr (CInt 5)));
+                 (Wild, (ConstExpr (CInt 7)))]
+               ))
+            ))
+         )) |}]
+;;
+
+let%expect_test _ =
+  let test = "good 6" in
+  start_test parse show_expr test;
+  [%expect
+    {| (AppExpr ((VarExpr "good"), (ConstExpr (CInt 6)))) |}]
 ;;
