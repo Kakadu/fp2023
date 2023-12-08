@@ -163,13 +163,6 @@ let fact_env1 =
     ]
 ;;
 
-let%test _ =
-  Ok (Int 120)
-  = interpret_exp
-      (FunctionCall (Identifier "factorial", [ Const (Int 5) ]))
-      (unpacker fact_env1)
-;;
-
 let fact_env2 =
   get_env
     env
@@ -201,7 +194,7 @@ let%test _ =
 
 let fact_and_print =
   get_env
-    env
+    global_env
     [ Function
         ( Identifier "factorial"
         , [ Identifier "x" ]
@@ -226,5 +219,8 @@ let fact_and_print =
 ;;
 
 let%test _ =
-  Ok None = interpret_exp (FunctionCall (Identifier "print", [ Const (Int 6003) ])) env
+  Ok None
+  = interpret_exp
+      (FunctionCall (Identifier "print", [ Const (Int 6003) ]))
+      (unpacker fact_and_print)
 ;;

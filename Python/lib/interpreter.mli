@@ -79,4 +79,5 @@ module Eval : functor (M : MONADERROR) -> sig
   val i_exp_or_stmt : dispatch
   val interpret_exp : Ast.expression -> environment -> Ast.value M.t
   val get_env : environment -> Ast.statement list -> environment M.t
+  val interpret : Ast.statement list -> environment M.t
 end

@@ -269,7 +269,7 @@ module Eval (M : MONADERROR) = struct
              | [] -> return None
              | exp :: tl ->
                let* value = i_expr exp_or_stmt env exp in
-               let () = print_string (pack_to_string value) in
+               let () = Printf.printf "%s" (pack_to_string value) in
                print_exp_list tl
            in
            (match exp_list with
@@ -325,4 +325,9 @@ module Eval (M : MONADERROR) = struct
   ;;
 
   let get_env global_env = fold_left (i_exp_or_stmt.i_stmt i_exp_or_stmt) global_env
+
+  let interpret =
+    let env = global_env in
+    get_env env
+  ;;
 end

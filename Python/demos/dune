@@ -8,5 +8,15 @@
  (instrumentation
   (backend bisect_ppx)))
 
+(executable
+ (name interpreter_test)
+ (public_name interpreter_test)
+ (modules interpreter_test)
+ (libraries Python.Lib)
+ (preprocess
+  (pps ppx_show))
+ (instrumentation
+  (backend bisect_ppx)))
+
 (cram
- (deps %{bin:demo_fact}))
+ (deps %{bin:interpreter_test}))
