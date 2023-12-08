@@ -280,7 +280,8 @@ let infer =
       (match const with
        | CBool _ -> return (env, Prim "bool")
        | CInt _ -> return (env, Prim "int")
-       | CString _ -> return (env, Prim "string"))
+       | CString _ -> return (env, Prim "string")
+       | CNil -> fail NotImplemented)
     | Var id ->
       let* tv = fresh_var in
       let env = TypeEnv.extend env (id, S (VarSet.empty, tv)) in
@@ -307,7 +308,8 @@ let infer =
       (match const with
        | CBool _ -> return (Subst.empty, Prim "bool")
        | CInt _ -> return (Subst.empty, Prim "int")
-       | CString _ -> return (Subst.empty, Prim "string"))
+       | CString _ -> return (Subst.empty, Prim "string")
+       | CNil -> fail NotImplemented)
     | BinExpr (op, left, right) ->
       let* subst_left, typ_left = helper env left in
       let* subst_right, typ_right = helper env right in
