@@ -364,7 +364,16 @@ let infer =
            let env = TypeEnv.extend env (let_name, S (VarSet.empty, tv)) in
            let* s, t = helper env expr in
            return (s, t)
-       | ActivePaterns (MultipleChoice _let_name) -> fail NotImplemented)
+       | ActivePaterns (MultipleChoice let_name) ->
+         if bool
+         then
+           let* s, t = helper env expr in
+           return (s, t)
+         else
+           let* tv = fresh_var in
+           let env = TypeEnv.extend env (List.hd_exn let_name, S (VarSet.empty, tv)) in
+           let* s, t = helper env expr in
+           return (s, t))
     | FunExpr (arg, e) ->
       let* env, t1 = pattern_helper env arg in
       let* s, t2 = helper env e in
