@@ -15,7 +15,6 @@ module VarSetInit = struct
   ;;
 end
 
-
 type ac = id * typ list [@@deriving show { with_path = false }]
 
 and typ =
