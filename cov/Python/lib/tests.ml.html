@@ -189,13 +189,13 @@
 <a id="L165"></a><span > </span>
 <a id="L166"></a><span > </span>
 <a id="L167"></a><span class="visited"> </span>
-<a id="L168"></a><span class="visited"> </span>
+<a id="L168"></a><span > </span>
 <a id="L169"></a><span > </span>
-<a id="L170"></a><span class="visited"> </span>
+<a id="L170"></a><span > </span>
 <a id="L171"></a><span > </span>
 <a id="L172"></a><span > </span>
 <a id="L173"></a><span > </span>
-<a id="L174"></a><span class="visited"> </span>
+<a id="L174"></a><span > </span>
 <a id="L175"></a><span > </span>
 <a id="L176"></a><span > </span>
 <a id="L177"></a><span > </span>
@@ -210,21 +210,21 @@
 <a id="L186"></a><span > </span>
 <a id="L187"></a><span > </span>
 <a id="L188"></a><span > </span>
-<a id="L189"></a><span > </span>
-<a id="L190"></a><span > </span>
+<a id="L189"></a><span class="visited"> </span>
+<a id="L190"></a><span class="visited"> </span>
 <a id="L191"></a><span > </span>
-<a id="L192"></a><span > </span>
+<a id="L192"></a><span class="visited"> </span>
 <a id="L193"></a><span > </span>
 <a id="L194"></a><span > </span>
 <a id="L195"></a><span > </span>
 <a id="L196"></a><span class="visited"> </span>
-<a id="L197"></a><span class="visited"> </span>
+<a id="L197"></a><span > </span>
 <a id="L198"></a><span > </span>
-<a id="L199"></a><span class="visited"> </span>
+<a id="L199"></a><span > </span>
 <a id="L200"></a><span > </span>
 <a id="L201"></a><span > </span>
 <a id="L202"></a><span > </span>
-<a id="L203"></a><span class="visited"> </span>
+<a id="L203"></a><span > </span>
 <a id="L204"></a><span > </span>
 <a id="L205"></a><span > </span>
 <a id="L206"></a><span > </span>
@@ -243,15 +243,11 @@
 <a id="L219"></a><span > </span>
 <a id="L220"></a><span > </span>
 <a id="L221"></a><span > </span>
-<a id="L222"></a><span > </span>
-<a id="L223"></a><span > </span>
+<a id="L222"></a><span class="visited"> </span>
+<a id="L223"></a><span class="visited"> </span>
 <a id="L224"></a><span > </span>
-<a id="L225"></a><span > </span>
+<a id="L225"></a><span class="visited"> </span>
 <a id="L226"></a><span > </span>
-<a id="L227"></a><span > </span>
-<a id="L228"></a><span > </span>
-<a id="L229"></a><span class="visited"> </span>
-<a id="L230"></a><span > </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -482,10 +478,6 @@
 <a href="#L224">224</a>
 <a href="#L225">225</a>
 <a href="#L226">226</a>
-<a href="#L227">227</a>
-<a href="#L228">228</a>
-<a href="#L229">229</a>
-<a href="#L230">230</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2021-2023, Averin Pavel *)
 
@@ -501,7 +493,7 @@ let env = global_env
 let%test _ = <span data-count="1">O</span>k (Int 5) = interpret_ex<span data-count="1">p</span> (ArithOp (Add, Const (Int 4), Const (Int 1))) env
 
 let env1 =
-  get_en<span data-count="4">v</span>
+  get_en<span data-count="3">v</span>
     env
     [ Assign (Variable (Identifier "x"), Const (Int 6156))
     ; Assign (Variable (Identifier "x"), Const (Int 4))
@@ -516,7 +508,7 @@ let%test _ =
 ;;
 
 let func_test_env1 =
-  get_en<span data-count="4">v</span>
+  get_en<span data-count="3">v</span>
     env
     [ Function
         ( Identifier "myFunction"
@@ -539,7 +531,7 @@ let%test _ =
 ;;
 
 let func_test_env2 =
-  get_en<span data-count="4">v</span>
+  get_en<span data-count="3">v</span>
     env
     [ Function (Identifier "myFunction", [ Identifier "x" ], [ Return (Const (Int 2)) ])
     ; Function
@@ -562,7 +554,7 @@ let%test _ =
 ;;
 
 let func_test_env3 =
-  get_en<span data-count="4">v</span>
+  get_en<span data-count="3">v</span>
     env
     [ Function (Identifier "myFunction", [ Identifier "x" ], [ Return (Const (Int 2)) ])
     ; Function
@@ -585,7 +577,7 @@ let%test _ =
 ;;
 
 let func_test_env4 =
-  get_en<span data-count="4">v</span>
+  get_en<span data-count="3">v</span>
     env
     [ Function (Identifier "myFunction", [ Identifier "x" ], [ Return (Const (Int 2)) ])
     ; Function
@@ -608,7 +600,7 @@ let%test _ =
 ;;
 
 let func_test_env4 =
-  get_en<span data-count="4">v</span>
+  get_en<span data-count="3">v</span>
     env
     [ Function (Identifier "myFunction", [ Identifier "x" ], [ Return (Const (Int 2)) ])
     ; Function
@@ -631,7 +623,7 @@ let%test _ =
 ;;
 
 let fact_env1 =
-  get_en<span data-count="4">v</span>
+  get_en<span data-count="3">v</span>
     env
     [ Function
         ( Identifier "factorial"
@@ -652,15 +644,8 @@ let fact_env1 =
     ]
 ;;
 
-let%test _ =
-  <span data-count="1">O</span>k (Int 120)
-  = interpret_ex<span data-count="1">p</span>
-      (FunctionCall (Identifier "factorial", [ Const (Int 5) ]))
-      (unpacke<span data-count="1">r</span> fact_env1)
-;;
-
 let fact_env2 =
-  get_en<span data-count="4">v</span>
+  get_en<span data-count="3">v</span>
     env
     [ Function
         ( Identifier "factorial"
@@ -689,8 +674,8 @@ let%test _ =
 ;;
 
 let fact_and_print =
-  get_en<span data-count="4">v</span>
-    env
+  get_en<span data-count="3">v</span>
+    global_env
     [ Function
         ( Identifier "factorial"
         , [ Identifier "x" ]
@@ -715,7 +700,10 @@ let fact_and_print =
 ;;
 
 let%test _ =
-  <span data-count="1">O</span>k None = interpret_ex<span data-count="1">p</span> (FunctionCall (Identifier "print", [ Const (Int 6003) ])) env
+  <span data-count="1">O</span>k None
+  = interpret_ex<span data-count="1">p</span>
+      (FunctionCall (Identifier "print", [ Const (Int 6003) ]))
+      (unpacke<span data-count="1">r</span> fact_and_print)
 ;;
 </code></pre>
       </div>
