@@ -568,10 +568,12 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  let test = " let good input = 
-            match input with 
-            | Even -> 5
-            | _ -> 7 " in
+  let test =
+    " let good input = \n\
+    \            match input with \n\
+    \            | Even -> 5\n\
+    \            | _ -> 7 "
+  in
   start_test parse show_expr test;
   [%expect
     {|
@@ -588,6 +590,5 @@ let%expect_test _ =
 let%expect_test _ =
   let test = "good 6" in
   start_test parse show_expr test;
-  [%expect
-    {| (AppExpr ((VarExpr "good"), (ConstExpr (CInt 6)))) |}]
+  [%expect {| (AppExpr ((VarExpr "good"), (ConstExpr (CInt 6)))) |}]
 ;;
