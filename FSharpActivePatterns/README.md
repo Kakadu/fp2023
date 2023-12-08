@@ -8,11 +8,15 @@ Author: Vitaliy Dyachkov, vitaliy.dyach@gmail.com
 
 Functions performed:
 - Parser of Binary operations, functions, lists, tuples and active patterns
-- Interpreter 
-- Type checker without Case, PCase and Let 
+- Interpreter
+- Partially made type checker
 
 Features under development:
-- Type checker with Case, PCase and Let 
+- Type checker: 
+  1) Let SingleChoice true 
+  2) Let MultipleChoice
+  3) Case expression
+  4) Case Pattern  
 
 (TODO: Поменять readme, может даже не забуду)
 ##### Замечания по стилю кодирования

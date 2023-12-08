@@ -341,7 +341,33 @@ let infer =
       let* s5 = unify t2 t3 in
       let* final_subst = Subst.compose_all [ s5; s4; s3; s2; s1 ] in
       return (final_subst, Subst.apply final_subst t2)
-    | LetExpr (_, _name, _e) -> fail NotImplemented
+    | LetExpr (bool, name, expr) ->
+      (match name with
+       | Name let_name ->
+         if bool
+         then
+           let* s, t = helper env expr in
+           return (s, t)
+         else
+           let* tv = fresh_var in
+           let env = TypeEnv.extend env (let_name, S (VarSet.empty, tv)) in
+           let* s, t = helper env expr in
+           return (s, t)
+       | ActivePaterns typ ->
+         (match typ with
+          | SingleChoice (let_name, typ) ->
+            if typ
+            then fail NotImplemented
+            else if bool
+            then
+              let* s, t = helper env expr in
+              return (s, t)
+            else
+              let* tv = fresh_var in
+              let env = TypeEnv.extend env (let_name, S (VarSet.empty, tv)) in
+              let* s, t = helper env expr in
+              return (s, t)
+          | MultipleChoice _a -> fail NotImplemented))
     | FunExpr (arg, e) ->
       let* env, t1 = pattern_helper env arg in
       let* s, t2 = helper env e in
