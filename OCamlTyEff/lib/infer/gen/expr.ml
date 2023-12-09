@@ -58,22 +58,15 @@ let rec gen = function
             failwith "not implemented"
       in
 
-      let* as_pat, ty_pat = Pattern.gen pat in
+      let* as_pat, bounds_pat, ty_pat = Pattern.gen pat in
       let* as1, ty1 = gen e1 in
       let* as2, ty2 = gen e2 in
 
       let* () = add_constrs [ty_pat == ty1] in
       let* mset = varset in
       let* constrs =
-        As.fold as_pat ~init:(return []) ~f:(fun ~key:id ~data:vars_pat acc ->
-            let* var_pat =
-              (* handle patterns like (x, x) *)
-              match vars_pat with
-              | [var] ->
-                  return var
-              | _ ->
-                  fail @@ PatVarBoundSeveralTimes id
-            in
+        Pattern.BoundVars.fold bounds_pat ~init:(return [])
+          ~f:(fun ~key:id ~data:var_pat acc ->
             let cs =
               As.lookup as2 id
               |> List.map ~f:(fun var_expr ->
@@ -84,7 +77,7 @@ let rec gen = function
       in
       let* () = add_constrs (List.concat_no_order constrs) in
 
-      return (as1 ++ (as2 -- As.idents as_pat), ty2)
+      return (as_pat ++ as1 ++ (as2 -- Pattern.BoundVars.idents bounds_pat), ty2)
   | Exp_ifthenelse (e_cond, e_th, e_el) ->
       let* as_cond, ty_cond = gen e_cond in
       let* as_th, ty_th = gen e_th in
@@ -95,7 +88,7 @@ let rec gen = function
       let* () = add_constrs [ty_cond == Ty.bool; ty_th == ty_el] in
       return (as_cond ++ as_th ++ as_el, ty_th)
   | Exp_tuple exprs ->
-      let* asm, tys = gen_many gen exprs in
+      let* asm, tys = gen_many exprs in
       return (asm, Ty.Ty_tuple tys)
   | Exp_construct (con_id, con_arg) ->
       let* var_con = fresh_var in
@@ -118,3 +111,8 @@ let rec gen = function
       return (as_con ++ as_arg, ty_res)
   | _ ->
       failwith "not implemented"
+
+and gen_many =
+  GenMonad.List.fold ~init:(As.empty, []) ~f:(fun acc expr ->
+      let* asm, ty = gen expr in
+      return (As.merge asm (fst acc), ty :: snd acc) )
