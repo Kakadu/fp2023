@@ -1,0 +1,10 @@
+(include_subdirs no)
+
+(library
+ (name infer_test)
+ (libraries base ast parse types infer)
+ (preprocess
+  (pps ppx_expect))
+ (inline_tests)
+ (instrumentation
+  (backend bisect_ppx)))

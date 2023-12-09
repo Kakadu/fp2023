@@ -29,3 +29,13 @@ let%expect_test "infer_add" =
        (Ty_arr ((Ty_con ((Ident "int"), [])),
           (Ty_arr ((Ty_con ((Ident "int"), [])), (Ty_con ((Ident "int"), []))))))
        )) |}]
+
+let%expect_test _ =
+  run {| let a, a = 1, 2 in a |} ;
+  [%expect {| (PatVarBoundSeveralTimes (Ident "a")) |}]
+
+let%expect_test _ =
+  run {| Some |} ; [%expect {| (ConstructorArityMismatch (Ident "Some")) |}]
+
+let%expect_test _ =
+  run {| None 1 |} ; [%expect {| (ConstructorArityMismatch (Ident "None")) |}]

@@ -17,4 +17,11 @@ let env =
     ; (id "+", no_vars basic_arith)
     ; (id "-", no_vars basic_arith)
     ; (id "*", no_vars basic_arith)
-    ; (id "=", no_vars (Ty.int @> Ty.int @> Ty.bool)) ]
+    ; (id "=", no_vars (Ty.int @> Ty.int @> Ty.bool))
+    ; ( id "Some"
+      , Forall
+          ( VarSet.singleton @@ Var "a"
+          , var "a" @> Ty_con (Ident "option", [var "a"]) ) )
+    ; ( id "None"
+      , Forall (VarSet.singleton @@ Var "a", Ty_con (Ident "option", [var "a"]))
+      ) ]

@@ -1,10 +1,20 @@
 open! Base
 open Monads.Std
 
-module MakeRWSMonad (ReaderT : T) (WriterT : Monoid.S) (StateT : T) = struct
+module MakeRWSEMonad
+    (ReaderT : T)
+    (WriterT : Monoid.S)
+    (StateT : T)
+    (ErrorT : T) =
+struct
+  module ErrorM = struct
+    include Monad.Result.T1 (ErrorT) (Monad.Ident)
+    include Monad.Result.Make (ErrorT) (Monad.Ident)
+  end
+
   module StateM = struct
-    include Monad.State.T1 (StateT) (Monad.Ident)
-    include Monad.State.Make (StateT) (Monad.Ident)
+    include Monad.State.T1 (StateT) (ErrorM)
+    include Monad.State.Make (StateT) (ErrorM)
   end
 
   module WriterM = struct
@@ -33,11 +43,17 @@ module MakeRWSMonad (ReaderT : T) (WriterT : Monoid.S) (StateT : T) = struct
     let put x = lift @@ WriterM.lift @@ StateM.put x
   end
 
+  module Error = struct
+    let fail err = lift @@ WriterM.lift @@ StateM.lift @@ ErrorM.fail err
+  end
+
   let run m reader_env init_state =
     let r = run m reader_env in
     let r = WriterM.run r in
-    let (ret, writer_state), state = StateM.run r init_state in
-    (ret, writer_state, state)
+    let r = StateM.run r init_state in
+    ErrorM.run r
+    |> Result.map ~f:(fun ((ret, writer_state), state) ->
+           (ret, writer_state, state) )
 end
 
 module MakeSEMonad (StateT : T) (ErrorT : T) = struct

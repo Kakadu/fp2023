@@ -1,9 +1,9 @@
 open! Base
 open Types
+
 open SolveMonad.Solve
 open SolveMonad.Let_syntax
 open SolveMonad.Let
-module Sub = Substitution
 
 let occurs_check tv ty = VarSet.mem (Ty.vars ty) tv
 
@@ -16,8 +16,10 @@ let rec unify ty1 ty2 =
       else return @@ Sub.singleton tv ty
   | Ty_arr (l1, r1), Ty_arr (l2, r2) ->
       unify_many [l1; r1] [l2; r2]
+  | Ty_tuple tys1, Ty_tuple tys2 ->
+      unify_many tys1 tys2
   | _ ->
-      (* XXX: tuples and constructors *)
+      (* XXX: constructors *)
       fail @@ UnificationFail (ty1, ty2)
 
 (**
