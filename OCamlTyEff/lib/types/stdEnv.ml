@@ -18,6 +18,9 @@ let env =
     ; (id "-", no_vars basic_arith)
     ; (id "*", no_vars basic_arith)
     ; (id "=", no_vars (Ty.int @> Ty.int @> Ty.bool))
+    ; (id "true", no_vars Ty.bool)
+    ; (id "false", no_vars Ty.bool)
+    ; (id "()", no_vars Ty.unit)
     ; ( id "Some"
       , Forall
           ( VarSet.singleton @@ Var "a"
