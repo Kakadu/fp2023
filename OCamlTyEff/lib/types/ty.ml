@@ -25,5 +25,5 @@ let rec vars = function
       VarSet.union (vars ty1) (vars ty2)
   | Ty_tuple tys ->
       List.map ~f:vars tys |> VarSet.union_list
-  | Ty_con _ ->
-      VarSet.empty
+  | Ty_con (_, tys) ->
+      List.map ~f:vars tys |> VarSet.union_list
