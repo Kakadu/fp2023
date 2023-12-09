@@ -1,11 +1,14 @@
 open! Base
 open Monads.Std
 open Types
+open Ast
+
 open Constraints
+open Containers
 
 include Monad.S
 
-val run : 'a t -> 'a * ConstrSet.t
+val run : 'a t -> ('a * ConstrSet.t * ConArityAssumpt.t, TyError.t) result
 
 module Gen : sig
   val varset : VarSet.t t
@@ -14,5 +17,9 @@ module Gen : sig
 
   val add_constrs : Constr.t list -> unit t
 
+  val add_con_assumpt : Ident.t -> ConArityAssumpt.arity -> unit t
+
   val fresh_var : Var.t t
+
+  val fail : TyError.t -> 'a t
 end

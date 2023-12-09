@@ -1,15 +1,20 @@
 open! Base
 open Monads.Std
 
-(** Makes Reader-Writer-State monad *)
-module MakeRWSMonad : functor
+(** Makes Reader-Writer-State-Error monad *)
+module MakeRWSEMonad : functor
   (ReaderT : T)
   (WriterT : Monoid.S)
   (StateT : T)
+  (ErrorT : T)
   -> sig
   include Monad.S
 
-  val run : 'a t -> ReaderT.t -> StateT.t -> 'a * WriterT.t * StateT.t
+  val run :
+       'a t
+    -> ReaderT.t
+    -> StateT.t
+    -> ('a * WriterT.t * StateT.t, ErrorT.t) result
 
   module Reader : sig
     val read : ReaderT.t t
@@ -26,6 +31,10 @@ module MakeRWSMonad : functor
     val get : StateT.t t
 
     val put : StateT.t -> unit t
+  end
+
+  module Error : sig
+    val fail : ErrorT.t -> 'a t
   end
 end
 

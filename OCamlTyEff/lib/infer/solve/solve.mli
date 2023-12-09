@@ -1,4 +1,6 @@
 open! Base
 open Constraints
 
-val solve : ConstrSet.t -> Substitution.t SolveMonad.t
+module Sub : module type of Sub
+
+val solve : ConstrSet.t -> (Sub.t, TyError.t) result

@@ -1,11 +1,10 @@
 open! Base
-open GenExpr
 open Ast
 
-let gen_str = function
+let gen = function
   | Str_eval e ->
-      gen_expr e
+      Expr.gen e
   | Str_value (Nonrecursive, [{pat= Pat_var _; expr= e}]) ->
-      gen_expr e
+      Expr.gen e
   | _ ->
       failwith "not implemented"
