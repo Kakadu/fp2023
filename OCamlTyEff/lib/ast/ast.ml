@@ -15,7 +15,7 @@ type constant =
 (* ======= Patterns ======= *)
 and pattern =
   | Pat_any  (** The pattern [_] *)
-  | Pat_var of string  (** A variable pattern such as [x] *)
+  | Pat_var of Ident.t  (** A variable pattern such as [x] *)
   | Pat_constant of constant
       (** Patterns such as [1], ['a'], ["hello"], [1.5] *)
   | Pat_tuple of pattern list

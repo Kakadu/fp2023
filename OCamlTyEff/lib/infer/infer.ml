@@ -9,10 +9,8 @@ open Gen
 open Solve
 
 let ( let* ) x f = Result.bind x ~f
-
 let fail = Result.fail
-
-open Result.Let_syntax
+let return = Result.return
 
 let infer_structure_item env str_item =
   let* asm, ty, gen_cs, con_assumpt = gen str_item in
@@ -33,9 +31,9 @@ let infer_structure_item env str_item =
 
         (* check that constructors are applied *)
         let* () =
-          let fail = fail @@ TyError.ConstructorArityMismatch id in
+          let mismatch = fail @@ TyError.ConstructorArityMismatch id in
           let assert_eq ar1 ar2 =
-            if ConArityAssumpt.equal_arity ar1 ar2 then return () else fail
+            if ConArityAssumpt.equal_arity ar1 ar2 then return () else mismatch
           in
 
           match ConArityAssumpt.find con_assumpt id with
@@ -49,7 +47,7 @@ let infer_structure_item env str_item =
             | Forall (_, Ty_arr (_, Ty_con (_, _))) ->
                 assert_eq arity SomeArgs
             | _ ->
-                fail )
+                mismatch )
         in
 
         (* add new constraints based on scheme from Env *)
@@ -68,7 +66,7 @@ let infer_structure_item env str_item =
   (* quantify all type variables *)
   let sc = Scheme.Forall (Ty.vars ty, ty) in
   match str_item with
-  | Str_value (_, [{pat= Pat_var name; expr= _}]) ->
-      return (sc, Env.set env ~key:(Ident name) ~data:sc)
+  | Str_value (_, [{pat= Pat_var id; expr= _}]) ->
+      return (sc, Env.set env ~key:id ~data:sc)
   | _ ->
       return (sc, env)
