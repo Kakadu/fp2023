@@ -18,8 +18,8 @@ let%expect_test "infer_id" =
   run {| fun x -> x |} ;
   [%expect
     {|
-    (Forall ({(Var "gen1")},
-       (Ty_arr ((Ty_var (Var "gen1")), (Ty_var (Var "gen1")))))) |}]
+    (Forall ({(Var "gen0")},
+       (Ty_arr ((Ty_var (Var "gen0")), (Ty_var (Var "gen0")))))) |}]
 
 let%expect_test "infer_add" =
   run {| fun x y -> x + y |} ;

@@ -18,29 +18,24 @@ let rec gen = function
   | Exp_constant const ->
       return (As.empty, type_of_constant const)
   | Exp_fun (args, e) ->
-      (* for now convert args to ident list *)
-      let args =
-        List.map args ~f:(function
-          | Pat_var id ->
-              id
-          | _ ->
-              failwith "not implemented" )
+      let* as_pat, bounds_pat, tys_pat = Pattern.gen_many args in
+      let* as_e, ty_e =
+        extend_varset (Pattern.BoundVars.vars bounds_pat) (gen e)
       in
 
-      let* vars_args = GenMonad.List.map args ~f:(fun _ -> fresh_var) in
-      let* as_e, ty_e = extend_varset vars_args (gen e) in
-      let ty_args = List.map vars_args ~f:( ! ) in
-
-      (* for each arg: tv from assumptions == fresh tv created above *)
-      let* () =
-        add_constrs
-          ( List.map2_exn args ty_args ~f:(fun arg ty_arg ->
-                As.lookup as_e arg |> List.map ~f:(fun var -> ty_arg == !var) )
-          |> List.concat_no_order )
+      let constrs =
+        Pattern.BoundVars.fold bounds_pat ~init:[]
+          ~f:(fun ~key:id ~data:var_pat acc ->
+            let cs =
+              As.lookup as_e id
+              |> List.map ~f:(fun var_expr -> !var_expr == !var_pat)
+            in
+            cs :: acc )
       in
+      let* () = add_constrs (List.concat_no_order constrs) in
 
-      let ty_res = List.fold_right ty_args ~init:ty_e ~f:( @> ) in
-      return (as_e -- args, ty_res)
+      let ty_res = List.fold_right tys_pat ~init:ty_e ~f:( @> ) in
+      return (as_pat ++ (as_e -- Pattern.BoundVars.idents bounds_pat), ty_res)
   | Exp_apply (e_fun, e_arg) ->
       let* as_fun, ty_fun = gen e_fun in
       let* as_arg, ty_arg = gen e_arg in
@@ -63,16 +58,15 @@ let rec gen = function
 
       let* () = add_constrs [ty_pat == ty1] in
       let* mset = varset in
-      let* constrs =
-        Pattern.BoundVars.fold bounds_pat ~init:(return [])
+      let constrs =
+        Pattern.BoundVars.fold bounds_pat ~init:[]
           ~f:(fun ~key:id ~data:var_pat acc ->
             let cs =
               As.lookup as2 id
               |> List.map ~f:(fun var_expr ->
                      Constr.ImplInstConstr (!var_expr, mset, !var_pat) )
             in
-            let* acc = acc in
-            return (cs :: acc) )
+            cs :: acc )
       in
       let* () = add_constrs (List.concat_no_order constrs) in
 
@@ -111,7 +105,10 @@ let rec gen = function
   | _ ->
       failwith "not implemented"
 
-and gen_many =
-  GenMonad.List.fold ~init:(As.empty, []) ~f:(fun acc expr ->
-      let* asm, ty = gen expr in
-      return (As.merge asm (fst acc), ty :: snd acc) )
+and gen_many exprs =
+  let* asm, tys =
+    GenMonad.List.fold exprs ~init:(As.empty, []) ~f:(fun acc expr ->
+        let* asm, ty = gen expr in
+        return (As.merge asm (fst acc), ty :: snd acc) )
+  in
+  return (asm, List.rev tys)
