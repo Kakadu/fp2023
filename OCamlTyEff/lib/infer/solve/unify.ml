@@ -1,5 +1,6 @@
 open! Base
 open Types
+open Ast
 
 open SolveMonad.Solve
 open SolveMonad.Let_syntax
@@ -18,8 +19,9 @@ let rec unify ty1 ty2 =
       unify_many [l1; r1] [l2; r2]
   | Ty_tuple tys1, Ty_tuple tys2 ->
       unify_many tys1 tys2
+  | Ty_con (id1, tys1), Ty_con (id2, tys2) when Ident.equal id1 id2 ->
+      unify_many tys1 tys2
   | _ ->
-      (* XXX: constructors *)
       fail @@ UnificationFail (ty1, ty2)
 
 (**
