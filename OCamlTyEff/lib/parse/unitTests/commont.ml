@@ -4,6 +4,7 @@
 
 open! Base
 open Ast
+open Pp
 open Common
 
 let%expect_test "parse_bool1" =

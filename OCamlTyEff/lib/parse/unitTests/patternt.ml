@@ -4,7 +4,7 @@
 
 open! Base
 open Ast
-open Common
+open Pp
 open Pattern
 
 let%expect_test "parse_var" =

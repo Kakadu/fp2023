@@ -1,22 +1,11 @@
-(include_subdirs unqualified)
+(include_subdirs qualified)
 
 (library
  (name parse)
  (public_name OCamlTyEff.Parse)
- (modules parse common expr pattern structure commont patternt exprt)
  (libraries base angstrom ast)
  (preprocess
   (pps ppx_expect ppx_deriving.eq))
- (inline_tests)
- (instrumentation
-  (backend bisect_ppx)))
-
-(library
- (name parse_test)
- (modules test)
- (libraries base ast parse)
- (preprocess
-  (pps ppx_expect))
  (inline_tests)
  (instrumentation
   (backend bisect_ppx)))
