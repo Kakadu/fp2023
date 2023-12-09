@@ -12,16 +12,17 @@ let%expect_test "parse_function_pattern_matching" =
   [%expect
     {|
     (Exp_function
-       [{ left = (Pat_var "a"); right = (Exp_construct ((Ident "true"), None)) };
-         { left = (Pat_var "b"); right = (Exp_construct ((Ident "false"), None))
-           }
+       [{ left = (Pat_var (Ident "a"));
+          right = (Exp_construct ((Ident "true"), None)) };
+         { left = (Pat_var (Ident "b"));
+           right = (Exp_construct ((Ident "false"), None)) }
          ]) |}]
 
 let%expect_test "parse_lambda_fun" =
   pp pp_expression parse_expression "fun x y -> x + y" ;
   [%expect
     {|
-    (Exp_fun ([(Pat_var "x"); (Pat_var "y")],
+    (Exp_fun ([(Pat_var (Ident "x")); (Pat_var (Ident "y"))],
        (Exp_apply (
           (Exp_apply ((Exp_ident (Ident "+")), (Exp_ident (Ident "x")))),
           (Exp_ident (Ident "y"))))
@@ -47,10 +48,13 @@ let%expect_test "parse_let" =
   [%expect
     {|
     (Exp_let (Recursive,
-       [{ pat = (Pat_var "a"); expr = (Exp_constant (Const_integer 1)) };
-         { pat = (Pat_var "b"); expr = (Exp_constant (Const_integer 2)) }],
+       [{ pat = (Pat_var (Ident "a")); expr = (Exp_constant (Const_integer 1)) };
+         { pat = (Pat_var (Ident "b")); expr = (Exp_constant (Const_integer 2)) }
+         ],
        (Exp_let (Nonrecursive,
-          [{ pat = (Pat_var "e"); expr = (Exp_constant (Const_integer 3)) }],
+          [{ pat = (Pat_var (Ident "e")); expr = (Exp_constant (Const_integer 3))
+             }
+            ],
           (Exp_ident (Ident "a"))))
        )) |}]
 
@@ -85,8 +89,8 @@ let%expect_test "parse_match1" =
   [%expect
     {|
     (Exp_match ((Exp_ident (Ident "a")),
-       [{ left = (Pat_var "b"); right = (Exp_ident (Ident "c")) };
-         { left = (Pat_var "d"); right = (Exp_ident (Ident "e")) }]
+       [{ left = (Pat_var (Ident "b")); right = (Exp_ident (Ident "c")) };
+         { left = (Pat_var (Ident "d")); right = (Exp_ident (Ident "e")) }]
        )) |}]
 
 let%expect_test "parse_match2" =
@@ -95,9 +99,10 @@ let%expect_test "parse_match2" =
     {|
     (Exp_match ((Exp_ident (Ident "a")),
        [{ left =
-          (Pat_or ((Pat_or ((Pat_var "b"), (Pat_var "c"))), (Pat_var "d")));
+          (Pat_or ((Pat_or ((Pat_var (Ident "b")), (Pat_var (Ident "c")))),
+             (Pat_var (Ident "d"))));
           right = (Exp_ident (Ident "e")) };
-         { left = (Pat_var "f"); right = (Exp_ident (Ident "g")) }]
+         { left = (Pat_var (Ident "f")); right = (Exp_ident (Ident "g")) }]
        )) |}]
 
 let%expect_test "parse_constr1" =

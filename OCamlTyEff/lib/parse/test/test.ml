@@ -21,9 +21,12 @@ let%expect_test "parse_let_binding_pattern1" =
         [{ pat =
            (Pat_construct ((Ident "::"),
               (Some (Pat_tuple
-                       [(Pat_var "ft");
+                       [(Pat_var (Ident "ft"));
                          (Pat_construct ((Ident "::"),
-                            (Some (Pat_tuple [(Pat_var "sc"); (Pat_var "tr")]))))
+                            (Some (Pat_tuple
+                                     [(Pat_var (Ident "sc"));
+                                       (Pat_var (Ident "tr"))]))
+                            ))
                          ]))
               ));
            expr = (Exp_ident (Ident "sc")) }
@@ -36,7 +39,7 @@ let%expect_test "parse_let_binding_pattern2" =
   [%expect
     {|
     [(Str_value (Nonrecursive,
-        [{ pat = (Pat_tuple [(Pat_var "f"); (Pat_var "s")]);
+        [{ pat = (Pat_tuple [(Pat_var (Ident "f")); (Pat_var (Ident "s"))]);
            expr =
            (Exp_tuple
               [(Exp_apply (
@@ -56,9 +59,9 @@ let%expect_test "parse_custom_operator1" =
   [%expect
     {|
     [(Str_value (Nonrecursive,
-        [{ pat = (Pat_var ">>=");
+        [{ pat = (Pat_var (Ident ">>="));
            expr =
-           (Exp_fun ([(Pat_var "a"); (Pat_var "b")],
+           (Exp_fun ([(Pat_var (Ident "a")); (Pat_var (Ident "b"))],
               (Exp_apply (
                  (Exp_apply ((Exp_ident (Ident "**")), (Exp_ident (Ident "a")))),
                  (Exp_ident (Ident "b"))))
@@ -73,9 +76,9 @@ let%expect_test "parse_custom_operator2" =
   [%expect
     {|
     [(Str_value (Nonrecursive,
-        [{ pat = (Pat_var "++");
+        [{ pat = (Pat_var (Ident "++"));
            expr =
-           (Exp_fun ([(Pat_var "a"); (Pat_var "b")],
+           (Exp_fun ([(Pat_var (Ident "a")); (Pat_var (Ident "b"))],
               (Exp_apply (
                  (Exp_apply ((Exp_ident (Ident "+")), (Exp_ident (Ident "a")))),
                  (Exp_ident (Ident "b"))))
@@ -92,9 +95,9 @@ let%expect_test "parse_comments" =
   [%expect
     {|
     [(Str_value (Recursive,
-        [{ pat = (Pat_var "f");
+        [{ pat = (Pat_var (Ident "f"));
            expr =
-           (Exp_fun ([(Pat_var "n")],
+           (Exp_fun ([(Pat_var (Ident "n"))],
               (Exp_apply (
                  (Exp_apply ((Exp_ident (Ident "+")), (Exp_ident (Ident "n")))),
                  (Exp_constant (Const_integer 1))))
@@ -127,7 +130,10 @@ let%expect_test "parse_let_rec_without_whitespaces2" =
   [%expect
     {|
     [(Str_value (Nonrecursive,
-        [{ pat = (Pat_var "reca"); expr = (Exp_constant (Const_integer 1)) }]))
+        [{ pat = (Pat_var (Ident "reca"));
+           expr = (Exp_constant (Const_integer 1)) }
+          ]
+        ))
       ] |}]
 
 let%expect_test "parse_fact" =
@@ -135,9 +141,9 @@ let%expect_test "parse_fact" =
   [%expect
     {|
     [(Str_value (Recursive,
-        [{ pat = (Pat_var "fact");
+        [{ pat = (Pat_var (Ident "fact"));
            expr =
-           (Exp_fun ([(Pat_var "n")],
+           (Exp_fun ([(Pat_var (Ident "n"))],
               (Exp_ifthenelse (
                  (Exp_apply (
                     (Exp_apply ((Exp_ident (Ident "<")), (Exp_ident (Ident "n"))

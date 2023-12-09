@@ -21,9 +21,8 @@ let rec gen = function
       (* for now convert args to ident list *)
       let args =
         List.map args ~f:(function
-          | Pat_var x ->
-              (* XXX: why do we create Ident here, not in parser? *)
-              Ident.Ident x
+          | Pat_var id ->
+              id
           | _ ->
               failwith "not implemented" )
       in

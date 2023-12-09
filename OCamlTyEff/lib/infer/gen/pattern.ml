@@ -31,9 +31,9 @@ module BoundVars = struct
 end
 
 let rec gen = function
-  | Pat_var name ->
+  | Pat_var id ->
       let* var = fresh_var in
-      return (As.empty, BoundVars.singleton (Ident name) var, !var)
+      return (As.empty, BoundVars.singleton id var, !var)
   | Pat_any ->
       let* var = fresh_var in
       return (As.empty, BoundVars.empty, !var)

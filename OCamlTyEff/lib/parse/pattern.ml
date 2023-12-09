@@ -11,7 +11,7 @@ open Common
 
 let parse_pat_any = char '_' *> return Pat_any
 
-let parse_pat_var = parse_value_name >>| fun name -> Pat_var name
+let parse_pat_var = parse_value_name >>| fun name -> Pat_var (Ident name)
 
 let parse_pat_const = parse_const >>| fun const -> Pat_constant const
 
