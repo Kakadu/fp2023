@@ -42,8 +42,25 @@ let rec gen = function
   | Pat_tuple pats ->
       let* asm, bound_vars, tys = gen_many pats in
       return (asm, bound_vars, Ty.Ty_tuple tys)
-  | Pat_construct (_, _) ->
-      failwith "not implemented"
+  | Pat_construct (con_id, con_arg) ->
+      let* var_con = fresh_var in
+      let as_con = As.singleton con_id var_con in
+      let ty_con = !var_con in
+
+      let* ty_res = fresh_var >>| ( ! ) in
+      let* as_arg, bounds_arg, constr =
+        match con_arg with
+        | None ->
+            let* () = add_con_assumpt con_id NoArgs in
+            return (As.empty, BoundVars.empty, ty_con == ty_res)
+        | Some con_arg ->
+            let* () = add_con_assumpt con_id SomeArgs in
+            let* as_arg, bounds_arg, ty_arg = gen con_arg in
+            return (as_arg, bounds_arg, ty_con == ty_arg @> ty_res)
+      in
+      let* () = add_constrs [constr] in
+
+      return (as_con ++ as_arg, bounds_arg, ty_res)
   | Pat_or (_, _) ->
       failwith "not implemented"
 
