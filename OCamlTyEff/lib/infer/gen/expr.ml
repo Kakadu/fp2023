@@ -102,6 +102,10 @@ let rec gen = function
       let* () = add_constrs [constr] in
 
       return (as_con ++ as_arg, ty_res)
+  | Exp_sequence (e1, e2) ->
+      let* as1, _ = gen e1 in
+      let* as2, ty2 = gen e2 in
+      return (as1 ++ as2, ty2)
   | _ ->
       failwith "not implemented"
 
