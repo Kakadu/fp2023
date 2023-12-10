@@ -2,7 +2,7 @@ open! Base
 open Types
 open Constraints
 
-open Containers
+open Common
 open Utils
 
 module ConstrSetMonoid = struct

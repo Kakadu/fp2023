@@ -3,7 +3,6 @@ open Types
 open Constraints
 open Ast
 
-open Containers
 open Common
 module As = Assumptions
 
