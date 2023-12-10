@@ -118,6 +118,7 @@ let rec gen = function
           Pattern.BoundVars.fold bounds_pat ~init:[]
             ~f:(fun ~key:id ~data:var_pat acc ->
               let cs =
+                (* generalize in patterns *)
                 As.lookup as_rhs id
                 |> List.map ~f:(fun var_expr ->
                        Constr.ImplInstConstr (!var_expr, mset, !var_pat) )
@@ -139,7 +140,41 @@ let rec gen = function
       in
 
       return (as_e ++ as_cases, ty_res)
-  | _ ->
+  | Exp_function cases ->
+      let* ty_arg = fresh_var >>| ( ! ) in
+
+      let gen_case {left= pat; right= e_rhs} =
+        let* as_pat, bounds_pat, ty_pat = Pattern.gen pat in
+        let* as_rhs, ty_rhs =
+          extend_varset (Pattern.BoundVars.vars bounds_pat) (gen e_rhs)
+        in
+
+        let* () = add_constrs [ty_pat == ty_arg] in
+        let constrs =
+          Pattern.BoundVars.fold bounds_pat ~init:[]
+            ~f:(fun ~key:id ~data:var_pat acc ->
+              let cs =
+                As.lookup as_rhs id
+                |> List.map ~f:(fun var_expr -> !var_expr == !var_pat)
+              in
+              cs :: acc )
+        in
+        let* () = add_constrs (List.concat_no_order constrs) in
+
+        return
+          (as_pat ++ (as_rhs -- Pattern.BoundVars.idents bounds_pat), ty_rhs)
+      in
+
+      let* ty_res = fresh_var >>| ( ! ) in
+      let* as_cases =
+        GenMonad.List.fold cases ~init:As.empty ~f:(fun acc case ->
+            let* as_case, ty_case = gen_case case in
+            let* () = add_constrs [ty_case == ty_res] in
+            return (acc ++ as_case) )
+      in
+
+      return (as_cases, ty_arg @> ty_res)
+  | Exp_let (Recursive, _, _) ->
       failwith "not implemented"
 
 and gen_many exprs =
