@@ -106,6 +106,40 @@ let rec gen = function
       let* as1, _ = gen e1 in
       let* as2, ty2 = gen e2 in
       return (as1 ++ as2, ty2)
+  | Exp_match (e, cases) ->
+      let* as_e, ty_e = gen e in
+
+      let gen_case {left= pat; right= e_rhs} =
+        let* as_pat, bounds_pat, ty_pat = Pattern.gen pat in
+        let* as_rhs, ty_rhs = gen e_rhs in
+
+        let* () = add_constrs [ty_pat == ty_e] in
+        let* mset = varset in
+        let constrs =
+          Pattern.BoundVars.fold bounds_pat ~init:[]
+            ~f:(fun ~key:id ~data:var_pat acc ->
+              let cs =
+                As.lookup as_rhs id
+                |> List.map ~f:(fun var_expr ->
+                       Constr.ImplInstConstr (!var_expr, mset, !var_pat) )
+              in
+              cs :: acc )
+        in
+        let* () = add_constrs (List.concat_no_order constrs) in
+
+        return
+          (as_pat ++ (as_rhs -- Pattern.BoundVars.idents bounds_pat), ty_rhs)
+      in
+
+      let* ty_res = fresh_var >>| ( ! ) in
+      let* as_cases =
+        GenMonad.List.fold cases ~init:As.empty ~f:(fun acc case ->
+            let* as_case, ty_case = gen_case case in
+            let* () = add_constrs [ty_case == ty_res] in
+            return (acc ++ as_case) )
+      in
+
+      return (as_e ++ as_cases, ty_res)
   | _ ->
       failwith "not implemented"
 
