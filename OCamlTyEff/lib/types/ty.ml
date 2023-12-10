@@ -6,7 +6,36 @@ type t =
   | Ty_arr of t * t
   | Ty_tuple of t list
   | Ty_con of Ident.t * t list
-[@@deriving eq, ord, sexp_of, show {with_path= false}]
+[@@deriving eq, ord, sexp_of]
+
+let rec pp ppf =
+  let open Stdlib.Format in
+  let pp_raw = pp in
+  let pp ppf ty =
+    match ty with
+    | Ty_arr _ | Ty_tuple _ ->
+        (* wrap arrow and tuple types in parentheses *)
+        fprintf ppf "(%a)" pp_raw ty
+    | _ ->
+        pp_raw ppf ty
+  in
+  function
+  | Ty_var var ->
+      Var.pp ppf var
+  | Ty_arr (l, r) ->
+      fprintf ppf "%a -> %a" pp l pp_raw r
+  | Ty_tuple tys ->
+      let pp_tys = pp_print_list pp ~pp_sep:(fun out () -> fprintf out " * ") in
+      fprintf ppf "%a" pp_tys tys
+  | Ty_con (Ident name, args) -> (
+      let pp_args = pp_print_list pp ~pp_sep:(fun out () -> fprintf out ",@") in
+      match args with
+      | [] ->
+          fprintf ppf "%s" name
+      | [arg] ->
+          fprintf ppf "%a %s" pp arg name
+      | _ ->
+          fprintf ppf "(%a) %s" pp_args args name )
 
 let unit = Ty_con (Ident "unit", [])
 
