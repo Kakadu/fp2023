@@ -116,3 +116,42 @@ let%expect_test _ =
 let%expect_test _ =
   run {| let a = 1, (fun (a, _) -> a), 2 in a|} ;
   [%expect {| 'solve0 'solve1. int * (('solve1 * 'solve0) -> 'solve1) * int |}]
+
+let%expect_test _ =
+  run
+    {|
+    match Some id with
+      | Some x -> x "hi"; x 5
+      | None -> 1
+    |} ;
+  [%expect {| int |}]
+
+let%expect_test _ =
+  run
+    {|
+    fun x ->
+      match x with
+        | Some v -> Some (v + 1)
+        | None -> None
+    |} ;
+  [%expect {| int option -> int option |}]
+
+let%expect_test _ =
+  run {| function Some x -> x | None -> 0 |} ;
+  [%expect {| int option -> int |}]
+
+let%expect_test _ =
+  run {| function Some id -> id "hi"; id 5 | None -> 1 |} ;
+  [%expect {| (UnificationFail (string, int)) |}]
+
+let%expect_test _ =
+  run {| fun arg -> match arg with Some x -> let y = x in y |} ;
+  [%expect {| 'solve0. 'solve0 option -> 'solve0 |}]
+
+let%expect_test _ =
+  run {| function [x] -> let y = x in y |} ;
+  [%expect {| 'solve1. 'solve1 list -> 'solve1 |}]
+
+let%expect_test _ =
+  run {| function 42 -> true | _ -> false |} ;
+  [%expect {| int -> bool |}]
