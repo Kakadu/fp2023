@@ -7,8 +7,9 @@ let compare = Set.compare_direct
 let sexp_of_t = Set.sexp_of_m__t (module Var)
 
 let pp ppf set =
-  Set.to_list set |> List.map ~f:Var.show |> String.concat ~sep:", "
-  |> Stdlib.Format.fprintf ppf "{%s}"
+  let open Stdlib.Format in
+  let vars = Set.to_list set in
+  pp_print_list ~pp_sep:(fun out () -> fprintf out " ") Var.pp ppf vars
 
 let empty = Set.empty (module Var)
 

@@ -19,55 +19,32 @@ let%expect_test _ =
     let id1 = fun x -> x in
     id1 42; id1 "hello"
   |} ;
-  [%expect {| (Forall ({}, (Ty_con ((Ident "string"), [])))) |}]
+  [%expect {| string |}]
 
 let%expect_test _ =
   run {|
     let f id = id 42; id "hello" in
     f (fun x -> x)
   |} ;
-  [%expect
-    {|
-    (UnificationFail ((Ty_con ((Ident "string"), [])),
-       (Ty_con ((Ident "int"), [])))) |}]
+  [%expect {| (UnificationFail (string, int)) |}]
 
 let%expect_test _ =
   run {| fun x -> let y = x in y |} ;
-  [%expect
-    {|
-    (Forall ({(Var "gen0")},
-       (Ty_arr ((Ty_var (Var "gen0")), (Ty_var (Var "gen0")))))) |}]
+  [%expect {| 'gen0. 'gen0 -> 'gen0 |}]
 
 let%expect_test _ =
   run {|
     fun x ->
       let y = fun z -> x z in y |} ;
-  [%expect
-    {|
-    (Forall ({(Var "gen2"), (Var "gen5")},
-       (Ty_arr ((Ty_arr ((Ty_var (Var "gen2")), (Ty_var (Var "gen5")))),
-          (Ty_arr ((Ty_var (Var "gen2")), (Ty_var (Var "gen5"))))))
-       )) |}]
+  [%expect {| 'gen2 'gen5. ('gen2 -> 'gen5) -> 'gen2 -> 'gen5 |}]
 
 let%expect_test _ =
   run {| fun x f -> f x |} ;
-  [%expect
-    {|
-    (Forall ({(Var "gen0"), (Var "gen4")},
-       (Ty_arr ((Ty_var (Var "gen0")),
-          (Ty_arr ((Ty_arr ((Ty_var (Var "gen0")), (Ty_var (Var "gen4")))),
-             (Ty_var (Var "gen4"))))
-          ))
-       )) |}]
+  [%expect {| 'gen0 'gen4. 'gen0 -> ('gen0 -> 'gen4) -> 'gen4 |}]
 
 let%expect_test _ =
   run {| fun f -> fun x -> f x |} ;
-  [%expect
-    {|
-    (Forall ({(Var "gen1"), (Var "gen4")},
-       (Ty_arr ((Ty_arr ((Ty_var (Var "gen1")), (Ty_var (Var "gen4")))),
-          (Ty_arr ((Ty_var (Var "gen1")), (Ty_var (Var "gen4"))))))
-       )) |}]
+  [%expect {| 'gen1 'gen4. ('gen1 -> 'gen4) -> 'gen1 -> 'gen4 |}]
 
 let%expect_test _ =
   run {| fun f -> fun x -> g x |} ;
@@ -78,12 +55,7 @@ let%expect_test _ =
     fun m -> let y = m in
     let x = y true in x
   |} ;
-  [%expect
-    {|
-    (Forall ({(Var "gen7")},
-       (Ty_arr ((Ty_arr ((Ty_con ((Ident "bool"), [])), (Ty_var (Var "gen7")))),
-          (Ty_var (Var "gen7"))))
-       )) |}]
+  [%expect {| 'gen7. (bool -> 'gen7) -> 'gen7 |}]
 
 let%expect_test _ =
   run
@@ -91,68 +63,33 @@ let%expect_test _ =
     (fun x -> x + 1)
     ( (fun y -> if y then true else false) false )
   |} ;
-  [%expect
-    {|
-    (UnificationFail ((Ty_con ((Ident "int"), [])), (Ty_con ((Ident "bool"), []))
-       )) |}]
+  [%expect {| (UnificationFail (int, bool)) |}]
 
 let%expect_test _ =
   run {| fun x -> if x then 42 else x |} ;
-  [%expect
-    {|
-    (UnificationFail ((Ty_con ((Ident "int"), [])), (Ty_con ((Ident "bool"), []))
-       )) |}]
+  [%expect {| (UnificationFail (int, bool)) |}]
 
 let%expect_test _ =
   run {| fun f -> (fun x -> f (x x)) (fun x -> f (x x)) |} ;
-  [%expect
-    {|
-    (OccursIn ((Var "gen1"),
-       (Ty_arr ((Ty_var (Var "gen1")), (Ty_var (Var "gen5")))))) |}]
+  [%expect {| (OccursIn ('gen1, 'gen1 -> 'gen5)) |}]
 
 let%expect_test _ =
   run {| fun x y (a, _) -> (x + y - a) = 1 |} ;
-  [%expect
-    {|
-    (Forall ({(Var "gen3")},
-       (Ty_arr ((Ty_con ((Ident "int"), [])),
-          (Ty_arr ((Ty_con ((Ident "int"), [])),
-             (Ty_arr (
-                (Ty_tuple [(Ty_con ((Ident "int"), [])); (Ty_var (Var "gen3"))]),
-                (Ty_con ((Ident "bool"), []))))
-             ))
-          ))
-       )) |}]
+  [%expect {| 'gen3. int -> int -> (int * 'gen3) -> bool |}]
 
 let%expect_test _ =
   run {|
     let x, Some f = 1, Some ( ( + ) 4 )
     in f x |} ;
-  [%expect {|
-    (Forall ({}, (Ty_con ((Ident "int"), [])))) |}]
+  [%expect {| int |}]
 
 let%expect_test _ =
-  run {| Some (1, "hi") |} ;
-  [%expect
-    {|
-    (Forall ({},
-       (Ty_con ((Ident "option"),
-          [(Ty_tuple
-              [(Ty_con ((Ident "int"), [])); (Ty_con ((Ident "string"), []))])
-            ]
-          ))
-       )) |}]
+  run {| Some (1, "hi") |} ; [%expect {| (int * string) option |}]
+
+let%expect_test _ = run {| None |} ; [%expect {| 'solve0. 'solve0 option |}]
 
 let%expect_test _ =
-  run {| None |} ;
-  [%expect
-    {|
-    (Forall ({(Var "solve0")},
-       (Ty_con ((Ident "option"), [(Ty_var (Var "solve0"))])))) |}]
-
-let%expect_test _ =
-  run {| Some |} ; [%expect {|
-    (ConstructorArityMismatch (Ident "Some")) |}]
+  run {| Some |} ; [%expect {| (ConstructorArityMismatch (Ident "Some")) |}]
 
 let%expect_test _ =
   run {| None 42 |} ; [%expect {| (ConstructorArityMismatch (Ident "None")) |}]
@@ -175,3 +112,7 @@ let%expect_test _ =
 let%expect_test _ =
   run {| let a, _ = 1, 2, 3 in a |} ;
   [%expect {| UnificationMismatch |}]
+
+let%expect_test _ =
+  run {| let a = 1, (fun (a, _) -> a), 2 in a|} ;
+  [%expect {| 'solve0 'solve1. int * (('solve1 * 'solve0) -> 'solve1) * int |}]
