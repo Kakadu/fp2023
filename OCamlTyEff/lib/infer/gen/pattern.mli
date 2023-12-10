@@ -2,7 +2,7 @@ open! Base
 open Types
 open Ast
 
-open Containers
+open Common
 
 module BoundVars : sig
   (* Variables bound by pattern *)

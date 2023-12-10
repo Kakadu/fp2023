@@ -3,7 +3,6 @@ open Types
 open Ast
 
 open Common
-open Containers
 module As = Assumptions
 
 open GenMonad.Gen

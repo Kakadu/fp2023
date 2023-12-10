@@ -3,7 +3,7 @@ open Types
 open Constraints
 open Ast
 
-open Containers
+open Common
 
 module Assumptions : module type of Assumptions
 module ConArityAssumpt : module type of ConArityAssumpt

@@ -1,5 +1,5 @@
-module Assumptions = Containers.Assumptions
-module ConArityAssumpt = Containers.ConArityAssumpt
+module Assumptions = Common.Assumptions
+module ConArityAssumpt = Common.ConArityAssumpt
 
 open! Base
 
