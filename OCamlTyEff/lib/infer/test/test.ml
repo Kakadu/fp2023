@@ -40,7 +40,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   run {| fun x f -> f x |} ;
-  [%expect {| 'gen0 'gen4. 'gen0 -> ('gen0 -> 'gen4) -> 'gen4 |}]
+  [%expect {| 'gen1 'gen4. 'gen1 -> ('gen1 -> 'gen4) -> 'gen4 |}]
 
 let%expect_test _ =
   run {| fun f -> fun x -> f x |} ;
@@ -75,7 +75,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   run {| fun x y (a, _) -> (x + y - a) = 1 |} ;
-  [%expect {| 'gen3. int -> int -> (int * 'gen3) -> bool |}]
+  [%expect {| 'gen0. int -> int -> (int * 'gen0) -> bool |}]
 
 let%expect_test _ =
   run {|
@@ -115,7 +115,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   run {| let a = 1, (fun (a, _) -> a), 2 in a|} ;
-  [%expect {| 'solve0 'solve1. int * (('solve1 * 'solve0) -> 'solve1) * int |}]
+  [%expect {| 'solve0 'solve1. int * (('solve0 * 'solve1) -> 'solve0) * int |}]
 
 let%expect_test _ =
   run

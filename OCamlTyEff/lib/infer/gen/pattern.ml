@@ -66,13 +66,10 @@ let rec gen = function
       failwith "not implemented"
 
 and gen_many pats =
-  let* asm, bounds, tys =
-    GenMonad.List.fold pats ~init:(As.empty, BoundVars.empty, [])
-      ~f:(fun acc pat ->
-        let* asm, bound, ty = gen pat in
-        let acc_asm, acc_bound, acc_tys = acc in
+  GenMonad.List.fold_right pats ~init:(As.empty, BoundVars.empty, [])
+    ~f:(fun pat acc ->
+      let* asm, bound, ty = gen pat in
+      let acc_asm, acc_bound, acc_tys = acc in
 
-        let* new_bound = BoundVars.merge acc_bound bound in
-        return (acc_asm ++ asm, new_bound, ty :: acc_tys) )
-  in
-  return (asm, bounds, List.rev tys)
+      let* new_bound = BoundVars.merge acc_bound bound in
+      return (acc_asm ++ asm, new_bound, ty :: acc_tys) )
