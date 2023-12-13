@@ -178,9 +178,6 @@ let rec gen = function
       failwith "not implemented"
 
 and gen_many exprs =
-  let* asm, tys =
-    GenMonad.List.fold exprs ~init:(As.empty, []) ~f:(fun acc expr ->
-        let* asm, ty = gen expr in
-        return (As.merge asm (fst acc), ty :: snd acc) )
-  in
-  return (asm, List.rev tys)
+  GenMonad.List.fold_right exprs ~init:(As.empty, []) ~f:(fun expr acc ->
+      let* asm, ty = gen expr in
+      return (As.merge asm (fst acc), ty :: snd acc) )
