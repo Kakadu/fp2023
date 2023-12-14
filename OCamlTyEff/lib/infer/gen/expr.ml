@@ -83,10 +83,10 @@ let rec gen = function
             failwith "not implemented"
       in
 
+      (* XXX: check rhs of let rec.
+         e.g. `let rec x = x + 1 in ..` must be rejected *)
       let* as1, ty1 = gen e1 in
       let* as2, ty2 = gen e2 in
-      (** XXX: check rhs of let rec.
-          e.g. `let rec x = x + 1 in ..` must be rejected *)
 
       let* () =
         add_constrs
