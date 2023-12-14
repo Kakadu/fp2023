@@ -2,11 +2,17 @@ open! Base
 open Types
 
 let run code =
+  let open Stdlib.Format in
   match Parse.parse code with
   | Some [str_item] -> (
     match Infer.infer_structure_item StdEnv.env str_item with
-    | Ok (ty, _) ->
-        Scheme.pp Stdlib.Format.std_formatter ty
+    | Ok (env, bounds, sc) ->
+        printf "%a\n" Scheme.pp sc ;
+
+        List.iter bounds ~f:(fun bound_var ->
+            let sc = Env.find_exn env bound_var in
+            let (Ident name) = bound_var in
+            printf "%s: %a\n" name Scheme.pp sc )
     | Error err ->
         Infer.TyError.pp Stdlib.Format.std_formatter err )
   | None ->
@@ -168,8 +174,53 @@ let%expect_test _ =
   run {| let rec f x = f 5 in f |} ;
   [%expect {| 'solve0. int -> 'solve0 |}]
 
-let%expect_test _ = run {| let rec _ = id in 1 |};
+let%expect_test _ =
+  run {| let rec _ = id in 1 |} ;
   [%expect {| NotVarLHSRec |}]
 
-let%expect_test _ = run {| let rec Some x = Some 1 in x |};
+let%expect_test _ =
+  run {| let rec Some x = Some 1 in x |} ;
   [%expect {| NotVarLHSRec |}]
+
+let%expect_test _ =
+  run {| let f x = x |} ;
+  [%expect {|
+    'gen1. 'gen1 -> 'gen1
+    f: 'gen1. 'gen1 -> 'gen1 |}]
+
+let%expect_test _ =
+  run {| let id1, id2 = id, id |} ;
+  [%expect
+    {|
+    'solve0 'solve1. ('solve0 -> 'solve0) * ('solve1 -> 'solve1)
+    id1: 'solve0. 'solve0 -> 'solve0
+    id2: 'solve1. 'solve1 -> 'solve1 |}]
+
+let%expect_test _ =
+  run {| let Some a = (<) |} ;
+  [%expect {| (UnificationFail ('solve0 option, int -> int -> bool)) |}]
+
+let%expect_test _ =
+  run {| let Some x = Some id |} ;
+  [%expect
+    {|
+    'solve1. ('solve1 -> 'solve1) option
+    x: 'solve1. 'solve1 -> 'solve1 |}]
+
+let%expect_test _ =
+  run {| let () = id |} ;
+  [%expect {| (UnificationFail (unit, 'solve0 -> 'solve0)) |}]
+
+let%expect_test _ =
+  run {| let [a; b] = [(1,2); (3,4)] |} ;
+  [%expect {|
+    (int * int) list
+    a: int * int
+    b: int * int |}]
+
+let%expect_test _ =
+  run {| let [Some(a, b)] = [Some(1,2)] |} ;
+  [%expect {|
+    (int * int) option list
+    a: int
+    b: int |}]

@@ -11,4 +11,6 @@ let of_alist_exn = Map.of_alist_exn (module Ident)
 
 let find = Map.find
 
+let find_exn = Map.find_exn
+
 let set = Map.set

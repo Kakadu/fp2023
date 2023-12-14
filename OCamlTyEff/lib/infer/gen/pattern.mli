@@ -5,8 +5,13 @@ open Ast
 open Common
 
 module BoundVars : sig
-  (* Variables bound by pattern *)
+  (**
+    Variables bound by patterns.
+    Maps identifiers of bound variables to respective type variables
+  *)
   type t
+
+  val empty : t
 
   val fold :
     t -> init:'acc -> f:(key:Ident.t -> data:Var.t -> 'acc -> 'acc) -> 'acc
