@@ -6,5 +6,5 @@ let gen = function
       Expr.gen e
   | Str_value (Nonrecursive, [{pat= Pat_var _; expr= e}]) ->
       Expr.gen e
-  | _ ->
+  | Str_value (_, _) ->
       failwith "not implemented"

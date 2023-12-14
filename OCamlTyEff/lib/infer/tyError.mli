@@ -9,5 +9,6 @@ type t =
   | OccursIn of Var.t * Ty.t
   | PatVarBoundSeveralTimes of Ident.t
   | ConstructorArityMismatch of Ident.t
+  | NotVarLHSRec
 
 val pp : Format.formatter -> t -> unit

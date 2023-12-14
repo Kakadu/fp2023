@@ -70,6 +70,38 @@ let rec gen = function
       let* () = add_constrs (List.concat_no_order constrs) in
 
       return (as_pat ++ as1 ++ (as2 -- Pattern.BoundVars.idents bounds_pat), ty2)
+  | Exp_let (Recursive, bindings, e2) ->
+      let* id, e1 =
+        match bindings with
+        | [{pat; expr}] -> (
+          match pat with
+          | Pat_var id ->
+              return (id, expr)
+          | _ ->
+              fail NotVarLHSRec )
+        | _ ->
+            failwith "not implemented"
+      in
+
+      let* as1, ty1 = gen e1 in
+      let* as2, ty2 = gen e2 in
+      (** XXX: check rhs of let rec.
+          e.g. `let rec x = x + 1 in ..` must be rejected *)
+
+      let* () =
+        add_constrs
+          (As.lookup as1 id |> List.map ~f:(fun var_expr -> !var_expr == ty1))
+      in
+
+      let* mset = varset in
+      let* () =
+        add_constrs
+          ( As.lookup as2 id
+          |> List.map ~f:(fun var_expr ->
+                 Constr.ImplInstConstr (!var_expr, mset, ty1) ) )
+      in
+
+      return (as1 ++ as2 -- [id], ty2)
   | Exp_ifthenelse (e_cond, e_th, e_el) ->
       let* as_cond, ty_cond = gen e_cond in
       let* as_th, ty_th = gen e_th in
@@ -174,8 +206,6 @@ let rec gen = function
       in
 
       return (as_cases, ty_arg @> ty_res)
-  | Exp_let (Recursive, _, _) ->
-      failwith "not implemented"
 
 and gen_many exprs =
   GenMonad.List.fold_right exprs ~init:(As.empty, []) ~f:(fun expr acc ->
