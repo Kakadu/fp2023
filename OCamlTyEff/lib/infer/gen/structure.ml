@@ -1,5 +1,4 @@
 open! Base
-open Types
 open Ast
 
 open Common
@@ -28,5 +27,29 @@ let gen = function
       let* () = add_constrs [ty_pat == ty_e] in
 
       return (as_pat ++ as_e, bounds_pat, ty_e)
-  | Str_value (_, _) ->
-      failwith "not implemented"
+  | Str_value (Recursive, bindings) ->
+      let* id, e =
+        match bindings with
+        | [{pat; expr}] -> (
+          match pat with
+          | Pat_var id ->
+              return (id, expr)
+          | _ ->
+              fail NotVarLHSRec )
+        | _ ->
+            failwith "not implemented"
+      in
+
+      (* XXX: check rhs of let rec.
+         e.g. `let rec x = x + 1` must be rejected *)
+      let* as_e, ty_e = Expr.gen e in
+
+      let* () =
+        add_constrs
+          (As.lookup as_e id |> List.map ~f:(fun var_expr -> !var_expr == ty_e))
+      in
+
+      let* var_id = fresh_var in
+      let* () = add_constrs [!var_id == ty_e] in
+
+      return (as_e -- [id], Pattern.BoundVars.singleton id var_id, ty_e)

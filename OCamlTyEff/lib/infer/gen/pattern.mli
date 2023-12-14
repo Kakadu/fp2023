@@ -13,6 +13,8 @@ module BoundVars : sig
 
   val empty : t
 
+  val singleton : Ident.t -> Var.t -> t
+
   val fold :
     t -> init:'acc -> f:(key:Ident.t -> data:Var.t -> 'acc -> 'acc) -> 'acc
 
