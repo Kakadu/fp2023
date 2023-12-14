@@ -2,7 +2,6 @@ module TyError = TyError
 
 open! Base
 open Types
-open Ast
 
 open Constraints
 open Gen
@@ -13,7 +12,7 @@ let fail = Result.fail
 let return = Result.return
 
 let infer_structure_item env str_item =
-  let* asm, ty, gen_cs, con_assumpt = gen str_item in
+  let* asm, bound_vars, ty_res, gen_cs, con_assumpt = gen str_item in
 
   (* create new constrainsts based on type environment *)
   let* env_cs =
@@ -61,12 +60,18 @@ let infer_structure_item env str_item =
 
   (* solve constrainsts *)
   let* sub = solve @@ ConstrSet.union gen_cs env_cs in
-  let ty = Sub.apply sub ty in
+  let ty_res = Sub.apply sub ty_res in
+  let sc_res = Scheme.Forall (Ty.vars ty_res, ty_res) in
 
-  (* quantify all type variables *)
-  let sc = Scheme.Forall (Ty.vars ty, ty) in
-  match str_item with
-  | Str_value (_, [{pat= Pat_var id; expr= _}]) ->
-      return (sc, Env.set env ~key:id ~data:sc)
-  | _ ->
-      return (sc, env)
+  (* add new bounds to type environment *)
+  let new_env =
+    BoundVars.fold bound_vars ~init:env ~f:(fun ~key:id ~data:tv acc ->
+        let ty = Sub.apply sub (Ty_var tv) in
+        let sc =
+          (* quantify all type variables *)
+          Scheme.Forall (Ty.vars ty, ty)
+        in
+        Env.set acc ~key:id ~data:sc )
+  in
+
+  return (new_env, BoundVars.idents bound_vars, sc_res)
