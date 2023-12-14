@@ -155,3 +155,21 @@ let%expect_test _ =
 let%expect_test _ =
   run {| function 42 -> true | _ -> false |} ;
   [%expect {| int -> bool |}]
+
+let%expect_test _ =
+  run {| let rec fact n = if n < 2 then 1 else n * fact (n - 1) in fact |} ;
+  [%expect {| int -> int |}]
+
+let%expect_test _ =
+  run {| let rec fact n = if n < 2 then 1 else n * fact true in fact |} ;
+  [%expect {| (UnificationFail (int, bool)) |}]
+
+let%expect_test _ =
+  run {| let rec f x = f 5 in f |} ;
+  [%expect {| 'solve0. int -> 'solve0 |}]
+
+let%expect_test _ = run {| let rec _ = id in 1 |};
+  [%expect {| NotVarLHSRec |}]
+
+let%expect_test _ = run {| let rec Some x = Some 1 in x |};
+  [%expect {| NotVarLHSRec |}]

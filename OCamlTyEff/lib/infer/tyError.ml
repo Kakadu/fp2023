@@ -9,4 +9,5 @@ type t =
   | OccursIn of Var.t * Ty.t
   | PatVarBoundSeveralTimes of Ident.t
   | ConstructorArityMismatch of Ident.t
+  | NotVarLHSRec
 [@@deriving show {with_path= false}]
