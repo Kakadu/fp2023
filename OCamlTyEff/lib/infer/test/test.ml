@@ -36,21 +36,21 @@ let%expect_test _ =
 
 let%expect_test _ =
   run {| fun x -> let y = x in y |} ;
-  [%expect {| 'gen0. 'gen0 -> 'gen0 |}]
+  [%expect {| 'a. 'a -> 'a |}]
 
 let%expect_test _ =
   run {|
     fun x ->
       let y = fun z -> x z in y |} ;
-  [%expect {| 'gen2 'gen5. ('gen2 -> 'gen5) -> 'gen2 -> 'gen5 |}]
+  [%expect {| 'a 'b. ('a -> 'b) -> 'a -> 'b |}]
 
 let%expect_test _ =
   run {| fun x f -> f x |} ;
-  [%expect {| 'gen1 'gen4. 'gen1 -> ('gen1 -> 'gen4) -> 'gen4 |}]
+  [%expect {| 'a 'b. 'a -> ('a -> 'b) -> 'b |}]
 
 let%expect_test _ =
   run {| fun f -> fun x -> f x |} ;
-  [%expect {| 'gen1 'gen4. ('gen1 -> 'gen4) -> 'gen1 -> 'gen4 |}]
+  [%expect {| 'a 'b. ('a -> 'b) -> 'a -> 'b |}]
 
 let%expect_test _ =
   run {| fun f -> fun x -> g x |} ;
@@ -61,7 +61,7 @@ let%expect_test _ =
     fun m -> let y = m in
     let x = y true in x
   |} ;
-  [%expect {| 'gen7. (bool -> 'gen7) -> 'gen7 |}]
+  [%expect {| 'a. (bool -> 'a) -> 'a |}]
 
 let%expect_test _ =
   run
@@ -81,7 +81,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   run {| fun x y (a, _) -> (x + y - a) = 1 |} ;
-  [%expect {| 'gen0. int -> int -> (int * 'gen0) -> bool |}]
+  [%expect {| 'a. int -> int -> (int * 'a) -> bool |}]
 
 let%expect_test _ =
   run {|
@@ -92,7 +92,7 @@ let%expect_test _ =
 let%expect_test _ =
   run {| Some (1, "hi") |} ; [%expect {| (int * string) option |}]
 
-let%expect_test _ = run {| None |} ; [%expect {| 'solve0. 'solve0 option |}]
+let%expect_test _ = run {| None |} ; [%expect {| 'a. 'a option |}]
 
 let%expect_test _ =
   run {| Some |} ; [%expect {| (ConstructorArityMismatch (Ident "Some")) |}]
@@ -121,7 +121,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   run {| let a = 1, (fun (a, _) -> a), 2 in a|} ;
-  [%expect {| 'solve0 'solve1. int * (('solve0 * 'solve1) -> 'solve0) * int |}]
+  [%expect {| 'a 'b. int * (('a * 'b) -> 'a) * int |}]
 
 let%expect_test _ =
   run
@@ -152,11 +152,11 @@ let%expect_test _ =
 
 let%expect_test _ =
   run {| fun arg -> match arg with Some x -> let y = x in y |} ;
-  [%expect {| 'solve0. 'solve0 option -> 'solve0 |}]
+  [%expect {| 'a. 'a option -> 'a |}]
 
 let%expect_test _ =
   run {| function [x] -> let y = x in y |} ;
-  [%expect {| 'solve1. 'solve1 list -> 'solve1 |}]
+  [%expect {| 'a. 'a list -> 'a |}]
 
 let%expect_test _ =
   run {| function 42 -> true | _ -> false |} ;
@@ -182,7 +182,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   run {| let rec f x = f 5 in f |} ;
-  [%expect {| 'solve0. int -> 'solve0 |}]
+  [%expect {| 'a. int -> 'a |}]
 
 let%expect_test _ =
   run {| let rec _ = id in 1 |} ;
@@ -197,16 +197,16 @@ let%expect_test _ =
 let%expect_test _ =
   run {| let f x = x |} ;
   [%expect {|
-    'gen1. 'gen1 -> 'gen1
-    f: 'gen1. 'gen1 -> 'gen1 |}]
+    'a. 'a -> 'a
+    f: 'a. 'a -> 'a |}]
 
 let%expect_test _ =
   run {| let id1, id2 = id, id |} ;
   [%expect
     {|
-    'solve0 'solve1. ('solve0 -> 'solve0) * ('solve1 -> 'solve1)
-    id1: 'solve0. 'solve0 -> 'solve0
-    id2: 'solve1. 'solve1 -> 'solve1 |}]
+    'a 'b. ('a -> 'a) * ('b -> 'b)
+    id1: 'a. 'a -> 'a
+    id2: 'a. 'a -> 'a |}]
 
 let%expect_test _ =
   run {| let Some a = (<) |} ;
@@ -216,8 +216,8 @@ let%expect_test _ =
   run {| let Some x = Some id |} ;
   [%expect
     {|
-    'solve1. ('solve1 -> 'solve1) option
-    x: 'solve1. 'solve1 -> 'solve1 |}]
+    'a. ('a -> 'a) option
+    x: 'a. 'a -> 'a |}]
 
 let%expect_test _ =
   run {| let () = id |} ;

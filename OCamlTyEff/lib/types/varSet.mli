@@ -30,3 +30,5 @@ val inter : t -> t -> t
 val diff : t -> t -> t
 
 val fold : t -> init:'acc -> f:('acc -> Var.t -> 'acc) -> 'acc
+
+val fold_right : t -> init:'acc -> f:(Var.t -> 'acc -> 'acc) -> 'acc

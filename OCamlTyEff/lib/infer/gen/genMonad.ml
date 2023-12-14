@@ -9,11 +9,8 @@ module ConstrSetMonoid = struct
   type t = ConstrSet.t
 
   let zero = ConstrSet.empty
-
   let plus = ConstrSet.union
-
   let ( @@ ) = plus
-
   let concat = ConstrSet.union_list
 end
 

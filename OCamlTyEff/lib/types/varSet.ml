@@ -32,3 +32,5 @@ let inter = Set.inter
 let diff = Set.diff
 
 let fold = Set.fold
+
+let fold_right = Set.fold_right
