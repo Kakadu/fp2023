@@ -63,7 +63,7 @@ let rec gen = function
 
       return (as_con ++ as_arg, bounds_arg, ty_res)
   | Pat_or (_, _) ->
-      failwith "not implemented"
+      fail @@ NotImplemented "or pattern"
 
 and gen_many pats =
   GenMonad.List.fold_right pats ~init:(As.empty, BoundVars.empty, [])
