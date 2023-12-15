@@ -43,12 +43,12 @@ let rec gen = function
       let* () = add_constrs [ty_fun == ty_arg @> ty_res] in
       return (as_fun ++ as_arg, ty_res)
   | Exp_let (Nonrecursive, bindings, e2) ->
-      let pat, e1 =
+      let* pat, e1 =
         match bindings with
         | [{pat; expr}] ->
-            (pat, expr)
+            return (pat, expr)
         | _ ->
-            failwith "not implemented"
+            fail @@ NotImplemented "several value bindings (and)"
       in
 
       let* as_pat, bounds_pat, ty_pat = Pattern.gen pat in
@@ -80,7 +80,7 @@ let rec gen = function
           | _ ->
               fail NotVarLHSRec )
         | _ ->
-            failwith "not implemented"
+            fail @@ NotImplemented "mutually recursive bindings"
       in
 
       (* XXX: check rhs of let rec.

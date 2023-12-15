@@ -13,12 +13,12 @@ let gen = function
       let* as_e, ty_e = Expr.gen e in
       return (as_e, Pattern.BoundVars.empty, ty_e)
   | Str_value (Nonrecursive, bindings) ->
-      let pat, e =
+      let* pat, e =
         match bindings with
         | [{pat; expr}] ->
-            (pat, expr)
+            return (pat, expr)
         | _ ->
-            failwith "not implemented"
+            fail @@ NotImplemented "several value bindings (and)"
       in
 
       let* as_pat, bounds_pat, ty_pat = Pattern.gen pat in
@@ -37,7 +37,7 @@ let gen = function
           | _ ->
               fail NotVarLHSRec )
         | _ ->
-            failwith "not implemented"
+            fail @@ NotImplemented "mutually recursive bindings"
       in
 
       (* XXX: check rhs of let rec.
