@@ -1,3 +1,7 @@
+(** Copyright 2023, Danil S, Andrei *)
+
+(** SPDX-License-Identifier: MIT *)
+
 open! Base
 
 let pp printer parser str =

@@ -1,3 +1,7 @@
+(** Copyright 2023, Danil S, Andrei *)
+
+(** SPDX-License-Identifier: MIT *)
+
 open! Base
 open Types
 
@@ -45,8 +49,7 @@ let%expect_test _ =
   [%expect {| 'a 'b. ('a -> 'b) -> 'a -> 'b |}]
 
 let%expect_test _ =
-  run {| fun x f -> f x |} ;
-  [%expect {| 'a 'b. 'a -> ('a -> 'b) -> 'b |}]
+  run {| fun x f -> f x |} ; [%expect {| 'a 'b. 'a -> ('a -> 'b) -> 'b |}]
 
 let%expect_test _ =
   run {| fun f -> fun x -> f x |} ;
@@ -195,8 +198,7 @@ let%expect_test _ =
   [%expect {| NotVarLHSRec |}]
 
 let%expect_test _ =
-  run {| let f x = x |} ;
-  [%expect {|
+  run {| let f x = x |} ; [%expect {|
     'a. 'a -> 'a
     f: 'a. 'a -> 'a |}]
 
@@ -214,8 +216,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   run {| let Some x = Some id |} ;
-  [%expect
-    {|
+  [%expect {|
     'a. ('a -> 'a) option
     x: 'a. 'a -> 'a |}]
 
