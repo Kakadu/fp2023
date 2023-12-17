@@ -1,3 +1,7 @@
+(** Copyright 2023, Danil S, Andrei *)
+
+(** SPDX-License-Identifier: MIT *)
+
 open! Base
 
 type t = Forall of VarSet.t * Ty.t [@@deriving ord, sexp_of]
