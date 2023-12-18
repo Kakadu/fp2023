@@ -1,6 +1,11 @@
-(** Copyright 2021-2023, Ilya Syresenkov *)
+(** Copyright 2021-2023, Ilya Syresenkov, Kakadu *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
+
+(*
+   TODO:
+   1. Implement match inference
+*)
 
 open Ast
 open Typing
@@ -244,7 +249,7 @@ end
 module TypeEnv = struct
   type t = (id, scheme, Base.String.comparator_witness) Base.Map.t
 
-  let extend env id scheme = Base.Map.set env ~key:id ~data:scheme
+  let extend env (id, scheme) = Base.Map.set env ~key:id ~data:scheme
   let empty = Base.Map.empty (module Base.String)
 
   let free_vars =
@@ -262,14 +267,19 @@ open R.Syntax
 let unify = Subst.unify
 let fresh_var = fresh >>| fun n -> TVar n
 
-let instantiate (S (set, t)) =
+let instantiate (S (set, ty)) =
   VarSet.fold_left
     set
     ~f:(fun ty name ->
       let* f1 = fresh_var in
       let* s = Subst.singleton name f1 in
       return (Subst.apply s ty))
-    ~init:(return t)
+    ~init:(return ty)
+;;
+
+let generalize env ty =
+  let free = VarSet.diff (Type.free_vars ty) (TypeEnv.free_vars env) in
+  S (free, ty)
 ;;
 
 let lookup_env id map =
@@ -278,4 +288,214 @@ let lookup_env id map =
   | Some scheme ->
     let* ans = instantiate scheme in
     return (Subst.empty, ans)
+;;
+
+let infer_pattern =
+  let rec helper : TypeEnv.t -> pattern -> (TypeEnv.t * ty) R.t =
+    fun env -> function
+    | PWild ->
+      let* tv = fresh_var in
+      return (env, tv)
+    | PEmpty ->
+      let* tv = fresh_var in
+      return (env, TList tv)
+    | PConst c ->
+      (match c with
+       | CInt _ -> return (env, TBase BInt)
+       | CBool _ -> return (env, TBase BBool))
+    | PVar x ->
+      let* tv = fresh_var in
+      let env = TypeEnv.extend env (x, S (VarSet.empty, tv)) in
+      return (env, tv)
+    | _ -> fail NotImplemented
+  in
+  helper
+;;
+
+let infer =
+  let rec helper : TypeEnv.t -> expr -> (Subst.t * ty) R.t =
+    fun env -> function
+    | EConst c ->
+      (match c with
+       | CInt _ -> return (Subst.empty, TBase BInt)
+       | CBool _ -> return (Subst.empty, TBase BBool))
+    | EVar x -> lookup_env x env
+    | EFun (x, e) ->
+      let* tv = fresh_var in
+      let env2 = TypeEnv.extend env (x, S (VarSet.empty, tv)) in
+      let* s, ty = helper env2 e in
+      let res_ty = TArrow (Subst.apply s tv, ty) in
+      return (s, res_ty)
+    | EBinop (op, l, r) ->
+      let* l_subst, l_ty = helper env l in
+      let* r_subst, r_ty = helper env r in
+      (match op with
+       | Eq | Neq | Les | Leq | Gre | Geq ->
+         let* subst = unify l_ty r_ty in
+         let* final_subst = Subst.compose_all [ l_subst; r_subst; subst ] in
+         return (final_subst, TBase BBool)
+       | _ ->
+         let* subst1 = unify l_ty (TBase BInt) in
+         let* subst2 = unify r_ty (TBase BInt) in
+         let* final_subst = Subst.compose_all [ l_subst; r_subst; subst1; subst2 ] in
+         return (final_subst, TBase BInt))
+    | EApp (e1, e2) ->
+      let* subst1, ty1 = helper env e1 in
+      let* subst2, ty2 = helper (TypeEnv.apply subst1 env) e2 in
+      let* tv = fresh_var in
+      let* subst3 = unify (Subst.apply subst2 ty1) (TArrow (ty2, tv)) in
+      let res_ty = Subst.apply subst3 tv in
+      let* final_subst = Subst.compose_all [ subst1; subst2; subst3 ] in
+      return (final_subst, res_ty)
+    | ETuple (e1, e2, es) ->
+      let* subst1, ty1 = helper env e1 in
+      let* subst2, ty2 = helper env e2 in
+      let* substs, tys =
+        Base.List.fold_right
+          es
+          ~init:(return ([], []))
+          ~f:(fun e acc ->
+            let* subst, ty = helper env e in
+            let* substs, tys = acc in
+            return (subst :: substs, ty :: tys))
+      in
+      let* final_subst = Subst.compose_all (subst1 :: subst2 :: substs) in
+      return (final_subst, TTuple (ty1, ty2, tys))
+    | EList es ->
+      (match es with
+       | [] ->
+         let* tv = fresh_var in
+         return (Subst.empty, TList tv)
+       | h :: tl ->
+         let* final_subst, res_ty =
+           Base.List.fold_left tl ~init:(helper env h) ~f:(fun acc e ->
+             let* subst, ty = acc in
+             let* subst1, ty1 = helper env e in
+             let* subst2 = unify ty ty1 in
+             let* final_subst = Subst.compose_all [ subst; subst1; subst2 ] in
+             let res_ty = Subst.apply final_subst ty in
+             return (final_subst, res_ty))
+         in
+         return (final_subst, TList res_ty))
+    | EBranch (c, t, f) ->
+      let* subst1, ty1 = helper env c in
+      let* subst2, ty2 = helper env t in
+      let* subst3, ty3 = helper env f in
+      let* subst4 = unify ty1 (TBase BBool) in
+      let* subst5 = unify ty2 ty3 in
+      let* final_subst = Subst.compose_all [ subst1; subst2; subst3; subst4; subst5 ] in
+      return (final_subst, Subst.apply subst5 ty3)
+    | ELet (NonRec, _, e1, EUnit) -> helper env e1
+    | ELet (Rec, x, e1, EUnit) ->
+      let* tv = fresh_var in
+      let env = TypeEnv.extend env (x, S (VarSet.empty, tv)) in
+      let* subst1, ty1 = helper env e1 in
+      let* subst2 = unify (Subst.apply subst1 tv) ty1 in
+      let* final_subst = Subst.compose subst1 subst2 in
+      return (final_subst, Subst.apply final_subst tv)
+    | ELet (NonRec, x, e1, e2) ->
+      let* subst1, ty1 = helper env e1 in
+      let env2 = TypeEnv.apply subst1 env in
+      let ty2 = generalize env2 ty1 in
+      let env3 = TypeEnv.extend env2 (x, ty2) in
+      let* subst2, ty3 = helper env3 e2 in
+      let* final_subst = Subst.compose subst1 subst2 in
+      return (final_subst, ty3)
+    | ELet (Rec, x, e1, e2) ->
+      let* tv = fresh_var in
+      let env = TypeEnv.extend env (x, S (VarSet.empty, tv)) in
+      let* subst1, ty1 = helper env e1 in
+      let* subst2 = unify (Subst.apply subst1 tv) ty1 in
+      let* subst = Subst.compose subst1 subst2 in
+      let env = TypeEnv.apply subst env in
+      let ty2 = generalize env (Subst.apply subst tv) in
+      let* subst2, ty2 = helper TypeEnv.(extend (apply subst env) (x, ty2)) e2 in
+      let* final_subst = Subst.compose subst subst2 in
+      return (final_subst, ty2)
+    | _ -> fail NotImplemented
+  in
+  helper
+;;
+
+let check_program env program =
+  let check_expr env e =
+    let* _, ty = infer env e in
+    match e with
+    | ELet (_, x, _, EUnit) ->
+      let env = TypeEnv.extend env (x, S (VarSet.empty, ty)) in
+      return (env, ty)
+    | _ -> return (env, ty)
+  in
+  Base.List.fold_left program ~init:(return env) ~f:(fun env e ->
+    let* env = env in
+    let* env, _ = check_expr env e in
+    return env)
+;;
+
+let typecheck env program = run (check_program env program)
+
+(* Tests *)
+
+let run_infer e = Result.map snd (run (infer TypeEnv.empty e))
+
+let pp_infer e =
+  match run_infer e with
+  | Ok ty -> Stdlib.Format.printf "%a" pp_ty ty
+  | Error err -> Stdlib.Format.printf "%a" pp_error err
+;;
+
+let pp_parse_and_infer input =
+  match Parser.parse_expr input with
+  | Result.Ok e -> pp_infer e
+  | _ -> Stdlib.print_endline "Failed to parse"
+;;
+
+let%expect_test _ =
+  pp_parse_and_infer "let x = (42, false, fun x -> x)";
+  [%expect {| (TTuple ((TBase BInt), (TBase BBool), [(TArrow ((TVar 0), (TVar 0)))])) |}]
+;;
+
+let%expect_test _ =
+  pp_parse_and_infer "let f x y = [x; y; x = y]";
+  [%expect
+    {| (TArrow ((TBase BBool), (TArrow ((TBase BBool), (TList (TBase BBool)))))) |}]
+;;
+
+let%expect_test _ =
+  pp_parse_and_infer "let f x y = [x; y] in f 42";
+  [%expect {| (TArrow ((TBase BInt), (TList (TBase BInt)))) |}]
+;;
+
+let%expect_test _ =
+  pp_parse_and_infer
+    "let rec fact x useless_var = if x = 1 then x else x * fact (x - 1) useless_var";
+  [%expect {| (TArrow ((TBase BInt), (TArrow ((TVar 2), (TBase BInt))))) |}]
+;;
+
+let%expect_test _ =
+  pp_parse_and_infer "let rec fact x = if x = 1 then x else x * fact (x - 1) in fact 42";
+  [%expect {| (TBase BInt) |}]
+;;
+
+(* Errors *)
+
+let%expect_test _ =
+  pp_parse_and_infer "let f x = x + y";
+  [%expect {| (NoVariable "y") |}]
+;;
+
+let%expect_test _ =
+  pp_parse_and_infer "let rec f x = f in f 10";
+  [%expect {| OccursCheckFailed |}]
+;;
+
+let%expect_test _ =
+  pp_parse_and_infer "[1; 1, 2]";
+  [%expect
+    {| (UnificationFailed ((TBase BInt), (TTuple ((TBase BInt), (TBase BInt), [])))) |}]
+;;
+
+let%expect_test _ =
+  pp_parse_and_infer "let f x = [fun x -> x + x; fun x -> x >= x]";
+  [%expect {| (UnificationFailed ((TBase BInt), (TBase BBool))) |}]
 ;;

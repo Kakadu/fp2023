@@ -202,7 +202,7 @@ let pgeq = pstoken ">=" *> return Geq
 let pexpr =
   fix
   @@ fun pexpr ->
-  let pe = choice [ pparens pexpr; pconst; pvar; plist pexpr ] in
+  let pe = choice [ pparens pexpr; pconst; pvar; plist pexpr; pfun pexpr ] in
   let pe =
     lift2
       (fun f args -> List.fold_left ~f:(fun f arg -> EApp (f, arg)) ~init:f args)
@@ -224,6 +224,7 @@ let pexpr =
   choice [ plet pexpr; pbranch pexpr; pmatch pexpr; pfun pexpr; pe ]
 ;;
 
+let parse_expr = parse_string ~consume:Consume.All (pexpr <* pspaces)
 let parse = parse_string ~consume:Consume.All (many1 (plet pexpr) <* pspaces)
 
 (** Tests *)
