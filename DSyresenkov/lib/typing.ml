@@ -28,5 +28,7 @@ type error =
   | OccursCheckFailed
   | NoVariable of id
   | UnificationFailed of ty * ty
+  | NotImplemented
+[@@deriving show { with_path = false }]
 
 type scheme = S of VarSet.t * ty
