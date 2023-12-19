@@ -22,6 +22,7 @@ type binop =
 type const =
   | CInt of int (** Integers 1, 2, ... *)
   | CBool of bool (** Boolean true or false *)
+  | CUnit (** Unit type () *)
 [@@deriving show { with_path = false }]
 
 type pattern =
@@ -39,7 +40,6 @@ type is_rec =
 [@@deriving show { with_path = false }]
 
 type expr =
-  | EUnit (** Empty expression *)
   | EConst of const (** Consts *)
   | EVar of id (** Variables with their names *)
   | EBinop of binop * expr * expr (** e1 binop e2 *)
@@ -48,7 +48,7 @@ type expr =
   | EList of expr list (** Lists [1; 2; 3], ... *)
   | EBranch of expr * expr * expr (** if [cond] then [a] else [b] *)
   | EMatch of expr * (pattern * expr) list (** match [x] with | [p1] -> [e1] | ... *)
-  | ELet of is_rec * id * expr * expr (** let rec f *)
+  | ELet of is_rec * id * expr * expr option (** let rec f *)
   | EFun of id * expr (** Anonymous function *)
   | EApp of expr * expr (** Application f x *)
 [@@deriving show { with_path = false }]

@@ -103,7 +103,8 @@ let pbool =
   >>| fun x -> CBool x
 ;;
 
-let pconst = choice [ pint; pbool ] >>| fun x -> EConst x
+let punit = pstoken "()" *> return CUnit
+let pconst = choice [ pint; pbool; punit ] >>| fun x -> EConst x
 let pvar = pid >>| fun e -> EVar e
 
 let plet pexpr =
@@ -116,7 +117,7 @@ let plet pexpr =
        (pstoken "rec" *> return Rec <|> return NonRec)
        (pstoken "()" <|> pid)
        (pstoken "=" *> pexpr <|> pbody pexpr)
-       (pstoken "in" *> pexpr <|> return EUnit)
+       (pstoken "in" *> pexpr >>| (fun x -> Some x) <|> return None)
 ;;
 
 let pbranch pexpr =
@@ -125,7 +126,7 @@ let pbranch pexpr =
        (fun cond t f -> EBranch (cond, t, f))
        (pstoken "if" *> pexpr)
        (pstoken "then" *> pexpr)
-       (pstoken "else" *> pexpr <|> return EUnit)
+       (pstoken "else" *> pexpr <|> return (EConst CUnit))
 ;;
 
 let plist pexpr =
@@ -231,7 +232,7 @@ let parse = parse_string ~consume:Consume.All (many1 (plet pexpr) <* pspaces)
 
 let%expect_test _ =
   pp pp_expr (plet pexpr) "let f x = x";
-  [%expect {| (ELet (NonRec, "f", (EFun ("x", (EVar "x"))), EUnit)) |}]
+  [%expect {| (ELet (NonRec, "f", (EFun ("x", (EVar "x"))), None)) |}]
 ;;
 
 let%expect_test _ =
@@ -286,4 +287,9 @@ let%expect_test _ =
        [(ETuple ((EConst (CInt 1)), (EConst (CInt 2)), [(EConst (CInt 3))]));
          (ETuple ((EConst (CInt 4)), (EConst (CInt 5)), [(EConst (CInt 6))]))]) 
     |}]
+;;
+
+let%expect_test _ =
+  pp pp_expr pexpr "let () = () in ()";
+  [%expect {| (ELet (NonRec, "()", (EConst CUnit), (Some (EConst CUnit)))) |}]
 ;;
