@@ -28,6 +28,7 @@ type error =
   | OccursCheckFailed
   | NoVariable of id
   | UnificationFailed of ty * ty
+  | PatternRebound
   | NotImplemented
 [@@deriving show { with_path = false }]
 
