@@ -11,8 +11,9 @@ end
 
 (* Base types *)
 type base_type =
-  | BInt
-  | BBool
+  | BInt (** Basic integer type *)
+  | BBool (** Basic bool type *)
+  | BUnit (** Unit type *)
 [@@deriving show { with_path = false }]
 
 (* Types *)

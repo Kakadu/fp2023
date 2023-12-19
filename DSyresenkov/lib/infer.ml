@@ -302,7 +302,8 @@ let infer_pattern =
     | PConst c ->
       (match c with
        | CInt _ -> return (env, TBase BInt)
-       | CBool _ -> return (env, TBase BBool))
+       | CBool _ -> return (env, TBase BBool)
+       | CUnit -> return (env, TBase BUnit))
     | PVar x ->
       (match Base.Map.find env x with
        | None ->
@@ -340,7 +341,6 @@ let infer_pattern =
             return (env, Subst.apply subst ty))
       in
       return (env, ty)
-    | _ -> fail NotImplemented
   in
   helper
 ;;
@@ -351,7 +351,8 @@ let infer =
     | EConst c ->
       (match c with
        | CInt _ -> return (Subst.empty, TBase BInt)
-       | CBool _ -> return (Subst.empty, TBase BBool))
+       | CBool _ -> return (Subst.empty, TBase BBool)
+       | CUnit -> return (Subst.empty, TBase BUnit))
     | EVar x -> lookup_env x env
     | EFun (x, e) ->
       let* tv = fresh_var in
@@ -418,15 +419,15 @@ let infer =
       let* subst5 = unify ty2 ty3 in
       let* final_subst = Subst.compose_all [ subst1; subst2; subst3; subst4; subst5 ] in
       return (final_subst, Subst.apply subst5 ty3)
-    | ELet (NonRec, _, e1, EUnit) -> helper env e1
-    | ELet (Rec, x, e1, EUnit) ->
+    | ELet (NonRec, _, e1, None) -> helper env e1
+    | ELet (Rec, x, e1, None) ->
       let* tv = fresh_var in
       let env = TypeEnv.extend env (x, S (VarSet.empty, tv)) in
       let* subst1, ty1 = helper env e1 in
       let* subst2 = unify (Subst.apply subst1 tv) ty1 in
       let* final_subst = Subst.compose subst1 subst2 in
       return (final_subst, Subst.apply final_subst tv)
-    | ELet (NonRec, x, e1, e2) ->
+    | ELet (NonRec, x, e1, Some e2) ->
       let* subst1, ty1 = helper env e1 in
       let env2 = TypeEnv.apply subst1 env in
       let ty2 = generalize env2 ty1 in
@@ -434,7 +435,7 @@ let infer =
       let* subst2, ty3 = helper env3 e2 in
       let* final_subst = Subst.compose subst1 subst2 in
       return (final_subst, ty3)
-    | ELet (Rec, x, e1, e2) ->
+    | ELet (Rec, x, e1, Some e2) ->
       let* tv = fresh_var in
       let env = TypeEnv.extend env (x, S (VarSet.empty, tv)) in
       let* subst1, ty1 = helper env e1 in
@@ -454,7 +455,7 @@ let check_program env program =
   let check_expr env e =
     let* _, ty = infer env e in
     match e with
-    | ELet (_, x, _, EUnit) ->
+    | ELet (_, x, _, None) ->
       let env = TypeEnv.extend env (x, S (VarSet.empty, ty)) in
       return (env, ty)
     | _ -> return (env, ty)
@@ -531,4 +532,9 @@ let%expect_test _ =
 let%expect_test _ =
   pp_parse_and_infer "let f x = [fun x -> x + x; fun x -> x >= x]";
   [%expect {| (UnificationFailed ((TBase BInt), (TBase BBool))) |}]
+;;
+
+let%expect_test _ =
+  pp_parse_and_infer "let () = if true then 1";
+  [%expect {| (UnificationFailed ((TBase BInt), (TBase BUnit))) |}]
 ;;
