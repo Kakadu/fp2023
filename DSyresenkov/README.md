@@ -9,6 +9,7 @@ Author: Ilya Syresenkov, ilya.syresenkov.04@gmail.com
 Features done (append only):
 
 - Factorial Parser
+- Simple typechecker
 
 Features in progress (and TODOs):
 
@@ -16,3 +17,5 @@ Features in progress (and TODOs):
 - Type annotations
 - List a :: b syntax
 - Comments parser
+- Match expressions typechecker 
+- Interpreter
