@@ -304,9 +304,42 @@ let infer_pattern =
        | CInt _ -> return (env, TBase BInt)
        | CBool _ -> return (env, TBase BBool))
     | PVar x ->
-      let* tv = fresh_var in
-      let env = TypeEnv.extend env (x, S (VarSet.empty, tv)) in
-      return (env, tv)
+      (match Base.Map.find env x with
+       | None ->
+         let* tv = fresh_var in
+         let env = TypeEnv.extend env (x, S (VarSet.empty, tv)) in
+         return (env, tv)
+       | Some _ -> fail PatternRebound)
+    | PCons (p1, p2, ps) ->
+      let* env, ty1 = helper env p1 in
+      let* env, ty2 = helper env p2 in
+      let* subst = unify ty1 ty2 in
+      let* env, ty =
+        Base.List.fold_left
+          ps
+          ~init:(return (env, Subst.apply subst ty1))
+          ~f:(fun acc p ->
+            let* env, ty = acc in
+            let* env, ty1 = helper env p in
+            let* subst = unify ty ty1 in
+            return (env, Subst.apply subst ty))
+      in
+      return (env, TList ty)
+    | POr (p1, p2, ps) ->
+      let* env, ty1 = helper env p1 in
+      let* env, ty2 = helper env p2 in
+      let* subst = unify ty1 ty2 in
+      let* env, ty =
+        Base.List.fold_left
+          ps
+          ~init:(return (env, Subst.apply subst ty1))
+          ~f:(fun acc p ->
+            let* env, ty = acc in
+            let* env, ty1 = helper env p in
+            let* subst = unify ty ty1 in
+            return (env, Subst.apply subst ty))
+      in
+      return (env, ty)
     | _ -> fail NotImplemented
   in
   helper
