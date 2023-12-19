@@ -5,14 +5,6 @@
 (* let rec fac x = if x = 1 then x else x * (fac x) *)
 
 (*
-   Todo:
-   1. Implement unary operators
-   2. Think about type annotations support
-   3. Think about supporting list a :: b syntax
-   4. Add comments parser
-*)
-
-(*
    Type anotations
    let f : int -> int -> bool = fun x y -> x = y
    let f (x : int) (y : int) : bool = x = y

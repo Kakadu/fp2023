@@ -2,11 +2,6 @@
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-(*
-   TODO:
-   1. Implement match inference
-*)
-
 open Ast
 open Typing
 
