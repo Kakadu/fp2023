@@ -14,3 +14,6 @@
          ))
        ]
      ))
+
+  $ dune exec interpreter_test
+  3628800

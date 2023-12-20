@@ -85,8 +85,8 @@ module _ = struct
     abs "f" (app hack hack)
   ;;
 
-  let () = test ao_strat @@ zero |> fun lam -> Format.printf "%a\n%!" Pprintast.pp lam
-  let () = test ao_strat @@ one |> fun lam -> Format.printf "%a\n%!" Pprintast.pp lam
+  let () = test ao_strat @@ zero |> Format.printf "%a\n%!" Pprintast.pp
+  let () = test ao_strat @@ one |> Format.printf "%a\n%!" Pprintast.pp
   let _ = test ao_strat @@ app plus @@ app one one |> Format.printf "%a\n%!" Pprintast.pp
 
   let () =
