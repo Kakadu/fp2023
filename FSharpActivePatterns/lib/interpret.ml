@@ -343,6 +343,8 @@ let run input =
 
 (* TESTS INTERPRET *)
 
+(* cram тесты добавлю немного позже *)
+
 (*  1 + 2 + 3 + 4 * 5 + 6 / 3 + (10 - 5) / 5 *)
 let test =
   [ BinExpr
