@@ -47,20 +47,20 @@ let is_keyword = function
 
 let take_whitespaces = take_while is_whitespace
 let take_whitespaces1 = take_while1 is_whitespace
-let token = take_while1 (fun c -> is_letter c || is_digit c || c = '_')
+let token1 = take_while1 (fun c -> is_letter c || is_digit c || c = '_')
 
 let keyword s =
-  take_whitespaces *> token
+  take_whitespaces *> token1
   >>= fun res -> if res = s then return s else fail "keyword expected"
 ;;
 
 let whitespace1_keyword s =
-  take_whitespaces1 *> token
+  take_whitespaces1 *> token1
   >>= fun res -> if res = s then return s else fail "keyword expected"
 ;;
 
 let valname =
-  token
+  token1
   >>= (fun s ->
         match s.[0] with
         | c when (not (is_keyword s)) && (is_low_letter c || c = '_') -> return s
@@ -71,7 +71,7 @@ let valname =
 let expr_valname = take_whitespaces *> valname >>| fun x -> Expr_val x
 
 let const_integer =
-  token
+  token1
   >>= fun s ->
   let cons x = Int x in
   try int_of_string s |> cons |> return with
@@ -81,7 +81,7 @@ let const_integer =
 let expr_integer = take_whitespaces *> const_integer >>| fun x -> Expr_const x
 
 let const_bool =
-  token
+  token1
   >>= function
   | "false" -> return (Bool false)
   | "true" -> return (Bool true)
@@ -89,6 +89,47 @@ let const_bool =
 ;;
 
 let expr_bool = take_whitespaces *> const_bool >>| fun x -> Expr_const x
+
+let const_char =
+  char '\''
+  *> (peek_char_fail
+      >>= fun c ->
+      match c with
+      | '\\' ->
+        peek_string 2
+        >>= fun s ->
+        (match s with
+         | {|\n|} -> advance 2 *> return '\n'
+         | {|\t|} -> advance 2 *> return '\t'
+         | {|\b|} -> advance 2 *> return '\b'
+         | {|\r|} -> advance 2 *> return '\r'
+         | {|\\|} -> advance 2 *> return '\\'
+         | {|\'|} -> advance 2 *> return '\''
+         | {|\"|} -> advance 2 *> return '\"'
+         | {|\ |} -> advance 2 *> return '\ '
+         | ({|\x|} | {|\o|} | _) when is_digit s.[1] ->
+           fail "Escape sequense is not supported"
+         | _ -> fail "Illegal backslash escape in string or character")
+      | _ -> advance 1 *> return c)
+  <* char '\''
+  >>| fun c -> Char c
+;;
+
+let expr_char = take_whitespaces *> const_char >>| fun c -> Expr_const c
+
+let const_string =
+  let rec helper acc =
+    any_char
+    >>= fun c ->
+    match c with
+    | '"' -> return acc
+    | '\\' -> any_char >>= fun t -> helper ((acc ^ "\\") ^ Base.Char.to_string t)
+    | _ -> helper (acc ^ Base.Char.to_string c)
+  in
+  char '\"' *> helper "" >>| fun s -> String s
+;;
+
+let expr_string = take_whitespaces *> const_string >>| fun c -> Expr_const c
 
 (* fails if s with characters after that can be interpreted by OCaml as user-defined operator *)
 let op_parse_helper s =
@@ -169,6 +210,10 @@ let or_op =
   take_whitespaces *> op_parse_helper "||" *> return (fun e1 e2 -> Bin_op (Or, e1, e2))
 ;;
 
+let concat_op =
+  take_whitespaces *> op_parse_helper "^" *> return (fun e1 e2 -> Bin_op (Concat, e1, e2))
+;;
+
 let chainl1 e op =
   let rec go acc = lift2 (fun f x -> f acc x) op e >>= go <|> return acc in
   e >>= fun init -> go init
@@ -189,7 +234,7 @@ let unary_op expr_item_parser =
 let if_then_else expr_item_parser =
   fix (fun cur_expr ->
     lift3
-      (fun e1 e2 e3 -> ITE (e1, e2, e3))
+      (fun e1 e2 e3 -> Expr_ite (e1, e2, e3))
       (keyword "if" *> cur_expr)
       (keyword "then" *> cur_expr)
       (keyword "else" *> cur_expr)
@@ -199,12 +244,20 @@ let if_then_else expr_item_parser =
 let expr =
   fix (fun cur_expr ->
     let cur_expr =
-      choice [ expr_integer; expr_valname; expr_bool; parenthesis cur_expr ]
+      choice
+        [ expr_integer
+        ; expr_valname
+        ; expr_bool
+        ; expr_char
+        ; expr_string
+        ; parenthesis cur_expr
+        ]
     in
-    let cur_expr = chainl1 cur_expr (return (fun e1 e2 -> App (e1, e2))) in
+    let cur_expr = chainl1 cur_expr (return (fun e1 e2 -> Expr_app (e1, e2))) in
     let cur_expr = unary_op cur_expr in
     let cur_expr = chainl1 cur_expr (mul <|> div) in
     let cur_expr = chainl1 cur_expr (add <|> sub) in
+    let cur_expr = chainl1 cur_expr concat_op in
     let cur_expr = chainl1 cur_expr rel in
     let cur_expr = chainr1 cur_expr and_op in
     let cur_expr = chainr1 cur_expr or_op in
@@ -217,8 +270,9 @@ let fun_args =
     valname
     >>= fun valname ->
     choice
-      [ (take_whitespaces *> char '=' *> expr >>| fun fun_expr -> Fun (valname, fun_expr))
-      ; (take_whitespaces1 *> cur_parser >>| fun fun_expr -> Fun (valname, fun_expr))
+      [ (take_whitespaces *> char '=' *> expr
+         >>| fun fun_expr -> Expr_fun (valname, fun_expr))
+      ; (take_whitespaces1 *> cur_parser >>| fun fun_expr -> Expr_fun (valname, fun_expr))
       ])
 ;;
 
