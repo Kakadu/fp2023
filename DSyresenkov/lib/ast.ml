@@ -22,7 +22,7 @@ type binop =
 type const =
   | CInt of int (** Integers 1, 2, ... *)
   | CBool of bool (** Boolean true or false *)
-  | CUnit (** Unit type () *)
+  | CUnit (** Unit () *)
 [@@deriving show { with_path = false }]
 
 type pattern =

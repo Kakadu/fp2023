@@ -17,5 +17,4 @@ Features in progress (and TODOs):
 - Type annotations
 - List a :: b syntax
 - Comments parser
-- Match expressions typechecker 
 - Interpreter

@@ -138,7 +138,10 @@ end = struct
   type t = (fresh, ty, Base.Int.comparator_witness) Base.Map.t
 
   let empty = Base.Map.empty (module Base.Int)
-  let mapping k v = if Type.occurs_in k v then fail OccursCheckFailed else return (k, v)
+
+  let mapping k v =
+    if Type.occurs_in k v then fail (OccursCheckFailed (k, v)) else return (k, v)
+  ;;
 
   let singleton k v =
     let* k, v = mapping k v in
@@ -307,35 +310,43 @@ let infer_pattern =
          return (env, tv)
        | Some _ -> fail PatternRebound)
     | PCons (p1, p2, ps) ->
+      let p1, ps, plast =
+        match List.rev ps with
+        | [] -> p1, [], p2
+        | h :: tl -> p1, p2 :: List.rev tl, h
+      in
       let* env, ty1 = helper env p1 in
-      let* env, ty2 = helper env p2 in
-      let* subst = unify ty1 ty2 in
       let* env, ty =
         Base.List.fold_left
           ps
-          ~init:(return (env, Subst.apply subst ty1))
+          ~init:(return (env, ty1))
           ~f:(fun acc p ->
             let* env, ty = acc in
             let* env, ty1 = helper env p in
             let* subst = unify ty ty1 in
-            return (env, Subst.apply subst ty))
+            return (TypeEnv.apply subst env, Subst.apply subst ty))
       in
-      return (env, TList ty)
-    | POr (p1, p2, ps) ->
-      let* env, ty1 = helper env p1 in
-      let* env, ty2 = helper env p2 in
-      let* subst = unify ty1 ty2 in
-      let* env, ty =
-        Base.List.fold_left
-          ps
-          ~init:(return (env, Subst.apply subst ty1))
-          ~f:(fun acc p ->
-            let* env, ty = acc in
-            let* env, ty1 = helper env p in
-            let* subst = unify ty ty1 in
-            return (env, Subst.apply subst ty))
-      in
-      return (env, ty)
+      let* env, ty_last = helper env plast in
+      let* subst = unify (TList ty) ty_last in
+      let ty_last = Subst.apply subst ty_last in
+      let env = TypeEnv.apply subst env in
+      return (TypeEnv.apply subst env, Subst.apply subst ty_last)
+    (* | POr (p1, p2, ps) ->
+       let* env, ty1 = helper env p1 in
+       let* env, ty2 = helper env p2 in
+       let* subst = unify ty1 ty2 in
+       let* env, ty =
+       Base.List.fold_left
+       ps
+       ~init:(return (env, Subst.apply subst ty1))
+       ~f:(fun acc p ->
+       let* env, ty = acc in
+       let* env, ty1 = helper env p in
+       let* subst = unify ty ty1 in
+       return (TypeEnv.apply subst env, Subst.apply subst ty))
+       in
+       return (env, ty) *)
+    | POr _ -> fail NotImplemented
   in
   helper
 ;;
@@ -441,7 +452,24 @@ let infer =
       let* subst2, ty2 = helper TypeEnv.(extend (apply subst env) (x, ty2)) e2 in
       let* final_subst = Subst.compose subst subst2 in
       return (final_subst, ty2)
-    | _ -> fail NotImplemented
+    | EMatch (c, cases) ->
+      let* c_subst, c_ty = helper env c in
+      let* tv = fresh_var in
+      let* e_subst, e_ty =
+        Base.List.fold_left
+          cases
+          ~init:(return (c_subst, tv))
+          ~f:(fun acc (pat, e) ->
+            let* subst, ty = acc in
+            let* pat_env, pat_ty = infer_pattern env pat in
+            let* subst2 = unify c_ty pat_ty in
+            let* subst3, e_ty = helper pat_env e in
+            let* subst4 = unify ty e_ty in
+            let* final_subst = Subst.compose_all [ subst; subst2; subst3; subst4 ] in
+            return (final_subst, Subst.apply final_subst ty))
+      in
+      let* final_subst = Subst.compose c_subst e_subst in
+      return (final_subst, Subst.apply final_subst e_ty)
   in
   helper
 ;;
@@ -469,7 +497,7 @@ let run_infer e = Result.map snd (run (infer TypeEnv.empty e))
 
 let pp_infer e =
   match run_infer e with
-  | Ok ty -> Stdlib.Format.printf "%a" pp_ty ty
+  | Ok ty -> print_ty ty
   | Error err -> Stdlib.Format.printf "%a" pp_error err
 ;;
 
@@ -481,29 +509,52 @@ let pp_parse_and_infer input =
 
 let%expect_test _ =
   pp_parse_and_infer "let x = (42, false, fun x -> x)";
-  [%expect {| (TTuple ((TBase BInt), (TBase BBool), [(TArrow ((TVar 0), (TVar 0)))])) |}]
+  [%expect {| int * bool * 'a -> 'a |}]
 ;;
 
 let%expect_test _ =
   pp_parse_and_infer "let f x y = [x; y; x = y]";
-  [%expect
-    {| (TArrow ((TBase BBool), (TArrow ((TBase BBool), (TList (TBase BBool)))))) |}]
+  [%expect {| bool -> bool -> bool list |}]
 ;;
 
 let%expect_test _ =
   pp_parse_and_infer "let f x y = [x; y] in f 42";
-  [%expect {| (TArrow ((TBase BInt), (TList (TBase BInt)))) |}]
+  [%expect {| int -> int list |}]
 ;;
 
 let%expect_test _ =
   pp_parse_and_infer
     "let rec fact x useless_var = if x = 1 then x else x * fact (x - 1) useless_var";
-  [%expect {| (TArrow ((TBase BInt), (TArrow ((TVar 2), (TBase BInt))))) |}]
+  [%expect {| int -> 'c -> int |}]
 ;;
 
 let%expect_test _ =
   pp_parse_and_infer "let rec fact x = if x = 1 then x else x * fact (x - 1) in fact 42";
-  [%expect {| (TBase BInt) |}]
+  [%expect {| int |}]
+;;
+
+let%expect_test _ =
+  pp_parse_and_infer "let f x = match x with | (h :: tl1) :: tl2 -> true | _ -> false";
+  [%expect {| 'c list list -> bool |}]
+;;
+
+let%expect_test _ =
+  pp_parse_and_infer
+    {|
+    let rec fold_left op acc xs = match xs with
+    | []   -> acc
+    | h :: t -> fold_left op (op acc h) t
+    |};
+  [%expect {| ('m -> 'f -> 'm) -> 'm -> 'f list -> 'm |}]
+;;
+
+let%expect_test _ =
+  pp_parse_and_infer
+    {|
+    let split xs = match xs with 
+      | a :: b :: tl -> a, b, tl
+    |};
+  [%expect {| 'd list -> 'd * 'd * 'd list |}]
 ;;
 
 (* Errors *)
@@ -515,7 +566,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   pp_parse_and_infer "let rec f x = f in f 10";
-  [%expect {| OccursCheckFailed |}]
+  [%expect {| (OccursCheckFailed (0, (TArrow ((TVar 1), (TVar 0))))) |}]
 ;;
 
 let%expect_test _ =
@@ -532,4 +583,10 @@ let%expect_test _ =
 let%expect_test _ =
   pp_parse_and_infer "let () = if true then 1";
   [%expect {| (UnificationFailed ((TBase BInt), (TBase BUnit))) |}]
+;;
+
+let%expect_test _ =
+  pp_parse_and_infer
+    "let f x = match x with | a :: b -> a | ((a :: true) :: c) :: tl -> c ";
+  [%expect {| (UnificationFailed ((TList (TVar 4)), (TBase BBool))) |}]
 ;;
