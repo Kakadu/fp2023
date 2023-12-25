@@ -158,12 +158,13 @@ jobs:
 #          proxy-url: https://add-pr-comment-proxy-94idvmwyie-uc.a.run.app
 
       - run: opam list
-      - name: manual adding of a comment from text.md
+      - name: Adding a comment from text.md via OCaml script
         run: >
           opam exec -- ocaml .github/add_comment.ml -file text.md \
-            -token ${{ secrets.CLASSIC_TOKEN }} \
+            -token ${{ secrets.GITHUB_TOKEN }} \
             -issue ${{ env.CI_PULL_REQUEST }} \
-            -repo fp2023 -user Kakadu
+            -repo fp2023 \
+            -user Kakadu
 
       - shell: bash
         run: echo "LINTER_RESOLUTION=$(bash .github/check_rdjson.sh lints.rdjsonl)" >> $GITHUB_ENV
