@@ -237,8 +237,9 @@ jobs:
       - name: Deploy documentation
         uses: peaceiris/actions-gh-pages@v3
         with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           #github_token: ${{ secrets.FP2023_UPLOAD_LINTS }}
-          personal_token: ${{ secrets.CLASSIC_TOKEN }}
+          #personal_token: ${{ secrets.CLASSIC_TOKEN }}  # seems to be expired
           #github_token: ${{ secrets.PAT1 }}  # used only to publish in local repo
           publish_dir: ./_docs/_doc/_html
           publish_branch: gh-pages
