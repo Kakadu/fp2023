@@ -89,6 +89,7 @@ let t_return = token "return"
 let t_def = token "def"
 let t_mul = token "*"
 let t_eq = token "=="
+let t_not_eq = token "!="
 let t_quote = token "\""
 let t_div = token "/"
 let t_assign = token "="
@@ -99,6 +100,12 @@ let t_add = token "+"
 let t_if = token "if"
 let t_else = token "else"
 let t_while = token "while"
+let t_and = token "and"
+let t_greater = token ">"
+let t_less_equal = token "<="
+let t_greater_equal = token ">="
+let t_less = token "<"
+let t_or = token "or"
 
 (*Builders*)
 let exp_add e1 e2 = ArithOp (Add, e1, e2)
@@ -107,14 +114,20 @@ let exp_mul e1 e2 = ArithOp (Mul, e1, e2)
 let exp_div e1 e2 = ArithOp (Div, e1, e2)
 let exp_mod e1 e2 = ArithOp (Mod, e1, e2)
 let exp_eq e1 e2 = BoolOp (Equal, e1, e2)
-let exp_eq e1 e2 = BoolOp (Equal, e1, e2)
-let exp_func_call i el = FunctionCall (i, el)
+let exp_not_eq e1 e2 = BoolOp (NotEqual, e1, e2)
 let stmt_expression e = Expression e
 let stmt_func i el sl = Function (i, el, sl)
 let stmt_if_else e sl1 sl2 = IfElse (e, sl1, sl2)
 let stmt_return e = Return e
 let stmt_assign e1 e2 = Assign (e1, e2)
 let stmt_while e sl = While (e, sl)
+let exp_func_call i el = FunctionCall (i, el)
+let exp_and e1 e2 = BoolOp (And, e1, e2)
+let exp_or e1 e2 = BoolOp (Or, e1, e2)
+let exp_greater e1 e2 = BoolOp (Greater, e1, e2)
+let exp_less e1 e2 = BoolOp (Less, e1, e2)
+let exp_greater_equal e1 e2 = BoolOp (GreaterOrEqual, e1, e2)
+let exp_less_equal e1 e2 = BoolOp (LessOrEqual, e1, e2)
 
 (* Lifters *)
 let lift_func_call = lift2 exp_func_call
@@ -133,6 +146,13 @@ let p_sub = t_sub *> return exp_sub
 let p_add = t_add *> return exp_add
 let p_assign el1 = lift_assign (el1 <* t_assign) el1
 let p_eq = t_eq *> return exp_eq
+let p_not_eq = t_not_eq *> return exp_not_eq
+let p_and = t_and *> return exp_and
+let p_or = t_or *> return exp_or
+let p_greater = t_greater *> return exp_greater
+let p_gr_eq = t_greater_equal *> return exp_greater_equal
+let p_less = t_less *> return exp_less
+let p_less_eq = t_less_equal *> return exp_less_equal
 
 let p_integer =
   take_sign
@@ -190,7 +210,12 @@ let p_lambda el sl = fail "WIP"
 (* Multiple parsers *)
 let mp_high_pr_op = p_mul <|> p_div <|> p_mod
 let mp_low_pr_op = p_add <|> p_sub
-let mp_bool_op = p_eq
+
+let gp_comparison_ops =
+  p_eq <|> p_not_eq <|> p_gr_eq <|> p_less_eq <|> p_greater <|> p_less
+;;
+
+let gp_logic_ops = p_and <|> p_or
 
 type dispatch =
   { p_expression : dispatch -> expression t
@@ -215,7 +240,10 @@ let p_exp_or_stmt =
         | '\"' -> p_string
         | _ -> fail "unexpected input"
       in
-      List.fold_left chainl1 next_char [ mp_high_pr_op; mp_low_pr_op; mp_bool_op ])
+      List.fold_left
+        chainl1
+        next_char
+        [ mp_high_pr_op; mp_low_pr_op; gp_comparison_ops; gp_logic_ops ])
   in
   let p_statement exp_or_stmt =
     fix (fun p_statement ->
@@ -319,4 +347,24 @@ let%test _ =
                   ] )
             ] )
       ]
+;;
+
+let%test _ =
+  parse pyParser "(y == 2)"
+  = Ok [ Expression (BoolOp (Equal, Variable (Identifier "y"), Const (Int 2))) ]
+;;
+
+let%test _ =
+  parse pyParser "(y >= 2)"
+  = Ok [ Expression (BoolOp (GreaterOrEqual, Variable (Identifier "y"), Const (Int 2))) ]
+;;
+
+let%test _ =
+  parse pyParser "(y < 2)"
+  = Ok [ Expression (BoolOp (Less, Variable (Identifier "y"), Const (Int 2))) ]
+;;
+
+let%test _ =
+  parse pyParser "(y != 2)"
+  = Ok [ Expression (BoolOp (NotEqual, Variable (Identifier "y"), Const (Int 2))) ]
 ;;
