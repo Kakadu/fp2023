@@ -228,8 +228,8 @@ jobs:
 
       #- run: ls docs
       - run: |
-          echo "LANG_NAME=$(cat _docs/_found_lints/projectname.txt)" >> $GITHUB_ENV
-          echo "PR_NUMBER=$(cat _docs/_found_lints/PR_number.txt)" >> $GITHUB_ENV
+          echo "LANG_NAME=$(cat _docs/projectname.txt)" >> $GITHUB_ENV
+          echo "PR_NUMBER=$(cat _docs/PR_number.txt)" >> $GITHUB_ENV
       - run: |
           echo "${{ env.LANG_NAME }}"
           echo "${{ env.PR_NUMBER }}"
