@@ -60,14 +60,14 @@ let add_comment ~filename =
     |> Yojson.Safe.pretty_to_string
   in
   (match Curly.(run (Request.make ~body ~headers ~url ~meth:`POST ())) with
+    | Ok ({ Curly.Response.code = 401; _ } as x) -> (* Bad credentials *)
+      Format.printf "status: %d\n" x.Curly.Response.code;
+      Format.printf "body: %s\n" x.Curly.Response.body;
+      exit 1
     | Ok x ->
       Format.printf "status: %d\n" x.Curly.Response.code;
       Format.printf "body: %s\n" x.Curly.Response.body;
       true
-    | Ok 401 -> (* Bad credentials *)
-      Format.printf "status: %d\n" x.Curly.Response.code;
-      Format.printf "body: %s\n" x.Curly.Response.body;
-      exit 1
     | Error e ->
       Format.eprintf "Failed: %a" Curly.Error.pp e;
       false)
