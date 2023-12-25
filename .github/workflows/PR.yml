@@ -123,16 +123,6 @@ jobs:
       - run: echo ${{ github.event.pull_request.head.sha }}
       - run: PAGER= git log
 
-      - name: Update docs artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: docs
-          path: |
-            ${{ env.latest }}/_build/default/_doc/_html
-            ${{ env.latest }}/${{ env.RDJSON_DIR_PATH }}/projectname.txt
-            ${{ env.latest }}/${{ env.RDJSON_DIR_PATH }}/PR_number.txt
-          #${{ env.latest }}/${{ env.RDJSON_DIR_PATH }}/CI_COMMIT.txt
-
       # Omitted. It is in docker image already
       #- name: Installing a clone detector
       #  run: npm install jscpd
@@ -196,3 +186,15 @@ jobs:
         with:
           name: coverage
           path: ${{ env.latest }}/_coverage
+
+      ###################### Upload Docs #####################################
+      - name: Update docs artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: docs
+          path: |
+            ${{ env.latest }}/_build/default/_doc/_html
+            ${{ env.latest }}/${{ env.RDJSON_DIR_PATH }}/projectname.txt
+            ${{ env.latest }}/${{ env.RDJSON_DIR_PATH }}/PR_number.txt
+            ${{ env.latest }}/_coverage/percent.txt
+          #${{ env.latest }}/${{ env.RDJSON_DIR_PATH }}/CI_COMMIT.txt
