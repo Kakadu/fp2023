@@ -83,11 +83,6 @@ jobs:
       - name: Running tests in ${{ env.latest }}...
         run: cd ${{ env.latest }} && opam exec -- dune runtest --profile=release
 
-      - name: Build API documentation for ${{ env.latest }}...
-        run: |
-          opam install odoc --yes
-          cd ${{ env.latest }} && opam exec -- dune build @doc --profile=release
-
       - name: Setting the environment
         env:
           LINTS_PATH: _build/default/_found_lints
@@ -181,6 +176,7 @@ jobs:
           BISECT_FILE: /tmp/bisect_ppx_data/data
 
       - run: echo ${{ env.latest }} > ${{ env.latest }}/_coverage/projectname.txt
+      
       - name: Update coverage artifact ${{ steps.calc-coverage.outputs.percent }}
         uses: actions/upload-artifact@v3
         with:
@@ -188,13 +184,21 @@ jobs:
           path: ${{ env.latest }}/_coverage
 
       ###################### Upload Docs #####################################
+      - run: echo ${{ github.event.number }} > ${{ env.latest }}/PR_number.txt
+      - run: echo ${{ env.latest }}          > ${{ env.latest }}/projectname.txt
+
+      - name: Build API documentation for ${{ env.latest }}...
+        run: |
+          opam install odoc --yes
+          cd ${{ env.latest }} && opam exec -- dune build @doc --profile=release
+
       - name: Update docs artifact
         uses: actions/upload-artifact@v3
         with:
           name: docs
           path: |
             ${{ env.latest }}/_build/default/_doc/_html
-            ${{ env.latest }}/${{ env.RDJSON_DIR_PATH }}/projectname.txt
-            ${{ env.latest }}/${{ env.RDJSON_DIR_PATH }}/PR_number.txt
+            ${{ env.latest }}/projectname.txt
+            ${{ env.latest }}/PR_number.txt
             ${{ env.latest }}/_coverage/percent.txt
           #${{ env.latest }}/${{ env.RDJSON_DIR_PATH }}/CI_COMMIT.txt
