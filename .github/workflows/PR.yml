@@ -27,7 +27,7 @@ jobs:
       #  if: matrix.os != 'macos-latest'
 
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0                # fix me later
 
@@ -176,7 +176,7 @@ jobs:
           BISECT_FILE: /tmp/bisect_ppx_data/data
 
       - run: echo ${{ env.latest }} > ${{ env.latest }}/_coverage/projectname.txt
-      
+
       - name: Update coverage artifact ${{ steps.calc-coverage.outputs.percent }}
         uses: actions/upload-artifact@v3
         with:
@@ -184,21 +184,23 @@ jobs:
           path: ${{ env.latest }}/_coverage
 
       ###################### Upload Docs #####################################
-      - run: echo ${{ github.event.number }} > ${{ env.latest }}/PR_number.txt
-      - run: echo ${{ env.latest }}          > ${{ env.latest }}/projectname.txt
-
       - name: Build API documentation for ${{ env.latest }}...
         run: |
           opam install odoc --yes
           cd ${{ env.latest }} && opam exec -- dune build @doc --profile=release
+
+      - run: echo ${{ github.event.number }} > ${{ env.latest }}/PR_number.txt
+      - run: echo ${{ env.latest }}          > ${{ env.latest }}/projectname.txt
+      - run: cp ${{ env.latest }}/_coverage/percent.txt .
+      - run: cp ${{ env.latest }}/_build/default/_doc/_html . -r
 
       - name: Update docs artifact
         uses: actions/upload-artifact@v3
         with:
           name: docs
           path: |
-            ${{ env.latest }}/_build/default/_doc/_html
-            ${{ env.latest }}/projectname.txt
-            ${{ env.latest }}/PR_number.txt
-            ${{ env.latest }}/_coverage/percent.txt
+            _html
+            projectname.txt
+            PR_number.txt
+            percent.txt
           #${{ env.latest }}/${{ env.RDJSON_DIR_PATH }}/CI_COMMIT.txt
