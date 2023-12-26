@@ -151,16 +151,16 @@
 
 (** Binary operators *)
 <span data-count="8">t</span>ype binop =
-  | Add (** + *)
-  | Sub (** - *)
-  | Div (** / *)
-  | Mul (** * *)
-  | Eq (** = *)
-  | Neq (** &lt;&gt; *)
-  | Les (** &lt; *)
-  | Leq (** &lt;= *)
-  | Gre (** &gt; *)
-  | Geq (** &gt;= *)
+  | Add (** [+] operator *)
+  | Sub (** [-] operator *)
+  | Div (** [/] operator *)
+  | Mul (** [*] operator *)
+  | Eq (** [=] operator *)
+  | Neq (** [&lt;&gt;] operator *)
+  | Les (** [&lt;] operator *)
+  | Leq (** [&lt;=] operator *)
+  | Gre (** [&gt;] operator *)
+  | Geq (** [&gt;=] operator *)
 [@@deriving show { with_path = false }]
 
 <span data-count="68">t</span>ype const =
