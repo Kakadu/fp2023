@@ -7,16 +7,16 @@ type id = string [@@deriving show { with_path = false }]
 
 (** Binary operators *)
 type binop =
-  | Add (** + *)
-  | Sub (** - *)
-  | Div (** / *)
-  | Mul (** * *)
-  | Eq (** = *)
-  | Neq (** <> *)
-  | Les (** < *)
-  | Leq (** <= *)
-  | Gre (** > *)
-  | Geq (** >= *)
+  | Add (** [+] operator *)
+  | Sub (** [-] operator *)
+  | Div (** [/] operator *)
+  | Mul (** [*] operator *)
+  | Eq (** [=] operator *)
+  | Neq (** [<>] operator *)
+  | Les (** [<] operator *)
+  | Leq (** [<=] operator *)
+  | Gre (** [>] operator *)
+  | Geq (** [>=] operator *)
 [@@deriving show { with_path = false }]
 
 type const =
@@ -36,7 +36,7 @@ type pattern =
 
 type is_rec =
   | Rec (** Recursive functions can call themselves in their body *)
-  | NonRec
+  | NonRec (** Non-recursive functions tag *)
 [@@deriving show { with_path = false }]
 
 type expr =
