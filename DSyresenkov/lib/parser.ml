@@ -220,7 +220,7 @@ let pexpr =
 let parse_expr = parse_string ~consume:Consume.All (pexpr <* pspaces)
 let parse = parse_string ~consume:Consume.All (many1 (plet pexpr) <* pspaces)
 
-(** Tests *)
+(* Tests *)
 
 let%expect_test _ =
   pp pp_expr (plet pexpr) "let f x = x";
