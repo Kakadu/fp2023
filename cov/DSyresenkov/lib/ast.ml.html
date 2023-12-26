@@ -179,8 +179,8 @@
 [@@deriving show { with_path = false }<span data-count="20">]</span>
 
 <span data-count="3">t</span>ype is_rec =
-  | Rec (** Recursive functions can call themselves in their body *)
-  | NonRec
+  | Rec (** Recursive functions tag, can call themselves in their body *)
+  | NonRec (** Non-recursive functions tag *)
 [@@deriving show { with_path = false }]
 
 <span data-count="351">t</span>ype expr =
