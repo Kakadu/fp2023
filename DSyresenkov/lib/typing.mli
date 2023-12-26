@@ -5,9 +5,7 @@
 (* Set of variables *)
 type id = string [@@deriving show { with_path = false }]
 
-module VarSet = struct
-  include Stdlib.Set.Make (Int)
-end
+module VarSet : Set.S with type elt = int
 
 (* Base types *)
 type base_type =
@@ -33,31 +31,7 @@ type error =
   | NotImplemented (** Still not implemented features *)
 [@@deriving show { with_path = false }]
 
-let rec pp_type fmt typ =
-  let open Format in
-  let fmt_arrpw = function
-    | TArrow _ -> format_of_string "(%a)"
-    | _ -> format_of_string "%a"
-  in
-  match typ with
-  | TBase x ->
-    (match x with
-     | BInt -> fprintf fmt "int"
-     | BBool -> fprintf fmt "bool"
-     | BUnit -> fprintf fmt "unit")
-  | TTuple (ty1, ty2, tys) ->
-    fprintf
-      fmt
-      "%a"
-      (pp_print_list
-         ~pp_sep:(fun _ _ -> fprintf fmt " * ")
-         (fun fmt typ -> pp_type fmt typ))
-      (ty1 :: ty2 :: tys)
-  | TList typ -> fprintf fmt (fmt_arrpw typ ^^ " list") pp_type typ
-  | TArrow (l, r) -> fprintf fmt (fmt_arrpw l ^^ " -> %a") pp_type l pp_type r
-  | TVar var -> fprintf fmt "%s" @@ "'" ^ Char.escaped (Char.chr (var + 97))
-;;
-
-let print_ty ty = Format.printf "%s\n" (Format.asprintf "%a" pp_type ty)
+val pp_type : Format.formatter -> ty -> unit
+val print_ty : ty -> unit
 
 type scheme = S of VarSet.t * ty
