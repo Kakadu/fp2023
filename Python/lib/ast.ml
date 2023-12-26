@@ -7,6 +7,8 @@ type value =
   | Int of int
   | String of string
   | List of value list
+  | Bool of bool
+  | None
 [@@deriving eq, show { with_path = false }]
 
 (*Standart arithmetic operations *)
@@ -26,6 +28,11 @@ type bool_op =
   | And
   | Or
   | Equal
+  | NotEqual
+  | GreaterOrEqual
+  | Greater
+  | LessOrEqual
+  | Less
 [@@deriving eq, show { with_path = false }]
 
 (*Standart expressions*)
@@ -35,7 +42,7 @@ type expression =
   | ArithOp of arith_op * expression * expression
   | BoolOp of bool_op * expression * expression
   | FunctionCall of identifier * expression list
-[@@deriving eq, show { with_path = false }]  
+[@@deriving eq, show { with_path = false }]
 
 type statement =
   | Expression of expression
@@ -45,3 +52,7 @@ type statement =
   | Return of expression
   | Function of identifier * identifier list * statement list
 [@@deriving eq, show { with_path = false }]
+
+type flag =
+  | No
+  | Return_f

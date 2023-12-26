@@ -1,40 +1,36 @@
-(** Copyright 2021-2022, Kakadu and contributors *)
+(** Copyright 2021-2023, ksenmel *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-(** ***** UNIT TESTS COULD GO HERE (JUST AN EXAMPLE) *)
-let rec fact n = if n = 1 then 1 else n * fact (n - 1)
-
-let%test _ = fact 5 = 120
-
-(* These is a simple unit test that tests a single function 'fact'
-  If you want to test something large, like interpretation of a piece
-  of a minilanguge, it is not longer a unit tests but an integration test.
-  Read about dune's cram tests and put the test into `demos/somefile.t`.
-*)
-
-open Lambda_lib
+open Angstrom
 open Parser
 
-let parse_optimistically str = Result.get_ok (parse str)
-let pp = Printast.pp_named
+(* parse *)
 
-let%expect_test _ =
-  Format.printf "%a" pp (parse_optimistically "x y");
-  [%expect {| (App ((Var x), (Var y))) |}]
+let parse p s show_program =
+  match parse_string ~consume:All p s with
+  | Ok ast -> print_endline (show_program ast)
+  | Error msg -> failwith msg
 ;;
 
 let%expect_test _ =
-  Format.printf "%a" pp (parse_optimistically "(x y)");
-  [%expect {| (App ((Var x), (Var y))) |}]
-;;
-
-let%expect_test _ =
-  Format.printf "%a" pp (parse_optimistically "(\\x . x x)");
-  [%expect {| (Abs (x, (App ((Var x), (Var x))))) |}]
-;;
-
-let%expect_test _ =
-  Format.printf "%a" pp (parse_optimistically "(λf.λx. f (x x))");
-  [%expect {| (Abs (f, (Abs (x, (App ((Var f), (App ((Var x), (Var x))))))))) |}]
+  parse pexpr "let rec fact = if n < 1 then 1 else n * fact (n - 1)" Ast.show_expr;
+  [%expect
+    {|
+    (Ast.ELet (Ast.Rec, { Ast.name = "fact"; ty = Ast.Unspecified },
+       (Ast.EIfThenElse (
+          (Ast.EBinOp (Ast.Lt,
+             (Ast.EVar { Ast.name = "n"; ty = Ast.Unspecified }),
+             (Ast.EConst (Ast.Int 1)))),
+          (Ast.EConst (Ast.Int 1)),
+          (Ast.EBinOp (Ast.Mult,
+             (Ast.EVar { Ast.name = "n"; ty = Ast.Unspecified }),
+             (Ast.EApp ((Ast.EVar { Ast.name = "fact"; ty = Ast.Unspecified }),
+                (Ast.EBinOp (Ast.Minus,
+                   (Ast.EVar { Ast.name = "n"; ty = Ast.Unspecified }),
+                   (Ast.EConst (Ast.Int 1))))
+                ))
+             ))
+          )),
+       Ast.EUnit)) |}]
 ;;

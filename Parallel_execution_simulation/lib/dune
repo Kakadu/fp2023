@@ -1,20 +1,15 @@
 (library
- (name lambda_lib)
- (public_name Lambda.Lib)
- (modules Ast Lambda Interpret Parser Printast Pprintast utils)
- (modules_without_implementation ast)
- (libraries base angstrom)
- (preprocess
-  (pps ppx_deriving.show))
- (instrumentation
-  (backend bisect_ppx)))
-
-(library
- (name tests)
- (modules tests)
- (libraries lambda_lib)
- (preprocess
-  (pps ppx_expect ppx_deriving.show))
+ (name Parallel_execution_simulationLib)
+ (public_name Parallel_execution_simulation.lib)
+ (modules ast parser)
+ (libraries base angstrom ppx_show.runtime)
  (instrumentation
   (backend bisect_ppx))
+ (preprocess
+  (pps
+   ppx_variants_conv
+   ppx_expect
+   ppx_deriving.show
+   ppx_inline_test
+   ppx_enumerate))
  (inline_tests))
