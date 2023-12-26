@@ -143,8 +143,7 @@ let ppattern =
   in
   let ppt =
     lift2
-      (fun p1 ps ->
-        match ps with
+      (fun p1 -> function
         | h :: tl -> PCons (p1, h, tl)
         | _ -> p1)
       ppt
@@ -152,8 +151,7 @@ let ppattern =
   in
   let ppt =
     lift2
-      (fun p1 ps ->
-        match ps with
+      (fun p1 -> function
         | h :: tl -> POr (p1, h, tl)
         | _ -> p1)
       ppt
@@ -207,8 +205,7 @@ let pexpr =
   let pe = plbinop pe (choice [ peq; pneq; pgeq; pleq; ples; pgre ]) in
   let pe =
     lift2
-      (fun e1 es ->
-        match es with
+      (fun e1 -> function
         | h :: tl -> ETuple (e1, h, tl)
         | _ -> e1)
       pe
