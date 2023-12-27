@@ -17,14 +17,11 @@ module BoundVars = struct
   type t = (Ident.t, Var.t, Ident.comparator_witness) Map.t
 
   let empty = Map.empty (module Ident)
-
   let singleton = Map.singleton (module Ident)
 
-  let fold = Map.fold
-
   let idents = Map.keys
-
   let vars = Map.data
+  let fold = Map.fold
 
   exception Rebound of Ident.t
   let merge m1 m2 =

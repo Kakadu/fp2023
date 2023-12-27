@@ -21,25 +21,14 @@ type t =
 val pp : Format.formatter -> t -> unit
 
 val equal : t -> t -> bool
-
 val compare : t -> t -> int
-
 val sexp_of_t : t -> Sexp.t
 
 val unit : t
-(** Unit type *)
-
 val int : t
-(** Int type *)
-
 val bool : t
-(** Bool type *)
-
 val char : t
-(** Char type *)
-
 val string : t
-(** String type *)
 
 val vars : t -> VarSet.t
 (** Type variables occuring in a type *)

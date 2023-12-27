@@ -16,15 +16,12 @@ module BoundVars : sig
   type t
 
   val empty : t
-
   val singleton : Ident.t -> Var.t -> t
 
+  val idents : t -> Ident.t list
+  val vars : t -> Var.t list
   val fold :
     t -> init:'acc -> f:(key:Ident.t -> data:Var.t -> 'acc -> 'acc) -> 'acc
-
-  val idents : t -> Ident.t list
-
-  val vars : t -> Var.t list
 end
 
 val gen : pattern -> (Assumptions.t * BoundVars.t * Ty.t) GenMonad.t

@@ -10,7 +10,6 @@ open Constraints
 type t
 
 val empty : t
-
 val singleton : Var.t -> Ty.t -> t
 
 val apply : t -> Ty.t -> Ty.t

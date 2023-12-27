@@ -27,17 +27,12 @@ module ConstrSet : sig
   val pp : Format.formatter -> t -> unit
 
   val empty : t
-
   val of_list : Constr.t list -> t
-
   val singleton : Constr.t -> t
 
-  val union : t -> t -> t
-
-  val union_list : t list -> t
-
   val add : t -> Constr.t -> t
-
+  val union : t -> t -> t
+  val union_list : t list -> t
   val remove : t -> Constr.t -> t
 
   val find_map : t -> f:(Constr.t -> 'a option) -> 'a option
@@ -47,6 +42,5 @@ module ConstrSet : sig
   *)
 
   val fold : t -> init:'acc -> f:('acc -> Constr.t -> 'acc) -> 'acc
-
   val map : t -> f:(Constr.t -> Constr.t) -> t
 end

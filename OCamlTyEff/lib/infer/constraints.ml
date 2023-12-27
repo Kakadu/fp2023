@@ -26,22 +26,15 @@ module ConstrSet = struct
     |> Stdlib.Format.fprintf ppf "{%s}"
 
   let empty = Set.empty (module Constr)
-
   let singleton = Set.singleton (module Constr)
-
   let of_list = Set.of_list (module Constr)
 
-  let union = Set.union
-
-  let union_list = Set.union_list (module Constr)
-
   let add = Set.add
-
+  let union = Set.union
+  let union_list = Set.union_list (module Constr)
   let remove = Set.remove
-
   let find_map = Set.find_map
 
   let fold = Set.fold
-
   let map = Set.map (module Constr)
 end

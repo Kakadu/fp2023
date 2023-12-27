@@ -33,7 +33,6 @@ module MakeRWSEMonad : functor
 
   module State : sig
     val get : StateT.t t
-
     val put : StateT.t -> unit t
   end
 
@@ -50,7 +49,6 @@ module MakeSEMonad : functor (StateT : T) (ErrorT : T) -> sig
 
   module State : sig
     val get : StateT.t t
-
     val put : StateT.t -> unit t
   end
 
