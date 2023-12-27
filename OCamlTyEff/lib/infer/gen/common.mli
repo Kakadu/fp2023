@@ -3,6 +3,7 @@
 (** SPDX-License-Identifier: MIT *)
 
 open! Base
+open Monads.Std
 open Types
 open Constraints
 open Ast
@@ -43,6 +44,24 @@ module ConArityAssumpt : sig
 
   val set : t -> Ident.t -> arity -> t
   val find : t -> Ident.t -> arity option
+end
+
+module GenMonad : sig
+  include Monad.S
+
+  val run : 'a t -> ('a * ConstrSet.t * ConArityAssumpt.t, TyError.t) result
+
+  module Gen : sig
+    val varset : VarSet.t t
+    val extend_varset : Var.t list -> 'a t -> 'a t
+
+    val add_constrs : Constr.t list -> unit t
+    val add_con_assumpt : Ident.t -> ConArityAssumpt.arity -> unit t
+
+    val fresh_var : Var.t t
+
+    val fail : TyError.t -> 'a t
+  end
 end
 
 val ( ! ) : Var.t -> Ty.t
