@@ -122,6 +122,7 @@ let is_false_fail cond ?(error_msg="") input =
 
 let some n = Some n
 let number n = Number n
+let string s = String s
 let const c = Const c
 let var v = Var v
 let expression e = Expression e
@@ -132,6 +133,9 @@ let parse_number =
   <|> take_while1 is_digit >>= (function |"." -> fail "incorrect number" | _ as num -> return num)
   >>| (fun n -> number @@ float_of_string n)
 (*TODO: -,NaN..., BigINT*)
+
+let parse_str = 
+  char '"' *> take_till (fun c -> c = '"') >>= string
 
 let valid_identifier =
   token @@ lift2 (^) 
@@ -187,6 +191,7 @@ and parse_expression = fun () ->
       parens self;
       all_op_parser >>| uop;
       parse_number >>| const;
+      parse_str >>| const;
       lift2 fun_call valid_identifier (parse_arguments ());
       valid_identifier >>| var
     ])) >>= parse_list_of_mini_expressions)

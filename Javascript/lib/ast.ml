@@ -12,6 +12,7 @@ type bin_op =
 
 type typename =
   | Number of float
+  | String of string
   | VarType
   | FuncType
 [@@deriving eq, show {with_path = false}]
