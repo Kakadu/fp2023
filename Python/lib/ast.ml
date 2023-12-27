@@ -40,12 +40,12 @@ type bool_op =
   | Less
 [@@deriving eq, show { with_path = false }]
 
-type fStringType =
+type f_string_type =
   | Str of value
   | Var of identifier
 [@@deriving eq, show { with_path = false }]
 
-type f_string_elem = FStringElem of fStringType
+type f_string_elem = FStringElem of f_string_type
 [@@deriving eq, show { with_path = false }]
 
 (*Standart expressions*)
@@ -79,4 +79,3 @@ type statement =
 type flag =
   | No
   | Return_f
-  

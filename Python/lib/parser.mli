@@ -150,9 +150,9 @@ val p_field : Ast.expression Angstrom.t
 val p_method_call : Ast.expression Angstrom.t -> Ast.expression Angstrom.t
 val p_assign : Ast.expression Angstrom.t -> int -> pseudo_statement Angstrom.t
 val anon_func : Ast.expression Angstrom.t -> Ast.expression Angstrom.t
-val p_interpolationStrElemEndingWithCurly : Ast.fStringElem Angstrom.t
-val p_interpolationVarElem : Ast.fStringElem Angstrom.t
-val p_interpolationStrElemLast : Ast.fStringElem Angstrom.t
+val p_interpolationStrElemEndingWithCurly : Ast.f_string_elem Angstrom.t
+val p_interpolationVarElem : Ast.f_string_elem Angstrom.t
+val p_interpolationStrElemLast : Ast.f_string_elem Angstrom.t
 val p_fString : Ast.expression Angstrom.t
 val p_list : Ast.expression Angstrom.t -> Ast.expression Angstrom.t
 val mp_high_pr_op : (Ast.expression -> Ast.expression -> Ast.expression) Angstrom.t

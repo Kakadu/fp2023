@@ -1,7 +1,3 @@
-(** Copyright 2021-2023, Averin Pavel *)
-
-(** SPDX-License-Identifier: LGPL-3.0-or-later *)
-
 type value =
   | Int of int
   | String of string
@@ -52,15 +48,15 @@ val equal_bool_op : bool_op -> bool_op -> bool
 val pp_bool_op : Format.formatter -> bool_op -> unit
 val show_bool_op : bool_op -> string
 
-type fStringType =
+type f_string_type =
   | Str of value
   | Var of identifier
 
-val equal_fStringType : fStringType -> fStringType -> bool
-val pp_fStringType : Format.formatter -> fStringType -> unit
-val show_fStringType : fStringType -> string
+val equal_f_string_type : f_string_type -> f_string_type -> bool
+val pp_f_string_type : Format.formatter -> f_string_type -> unit
+val show_f_string_type : f_string_type -> string
 
-type fStringElem = FStringElem of fStringType
+type f_string_elem = FStringElem of f_string_type
 
 and expression =
   | Const of value
@@ -73,12 +69,12 @@ and expression =
   | MethodCall of identifier * identifier * expression list
   | Lambda of identifier list * expression
   | Object of identifier * expression list
-  | FString of fStringElem list
+  | FString of f_string_elem list
 
-val equal_fStringElem : fStringElem -> fStringElem -> bool
+val equal_f_string_elem : f_string_elem -> f_string_elem -> bool
 val equal_expression : expression -> expression -> bool
-val pp_fStringElem : Format.formatter -> fStringElem -> unit
-val show_fStringElem : fStringElem -> string
+val pp_f_string_elem : Format.formatter -> f_string_elem -> unit
+val show_f_string_elem : f_string_elem -> string
 val pp_expression : Format.formatter -> expression -> unit
 val show_expression : expression -> string
 
