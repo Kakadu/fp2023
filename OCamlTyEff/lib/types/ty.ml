@@ -42,13 +42,9 @@ let rec pp ppf =
           fprintf ppf "(%a) %s" pp_args args name )
 
 let unit = Ty_con (Ident "unit", [])
-
 let int = Ty_con (Ident "int", [])
-
 let bool = Ty_con (Ident "bool", [])
-
 let char = Ty_con (Ident "char", [])
-
 let string = Ty_con (Ident "string", [])
 
 let rec vars = function

@@ -9,7 +9,6 @@ open Constraints
 type t = (Var.t, Ty.t, Var.comparator_witness) Map.t
 
 let empty = Map.empty (module Var)
-
 let singleton = Map.singleton (module Var)
 
 let apply sub =

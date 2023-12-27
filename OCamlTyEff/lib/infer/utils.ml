@@ -43,7 +43,6 @@ struct
 
   module State = struct
     let get = lift @@ WriterM.lift @@ StateM.get ()
-
     let put x = lift @@ WriterM.lift @@ StateM.put x
   end
 
@@ -71,7 +70,6 @@ module MakeSEMonad (StateT : T) (ErrorT : T) = struct
 
   module State = struct
     let get = get ()
-
     let put = put
   end
 
