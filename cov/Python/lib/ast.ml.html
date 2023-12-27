@@ -278,12 +278,12 @@
   <span data-count="0">|</span> Less
 [@@deriving eq, show { with_path = false }]
 
-<span data-count="0">t</span>ype fStringType =
+<span data-count="0">t</span>ype f_string_type =
   <span data-count="0">|</span> Str of valu<span data-count="0">e</span>
   <span data-count="0">|</span> Var of identifie<span data-count="0">r</span>
 [@@deriving eq, show { with_path = false }<span data-count="0">]</span>
 
-<span data-count="46">t</span>ype fStringElem = <span data-count="0">F</span>StringElem of fStringTyp<span data-count="0">e</span>
+<span data-count="46">t</span>ype f_string_elem = <span data-count="0">F</span>StringElem of f_string_typ<span data-count="0">e</span>
 [@@deriving eq, show { with_path = false }]
 
 (*Standart expressions*)
@@ -298,7 +298,7 @@
   <span data-count="0">|</span> MethodCall of identifier * identifier * <span data-count="0">e</span>xpression lis<span data-count="0">t</span>
   <span data-count="0">|</span> Lambda of <span data-count="0">i</span>dentifier lis<span data-count="0">t</span> * expressio<span data-count="0">n</span>
   <span data-count="0">|</span> Object of identifier * <span data-count="0">e</span>xpression lis<span data-count="0">t</span>
-  <span data-count="0">|</span> FString of <span data-count="0">f</span>StringElem lis<span data-count="0">t</span>
+  <span data-count="0">|</span> FString of <span data-count="0">f</span>_string_elem lis<span data-count="0">t</span>
 [@@deriving eq, show { with_path = false }<span data-count="49">]</span>
 
 (*Standart statements*)
