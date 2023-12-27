@@ -45,7 +45,7 @@ type fStringType =
   | Var of identifier
 [@@deriving eq, show { with_path = false }]
 
-type fStringElem = FStringElem of fStringType
+type f_string_elem = FStringElem of fStringType
 [@@deriving eq, show { with_path = false }]
 
 (*Standart expressions*)
@@ -60,7 +60,7 @@ and expression =
   | MethodCall of identifier * identifier * expression list
   | Lambda of identifier list * expression
   | Object of identifier * expression list
-  | FString of fStringElem list
+  | FString of f_string_elem list
 [@@deriving eq, show { with_path = false }]
 
 (*Standart statements*)
