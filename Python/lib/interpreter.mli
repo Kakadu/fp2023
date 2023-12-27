@@ -64,11 +64,12 @@ module Eval : functor (M : MONADERROR) -> sig
   val change_func : function_symb -> environment -> environment
   val change_or_add_func : function_symb -> environment -> environment
   val get_func : Ast.identifier -> environment -> function_symb
-  val pack_to_string : Ast.value -> string
+  val pack_to_string_safe : Ast.value -> string M.t
   val print_list : string list -> unit
   val combine_args_and_params : Ast.identifier list -> Ast.value list -> var_symb list
   val get_str_from_identifier : Ast.identifier -> string
   val print_funcs : function_symb list -> unit
+  val pack_to_string_unsafe : Ast.value -> string
   val print_vars : var_symb list -> unit
 
   type dispatch =

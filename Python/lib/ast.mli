@@ -2,33 +2,42 @@
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-(*Standart data types: integers, strings, lists*)
 type value =
   | Int of int
   | String of string
   | List of value list
   | Bool of bool
   | None
-[@@deriving eq, show { with_path = false }]
 
-(*Standart arithmetic operations *)
+val equal_value : value -> value -> bool
+val pp_value : Format.formatter -> value -> unit
+val show_value : value -> string
+
 type arith_op =
   | Add
   | Sub
   | Mul
   | Div
   | Mod
-[@@deriving eq, show { with_path = false }]
 
-(*Funcions' name & args' name*)
-type identifier = Identifier of string [@@deriving eq, show { with_path = false }]
+val equal_arith_op : arith_op -> arith_op -> bool
+val pp_arith_op : Format.formatter -> arith_op -> unit
+val show_arith_op : arith_op -> string
+
+type identifier = Identifier of string
+
+val equal_identifier : identifier -> identifier -> bool
+val pp_identifier : Format.formatter -> identifier -> unit
+val show_identifier : identifier -> string
 
 type modifier =
   | Global
   | Class
-[@@deriving eq, show { with_path = false }]
 
-(*Standart boolean operators*)
+val equal_modifier : modifier -> modifier -> bool
+val pp_modifier : Format.formatter -> modifier -> unit
+val show_modifier : modifier -> string
+
 type bool_op =
   | And
   | Or
@@ -38,17 +47,21 @@ type bool_op =
   | Greater
   | LessOrEqual
   | Less
-[@@deriving eq, show { with_path = false }]
+
+val equal_bool_op : bool_op -> bool_op -> bool
+val pp_bool_op : Format.formatter -> bool_op -> unit
+val show_bool_op : bool_op -> string
 
 type fStringType =
   | Str of value
   | Var of identifier
-[@@deriving eq, show { with_path = false }]
+
+val equal_fStringType : fStringType -> fStringType -> bool
+val pp_fStringType : Format.formatter -> fStringType -> unit
+val show_fStringType : fStringType -> string
 
 type fStringElem = FStringElem of fStringType
-[@@deriving eq, show { with_path = false }]
 
-(*Standart expressions*)
 and expression =
   | Const of value
   | Variable of modifier * identifier
@@ -61,9 +74,14 @@ and expression =
   | Lambda of identifier list * expression
   | Object of identifier * expression list
   | FString of fStringElem list
-[@@deriving eq, show { with_path = false }]
 
-(*Standart statements*)
+val equal_fStringElem : fStringElem -> fStringElem -> bool
+val equal_expression : expression -> expression -> bool
+val pp_fStringElem : Format.formatter -> fStringElem -> unit
+val show_fStringElem : fStringElem -> string
+val pp_expression : Format.formatter -> expression -> unit
+val show_expression : expression -> string
+
 type statement =
   | Expression of expression
   | Assign of expression * expression
@@ -74,7 +92,10 @@ type statement =
   | For of expression * expression list * statement list
   | Class of identifier * statement list
   | Return of expression
-[@@deriving eq, show { with_path = false }]
+
+val equal_statement : statement -> statement -> bool
+val pp_statement : Format.formatter -> statement -> unit
+val show_statement : statement -> string
 
 type flag =
   | No

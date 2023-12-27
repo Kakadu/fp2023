@@ -141,11 +141,11 @@ module Eval (M : MONADERROR) = struct
   ;;
 
   (* Miscellaneous *)
-  let pack_to_string = function
-    | String a -> a
-    | Int a -> Int.to_string a
-    | Bool a -> Bool.to_string a
-    | _ -> "Interpretation Error"
+  let pack_to_string_safe : value -> tag t = function
+    | String a -> return a
+    | Int a -> return (Int.to_string a)
+    | Bool a -> return (Bool.to_string a)
+    | _ -> error "Interpretation Error"
   ;;
 
   let rec print_list = function
@@ -172,10 +172,19 @@ module Eval (M : MONADERROR) = struct
       print_funcs remaining_functions
   ;;
 
+  let pack_to_string_unsafe = function
+    | String a -> a
+    | Int a -> Int.to_string a
+    | Bool a -> Bool.to_string a
+    | _ -> "Interpretation Error"
+  ;;
+
   let rec print_vars = function
     | [] -> ()
     | (var : var_symb) :: (remaining_vars : var_symb list) ->
       print_string (get_str_from_identifier var.identifier);
+      print_string " = ";
+      print_string (pack_to_string_unsafe var.value);
       print_string " ";
       print_vars remaining_vars
   ;;
@@ -258,18 +267,19 @@ module Eval (M : MONADERROR) = struct
         let* a = i_expr exp_or_stmt env a in
         let* b = i_expr exp_or_stmt env b in
         return (Bool (a = Bool true || b = Bool true))
-      | Variable i ->
+      | Variable (_, i) ->
         (match var_in_env i env with
          | true -> return (get_var i env).value
          | false -> error "undefined Variable")
       | FunctionCall (identifier, exp_list) ->
         (match identifier with
-         | Identifier "print" ->
+         | Identifier "print" when not (func_in_env (Identifier "print") env) ->
            let rec print_exp_list = function
              | [] -> return None
              | exp :: tl ->
                let* value = i_expr exp_or_stmt env exp in
-               let () = Printf.printf "%s" (pack_to_string value) in
+               let* str_val = pack_to_string_safe value in
+               let () = Printf.printf "%s" str_val in
                print_exp_list tl
            in
            (match exp_list with
@@ -299,6 +309,23 @@ module Eval (M : MONADERROR) = struct
       | Return exp ->
         let* value = i_exp_or_stmt.i_expr i_exp_or_stmt env exp in
         return { env with flag = Return_f; return_v = value }
+      | While (guard, body) ->
+        let rec helper env body =
+          match env.flag with
+          | Return_f -> return env
+          | _ ->
+            (match body with
+             | [] -> guard_res env
+             | h :: tl ->
+               let* new_env = i_stmt i_exp_or_stmt env h in
+               helper new_env tl)
+        and guard_res env =
+          let* res = i_exp_or_stmt.i_expr i_exp_or_stmt env guard in
+          match res with
+          | Bool false -> return env
+          | _ -> helper env body
+        in
+        guard_res env
       | IfElse (guard, ifBranch, elseBranch) ->
         let* res = i_expr i_exp_or_stmt env guard in
         let get_env env = fold_left (i_exp_or_stmt.i_stmt i_exp_or_stmt) env in
@@ -308,7 +335,7 @@ module Eval (M : MONADERROR) = struct
          | _ -> error "failed to interpred the guard")
       | Assign (l, r) ->
         (match l with
-         | Variable identifier ->
+         | Variable (_, identifier) ->
            let* value = i_exp_or_stmt.i_expr i_exp_or_stmt env r in
            return (change_or_add_var env { identifier; value })
          | _ -> error "Left-hand side operator is not a variable")

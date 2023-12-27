@@ -12,9 +12,9 @@
  (deps %{bin:demo_fact}))
 
 (executable
- (name interpreter_test)
- (public_name interpreter_test)
- (modules interpreter_test)
+ (name interpreter_fact_test)
+ (public_name interpreter_fact_test)
+ (modules interpreter_fact_test)
  (libraries Python.Lib)
  (preprocess
   (pps ppx_show))
@@ -22,4 +22,30 @@
   (backend bisect_ppx)))
 
 (cram
- (deps %{bin:interpreter_test}))
+ (deps %{bin:interpreter_fact_test}))
+
+(executable
+ (name parse_and_interpret_fact_test)
+ (public_name parse_and_interpret_fact_test)
+ (modules parse_and_interpret_fact_test)
+ (libraries Python.Lib)
+ (preprocess
+  (pps ppx_show))
+ (instrumentation
+  (backend bisect_ppx)))
+
+(cram
+ (deps %{bin:parse_and_interpret_fact_test}))
+
+(executable
+ (name change_print_test)
+ (public_name change_print_test)
+ (modules change_print_test)
+ (libraries Python.Lib)
+ (preprocess
+  (pps ppx_show))
+ (instrumentation
+  (backend bisect_ppx)))
+
+(cram
+ (deps %{bin:change_print_test}))
