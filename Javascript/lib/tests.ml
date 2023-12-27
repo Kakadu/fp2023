@@ -22,17 +22,93 @@ let eq_ok str exp =
     );
     Format.eprintf "\n";
     false
-  )
+ )
+;;
+
 let eq_error str res = match Result.get_error(parse str) with
-| `ParsingError s -> s = res
+| `ParsingError s -> if s = res then true
+else (
+  Format.eprintf "The error doesn't equal to expected\n";
+  Format.eprintf "Expected:\n";
+  Format.eprintf "%s\n" res;
+  Format.eprintf "But the parser ended with an error:\n";
+  Format.eprintf "%s" s;
+  false
+)
 ;;
 
 (** Number parser *)
 
-let%test "int number" =
+let%test "number 4" =
   eq_ok
   "4"
   (Programm[Expression(Const(Number 4.))])
+
+let%test "number 4." = 
+  eq_ok
+  "4."
+  (Programm[Expression(Const(Number 4.))])
+  
+let%test "number .4" = 
+  eq_ok
+  ".4"
+  (Programm[Expression(Const(Number 0.4))])
+
+let%test "number 0.4" = 
+  eq_ok
+  "0.4"
+  (Programm[Expression(Const(Number 0.4))])
+
+let%test "number 10.01" =
+  eq_ok
+  "10.01"
+  (Programm[Expression(Const(Number 10.01))])
+
+let%test "number 1000000" =
+  eq_ok
+  "1000000"
+  (Programm[Expression(Const(Number 1000000.))])
+
+let%test "int only dot fail" =
+  eq_error
+  "."
+  "incorrect statement: there is an invalid keyword: \"\""
+
+(** Expressions *)
+
+let%test "sum of number 1" =
+  eq_ok
+  "40 + 50"
+  (Programm[Expression(BinOp(Add, Const(Number 40.), Const(Number 50.)))])
+
+let%test "sum of number 2" =
+  eq_ok
+  "40+50"
+  (Programm[Expression(BinOp(Add, Const(Number 40.), Const(Number 50.)))])
+
+let%test "priority 1 + 2 + 3" =
+  eq_ok
+  "1 + 2 + 3"
+  (Programm[Expression(BinOp(Add, BinOp(Add, 
+  Const(Number 1.), Const(Number 2.)), Const(Number 3.)))])
+
+let%test "priority 4 + 5 * 2 + 3" =
+  eq_ok
+  "4 + 5 * 2 + 3"
+  (Programm[Expression(BinOp(Add, BinOp(Add, 
+  Const(Number 4.), BinOp(
+    Mul, Const(Number 5.), Const(Number 2.))), Const(Number 3.)))])
+
+let%test "priority 4 + 5 + 2 * 3" =
+  eq_ok
+  "4 + 5 + 2 * 3"
+  (Programm
+   [(Expression
+       (BinOp (Add, (BinOp (Add, (Const (Number 4.)), (Const (Number 5.)))),
+          (BinOp (Mul, (Const (Number 2.)), (Const (Number 3.)))))))
+     ])
+
+
 
 let%test "if1" =
   eq_ok
