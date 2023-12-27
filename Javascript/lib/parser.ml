@@ -122,7 +122,6 @@ let is_false_fail cond ?(error_msg="") input =
 
 let some n = Some n
 let number n = Number n
-let string s = String s
 let const c = Const c
 let var v = Var v
 let expression e = Expression e
@@ -135,7 +134,7 @@ let parse_number =
 (*TODO: -,NaN..., BigINT*)
 
 let parse_str = 
-  char '"' *> take_till (fun c -> c = '"') >>= string
+  char '"' *> take_till (fun c -> c = '"') >>| (fun s -> String s)
 
 let valid_identifier =
   token @@ lift2 (^) 
