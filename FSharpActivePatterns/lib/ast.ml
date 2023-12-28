@@ -60,7 +60,7 @@ type expr =
   | CaseExpr of name * expr list
 [@@deriving show { with_path = false }]
 
-and program = expr list [@@deriving show { with_path = false }]
+type program = expr list [@@deriving show { with_path = false }]
 
 (** for interpret *)
 type value =
