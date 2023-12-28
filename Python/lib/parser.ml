@@ -339,17 +339,17 @@ let anon_func e =
 
 let p_interpolationStrElemEndingWithCurly =
   let* x = take_interpolString <* t_curlyLeft in
-  return @@ FStringElem (Str (String x))
+  return @@ Str (String x)
 ;;
 
 let p_interpolationVarElem =
   let* x = take_interpolIdentifier <* t_curlyRight in
-  return @@ FStringElem (Var (Identifier x))
+  return @@ Var (Identifier x)
 ;;
 
 let p_interpolationStrElemLast =
   let* x = take_string <* t_quote in
-  return @@ FStringElem (Str (String x))
+  return @@ Str (String x)
 ;;
 
 let p_fString =

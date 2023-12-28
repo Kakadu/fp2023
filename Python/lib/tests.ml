@@ -199,12 +199,12 @@ let%test _ =
 ;;
 
 let%test _ =
-  parse pyParser "cat.set(10, 20+10)"
+  parse pyParser "someClass.someField(10, 20+10)"
   = Ok
       [ Expression
           (MethodCall
-             ( Identifier "cat"
-             , Identifier "set"
+             ( Identifier "someClass"
+             , Identifier "someField"
              , [ Const (Int 10); ArithOp (Add, Const (Int 20), Const (Int 10)) ] ))
       ]
 ;;
@@ -234,26 +234,15 @@ let%test _ =
 ;;
 
 let%test _ =
-  parse p_interpolationStrElemEndingWithCurly "string{"
-  = Ok (FStringElem (Str (String "string")))
+  parse p_interpolationStrElemEndingWithCurly "string{" = Ok (Str (String "string"))
 ;;
 
-let%test _ =
-  parse p_interpolationVarElem "var}" = Ok (FStringElem (Var (Identifier "var")))
-;;
-
-let%test _ =
-  parse p_interpolationStrElemLast "str\"" = Ok (FStringElem (Str (String "str")))
-;;
+let%test _ = parse p_interpolationVarElem "var}" = Ok (Var (Identifier "var"))
+let%test _ = parse p_interpolationStrElemLast "str\"" = Ok (Str (String "str"))
 
 let%test _ =
   parse p_fString "f\"string{var}str\""
-  = Ok
-      (FString
-         [ FStringElem (Str (String "string"))
-         ; FStringElem (Var (Identifier "var"))
-         ; FStringElem (Str (String "str"))
-         ])
+  = Ok (FString [ Str (String "string"); Var (Identifier "var"); Str (String "str") ])
 ;;
 
 let unpacker (Ok x) = x

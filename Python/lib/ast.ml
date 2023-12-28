@@ -45,10 +45,6 @@ type f_string_type =
   | Var of identifier (** variable in a f string *)
 [@@deriving eq, show { with_path = false }]
 
-(*string or variable in a f string*)
-type f_string_elem = FStringElem of f_string_type
-[@@deriving eq, show { with_path = false }]
-
 (*Standart expressions*)
 and expression =
   | Const of value (** A constant that holds value *)
@@ -64,7 +60,7 @@ and expression =
   (** A method call class.method() *)
   | Lambda of identifier list * expression (** Anonymous function *)
   | Object of identifier * expression list (** Instance of a class *)
-  | FString of f_string_elem list (** F string *)
+  | FString of f_string_type list (** F string *)
 [@@deriving eq, show { with_path = false }]
 
 (*Standart statements*)
@@ -84,5 +80,5 @@ type statement =
 [@@deriving eq, show { with_path = false }]
 
 type flag =
-  | No
-  | Return_f
+  | No (** No flag *)
+  | Return_f (** Return flag *)
