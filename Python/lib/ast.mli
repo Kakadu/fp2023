@@ -56,21 +56,23 @@ type f_string_type =
   | Str of value (** string in a f string *)
   | Var of identifier (** variable in a f string *)
 
-and expression =
-  | Const of value (** A constant that holds value *)
-  | Variable of modifier * identifier (** Variable with a scope and its identifier *)
+type expression =
+  | Const of value [@ocaml.doc " A constant that holds value "]
+  | Variable of modifier * identifier
+  [@ocaml.doc " Variable with a scope and its identifier "]
   | ArithOp of arith_op * expression * expression
-  (** Arithmetic operation that consists of an operator and operands *)
+  [@ocaml.doc " Arithmetic operation that consists of an operator and operands "]
   | BoolOp of bool_op * expression * expression
-  (** Logical operation that consists of an operator and operands *)
-  | FunctionCall of identifier * expression list (** A function call with its arguments *)
-  | List of expression list (** A list expression *)
-  | Field of identifier * identifier (** A class field x.field *)
+  [@ocaml.doc " Logical operation that consists of an operator and operands "]
+  | FunctionCall of identifier * expression list
+  [@ocaml.doc " A function call with its arguments "]
+  | List of expression list [@ocaml.doc " A list expression "]
+  | Field of identifier * identifier [@ocaml.doc " A class field x.field "]
   | MethodCall of identifier * identifier * expression list
-  (** A method call class.method() *)
-  | Lambda of identifier list * expression (** Anonymous function *)
-  | Object of identifier * expression list (** Instance of a class *)
-  | FString of f_string_type list (** F string *)
+  [@ocaml.doc " A method call class.method() "]
+  | Lambda of identifier list * expression [@ocaml.doc " Anonymous function "]
+  | Object of identifier * expression list [@ocaml.doc " Instance of a class "]
+  | FString of f_string_type list [@ocaml.doc " F string "]
 
 val equal_f_string_type : f_string_type -> f_string_type -> bool
 val equal_expression : expression -> expression -> bool
