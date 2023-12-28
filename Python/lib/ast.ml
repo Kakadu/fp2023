@@ -4,81 +4,75 @@
 
 (*Standart data types: integers, strings, lists*)
 type value =
-  | Int of int (** Int type *)
-  | String of string (** String type *)
-  | List of value list (** List type *)
-  | Bool of bool (** Bool type *)
-  | None (** None type *)
+  | Int of int
+  | String of string
+  | List of value list
+  | Bool of bool
+  | None
 [@@deriving eq, show { with_path = false }]
 
 (*Standart arithmetic operations *)
 type arith_op =
-  | Add (** Integer arithmetic addition *)
-  | Sub (** Integer arithmetic subtraction *)
-  | Mul (** Integer arithmetic multiplication *)
-  | Div (** Integer arithmetic divison *)
-  | Mod (** Integer arithmetic modulus *)
+  | Add
+  | Sub
+  | Mul
+  | Div
+  | Mod
 [@@deriving eq, show { with_path = false }]
 
 (*Funcions' name & args' name*)
 type identifier = Identifier of string [@@deriving eq, show { with_path = false }]
 
 type modifier =
-  | Global (** Variable in a global scope *)
-  | Class (** Variable in a class scope *)
+  | Global
+  | Class
 [@@deriving eq, show { with_path = false }]
 
 (*Standart boolean operators*)
 type bool_op =
-  | And (** logical and *)
-  | Or (** logical or *)
-  | Equal (** logical equals *)
-  | NotEqual (** logical not equals *)
-  | GreaterOrEqual (** logical greater or equals *)
-  | Greater (** logical greater *)
-  | LessOrEqual (** logical less or equals *)
-  | Less (** logical less *)
+  | And
+  | Or
+  | Equal
+  | NotEqual
+  | GreaterOrEqual
+  | Greater
+  | LessOrEqual
+  | Less
 [@@deriving eq, show { with_path = false }]
 
 type f_string_type =
-  | Str of value (** string in a f string *)
-  | Var of identifier (** variable in a f string *)
+  | Str of value
+  | Var of identifier
 [@@deriving eq, show { with_path = false }]
 
 (*Standart expressions*)
 and expression =
-  | Const of value (** A constant that holds value *)
-  | Variable of modifier * identifier (** Variable with a scope and its identifier *)
+  | Const of value
+  | Variable of modifier * identifier
   | ArithOp of arith_op * expression * expression
-  (** Arithmetic operation that consists of an operator and operands *)
   | BoolOp of bool_op * expression * expression
-  (** Logical operation that consists of an operator and operands *)
-  | FunctionCall of identifier * expression list (** A function call with its arguments *)
-  | List of expression list (** A list expression *)
-  | Field of identifier * identifier (** A class field x.field *)
+  | FunctionCall of identifier * expression list
+  | List of expression list
+  | Field of identifier * identifier
   | MethodCall of identifier * identifier * expression list
-  (** A method call class.method() *)
-  | Lambda of identifier list * expression (** Anonymous function *)
-  | Object of identifier * expression list (** Instance of a class *)
-  | FString of f_string_type list (** F string *)
+  | Lambda of identifier list * expression
+  | Object of identifier * expression list
+  | FString of f_string_type list
 [@@deriving eq, show { with_path = false }]
 
 (*Standart statements*)
 type statement =
-  | Expression of expression (** Statement which is expression *)
-  | Assign of expression * expression (** Assign statement *)
+  | Expression of expression
+  | Assign of expression * expression
   | Function of identifier * identifier list * statement list
-  (** A function declartion with its identifier and body *)
   | IfElse of expression * statement list * statement list
-  (** If else statemtn with a guard both if and else body *)
-  | Else of statement list (** Else statemtn with its body *)
-  | While of expression * statement list (** Else statemtn with a guard and its body *)
+  | Else of statement list
+  | While of expression * statement list
   | For of expression * expression list * statement list
-  (** Else statemtn with a guards and its body *)
-  | Class of identifier * statement list (** Class with its identifier and contents *)
-  | Return of expression (** Return statement *)
+  | Class of identifier * statement list
+  | Return of expression
 [@@deriving eq, show { with_path = false }]
 
 type flag =
-  | No (** No flag *)
-  | Return_f (** Return flag *)
+  | No
+  | Return_f

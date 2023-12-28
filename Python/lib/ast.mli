@@ -3,22 +3,22 @@
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
 type value =
-  | Int of int
-  | String of string
-  | List of value list
-  | Bool of bool
-  | None
+  | Int of int (** Int type *)
+  | String of string (** String type *)
+  | List of value list (** List type *)
+  | Bool of bool (** Bool type *)
+  | None (** None type *)
 
 val equal_value : value -> value -> bool
 val pp_value : Format.formatter -> value -> unit
 val show_value : value -> string
 
 type arith_op =
-  | Add
-  | Sub
-  | Mul
-  | Div
-  | Mod
+  | Add (** Integer arithmetic addition *)
+  | Sub (** Integer arithmetic subtraction *)
+  | Mul (** Integer arithmetic multiplication *)
+  | Div (** Integer arithmetic divison *)
+  | Mod (** Integer arithmetic modulus *)
 
 val equal_arith_op : arith_op -> arith_op -> bool
 val pp_arith_op : Format.formatter -> arith_op -> unit
@@ -31,43 +31,46 @@ val pp_identifier : Format.formatter -> identifier -> unit
 val show_identifier : identifier -> string
 
 type modifier =
-  | Global
-  | Class
+  | Global (** Variable in a global scope *)
+  | Class (** Variable in a class scope *)
 
 val equal_modifier : modifier -> modifier -> bool
 val pp_modifier : Format.formatter -> modifier -> unit
 val show_modifier : modifier -> string
 
 type bool_op =
-  | And
-  | Or
-  | Equal
-  | NotEqual
-  | GreaterOrEqual
-  | Greater
-  | LessOrEqual
-  | Less
+  | And (** logical and *)
+  | Or (** logical or *)
+  | Equal (** logical equals *)
+  | NotEqual (** logical not equals *)
+  | GreaterOrEqual (** logical greater or equals *)
+  | Greater (** logical greater *)
+  | LessOrEqual (** logical less or equals *)
+  | Less (** logical less *)
 
 val equal_bool_op : bool_op -> bool_op -> bool
 val pp_bool_op : Format.formatter -> bool_op -> unit
 val show_bool_op : bool_op -> string
 
 type f_string_type =
-  | Str of value
-  | Var of identifier
+  | Str of value (** string in a f string *)
+  | Var of identifier (** variable in a f string *)
 
 and expression =
-  | Const of value
-  | Variable of modifier * identifier
+  | Const of value (** A constant that holds value *)
+  | Variable of modifier * identifier (** Variable with a scope and its identifier *)
   | ArithOp of arith_op * expression * expression
+  (** Arithmetic operation that consists of an operator and operands *)
   | BoolOp of bool_op * expression * expression
-  | FunctionCall of identifier * expression list
-  | List of expression list
-  | Field of identifier * identifier
+  (** Logical operation that consists of an operator and operands *)
+  | FunctionCall of identifier * expression list (** A function call with its arguments *)
+  | List of expression list (** A list expression *)
+  | Field of identifier * identifier (** A class field x.field *)
   | MethodCall of identifier * identifier * expression list
-  | Lambda of identifier list * expression
-  | Object of identifier * expression list
-  | FString of f_string_type list
+  (** A method call class.method() *)
+  | Lambda of identifier list * expression (** Anonymous function *)
+  | Object of identifier * expression list (** Instance of a class *)
+  | FString of f_string_type list (** F string *)
 
 val equal_f_string_type : f_string_type -> f_string_type -> bool
 val equal_expression : expression -> expression -> bool
@@ -77,15 +80,18 @@ val pp_expression : Format.formatter -> expression -> unit
 val show_expression : expression -> string
 
 type statement =
-  | Expression of expression
-  | Assign of expression * expression
+  | Expression of expression (** Statement which is expression *)
+  | Assign of expression * expression (** Assign statement *)
   | Function of identifier * identifier list * statement list
+  (** A function declartion with its identifier and body *)
   | IfElse of expression * statement list * statement list
-  | Else of statement list
-  | While of expression * statement list
+  (** If else statemtn with a guard both if and else body *)
+  | Else of statement list (** Else statemtn with its body *)
+  | While of expression * statement list (** Else statemtn with a guard and its body *)
   | For of expression * expression list * statement list
-  | Class of identifier * statement list
-  | Return of expression
+  (** Else statemtn with a guards and its body *)
+  | Class of identifier * statement list (** Class with its identifier and contents *)
+  | Return of expression (** Return statement *)
 
 val equal_statement : statement -> statement -> bool
 val pp_statement : Format.formatter -> statement -> unit
