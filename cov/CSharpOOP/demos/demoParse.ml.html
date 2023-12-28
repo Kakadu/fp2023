@@ -54,9 +54,9 @@
 
 let () =
   let s = Stdio.In_channel.input_all Stdlib.stdin in
-  <span data-count="1">m</span>atch Csharp_lib.Parser.parse1 Csharp_lib.Parser.e_method s with
-  | <span data-count="1">R</span>esult.Ok x -&gt; Format.print<span data-count="1">f</span> "%a\n%!" Csharp_lib.Ast.pp_methods x
-  | <span data-count="0">E</span>rror _ -&gt; Format.print<span data-count="0">f</span> "Some error with parsing"
+  <span data-count="1">m</span>atch Csharp_lib.Parser.parse Csharp_lib.Parser.p_ast s with
+  | <span data-count="1">R</span>esult.Ok ast -&gt; Format.print<span data-count="1">f</span> "%a\n%!" Csharp_lib.Ast.pp_program ast
+  | <span data-count="0">E</span>rror _ -&gt; Format.print<span data-count="0">f</span> "Some error"
 ;;
 </code></pre>
       </div>
