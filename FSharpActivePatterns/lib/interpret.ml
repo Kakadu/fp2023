@@ -210,8 +210,8 @@ end = struct
     let* rigth_val = eval r env in
     let* left_val = eval l env in
     match op, left_val, rigth_val with
-    | Div, VInt _l, VInt 0 -> fail Division_by_zero
-    | Mod, VInt _l, VInt 0 -> fail Division_by_zero
+    | Div, VInt _, VInt 0 -> fail Division_by_zero
+    | Mod, VInt _, VInt 0 -> fail Division_by_zero
     | Add, VInt l, VInt r -> return @@ VInt (l + r)
     | Sub, VInt l, VInt r -> return @@ VInt (l - r)
     | Mul, VInt l, VInt r -> return @@ VInt (l * r)
@@ -270,7 +270,7 @@ end = struct
 
   and inter_match expr_match cases env =
     let* val_match = eval expr_match env in
-    let rec eval_match = function
+    let rec eval_match = function 
       | (pat, expr) :: cases ->
         run
           (bind_fun_params ~env (pat, val_match))

@@ -129,10 +129,7 @@ let parse_Const = (fun v -> Const v) <$> parse_const
 let parse_var = (fun v -> Var v) <$> p_var
 
 let parse_tuple parser =
-  lift2
-    (fun a b -> Tuple (a :: b))
-    (parse_token @@ parser)
-    (many1 (pstrtoken "," *> parser))
+  lift2 (fun a b -> Tuple (a :: b)) (parse_token parser) (many1 (pstrtoken "," *> parser))
 ;;
 
 let parse_list ps =
