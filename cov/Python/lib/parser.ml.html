@@ -1328,7 +1328,7 @@ let rec convert_pseudoast_to_ast = function
   | <span data-count="0">F</span>or (exp1, exp2, body) -&gt;
     For (exp1, exp2, List.ma<span data-count="0">p</span> (fun a -&gt; <span data-count="0">c</span>onvert_pseudoast_to_ast a) body)
   | <span data-count="0">W</span>hile (exp, body) -&gt; While (exp, List.ma<span data-count="0">p</span> (fun a -&gt; <span data-count="0">c</span>onvert_pseudoast_to_ast a) body)
-  | <span data-count="0">_</span> -&gt; failwith "failed trying to convert pseudo ast to ast"
+  | <span data-count="0">_</span> -&gt; Error
 ;;
 
 (* Taken names of expression &amp; statements *)
