@@ -1629,17 +1629,17 @@ let anon_func e =
 
 let p_interpolationStrElemEndingWithCurly =
   let* x = take_interpolString &lt;<span data-count="5">*</span> t_curlyLeft in
-  <span data-count="0">r</span>eturn @@ FStringElem (Str (String x))
+  <span data-count="0">r</span>eturn @@ Str (String x)
 ;;
 
 let p_interpolationVarElem =
   let* x = take_interpolIdentifier &lt;<span data-count="5">*</span> t_curlyRight in
-  <span data-count="0">r</span>eturn @@ FStringElem (Var (Identifier x))
+  <span data-count="0">r</span>eturn @@ Var (Identifier x)
 ;;
 
 let p_interpolationStrElemLast =
   let* x = take_string &lt;<span data-count="5">*</span> t_quote in
-  <span data-count="0">r</span>eturn @@ FStringElem (Str (String x))
+  <span data-count="0">r</span>eturn @@ Str (String x)
 ;;
 
 let p_fString =
