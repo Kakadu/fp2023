@@ -84,5 +84,5 @@ type statement =
 [@@deriving eq, show { with_path = false }]
 
 type flag =
-  | No (** no flag *)
-  | Return_f (** return flag *)
+  | No
+  | Return_f
