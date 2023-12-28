@@ -38,7 +38,7 @@ let rec convert_pseudoast_to_ast = function
   | For (exp1, exp2, body) ->
     For (exp1, exp2, List.map (fun a -> convert_pseudoast_to_ast a) body)
   | While (exp, body) -> While (exp, List.map (fun a -> convert_pseudoast_to_ast a) body)
-  | _ -> failwith "failed trying to convert pseudo ast to ast"
+  | _ -> Error
 ;;
 
 (* Taken names of expression & statements *)

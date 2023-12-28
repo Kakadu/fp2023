@@ -24,7 +24,7 @@ val equal_arith_op : arith_op -> arith_op -> bool
 val pp_arith_op : Format.formatter -> arith_op -> unit
 val show_arith_op : arith_op -> string
 
-type identifier = Identifier of string
+type identifier = Identifier of string (** A function or variable identifier *)
 
 val equal_identifier : identifier -> identifier -> bool
 val pp_identifier : Format.formatter -> identifier -> unit
@@ -92,6 +92,7 @@ type statement =
   (** Else statemtn with a guards and its body *)
   | Class of identifier * statement list (** Class with its identifier and contents *)
   | Return of expression (** Return statement *)
+  | Error (** Error *)
 
 val equal_statement : statement -> statement -> bool
 val pp_statement : Format.formatter -> statement -> unit
