@@ -1452,8 +1452,8 @@ end = struct
     <span data-count="27">l</span>et* rigth_val = eva<span data-count="27">l</span> r env in
     <span data-count="27">l</span>et* left_val = eva<span data-count="27">l</span> l env in
     <span data-count="27">m</span>atch op, left_val, rigth_val with
-    | <span data-count="0">D</span>iv, VInt _l, VInt 0 -&gt; fail Division_by_zero
-    | <span data-count="0">M</span>od, VInt _l, VInt 0 -&gt; fail Division_by_zero
+    | <span data-count="0">D</span>iv, VInt _, VInt 0 -&gt; fail Division_by_zero
+    | <span data-count="0">M</span>od, VInt _, VInt 0 -&gt; fail Division_by_zero
     | <span data-count="5">A</span>dd, VInt l, VInt r -&gt; return @@ VInt (l + r)
     | <span data-count="5">S</span>ub, VInt l, VInt r -&gt; return @@ VInt (l - r)
     | <span data-count="5">M</span>ul, VInt l, VInt r -&gt; return @@ VInt (l * r)
@@ -1512,7 +1512,7 @@ end = struct
 
   and inter_match expr_match cases env =
     <span data-count="3">l</span>et* val_match = eva<span data-count="3">l</span> expr_match env in
-    <span data-count="3">l</span>et rec eval_match = function
+    <span data-count="3">l</span>et rec eval_match = function 
       | <span data-count="5">(</span>pat, expr) :: cases -&gt;
         run
           (bind_fun_param<span data-count="5">s</span> ~env (pat, val_match))
