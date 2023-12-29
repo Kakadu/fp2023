@@ -259,10 +259,14 @@ and parse_statements stopper =
 let parse_programm = 
   parse_statements end_of_input >>| (fun c -> Programm c)
 
-let parse ?(parser=parse_programm) str =
+let parse_str ?(parser=parse_programm) str =
   match
     Angstrom.parse_string (parser) ~consume:Angstrom.Consume.All str
   with
   | Result.Ok x -> Result.Ok x
   | Error er -> Result.Error (`ParsingError er)
 ;;
+
+let parse str = parse_str ~parser:parse_programm str
+
+let parse_expression str = parse_str ~parser:(expression_parser () >>| fun e -> Expression e) str
