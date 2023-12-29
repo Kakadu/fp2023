@@ -1,4 +1,5 @@
 (** Copyright 2023, Kuarni, AlexShmak *)
+
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
 type bin_op =
@@ -8,14 +9,14 @@ type bin_op =
   | Div
   | Equal
   | NotEqual
-[@@deriving eq, show {with_path = false}]
+[@@deriving eq, show { with_path = false }]
 
 type typename =
   | Number of float
   | String of string
   | VarType
   | FuncType
-[@@deriving eq, show {with_path = false}]
+[@@deriving eq, show { with_path = false }]
 
 type expression =
   | BinOp of bin_op * expression * expression
@@ -25,22 +26,21 @@ type expression =
   | Var of string
   | FunctionCall of string * expression list
   | DebugExp of expression list
-[@@deriving eq, show {with_path = false}]
+  | Array_list of expression list
+[@@deriving eq, show { with_path = false }]
 
 type var_init =
-{
-  var_identifier: string;
-  is_const: bool;
-  var_type: typename;
-  value: expression option
-}
+  { var_identifier : string
+  ; is_const : bool
+  ; var_type : typename
+  ; value : expression option
+  }
 
 and fun_init =
-{
-  fun_identifier: string;
-  arguments: expression list;
-  body: statement option
-}
+  { fun_identifier : string
+  ; arguments : expression list
+  ; body : statement option
+  }
 
 and statement =
   | Block of statement list
