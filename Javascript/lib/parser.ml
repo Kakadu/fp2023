@@ -153,54 +153,42 @@ let mul_div_rem_op = [("*", Mul); ("/", Div)] (*precedence 12*)
 let add_sub_op = [("+", Add); ("-", Sub)] (*precedence 11*)
 let equality_op = [("==", Equal); ("!=", NotEqual)] (*precedence 8*)
 
-let list_of_ops = [mul_div_rem_op; add_sub_op; equality_op]
+let list_of_bops = [equality_op; add_sub_op; mul_div_rem_op] (*from lower to greater precedence*)
 
 let op_parse ops =
   choice
     (List.map (fun (js_op, op) -> string js_op *> (return op)) ops)
 
-let all_op_parser = op_parse @@ List.concat list_of_ops
-
-let for_every_op func list_for_analizing = 
-  let rec parse last_result = function
-  | a :: tail -> parse (func (List.map (fun (_, op) -> op) a) [] last_result) tail
-  | [] -> last_result in
-  parse list_for_analizing list_of_ops
-
-let parse_list_of_mini_expressions parsed_list =
-  let rec analize_bin_op ops head = function
-    | a :: b :: c :: tail -> 
-      (let cur_op = return_eq_element b uop ops in
-      match cur_op with
-      | Some op -> analize_bin_op ops head ((bop op a c) :: tail)
-      | None -> analize_bin_op ops (head @ [a]) (b :: c :: tail))
-    | _ as a -> head @ a in
-    (*TODO: think how to replace @ operator and mb rewrite all expr parser*)
-  match for_every_op analize_bin_op parsed_list with
-  | [a] -> return a
-  | _ -> fail "fail when parse mini expression"
-(*TODO: error*)
+let chainl1 parser op =
+  let rec go acc = (token op >>| fun op -> Some op) <|> return None >>= function
+  | Some f -> parser >>| (fun x -> BinOp(f, acc, x)) >>= go
+  | _ -> return acc in
+  parser >>= fun init -> go init
 
 let rec parse_arguments = fun () ->
-  parens(sep_by (token_str ",") (parse_expression ())) <?> "incorrect function arguments"
+  parens(sep_by (token_str ",") (expression_parser ())) <?> "incorrect function arguments"
 
-and parse_expression = fun () ->
-  fix(fun self ->
-    many1(token (choice [
-      parens self;
-      all_op_parser >>| uop;
+and bop_parser = function
+  | a :: b -> chainl1 (bop_parser b) (op_parse a)
+  | _ -> mini_expression_parser ()
+
+and mini_expression_parser = fun () ->
+  token (choice [
+      parens @@ expression_parser ();
+      lift2 fun_call valid_identifier (parse_arguments ());
       parse_number >>| const;
       parse_str >>| const;
-      lift2 fun_call valid_identifier (parse_arguments ());
       valid_identifier >>| var
-    ])) >>= parse_list_of_mini_expressions)
-   <?> "incorrect expression"
-(*TODO: correct next statement recognise and stop ("let a = 3 + 4 \n 5 + 6") (scan?) (I've tried and failed)*)
+    ]) <?> "invalid part of expression"
+
+and expression_parser = fun () ->
+  fix(fun _ -> bop_parser list_of_bops)
+  <?> "incorrect expression"
   
 let var_parser (init_word: string) = 
   valid_identifier
   >>= (fun identifier ->
-    (token_str "=" *> parse_expression () <* to_end_of_stm >>| some) 
+    (token_str "=" *> expression_parser () <* to_end_of_stm >>| some) 
     <|> (to_end_of_stm *> return None) <?> "incorrect definition"
     >>| (fun expr -> VarDeck 
     {
@@ -213,7 +201,7 @@ let var_parser (init_word: string) =
 (*TODO: var support*)
 
 let parse_return =
-  token @@ parse_expression () >>| (fun c -> Return c) <* to_end_of_stm
+  token @@ expression_parser () >>| (fun c -> Return c) <* to_end_of_stm
 
 let parse_empty_stm =
   to_end_of_stm >>| fun _ -> EmptyStm
@@ -234,7 +222,7 @@ and parse_block_or_stm = fun () ->
   <|> parse_stm ()
 
 and if_parser = fun () ->
-  token @@ parens (parse_expression ()) >>= fun condition ->
+  token @@ parens (expression_parser ()) >>= fun condition ->
    parse_block_or_stm () <?> "invalid then statement" >>= fun then_stm ->
     ((token_str "else" *> token1(parse_block_or_stm () >>| some)) <|> return None) <?> "invalid else statement"
      >>| fun else_stm ->
@@ -243,13 +231,14 @@ and if_parser = fun () ->
 and parse_stm = fun () ->
   token (
     parse_empty_stm <|>
-    (parse_expression () >>| expression) <|>
+    (expression_parser () >>| expression) <|>
     (read_word >>= 
     (fun word -> match word with
       | "let" | "const" -> token1 @@ var_parser word <?> "wrong var statement"
       | "function" -> token1 @@ func_parser () <?> "wrong function statement"
       | "if" -> token1 @@ if_parser () <?> "wrong if statement"
       | "return" -> token parse_return <?> "wrong return statement"
+      | "" ->  peek_char_fail >>= fun ch -> fail @@ "there is unexpected symbol: '"^(Char.escaped ch)^"'"
       | _ -> fail @@ "there is an invalid keyword: \""^word^"\""
     ))) <* empty <?> "incorrect statement"
 
