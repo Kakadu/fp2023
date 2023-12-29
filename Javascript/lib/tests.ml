@@ -39,125 +39,218 @@ else (
 
 (** Number parser *)
 
-let%test "number 4" =
-  eq_ok
-  "4"
-  (Programm[Expression(Const(Number 4.))])
+let%expect_test _ =
+  pp ~parse:parse_expression 
+  "4";
+  [%expect{|(Expression (Const (Number 4.)))|}]
+;;
 
-let%test "number 4." = 
-  eq_ok
-  "4."
-  (Programm[Expression(Const(Number 4.))])
+let%expect_test _ =
+  pp ~parse:parse_expression 
+  "4.";
+  [%expect{|(Expression (Const (Number 4.)))|}]
+;;
   
-let%test "number .4" = 
-  eq_ok
-  ".4"
-  (Programm[Expression(Const(Number 0.4))])
+let%expect_test _ =
+  pp ~parse:parse_expression 
+  ".4";
+  [%expect{|(Expression (Const (Number 0.4)))|}]
+;;
 
-let%test "number 0.4" = 
-  eq_ok
-  "0.4"
-  (Programm[Expression(Const(Number 0.4))])
+let%expect_test _ =
+  pp ~parse:parse_expression 
+  "0.4";
+  [%expect{|(Expression (Const (Number 0.4)))|}]
+;;
 
-let%test "number 10.01" =
-  eq_ok
-  "10.01"
-  (Programm[Expression(Const(Number 10.01))])
+let%expect_test _ =
+  pp ~parse:parse_expression 
+  "10.01";
+  [%expect{|(Expression (Const (Number 10.01)))|}]
+;;
 
-let%test "number 1000000" =
-  eq_ok
-  "1000000"
-  (Programm[Expression(Const(Number 1000000.))])
+let%expect_test _ =
+  pp ~parse:parse_expression 
+  "1000000";
+  [%expect{|(Expression (Const (Number 1000000.)))|}]
+;;
 
-let%test "int only dot fail" =
-  eq_error
-  "."
-  "incorrect statement: there is an invalid keyword: \"\""
+let%expect_test _ =
+  pp ~parse:parse_expression 
+  ".";
+  [%expect{|Error: incorrect expression > invalid part of expression: no more choices|}]
+;;
 
 (** Expressions *)
 
-let%test "sum of number 1" =
-  eq_ok
-  "40 + 50"
-  (Programm[Expression(BinOp(Add, Const(Number 40.), Const(Number 50.)))])
-
-let%test "sum of number 2" =
-  eq_ok
-  "40+50"
-  (Programm[Expression(BinOp(Add, Const(Number 40.), Const(Number 50.)))])
-
-let%test "priority 1 + 2 + 3" =
-  eq_ok
-  "1 + 2 + 3"
-  (Programm[Expression(BinOp(Add, BinOp(Add, 
-  Const(Number 1.), Const(Number 2.)), Const(Number 3.)))])
-
-let%test "priority 4 + 5 * 2 + 3" =
-  eq_ok
-  "4 + 5 * 2 + 3"
-  (Programm[Expression(BinOp(Add, BinOp(Add, 
-  Const(Number 4.), BinOp(
-    Mul, Const(Number 5.), Const(Number 2.))), Const(Number 3.)))])
-
-let%test "priority 4 + 5 + 2 * 3" =
-  eq_ok
-  "4 + 5 + 2 * 3"
-  (Programm
-   [(Expression
-       (BinOp (Add, (BinOp (Add, (Const (Number 4.)), (Const (Number 5.)))),
-          (BinOp (Mul, (Const (Number 2.)), (Const (Number 3.)))))))
-     ])
-
-
-
-let%test "if1" =
-  eq_ok
-  "if (a == 4) let a = b + 6; else let b = 6+7;"
-  ((
-  Programm
-    [(If ((BinOp (Equal, (Var "a"), (Const (Number 4.)))),
-        (VarDeck
-           { var_identifier = "a"; is_const = false; var_type = VarType;
-             value = (Some (BinOp (Add, (Var "b"), (Const (Number 6.))))) }),
-        (Some (VarDeck
-                 { var_identifier = "b"; is_const = false; var_type = VarType;
-                   value =
-                   (Some (BinOp (Add, (Const (Number 6.)), (Const (Number 7.))
-                            )))
-                   }))
-        ))
-      ]))
+let%expect_test _ =
+  pp ~parse:parse_expression
+  "40 + 50";
+  [%expect{|(Expression (BinOp (Add, (Const (Number 40.)), (Const (Number 50.)))))|}]
 ;;
 
-let%test "factorial" =
-  eq_ok
+let%expect_test _ =
+  pp ~parse:parse_expression
+  "40+50";
+  [%expect{|(Expression (BinOp (Add, (Const (Number 40.)), (Const (Number 50.)))))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression
+  "1 + 2 + 3";
+  [%expect{|
+    (Expression
+       (BinOp (Add, (BinOp (Add, (Const (Number 1.)), (Const (Number 2.)))),
+          (Const (Number 3.)))))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression
+  "4 + 5 * 2 + 3";
+  [%expect{|
+    (Expression
+       (BinOp (Add,
+          (BinOp (Add, (Const (Number 4.)),
+             (BinOp (Mul, (Const (Number 5.)), (Const (Number 2.)))))),
+          (Const (Number 3.)))))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression
+  "4 + 5 + 2 * 3";
+  [%expect{|
+    (Expression
+       (BinOp (Add, (BinOp (Add, (Const (Number 4.)), (Const (Number 5.)))),
+          (BinOp (Mul, (Const (Number 2.)), (Const (Number 3.)))))))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression
+  "(4 + 5 + 2 * 3)";
+  [%expect{|
+    (Expression
+       (BinOp (Add, (BinOp (Add, (Const (Number 4.)), (Const (Number 5.)))),
+          (BinOp (Mul, (Const (Number 2.)), (Const (Number 3.)))))))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression
+  "4 + ;5 + 2 * 3";
+  [%expect{|
+    Error: incorrect expression > invalid part of expression: no more choices|}]
+;;
+
+let%expect_test _ =
+  pp
+  "4 + 5; + 2 * 3";
+  [%expect{|
+    Error: incorrect statement: there is unexpected symbol: '+'|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression
+  "4 + ; + 2 * 3";
+  [%expect{|
+    Error: incorrect expression > invalid part of expression: no more choices|}]
+;;
+
+let%expect_test _ =
+  pp
+  "4 + 5 ; 2 * 3";
+  [%expect{|
+    (Programm
+       [(Expression (BinOp (Add, (Const (Number 4.)), (Const (Number 5.)))));
+         EmptyStm;
+         (Expression (BinOp (Mul, (Const (Number 2.)), (Const (Number 3.)))))])|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression
+  "(4 + 5) + 2 * 3";
+  [%expect{|
+    (Expression
+       (BinOp (Add, (BinOp (Add, (Const (Number 4.)), (Const (Number 5.)))),
+          (BinOp (Mul, (Const (Number 2.)), (Const (Number 3.)))))))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression
+  "4 + 5 * (2 + 3)";
+  [%expect{|
+    (Expression
+       (BinOp (Add, (Const (Number 4.)),
+          (BinOp (Mul, (Const (Number 5.)),
+             (BinOp (Add, (Const (Number 2.)), (Const (Number 3.))))))
+          )))|}]
+;;
+
+let%expect_test _ =
+  pp
+  "4 + (5 + 2) * 3)";
+  [%expect{|
+    Error: incorrect statement: there is unexpected symbol: ')'|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression
+  "(4 + 5) + (2 * 3)";
+  [%expect{|
+    (Expression
+       (BinOp (Add, (BinOp (Add, (Const (Number 4.)), (Const (Number 5.)))),
+          (BinOp (Mul, (Const (Number 2.)), (Const (Number 3.)))))))|}]
+;;
+
+
+
+let%expect_test "if1" =
+  pp
+  "if (a == 4) let a = b + 6; else let b = 6+7;";
+  [%expect{|
+    (Programm
+       [(If ((BinOp (Equal, (Var "a"), (Const (Number 4.)))),
+           (VarDeck
+              { var_identifier = "a"; is_const = false; var_type = VarType;
+                value = (Some (BinOp (Add, (Var "b"), (Const (Number 6.))))) }),
+           (Some (VarDeck
+                    { var_identifier = "b"; is_const = false; var_type = VarType;
+                      value =
+                      (Some (BinOp (Add, (Const (Number 6.)), (Const (Number 7.))
+                               )))
+                      }))
+           ))
+         ])|}]
+;;
+
+let%expect_test "factorial" =
+  pp
   "let fact = 4
 
   function calculateFact(fact) {
       if
       (fact != 0)
           return fact * calculateFact(fact - 1);else return 1;
-  }"
-  ((Programm
-  [(VarDeck
-      { var_identifier = "fact"; is_const = false; var_type = VarType;
-        value = (Some (Const (Number 4.))) });
-    (FunDeck
-       { fun_identifier = "calculateFact"; arguments = [(Var "fact")];
-         body =
-         (Some (Block
-                  [(If (
-                      (BinOp (NotEqual, (Var "fact"), (Const (Number 0.)))),
-                      (Return
-                         (BinOp (Mul, (Var "fact"),
-                            (FunctionCall ("calculateFact",
-                               [(BinOp (Sub, (Var "fact"),
-                                   (Const (Number 1.))))
-                                 ]
-                               ))
-                            ))),
-                      (Some (Return (Const (Number 1.))))))
-                    ]))
-         })
-    ]))
+  }";
+  [%expect{|
+    (Programm
+       [(VarDeck
+           { var_identifier = "fact"; is_const = false; var_type = VarType;
+             value = (Some (Const (Number 4.))) });
+         (FunDeck
+            { fun_identifier = "calculateFact"; arguments = [(Var "fact")];
+              body =
+              (Some (Block
+                       [(If (
+                           (BinOp (NotEqual, (Var "fact"), (Const (Number 0.)))),
+                           (Return
+                              (BinOp (Mul, (Var "fact"),
+                                 (FunctionCall ("calculateFact",
+                                    [(BinOp (Sub, (Var "fact"),
+                                        (Const (Number 1.))))
+                                      ]
+                                    ))
+                                 ))),
+                           (Some (Return (Const (Number 1.))))))
+                         ]))
+              })
+         ])|}]
 ;;
