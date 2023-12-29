@@ -63,6 +63,7 @@ let between l r p = pstoken l *> p <* pstoken r
 let pparens p = between "(" ")" p
 let pbrackets p = between "[" "]" p
 let lit_int s = LitInt (int_of_string s)
+let lit_bool s = LitBool (bool_of_string @@ String.lowercase_ascii s)
 let lit_str s = LitString s
 let lit_char s = LitChar s
 let expr_var id = ExprVar id
@@ -102,9 +103,10 @@ let pname =
 (* Literals *)
 
 let pint = lit_int <$> ptoken @@ take_while1 is_digit
+let pbool = lit_bool <$> (pstoken "True" <|> pstoken "False")
 let pstring = lit_str <$> ptoken @@ between "\"" "\"" (take_till (Char.equal '"'))
 let pchar = lit_char <$> ptoken @@ between "\'" "\'" any_char
-let plit = choice [ pint; pstring; pchar ]
+let plit = choice [ pint; pbool; pstring; pchar ]
 
 (* Patterns *)
 

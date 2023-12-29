@@ -41,7 +41,6 @@ and expr =
   | ExprApp of expr * expr (** Function application [f x] *)
   | ExprIf of expr * expr * expr (** If expression [if x then y else z] *)
   | ExprTuple of expr list (** Tuple [(x, y)] *)
-  | ExprList of expr list (** List [[x, y, z]] *)
   | ExprCons of expr * expr (** List construction [x:xs] *)
   | ExprNil (** Empty list [[]] *)
   | ExprCase of expr * alt list (** Case expression [case (m,ys) of
@@ -69,6 +68,7 @@ and pat =
 (** Type representing literals *)
 and lit =
   | LitInt of int  (** Integer literal [7] *)
+  | LitBool of bool (** Boolean literal [True] *)
   | LitChar of char  (** Character literal ['a'] *)
   | LitString of string  (** String literal ["abc"] *)
   | LitFloat of float  (** Float literal [3.14] *)

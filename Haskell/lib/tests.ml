@@ -166,3 +166,17 @@ let%expect_test _ =
               (ExprVar "z")))
            )))) |}]
 ;;
+
+let%expect_test _ =
+  ptest pdecl pp_decl {|real n = if True || False then false else true|};
+  [%expect
+    {|
+    (DeclLet
+       ((PatVar "real"),
+        (ExprFunc
+           ((PatVar "n"),
+            (ExprIf (
+               (ExprBinOp (Or, (ExprLit (LitBool true)),
+                  (ExprLit (LitBool false)))),
+               (ExprVar "false"), (ExprVar "true"))))))) |}]
+;;

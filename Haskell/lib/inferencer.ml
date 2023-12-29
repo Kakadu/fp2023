@@ -338,8 +338,11 @@ let infer =
       let trez = Subst.apply s3 tv in
       let* final_subst = Subst.compose_all [ s3; s2; s1 ] in
       return (final_subst, trez)
-    | ExprLit (LitInt _) -> return (Subst.empty, TyLit "int")
-    | ExprLit (LitString _) -> return (Subst.empty, TyLit "string")
+    | ExprLit lit ->
+      (match lit with
+      | LitInt _ -> return (Subst.empty, TyLit "int")
+      | LitBool _ -> return (Subst.empty, TyLit "bool")
+      | LitString _ -> return (Subst.empty, TyLit "string"))
     | ExprIf (c, th, el) ->
       let* s1, t1 = helper env c in
       let* s2, t2 = helper env th in
@@ -466,4 +469,10 @@ let%expect_test _ =
   in x + y + z + a|};
   [%expect {|
     (S ([ ], (TyArrow ((TyLit "int"), (TyLit "int"))))) |}]
+;;
+
+let%expect_test _ =
+  pp_parse_and_infer {|real n = if True || False then 1 else 2|};
+  [%expect {|
+    (S ([ 1; ], (TyArrow ((TyVar 1), (TyLit "int"))))) |}]
 ;;
