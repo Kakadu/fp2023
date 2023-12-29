@@ -15,10 +15,10 @@ let eq_ok str exp =
     Format.eprintf "%a" pp_statement exp;
     if Result.is_error(result) then (
       Format.eprintf "\nBut the parser ended with an error:\n";
-      pp_result_error result
+      pp_error result
     ) else (
       Format.eprintf "\nBut the parser returned:\n";
-      pp_ok str; 
+      pp_ok result; 
     );
     Format.eprintf "\n";
     false

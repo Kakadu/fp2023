@@ -4,13 +4,19 @@
 open Parser
 open Ast
 
-let pp_ok ?(parser) str =
-  Format.printf "%a" pp_statement @@ Result.get_ok(parse ?parser str)
+let pp_ok result =
+  Format.printf "%a" pp_statement @@ Result.get_ok(result)
 ;;
 
-let pp_result_error result = match Result.get_error result with
-  | `ParsingError s -> Format.eprintf "%s" s
+let pp_error result = match Result.get_error result with
+  | `ParsingError s -> Format.eprintf "Error: %s" s
 ;;
 
-let pp_error str = pp_result_error @@ parse str
+let pp ?(parse=parse) str =
+  let result = parse str in
+  if Result.is_ok(result) then
+    pp_ok result
+  else (
+    pp_error result
+ )
 ;;
