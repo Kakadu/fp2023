@@ -1,0 +1,30 @@
+(lang dune 3.7)
+
+(generate_opam_files true)
+
+(cram enable)
+
+(license LGPL-3.0-or-later)
+
+(authors "Aleksandr Rozhkov")
+
+(homepage "FIXME Homepage")
+
+(package
+ (name DRozhkov) ; FIXME and regenerate .opam file using 'dune build @install'
+ (synopsis "MiniML")
+ (description
+  "FIXME. A longer description, for example, which are the most interesing features being supported, etc.")
+ (version 0.1)
+ (depends
+  dune
+  angstrom
+  (ppx_inline_test :with-test)
+  ppx_expect
+  ppx_deriving
+  bisect_ppx
+  (odoc :with-doc)
+  (ocamlformat :build)
+  ; base
+  ; After adding dependencies to 'dune' files and the same dependecies here too
+  ))

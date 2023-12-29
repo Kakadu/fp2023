@@ -1,0 +1,34 @@
+(lang dune 3.7)
+
+(generate_opam_files true)
+
+(cram enable)
+
+(license LGPL-3.0-or-later)
+
+(authors "Ilya Syresenkov")
+
+(maintainers "Ilya Syresenkov")
+
+(bug_reports "Write bug reports in Github issues")
+
+(homepage "github.com/Kakadu/fp2023")
+
+(package
+ (name DSyresenkov) ; FIXME and regenerate .opam file using 'dune build @install'
+ (synopsis "MiniML interpreter")
+ (description
+  "FIXME. A longer description, for example, which are the most interesing features being supported, etc.")
+ (version 0.1)
+ (depends
+  dune
+  angstrom
+  (ppx_inline_test :with-test)
+  ppx_expect
+  ppx_deriving
+  bisect_ppx
+  (odoc :with-doc)
+  (ocamlformat :build)
+  ; base
+  ; After adding dependencies to 'dune' files and the same dependecies here too
+  ))

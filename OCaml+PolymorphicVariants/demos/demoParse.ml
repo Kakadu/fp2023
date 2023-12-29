@@ -1,12 +1,13 @@
-(** Copyright 2021-2022, Kakadu and contributors *)
+(** Copyright 2021-2022, Nikita Nemakin *)
 
 (** SPDX-License-Identifier: CC0-1.0 *)
 
-open Lambda_lib
+open Ocaml_pv.Parser
+open Ocaml_pv.Ast
 
 let () =
-  let s = Stdio.In_channel.input_all Stdlib.stdin in
-  match Lambda_lib.Parser.parse s with
-  | Result.Ok ast -> Format.printf "%a\n%!" Printast.pp_named ast
-  | Error _ -> Format.printf "Some error"
+  let res = parse "let rec fac n = if n < 2 then 1 else n * fac (n - 1) " in
+  match res with
+  | Ok ast -> Format.printf "%a\n%!" pp_structure ast
+  | Error msg -> Format.printf "Error %s\n" msg
 ;;

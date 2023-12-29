@@ -1,1 +1,0 @@
-Dummy text, it doesn't affect execution of ./demoAO.exe

@@ -1,34 +1,25 @@
 (lang dune 3.7)
 
+(name OCamlTyEff)
+
 (generate_opam_files true)
 
 (cram enable)
 
-; (license LGPL-3.0-or-later)
+(authors "Andrei <therain.i@yahoo.com>" "Danil S <danil.slinchuk@gmail.com")
 
-(authors "Andrei Sukharev" "Danil Slinchuk")
+(maintainers
+ "Andrei <therain.i@yahoo.com>"
+ "Danil S <danil.slinchuk@gmail.com")
 
-(maintainers "Andrei Sukharev" "Danil Slinchuk")
+(license MIT)
 
-(bug_reports "FIXME where to put bug reports about the code")
+(homepage "https://github.com/therain7/OCamlTyEff")
 
-(homepage "FIXME Homepage")
+(bug_reports "https://github.com/therain7/OCamlTyEff/issues")
 
 (package
  (name OCamlTyEff)
- (synopsis "FIXME An interpreter for language")
- (description
-  "FIXME. A longer description, for example, which are the most interesing features being supported, etc.")
- (version 0.1)
- (depends
-  dune
-  angstrom
-  (ppx_inline_test :with-test)
-  ppx_expect
-  ppx_deriving
-  bisect_ppx
-  (odoc :with-doc)
-  (ocamlformat :build)
-  ; base
-  ; After adding dependencies to 'dune' files and the same dependecies here too
-  ))
+ (synopsis "OCaml interpreter with support for typed effects")
+ (description "OCaml interpreter with support for typed effects")
+ (depends ocaml dune base angstrom ppx_deriving ppx_expect bisect_ppx))

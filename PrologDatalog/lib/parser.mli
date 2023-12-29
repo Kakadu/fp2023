@@ -1,18 +1,19 @@
-(** Copyright 2021-2023, Kakadu and contributors *)
+(** Copyright 2023-2024, Pogorelov Ilya *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-type error = [ `ParsingError of string ]
-
 val pp_error : Format.formatter -> [< `ParsingError of string ] -> unit
 
-(** Main entry of parser *)
-val parse : string -> (Ast.name Ast.t, [> error ]) result
+type error = [ `ParsingError of string ]
 
-type dispatch =
-  { apps : dispatch -> Ast.name Ast.t Angstrom.t
-  ; single : dispatch -> Ast.name Ast.t Angstrom.t
-  }
+val chainl1 : Ast.term Angstrom.t -> Ast.atom Angstrom.t -> Ast.term Angstrom.t
 
-(* A collection of miniparsers *)
-val parse_lam : dispatch
+(*Parsers*)
+val atom : Ast.atom Angstrom.t
+val const : Ast.const Angstrom.t
+val var : Ast.term Angstrom.t
+val relation : Ast.term Angstrom.t
+val term : Ast.term Angstrom.t
+val many_term_c : Ast.term list -> Ast.many_term
+val parse_prolog : Ast.many_term Angstrom.t
+val parse_program : string -> unit

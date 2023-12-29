@@ -1,40 +1,34 @@
-(** Copyright 2021-2022, Kakadu and contributors *)
+(** Copyright 2023-2024, Danil P *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-(** ***** UNIT TESTS COULD GO HERE (JUST AN EXAMPLE) *)
-let rec fact n = if n = 1 then 1 else n * fact (n - 1)
+open HaskellLib
+open Ast
 
-let%test _ = fact 5 = 120
-
-(* These is a simple unit test that tests a single function 'fact'
-  If you want to test something large, like interpretation of a piece
-  of a minilanguge, it is not longer a unit tests but an integration test.
-  Read about dune's cram tests and put the test into `demos/somefile.t`.
-*)
-
-open Lambda_lib
-open Parser
-
-let parse_optimistically str = Result.get_ok (parse str)
-let pp = Printast.pp_named
-
-let%expect_test _ =
-  Format.printf "%a" pp (parse_optimistically "x y");
-  [%expect {| (App ((Var x), (Var y))) |}]
+let ptest s e =
+  match Parser.parse s with
+  | Ok a -> List.equal equal_decl e a
+  | Error err ->
+    Format.printf "%s\n" err;
+    false
 ;;
 
-let%expect_test _ =
-  Format.printf "%a" pp (parse_optimistically "(x y)");
-  [%expect {| (App ((Var x), (Var y))) |}]
-;;
+let%test _ = ptest "x = 2" [ DeclLet (PatVar "x", ExprLit (LitInt 2)) ]
 
-let%expect_test _ =
-  Format.printf "%a" pp (parse_optimistically "(\\x . x x)");
-  [%expect {| (Abs (x, (App ((Var x), (Var x))))) |}]
-;;
-
-let%expect_test _ =
-  Format.printf "%a" pp (parse_optimistically "(λf.λx. f (x x))");
-  [%expect {| (Abs (f, (Abs (x, (App ((Var f), (App ((Var x), (Var x))))))))) |}]
+let%test _ =
+  ptest
+    "fact n = if (n < 2) then 1 else fact (n - 1) * n"
+    [ DeclLet
+        ( PatVar "fact"
+        , ExprFunc
+            ( PatVar "n"
+            , ExprIf
+                ( ExprBinOp (Lt, ExprVar "n", ExprLit (LitInt 2))
+                , ExprLit (LitInt 1)
+                , ExprBinOp
+                    ( Mul
+                    , ExprApp
+                        (ExprVar "fact", ExprBinOp (Sub, ExprVar "n", ExprLit (LitInt 1)))
+                    , ExprVar "n" ) ) ) )
+    ]
 ;;

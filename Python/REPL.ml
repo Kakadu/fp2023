@@ -1,4 +1,4 @@
-open Base
+(* open Base
 open Lambda_lib
 
 let run_repl _ =
@@ -54,3 +54,4 @@ let () =
   in
   (if opts.batch then run_single else run_repl) eval
 ;;
+*)
