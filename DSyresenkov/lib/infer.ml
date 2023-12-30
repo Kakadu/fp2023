@@ -308,7 +308,7 @@ let infer_pattern =
          let* tv = fresh_var in
          let env = TypeEnv.extend env (x, S (VarSet.empty, tv)) in
          return (env, tv)
-       | Some _ -> fail PatternRebound)
+       | Some (S (_, ty)) -> return (env, ty))
     | PCons (p1, p2, ps) ->
       let p1, ps, plast =
         match List.rev ps with
@@ -555,6 +555,17 @@ let%expect_test _ =
       | a :: b :: tl -> a, b, tl
     |};
   [%expect {| '3 list -> '3 * '3 * '3 list |}]
+;;
+
+let%expect_test _ =
+  pp_parse_and_infer
+    {|
+    let rec even_length xs = match xs with 
+    | h :: h :: tl -> even_length tl
+    | h :: [] -> false
+    | _ -> true
+    |};
+  [%expect {| '3 list -> bool |}]
 ;;
 
 (* Errors *)
