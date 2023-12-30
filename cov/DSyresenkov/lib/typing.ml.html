@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8"/>
     <title>typing.ml &mdash; Coverage report</title>
-    <meta name="description" content="93.94% coverage in lib/typing.ml">
+    <meta name="description" content="91.67% coverage in lib/typing.ml">
     <link rel="stylesheet" href="../coverage.css"/>
     <script src="../highlight.pack.js"></script>
     <script>hljs.initHighlightingOnLoad();</script>
@@ -15,11 +15,11 @@
           <span class="dirname">lib/</span>typing.ml
         </a>
       </h1>
-      <h2>93.94%</h2>
+      <h2>91.67%</h2>
     </div>
     <div id="navbar">
-      <span class="some-visited" style="top:9.52%"></span>
-      <span class="unvisited" style="bottom:25.40%"></span>
+      <span class="some-visited" style="top:13.33%"></span>
+      <span class="unvisited" style="bottom:28.33%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -29,21 +29,21 @@
 <a id="L3"></a><span > </span>
 <a id="L4"></a><span > </span>
 <a id="L5"></a><span > </span>
-<a id="L6"></a><span class="some-visited"> </span>
+<a id="L6"></a><span > </span>
 <a id="L7"></a><span > </span>
-<a id="L8"></a><span > </span>
+<a id="L8"></a><span class="some-visited"> </span>
 <a id="L9"></a><span > </span>
 <a id="L10"></a><span > </span>
 <a id="L11"></a><span > </span>
 <a id="L12"></a><span > </span>
-<a id="L13"></a><span class="visited"> </span>
+<a id="L13"></a><span > </span>
 <a id="L14"></a><span > </span>
-<a id="L15"></a><span > </span>
+<a id="L15"></a><span class="visited"> </span>
 <a id="L16"></a><span > </span>
 <a id="L17"></a><span > </span>
 <a id="L18"></a><span > </span>
 <a id="L19"></a><span > </span>
-<a id="L20"></a><span class="visited"> </span>
+<a id="L20"></a><span > </span>
 <a id="L21"></a><span > </span>
 <a id="L22"></a><span class="visited"> </span>
 <a id="L23"></a><span > </span>
@@ -52,41 +52,38 @@
 <a id="L26"></a><span class="visited"> </span>
 <a id="L27"></a><span > </span>
 <a id="L28"></a><span class="visited"> </span>
-<a id="L29"></a><span class="visited"> </span>
-<a id="L30"></a><span > </span>
-<a id="L31"></a><span > </span>
+<a id="L29"></a><span > </span>
+<a id="L30"></a><span class="visited"> </span>
+<a id="L31"></a><span class="visited"> </span>
 <a id="L32"></a><span > </span>
 <a id="L33"></a><span > </span>
-<a id="L34"></a><span class="visited"> </span>
+<a id="L34"></a><span > </span>
 <a id="L35"></a><span > </span>
-<a id="L36"></a><span > </span>
-<a id="L37"></a><span class="visited"> </span>
+<a id="L36"></a><span class="visited"> </span>
+<a id="L37"></a><span > </span>
 <a id="L38"></a><span > </span>
 <a id="L39"></a><span class="visited"> </span>
-<a id="L40"></a><span class="visited"> </span>
-<a id="L41"></a><span > </span>
-<a id="L42"></a><span > </span>
-<a id="L43"></a><span class="visited"> </span>
-<a id="L44"></a><span > </span>
+<a id="L40"></a><span > </span>
+<a id="L41"></a><span class="visited"> </span>
+<a id="L42"></a><span class="visited"> </span>
+<a id="L43"></a><span class="unvisited"> </span>
+<a id="L44"></a><span class="visited"> </span>
 <a id="L45"></a><span class="visited"> </span>
-<a id="L46"></a><span class="visited"> </span>
-<a id="L47"></a><span class="unvisited"> </span>
+<a id="L46"></a><span > </span>
+<a id="L47"></a><span class="visited"> </span>
 <a id="L48"></a><span class="visited"> </span>
-<a id="L49"></a><span > </span>
+<a id="L49"></a><span class="visited"> </span>
 <a id="L50"></a><span > </span>
 <a id="L51"></a><span > </span>
-<a id="L52"></a><span class="visited"> </span>
+<a id="L52"></a><span > </span>
 <a id="L53"></a><span class="visited"> </span>
 <a id="L54"></a><span class="visited"> </span>
-<a id="L55"></a><span > </span>
-<a id="L56"></a><span class="visited"> </span>
+<a id="L55"></a><span class="visited"> </span>
+<a id="L56"></a><span > </span>
 <a id="L57"></a><span class="visited"> </span>
-<a id="L58"></a><span class="visited"> </span>
+<a id="L58"></a><span > </span>
 <a id="L59"></a><span > </span>
 <a id="L60"></a><span > </span>
-<a id="L61"></a><span class="visited"> </span>
-<a id="L62"></a><span > </span>
-<a id="L63"></a><span > </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -151,15 +148,14 @@
 <a href="#L58">58</a>
 <a href="#L59">59</a>
 <a href="#L60">60</a>
-<a href="#L61">61</a>
-<a href="#L62">62</a>
-<a href="#L63">63</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2021-2023, Ilya Syresenkov *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
 (* Set of variables *)
+open Format
+
 <span data-count="0">t</span>ype id = <span data-count="1">s</span>tring [@@deriving show { with_path = false }]
 
 module VarSet = struct
@@ -190,32 +186,27 @@ end
   | NotImplemented (** Still not implemented features *)
 [@@deriving show { with_path = false }<span data-count="25">]</span>
 
-let rec pp_type fmt typ =
-  <span data-count="47">l</span>et open Format in
-  let fmt_arrpw = function
-    | <span data-count="1">T</span>Arrow _ -&gt; format_of_string "(%a)"
-    | <span data-count="19">_</span> -&gt; format_of_string "%a"
-  in
-  match typ with
-  | <span data-count="11">T</span>Base x -&gt;
-    (match x with
+let rec pp_ty fmt = function
+  | <span data-count="11">T</span>Base ty -&gt;
+    (match ty with
      | <span data-count="6">B</span>Int -&gt; fprintf fmt "int"
      | <span data-count="5">B</span>Bool -&gt; fprintf fmt "bool"
      | <span data-count="0">B</span>Unit -&gt; fprintf fmt "unit")
+  | <span data-count="14">T</span>Var x -&gt; fprintf fmt "'%d" x
+  | <span data-count="13">T</span>Arrow (l, r) -&gt;
+    (match l, r with
+     | <span data-count="1">T</span>Arrow (_, _), _ -&gt; fprintf fmt "(%a) -&gt; %a" pp_ty l pp_ty r
+     | <span data-count="12">_</span>, _ -&gt; fprintf fmt "%a -&gt; %a" pp_ty l pp_ty r)
   | <span data-count="2">T</span>Tuple (ty1, ty2, tys) -&gt;
     fprintf
       fmt
       "%a"
       (pp_print_lis<span data-count="2">t</span>
-         ~pp_sep:(fun _ _ -&gt; <span data-count="4">f</span>printf fmt " * ")
-         (fun fmt typ -&gt; <span data-count="6">p</span>p_type fmt typ))
+         ~pp_sep:(fun fmt _ -&gt; <span data-count="4">f</span>printf fmt " * ")
+         (fun fmt ty -&gt; <span data-count="6">p</span>p_ty fmt ty))
       (ty1 :: ty2 :: tys)
-  | <span data-count="7">T</span>List typ -&gt; fprintf fmt (fmt_arrp<span data-count="7">w</span> typ ^<span data-count="7">^</span> " list") pp_type typ
-  | <span data-count="13">T</span>Arrow (l, r) -&gt; fprintf fmt (fmt_arrp<span data-count="13">w</span> l ^<span data-count="13">^</span> " -&gt; %a") pp_type l pp_type r
-  | <span data-count="14">T</span>Var var -&gt; fprintf fmt "%s" @@ "'" ^ Char.escape<span data-count="14">d</span> (Char.ch<span data-count="14">r</span> (var + 97))
+  | <span data-count="7">T</span>List t -&gt; fprintf fmt "%a list" pp_ty t
 ;;
-
-let print_ty ty = <span data-count="8">F</span>ormat.printf "%s\n" (Format.asprint<span data-count="8">f</span> "%a" pp_type ty)
 
 type scheme = S of VarSet.t * ty
 </code></pre>

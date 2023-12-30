@@ -1747,7 +1747,7 @@ let run_infer e = <span data-count="14">R</span>esult.map snd (ru<span data-coun
 
 let pp_infer e =
   <span data-count="14">m</span>atch run_infer e with
-  | <span data-count="8">O</span>k ty -&gt; print_ty ty
+  | <span data-count="8">O</span>k ty -&gt; Stdlib.Format.printf "%a" pp_ty ty
   | <span data-count="6">E</span>rror err -&gt; Stdlib.Format.printf "%a" pp_error err
 ;;
 
@@ -1759,7 +1759,7 @@ let pp_parse_and_infer input =
 
 let%expect_test _ =
   <span data-count="1">p</span>p_parse_and_infer "let x = (42, false, fun x -&gt; x)";
-  <span data-count="1">[</span>%expect {| int * bool * 'a -&gt; 'a |}<span data-count="7">]</span>
+  <span data-count="1">[</span>%expect {| int * bool * '0 -&gt; '0 |}<span data-count="7">]</span>
 ;;
 
 let%expect_test _ =
@@ -1775,7 +1775,7 @@ let%expect_test _ =
 let%expect_test _ =
   <span data-count="1">p</span>p_parse_and_infer
     "let rec fact x useless_var = if x = 1 then x else x * fact (x - 1) useless_var";
-  <span data-count="1">[</span>%expect {| int -&gt; 'c -&gt; int |}<span data-count="7">]</span>
+  <span data-count="1">[</span>%expect {| int -&gt; '2 -&gt; int |}<span data-count="7">]</span>
 ;;
 
 let%expect_test _ =
@@ -1785,7 +1785,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   <span data-count="1">p</span>p_parse_and_infer "let f x = match x with | (h :: tl1) :: tl2 -&gt; true | _ -&gt; false";
-  <span data-count="1">[</span>%expect {| 'c list list -&gt; bool |}<span data-count="7">]</span>
+  <span data-count="1">[</span>%expect {| '2 list list -&gt; bool |}<span data-count="7">]</span>
 ;;
 
 let%expect_test _ =
@@ -1795,7 +1795,7 @@ let%expect_test _ =
     | []   -&gt; acc
     | h :: t -&gt; fold_left op (op acc h) t
     |};
-  <span data-count="1">[</span>%expect {| ('m -&gt; 'f -&gt; 'm) -&gt; 'm -&gt; 'f list -&gt; 'm |}<span data-count="7">]</span>
+  <span data-count="1">[</span>%expect {| ('12 -&gt; '5 -&gt; '12) -&gt; '12 -&gt; '5 list -&gt; '12 |}<span data-count="7">]</span>
 ;;
 
 let%expect_test _ =
@@ -1804,7 +1804,7 @@ let%expect_test _ =
     let split xs = match xs with 
       | a :: b :: tl -&gt; a, b, tl
     |};
-  <span data-count="1">[</span>%expect {| 'd list -&gt; 'd * 'd * 'd list |}<span data-count="7">]</span>
+  <span data-count="1">[</span>%expect {| '3 list -&gt; '3 * '3 * '3 list |}<span data-count="7">]</span>
 ;;
 
 (* Errors *)
