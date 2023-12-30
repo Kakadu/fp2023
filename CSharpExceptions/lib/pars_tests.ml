@@ -105,8 +105,7 @@ let%expect_test "Declaration + assign" =
   test_pp_statement ep_decl {|a         egor    =    a (1+2,  d  , "qwe") + 100000|};
   [%expect
     {|
-    (SDecl (
-       (Var_decl ((TVariable (TVar (TNullable (TClass (Id "a"))))), (Id "egor"))),
+    (SDecl ((Var_decl ((TVar (TNullable (TClass (Id "a")))), (Id "egor"))),
        (Some (EBin_op (Plus,
                 (EMethod_invoke ((EIdentifier (Id "a")),
                    (Params
@@ -121,8 +120,7 @@ let%expect_test "Declaration only" =
   test_pp_statement ep_decl {|string        egor|};
   [%expect
     {|
-    (SDecl ((Var_decl ((TVariable (TVar (TNullable TString))), (Id "egor"))),
-       None)) |}]
+    (SDecl ((Var_decl ((TVar (TNullable TString)), (Id "egor"))), None)) |}]
 ;;
 
 (* ep loops and branches *)
@@ -171,8 +169,7 @@ let%expect_test "" =
     {|
       STry_catch_fin {try_s = (Steps []);
         catch_s =
-        (Some ((Some ((Var_decl (
-                         (TVariable (TVar (TNullable (TClass (Id "Excaption"))))),
+        (Some ((Some ((Var_decl ((TVar (TNullable (TClass (Id "Excaption")))),
                          (Id "e"))),
                       None)),
                (Steps [])));
@@ -185,8 +182,7 @@ let%expect_test "" =
     {|
       STry_catch_fin {try_s = (Steps []);
         catch_s =
-        (Some ((Some ((Var_decl (
-                         (TVariable (TVar (TNullable (TClass (Id "Excaption"))))),
+        (Some ((Some ((Var_decl ((TVar (TNullable (TClass (Id "Excaption")))),
                          (Id "e"))),
                       (Some (EIdentifier (Id "e"))))),
                (Steps [])));
@@ -245,8 +241,7 @@ let%expect_test "For with decl" =
     {|
       SFor {
         f_init_p =
-        (Some (SDecl (
-                 (Var_decl ((TVariable (TVar (TNot_Nullable TInt))), (Id "a"))),
+        (Some (SDecl ((Var_decl ((TVar (TNot_Nullable TInt)), (Id "a"))),
                  (Some (EConst (VInt 0))))));
         f_cond_p = None; f_iter_p = None; f_body = (Steps [])} |}]
 ;;
@@ -257,8 +252,7 @@ let%expect_test "For without body" =
     {|
       SFor {
         f_init_p =
-        (Some (SDecl (
-                 (Var_decl ((TVariable (TVar (TNot_Nullable TInt))), (Id "a"))),
+        (Some (SDecl ((Var_decl ((TVar (TNot_Nullable TInt)), (Id "a"))),
                  (Some (EConst (VInt 0))))));
         f_cond_p = None; f_iter_p = None;
         f_body =
@@ -307,8 +301,7 @@ let%expect_test "Body with conditions" =
                           (SReturn None)]),
                      (Some (Steps
                               [(SDecl (
-                                  (Var_decl (
-                                     (TVariable (TVar (TNullable (TBase TInt)))),
+                                  (Var_decl ((TVar (TNullable (TBase TInt))),
                                      (Id "exmp"))),
                                   (Some (EBin_op (Plus, (EConst (VInt 243)),
                                            (EConst (VInt 1)))))
@@ -360,9 +353,7 @@ let%expect_test "Method parsing" =
     (Method (
        { m_modif = (Some MStatic); m_type = (TReturn (TNot_Nullable TInt));
          m_id = (Id "Fac");
-         m_args =
-         (Args [(Var_decl ((TVariable (TVar (TNot_Nullable TInt))), (Id "num")))])
-         },
+         m_args = (Args [(Var_decl ((TVar (TNot_Nullable TInt)), (Id "num")))]) },
        (Steps
           [(SIf_else (
               (EBin_op (Equal, (EIdentifier (Id "num")), (EConst (VInt 1)))),
@@ -407,21 +398,20 @@ let%expect_test _ =
     {|
    { cl_modif = None; cl_id = (Id "Program"); parent = (Some (Id "Exception"));
      cl_mems =
-     [(Fild
+     [(Fild (
          { f_modif = None; f_type = (TVar (TNot_Nullable TInt));
-           f_id = (Id "A1"); f_val = (Some (EConst (VInt 0))) });
-       (Fild
+           f_id = (Id "A1") },
+         (Some (EConst (VInt 0)))));
+       (Fild (
           { f_modif = (Some (FAccess MPublic));
             f_type = (TVar (TNullable (TClass (Id "MyClass"))));
-            f_id = (Id "A2"); f_val = None });
+            f_id = (Id "A2") },
+          None));
        (Method (
           { m_modif = (Some MStatic); m_type = (TReturn (TNot_Nullable TInt));
             m_id = (Id "Fac");
             m_args =
-            (Args
-               [(Var_decl ((TVariable (TVar (TNot_Nullable TInt))), (Id "num")))
-                 ])
-            },
+            (Args [(Var_decl ((TVar (TNot_Nullable TInt)), (Id "num")))]) },
           (Steps
              [(SIf_else (
                  (EBin_op (Equal, (EIdentifier (Id "num")), (EConst (VInt 1)))),
@@ -473,22 +463,20 @@ let%expect_test _ =
      [{ cl_modif = None; cl_id = (Id "Program");
         parent = (Some (Id "Exception"));
         cl_mems =
-        [(Fild
+        [(Fild (
             { f_modif = None; f_type = (TVar (TNot_Nullable TInt));
-              f_id = (Id "A1"); f_val = (Some (EConst (VInt 0))) });
-          (Fild
+              f_id = (Id "A1") },
+            (Some (EConst (VInt 0)))));
+          (Fild (
              { f_modif = (Some (FAccess MPublic));
                f_type = (TVar (TNullable (TClass (Id "MyClass"))));
-               f_id = (Id "A2"); f_val = None });
+               f_id = (Id "A2") },
+             None));
           (Method (
              { m_modif = (Some MStatic);
                m_type = (TReturn (TNot_Nullable TInt)); m_id = (Id "Fac");
                m_args =
-               (Args
-                  [(Var_decl ((TVariable (TVar (TNot_Nullable TInt))),
-                      (Id "num")))
-                    ])
-               },
+               (Args [(Var_decl ((TVar (TNot_Nullable TInt)), (Id "num")))]) },
              (Steps
                 [(SIf_else (
                     (EBin_op (Equal, (EIdentifier (Id "num")),
@@ -546,22 +534,20 @@ let%expect_test _ =
        [{ cl_modif = None; cl_id = (Id "Program");
           parent = (Some (Id "Exception"));
           cl_mems =
-          [(Fild
+          [(Fild (
               { f_modif = None; f_type = (TVar (TNot_Nullable TInt));
-                f_id = (Id "A1"); f_val = (Some (EConst (VInt 0))) });
-            (Fild
+                f_id = (Id "A1") },
+              (Some (EConst (VInt 0)))));
+            (Fild (
                { f_modif = (Some (FAccess MPublic));
                  f_type = (TVar (TNullable (TClass (Id "MyClass"))));
-                 f_id = (Id "A2"); f_val = None });
+                 f_id = (Id "A2") },
+               None));
             (Method (
                { m_modif = (Some MStatic);
                  m_type = (TReturn (TNot_Nullable TInt)); m_id = (Id "Fac");
                  m_args =
-                 (Args
-                    [(Var_decl ((TVariable (TVar (TNot_Nullable TInt))),
-                        (Id "num")))
-                      ])
-                 },
+                 (Args [(Var_decl ((TVar (TNot_Nullable TInt)), (Id "num")))]) },
                (Steps
                   [(SIf_else (
                       (EBin_op (Equal, (EIdentifier (Id "num")),

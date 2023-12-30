@@ -44,11 +44,6 @@ type meth_type =
   | TReturn of assignable_type
 [@@deriving show { with_path = false }]
 
-type type_ =
-  | TMethod of meth_type
-  | TVariable of var_type
-[@@deriving show { with_path = false }]
-
 type access_modifier =
   | MPublic
   | MPrivate
@@ -58,13 +53,9 @@ type access_modifier =
 type method_modifier =
   | MAccess of access_modifier
   | MStatic
-(* TODO: | Virtual *)
-(* TODO: | Override *)
 [@@deriving show { with_path = false }]
 
 type fild_modifier = FAccess of access_modifier
-(* TODO:| New *)
-(* TODO:| Const *)
 [@@deriving show { with_path = false }]
 
 type bin_op =
@@ -96,19 +87,19 @@ type expr =
   | EIdentifier of ident (* id of something e.g. class name; var name; method name *)
   | EMethod_invoke of expr * params (* method(a, b, c) | Class.method(a, b, c) *)
   (*  *)
-  | EBin_op of bin_op * expr * expr
   | EPoint_access of expr * expr (* access by point e.g. A.run() *)
+  | EBin_op of bin_op * expr * expr
   | EUn_op of un_op * expr
 (*  *)
 
 and params = Params of expr list [@@deriving show { with_path = false }]
 
-type var_decl = Var_decl of type_ * ident [@@deriving show { with_path = false }]
+type var_decl = Var_decl of var_type * ident [@@deriving show { with_path = false }]
 type args = Args of var_decl list [@@deriving show { with_path = false }]
 
 type statement =
   | SExpr of expr
-  | Steps of statement list (* sequence of actions inside {...} TODO: вынести *)
+  | Steps of statement list
   | SIf_else of expr * statement * statement option
   | SDecl of var_decl * expr option
   | SReturn of expr option
@@ -132,7 +123,6 @@ type fild_sign =
   { f_modif : fild_modifier option
   ; f_type : var_type
   ; f_id : ident
-  ; f_val : expr option
   }
 [@@deriving show { with_path = false }]
 
@@ -153,7 +143,7 @@ type constructor_sign =
 [@@deriving show { with_path = false }]
 
 type class_member =
-  | Fild of fild_sign
+  | Fild of fild_sign * expr option
   | Main of statement
   | Method of method_sign * statement (* statment - Steps *)
   | Constructor of constructor_sign * statement (* statment - Steps *)

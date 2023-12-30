@@ -222,7 +222,7 @@ let ep_method_fild_ ep_arg =
   ep_member_ident >>= fun id -> ep_invoke_ id ep_arg <|> return id
 ;;
 
-let ep_var_decl_ tp = skip_spaces1 *> p_ident >>| fun id -> Var_decl (TVariable tp, id)
+let ep_var_decl_ tp = skip_spaces1 *> p_ident >>| fun id -> Var_decl (tp, id)
 
 let ep_var_type_ =
   ep_spaces
@@ -444,7 +444,7 @@ let ep_constructor_sign =
 let ep_fild_sign =
   let f_value = ep_spaces (char '=') *> get_opt ep_operation in
   lift4
-    (fun f_modif f_type f_id f_val -> { f_modif; f_type; f_id; f_val })
+    (fun f_modif f_type f_id f_val -> { f_modif; f_type; f_id }, f_val)
     (ep_modifier_ p_fild_modifier)
     (ep_spaces ep_var_type_)
     (ep_spaces p_ident)
@@ -494,7 +494,7 @@ let ep_constructor_member_ =
   lift2 (fun con_sign body_ -> Constructor (con_sign, body_)) ep_constructor_sign ep_steps
 ;;
 
-let ep_fild_member_ = ep_fild_sign >>| fun x -> Fild x
+let ep_fild_member_ = ep_fild_sign >>| fun (x, e_opt) -> Fild (x, e_opt)
 
 let ep_class_members =
   let member = choice [ ep_method_member; ep_fild_member_; ep_constructor_member_ ] in
