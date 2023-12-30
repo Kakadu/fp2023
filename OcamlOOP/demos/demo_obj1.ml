@@ -17,8 +17,8 @@ let p =
 "
 
 let test_parse =
-  let res = parse_string ~consume:Prefix pexpr input in
+  let res = parse_string ~consume:Prefix program input in
   match res with
-  | Ok v -> print_endline (show_exp v)
+  | Ok v -> print_endline (show_program v)
   | Error v -> print_endline v
 ;;

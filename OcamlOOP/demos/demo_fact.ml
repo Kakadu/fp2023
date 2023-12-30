@@ -6,8 +6,8 @@ open OcamlOOP_lib.Parser
 open OcamlOOP_lib.Ast
 open Angstrom
 let test_parse = 
-  let res = parse_string ~consume: Prefix pexpr "let rec fact x =  if x = 0 then 1 else x * fact (x - 1)" in 
+  let res = parse_string ~consume: Prefix program "let rec fact x =  if x = 0 then 1 else x * fact (x - 1)" in 
   match res with
-  | Ok v -> print_endline (show_exp v)
+  | Ok v -> print_endline (show_program v)
   | Error v -> print_endline v
 

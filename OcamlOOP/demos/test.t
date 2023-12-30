@@ -1,47 +1,62 @@
   $ dune exec demo_fact
-  LetRec
-  (Pdecl
-   (PVal (Id ("fact")),
-    Fun
-    (PVal (Id ("x")),
-     IfThenElse
-     (BinOp (Eq, EVal (Id ("x")), EConst (Int (0))), EConst (Int (1)),
-      BinOp
-      (Asterisk, EVal (Id ("x")),
-       App (EVal (Id ("fact")), BinOp (Sub, EVal (Id ("x")), EConst (Int (1)))))))),
-   EConst (Unit))
+  [Str_value ({ d_rec = Recursive; d_pat = Pat_var (Id ("fact"));
+                d_expr =
+                Exp_function
+                (Pat_var (Id ("x")),
+                 Exp_ifthenelse
+                 (Exp_apply
+                  (Exp_apply (Exp_bin_op (Eq), Exp_ident (Id ("x"))),
+                   Exp_constant (Const_int (0))),
+                  Exp_constant (Const_int (1)),
+                  Exp_apply
+                  (Exp_apply (Exp_bin_op (Asterisk), Exp_ident (Id ("x"))),
+                   Exp_apply
+                   (Exp_ident (Id ("fact")),
+                    Exp_apply
+                    (Exp_apply (Exp_bin_op (Sub), Exp_ident (Id ("x"))),
+                     Exp_constant (Const_int (1)))))))
+                })]
   $ dune exec demo_obj
-  Let
-  (Pdecl
-   (PVal (Id ("minmax")),
-    Fun
-    (PVal (Id ("x")),
-     Fun
-     (PVal (Id ("y")),
-      IfThenElse
-      (BinOp (Lt, EVal (Id ("x")), EVal (Id ("y"))),
-       Eobject
-       (Pany,
-        [Omethod (Public, PVal (Id ("min")), EVal (Id ("x")));
-         Omethod (Public, PVal (Id ("max")), EVal (Id ("y")))]),
-       Eobject
-       (Pany,
-        [Omethod (Public, PVal (Id ("min")), EVal (Id ("y")));
-         Omethod (Public, PVal (Id ("max")), EVal (Id ("x")))]))))),
-   EConst (Unit))
+  [Str_value ({ d_rec = Nonrecursive; d_pat = Pat_var (Id ("minmax"));
+                d_expr =
+                Exp_function
+                (Pat_var (Id ("x")),
+                 Exp_function
+                 (Pat_var (Id ("y")),
+                  Exp_ifthenelse
+                  (Exp_apply
+                   (Exp_apply (Exp_bin_op (Lt), Exp_ident (Id ("x"))),
+                    Exp_ident (Id ("y"))),
+                   Exp_object ({ o_self = Pat_any;
+                                 o_fields =
+                                 [Obj_method
+                                  (Public, Id ("min"), Exp_ident (Id ("x")));
+                                  Obj_method
+                                  (Public, Id ("max"), Exp_ident (Id ("y")))]
+                                 }),
+                   Exp_object ({ o_self = Pat_any;
+                                 o_fields =
+                                 [Obj_method
+                                  (Public, Id ("min"), Exp_ident (Id ("y")));
+                                  Obj_method
+                                  (Public, Id ("max"), Exp_ident (Id ("x")))]
+                                 }))))
+                })]
   $ dune exec demo_obj1
-  Let
-  (Pdecl
-   (PVal (Id ("p")),
-    Eobject
-    (PVal (Id ("s")),
-     [Oval (PVal (Id ("x")), EConst (Int (5)));
-      Omethod (Private, PVal (Id ("get_x")), EVal (Id ("x")));
-      Omethod
-      (Public, PVal (Id ("print")),
-       App
-       (EVal (Id ("print_int")), Esend (EVal (Id ("s")), PVal (Id ("get_x")))))])),
-   EConst (Unit))
+  [Str_value ({ d_rec = Nonrecursive; d_pat = Pat_var (Id ("p"));
+                d_expr =
+                Exp_object ({ o_self = Pat_var (Id ("s"));
+                              o_fields =
+                              [Obj_val (Id ("x"), Exp_constant (Const_int (5)));
+                               Obj_method
+                               (Private, Id ("get_x"), Exp_ident (Id ("x")));
+                               Obj_method
+                               (Public, Id ("print"),
+                                Exp_apply
+                                (Exp_ident (Id ("print_int")),
+                                 Exp_send (Exp_ident (Id ("s")), Id ("get_x"))))]
+                              })
+                })]
 
   $ cat << EOF | dune exec demo - 
   > let sum x y = x + y ;;
@@ -54,26 +69,32 @@
   > 
   > let incr x = x + 1 ;;
   > EOF
-  Let
-  (Pdecl
-   (PVal (Id ("sum")),
-    Fun
-    (PVal (Id ("x")),
-     Fun (PVal (Id ("y")), BinOp (Plus, EVal (Id ("x")), EVal (Id ("y")))))),
-   EConst (Unit))
-  Let
-  (Pdecl
-   (PVal (Id ("is_ten")),
-    Fun
-    (PVal (Id ("n")),
-     Match
-     (EVal (Id ("n")),
-      [(PConst (Int (10)), EConst (Bool (true)));
-       (PVal (Id ("_")), EConst (Bool (false)))]))),
-   EConst (Unit))
-  Let
-  (Pdecl
-   (PVal (Id ("incr")),
-    Fun (PVal (Id ("x")), BinOp (Plus, EVal (Id ("x")), EConst (Int (1))))),
-   EConst (Unit))
+  Str_value ({ d_rec = Nonrecursive; d_pat = Pat_var (Id ("sum"));
+               d_expr =
+               Exp_function
+               (Pat_var (Id ("x")),
+                Exp_function
+                (Pat_var (Id ("y")),
+                 Exp_apply
+                 (Exp_apply (Exp_bin_op (Plus), Exp_ident (Id ("x"))),
+                  Exp_ident (Id ("y")))))
+               })
+  Str_value ({ d_rec = Nonrecursive; d_pat = Pat_var (Id ("is_ten"));
+               d_expr =
+               Exp_function
+               (Pat_var (Id ("n")),
+                Exp_match
+                (Exp_ident (Id ("n")),
+                 [(Pat_const (Const_int (10)),
+                   Exp_constant (Const_bool (true)));
+                  (Pat_any, Exp_constant (Const_bool (false)))]))
+               })
+  Str_value ({ d_rec = Nonrecursive; d_pat = Pat_var (Id ("incr"));
+               d_expr =
+               Exp_function
+               (Pat_var (Id ("x")),
+                Exp_apply
+                (Exp_apply (Exp_bin_op (Plus), Exp_ident (Id ("x"))),
+                 Exp_constant (Const_int (1))))
+               })
 
