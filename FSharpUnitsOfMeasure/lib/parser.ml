@@ -54,6 +54,7 @@ let token1 s = take_empty1 *> s
 let stoken s = take_empty *> string s
 let stoken1 s = take_empty1 *> string s
 let brackets p = stoken "(" *> p <* stoken ")"
+let brackets1 p = stoken1 "(" *> p <* stoken1 ")"
 let quotes p = stoken "\"" *> p <* stoken "\""
 let parens_or_not p = p <|> brackets p
 let chainl1 e op =
@@ -142,6 +143,48 @@ let parse_pconst = parse_types >>| fun x -> PConst x
 let parse_pvar = parse_id >>| fun x -> PVar x
 let parse_pwild = stoken "_" *> return pwild
 
+let parse_tuple parser constructor =
+  lift2
+    (fun a b -> constructor @@ (a :: b))
+    (parser <* stoken ",")
+    (sep_by1 (stoken ",") parser)
+;;
+
+type pdispatch =
+  { tuple : pdispatch -> pattern t; 
+  tuple_brackets : pdispatch -> pattern t;
+  value : pdispatch -> pattern t; 
+  pattern : pdispatch -> pattern t
+  }
+
+let pack = 
+  let pattern pack = choice 
+    [
+      pack.tuple pack;
+      pack.tuple_brackets pack;
+      pack.value pack
+    ]
+  in 
+  let parser pack = choice 
+    [
+      pack.tuple_brackets pack;
+      pack.value pack
+    ]  
+  in 
+  let value _ = parse_pwild <|> parse_pvar <|> parse_pconst
+  in let tuple_brackets pack = fix @@ fun _ -> take_empty *> (brackets @@ parse_tuple (parser pack) ptuple)
+  in let tuple pack = fix @@ fun _ -> take_empty *> parse_tuple (parser pack) ptuple
+  in 
+    {
+      tuple;
+      tuple_brackets;
+      value;
+      pattern
+    } 
+;;
+
+let parse_pattern = pack.pattern pack
+
 (** Expression constructor *)
 
 let eifelse i t e = EIfElse (i, t, e)
@@ -153,8 +196,8 @@ let evar x = EVar x
 
 (** Expression parse *)
 
-let parse_evar = evar <$> parse_id
-let parse_etypes = parse_types >>| fun x -> EConst x
+let parse_evar = parse_id >>| evar 
+let parse_econst = parse_types >>| fun x -> EConst x
 let parse_arg = many @@ parens_or_not parse_pvar
 let parse_arg1 = many1 @@ parens_or_not parse_pvar
 
@@ -255,7 +298,7 @@ let parse_eapp parse_expr =
 ;;
 
 let pack =
-  let etypes _ = parse_etypes 
+  let etypes _ = parse_econst
   in let evar _ = parse_evar 
   in let lets pack = choice [ pack.elet pack; pack.eletrec pack ]
   in let expression pack = choice 

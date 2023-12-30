@@ -11,13 +11,13 @@ let parsed_result str parser show =
 (** Types test *)
 
 let%expect_test _ =
-parsed_result "777" parse_types show_types;
-[%expect {| (FInt 777) |}]
+  parsed_result "777" parse_types show_types;
+  [%expect {| (FInt 777) |}]
 ;;
 
 let%expect_test _ =
-parsed_result "-777" parse_types show_types;
-[%expect {| (FInt -777) |}]
+  parsed_result "-777" parse_types show_types;
+  [%expect {| (FInt -777) |}]
 ;;
 
 let%expect_test _ =
@@ -194,5 +194,30 @@ let%expect_test _ =
      |}]
 ;;
 
+(** Pattern test *)
 
+let%expect_test _ =
+  parsed_result "1" parse_pattern show_pattern;
+  [%expect {| (PConst (FInt 1)) |}]
+;;
+
+let%expect_test _ =
+  parsed_result "a" parse_pattern show_pattern;
+  [%expect {| (PVar "a") |}]
+;;
+
+let%expect_test _ =
+  parsed_result "a, b" parse_pattern show_pattern;
+  [%expect {| (PTuple [(PVar "a"); (PVar "b")]) |}]
+;;
+
+let%expect_test _ =
+  parsed_result "((a, b), c)" parse_pattern show_pattern;
+  [%expect {| (PTuple [(PTuple [(PVar "a"); (PVar "b")]); (PVar "c")]) |}]
+;;
+
+let%expect_test _ =
+  parsed_result "((a, 1), c)" parse_pattern show_pattern;
+  [%expect {| (PTuple [(PTuple [(PVar "a"); (PConst (FInt 1))]); (PVar "c")]) |}]
+;;
 
