@@ -8,11 +8,10 @@ Author: Efim Perevalov, es.perevalov@mail.ru
 
 Features done:
 
-- Nothing
+- Parser
 
 Features in progress (and TODOs):
 
-- Parser 
 - interpreter of non-recursive functions
 
 

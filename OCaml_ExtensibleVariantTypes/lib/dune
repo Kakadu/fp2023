@@ -1,18 +1,18 @@
 (library
- (name lambda_lib)
- (public_name Lambda.Lib)
- (modules Ast Lambda Interpret Parser Printast Pprintast utils)
- (modules_without_implementation ast)
+ (name OCaml_ExtensibleVariantTypes_lib)
+ (public_name OCaml_ExtensibleVariantTypes.Lib)
+ (modules Ast Parser)
  (libraries base angstrom)
  (preprocess
-  (pps ppx_deriving.show))
+  (pps ppx_expect ppx_deriving.show ppx_deriving.eq))
  (instrumentation
-  (backend bisect_ppx)))
+  (backend bisect_ppx))
+ (inline_tests))
 
 (library
  (name tests)
  (modules tests)
- (libraries lambda_lib)
+ (libraries OCaml_ExtensibleVariantTypes_lib)
  (preprocess
   (pps ppx_expect ppx_deriving.show))
  (instrumentation

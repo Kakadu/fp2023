@@ -1,40 +1,226 @@
-(** Copyright 2021-2022, Kakadu and contributors *)
+(** Copyright 2021-2023, Averin Pavel *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-(** ***** UNIT TESTS COULD GO HERE (JUST AN EXAMPLE) *)
-let rec fact n = if n = 1 then 1 else n * fact (n - 1)
-
-let%test _ = fact 5 = 120
-
-(* These is a simple unit test that tests a single function 'fact'
-  If you want to test something large, like interpretation of a piece
-  of a minilanguge, it is not longer a unit tests but an integration test.
-  Read about dune's cram tests and put the test into `demos/somefile.t`.
-*)
-
-open Lambda_lib
+open Ast
 open Parser
+open Interpreter
+open Eval (Result)
 
-let parse_optimistically str = Result.get_ok (parse str)
-let pp = Printast.pp_named
+let unpacker (Ok x) = x
+let env = global_env
+let%test _ = Ok (Int 5) = interpret_exp (ArithOp (Add, Const (Int 4), Const (Int 1))) env
 
-let%expect_test _ =
-  Format.printf "%a" pp (parse_optimistically "x y");
-  [%expect {| (App ((Var x), (Var y))) |}]
+let env1 =
+  get_env
+    env
+    [ Assign (Variable (Identifier "x"), Const (Int 6156))
+    ; Assign (Variable (Identifier "x"), Const (Int 4))
+    ]
 ;;
 
-let%expect_test _ =
-  Format.printf "%a" pp (parse_optimistically "(x y)");
-  [%expect {| (App ((Var x), (Var y))) |}]
+let%test _ =
+  Ok (Int 6)
+  = interpret_exp
+      (ArithOp (Add, Const (Int 2), Variable (Identifier "x")))
+      (unpacker env1)
 ;;
 
-let%expect_test _ =
-  Format.printf "%a" pp (parse_optimistically "(\\x . x x)");
-  [%expect {| (Abs (x, (App ((Var x), (Var x))))) |}]
+let func_test_env1 =
+  get_env
+    env
+    [ Function
+        ( Identifier "myFunction"
+        , [ Identifier "x" ]
+        , [ Return (ArithOp (Add, Const (Int 2), Const (Int 3))) ] )
+    ; Function
+        ( Identifier "myFunction2"
+        , [ Identifier "x" ]
+        , [ Assign (Variable (Identifier "x"), Const (Int 3)) ] )
+    ]
 ;;
 
-let%expect_test _ =
-  Format.printf "%a" pp (parse_optimistically "(λf.λx. f (x x))");
-  [%expect {| (Abs (f, (Abs (x, (App ((Var f), (App ((Var x), (Var x))))))))) |}]
+(* print_funcs (unpacker func_test_env1).functions *)
+
+let%test _ =
+  Ok (Int 5)
+  = interpret_exp
+      (FunctionCall (Identifier "myFunction", [ Const (Int 4) ]))
+      (unpacker func_test_env1)
+;;
+
+let func_test_env2 =
+  get_env
+    env
+    [ Function (Identifier "myFunction", [ Identifier "x" ], [ Return (Const (Int 2)) ])
+    ; Function
+        ( Identifier "myFunction2"
+        , [ Identifier "x" ]
+        , [ Assign (Variable (Identifier "y"), Const (Int 2)); Return (Const (Int 2)) ] )
+    ]
+;;
+
+(** print_funcs (unpacker func_test_env2).functions **)
+
+let%test _ =
+  Ok (Int 4)
+  = interpret_exp
+      (ArithOp
+         ( Mul
+         , FunctionCall (Identifier "myFunction", [ Const (Int 4) ])
+         , FunctionCall (Identifier "myFunction2", [ Const (Int 4) ]) ))
+      (unpacker func_test_env2)
+;;
+
+let func_test_env3 =
+  get_env
+    env
+    [ Function (Identifier "myFunction", [ Identifier "x" ], [ Return (Const (Int 2)) ])
+    ; Function
+        ( Identifier "myFunction2"
+        , [ Identifier "x" ]
+        , [ Assign (Variable (Identifier "y"), Const (Int 3))
+          ; Return (Variable (Identifier "y"))
+          ] )
+    ]
+;;
+
+let%test _ =
+  Ok (Int 6)
+  = interpret_exp
+      (ArithOp
+         ( Mul
+         , FunctionCall (Identifier "myFunction", [ Const (Int 4) ])
+         , FunctionCall (Identifier "myFunction2", [ Const (Int 4) ]) ))
+      (unpacker func_test_env3)
+;;
+
+let func_test_env4 =
+  get_env
+    env
+    [ Function (Identifier "myFunction", [ Identifier "x" ], [ Return (Const (Int 2)) ])
+    ; Function
+        ( Identifier "myFunction2"
+        , [ Identifier "x" ]
+        , [ Assign (Variable (Identifier "y"), Const (Int 3))
+          ; Return (ArithOp (Add, Variable (Identifier "y"), Variable (Identifier "x")))
+          ] )
+    ]
+;;
+
+let%test _ =
+  Ok (Int 9)
+  = interpret_exp
+      (ArithOp
+         ( Add
+         , FunctionCall (Identifier "myFunction", [ Const (Int 4) ])
+         , FunctionCall (Identifier "myFunction2", [ Const (Int 4) ]) ))
+      (unpacker func_test_env4)
+;;
+
+let func_test_env4 =
+  get_env
+    env
+    [ Function (Identifier "myFunction", [ Identifier "x" ], [ Return (Const (Int 2)) ])
+    ; Function
+        ( Identifier "myFunction2"
+        , [ Identifier "x" ]
+        , [ Assign (Variable (Identifier "y"), Const (Int 3))
+          ; Return (ArithOp (Add, Variable (Identifier "y"), Variable (Identifier "x")))
+          ] )
+    ]
+;;
+
+let%test _ =
+  Ok (Int 9)
+  = interpret_exp
+      (ArithOp
+         ( Add
+         , FunctionCall (Identifier "myFunction", [ Const (Int 4) ])
+         , FunctionCall (Identifier "myFunction2", [ Const (Int 4) ]) ))
+      (unpacker func_test_env4)
+;;
+
+let fact_env1 =
+  get_env
+    env
+    [ Function
+        ( Identifier "factorial"
+        , [ Identifier "x" ]
+        , [ IfElse
+              ( BoolOp (Equal, Variable (Identifier "x"), Const (Int 1))
+              , [ Return (Const (Int 1)) ]
+              , [ Return
+                    (ArithOp
+                       ( Mul
+                       , Variable (Identifier "x")
+                       , FunctionCall
+                           ( Identifier "factorial"
+                           , [ ArithOp (Sub, Variable (Identifier "x"), Const (Int 1)) ]
+                           ) ))
+                ] )
+          ] )
+    ]
+;;
+
+let fact_env2 =
+  get_env
+    env
+    [ Function
+        ( Identifier "factorial"
+        , [ Identifier "x" ]
+        , [ IfElse
+              ( BoolOp (Equal, Variable (Identifier "x"), Const (Int 1))
+              , [ Return (Const (Int 1)) ]
+              , [ Return
+                    (ArithOp
+                       ( Mul
+                       , Variable (Identifier "x")
+                       , FunctionCall
+                           ( Identifier "factorial"
+                           , [ ArithOp (Sub, Variable (Identifier "x"), Const (Int 1)) ]
+                           ) ))
+                ] )
+          ] )
+    ]
+;;
+
+let%test _ =
+  Ok (Int 87178291200)
+  = interpret_exp
+      (FunctionCall (Identifier "factorial", [ Const (Int 14) ]))
+      (unpacker fact_env2)
+;;
+
+let fact_and_print =
+  get_env
+    global_env
+    [ Function
+        ( Identifier "factorial"
+        , [ Identifier "x" ]
+        , [ IfElse
+              ( BoolOp (Equal, Variable (Identifier "x"), Const (Int 1))
+              , [ Return (Const (Int 1)) ]
+              , [ Return
+                    (ArithOp
+                       ( Mul
+                       , Variable (Identifier "x")
+                       , FunctionCall
+                           ( Identifier "factorial"
+                           , [ ArithOp (Sub, Variable (Identifier "x"), Const (Int 1)) ]
+                           ) ))
+                ] )
+          ] )
+    ; Expression
+        (FunctionCall
+           ( Identifier "print"
+           , [ FunctionCall (Identifier "factorial", [ Const (Int 5) ]) ] ))
+    ]
+;;
+
+let%test _ =
+  Ok None
+  = interpret_exp
+      (FunctionCall (Identifier "print", [ Const (Int 6003) ]))
+      (unpacker fact_and_print)
 ;;
