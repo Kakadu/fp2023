@@ -1,10 +1,10 @@
 (library
  (name csharp_Exc_Lib)
  (public_name CSharpExceptions.Lib)
- (modules Ast Parser)
+ (modules Ast Parser Type_check)
  (libraries base angstrom str)
  (preprocess
-  (pps ppx_deriving.show))
+  (pps ppx_expect ppx_deriving.show ppx_inline_test ppx_deriving.eq))
  (instrumentation
   (backend bisect_ppx)))
 

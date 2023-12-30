@@ -12,7 +12,7 @@ type value_ =
   | VBool of bool
 [@@deriving show { with_path = false }]
 
-type ident = Id of string [@@deriving show { with_path = false }]
+type ident = Id of string [@@deriving show { with_path = false }, eq]
 
 (** {2 Declarations types} *)
 
@@ -24,18 +24,18 @@ type base_type =
   | TInt
   | TChar
   | TBool
-[@@deriving show { with_path = false }]
+[@@deriving show { with_path = false }, eq]
 
 type nulable_type =
   | TBase of base_type
   | TString
   | TClass of ident
-[@@deriving show { with_path = false }]
+[@@deriving show { with_path = false }, eq]
 
 type assignable_type =
   | TNot_Nullable of base_type
   | TNullable of nulable_type
-[@@deriving show { with_path = false }]
+[@@deriving show { with_path = false }, eq]
 
 type var_type = TVar of assignable_type [@@deriving show { with_path = false }]
 
@@ -87,8 +87,8 @@ type expr =
   | EIdentifier of ident (* id of something e.g. class name; var name; method name *)
   | EMethod_invoke of expr * params (* method(a, b, c) | Class.method(a, b, c) *)
   (*  *)
-  | EPoint_access of expr * expr (* access by point e.g. A.run() *)
   | EBin_op of bin_op * expr * expr
+  | EPoint_access of expr * expr (* access by point e.g. A.run() *)
   | EUn_op of un_op * expr
 (*  *)
 
