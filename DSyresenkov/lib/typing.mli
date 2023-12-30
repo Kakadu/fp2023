@@ -31,7 +31,6 @@ type error =
   | NotImplemented (** Still not implemented features *)
 [@@deriving show { with_path = false }]
 
-val pp_type : Format.formatter -> ty -> unit
-val print_ty : ty -> unit
+val pp_ty : Format.formatter -> ty -> unit
 
 type scheme = S of VarSet.t * ty
