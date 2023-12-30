@@ -18,8 +18,8 @@
       <h2>91.67%</h2>
     </div>
     <div id="navbar">
-      <span class="some-visited" style="top:13.33%"></span>
-      <span class="unvisited" style="bottom:28.33%"></span>
+      <span class="some-visited" style="top:13.56%"></span>
+      <span class="unvisited" style="bottom:28.81%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -58,32 +58,31 @@
 <a id="L32"></a><span > </span>
 <a id="L33"></a><span > </span>
 <a id="L34"></a><span > </span>
-<a id="L35"></a><span > </span>
-<a id="L36"></a><span class="visited"> </span>
+<a id="L35"></a><span class="visited"> </span>
+<a id="L36"></a><span > </span>
 <a id="L37"></a><span > </span>
-<a id="L38"></a><span > </span>
-<a id="L39"></a><span class="visited"> </span>
-<a id="L40"></a><span > </span>
+<a id="L38"></a><span class="visited"> </span>
+<a id="L39"></a><span > </span>
+<a id="L40"></a><span class="visited"> </span>
 <a id="L41"></a><span class="visited"> </span>
-<a id="L42"></a><span class="visited"> </span>
-<a id="L43"></a><span class="unvisited"> </span>
+<a id="L42"></a><span class="unvisited"> </span>
+<a id="L43"></a><span class="visited"> </span>
 <a id="L44"></a><span class="visited"> </span>
-<a id="L45"></a><span class="visited"> </span>
-<a id="L46"></a><span > </span>
+<a id="L45"></a><span > </span>
+<a id="L46"></a><span class="visited"> </span>
 <a id="L47"></a><span class="visited"> </span>
 <a id="L48"></a><span class="visited"> </span>
-<a id="L49"></a><span class="visited"> </span>
+<a id="L49"></a><span > </span>
 <a id="L50"></a><span > </span>
 <a id="L51"></a><span > </span>
-<a id="L52"></a><span > </span>
+<a id="L52"></a><span class="visited"> </span>
 <a id="L53"></a><span class="visited"> </span>
 <a id="L54"></a><span class="visited"> </span>
-<a id="L55"></a><span class="visited"> </span>
-<a id="L56"></a><span > </span>
-<a id="L57"></a><span class="visited"> </span>
+<a id="L55"></a><span > </span>
+<a id="L56"></a><span class="visited"> </span>
+<a id="L57"></a><span > </span>
 <a id="L58"></a><span > </span>
 <a id="L59"></a><span > </span>
-<a id="L60"></a><span > </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -147,7 +146,6 @@
 <a href="#L57">57</a>
 <a href="#L58">58</a>
 <a href="#L59">59</a>
-<a href="#L60">60</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2021-2023, Ilya Syresenkov *)
 
@@ -182,21 +180,20 @@ end
   | OccursCheckFailed of in<span data-count="1">t</span> * ty (** OCaml's Occurs check *)
   | NoVariable of id (** Attempt to use non-initialized variable *)
   | UnificationFailed of ty * ty (** Failed to unify left and right types *)
-  | PatternRebound (** Attempt to use in pattern single bound two times (h :: h :: tl) *)
   | NotImplemented (** Still not implemented features *)
 [@@deriving show { with_path = false }<span data-count="25">]</span>
 
 let rec pp_ty fmt = function
-  | <span data-count="11">T</span>Base ty -&gt;
+  | <span data-count="12">T</span>Base ty -&gt;
     (match ty with
      | <span data-count="6">B</span>Int -&gt; fprintf fmt "int"
-     | <span data-count="5">B</span>Bool -&gt; fprintf fmt "bool"
+     | <span data-count="6">B</span>Bool -&gt; fprintf fmt "bool"
      | <span data-count="0">B</span>Unit -&gt; fprintf fmt "unit")
-  | <span data-count="14">T</span>Var x -&gt; fprintf fmt "'%d" x
-  | <span data-count="13">T</span>Arrow (l, r) -&gt;
+  | <span data-count="15">T</span>Var x -&gt; fprintf fmt "'%d" x
+  | <span data-count="14">T</span>Arrow (l, r) -&gt;
     (match l, r with
      | <span data-count="1">T</span>Arrow (_, _), _ -&gt; fprintf fmt "(%a) -&gt; %a" pp_ty l pp_ty r
-     | <span data-count="12">_</span>, _ -&gt; fprintf fmt "%a -&gt; %a" pp_ty l pp_ty r)
+     | <span data-count="13">_</span>, _ -&gt; fprintf fmt "%a -&gt; %a" pp_ty l pp_ty r)
   | <span data-count="2">T</span>Tuple (ty1, ty2, tys) -&gt;
     fprintf
       fmt
@@ -205,7 +202,7 @@ let rec pp_ty fmt = function
          ~pp_sep:(fun fmt _ -&gt; <span data-count="4">f</span>printf fmt " * ")
          (fun fmt ty -&gt; <span data-count="6">p</span>p_ty fmt ty))
       (ty1 :: ty2 :: tys)
-  | <span data-count="7">T</span>List t -&gt; fprintf fmt "%a list" pp_ty t
+  | <span data-count="8">T</span>List t -&gt; fprintf fmt "%a list" pp_ty t
 ;;
 
 type scheme = S of VarSet.t * ty
