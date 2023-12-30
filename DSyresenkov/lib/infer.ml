@@ -497,7 +497,7 @@ let run_infer e = Result.map snd (run (infer TypeEnv.empty e))
 
 let pp_infer e =
   match run_infer e with
-  | Ok ty -> print_ty ty
+  | Ok ty -> Stdlib.Format.printf "%a" pp_ty ty
   | Error err -> Stdlib.Format.printf "%a" pp_error err
 ;;
 
@@ -509,7 +509,7 @@ let pp_parse_and_infer input =
 
 let%expect_test _ =
   pp_parse_and_infer "let x = (42, false, fun x -> x)";
-  [%expect {| int * bool * 'a -> 'a |}]
+  [%expect {| int * bool * '0 -> '0 |}]
 ;;
 
 let%expect_test _ =
@@ -525,7 +525,7 @@ let%expect_test _ =
 let%expect_test _ =
   pp_parse_and_infer
     "let rec fact x useless_var = if x = 1 then x else x * fact (x - 1) useless_var";
-  [%expect {| int -> 'c -> int |}]
+  [%expect {| int -> '2 -> int |}]
 ;;
 
 let%expect_test _ =
@@ -535,7 +535,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   pp_parse_and_infer "let f x = match x with | (h :: tl1) :: tl2 -> true | _ -> false";
-  [%expect {| 'c list list -> bool |}]
+  [%expect {| '2 list list -> bool |}]
 ;;
 
 let%expect_test _ =
@@ -545,7 +545,7 @@ let%expect_test _ =
     | []   -> acc
     | h :: t -> fold_left op (op acc h) t
     |};
-  [%expect {| ('m -> 'f -> 'm) -> 'm -> 'f list -> 'm |}]
+  [%expect {| ('12 -> '5 -> '12) -> '12 -> '5 list -> '12 |}]
 ;;
 
 let%expect_test _ =
@@ -554,7 +554,7 @@ let%expect_test _ =
     let split xs = match xs with 
       | a :: b :: tl -> a, b, tl
     |};
-  [%expect {| 'd list -> 'd * 'd * 'd list |}]
+  [%expect {| '3 list -> '3 * '3 * '3 list |}]
 ;;
 
 (* Errors *)
