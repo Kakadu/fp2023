@@ -8,5 +8,5 @@ open OcamlOOP_lib.Ast
 let test_parse = 
   let res = parse Stdio.In_channel.(input_all stdin) in 
   match res with
-  | Ok v -> List.iter (fun e -> print_endline (show_exp e)) v
+  | Ok v -> List.iter (fun e -> print_endline (show_structure_item e)) v
   | Error v -> prerr_endline v
