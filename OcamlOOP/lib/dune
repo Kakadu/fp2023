@@ -1,7 +1,7 @@
 (library
  (name ocamlOOP_lib)
  (public_name OcamlOOP.Lib)
- (modules parser ast typedtree infer pp_infer)
+ (modules parser ast typedtree infer pp_infer infer_tests)
  (inline_tests)
  (preprocess
   (pps ppx_show ppx_expect ppx_deriving.eq))
