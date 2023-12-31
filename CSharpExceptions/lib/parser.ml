@@ -303,7 +303,7 @@ let ep_throw =
   lift2
     (fun _ ex -> SThrow ex)
     (ep_keyword_ "throw")
-    (ep_operation >>= (fun x -> return (Some x)) <|> return None)
+    (ep_operation >>= (fun x -> return x))
 ;;
 
 (* Loops and brunches parsing *)

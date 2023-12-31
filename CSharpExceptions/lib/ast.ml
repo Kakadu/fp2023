@@ -6,10 +6,10 @@
 
 type value_ =
   | Null
-  | VString of string
-  | VInt of int
-  | VChar of char
-  | VBool of bool
+  | VString of string (* Операции над типом не поддерживаются *)
+  | VInt of int (* Арифметические операции *)
+  | VChar of char (* Операции над типом не поддерживаются *)
+  | VBool of bool (* Только логические операции *)
 [@@deriving show { with_path = false }]
 
 type ident = Id of string [@@deriving show { with_path = false }, eq]
@@ -103,7 +103,7 @@ type statement =
   | SIf_else of expr * statement * statement option
   | SDecl of var_decl * expr option
   | SReturn of expr option
-  | SThrow of expr option
+  | SThrow of expr
   | SBreak
   | SWhile of expr * statement
   | SFor of

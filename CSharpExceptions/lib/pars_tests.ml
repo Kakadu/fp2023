@@ -132,18 +132,18 @@ let%expect_test "" =
 ;;
 
 let%expect_test "" =
-  test_pp_statement ep_try_catch_fin {|try {throw;}|};
+  test_pp_statement ep_try_catch_fin {|try {throw e;}|};
   [%expect
     {|
-      STry_catch_fin {try_s = (Steps [(SThrow None)]); catch_s = None;
-        finally_s = None} |}]
+      STry_catch_fin {try_s = (Steps [(SThrow (EIdentifier (Id "e")))]);
+        catch_s = None; finally_s = None} |}]
 ;;
 
 let%expect_test "" =
   test_pp_statement ep_try_catch_fin {|try {throw e;}|};
   [%expect
     {|
-      STry_catch_fin {try_s = (Steps [(SThrow (Some (EIdentifier (Id "e"))))]);
+      STry_catch_fin {try_s = (Steps [(SThrow (EIdentifier (Id "e")))]);
         catch_s = None; finally_s = None} |}]
 ;;
 
@@ -373,6 +373,71 @@ let%expect_test "Method parsing" =
               ))
             ])
        )) |}]
+;;
+
+let%expect_test _ =
+  test_pp_class_decl
+    ep_class
+    {|class Program : Exception
+     {
+        int A1 = 0;
+        public MyClass A2;
+        public Program(int num) : base(1,2,3)
+        {
+            if (num == 1)
+            {
+                return 1;
+            }
+            else 
+            {
+                return num * Fac(num - 1);
+            }
+        }
+     }|};
+  [%expect
+    {|
+   { cl_modif = None; cl_id = (Id "Program"); parent = (Some (Id "Exception"));
+     cl_mems =
+     [(Fild (
+         { f_modif = None; f_type = (TVar (TNot_Nullable TInt));
+           f_id = (Id "A1") },
+         (Some (EConst (VInt 0)))));
+       (Fild (
+          { f_modif = (Some (FAccess MPublic));
+            f_type = (TVar (TNullable (TClass (Id "MyClass"))));
+            f_id = (Id "A2") },
+          None));
+       (Constructor (
+          { con_modif = (Some MPublic); con_id = (Id "Program");
+            con_args =
+            (Args [(Var_decl ((TVar (TNot_Nullable TInt)), (Id "num")))]);
+            base_params =
+            (Some (Params
+                     [(EConst (VInt 1)); (EConst (VInt 2)); (EConst (VInt 3))]))
+            },
+          (Steps
+             [(SIf_else (
+                 (EBin_op (Equal, (EIdentifier (Id "num")), (EConst (VInt 1)))),
+                 (Steps [(SReturn (Some (EConst (VInt 1))))]),
+                 (Some (Steps
+                          [(SReturn
+                              (Some (EBin_op (Asterisk,
+                                       (EIdentifier (Id "num")),
+                                       (EMethod_invoke (
+                                          (EIdentifier (Id "Fac")),
+                                          (Params
+                                             [(EBin_op (Minus,
+                                                 (EIdentifier (Id "num")),
+                                                 (EConst (VInt 1))))
+                                               ])
+                                          ))
+                                       ))))
+                            ]))
+                 ))
+               ])
+          ))
+       ]
+     } |}]
 ;;
 
 let%expect_test _ =

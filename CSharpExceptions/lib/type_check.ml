@@ -19,6 +19,20 @@ open Ast
    (после этапа )
 *)
 
+(*
+   TODO:
+
+   1) все конструкторы добавляются в локальное окружение (в любом локальном окружении есть конструкторы)
+
+   2) добавить в глобальное/локальное окружение дополнительные штуки (типо base_lib)
+   * Exception - базовое исключение, которое можно создать
+   * метод print (local)
+   * метод open_file + close_file + write_file(string)
+
+   3) сделать проверку внутри класса на поля конструктора (крч, если у нас поля есть, они неопределены, и нет конструктора, то фэйл)
+   * все конструкторы добавляются в класс автоматически
+*)
+
 module Ident = struct
   type t = ident
 
@@ -48,7 +62,7 @@ module EnvMap = Stdlib.Map.Make (Env_id)
 type excaption = Exception of ident
 
 type code_ctx =
-  | Exception_ctx of excaption
+  | Exception_ctx of class_decl
     (* TODO: переделывать классы с наследованием в этот тип, так как нормального наследования у меня нет *)
   | Class_ctx of class_decl (* Сюда просто перепихнуть инфу *)
 
@@ -75,6 +89,7 @@ type runtime_ctx =
 
 type t_env_value =
   | Metod_sig of method_sign
+  | Constructor_sig of constructor_sign
   | Value_sign of var_type
 
 type t_loc_env = t_env_value IdentMap.t
@@ -137,16 +152,26 @@ module Type_checker = struct
       save_global new_l c_env
   ;;
 
-  let read_local : ident -> t_env_value option tt =
+  let read_local : ident -> t_env_value tt =
     fun id c_env ->
     match c_env with
-    | _, local_env -> return (IdentMap.find_opt id local_env) c_env
+    | _, local_env ->
+      (match IdentMap.find_opt id local_env with
+       | Some x -> return x c_env
+       | None -> fail (`Not_find_ident id) c_env)
   ;;
 
-  let read_global : code_ident -> code_ctx option tt =
+  let read_global : code_ident -> code_ctx tt =
     fun id c_env ->
+    let id_ =
+      match id with
+      | Code_ident x -> x
+    in
     match c_env with
-    | code, _ -> return (CodeMap.find_opt id code) c_env
+    | code, _ ->
+      (match CodeMap.find_opt id code with
+       | Some x -> return x c_env
+       | None -> fail (`Not_find_ident id_) c_env)
   ;;
 
   let run : 'a tt -> ctx_env * ('a, error) Result.t =
@@ -217,6 +242,7 @@ let to_assign_t = function
     (match m_type with
      | Void -> Result.error "Non-assignable type"
      | TReturn a_tp -> Result.ok a_tp)
+  | Constructor_sig { con_modif = _; con_id; _ } -> Result.ok (TNullable (TClass con_id))
 ;;
 
 let opt_to_assign_t = function
@@ -284,47 +310,117 @@ let map2_opt f l1 l2 =
   | false -> Result.error "len(list1) != len(list2)"
 ;;
 
-let check_method_ method_sign env_prms =
+let check_method tp args params =
   let compare_prms = map2_opt ( =!> ) in
   let to_env elem = Some (v_decl_to_type_v elem) in
-  match method_sign with
+  let args_env = List.map to_env args in
+  let result =
+    params
+    >>| fun prms_env ->
+    match compare_prms args_env prms_env with
+    | Result.Ok ans -> is_success_list ans
+    | Result.Error _ -> false
+  in
+  result
+  >>= function
+  | true -> return (Some tp)
+  | false -> fail `Type_mismatch
+;;
+
+let check_invoke sign env_prms =
+  match sign with
   | Some (Metod_sig { m_modif = _; m_type; m_id = _; m_args = Args args }) ->
-    (match to_type_m m_type with
+    let tp = to_type_m m_type in
+    (match tp with
      | Result.Error _ -> fail `Type_mismatch
-     | Result.Ok tp ->
-       let args_env = List.map to_env args in
-       let result =
-         env_prms
-         >>| fun prms_env ->
-         match compare_prms args_env prms_env with
-         | Result.Ok ans -> is_success_list ans
-         | Result.Error _ -> false
-       in
-       result
-       >>= (function
-        | true -> return (Some tp)
-        | false -> fail `Type_mismatch))
+     | Result.Ok tp -> check_method tp args env_prms)
+  | Some (Constructor_sig { con_modif = _; con_id; con_args; base_params }) ->
+    let tp = Value_sign (TVar (TNullable (TClass con_id))) in
+    (match con_args, base_params with
+     | Args args, None -> check_method tp args env_prms
+     | _ -> fail (`Other_error "Inheritance with constructors is not supported"))
   | _ -> fail `Type_mismatch
 ;;
+
+let get_class_decl = function
+  | Exception_ctx exc -> exc
+  | Class_ctx cl -> cl
+;;
+
+let get_class_member_sign cl_d el_id =
+  let f id acc el =
+    match acc, el with
+    | None, el ->
+      let is_fild s id =
+        match s with
+        | { f_modif = _; f_type; f_id } when equal_ident f_id id ->
+          Some (Value_sign f_type)
+        | _ -> None
+      in
+      let is_method s id =
+        match s with
+        | { m_modif = _; m_type = _; m_id; _ } when equal_ident m_id id ->
+          Some (Metod_sig s)
+        | _ -> None
+      in
+      let is_constructor s id =
+        match s with
+        | { con_modif = _; con_id; _ } when equal_ident con_id id ->
+          Some (Constructor_sig s)
+        | _ -> None
+      in
+      (match el with
+       | Fild (sign, _) -> is_fild sign id
+       | Method (sign, _) -> is_method sign id
+       | Constructor (sign, _) -> is_constructor sign id
+       | Main _ -> None)
+    | ret, _ -> ret
+  in
+  List.fold_left (f el_id) None cl_d.cl_mems
+;;
+
+(* let find_global id =
+   read_global (Code_ident id) >>= *)
+
+let rec find_class_member cl_decl expr =
+  let find_mem id =
+    match get_class_member_sign cl_decl id with
+    | Some x -> return x
+    | None -> fail (`Other_error "Parsing error in EPoint_access")
+  in
+  match expr with
+  | EIdentifier id -> find_mem id
+  | EPoint_access (EIdentifier id, expr1) -> (* TODO: *) find_mem id
+  | _ -> fail (`Other_error "Parsing error in EPoint_access")
+;;
+
+(* match f with *)
+(*
+   let point_check e1 e2 =
+   match e1 with
+   | EIdentifier id ->
+   let local_find = read_local id >>| fun x -> Some x in
+   let global_find = read_global (Code_ident id) in
+
+   | _ -> fail (`Other_error "Error during parsing in Epoint_access") *)
 
 let check_expr exp =
   let rec helper e1 =
     match e1 with
     | EConst x ->
-      return (to_type_v @@ to_var_type @@ to_atype x)
       (* TODO: отсюда берется None, потому что у Null нет типа *)
-    | EIdentifier x -> read_local x
+      return (to_type_v @@ to_var_type @@ to_atype x)
+    | EIdentifier x -> read_local x >>| fun x -> Some x
     | EMethod_invoke (e2, Params prms) ->
-      helper e2
+      (* TODO: Юля должна себе придумать, как еще вызов конструктора проверять *)
+      helper e2 (* TODO: ВСЕ КОНСТРУКТОРЫ ДОЛЖНЫ БЫТЬ В ЛОКАЛЬНОЙ ОБЛАСТИ ВИДИМОСТИ *)
       >>= fun x ->
       let env_val_prms = params_check helper prms in
-      check_method_ x env_val_prms
-    (* | EPoint_access ->  мб тут надо делать проверку на обращение к приватному методу *)
+      check_invoke x env_val_prms
+    (* | EPoint_access (e1, e2) -> *)
+    (* | EPoint_access ->  мб тут надо делать проверку на обращение к приватному методу + TODO: это жопа будет*)
     (* | EBin_op ->  *)
     (* | EUn_op ->  *)
   in
   helper exp
 ;;
-(* let checker: tast -> (code_ctx , error) result =
-   fun ast ->
-   let *)
