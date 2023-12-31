@@ -4,6 +4,15 @@
  (modules Ast Parser Infer Typing)
  (libraries base angstrom)
  (preprocess
+  (pps ppx_deriving.show))
+ (instrumentation
+  (backend bisect_ppx)))
+
+(library
+ (name tests)
+ (modules tests)
+ (libraries miniml_lib)
+ (preprocess
   (pps ppx_expect ppx_deriving.show))
  (instrumentation
   (backend bisect_ppx))

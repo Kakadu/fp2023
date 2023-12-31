@@ -282,7 +282,7 @@ let generalize env ty =
 
 let lookup_env id map =
   match Base.Map.find map id with
-  | None -> fail (NoVariable id)
+  | None -> fail (UndeclaredVariable id)
   | Some scheme ->
     let* ans = instantiate scheme in
     return (Subst.empty, ans)
@@ -474,6 +474,8 @@ let infer =
   helper
 ;;
 
+let run_infer e = Result.map snd (run (infer TypeEnv.empty e))
+
 let check_program env program =
   let check_expr env e =
     let* _, ty = infer env e in
@@ -490,114 +492,3 @@ let check_program env program =
 ;;
 
 let typecheck env program = run (check_program env program)
-
-(* Tests *)
-
-let run_infer e = Result.map snd (run (infer TypeEnv.empty e))
-
-let pp_infer e =
-  match run_infer e with
-  | Ok ty -> Stdlib.Format.printf "%a" pp_ty ty
-  | Error err -> Stdlib.Format.printf "%a" pp_error err
-;;
-
-let pp_parse_and_infer input =
-  match Parser.parse_expr input with
-  | Result.Ok e -> pp_infer e
-  | _ -> Stdlib.print_endline "Failed to parse"
-;;
-
-let%expect_test _ =
-  pp_parse_and_infer "let x = (42, false, fun x -> x)";
-  [%expect {| int * bool * '0 -> '0 |}]
-;;
-
-let%expect_test _ =
-  pp_parse_and_infer "let f x y = [x; y; x = y]";
-  [%expect {| bool -> bool -> bool list |}]
-;;
-
-let%expect_test _ =
-  pp_parse_and_infer "let f x y = [x; y] in f 42";
-  [%expect {| int -> int list |}]
-;;
-
-let%expect_test _ =
-  pp_parse_and_infer
-    "let rec fact x useless_var = if x = 1 then x else x * fact (x - 1) useless_var";
-  [%expect {| int -> '2 -> int |}]
-;;
-
-let%expect_test _ =
-  pp_parse_and_infer "let rec fact x = if x = 1 then x else x * fact (x - 1) in fact 42";
-  [%expect {| int |}]
-;;
-
-let%expect_test _ =
-  pp_parse_and_infer "let f x = match x with | (h :: tl1) :: tl2 -> true | _ -> false";
-  [%expect {| '2 list list -> bool |}]
-;;
-
-let%expect_test _ =
-  pp_parse_and_infer
-    {|
-    let rec fold_left op acc xs = match xs with
-    | []   -> acc
-    | h :: t -> fold_left op (op acc h) t
-    |};
-  [%expect {| ('12 -> '5 -> '12) -> '12 -> '5 list -> '12 |}]
-;;
-
-let%expect_test _ =
-  pp_parse_and_infer
-    {|
-    let split xs = match xs with 
-      | a :: b :: tl -> a, b, tl
-    |};
-  [%expect {| '3 list -> '3 * '3 * '3 list |}]
-;;
-
-let%expect_test _ =
-  pp_parse_and_infer
-    {|
-    let rec even_length xs = match xs with 
-    | h :: h :: tl -> even_length tl
-    | h :: [] -> false
-    | _ -> true
-    |};
-  [%expect {| '3 list -> bool |}]
-;;
-
-(* Errors *)
-
-let%expect_test _ =
-  pp_parse_and_infer "let f x = x + y";
-  [%expect {| (NoVariable "y") |}]
-;;
-
-let%expect_test _ =
-  pp_parse_and_infer "let rec f x = f in f 10";
-  [%expect {| (OccursCheckFailed (0, (TArrow ((TVar 1), (TVar 0))))) |}]
-;;
-
-let%expect_test _ =
-  pp_parse_and_infer "[1; 1, 2]";
-  [%expect
-    {| (UnificationFailed ((TBase BInt), (TTuple ((TBase BInt), (TBase BInt), [])))) |}]
-;;
-
-let%expect_test _ =
-  pp_parse_and_infer "let f x = [fun x -> x + x; fun x -> x >= x]";
-  [%expect {| (UnificationFailed ((TBase BInt), (TBase BBool))) |}]
-;;
-
-let%expect_test _ =
-  pp_parse_and_infer "let () = if true then 1";
-  [%expect {| (UnificationFailed ((TBase BInt), (TBase BUnit))) |}]
-;;
-
-let%expect_test _ =
-  pp_parse_and_infer
-    "let f x = match x with | a :: b -> a | ((a :: true) :: c) :: tl -> c ";
-  [%expect {| (UnificationFailed ((TList (TVar 4)), (TBase BBool))) |}]
-;;
