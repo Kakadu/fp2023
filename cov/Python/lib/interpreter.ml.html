@@ -1020,7 +1020,7 @@
 <a href="#L445">445</a>
 <a href="#L446">446</a>
 </pre>
-<pre><code class="ocaml">(** Copyright 2021-2022, Averin Pavel *)
+<pre><code class="ocaml">(** Copyright 2023-2024, Averin Pavel *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
@@ -1057,13 +1057,13 @@ module Eval (M : MONADERROR) = struct
 
   (* Utility functions *)
   let rec fold_left func init = function
-    | <span data-count="54">[</span>] -&gt; return init
-    | <span data-count="75">h</span>d :: tl -&gt; fun<span data-count="75">c</span> init hd &gt;&gt;= fun init -&gt; <span data-count="75">f</span>old_left func init tl
+    | <span data-count="26">[</span>] -&gt; return init
+    | <span data-count="33">h</span>d :: tl -&gt; fun<span data-count="33">c</span> init hd &gt;&gt;= fun init -&gt; <span data-count="33">f</span>old_left func init tl
   ;;
 
   let rec map1 f = function
-    | <span data-count="30">[</span>] -&gt; return []
-    | <span data-count="28">h</span> :: tl -&gt; <span data-count="28">f</span> h &gt;&gt;= fun c -&gt; <span data-count="28">m</span>ap<span data-count="28">1</span> f tl &gt;&gt;= fun lst -&gt; <span data-count="28">r</span>eturn (c :: lst)
+    | <span data-count="20">[</span>] -&gt; return []
+    | <span data-count="18">h</span> :: tl -&gt; <span data-count="18">f</span> h &gt;&gt;= fun c -&gt; <span data-count="18">m</span>ap<span data-count="18">1</span> f tl &gt;&gt;= fun lst -&gt; <span data-count="18">r</span>eturn (c :: lst)
   ;;
 
   (* Environment symbols *)
@@ -1129,31 +1129,31 @@ module Eval (M : MONADERROR) = struct
 
   (* Environment related functions for variables *)
 
-  let var_in_env i env = <span data-count="108">L</span>ist.exists (fun (x : var_symb) -&gt; <span data-count="99">x</span>.identifier = i) env.vars
+  let var_in_env i env = <span data-count="68">L</span>ist.exists (fun (x : var_symb) -&gt; <span data-count="63">x</span>.identifier = i) env.vars
 
   let change_var i new_value env =
-    <span data-count="25">l</span>et new_vars =
+    <span data-count="15">l</span>et new_vars =
       List.map
         (fun (x : var_symb) -&gt;
-          <span data-count="25">i</span>f x.identifier = i then <span data-count="25">{</span> x with value = new_value } else <span data-count="0">x</span>)
+          <span data-count="15">i</span>f x.identifier = i then <span data-count="15">{</span> x with value = new_value } else <span data-count="0">x</span>)
         env.vars
     in
-    <span data-count="25">{</span> env with vars = new_vars }
+    <span data-count="15">{</span> env with vars = new_vars }
   ;;
 
   let change_or_add_var env (x : var_symb) =
-    <span data-count="34">m</span>atch var_in_env x.identifier env with
-    | <span data-count="25">t</span>rue -&gt; change_var x.identifier x.value env
-    | <span data-count="9">f</span>alse -&gt; { env with vars = x :: env.vars }
+    <span data-count="20">m</span>atch var_in_env x.identifier env with
+    | <span data-count="15">t</span>rue -&gt; change_var x.identifier x.value env
+    | <span data-count="5">f</span>alse -&gt; { env with vars = x :: env.vars }
   ;;
 
   let change_or_add_var_list = List.fold_lef<span data-count="9">t</span> change_or_add_var
-  let get_var i env = <span data-count="75">L</span>ist.find (fun (x : var_symb) -&gt; <span data-count="75">x</span>.identifier = i) env.vars
+  let get_var i env = <span data-count="49">L</span>ist.find (fun (x : var_symb) -&gt; <span data-count="49">x</span>.identifier = i) env.vars
 
   (* Environment related functions for functions *)
 
   let func_in_env i env =
-    <span data-count="71">L</span>ist.exists (fun (a : function_symb) -&gt; <span data-count="47">i</span> = a.identifier) env.functions
+    <span data-count="33">L</span>ist.exists (fun (a : function_symb) -&gt; <span data-count="25">i</span> = a.identifier) env.functions
   ;;
 
   let class_in_env i env = <span data-count="0">L</span>ist.exists (fun (a : environment) -&gt; <span data-count="0">i</span> = a.id) env.classes
@@ -1172,9 +1172,9 @@ module Eval (M : MONADERROR) = struct
   ;;
 
   let change_or_add_func (x : function_symb) env =
-    <span data-count="33">m</span>atch func_in_env x.identifier env with
+    <span data-count="7">m</span>atch func_in_env x.identifier env with
     | <span data-count="0">t</span>rue -&gt; change_func x env
-    | <span data-count="33">f</span>alse -&gt; { env with functions = x :: env.functions }
+    | <span data-count="7">f</span>alse -&gt; { env with functions = x :: env.functions }
   ;;
 
   let change_class (new_class : environment) env =
@@ -1196,7 +1196,7 @@ module Eval (M : MONADERROR) = struct
   ;;
 
   let get_func i env =
-    <span data-count="91">L</span>ist.find (fun (x : function_symb) -&gt; <span data-count="91">x</span>.identifier = i) env.functions
+    <span data-count="61">L</span>ist.find (fun (x : function_symb) -&gt; <span data-count="61">x</span>.identifier = i) env.functions
   ;;
 
   let get_class i env = <span data-count="1">L</span>ist.find (fun (x : environment) -&gt; <span data-count="1">x</span>.id = i) env.classes
@@ -1212,7 +1212,7 @@ module Eval (M : MONADERROR) = struct
   ;;
 
   let combine_args_and_params args (params : value list) =
-    <span data-count="30">L</span>ist.map (fun x -&gt; <span data-count="28">{</span> identifier = fs<span data-count="28">t</span> x; value = sn<span data-count="28">d</span> x }) (List.combin<span data-count="30">e</span> args params)
+    <span data-count="20">L</span>ist.map (fun x -&gt; <span data-count="18">{</span> identifier = fs<span data-count="18">t</span> x; value = sn<span data-count="18">d</span> x }) (List.combin<span data-count="20">e</span> args params)
   ;;
 
   (* Debugging &amp; Testing functions *)
@@ -1229,7 +1229,7 @@ module Eval (M : MONADERROR) = struct
 
   let pack_to_string = function
     | <span data-count="4">S</span>tring a -&gt; a
-    | <span data-count="7">I</span>nt a -&gt; Int.to_string a
+    | <span data-count="5">I</span>nt a -&gt; Int.to_string a
     | <span data-count="0">B</span>ool a -&gt; Bool.to_string a
     | <span data-count="0">_</span> -&gt; "Interpretation Error"
   ;;
@@ -1253,29 +1253,29 @@ module Eval (M : MONADERROR) = struct
 
   let i_exp_or_stmt =
     let rec i_expr (exp_or_stmt : dispatch) (env : environment) exp =
-      <span data-count="257">l</span>et rec apply env body =
-        <span data-count="60">i</span>f env.flag == Return_f
-        then <span data-count="30">r</span>eturn env.return_v
-        else <span data-count="30">(</span>
+      <span data-count="167">l</span>et rec apply env body =
+        <span data-count="40">i</span>f env.flag == Return_f
+        then <span data-count="20">r</span>eturn env.return_v
+        else <span data-count="20">(</span>
           match body with
           | <span data-count="0">[</span>] -&gt; return None
-          | <span data-count="30">h</span>d :: tl -&gt;
-            let* a = exp_or_stmt.i_stm<span data-count="30">t</span> exp_or_stmt env hd in
-            <span data-count="30">a</span>pply a tl)
+          | <span data-count="20">h</span>d :: tl -&gt;
+            let* a = exp_or_stmt.i_stm<span data-count="20">t</span> exp_or_stmt env hd in
+            <span data-count="20">a</span>pply a tl)
       in
       match exp with
-      | <span data-count="69">C</span>onst a -&gt; return a
+      | <span data-count="43">C</span>onst a -&gt; return a
       | <span data-count="2">A</span>rithOp (Add, a, b) -&gt;
         let* a = i_exp<span data-count="2">r</span> exp_or_stmt env a in
         <span data-count="2">l</span>et* b = i_exp<span data-count="2">r</span> exp_or_stmt env b in
         <span data-count="2">(</span>match a, b with
          | <span data-count="2">I</span>nt a1, Int b1 -&gt; return (Int (a1 + b1))
          | <span data-count="0">_</span> -&gt; error "unexpected type")
-      | <span data-count="23">A</span>rithOp (Sub, a, b) -&gt;
-        let* a = i_exp<span data-count="23">r</span> exp_or_stmt env a in
-        <span data-count="23">l</span>et* b = i_exp<span data-count="23">r</span> exp_or_stmt env b in
-        <span data-count="23">(</span>match a, b with
-         | <span data-count="23">I</span>nt a1, Int b1 -&gt; return (Int (a1 - b1))
+      | <span data-count="15">A</span>rithOp (Sub, a, b) -&gt;
+        let* a = i_exp<span data-count="15">r</span> exp_or_stmt env a in
+        <span data-count="15">l</span>et* b = i_exp<span data-count="15">r</span> exp_or_stmt env b in
+        <span data-count="15">(</span>match a, b with
+         | <span data-count="15">I</span>nt a1, Int b1 -&gt; return (Int (a1 - b1))
          | <span data-count="0">_</span> -&gt; error "unexpected type")
       | <span data-count="0">A</span>rithOp (Div, a, b) -&gt;
         let* a = i_exp<span data-count="0">r</span> exp_or_stmt env a in
@@ -1284,16 +1284,16 @@ module Eval (M : MONADERROR) = struct
          | <span data-count="0">_</span>, Int b1 when b1 = 0 -&gt; <span data-count="0">e</span>rror "0 Division Error"
          | <span data-count="0">I</span>nt a1, Int b1 -&gt; return (Int (a1 / b1))
          | <span data-count="0">_</span> -&gt; error "unexpected type")
-      | <span data-count="23">A</span>rithOp (Mul, a, b) -&gt;
-        let* a = i_exp<span data-count="23">r</span> exp_or_stmt env a in
-        <span data-count="23">l</span>et* b = i_exp<span data-count="23">r</span> exp_or_stmt env b in
-        <span data-count="23">(</span>match a, b with
-         | <span data-count="23">I</span>nt a1, Int b1 -&gt; return (Int (a1 * b1))
+      | <span data-count="15">A</span>rithOp (Mul, a, b) -&gt;
+        let* a = i_exp<span data-count="15">r</span> exp_or_stmt env a in
+        <span data-count="15">l</span>et* b = i_exp<span data-count="15">r</span> exp_or_stmt env b in
+        <span data-count="15">(</span>match a, b with
+         | <span data-count="15">I</span>nt a1, Int b1 -&gt; return (Int (a1 * b1))
          | <span data-count="0">_</span> -&gt; error "unexpected type")
-      | <span data-count="27">B</span>oolOp (Equal, a, b) -&gt;
-        let* a = i_exp<span data-count="27">r</span> exp_or_stmt env a in
-        <span data-count="27">l</span>et* b = i_exp<span data-count="27">r</span> exp_or_stmt env b in
-        <span data-count="27">r</span>eturn (Bool (a = b))
+      | <span data-count="17">B</span>oolOp (Equal, a, b) -&gt;
+        let* a = i_exp<span data-count="17">r</span> exp_or_stmt env a in
+        <span data-count="17">l</span>et* b = i_exp<span data-count="17">r</span> exp_or_stmt env b in
+        <span data-count="17">r</span>eturn (Bool (a = b))
       | <span data-count="0">B</span>oolOp (NotEqual, a, b) -&gt;
         let* a = i_exp<span data-count="0">r</span> exp_or_stmt env a in
         <span data-count="0">l</span>et* b = i_exp<span data-count="0">r</span> exp_or_stmt env b in
@@ -1322,24 +1322,24 @@ module Eval (M : MONADERROR) = struct
         let* a = i_exp<span data-count="0">r</span> exp_or_stmt env a in
         <span data-count="0">l</span>et* b = i_exp<span data-count="0">r</span> exp_or_stmt env b in
         <span data-count="0">r</span>eturn (Bool (a = Bool tru<span data-count="0">e</span> || b = Bool tru<span data-count="0">e</span>))
-      | <span data-count="74">V</span>ariable (_, i) -&gt;
+      | <span data-count="48">V</span>ariable (_, i) -&gt;
         (match var_in_env i env with
-         | <span data-count="74">t</span>rue -&gt; return (get_va<span data-count="74">r</span> i env).value
+         | <span data-count="48">t</span>rue -&gt; return (get_va<span data-count="48">r</span> i env).value
          | <span data-count="0">f</span>alse -&gt; error "undefined Variable")
-      | <span data-count="37">F</span>unctionCall (identifier, exp_list) -&gt;
+      | <span data-count="25">F</span>unctionCall (identifier, exp_list) -&gt;
         (match identifier with
-         | <span data-count="8">I</span>dentifier "print" when not (func_in_en<span data-count="8">v</span> (Identifier "print") env) -&gt;
-           <span data-count="7">l</span>et rec print_exp_list = function
-             | <span data-count="7">[</span>] -&gt; return None
-             | <span data-count="7">e</span>xp :: tl -&gt;
-               let* value = i_exp<span data-count="7">r</span> exp_or_stmt env exp in
-               <span data-count="7">l</span>et str_val = pack_to_string value in
-               <span data-count="7">l</span>et () = Printf.printf "%s" str_val in
-               <span data-count="7">p</span>rint_exp_list tl
+         | <span data-count="6">I</span>dentifier "print" when not (func_in_en<span data-count="6">v</span> (Identifier "print") env) -&gt;
+           <span data-count="5">l</span>et rec print_exp_list = function
+             | <span data-count="5">[</span>] -&gt; return None
+             | <span data-count="5">e</span>xp :: tl -&gt;
+               let* value = i_exp<span data-count="5">r</span> exp_or_stmt env exp in
+               <span data-count="5">l</span>et str_val = pack_to_string value in
+               <span data-count="5">l</span>et () = Printf.printf "%s" str_val in
+               <span data-count="5">p</span>rint_exp_list tl
            in
            (match exp_list with
             | <span data-count="0">[</span>] -&gt; return None
-            | <span data-count="7">_</span> -&gt; print_exp_list exp_list)
+            | <span data-count="5">_</span> -&gt; print_exp_list exp_list)
          | <span data-count="0">I</span>dentifier "setattr" when not (func_in_en<span data-count="0">v</span> (Identifier "setattr") env) -&gt;
            <span data-count="0">l</span>et* className = i_exp<span data-count="0">r</span> exp_or_stmt env (List.h<span data-count="0">d</span> exp_list) in
            <span data-count="0">l</span>et classId = Identifier (pack_to_strin<span data-count="0">g</span> className) in
@@ -1356,21 +1356,21 @@ module Eval (M : MONADERROR) = struct
              change_fun<span data-count="0">c</span> funcI fetchedClass
            in
            i_expr exp_or_stmt (change_or_add_clas<span data-count="0">s</span> changedClass env) (Const None)
-         | <span data-count="30">_</span> -&gt;
+         | <span data-count="20">_</span> -&gt;
            (match func_in_env identifier env with
             | <span data-count="0">f</span>alse -&gt; error "undefined Function"
-            | <span data-count="30">t</span>rue -&gt;
-              let* x = map<span data-count="30">1</span> (fun x -&gt; <span data-count="28">i</span>_expr exp_or_stmt env x) exp_list in
-              <span data-count="30">a</span>pply
-                { (change_or_add_var_lis<span data-count="30">t</span>
+            | <span data-count="20">t</span>rue -&gt;
+              let* x = map<span data-count="20">1</span> (fun x -&gt; <span data-count="18">i</span>_expr exp_or_stmt env x) exp_list in
+              <span data-count="20">a</span>pply
+                { (change_or_add_var_lis<span data-count="20">t</span>
                      env
-                     (combine_args_and_param<span data-count="30">s</span> (get_fun<span data-count="30">c</span> identifier env).params x))
+                     (combine_args_and_param<span data-count="20">s</span> (get_fun<span data-count="20">c</span> identifier env).params x))
                   with
                   id = Identifier "local"
                 ; local_envs = [ { local_env with vars = env.vars } ]
-                ; functions = [ get_fun<span data-count="30">c</span> identifier env ]
+                ; functions = [ get_fun<span data-count="20">c</span> identifier env ]
                 }
-                (get_fun<span data-count="30">c</span> identifier env).body))
+                (get_fun<span data-count="20">c</span> identifier env).body))
       | <span data-count="1">M</span>ethodCall (classId, methodId, e) -&gt;
         let fetchedMethod = get_func methodId (get_clas<span data-count="1">s</span> classId env) in
         <span data-count="1">l</span>et temp_env = { env with functions = env.functions @ [ fetchedMethod ] } in
@@ -1390,12 +1390,12 @@ module Eval (M : MONADERROR) = struct
       | <span data-count="0">_</span> -&gt; error "unexpected expression"
     in
     let rec i_stmt (i_exp_or_stmt : dispatch) (env : environment) = function
-      | <span data-count="7">E</span>xpression exp -&gt;
-        let* some_val = i_exp<span data-count="7">r</span> i_exp_or_stmt env exp in
-        <span data-count="7">r</span>eturn env
-      | <span data-count="30">R</span>eturn exp -&gt;
-        let* value = i_exp_or_stmt.i_exp<span data-count="30">r</span> i_exp_or_stmt env exp in
-        <span data-count="30">r</span>eturn { env with flag = Return_f; return_v = value }
+      | <span data-count="5">E</span>xpression exp -&gt;
+        let* some_val = i_exp<span data-count="5">r</span> i_exp_or_stmt env exp in
+        <span data-count="5">r</span>eturn env
+      | <span data-count="20">R</span>eturn exp -&gt;
+        let* value = i_exp_or_stmt.i_exp<span data-count="20">r</span> i_exp_or_stmt env exp in
+        <span data-count="20">r</span>eturn { env with flag = Return_f; return_v = value }
       | <span data-count="0">W</span>hile (e, s) -&gt;
         let rec guard_res ctx =
           <span data-count="0">i</span>_exp_or_stmt.i_exp<span data-count="0">r</span> i_exp_or_stmt env e
@@ -1413,22 +1413,22 @@ module Eval (M : MONADERROR) = struct
                <span data-count="0">h</span>elper newEnv tl)
         in
         guard_res env
-      | <span data-count="27">I</span>fElse (guard, ifBranch, elseBranch) -&gt;
-        let* res = i_exp<span data-count="27">r</span> i_exp_or_stmt env guard in
-        <span data-count="27">l</span>et get_env env = <span data-count="27">f</span>old_left (i_exp_or_stmt.i_stm<span data-count="27">t</span> i_exp_or_stmt) env in
+      | <span data-count="17">I</span>fElse (guard, ifBranch, elseBranch) -&gt;
+        let* res = i_exp<span data-count="17">r</span> i_exp_or_stmt env guard in
+        <span data-count="17">l</span>et get_env env = <span data-count="17">f</span>old_left (i_exp_or_stmt.i_stm<span data-count="17">t</span> i_exp_or_stmt) env in
         (match res with
-         | <span data-count="4">B</span>ool true -&gt; get_env env ifBranch
-         | <span data-count="23">B</span>ool false -&gt; get_env env elseBranch
+         | <span data-count="2">B</span>ool true -&gt; get_env env ifBranch
+         | <span data-count="15">B</span>ool false -&gt; get_env env elseBranch
          | <span data-count="0">_</span> -&gt; error "failed to interpred the guard")
-      | <span data-count="7">A</span>ssign (l, r) -&gt;
+      | <span data-count="3">A</span>ssign (l, r) -&gt;
         (match l with
-         | <span data-count="7">V</span>ariable (_, identifier) -&gt;
+         | <span data-count="3">V</span>ariable (_, identifier) -&gt;
            (match r with
             | <span data-count="1">L</span>ambda (params, exp) -&gt;
               i_stmt i_exp_or_stmt env (Function (identifier, params, [ Return exp ]))
-            | <span data-count="6">_</span> -&gt;
-              let* value = i_exp_or_stmt.i_exp<span data-count="6">r</span> i_exp_or_stmt env r in
-              <span data-count="6">r</span>eturn (change_or_add_va<span data-count="6">r</span> env { identifier; value }))
+            | <span data-count="2">_</span> -&gt;
+              let* value = i_exp_or_stmt.i_exp<span data-count="2">r</span> i_exp_or_stmt env r in
+              <span data-count="2">r</span>eturn (change_or_add_va<span data-count="2">r</span> env { identifier; value }))
          | <span data-count="0">_</span> -&gt; error "Left-hand side operator is not a variable")
       | <span data-count="2">C</span>lass (id, statements) -&gt;
         let global_env =
@@ -1447,9 +1447,9 @@ module Eval (M : MONADERROR) = struct
          | <span data-count="2">f</span>alse -&gt;
            let* class_env = class_env in
            <span data-count="2">r</span>eturn { env with classes = { class_env with id } :: env.classes })
-      | <span data-count="33">F</span>unction (i, some_params, some_body) -&gt;
+      | <span data-count="7">F</span>unction (i, some_params, some_body) -&gt;
         let new_func_env = { identifier = i; params = some_params; body = some_body } in
-        return (change_or_add_fun<span data-count="33">c</span> new_func_env env)
+        return (change_or_add_fun<span data-count="7">c</span> new_func_env env)
       | <span data-count="0">_</span> -&gt; error "unexpected statement"
     in
     { i_expr; i_stmt }
@@ -1459,7 +1459,7 @@ module Eval (M : MONADERROR) = struct
     <span data-count="0">i</span>_exp_or_stmt.i_expr i_exp_or_stmt global_env e
   ;;
 
-  let get_env global_env = <span data-count="27">f</span>old_left (i_exp_or_stmt.i_stm<span data-count="27">t</span> i_exp_or_stmt) global_env
+  let get_env global_env = <span data-count="9">f</span>old_left (i_exp_or_stmt.i_stm<span data-count="9">t</span> i_exp_or_stmt) global_env
 
   let interpret =
     let env = global_env in
