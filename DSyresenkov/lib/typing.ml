@@ -29,7 +29,7 @@ type ty =
 
 type error =
   | OccursCheckFailed of int * ty (** OCaml's Occurs check *)
-  | NoVariable of id (** Attempt to use non-initialized variable *)
+  | UndeclaredVariable of id (** Attempt to use non-initialized variable *)
   | UnificationFailed of ty * ty (** Failed to unify left and right types *)
   | NotImplemented (** Still not implemented features *)
 [@@deriving show { with_path = false }]

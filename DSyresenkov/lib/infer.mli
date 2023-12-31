@@ -9,4 +9,5 @@ module TypeEnv : sig
   type t = (id, scheme, Base.String.comparator_witness) Base.Map.t
 end
 
+val run_infer : expr -> (ty, error) result
 val typecheck : TypeEnv.t -> program -> (TypeEnv.t, error) result
