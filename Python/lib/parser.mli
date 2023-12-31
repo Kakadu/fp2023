@@ -1,3 +1,7 @@
+(** Copyright 2021-2022, Averin Pavel *)
+
+(** SPDX-License-Identifier: LGPL-3.0-or-later *)
+
 type pseudo_statement =
   | SpecialStatementWithColumns of int * pseudo_statement
   | StatementWithColumns of int * pseudo_statement

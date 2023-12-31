@@ -330,12 +330,7 @@ module Eval (M : MONADERROR) = struct
            let fetchedClass = get_class classId env in
            let fetchedMethod = get_func methodId env in
            let changedClass =
-             let funcI : function_symb =
-               { identifier = funcId
-               ; params = fetchedMethod.params
-               ; body = fetchedMethod.body
-               }
-             in
+             let funcI : function_symb = { fetchedMethod with identifier = funcId } in
              change_func funcI fetchedClass
            in
            i_expr exp_or_stmt (change_or_add_class changedClass env) (Const None)
@@ -364,13 +359,12 @@ module Eval (M : MONADERROR) = struct
       | FString fStringList ->
         let strList =
           List.map
-            (fun x ->
-              match x with
+            (function
               | Str c -> pack_to_string c
               | Var id -> pack_to_string (get_var id env).value)
             fStringList
         in
-        i_expr exp_or_stmt env (Const (String (List.fold_left ( ^ ) "" strList)))
+        i_expr exp_or_stmt env (Const (String (String.concat "" strList)))
       | _ -> error "unexpected expression"
     in
     let rec i_stmt (i_exp_or_stmt : dispatch) (env : environment) = function
