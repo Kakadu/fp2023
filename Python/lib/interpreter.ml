@@ -1,4 +1,4 @@
-(** Copyright 2021-2022, Averin Pavel *)
+(** Copyright 2023-2024, Averin Pavel *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
