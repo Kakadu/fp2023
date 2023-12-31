@@ -1,7 +1,3 @@
-(** Copyright 2021-2023, Averin Pavel *)
-
-(** SPDX-License-Identifier: LGPL-3.0-or-later *)
-
 type pseudo_statement =
   | SpecialStatementWithColumns of int * pseudo_statement
   | StatementWithColumns of int * pseudo_statement
@@ -145,7 +141,6 @@ val p_func : int -> pseudo_statement Angstrom.t
 val p_while : Ast.expression Angstrom.t -> int -> pseudo_statement Angstrom.t
 val p_for : Ast.expression Angstrom.t -> int -> pseudo_statement Angstrom.t
 val p_class : int -> pseudo_statement Angstrom.t
-val p_object : Ast.expression Angstrom.t -> Ast.expression Angstrom.t
 val p_field : Ast.expression Angstrom.t
 val p_method_call : Ast.expression Angstrom.t -> Ast.expression Angstrom.t
 val p_assign : Ast.expression Angstrom.t -> int -> pseudo_statement Angstrom.t
@@ -170,7 +165,7 @@ val p_exp_or_stmt : dispatch
 val extract_body : pseudo_statement -> pseudo_statement list
 val insert_body : pseudo_statement list -> pseudo_statement -> pseudo_statement
 val align_pseudo_statement : pseudo_statement list -> pseudo_statement list Angstrom.t
-val remove_columns : pseudo_statement list -> Ast.statement list Angstrom.t
+val remove_columns_and_join_elses : pseudo_statement list -> Ast.statement list Angstrom.t
 val parse : 'a Angstrom.t -> string -> ('a, string) result
 val pyParser : Ast.statement list Angstrom.t
 val parser : string -> (Ast.statement list, string) result

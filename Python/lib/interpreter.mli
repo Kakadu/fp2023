@@ -1,7 +1,3 @@
-(** Copyright 2021-2023, Averin Pavel *)
-
-(** SPDX-License-Identifier: LGPL-3.0-or-later *)
-
 module type MONAD = sig
   type 'a t
 
@@ -46,6 +42,7 @@ module Eval : functor (M : MONADERROR) -> sig
   type environment =
     { id : Ast.identifier
     ; local_envs : environment list
+    ; classes : environment list
     ; functions : function_symb list
     ; flag : Ast.flag
     ; return_v : Ast.value
@@ -54,6 +51,7 @@ module Eval : functor (M : MONADERROR) -> sig
     }
 
   val local_env : environment
+  val temp_class_env : environment
   val global_env : environment
   val var_in_env : Ast.identifier -> environment -> bool
   val change_var : Ast.identifier -> Ast.value -> environment -> environment
@@ -61,15 +59,18 @@ module Eval : functor (M : MONADERROR) -> sig
   val change_or_add_var_list : environment -> var_symb list -> environment
   val get_var : Ast.identifier -> environment -> var_symb
   val func_in_env : Ast.identifier -> environment -> bool
+  val class_in_env : Ast.identifier -> environment -> bool
   val change_func : function_symb -> environment -> environment
   val change_or_add_func : function_symb -> environment -> environment
+  val change_class : environment -> environment -> environment
+  val change_or_add_class : environment -> environment -> environment
   val get_func : Ast.identifier -> environment -> function_symb
-  val pack_to_string_safe : Ast.value -> string M.t
+  val get_class : Ast.identifier -> environment -> environment
   val print_list : string list -> unit
   val combine_args_and_params : Ast.identifier list -> Ast.value list -> var_symb list
   val get_str_from_identifier : Ast.identifier -> string
   val print_funcs : function_symb list -> unit
-  val pack_to_string_unsafe : Ast.value -> string
+  val pack_to_string : Ast.value -> string
   val print_vars : var_symb list -> unit
 
   type dispatch =

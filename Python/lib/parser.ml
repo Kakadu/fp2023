@@ -9,6 +9,7 @@ open Ast
 (* Pseudo Ast *)
 type pseudo_statement =
   | SpecialStatementWithColumns of int * pseudo_statement
+  (** if, else, funtions, loops, classes*)
   | StatementWithColumns of int * pseudo_statement
   | Expression of expression
   | Assign of expression * expression
@@ -297,16 +298,6 @@ let p_class columns =
   return (SpecialStatementWithColumns (columns, Class (identifier, [])))
 ;;
 
-let p_object el =
-  let* character = peek_char_fail in
-  match is_class character with
-  | true ->
-    let* identifier = p_identifier in
-    let* params = round_brackets (sep_by t_comma el) in
-    return (Object (identifier, params))
-  | false -> fail "couldn't parse an object"
-;;
-
 let p_field =
   let* identfier = p_identifier in
   let* field = t_dot *> p_identifier in
@@ -366,7 +357,7 @@ let p_fString =
 
 let p_list exp =
   let* list = square_brackets (sep_by (t_comma *> skip_whitespace) exp) in
-  return (List list)
+  return (ListExp list)
 ;;
 
 (* Multiple parsers *)
@@ -392,19 +383,15 @@ let p_exp_or_stmt =
     fix (fun p_expression ->
       let expression_list = sep_by t_comma p_expression in
       let exp =
-        take_while is_whitespace_or_eol *> peek_char_fail
-        >>= fun ch1 ->
-        peek_char_fail
-        >>= fun ch2 ->
+        let* ch1 = take_while is_whitespace_or_eol *> peek_char_fail in
         match ch1 with
-        | x when x = 'f' & ch2 = '\"' -> p_fString
         | x when is_valid_first_char x ->
           choice
             [ p_class_variable
-            ; p_object p_expression
+            ; p_func_call expression_list
             ; p_method_call p_expression
             ; p_field
-            ; p_func_call expression_list
+            ; p_fString
             ; p_global_variable
             ; anon_func p_expression
             ]
@@ -457,16 +444,9 @@ let insert_body body = function
 ;;
 
 let align_pseudo_statement pseudo_statement =
-  let empty_body body =
-    let rec helper = function
-      | [] -> true
-      | SpecialStatementWithColumns (_, statements) :: _ ->
-        (match extract_body statements with
-         | [] -> true
-         | _ -> helper (extract_body statements))
-      | _ -> false
-    in
-    helper body
+  let empty_body = function
+    | [] -> true
+    | _ -> false
   in
   let rec helper acc = function
     | [] -> return acc
@@ -477,58 +457,53 @@ let align_pseudo_statement pseudo_statement =
          (match h with
           | StatementWithColumns (columns2, _) when columns2 = columns1 ->
             helper (StatementWithColumns (columns1, body1) :: acc) tail
+          | SpecialStatementWithColumns (columns2, body2) when columns2 >= columns1 ->
+            (match empty_body (extract_body body2) with
+             | true -> fail "empty statement list"
+             | _ -> helper (StatementWithColumns (columns1, body1) :: acc) tail)
           | SpecialStatementWithColumns (columns2, body2) ->
-            if columns2 >= columns1
-            then (
-              match empty_body (extract_body body2) with
-              | true -> fail "empty statement list"
-              | _ -> helper (StatementWithColumns (columns1, body1) :: acc) tail)
-            else
-              let* new_statements =
-                helper (extract_body body2) [ StatementWithColumns (columns1, body1) ]
-              in
-              helper
-                (SpecialStatementWithColumns (columns2, insert_body new_statements body2)
-                 :: tl)
-                tail
+            let* new_statements =
+              helper (extract_body body2) [ StatementWithColumns (columns1, body1) ]
+            in
+            helper
+              (SpecialStatementWithColumns (columns2, insert_body new_statements body2)
+               :: tl)
+              tail
           | _ -> fail "unsupported order of statemtns"))
     | SpecialStatementWithColumns (columns1, body1) :: tail ->
       (match acc with
        | [] -> helper (SpecialStatementWithColumns (columns1, body1) :: acc) tail
        | h :: tl ->
          (match h with
+          | StatementWithColumns (columns2, _) when columns2 < columns1 ->
+            fail "unsupported order of statemtns"
           | StatementWithColumns (columns2, _) ->
-            if columns2 < columns1
-            then fail "unsupported order of statemtns"
-            else helper (SpecialStatementWithColumns (columns1, body1) :: acc) tail
+            helper (SpecialStatementWithColumns (columns1, body1) :: acc) tail
+          | SpecialStatementWithColumns (columns2, body2) when columns2 > columns1 ->
+            (match empty_body (extract_body body2) with
+             | true -> fail "empty statement list"
+             | _ -> helper (SpecialStatementWithColumns (columns1, body1) :: acc) tail)
+          | SpecialStatementWithColumns (columns2, body2) when columns2 = columns1 ->
+            (match empty_body (extract_body body2) with
+             | true -> fail "empty statement list"
+             | _ -> helper (SpecialStatementWithColumns (columns1, body1) :: acc) tail)
           | SpecialStatementWithColumns (columns2, body2) ->
-            if columns2 > columns1
-            then (
-              match empty_body (extract_body body2) with
-              | true -> fail "empty statement list"
-              | _ -> helper (SpecialStatementWithColumns (columns1, body1) :: acc) tail)
-            else if columns2 = columns1
-            then (
-              match empty_body (extract_body body2) with
-              | true -> fail "empty statement list"
-              | _ -> helper (SpecialStatementWithColumns (columns1, body1) :: acc) tail)
-            else
-              let* new_statements =
-                helper
-                  (extract_body body2)
-                  [ SpecialStatementWithColumns (columns1, body1) ]
-              in
+            let* new_statements =
               helper
-                (SpecialStatementWithColumns (columns2, insert_body new_statements body2)
-                 :: tl)
-                tail
+                (extract_body body2)
+                [ SpecialStatementWithColumns (columns1, body1) ]
+            in
+            helper
+              (SpecialStatementWithColumns (columns2, insert_body new_statements body2)
+               :: tl)
+              tail
           | _ -> fail "unsupported order of statemtns"))
     | _ -> fail "unsupported order of statemtns"
   in
   helper [] pseudo_statement
 ;;
 
-let remove_columns list =
+let remove_columns_and_join_elses list =
   let join_if_and_else else_statements = function
     | IfElse (guard, if_statements, else_body) ->
       (match else_body with
@@ -571,7 +546,7 @@ let pyParser =
     *> sep_by t_eol (p_exp_or_stmt.p_statement p_exp_or_stmt)
   in
   let* intermediate_ast = align_pseudo_statement pseudo_statement in
-  remove_columns intermediate_ast
+  remove_columns_and_join_elses intermediate_ast
 ;;
 
 let parser s = parse pyParser s

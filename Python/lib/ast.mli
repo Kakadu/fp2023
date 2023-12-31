@@ -66,7 +66,7 @@ type expression =
   [@ocaml.doc " Logical operation that consists of an operator and operands "]
   | FunctionCall of identifier * expression list
   [@ocaml.doc " A function call with its arguments "]
-  | List of expression list [@ocaml.doc " A list expression "]
+  | ListExp of expression list [@ocaml.doc " A list expression "]
   | Field of identifier * identifier [@ocaml.doc " A class field x.field "]
   | MethodCall of identifier * identifier * expression list
   [@ocaml.doc " A method call class.method() "]

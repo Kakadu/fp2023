@@ -49,3 +49,55 @@
 
 (cram
  (deps %{bin:change_print_test}))
+
+(executable
+ (name adding_class_to_env_test)
+ (public_name adding_class_to_env_test)
+ (modules adding_class_to_env_test)
+ (libraries Python.Lib)
+ (preprocess
+  (pps ppx_show))
+ (instrumentation
+  (backend bisect_ppx)))
+
+(cram
+ (deps %{bin:adding_class_to_env_test}))
+
+(executable
+ (name method_call_test)
+ (public_name method_call_test)
+ (modules method_call_test)
+ (libraries Python.Lib)
+ (preprocess
+  (pps ppx_show))
+ (instrumentation
+  (backend bisect_ppx)))
+
+(cram
+ (deps %{bin:method_call_test}))
+
+(executable
+ (name string_interpolation_test)
+ (public_name string_interpolation_test)
+ (modules string_interpolation_test)
+ (libraries Python.Lib)
+ (preprocess
+  (pps ppx_show))
+ (instrumentation
+  (backend bisect_ppx)))
+
+(cram
+ (deps %{bin:string_interpolation_test}))
+
+(executable
+ (name anon_func_test)
+ (public_name anon_func_test)
+ (modules anon_func_test)
+ (libraries Python.Lib)
+ (preprocess
+  (pps ppx_show))
+ (instrumentation
+  (backend bisect_ppx)))
+
+(cram
+ (deps %{bin:anon_func_test}))

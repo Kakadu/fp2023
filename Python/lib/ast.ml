@@ -52,7 +52,7 @@ type expression =
   | ArithOp of arith_op * expression * expression
   | BoolOp of bool_op * expression * expression
   | FunctionCall of identifier * expression list
-  | List of expression list
+  | ListExp of expression list
   | Field of identifier * identifier
   | MethodCall of identifier * identifier * expression list
   | Lambda of identifier list * expression

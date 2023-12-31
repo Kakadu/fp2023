@@ -25,3 +25,16 @@
 
   $ dune exec change_print_test
   test = 1 
+
+  $ dune exec adding_class_to_env_test
+  MyClass 
+
+  $ dune exec method_call_test
+  4
+
+  $ dune exec string_interpolation_test
+  Hello World!
+
+  $ dune exec anon_func_test
+  1
+
