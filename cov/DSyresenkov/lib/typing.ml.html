@@ -178,7 +178,7 @@ end
 
 <span data-count="33">t</span>ype error =
   | OccursCheckFailed of in<span data-count="1">t</span> * ty (** OCaml's Occurs check *)
-  | NoVariable of id (** Attempt to use non-initialized variable *)
+  | UndeclaredVariable of id (** Attempt to use non-initialized variable *)
   | UnificationFailed of ty * ty (** Failed to unify left and right types *)
   | NotImplemented (** Still not implemented features *)
 [@@deriving show { with_path = false }<span data-count="25">]</span>
