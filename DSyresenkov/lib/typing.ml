@@ -16,7 +16,6 @@ type base_type =
   | BInt (** Basic integer type *)
   | BBool (** Basic bool type *)
   | BUnit (** Unit type *)
-[@@deriving show { with_path = false }]
 
 (* Types *)
 type ty =
@@ -25,14 +24,6 @@ type ty =
   | TArrow of ty * ty (** Type of function ty1 -> ty2 *)
   | TTuple of ty * ty * ty list (** Type of tuple *)
   | TList of ty (** Type of list *)
-[@@deriving show { with_path = false }]
-
-type error =
-  | OccursCheckFailed of int * ty (** OCaml's Occurs check *)
-  | UndeclaredVariable of id (** Attempt to use non-initialized variable *)
-  | UnificationFailed of ty * ty (** Failed to unify left and right types *)
-  | NotImplemented (** Still not implemented features *)
-[@@deriving show { with_path = false }]
 
 let rec pp_ty fmt = function
   | TBase ty ->
@@ -51,9 +42,30 @@ let rec pp_ty fmt = function
       "%a"
       (pp_print_list
          ~pp_sep:(fun fmt _ -> fprintf fmt " * ")
-         (fun fmt ty -> pp_ty fmt ty))
+         (fun fmt ty ->
+           match ty with
+           | TArrow (_, _) -> fprintf fmt "(%a)" pp_ty ty
+           | _ -> fprintf fmt "%a" pp_ty ty))
       (ty1 :: ty2 :: tys)
-  | TList t -> fprintf fmt "%a list" pp_ty t
+  | TList ty ->
+    (match ty with
+     | TArrow (_, _) -> fprintf fmt "(%a) list" pp_ty ty
+     | _ -> fprintf fmt "%a list" pp_ty ty)
+;;
+
+type error =
+  | OccursCheckFailed of int * ty (** OCaml's Occurs check *)
+  | UndeclaredVariable of id (** Attempt to use non-initialized variable *)
+  | UnificationFailed of ty * ty (** Failed to unify left and right types *)
+  | NotImplemented (** Still not implemented features *)
+
+let pp_error fmt = function
+  | OccursCheckFailed (tv, ty) ->
+    fprintf fmt "The type variable '%d occurs inside %a" tv pp_ty ty
+  | UndeclaredVariable id -> fprintf fmt "Unbound value %s" id
+  | UnificationFailed (l, r) ->
+    fprintf fmt "Failed to unify types %a and %a" pp_ty l pp_ty r
+  | NotImplemented -> Stdlib.print_endline "Expression contains not implemented features"
 ;;
 
 type scheme = S of VarSet.t * ty
