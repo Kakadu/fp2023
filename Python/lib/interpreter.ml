@@ -206,20 +206,10 @@ module Eval (M : MONADERROR) = struct
   ;;
 
   let pack_to_string = function
-    | String a -> a
-    | Int a -> Int.to_string a
-    | Bool a -> Bool.to_string a
-    | _ -> "Interpretation Error"
-  ;;
-
-  let rec print_vars = function
-    | [] -> ()
-    | (var : var_symb) :: (remaining_vars : var_symb list) ->
-      print_string (get_str_from_identifier var.identifier);
-      print_string " = ";
-      print_string (pack_to_string var.value);
-      print_string " ";
-      print_vars remaining_vars
+    | String a -> return a
+    | Int a -> return @@ Int.to_string a
+    | Bool a -> return @@ Bool.to_string a
+    | _ -> error "Interpretation Error"
   ;;
 
   (* Main functions *)
@@ -311,7 +301,7 @@ module Eval (M : MONADERROR) = struct
              | [] -> return None
              | exp :: tl ->
                let* value = i_expr exp_or_stmt env exp in
-               let str_val = pack_to_string value in
+               let* str_val = pack_to_string value in
                let () = Printf.printf "%s" str_val in
                print_exp_list tl
            in
@@ -320,13 +310,16 @@ module Eval (M : MONADERROR) = struct
             | _ -> print_exp_list exp_list)
          | Identifier "setattr" when not (func_in_env (Identifier "setattr") env) ->
            let* className = i_expr exp_or_stmt env (List.hd exp_list) in
-           let classId = Identifier (pack_to_string className) in
+           let* packedToStrClass = pack_to_string className in
+           let classId = Identifier packedToStrClass in
            let nameAndMethod = List.tl exp_list in
            let* funcName = i_expr exp_or_stmt env (List.hd nameAndMethod) in
-           let funcId = Identifier (pack_to_string funcName) in
+           let* packedToStrFunc = pack_to_string funcName in
+           let funcId = Identifier packedToStrFunc in
            let remaining = List.tl nameAndMethod in
            let* methodName = i_expr exp_or_stmt env (List.hd remaining) in
-           let methodId = Identifier (pack_to_string methodName) in
+           let* packedToStrMethod = pack_to_string methodName in
+           let methodId = Identifier packedToStrMethod in
            let fetchedClass = get_class classId env in
            let fetchedMethod = get_func methodId env in
            let changedClass =
@@ -357,8 +350,8 @@ module Eval (M : MONADERROR) = struct
         let* calcList = map1 (fun exp -> i_expr exp_or_stmt env exp) exps in
         return @@ List calcList
       | FString fStringList ->
-        let strList =
-          List.map
+        let* strList =
+          map1
             (function
               | Str c -> pack_to_string c
               | Var id -> pack_to_string (get_var id env).value)

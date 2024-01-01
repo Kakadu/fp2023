@@ -74,8 +74,7 @@ module Eval : functor (M : MONADERROR) -> sig
   val combine_args_and_params : Ast.identifier list -> Ast.value list -> var_symb list
   val get_str_from_identifier : Ast.identifier -> string
   val print_funcs : function_symb list -> unit
-  val pack_to_string : Ast.value -> string
-  val print_vars : var_symb list -> unit
+  val pack_to_string : Ast.value -> string M.t
 
   type dispatch =
     { i_expr : dispatch -> environment -> Ast.expression -> Ast.value M.t
