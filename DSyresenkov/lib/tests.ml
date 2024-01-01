@@ -1,4 +1,4 @@
-(** Copyright 2021-2022, Kakadu and contributors *)
+(** Copyright 2021-2023, Ilya Syresenkov *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
@@ -97,7 +97,7 @@ module InferTests = struct
 
   let%expect_test _ =
     pp_parse_and_infer "let x = (42, false, fun x -> x)";
-    [%expect {| int * bool * '0 -> '0 |}]
+    [%expect {| int * bool * ('0 -> '0) |}]
   ;;
 
   let%expect_test _ =
@@ -156,37 +156,51 @@ module InferTests = struct
     [%expect {| '3 list -> bool |}]
   ;;
 
+  let%expect_test _ =
+    pp_parse_and_infer "[(fun x y -> x = y); (fun x y -> x <> y)]";
+    [%expect {| ('3 -> '3 -> bool) list |}]
+  ;;
+
+  let%expect_test _ =
+    pp_parse_and_infer "fun x -> x, fun x y -> x, y";
+    [%expect {| '0 -> '0 * ('1 -> '2 -> '1 * '2) |}]
+  ;;
+
+  let%expect_test _ =
+    pp_parse_and_infer "(fun x -> x), (fun x y -> x, y)";
+    [%expect {| ('0 -> '0) * ('1 -> '2 -> '1 * '2) |}]
+  ;;
+
   (* Errors *)
 
   let%expect_test _ =
     pp_parse_and_infer "let f x = x + y";
-    [%expect {| (UndeclaredVariable "y") |}]
+    [%expect {| Unbound value y |}]
   ;;
 
   let%expect_test _ =
-    pp_parse_and_infer "let rec f x = f in f 10";
-    [%expect {| (OccursCheckFailed (0, (TArrow ((TVar 1), (TVar 0))))) |}]
+    pp_parse_and_infer "let rec f x = f";
+    [%expect {| The type variable '0 occurs inside '1 -> '0 |}]
   ;;
 
   let%expect_test _ =
     pp_parse_and_infer "[1; 1, 2]";
-    [%expect
-      {| (UnificationFailed ((TBase BInt), (TTuple ((TBase BInt), (TBase BInt), [])))) |}]
+    [%expect {| Failed to unify types int and int * int |}]
   ;;
 
   let%expect_test _ =
     pp_parse_and_infer "let f x = [fun x -> x + x; fun x -> x >= x]";
-    [%expect {| (UnificationFailed ((TBase BInt), (TBase BBool))) |}]
+    [%expect {| Failed to unify types int and bool |}]
   ;;
 
   let%expect_test _ =
     pp_parse_and_infer "let () = if true then 1";
-    [%expect {| (UnificationFailed ((TBase BInt), (TBase BUnit))) |}]
+    [%expect {| Failed to unify types int and unit |}]
   ;;
 
   let%expect_test _ =
     pp_parse_and_infer
       "let f x = match x with | a :: b -> a | ((a :: true) :: c) :: tl -> c ";
-    [%expect {| (UnificationFailed ((TList (TVar 4)), (TBase BBool))) |}]
+    [%expect {| Failed to unify types '4 list and bool |}]
   ;;
 end
