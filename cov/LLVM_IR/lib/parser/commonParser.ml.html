@@ -279,7 +279,7 @@ let test_parse p show str =
 ;;
 
 let whitespace = function
-  | <span data-count="148002">'</span> ' | <span data-count="0">'</span>\t' | <span data-count="9851">'</span>\n' | <span data-count="0">'</span>\r' -&gt; true
+  | <span data-count="148691">'</span> ' | <span data-count="0">'</span>\t' | <span data-count="9848">'</span>\n' | <span data-count="0">'</span>\r' -&gt; true
   | <span data-count="125270">_</span> -&gt; false
 ;;
 
@@ -305,7 +305,7 @@ let str_extended_integer =
     | <span data-count="8">'</span>a' .. 'f' -&gt; true
     | <span data-count="1">'</span>A' .. 'F' -&gt; true
     | <span data-count="4515">'</span>0' .. '9' -&gt; true
-    | <span data-count="3018">_</span> -&gt; false)
+    | <span data-count="3019">_</span> -&gt; false)
 ;;
 
 let varname_char = function

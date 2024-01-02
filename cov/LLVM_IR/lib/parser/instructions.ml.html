@@ -1887,8 +1887,8 @@ let%expect_test _ =
   <span data-count="1">t</span>est_parse
     parse_instruction
     Ast.show_instruction
-    "%result = shufflevector &lt;4 x i32&gt; %v1, &lt;4 x i32&gt; %v2,\n\
-    \    &lt;8 x i32&gt; &lt;i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7 &gt; ";
+    {| %result = shufflevector &lt;4 x i32&gt; %v1, &lt;4 x i32&gt; %v2,
+        &lt;8 x i32&gt; &lt;i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7 &gt; |};
   <span data-count="1">[</span>%expect
     {|
       (Vector
@@ -2010,11 +2010,11 @@ let%expect_test _ =
   <span data-count="1">t</span>est_parse
     parse_instruction
     Ast.show_instruction
-    "%vptr = getelementptr  i32, &lt;4 x ptr&gt; %vs, &lt;4 x i64&gt; %vind1,\n\
-    \    &lt;4 x i32&gt; &lt;i32 2, i32 2, i32 2, i32 2&gt;,\n\
-    \    &lt;4 x i32&gt; &lt;i32 1, i32 1, i32 1, i32 1&gt;,\n\
-    \    &lt;4 x i32&gt; %vind4,\n\
-    \    &lt;4 x i64&gt; &lt;i64 13, i64 13, i64 13, i64 13&gt;";
+    {| %vptr = getelementptr  i32, &lt;4 x ptr&gt; %vs, &lt;4 x i64&gt; %vind1,
+        &lt;4 x i32&gt; &lt;i32 2, i32 2, i32 2, i32 2&gt;,
+        &lt;4 x i32&gt; &lt;i32 1, i32 1, i32 1, i32 1&gt;,
+        &lt;4 x i32&gt; %vind4,
+        &lt;4 x i64&gt; &lt;i64 13, i64 13, i64 13, i64 13&gt; |};
   <span data-count="1">[</span>%expect
     {|
     (MemoryAddress

@@ -18,17 +18,17 @@
       <h2>88.06%</h2>
     </div>
     <div id="navbar">
-      <span class="unvisited" style="top:11.35%"></span>
-      <span class="unvisited" style="top:14.59%"></span>
-      <span class="unvisited" style="top:15.68%"></span>
-      <span class="unvisited" style="top:30.81%"></span>
-      <span class="unvisited" style="top:46.49%"></span>
-      <span class="unvisited" style="bottom:34.59%"></span>
-      <span class="unvisited" style="bottom:33.51%"></span>
-      <span class="unvisited" style="bottom:29.73%"></span>
-      <span class="unvisited" style="bottom:24.86%"></span>
-      <span class="unvisited" style="bottom:9.19%"></span>
-      <span class="unvisited" style="bottom:8.65%"></span>
+      <span class="unvisited" style="top:11.23%"></span>
+      <span class="unvisited" style="top:14.44%"></span>
+      <span class="unvisited" style="top:15.51%"></span>
+      <span class="unvisited" style="top:30.48%"></span>
+      <span class="unvisited" style="top:45.99%"></span>
+      <span class="unvisited" style="bottom:35.29%"></span>
+      <span class="unvisited" style="bottom:34.22%"></span>
+      <span class="unvisited" style="bottom:30.48%"></span>
+      <span class="unvisited" style="bottom:25.67%"></span>
+      <span class="unvisited" style="bottom:9.09%"></span>
+      <span class="unvisited" style="bottom:8.56%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -183,8 +183,8 @@
 <a id="L148"></a><span > </span>
 <a id="L149"></a><span > </span>
 <a id="L150"></a><span > </span>
-<a id="L151"></a><span class="visited"> </span>
-<a id="L152"></a><span class="visited"> </span>
+<a id="L151"></a><span > </span>
+<a id="L152"></a><span > </span>
 <a id="L153"></a><span class="visited"> </span>
 <a id="L154"></a><span class="visited"> </span>
 <a id="L155"></a><span class="visited"> </span>
@@ -196,28 +196,30 @@
 <a id="L161"></a><span class="visited"> </span>
 <a id="L162"></a><span class="visited"> </span>
 <a id="L163"></a><span class="visited"> </span>
-<a id="L164"></a><span > </span>
-<a id="L165"></a><span > </span>
-<a id="L166"></a><span class="visited"> </span>
-<a id="L167"></a><span class="visited"> </span>
-<a id="L168"></a><span class="unvisited"> </span>
-<a id="L169"></a><span class="unvisited"> </span>
-<a id="L170"></a><span > </span>
-<a id="L171"></a><span > </span>
+<a id="L164"></a><span class="visited"> </span>
+<a id="L165"></a><span class="visited"> </span>
+<a id="L166"></a><span > </span>
+<a id="L167"></a><span > </span>
+<a id="L168"></a><span class="visited"> </span>
+<a id="L169"></a><span class="visited"> </span>
+<a id="L170"></a><span class="unvisited"> </span>
+<a id="L171"></a><span class="unvisited"> </span>
 <a id="L172"></a><span > </span>
 <a id="L173"></a><span > </span>
-<a id="L174"></a><span class="visited"> </span>
+<a id="L174"></a><span > </span>
 <a id="L175"></a><span > </span>
-<a id="L176"></a><span > </span>
+<a id="L176"></a><span class="visited"> </span>
 <a id="L177"></a><span > </span>
 <a id="L178"></a><span > </span>
 <a id="L179"></a><span > </span>
-<a id="L180"></a><span class="visited"> </span>
+<a id="L180"></a><span > </span>
 <a id="L181"></a><span > </span>
-<a id="L182"></a><span > </span>
+<a id="L182"></a><span class="visited"> </span>
 <a id="L183"></a><span > </span>
 <a id="L184"></a><span > </span>
-<a id="L185"></a><span class="visited"> </span>
+<a id="L185"></a><span > </span>
+<a id="L186"></a><span > </span>
+<a id="L187"></a><span class="visited"> </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -407,6 +409,8 @@
 <a href="#L183">183</a>
 <a href="#L184">184</a>
 <a href="#L185">185</a>
+<a href="#L186">186</a>
+<a href="#L187">187</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2023-2024, Efremov Alexey *)
 
@@ -547,11 +551,13 @@ let ser_test target print =
     if print
     then
       <span data-count="0">P</span>rintf.print<span data-count="0">f</span>
-        "########################\n\
-         Exp: %s\n\
-         ----------------\n\
-         Get: %s\n\
-         ########################\n\n"
+        {| ########################
+         Exp: %s
+         ----------------
+         Get: %s
+         ######################## 
+         
+         |}
         t2
         t1
   in
