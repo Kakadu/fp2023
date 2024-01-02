@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8"/>
     <title>memoryAddress.ml &mdash; Coverage report</title>
-    <meta name="description" content="95.37% coverage in lib/interpreter/instructions/memoryAddress.ml">
+    <meta name="description" content="97.03% coverage in lib/interpreter/instructions/memoryAddress.ml">
     <link rel="stylesheet" href="../../../coverage.css"/>
     <script src="../../../highlight.pack.js"></script>
     <script>hljs.initHighlightingOnLoad();</script>
@@ -15,13 +15,11 @@
           <span class="dirname">lib/interpreter/instructions/</span>memoryAddress.ml
         </a>
       </h1>
-      <h2>95.37%</h2>
+      <h2>97.03%</h2>
     </div>
     <div id="navbar">
-      <span class="unvisited" style="top:20.19%"></span>
-      <span class="unvisited" style="top:28.85%"></span>
-      <span class="some-visited" style="top:37.50%"></span>
-      <span class="unvisited" style="bottom:47.12%"></span>
+      <span class="some-visited" style="top:39.42%"></span>
+      <span class="unvisited" style="bottom:46.15%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -44,51 +42,51 @@
 <a id="L16"></a><span > </span>
 <a id="L17"></a><span class="visited"> </span>
 <a id="L18"></a><span class="visited"> </span>
-<a id="L19"></a><span class="visited"> </span>
-<a id="L20"></a><span class="visited"> </span>
-<a id="L21"></a><span class="unvisited"> </span>
+<a id="L19"></a><span > </span>
+<a id="L20"></a><span > </span>
+<a id="L21"></a><span class="visited"> </span>
 <a id="L22"></a><span > </span>
 <a id="L23"></a><span > </span>
 <a id="L24"></a><span > </span>
-<a id="L25"></a><span class="visited"> </span>
-<a id="L26"></a><span class="visited"> </span>
-<a id="L27"></a><span > </span>
-<a id="L28"></a><span class="visited"> </span>
-<a id="L29"></a><span class="visited"> </span>
-<a id="L30"></a><span class="unvisited"> </span>
-<a id="L31"></a><span > </span>
+<a id="L25"></a><span > </span>
+<a id="L26"></a><span > </span>
+<a id="L27"></a><span class="visited"> </span>
+<a id="L28"></a><span > </span>
+<a id="L29"></a><span > </span>
+<a id="L30"></a><span class="visited"> </span>
+<a id="L31"></a><span class="visited"> </span>
 <a id="L32"></a><span > </span>
 <a id="L33"></a><span > </span>
-<a id="L34"></a><span class="visited"> </span>
-<a id="L35"></a><span class="visited"> </span>
-<a id="L36"></a><span class="visited"> </span>
-<a id="L37"></a><span > </span>
-<a id="L38"></a><span > </span>
-<a id="L39"></a><span class="some-visited"> </span>
-<a id="L40"></a><span class="visited"> </span>
-<a id="L41"></a><span class="visited"> </span>
+<a id="L34"></a><span > </span>
+<a id="L35"></a><span > </span>
+<a id="L36"></a><span > </span>
+<a id="L37"></a><span class="visited"> </span>
+<a id="L38"></a><span class="visited"> </span>
+<a id="L39"></a><span > </span>
+<a id="L40"></a><span > </span>
+<a id="L41"></a><span class="some-visited"> </span>
 <a id="L42"></a><span class="visited"> </span>
 <a id="L43"></a><span class="visited"> </span>
-<a id="L44"></a><span > </span>
-<a id="L45"></a><span > </span>
-<a id="L46"></a><span class="visited"> </span>
-<a id="L47"></a><span class="visited"> </span>
-<a id="L48"></a><span > </span>
+<a id="L44"></a><span class="visited"> </span>
+<a id="L45"></a><span class="visited"> </span>
+<a id="L46"></a><span > </span>
+<a id="L47"></a><span > </span>
+<a id="L48"></a><span class="visited"> </span>
 <a id="L49"></a><span class="visited"> </span>
 <a id="L50"></a><span > </span>
-<a id="L51"></a><span > </span>
+<a id="L51"></a><span class="visited"> </span>
 <a id="L52"></a><span > </span>
 <a id="L53"></a><span > </span>
-<a id="L54"></a><span class="visited"> </span>
-<a id="L55"></a><span class="unvisited"> </span>
-<a id="L56"></a><span class="visited"> </span>
+<a id="L54"></a><span > </span>
+<a id="L55"></a><span > </span>
+<a id="L56"></a><span class="unvisited"> </span>
 <a id="L57"></a><span class="visited"> </span>
 <a id="L58"></a><span class="visited"> </span>
 <a id="L59"></a><span class="visited"> </span>
-<a id="L60"></a><span > </span>
+<a id="L60"></a><span class="visited"> </span>
 <a id="L61"></a><span > </span>
 <a id="L62"></a><span > </span>
-<a id="L63"></a><span class="visited"> </span>
+<a id="L63"></a><span > </span>
 <a id="L64"></a><span class="visited"> </span>
 <a id="L65"></a><span class="visited"> </span>
 <a id="L66"></a><span class="visited"> </span>
@@ -242,8 +240,8 @@
 <pre><code class="ocaml">(** Copyright 2023-2024, Efremov Alexey *)
 
 (** SPDX-License-Identifier: CC0-1.0 *)
-open Ihelp
 
+open Ihelp
 open State
 open CommonInterpInstructions
 
@@ -257,22 +255,24 @@ let ialloca variable tp value align =
 let istore _tp value ptr align =
   <span data-count="691">l</span>et* value = get_const_from_valu<span data-count="691">e</span> value in
   <span data-count="691">l</span>et* ptr = get_const_from_valu<span data-count="691">e</span> ptr &gt;&gt;<span data-count="691">=</span> is_ptr in
-  <span data-count="691">i</span>f true (* ptr mod align == 0 *)
-  then <span data-count="691">M</span>emory.put_cnst_in_heap ptr value
-  else <span data-count="0">f</span>ail "Runtime error: get unaligned pointer for store"
+  (* if ptr mod align == 0
+     then *)
+  <span data-count="691">M</span>emory.put_cnst_in_heap ptr value
 ;;
+
+(* else fail "Runtime error: get unaligned pointer for store" *)
 
 let iload var tp ptr align =
   <span data-count="2161">l</span>et* ptr = get_const_from_valu<span data-count="2161">e</span> ptr &gt;&gt;<span data-count="2161">=</span> is_ptr in
-  <span data-count="2161">i</span>f true (* ptr mod align == 0 *)
-  then
-    <span data-count="2161">l</span>et* cnst = Memory.take_cnst_in_hea<span data-count="2161">p</span> ptr tp in
-    <span data-count="2161">w</span>rite_var var cnst
-  else <span data-count="0">f</span>ail "Runtime error: get unaligned pointer for load"
+  (* if   ptr mod align == 0
+     then *)
+  <span data-count="2161">l</span>et* cnst = Memory.take_cnst_in_hea<span data-count="2161">p</span> ptr tp in
+  <span data-count="2161">w</span>rite_var var cnst
 ;;
 
-let rec rec_real_getelementprt tp ptr ilist =
-  <span data-count="596">m</span>atch ilist with
+(* else fail "Runtime error: get unaligned pointer for load" *)
+
+let rec rec_real_getelementprt tp ptr = function
   | <span data-count="540">[</span>] -&gt; return ptr
   | <span data-count="56">x</span> :: tl -&gt;
     let* delta_and_ntp =
@@ -291,8 +291,7 @@ let rec rec_real_getelementprt tp ptr ilist =
     rec_real_getelementprt ntp (ptr + delta) tl
 ;;
 
-let real_getelemetptr tp ptr ilist =
-  <span data-count="541">m</span>atch ilist with
+let real_getelemetptr tp ptr = function
   | <span data-count="0">[</span>] -&gt; return (to_pt<span data-count="0">r</span> ptr)
   | <span data-count="541">x</span> :: tl -&gt;
     let ptr = ptr + (Serialisation.raw_date_le<span data-count="541">n</span> tp * x) in
@@ -301,8 +300,7 @@ let real_getelemetptr tp ptr ilist =
 ;;
 
 let igetelementptr var v_tp ptr_tp ptr ilist =
-  <span data-count="540">l</span>et rec transpose list =
-    <span data-count="9">m</span>atch list with
+  <span data-count="540">l</span>et rec transpose = function
     | <span data-count="2">[</span>] -&gt; []
     | <span data-count="3">[</span>] :: xss -&gt; transpose xss
     | <span data-count="4">(</span>x :: xs) :: xss -&gt;
