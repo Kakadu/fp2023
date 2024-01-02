@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>commonInterpInstructions.ml &mdash; Coverage report</title>
+    <meta name="description" content="71.26% coverage in lib/interpreter/instructions/commonInterpInstructions.ml">
+    <link rel="stylesheet" href="../../../coverage.css"/>
+    <script src="../../../highlight.pack.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+  </head>
+  <body>
+    <div id="header">
+      <h1>
+        <a href="../../../index.html">
+          <span class="dirname">lib/interpreter/instructions/</span>commonInterpInstructions.ml
+        </a>
+      </h1>
+      <h2>71.26%</h2>
+    </div>
+    <div id="navbar">
+      <span class="unvisited" style="top:12.20%"></span>
+      <span class="unvisited" style="top:14.63%"></span>
+      <span class="unvisited" style="top:22.76%"></span>
+      <span class="unvisited" style="top:23.58%"></span>
+      <span class="unvisited" style="top:25.20%"></span>
+      <span class="unvisited" style="top:26.02%"></span>
+      <span class="unvisited" style="top:26.83%"></span>
+      <span class="unvisited" style="top:31.71%"></span>
+      <span class="unvisited" style="top:36.59%"></span>
+      <span class="unvisited" style="top:41.46%"></span>
+      <span class="unvisited" style="top:46.34%"></span>
+      <span class="unvisited" style="bottom:47.97%"></span>
+      <span class="unvisited" style="bottom:43.09%"></span>
+      <span class="unvisited" style="bottom:38.21%"></span>
+      <span class="unvisited" style="bottom:36.59%"></span>
+      <span class="unvisited" style="bottom:34.96%"></span>
+      <span class="unvisited" style="bottom:6.50%"></span>
+      <span class="unvisited" style="bottom:4.88%"></span>
+      <span class="unvisited" style="bottom:0.81%"></span>
+    </div>
+    <div id="report">
+      <div id="lines-layer">
+        <pre>
+<a id="L1"></a><span > </span>
+<a id="L2"></a><span > </span>
+<a id="L3"></a><span > </span>
+<a id="L4"></a><span > </span>
+<a id="L5"></a><span > </span>
+<a id="L6"></a><span > </span>
+<a id="L7"></a><span > </span>
+<a id="L8"></a><span > </span>
+<a id="L9"></a><span > </span>
+<a id="L10"></a><span > </span>
+<a id="L11"></a><span > </span>
+<a id="L12"></a><span class="visited"> </span>
+<a id="L13"></a><span > </span>
+<a id="L14"></a><span > </span>
+<a id="L15"></a><span class="unvisited"> </span>
+<a id="L16"></a><span > </span>
+<a id="L17"></a><span > </span>
+<a id="L18"></a><span class="unvisited"> </span>
+<a id="L19"></a><span > </span>
+<a id="L20"></a><span > </span>
+<a id="L21"></a><span class="visited"> </span>
+<a id="L22"></a><span class="visited"> </span>
+<a id="L23"></a><span class="visited"> </span>
+<a id="L24"></a><span class="visited"> </span>
+<a id="L25"></a><span class="visited"> </span>
+<a id="L26"></a><span class="visited"> </span>
+<a id="L27"></a><span > </span>
+<a id="L28"></a><span class="unvisited"> </span>
+<a id="L29"></a><span class="unvisited"> </span>
+<a id="L30"></a><span > </span>
+<a id="L31"></a><span class="unvisited"> </span>
+<a id="L32"></a><span class="unvisited"> </span>
+<a id="L33"></a><span class="unvisited"> </span>
+<a id="L34"></a><span > </span>
+<a id="L35"></a><span > </span>
+<a id="L36"></a><span > </span>
+<a id="L37"></a><span class="visited"> </span>
+<a id="L38"></a><span class="visited"> </span>
+<a id="L39"></a><span class="unvisited"> </span>
+<a id="L40"></a><span > </span>
+<a id="L41"></a><span > </span>
+<a id="L42"></a><span > </span>
+<a id="L43"></a><span class="visited"> </span>
+<a id="L44"></a><span class="visited"> </span>
+<a id="L45"></a><span class="unvisited"> </span>
+<a id="L46"></a><span > </span>
+<a id="L47"></a><span > </span>
+<a id="L48"></a><span > </span>
+<a id="L49"></a><span class="visited"> </span>
+<a id="L50"></a><span class="visited"> </span>
+<a id="L51"></a><span class="unvisited"> </span>
+<a id="L52"></a><span > </span>
+<a id="L53"></a><span > </span>
+<a id="L54"></a><span > </span>
+<a id="L55"></a><span class="visited"> </span>
+<a id="L56"></a><span class="visited"> </span>
+<a id="L57"></a><span class="unvisited"> </span>
+<a id="L58"></a><span > </span>
+<a id="L59"></a><span > </span>
+<a id="L60"></a><span > </span>
+<a id="L61"></a><span class="visited"> </span>
+<a id="L62"></a><span class="visited"> </span>
+<a id="L63"></a><span class="visited"> </span>
+<a id="L64"></a><span class="unvisited"> </span>
+<a id="L65"></a><span > </span>
+<a id="L66"></a><span > </span>
+<a id="L67"></a><span > </span>
+<a id="L68"></a><span class="visited"> </span>
+<a id="L69"></a><span class="visited"> </span>
+<a id="L70"></a><span class="unvisited"> </span>
+<a id="L71"></a><span > </span>
+<a id="L72"></a><span > </span>
+<a id="L73"></a><span > </span>
+<a id="L74"></a><span class="visited"> </span>
+<a id="L75"></a><span class="visited"> </span>
+<a id="L76"></a><span class="unvisited"> </span>
+<a id="L77"></a><span > </span>
+<a id="L78"></a><span class="unvisited"> </span>
+<a id="L79"></a><span > </span>
+<a id="L80"></a><span class="unvisited"> </span>
+<a id="L81"></a><span > </span>
+<a id="L82"></a><span > </span>
+<a id="L83"></a><span > </span>
+<a id="L84"></a><span class="visited"> </span>
+<a id="L85"></a><span class="visited"> </span>
+<a id="L86"></a><span > </span>
+<a id="L87"></a><span > </span>
+<a id="L88"></a><span > </span>
+<a id="L89"></a><span class="visited"> </span>
+<a id="L90"></a><span class="visited"> </span>
+<a id="L91"></a><span class="visited"> </span>
+<a id="L92"></a><span > </span>
+<a id="L93"></a><span > </span>
+<a id="L94"></a><span > </span>
+<a id="L95"></a><span class="visited"> </span>
+<a id="L96"></a><span class="visited"> </span>
+<a id="L97"></a><span class="visited"> </span>
+<a id="L98"></a><span class="visited"> </span>
+<a id="L99"></a><span > </span>
+<a id="L100"></a><span > </span>
+<a id="L101"></a><span > </span>
+<a id="L102"></a><span class="visited"> </span>
+<a id="L103"></a><span class="visited"> </span>
+<a id="L104"></a><span class="visited"> </span>
+<a id="L105"></a><span > </span>
+<a id="L106"></a><span > </span>
+<a id="L107"></a><span > </span>
+<a id="L108"></a><span class="visited"> </span>
+<a id="L109"></a><span class="visited"> </span>
+<a id="L110"></a><span > </span>
+<a id="L111"></a><span > </span>
+<a id="L112"></a><span > </span>
+<a id="L113"></a><span class="visited"> </span>
+<a id="L114"></a><span class="visited"> </span>
+<a id="L115"></a><span class="unvisited"> </span>
+<a id="L116"></a><span > </span>
+<a id="L117"></a><span class="unvisited"> </span>
+<a id="L118"></a><span > </span>
+<a id="L119"></a><span > </span>
+<a id="L120"></a><span > </span>
+<a id="L121"></a><span class="visited"> </span>
+<a id="L122"></a><span class="unvisited"> </span>
+<a id="L123"></a><span > </span>
+</pre>
+      </div>
+      <div id="text-layer">
+        <pre id="line-numbers">
+<a href="#L1">  1</a>
+<a href="#L2">  2</a>
+<a href="#L3">  3</a>
+<a href="#L4">  4</a>
+<a href="#L5">  5</a>
+<a href="#L6">  6</a>
+<a href="#L7">  7</a>
+<a href="#L8">  8</a>
+<a href="#L9">  9</a>
+<a href="#L10"> 10</a>
+<a href="#L11"> 11</a>
+<a href="#L12"> 12</a>
+<a href="#L13"> 13</a>
+<a href="#L14"> 14</a>
+<a href="#L15"> 15</a>
+<a href="#L16"> 16</a>
+<a href="#L17"> 17</a>
+<a href="#L18"> 18</a>
+<a href="#L19"> 19</a>
+<a href="#L20"> 20</a>
+<a href="#L21"> 21</a>
+<a href="#L22"> 22</a>
+<a href="#L23"> 23</a>
+<a href="#L24"> 24</a>
+<a href="#L25"> 25</a>
+<a href="#L26"> 26</a>
+<a href="#L27"> 27</a>
+<a href="#L28"> 28</a>
+<a href="#L29"> 29</a>
+<a href="#L30"> 30</a>
+<a href="#L31"> 31</a>
+<a href="#L32"> 32</a>
+<a href="#L33"> 33</a>
+<a href="#L34"> 34</a>
+<a href="#L35"> 35</a>
+<a href="#L36"> 36</a>
+<a href="#L37"> 37</a>
+<a href="#L38"> 38</a>
+<a href="#L39"> 39</a>
+<a href="#L40"> 40</a>
+<a href="#L41"> 41</a>
+<a href="#L42"> 42</a>
+<a href="#L43"> 43</a>
+<a href="#L44"> 44</a>
+<a href="#L45"> 45</a>
+<a href="#L46"> 46</a>
+<a href="#L47"> 47</a>
+<a href="#L48"> 48</a>
+<a href="#L49"> 49</a>
+<a href="#L50"> 50</a>
+<a href="#L51"> 51</a>
+<a href="#L52"> 52</a>
+<a href="#L53"> 53</a>
+<a href="#L54"> 54</a>
+<a href="#L55"> 55</a>
+<a href="#L56"> 56</a>
+<a href="#L57"> 57</a>
+<a href="#L58"> 58</a>
+<a href="#L59"> 59</a>
+<a href="#L60"> 60</a>
+<a href="#L61"> 61</a>
+<a href="#L62"> 62</a>
+<a href="#L63"> 63</a>
+<a href="#L64"> 64</a>
+<a href="#L65"> 65</a>
+<a href="#L66"> 66</a>
+<a href="#L67"> 67</a>
+<a href="#L68"> 68</a>
+<a href="#L69"> 69</a>
+<a href="#L70"> 70</a>
+<a href="#L71"> 71</a>
+<a href="#L72"> 72</a>
+<a href="#L73"> 73</a>
+<a href="#L74"> 74</a>
+<a href="#L75"> 75</a>
+<a href="#L76"> 76</a>
+<a href="#L77"> 77</a>
+<a href="#L78"> 78</a>
+<a href="#L79"> 79</a>
+<a href="#L80"> 80</a>
+<a href="#L81"> 81</a>
+<a href="#L82"> 82</a>
+<a href="#L83"> 83</a>
+<a href="#L84"> 84</a>
+<a href="#L85"> 85</a>
+<a href="#L86"> 86</a>
+<a href="#L87"> 87</a>
+<a href="#L88"> 88</a>
+<a href="#L89"> 89</a>
+<a href="#L90"> 90</a>
+<a href="#L91"> 91</a>
+<a href="#L92"> 92</a>
+<a href="#L93"> 93</a>
+<a href="#L94"> 94</a>
+<a href="#L95"> 95</a>
+<a href="#L96"> 96</a>
+<a href="#L97"> 97</a>
+<a href="#L98"> 98</a>
+<a href="#L99"> 99</a>
+<a href="#L100">100</a>
+<a href="#L101">101</a>
+<a href="#L102">102</a>
+<a href="#L103">103</a>
+<a href="#L104">104</a>
+<a href="#L105">105</a>
+<a href="#L106">106</a>
+<a href="#L107">107</a>
+<a href="#L108">108</a>
+<a href="#L109">109</a>
+<a href="#L110">110</a>
+<a href="#L111">111</a>
+<a href="#L112">112</a>
+<a href="#L113">113</a>
+<a href="#L114">114</a>
+<a href="#L115">115</a>
+<a href="#L116">116</a>
+<a href="#L117">117</a>
+<a href="#L118">118</a>
+<a href="#L119">119</a>
+<a href="#L120">120</a>
+<a href="#L121">121</a>
+<a href="#L122">122</a>
+<a href="#L123">123</a>
+</pre>
+<pre><code class="ocaml">(** Copyright 2023-2024, Efremov Alexey *)
+
+(** SPDX-License-Identifier: CC0-1.0 *)
+
+open Ihelp.State
+
+type instr_launch_res =
+  | Ret of Ast.const
+  | Jmp of Ast.variable
+  | None
+
+let to_ptr x = <span data-count="866">A</span>st.CPointer (Ast.PointerInt x)
+
+let err_type exp get =
+  <span data-count="0">f</span>ail (Printf.sprint<span data-count="0">f</span> "expected %s, but get %s\n" (Ast.show_t<span data-count="0">p</span> exp) (Ast.show_t<span data-count="0">p</span> get))
+;;
+
+let err_type_c exp cnst = <span data-count="0">e</span>rr_type exp (Ast.const_to_t<span data-count="0">p</span> cnst)
+
+let get_const_from_value : Ast.value -&gt; (state, Ast.const) t = function
+  | <span data-count="1718">A</span>st.Const x -&gt; return x
+  | <span data-count="7716">A</span>st.FromVariable (var, exp_tp) -&gt;
+    let* cnst = read_va<span data-count="7716">r</span> var in
+    <span data-count="7716">l</span>et real_tp = Ast.const_to_tp cnst in
+    <span data-count="7716">i</span>f Ast.tp_equal real_tp exp_tp
+    then <span data-count="7716">r</span>eturn cnst
+    else
+      <span data-count="0">f</span>ail
+        (Printf.sprint<span data-count="0">f</span>
+           "Variable %s is of type %s, but %s was expected"
+           (Ast.show_variabl<span data-count="0">e</span> var)
+           (Ast.show_t<span data-count="0">p</span> real_tp)
+           (Ast.show_t<span data-count="0">p</span> exp_tp))
+;;
+
+let is_block cnst =
+  <span data-count="1216">m</span>atch cnst with
+  | <span data-count="1216">A</span>st.CLabel x -&gt; return x
+  | <span data-count="0">_</span> -&gt; err_type_c Ast.TLabel cnst
+;;
+
+let is_bool cnst =
+  <span data-count="655">m</span>atch cnst with
+  | <span data-count="655">A</span>st.CInteger (1, x) -&gt; return (Int64.equa<span data-count="655">l</span> 1L x)
+  | <span data-count="0">_</span> -&gt; err_type_c (Ast.TInteger 1) cnst
+;;
+
+let is_int cnst =
+  <span data-count="4025">m</span>atch cnst with
+  | <span data-count="4025">A</span>st.CInteger (_, x) -&gt; return x
+  | <span data-count="0">_</span> -&gt; err_type_c (Ast.TInteger 0) cnst
+;;
+
+let is_float cnst =
+  <span data-count="212">m</span>atch cnst with
+  | <span data-count="212">A</span>st.CFloat x -&gt; return x
+  | <span data-count="0">_</span> -&gt; err_type_c Ast.TFloat cnst
+;;
+
+let rec is_ptr cnst =
+  <span data-count="3410">m</span>atch cnst with
+  | <span data-count="3398">A</span>st.CPointer (Ast.PointerInt x) -&gt; return x
+  | <span data-count="12">A</span>st.CPointer (Ast.PointerGlob x) -&gt; read_va<span data-count="12">r</span> x &gt;&gt;= is_ptr
+  | <span data-count="0">_</span> -&gt; err_type_c Ast.TPointer cnst
+;;
+
+let is_vector is_elem cnst =
+  <span data-count="25">m</span>atch cnst with
+  | <span data-count="25">A</span>st.CVector x -&gt; map_list is_elem x
+  | <span data-count="0">c</span> -&gt; err_type_c (Ast.TVector (0, Ast.const_to_t<span data-count="0">p</span> c)) cnst
+;;
+
+let is_aggregate is_elem cnst =
+  <span data-count="5">m</span>atch cnst with
+  | <span data-count="2">A</span>st.CArr x | <span data-count="3">A</span>st.CStruct x -&gt; map_list is_elem x
+  | <span data-count="0">_</span> -&gt;
+    fail
+      (Printf.sprint<span data-count="0">f</span>
+         "Expected aggregate type, but got %s\n"
+         (Ast.show_t<span data-count="0">p</span> (Ast.const_to_t<span data-count="0">p</span> cnst)))
+;;
+
+let vectorize1 operat is_elem value =
+  <span data-count="3">l</span>et* v = get_const_from_valu<span data-count="3">e</span> value &gt;&gt;<span data-count="3">=</span> is_vecto<span data-count="3">r</span> is_elem in
+  <span data-count="3">r</span>eturn (Ast.CVector (List.ma<span data-count="3">p</span> operat v))
+;;
+
+let vectorize2 operat is_elem v1 v2 =
+  <span data-count="3">l</span>et* v1 = get_const_from_valu<span data-count="3">e</span> v1 &gt;&gt;<span data-count="3">=</span> is_vecto<span data-count="3">r</span> is_elem in
+  <span data-count="3">l</span>et* v2 = get_const_from_valu<span data-count="3">e</span> v2 &gt;&gt;<span data-count="3">=</span> is_vecto<span data-count="3">r</span> is_elem in
+  <span data-count="3">r</span>eturn (Ast.CVector (List.map<span data-count="3">2</span> operat v1 v2))
+;;
+
+let launch_binary_body_operation operat is_elem x y =
+  <span data-count="576">l</span>et* x = get_const_from_valu<span data-count="576">e</span> x &gt;&gt;<span data-count="576">=</span> is_elem in
+  <span data-count="576">l</span>et* y = get_const_from_valu<span data-count="576">e</span> y &gt;&gt;<span data-count="576">=</span> is_elem in
+  <span data-count="576">t</span>ry retur<span data-count="575">n</span> (opera<span data-count="575">t</span> x y) with
+  | <span data-count="1">D</span>ivision_by_zero -&gt; fail "Runtime error: Division by 0"
+;;
+
+let launch_binary_body_operation_vectorizated tp operat is_elem x y =
+  <span data-count="578">m</span>atch tp with
+  | <span data-count="2">A</span>st.TVector (_, elem_tp) -&gt; vectorize2 (opera<span data-count="2">t</span> elem_tp) is_elem x y
+  | <span data-count="576">_</span> -&gt; launch_binary_body_operation (opera<span data-count="576">t</span> tp) is_elem x y
+;;
+
+let write_binop_res tp real_add is_int v1 v2 var =
+  <span data-count="578">l</span>et* res = launch_binary_body_operation_vectorizate<span data-count="578">d</span> tp real_add is_int v1 v2 in
+  <span data-count="577">w</span>rite_var var res
+;;
+
+let check_to_int operat tp x y =
+  <span data-count="482">m</span>atch tp with
+  | <span data-count="482">A</span>st.TInteger sz -&gt; operat sz x y
+  | <span data-count="0">_</span> -&gt;
+    let _ = Printf.printf "Impossible error: get wrong type at binary/biwise operation" in
+    <span data-count="0">A</span>st.CVoid
+;;
+
+let get_bb_var_from_label = function
+  | <span data-count="1814">A</span>st.FromVariable (x, _) -&gt; return x
+  | <span data-count="0">A</span>st.Const _ -&gt; fail "expected get basic block"
+;;
+</code></pre>
+      </div>
+    </div>
+    <script src="../../../coverage.js"></script>
+  </body>
+</html>
