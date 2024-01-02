@@ -5,7 +5,7 @@
 open Typedtree
 
 (* Convert binders for further replacement with strings
-  Example: type '10 * '22 -> '11 will be replaced by '0 * '1 -> '2 *)
+   Example: type '10 * '22 -> '11 will be replaced by '0 * '1 -> '2 *)
 let reconstruct_binders ty =
   let open Base in
   let empty = Map.empty (module Int) in
@@ -42,7 +42,8 @@ let%expect_test _ =
   let _ = print_string (show_ty (reconstruct_binders ty)) in
   [%expect
     {|
-    TArrow (TArrow (TVar (0), TVar (1)), TTuple ([TVar (2); TVar (3); TVar (4)])) |}]
+    (TArrow ((TArrow ((TVar 0), (TVar 1))),
+       (TTuple [(TVar 2); (TVar 3); (TVar 4)]))) |}]
 ;;
 
 (* [WARNING] Works correctly for strings of length <= 2 *)
@@ -75,33 +76,36 @@ let pp_type ppf ty =
   let open Format in
   let rec helper ppf = function
     | TVar n, _ -> fprintf ppf "'%s" (convert_to_string n)
-    | TPrim s, _ -> Format.pp_print_string ppf s
-    | TArrow (l, r), pos -> (* Format.fprintf ppf "(%a -> %a)" helper l helper r *)
-      (match l with 
-      | TArrow (_, _) -> Format.fprintf ppf "(%a) -> %a" helper (l, pos) helper (r, pos)
-      | _ -> Format.fprintf ppf "%a -> %a" helper (l, pos) helper (r, pos))
-    | TList t, pos -> Format.fprintf ppf "%a list" helper (t, pos)
-    | TTuple ts, pos ->
-      let pp_tuple ppf (ts, pos) = 
-        fprintf
-        ppf
-        "%a"
-        (pp_print_list
-        ~pp_sep:(fun ppf () -> fprintf ppf " * ")
-        (fun ppf t -> fprintf ppf "%a" helper (t, pos)))
-        ts
+    | TPrim s, _ -> pp_print_string ppf s
+    | TArrow (l, r), pos ->
+      (* Format.fprintf ppf "(%a -> %a)" helper l helper r *)
+      let arrow ppf pos =
+        match l with
+        | TArrow (_, _) -> fprintf ppf "(%a) -> %a" helper (l, pos) helper (r, pos)
+        | _ -> fprintf ppf "%a -> %a" helper (l, pos) helper (r, pos)
       in
-      if pos then 
-        fprintf ppf "(%a)" pp_tuple (ts, pos)
-      else fprintf ppf "%a" pp_tuple (ts, true) 
+      if pos then fprintf ppf "(%a)" arrow pos else fprintf ppf "%a" arrow pos
+    | TList t, pos -> fprintf ppf "%a list" helper (t, pos)
+    | TTuple ts, pos ->
+      let pp_tuple ppf (ts, pos) =
+        fprintf
+          ppf
+          "%a"
+          (pp_print_list
+             ~pp_sep:(fun ppf () -> fprintf ppf " * ")
+             (fun ppf t -> fprintf ppf "%a" helper (t, pos)))
+          ts
+      in
+      if pos
+      then fprintf ppf "(%a)" pp_tuple (ts, pos)
+      else fprintf ppf "%a" pp_tuple (ts, true)
   in
   helper ppf (new_ty, false)
 ;;
 
 let pp_program ppf env =
-  List.iter
-    (fun (v, S (_, ty)) -> Format.fprintf ppf "var %s: %a\n" v pp_type ty)
-    (List.rev env)
+  Base.Map.iteri env ~f:(fun ~key:v ~data:(S (_, ty)) ->
+    Format.fprintf ppf "var %s: %a\n" v pp_type ty)
 ;;
 
 let map_binder t1 t2 binder =
