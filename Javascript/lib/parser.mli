@@ -6,4 +6,6 @@ open Ast
 
 type error = [ `ParsingError of string ]
 
-val parse : ?parser:statement t -> string -> (Ast.statement, [> error ]) result
+val parse : string -> (Ast.statement, [> error ]) result
+
+val parse_expression : string -> (Ast.statement, [> error ]) result
