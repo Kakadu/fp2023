@@ -47,12 +47,12 @@ type meth_type =
 type access_modifier =
   | MPublic
   | MPrivate
-  | MProtected
+  | MProtected (* TODO: rudimental, can be used as a MPrivate *)
 [@@deriving show { with_path = false }]
 
 type method_modifier =
-  | MAccess of access_modifier
-  | MStatic
+  | MAccess of access_modifier 
+  | MStatic (* TODO: UNSOPPORTED only with main *)
 [@@deriving show { with_path = false }]
 
 type fild_modifier = FAccess of access_modifier

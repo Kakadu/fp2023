@@ -90,7 +90,8 @@ type runtime_ctx =
 type t_env_value =
   | Metod_sig of method_sign
   | Constructor_sig of constructor_sign
-  | Value_sign of var_type
+  | Value_sig of var_type
+  | Fild_sig of fild_sign
 
 type t_loc_env = t_env_value IdentMap.t
 type type_check_ctx = text * t_loc_env
@@ -106,6 +107,7 @@ type error =
   | `Other_error of string
   | `Method_not_find
   | `User_exception of excaption
+  | `Access_error of string
   ]
 
 module Type_checker = struct
@@ -118,10 +120,10 @@ module Type_checker = struct
 
   let ( >>= ) : 'a tt -> ('a -> 'b tt) -> 'b tt =
     fun x f st ->
-    let st, x = x st in
-    match x with
-    | Result.Ok x -> f x st
-    | Result.Error s -> st, Result.error s
+    let st1, x1 = x st in
+    match x1 with
+    | Result.Ok x -> f x st1
+    | Result.Error s -> st1, Result.error s
   ;;
 
   let save_local : t_loc_env -> unit tt =
@@ -186,12 +188,22 @@ module Type_checker = struct
     fun f a b st -> (a >>= fun a1 -> b >>= fun b1 -> return (f a1 b1)) st
   ;;
 
+  let ( *> ) : 'a tt -> 'b tt -> 'b tt = fun a b st -> (lift2 (fun _ x -> x) a b) st
+  let ( <* ) : 'a tt -> 'b tt -> 'a tt = fun a b st -> (lift2 (fun x _ -> x) a b) st
+
   let ( <|> ) : 'a tt -> 'a tt -> 'a tt =
     fun a1 a2 st ->
     let st, x = a1 st in
     match x with
     | Result.Ok x -> return x st
     | Result.Error _ -> a2 st
+  ;;
+
+  let choice : 'a tt list -> 'a tt =
+    fun l ->
+    match l with
+    | [] -> fail (`Other_error "Empty choice")
+    | h :: tl -> List.fold_left ( <|> ) h tl
   ;;
 
   let ( >>| ) : 'a tt -> ('a -> 'b) -> 'b tt =
@@ -227,22 +239,23 @@ let to_var_type = function
 ;;
 
 let to_type_v = function
-  | Some x -> Some (Value_sign x)
+  | Some x -> Some (Value_sig x)
   | None -> None
 ;;
 
 let to_type_m = function
   | Void -> Result.error "Not assignable type"
-  | TReturn x -> Result.ok (Value_sign (TVar x))
+  | TReturn x -> Result.ok (Value_sig (TVar x))
 ;;
 
 let to_assign_t = function
-  | Value_sign (TVar a_tp) -> Result.ok a_tp
+  | Value_sig (TVar a_tp) -> Result.ok a_tp
   | Metod_sig { m_modif = _; m_type; _ } ->
     (match m_type with
      | Void -> Result.error "Non-assignable type"
      | TReturn a_tp -> Result.ok a_tp)
   | Constructor_sig { con_modif = _; con_id; _ } -> Result.ok (TNullable (TClass con_id))
+  | Fild_sig { f_modif = _; f_type = TVar tp; _ } -> Result.ok tp
 ;;
 
 let opt_to_assign_t = function
@@ -262,6 +275,13 @@ let compare a b f =
   | Result.Ok a_tp_opt, Result.Ok b_tp_opt -> f (a_tp_opt, b_tp_opt)
 ;;
 
+let compare_t_env_opt f a b =
+  match f a b with
+  | Result.Ok None -> return None
+  | Result.Ok (Some x) -> return (Some (Value_sig (TVar x)))
+  | Result.Error msg -> fail (`Other_error msg)
+;;
+
 let ( =!= ) a b =
   let helper (a_tp_opt, b_tp_opt) =
     match a_tp_opt, b_tp_opt with
@@ -273,6 +293,8 @@ let ( =!= ) a b =
   in
   compare a b helper
 ;;
+
+let eq_t_env_opt a b = compare_t_env_opt ( =!= ) a b
 
 let ( =!> ) a b =
   match a =!= b with
@@ -287,10 +309,11 @@ let ( =!> ) a b =
     compare a b helper
 ;;
 
+let greater_t_env_opt a b = compare_t_env_opt ( =!> ) a b
 let params_check f prms = map_left f prms
 
 let v_decl_to_type_v = function
-  | Var_decl (tp, _) -> Value_sign tp
+  | Var_decl (tp, _) -> Value_sig tp
 ;;
 
 let is_success_list lst =
@@ -335,7 +358,7 @@ let check_invoke sign env_prms =
      | Result.Error _ -> fail `Type_mismatch
      | Result.Ok tp -> check_method tp args env_prms)
   | Some (Constructor_sig { con_modif = _; con_id; con_args; base_params }) ->
-    let tp = Value_sign (TVar (TNullable (TClass con_id))) in
+    let tp = Value_sig (TVar (TNullable (TClass con_id))) in
     (match con_args, base_params with
      | Args args, None -> check_method tp args env_prms
      | _ -> fail (`Other_error "Inheritance with constructors is not supported"))
@@ -347,62 +370,128 @@ let get_class_decl = function
   | Class_ctx cl -> cl
 ;;
 
+let get_sign id el =
+  let is_fild s id =
+    match s with
+    | { f_modif = _; f_type = _; f_id } when equal_ident f_id id -> Some (Fild_sig s)
+    | _ -> None
+  in
+  let is_method s id =
+    match s with
+    | { m_modif = _; m_type = _; m_id; _ } when equal_ident m_id id -> Some (Metod_sig s)
+    | _ -> None
+  in
+  let is_constructor s id =
+    match s with
+    | { con_modif = _; con_id; _ } when equal_ident con_id id -> Some (Constructor_sig s)
+    | _ -> None
+  in
+  match el with
+  | Fild (sign, _) -> is_fild sign id
+  | Method (sign, _) -> is_method sign id
+  | Constructor (sign, _) -> is_constructor sign id
+  | Main _ -> None
+;;
+
 let get_class_member_sign cl_d el_id =
   let f id acc el =
     match acc, el with
-    | None, el ->
-      let is_fild s id =
-        match s with
-        | { f_modif = _; f_type; f_id } when equal_ident f_id id ->
-          Some (Value_sign f_type)
-        | _ -> None
-      in
-      let is_method s id =
-        match s with
-        | { m_modif = _; m_type = _; m_id; _ } when equal_ident m_id id ->
-          Some (Metod_sig s)
-        | _ -> None
-      in
-      let is_constructor s id =
-        match s with
-        | { con_modif = _; con_id; _ } when equal_ident con_id id ->
-          Some (Constructor_sig s)
-        | _ -> None
-      in
-      (match el with
-       | Fild (sign, _) -> is_fild sign id
-       | Method (sign, _) -> is_method sign id
-       | Constructor (sign, _) -> is_constructor sign id
-       | Main _ -> None)
+    | None, el -> get_sign id el
     | ret, _ -> ret
   in
   List.fold_left (f el_id) None cl_d.cl_mems
 ;;
 
-(* let find_global id =
-   read_global (Code_ident id) >>= *)
+let find_global id = read_global (Code_ident id) >>| fun x -> get_class_decl x
 
-let rec find_class_member cl_decl expr =
+let is_public sign =
+  match sign with
+  | Fild_sig { f_modif = Some (FAccess MPublic); _ }
+  | Metod_sig { m_modif = Some (MAccess MPublic); _ }
+  | Constructor_sig { con_modif = Some MPublic; _ } -> return sign
+  | _ -> fail (`Access_error "Attempt to get a private class member")
+;;
+
+let rec find_class_member expr cl_decl =
   let find_mem id =
     match get_class_member_sign cl_decl id with
     | Some x -> return x
     | None -> fail (`Other_error "Parsing error in EPoint_access")
   in
+  let get_next_decl_id mem_id =
+    find_mem mem_id
+    >>= is_public
+    >>= function
+    | Fild_sig { f_modif = _; f_type = TVar (TNullable (TClass id)); _ } -> return id
+    | Metod_sig { m_modif = _; m_type = TReturn (TNullable (TClass id)); _ } -> return id
+    | Constructor_sig { con_modif = _; con_id; _ } -> return con_id
+    | _ -> fail (`Access_error "Magic case")
+  in
   match expr with
-  | EIdentifier id -> find_mem id
-  | EPoint_access (EIdentifier id, expr1) -> (* TODO: *) find_mem id
+  | EIdentifier id -> find_mem id >>= is_public
+  | EPoint_access (EIdentifier id, expr1) ->
+    get_next_decl_id id >>= find_global >>= find_class_member expr1
   | _ -> fail (`Other_error "Parsing error in EPoint_access")
 ;;
 
-(* match f with *)
-(*
-   let point_check e1 e2 =
-   match e1 with
-   | EIdentifier id ->
-   let local_find = read_local id >>| fun x -> Some x in
-   let global_find = read_global (Code_ident id) in
+let point_check e1 e2 =
+  let helper =
+    match e1 with
+    | EIdentifier id ->
+      let local_find = read_local id in
+      let global_find = read_global (Code_ident id) >>| get_class_decl in
+      local_find <|> (global_find >>= find_class_member e2 >>= is_public)
+    | _ -> fail (`Other_error "Error during parsing in Epoint_access")
+  in
+  helper >>| fun x -> Some x
+;;
 
-   | _ -> fail (`Other_error "Error during parsing in Epoint_access") *)
+let env_bool = Value_sig (TVar (TNot_Nullable TBool))
+let env_bool_null = Value_sig (TVar (TNullable (TBase TBool)))
+let env_int = Value_sig (TVar (TNot_Nullable TInt))
+let env_int_null = Value_sig (TVar (TNullable (TBase TInt)))
+let env_char = Value_sig (TVar (TNot_Nullable TChar))
+let env_char_null = Value_sig (TVar (TNullable (TBase TChar)))
+let env_string = Value_sig (TVar (TNullable TString))
+
+let operands_eq oper1 oper2 =
+  match oper1, oper2 with
+  | None, None | None, _ | _, None ->
+    fail (`Other_error "Using keyword Null with math operations")
+  | _ -> eq_t_env_opt oper1 oper2
+;;
+
+let base_type_eq2 tp0 tp1 tp2 = tp0 >>= eq_t_env_opt tp1 <|> tp0 >>= eq_t_env_opt tp2
+
+let check_bin_op op (env1, env2) =
+  let is_operands_eq = operands_eq env1 env2 in
+  let base_type_eq2 = base_type_eq2 is_operands_eq in
+  (* _ *)
+  let int_op = base_type_eq2 (Some env_int) (Some env_int_null) in
+  let int_bool_op = int_op *> return (Some env_bool) in
+  let bool_op = base_type_eq2 (Some env_bool) (Some env_bool_null) in
+  let char_op = base_type_eq2 (Some env_char) (Some env_char_null) in
+  let string_op = is_operands_eq >>= eq_t_env_opt (Some env_string) in
+  let compare_op = choice [ int_op; bool_op; char_op; string_op ] in
+  match op with
+  | Asterisk | Plus | Minus | Division | Mod -> int_op
+  | Less | LessOrEqual | More | MoreOrEqual -> int_bool_op
+  | And | Or -> bool_op
+  | Equal | NotEqual -> compare_op
+  | Assign -> is_operands_eq
+;;
+
+let check_un_op op env1 =
+  match op with
+  | UMinus -> base_type_eq2 env1 (Some env_int) (Some env_int_null)
+  | UNot -> base_type_eq2 env1 (Some env_bool) (Some env_bool_null)
+  | New ->
+    env1
+    >>= (function
+     | Some (Value_sig (TVar (TNullable (TClass x)))) ->
+       return (Some (Value_sig (TVar (TNullable (TClass x)))))
+     | _ -> fail `Type_mismatch)
+;;
 
 let check_expr exp =
   let rec helper e1 =
@@ -417,10 +506,10 @@ let check_expr exp =
       >>= fun x ->
       let env_val_prms = params_check helper prms in
       check_invoke x env_val_prms
-    (* | EPoint_access (e1, e2) -> *)
-    (* | EPoint_access ->  мб тут надо делать проверку на обращение к приватному методу + TODO: это жопа будет*)
-    (* | EBin_op ->  *)
-    (* | EUn_op ->  *)
+    | EPoint_access (e1, e2) -> point_check e1 e2
+    | EBin_op (op, e1, e2) ->
+      lift2 (fun x y -> x, y) (helper e1) (helper e2) >>= check_bin_op op
+    | EUn_op (op, e1) -> check_un_op op (helper e1)
   in
   helper exp
 ;;
