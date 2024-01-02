@@ -51,8 +51,8 @@ type pattern =
 
 type expression =
   | Exp_constant of const (** Expressions constant such as [1], [true] *)
-  | Exp_unary_op of unary_op
-  | Exp_bin_op of bin_op
+  | Exp_unary_op of unary_op * expression
+  | Exp_bin_op of bin_op * expression * expression
   | Exp_ident of ident (** Identifiers such as [x] *)
   | Exp_tuple of expression list (** Expressions [(E1, ..., En)]*)
   | Exp_function of pattern * expression (** [fun P1 -> E] *)

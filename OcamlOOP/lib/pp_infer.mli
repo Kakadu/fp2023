@@ -6,7 +6,7 @@ open Typedtree
 
 val pp_type : Format.formatter -> ty -> unit
 
-val pp_program : Format.formatter -> (string * scheme) list -> unit
+val pp_program : Format.formatter -> (string, scheme, 'a) Base.Map.t -> unit
 
 val pp_error : Format.formatter -> error -> unit
 

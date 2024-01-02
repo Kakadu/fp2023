@@ -40,7 +40,7 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  let () = run_infer "let rec fact x =  if x = 0 then 1 else x * fact (x - 1) in fact" in
+  let () = run_infer "let rec fact x =  if x = 0 then 1 else x * fact (x - 1)" in
   [%expect {|var fact: int -> int|}]
 ;;
 
@@ -63,8 +63,8 @@ let (_, b) = tuple
 let%expect_test _ =
   let () = run_infer input in
   [%expect {|
-    var tuple: int * int
-    var b: int |}]
+    var b: int
+    var tuple: int * int |}]
 ;;
 
 let input =
@@ -96,6 +96,11 @@ let%expect_test _ =
   let () = run_infer input in
   [%expect {|
     var check_equal: int -> int -> int |}]
+;;
+
+let%expect_test _ =
+  let () = run_infer "let a = (fun x y -> (x, y)) 1 2" in
+  [%expect {| var a: int * int |}]
 ;;
 
 (*=====================Expressions=====================*)
@@ -151,19 +156,25 @@ let%expect_test _ =
 let%expect_test _ =
   let () = run_infer "let several_bounds x = let (y::y) = x in y" in
   [%expect {| Variable y is bound several times |}]
-
+;;
 
 let%expect_test _ =
   let () = run_infer "let nested_bounds x = let ((h::tl), h) = x in h" in
   [%expect {| Variable h is bound several times |}]
-
+;;
 
 let%expect_test _ =
   let () = run_infer "let rec (a, b) = 5" in
   [%expect {| Only variables are allowed as left-side of 'let rec' |}]
-
+;;
 
 let%expect_test _ =
   let () = run_infer "let increase = x + 1" in
   [%expect {| Unbound value 'x' |}]
+;;
+
+let%expect_test _ =
+  let () = run_infer "let rec f x y = if x = y then f x else f y" in
+  [%expect {| The type variable 'b occurs inside 'a -> 'b |}]
+;;
 

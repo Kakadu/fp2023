@@ -232,13 +232,20 @@ module Scheme = struct
   ;;
 end
 
+(*
+   type t = (fresh, ty, Int.comparator_witness) Map.t
+
+   let empty = Map.empty (module Int)
+*)
 module TypeEnv = struct
   open Base
 
-  type t =
-    (string * scheme) list (* поменять на мапу, тогда не надо будет с extend дурить *)
+  type t = (string, scheme, String.comparator_witness) Map.t
 
-  let extend e h = h :: e
+  (* type t = (string * scheme) list *)
+
+  let extend env (v, scheme) = Map.update env v ~f:(fun _ -> scheme)
+  (* let extend e h = h :: e *)
 
   let replace_scheme env (v, new_scheme) =
     let new_env =
@@ -251,8 +258,8 @@ module TypeEnv = struct
   let rec extend1 (S (bs, ty) as scheme) acc =
     let open Ast in
     function
-    | Pat_var (Id v) -> replace_scheme acc (v, scheme)
-    | Pat_cons (_, _) -> acc
+    | Pat_var (Id v) -> extend acc (v, scheme)
+    | Pat_cons (_, _) -> acc (* ИСПРАВИТЬ !!! *)
     | Pat_tuple es ->
       (match ty with
        | TTuple ts ->
@@ -266,15 +273,25 @@ module TypeEnv = struct
     | _ -> acc
   ;;
 
-  let empty = []
+  let empty = Map.empty (module String)
+  (* let empty = [] *)
 
   let free_vars =
-    List.fold_left ~init:VarSet.empty ~f:(fun acc (_, s) ->
+    Map.fold ~init:VarSet.empty ~f:(fun ~key:_ ~data:s acc ->
       VarSet.union acc (Scheme.free_vars s))
   ;;
 
-  let apply s env = List.Assoc.map env ~f:(Scheme.apply s)
-  let find xs name = List.Assoc.find ~equal:String.equal xs name
+  (* let free_vars =
+    List.fold_left ~init:VarSet.empty ~f:(fun acc (_, s) ->
+      VarSet.union acc (Scheme.free_vars s))
+  ;;*)
+
+  let apply s env = Map.map env ~f:(Scheme.apply s)
+
+  (* let apply s env = List.Assoc.map env ~f:(Scheme.apply s) *)
+
+  let find xs name = Map.find xs name
+  (* let find xs name = List.Assoc.find ~equal:String.equal xs name *)
 end
 
 open R
@@ -378,18 +395,44 @@ let infer =
   let rec helper env = function
     | Exp_constant c -> const_infer Subst.empty c
     | Exp_ident (Id v) -> lookup_env v env
-    | Exp_unary_op op ->
-      (match op with
-       | Minus -> return (Subst.empty, tarrow tint tint)
-       | Not -> return (Subst.empty, tarrow tbool tbool))
-    | Exp_bin_op op ->
-      (match op with
-       | Asterisk | Divider | Plus | Sub ->
+    | Exp_unary_op (op, e) ->
+      let exp_ty =
+        match op with
+        | Minus -> tint
+        | Not -> tbool
+      in
+      let* s, t = helper env e in
+      let* subst = unify t exp_ty in
+      let* final_subs = Subst.compose s subst in
+      return (final_subs, exp_ty)
+      (* (match op with
+         | Minus ->
+
+         return (Subst.empty, tarrow tint tint)
+         | Not -> return (Subst.empty, tarrow tbool tbool))*)
+    | Exp_bin_op (op, e1, e2) ->
+      let* arg_ty, expr_type =
+        match op with
+        | Asterisk | Divider | Plus | Sub -> return (tint, tint)
+        | And | Or -> return (tbool, tbool)
+        | Eq | Neq | Lt | Ltq | Gt | Gtq ->
+          let* tv = fresh_var in
+          return (tv, tbool)
+      in
+      let* s1, t1 = helper env e1 in
+      let* s2, t2 = helper env e2 in
+      let* sub1 = unify t1 arg_ty in
+      let* sub2 = unify (Subst.apply sub1 t2) arg_ty in
+      let* final_subs = Subst.compose_all [ s1; s2; sub1; sub2 ] in
+      return (final_subs, expr_type)
+      (*
+         (match op with
+         | Asterisk | Divider | Plus | Sub ->
          return (Subst.empty, tarrow tint (tarrow tint tint))
-       | And | Or -> return (Subst.empty, tarrow tbool (tarrow tbool tbool))
-       | Eq | Neq | Lt | Ltq | Gt | Gtq ->
+         | And | Or -> return (Subst.empty, tarrow tbool (tarrow tbool tbool))
+         | Eq | Neq | Lt | Ltq | Gt | Gtq ->
          let* v = fresh_var in
-         return (Subst.empty, tarrow v (tarrow v tbool)))
+         return (Subst.empty, tarrow v (tarrow v tbool)))*)
     | Exp_apply (e, e') ->
       let* tv = fresh_var in
       let* s1, t1 = helper env e in
@@ -503,8 +546,7 @@ let expr_type env e =
 ;;
 
 (* TODO: remove copy-paste *)
-let value_type env =
-  function
+let value_type env = function
   | { d_rec = Nonrecursive; d_pat; d_expr } ->
     let* s1, t1 = infer env d_expr in
     let scheme = generalize (TypeEnv.apply s1 env) t1 in
