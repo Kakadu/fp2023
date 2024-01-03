@@ -85,6 +85,7 @@ let unspecified = pstoken "" *> return Unspecified
 let pty = choice [ ptint; ptstring; ptbool; unspecified ]
 
 (* typed variable *)
+
 let tvar =
   lift2 (fun name ty -> { name; ty }) varname (pstoken ":" *> pty <|> return Unspecified)
 ;;

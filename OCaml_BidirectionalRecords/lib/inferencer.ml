@@ -11,4 +11,5 @@ type error =
   | IllegalRec of string
   | MatchFailed
   | EmptyInput
+  | NotImplemented of string
 [@@deriving show { with_path = false }]
