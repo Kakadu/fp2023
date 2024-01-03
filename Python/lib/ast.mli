@@ -7,7 +7,7 @@ type value =
   | String of string (** String type *)
   | List of value list (** List type *)
   | Bool of bool (** Bool type *)
-  | None (** None type *)
+  | Nil (** None type *)
 
 val equal_value : value -> value -> bool
 val pp_value : Format.formatter -> value -> unit

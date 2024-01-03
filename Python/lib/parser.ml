@@ -20,7 +20,7 @@ type pseudo_statement =
   | For of expression * expression list * pseudo_statement list
   | Class of identifier * pseudo_statement list
   | Return of expression
-  | Error
+  | ParsingError
 
 let rec map1 f = function
   | [] -> return []
@@ -435,7 +435,7 @@ let insert_body body = function
   | Function (identifier, params, _) -> Function (identifier, params, body)
   | Class (exp, _) -> Class (exp, body)
   | While (exp, _) -> While (exp, body)
-  | _ -> Error
+  | _ -> ParsingError
 ;;
 
 let align_pseudo_statement pseudo_statement =

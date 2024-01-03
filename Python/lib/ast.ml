@@ -8,7 +8,7 @@ type value =
   | String of string
   | List of value list
   | Bool of bool
-  | None
+  | Nil
 [@@deriving eq, show { with_path = false }]
 
 (*Standart arithmetic operations *)

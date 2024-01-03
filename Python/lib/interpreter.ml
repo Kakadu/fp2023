@@ -75,7 +75,7 @@ module Eval (M : MONADERROR) = struct
     ; classes = []
     ; functions = []
     ; flag = No
-    ; return_v = None
+    ; return_v = Nil
     ; vars = []
     ; vals_to_print = []
     }
@@ -87,7 +87,7 @@ module Eval (M : MONADERROR) = struct
     ; classes = []
     ; functions = []
     ; flag = No
-    ; return_v = None
+    ; return_v = Nil
     ; vars = []
     ; vals_to_print = []
     }
@@ -100,7 +100,7 @@ module Eval (M : MONADERROR) = struct
     ; classes = []
     ; functions = []
     ; flag = No
-    ; return_v = None
+    ; return_v = Nil
     ; vals_to_print = []
     }
   ;;
@@ -209,7 +209,7 @@ module Eval (M : MONADERROR) = struct
         then return env.return_v
         else (
           match body with
-          | [] -> return None
+          | [] -> return Nil
           | hd :: tl ->
             let* a = exp_or_stmt.i_stmt exp_or_stmt env hd in
             apply a tl)
@@ -281,7 +281,7 @@ module Eval (M : MONADERROR) = struct
         (match identifier with
          | Identifier "print" when not (func_in_env (Identifier "print") env) ->
            let rec print_exp_list = function
-             | [] -> return None
+             | [] -> return Nil
              | exp :: tl ->
                let* value = i_expr exp_or_stmt env exp in
                let* str_val = pack_to_string value in
@@ -289,7 +289,7 @@ module Eval (M : MONADERROR) = struct
                print_exp_list tl
            in
            (match exp_list with
-            | [] -> return None
+            | [] -> return Nil
             | _ -> print_exp_list exp_list)
          | Identifier "setattr" when not (func_in_env (Identifier "setattr") env) ->
            let* className = i_expr exp_or_stmt env (List.hd exp_list) in
@@ -309,7 +309,7 @@ module Eval (M : MONADERROR) = struct
              let funcI : function_symb = { fetchedMethod with identifier = funcId } in
              change_func funcI fetchedClass
            in
-           i_expr exp_or_stmt (change_or_add_class changedClass env) (Const None)
+           i_expr exp_or_stmt (change_or_add_class changedClass env) (Const Nil)
          | _ ->
            (match func_in_env identifier env with
             | false -> error "undefined Function"
