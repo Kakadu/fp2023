@@ -9,6 +9,7 @@ type ty =
   | TBool
   | TString
   | TList of ty
+  | TArrow of ty * ty
   | TTuple of ty list
   | Unspecified
   | UserDefined of id
@@ -75,6 +76,7 @@ type expr =
   | EIfThenElse of expr * expr * expr (** IfThenElse (b,t,e) is if b then t else e *)
   | ELet of rec_flag * ty_bind * expr * expr (** Let (x,e,e') is let x = e in e' *)
   | EApp of expr * expr (**  App (f,e) is application f e *)
+  | EList of expr list
   | EMatch of expr * (pattern * expr)
   | EUnit
 [@@deriving show]

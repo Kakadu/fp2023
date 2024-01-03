@@ -6,6 +6,8 @@ open Angstrom
 open Base
 open Ast
 
+let parse p s = parse_string ~consume:Consume.All p s
+
 (* helpers *)
 
 let is_keyword = function
@@ -30,6 +32,7 @@ let pstoken s = pws *> string s
 let ptoken s = pws *> s
 let pparens p = pstoken "(" *> p <* pstoken ")"
 let pbrackets p = pstoken "{" *> p <* pstoken "}"
+let psqparens p = pstoken "[" *> p <* pstoken "]"
 
 let chainl1 e op =
   let rec go acc = lift2 (fun f x -> f acc x) op e >>= go <|> return acc in
@@ -111,6 +114,8 @@ let petuple pexpr =
   lift2 List.cons pexpr (many1 (pstoken "," *> pexpr)) >>| fun x -> ETuple x
 ;;
 
+let plist pexpr = psqparens (sep_by (pstoken ";") pexpr >>| fun x -> EList x)
+
 let pbranch pexpr =
   lift3
     (fun e1 e2 e3 -> EIfThenElse (e1, e2, e3))
@@ -154,7 +159,7 @@ let plet pexpr =
 
 let pexpr =
   fix (fun expr ->
-    let expr = choice [ peconst; pevar; pparens expr ] in
+    let expr = choice [ peconst; pevar; pparens expr; plist expr ] in
     let expr = peapp expr <|> expr in
     let expr = chainl1 expr (mult <|> div) in
     let expr = chainl1 expr (add <|> sub) in
