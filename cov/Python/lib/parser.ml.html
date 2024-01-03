@@ -1786,23 +1786,23 @@ type pseudo_statement =
   | Error
 
 let rec map1 f = function
-  | <span data-count="59">[</span>] -&gt; return []
-  | <span data-count="65">h</span> :: tl -&gt; <span data-count="65">f</span> h &gt;&gt;= fun c -&gt; <span data-count="65">m</span>ap<span data-count="65">1</span> f tl &gt;&gt;= fun lst -&gt; <span data-count="65">r</span>eturn (c :: lst)
+  | <span data-count="62">[</span>] -&gt; return []
+  | <span data-count="70">h</span> :: tl -&gt; <span data-count="70">f</span> h &gt;&gt;= fun c -&gt; <span data-count="70">m</span>ap<span data-count="70">1</span> f tl &gt;&gt;= fun lst -&gt; <span data-count="70">r</span>eturn (c :: lst)
 ;;
 
 let rec convert_pseudoast_to_ast : pseudo_statement -&gt; statement t = function
   | <span data-count="0">S</span>pecialStatementWithColumns (_, body) -&gt; convert_pseudoast_to_ast body
   | <span data-count="4">S</span>tatementWithColumns (_, body) -&gt; convert_pseudoast_to_ast body
-  | <span data-count="10">F</span>unction (identifier, params, body) -&gt;
-    let* newBody = map<span data-count="10">1</span> (fun a -&gt; <span data-count="11">c</span>onvert_pseudoast_to_ast a) body in
-    <span data-count="10">r</span>eturn @@ Ast.Function (identifier, params, newBody)
-  | <span data-count="21">E</span>xpression exp -&gt; return @@ Ast.Expression exp
+  | <span data-count="12">F</span>unction (identifier, params, body) -&gt;
+    let* newBody = map<span data-count="12">1</span> (fun a -&gt; <span data-count="13">c</span>onvert_pseudoast_to_ast a) body in
+    <span data-count="12">r</span>eturn @@ Ast.Function (identifier, params, newBody)
+  | <span data-count="22">E</span>xpression exp -&gt; return @@ Ast.Expression exp
   | <span data-count="9">A</span>ssign (left, right) -&gt; return @@ Ast.Assign (left, right)
   | <span data-count="6">I</span>fElse (exp, if_body, else_body) -&gt;
     let* newIfBody = map<span data-count="6">1</span> (fun x -&gt; <span data-count="6">c</span>onvert_pseudoast_to_ast x) if_body in
     <span data-count="6">l</span>et* newElseBody = map<span data-count="6">1</span> (fun x -&gt; <span data-count="4">c</span>onvert_pseudoast_to_ast x) else_body in
     <span data-count="6">r</span>eturn @@ Ast.IfElse (exp, newIfBody, newElseBody)
-  | <span data-count="13">R</span>eturn x -&gt; return @@ Ast.Return x
+  | <span data-count="15">R</span>eturn x -&gt; return @@ Ast.Return x
   | <span data-count="3">C</span>lass (exp, body) -&gt;
     let* newBody = map<span data-count="3">1</span> (fun x -&gt; <span data-count="5">c</span>onvert_pseudoast_to_ast x) body in
     <span data-count="3">r</span>eturn @@ Ast.Class (exp, newBody)
@@ -1821,20 +1821,20 @@ let is_banned = function
   | <span data-count="0">"</span>or"
   | <span data-count="0">"</span>true"
   | <span data-count="0">"</span>false"
-  | <span data-count="27">"</span>return"
+  | <span data-count="31">"</span>return"
   | <span data-count="12">"</span>if"
   | <span data-count="8">"</span>else"
   | <span data-count="4">"</span>while"
-  | <span data-count="20">"</span>def"
+  | <span data-count="24">"</span>def"
   | <span data-count="6">"</span>class"
   | <span data-count="10">"</span>lambda" -&gt; true
-  | <span data-count="218">_</span> -&gt; false
+  | <span data-count="224">_</span> -&gt; false
 ;;
 
 (* Checkers *)
 let is_digit = function
-  | <span data-count="120">'</span>0' .. '9' -&gt; true
-  | <span data-count="78">_</span> -&gt; false
+  | <span data-count="124">'</span>0' .. '9' -&gt; true
+  | <span data-count="81">_</span> -&gt; false
 ;;
 
 let is_space = function
@@ -1844,22 +1844,22 @@ let is_space = function
 
 let is_sign = function
   | <span data-count="1">'</span>-' -&gt; true
-  | <span data-count="58">_</span> -&gt; false
+  | <span data-count="60">_</span> -&gt; false
 ;;
 
 let is_valid_first_char = function
-  | <span data-count="245">'</span>a' .. 'z' | <span data-count="9">'</span>A' .. 'Z' -&gt; true
-  | <span data-count="93">_</span> -&gt; false
+  | <span data-count="256">'</span>a' .. 'z' | <span data-count="9">'</span>A' .. 'Z' -&gt; true
+  | <span data-count="98">_</span> -&gt; false
 ;;
 
 let is_eol = function
   | <span data-count="10">'</span>\n' -&gt; true
-  | <span data-count="31">_</span> -&gt; false
+  | <span data-count="32">_</span> -&gt; false
 ;;
 
 let is_whitespace = function
-  | <span data-count="647">'</span> ' -&gt; true
-  | <span data-count="2285">_</span> -&gt; false
+  | <span data-count="649">'</span> ' -&gt; true
+  | <span data-count="2394">_</span> -&gt; false
 ;;
 
 let is_stmt_sep = function
@@ -1868,8 +1868,8 @@ let is_stmt_sep = function
 ;;
 
 let is_variable = function
-  | <span data-count="942">'</span>a' .. 'z' | <span data-count="28">'</span>A' .. 'Z' | <span data-count="7">'</span>0' .. '9' | <span data-count="0">'</span>_' -&gt; true
-  | <span data-count="294">_</span> -&gt; false
+  | <span data-count="996">'</span>a' .. 'z' | <span data-count="28">'</span>A' .. 'Z' | <span data-count="7">'</span>0' .. '9' | <span data-count="0">'</span>_' -&gt; true
+  | <span data-count="308">_</span> -&gt; false
 ;;
 
 let is_quotes = function
@@ -1878,8 +1878,8 @@ let is_quotes = function
 ;;
 
 let is_whitespace_or_eol = function
-  | <span data-count="62">'</span> ' | <span data-count="0">'</span>\n' -&gt; true
-  | <span data-count="133">_</span> -&gt; false
+  | <span data-count="64">'</span> ' | <span data-count="0">'</span>\n' -&gt; true
+  | <span data-count="138">_</span> -&gt; false
 ;;
 
 let is_class = function
@@ -1898,60 +1898,60 @@ let is_curlyRight = function
 ;;
 
 let chainl1 e op =
-  <span data-count="212">l</span>et rec go acc = <span data-count="463">l</span>ift<span data-count="463">2</span> (fun f x -&gt; <span data-count="40">f</span> acc x) op e &gt;&gt;<span data-count="463">=</span> go &lt;|&gt; retur<span data-count="463">n</span> acc in
-  e &gt;&gt;= fun init -&gt; <span data-count="423">g</span>o init
+  <span data-count="224">l</span>et rec go acc = <span data-count="479">l</span>ift<span data-count="479">2</span> (fun f x -&gt; <span data-count="40">f</span> acc x) op e &gt;&gt;<span data-count="479">=</span> go &lt;|&gt; retur<span data-count="479">n</span> acc in
+  e &gt;&gt;= fun init -&gt; <span data-count="439">g</span>o init
 ;;
 
 (* Skippers *)
-let skip_whitespace = skip_whil<span data-count="10">e</span> is_whitespace
-let between t1 t2 e1 = <span data-count="70">t</span>1 *<span data-count="70">&gt;</span> skip_whitespace *<span data-count="70">&gt;</span> e1 &lt;<span data-count="70">*</span> skip_whitespace &lt;* t2
-let round_brackets e1 = <span data-count="70">b</span>etween (strin<span data-count="70">g</span> "(") (strin<span data-count="70">g</span> ")") e1
+let skip_whitespace = skip_whil<span data-count="11">e</span> is_whitespace
+let between t1 t2 e1 = <span data-count="72">t</span>1 *<span data-count="72">&gt;</span> skip_whitespace *<span data-count="72">&gt;</span> e1 &lt;<span data-count="72">*</span> skip_whitespace &lt;* t2
+let round_brackets e1 = <span data-count="72">b</span>etween (strin<span data-count="72">g</span> "(") (strin<span data-count="72">g</span> ")") e1
 let square_brackets e1 = <span data-count="0">b</span>etween (strin<span data-count="0">g</span> "[") (strin<span data-count="0">g</span> "]") e1
-let skip_stmt_sep = skip_whil<span data-count="10">e</span> is_stmt_sep
+let skip_stmt_sep = skip_whil<span data-count="11">e</span> is_stmt_sep
 (* Takers*)
 
-let take_number = take_whil<span data-count="10">e</span> is_digit
-let take_string = take_til<span data-count="10">l</span> is_quotes
-let take_variable = take_whil<span data-count="10">e</span> is_variable
-let take_sign = take_whil<span data-count="10">e</span> is_sign
-let token t = <span data-count="370">s</span>kip_whitespace *&gt; strin<span data-count="370">g</span> t
-let take_interpolString = take_til<span data-count="10">l</span> is_curlyLeft
-let take_interpolIdentifier = take_til<span data-count="10">l</span> is_curlyRight
-let t_return = toke<span data-count="10">n</span> "return"
-let t_def = toke<span data-count="10">n</span> "def"
-let t_mul = toke<span data-count="10">n</span> "*"
-let t_eq = toke<span data-count="10">n</span> "=="
-let t_assign = toke<span data-count="10">n</span> "="
-let t_not_eq = toke<span data-count="10">n</span> "!="
-let t_quote = toke<span data-count="10">n</span> "\""
-let t_div = toke<span data-count="10">n</span> "/"
-let t_assign = toke<span data-count="10">n</span> "="
-let t_mod = toke<span data-count="10">n</span> "%"
-let t_comma = toke<span data-count="10">n</span> ","
-let t_sub = toke<span data-count="10">n</span> "-"
-let t_add = toke<span data-count="10">n</span> "+"
-let t_if = toke<span data-count="10">n</span> "if"
-let t_else = toke<span data-count="10">n</span> "else"
-let t_while = toke<span data-count="10">n</span> "while"
-let t_for = toke<span data-count="10">n</span> "for"
-let t_in = toke<span data-count="10">n</span> "in"
-let t_range = toke<span data-count="10">n</span> "range"
-let t_and = toke<span data-count="10">n</span> "and"
-let t_greater = toke<span data-count="10">n</span> "&gt;"
-let t_less_equal = toke<span data-count="10">n</span> "&lt;="
-let t_greater_equal = toke<span data-count="10">n</span> "&gt;="
-let t_less = toke<span data-count="10">n</span> "&lt;"
-let t_column = toke<span data-count="10">n</span> ":"
-let t_dot = toke<span data-count="10">n</span> "."
-let t_or = toke<span data-count="10">n</span> "or"
-let t_self = toke<span data-count="10">n</span> "self."
-let t_class = toke<span data-count="10">n</span> "class"
-let t_lambda = toke<span data-count="10">n</span> "lambda"
-let t_eol = toke<span data-count="10">n</span> "\n"
-let t_f = toke<span data-count="10">n</span> "f"
-let t_curlyLeft = toke<span data-count="10">n</span> "{"
-let t_curlyRight = toke<span data-count="10">n</span> "}"
-let t_tab1 = toke<span data-count="10">n</span> "\t"
+let take_number = take_whil<span data-count="11">e</span> is_digit
+let take_string = take_til<span data-count="11">l</span> is_quotes
+let take_variable = take_whil<span data-count="11">e</span> is_variable
+let take_sign = take_whil<span data-count="11">e</span> is_sign
+let token t = <span data-count="409">s</span>kip_whitespace *&gt; strin<span data-count="409">g</span> t
+let take_interpolString = take_til<span data-count="11">l</span> is_curlyLeft
+let take_interpolIdentifier = take_til<span data-count="11">l</span> is_curlyRight
+let t_return = toke<span data-count="11">n</span> "return"
+let t_def = toke<span data-count="11">n</span> "def"
+let t_mul = toke<span data-count="11">n</span> "*"
+let t_eq = toke<span data-count="11">n</span> "=="
+let t_assign = toke<span data-count="11">n</span> "="
+let t_not_eq = toke<span data-count="11">n</span> "!="
+let t_quote = toke<span data-count="11">n</span> "\""
+let t_div = toke<span data-count="11">n</span> "/"
+let t_assign = toke<span data-count="11">n</span> "="
+let t_mod = toke<span data-count="11">n</span> "%"
+let t_comma = toke<span data-count="11">n</span> ","
+let t_sub = toke<span data-count="11">n</span> "-"
+let t_add = toke<span data-count="11">n</span> "+"
+let t_if = toke<span data-count="11">n</span> "if"
+let t_else = toke<span data-count="11">n</span> "else"
+let t_while = toke<span data-count="11">n</span> "while"
+let t_for = toke<span data-count="11">n</span> "for"
+let t_in = toke<span data-count="11">n</span> "in"
+let t_range = toke<span data-count="11">n</span> "range"
+let t_and = toke<span data-count="11">n</span> "and"
+let t_greater = toke<span data-count="11">n</span> "&gt;"
+let t_less_equal = toke<span data-count="11">n</span> "&lt;="
+let t_greater_equal = toke<span data-count="11">n</span> "&gt;="
+let t_less = toke<span data-count="11">n</span> "&lt;"
+let t_column = toke<span data-count="11">n</span> ":"
+let t_dot = toke<span data-count="11">n</span> "."
+let t_or = toke<span data-count="11">n</span> "or"
+let t_self = toke<span data-count="11">n</span> "self."
+let t_class = toke<span data-count="11">n</span> "class"
+let t_lambda = toke<span data-count="11">n</span> "lambda"
+let t_eol = toke<span data-count="11">n</span> "\n"
+let t_f = toke<span data-count="11">n</span> "f"
+let t_curlyLeft = toke<span data-count="11">n</span> "{"
+let t_curlyRight = toke<span data-count="11">n</span> "}"
+let t_tab1 = toke<span data-count="11">n</span> "\t"
 
 (* Builders *)
 let exp_add e1 e2 = <span data-count="4">A</span>rithOp (Add, e1, e2)
@@ -1962,13 +1962,13 @@ let exp_mod e1 e2 = <span data-count="0">A</span>rithOp (Mod, e1, e2)
 let exp_eq e1 e2 = <span data-count="9">B</span>oolOp (Equal, e1, e2)
 let exp_not_eq e1 e2 = <span data-count="2">B</span>oolOp (NotEqual, e1, e2)
 let stmt_expression e = <span data-count="0">E</span>xpression e
-let expression_with_columns columns expr = <span data-count="21">S</span>tatementWithColumns (columns, Expression expr)
+let expression_with_columns columns expr = <span data-count="22">S</span>tatementWithColumns (columns, Expression expr)
 let stmt_func i el sl columns = <span data-count="0">S</span>pecialStatementWithColumns (columns, Function (i, el, sl))
 let stmt_if_else e sl1 sl2 = <span data-count="0">I</span>fElse (e, sl1, sl2)
 let stmt_return e = <span data-count="0">R</span>eturn e
 let stmt_assign e1 e2 = <span data-count="0">A</span>ssign (e1, e2)
 let stmt_while e sl = <span data-count="0">W</span>hile (e, sl)
-let exp_func_call i el = <span data-count="15">F</span>unctionCall (i, el)
+let exp_func_call i el = <span data-count="17">F</span>unctionCall (i, el)
 let exp_and e1 e2 = <span data-count="6">B</span>oolOp (And, e1, e2)
 let exp_or e1 e2 = <span data-count="2">B</span>oolOp (Or, e1, e2)
 let exp_greater e1 e2 = <span data-count="3">B</span>oolOp (Greater, e1, e2)
@@ -1977,108 +1977,108 @@ let exp_greater_equal e1 e2 = <span data-count="2">B</span>oolOp (GreaterOrEqual
 let exp_less_equal e1 e2 = <span data-count="2">B</span>oolOp (LessOrEqual, e1, e2)
 
 (* Lifters *)
-let lift_func_call = lift<span data-count="10">2</span> exp_func_call
+let lift_func_call = lift<span data-count="11">2</span> exp_func_call
 
 (* Parsers *)
-let p_mul = t_mul *<span data-count="10">&gt;</span> retur<span data-count="10">n</span> exp_mul
-let p_div = t_div *<span data-count="10">&gt;</span> retur<span data-count="10">n</span> exp_div
-let p_mod = t_mod *<span data-count="10">&gt;</span> retur<span data-count="10">n</span> exp_mod
-let p_sub = t_sub *<span data-count="10">&gt;</span> retur<span data-count="10">n</span> exp_sub
-let p_add = t_add *<span data-count="10">&gt;</span> retur<span data-count="10">n</span> exp_add
-let p_eq = t_eq *<span data-count="10">&gt;</span> retur<span data-count="10">n</span> exp_eq
-let p_not_eq = t_not_eq *<span data-count="10">&gt;</span> retur<span data-count="10">n</span> exp_not_eq
-let p_and = t_and *<span data-count="10">&gt;</span> retur<span data-count="10">n</span> exp_and
-let p_or = t_or *<span data-count="10">&gt;</span> retur<span data-count="10">n</span> exp_or
-let p_greater = t_greater *<span data-count="10">&gt;</span> retur<span data-count="10">n</span> exp_greater
-let p_gr_eq = t_greater_equal *<span data-count="10">&gt;</span> retur<span data-count="10">n</span> exp_greater_equal
-let p_less = t_less *<span data-count="10">&gt;</span> retur<span data-count="10">n</span> exp_less
-let p_less_eq = t_less_equal *<span data-count="10">&gt;</span> retur<span data-count="10">n</span> exp_less_equal
+let p_mul = t_mul *<span data-count="11">&gt;</span> retur<span data-count="11">n</span> exp_mul
+let p_div = t_div *<span data-count="11">&gt;</span> retur<span data-count="11">n</span> exp_div
+let p_mod = t_mod *<span data-count="11">&gt;</span> retur<span data-count="11">n</span> exp_mod
+let p_sub = t_sub *<span data-count="11">&gt;</span> retur<span data-count="11">n</span> exp_sub
+let p_add = t_add *<span data-count="11">&gt;</span> retur<span data-count="11">n</span> exp_add
+let p_eq = t_eq *<span data-count="11">&gt;</span> retur<span data-count="11">n</span> exp_eq
+let p_not_eq = t_not_eq *<span data-count="11">&gt;</span> retur<span data-count="11">n</span> exp_not_eq
+let p_and = t_and *<span data-count="11">&gt;</span> retur<span data-count="11">n</span> exp_and
+let p_or = t_or *<span data-count="11">&gt;</span> retur<span data-count="11">n</span> exp_or
+let p_greater = t_greater *<span data-count="11">&gt;</span> retur<span data-count="11">n</span> exp_greater
+let p_gr_eq = t_greater_equal *<span data-count="11">&gt;</span> retur<span data-count="11">n</span> exp_greater_equal
+let p_less = t_less *<span data-count="11">&gt;</span> retur<span data-count="11">n</span> exp_less
+let p_less_eq = t_less_equal *<span data-count="11">&gt;</span> retur<span data-count="11">n</span> exp_less_equal
 
 let p_integer =
   let* sign = take_sign in
-  <span data-count="58">l</span>et* x = take_number in
-  <span data-count="58">r</span>eturn (Const (Int (int_of_strin<span data-count="58">g</span> (sign ^ x))))
+  <span data-count="60">l</span>et* x = take_number in
+  <span data-count="60">r</span>eturn (Const (Int (int_of_strin<span data-count="60">g</span> (sign ^ x))))
 ;;
 
 let p_string =
-  let* x = t_quote *<span data-count="10">&gt;</span> take_string &lt;<span data-count="10">*</span> t_quote in
+  let* x = t_quote *<span data-count="11">&gt;</span> take_string &lt;<span data-count="11">*</span> t_quote in
   <span data-count="3">r</span>eturn (Const (String x))
 ;;
 
 let p_global_variable =
-  skip_whitespace *<span data-count="10">&gt;</span> take_variable
-  &gt;&gt;<span data-count="10">=</span> function
-  | <span data-count="100">x</span> when not (is_banne<span data-count="100">d</span> x) -&gt; <span data-count="59">r</span>eturn (Variable (Global, Identifier x))
-  | <span data-count="41">_</span> -&gt; fail "can't name a variable with a taken word"
+  skip_whitespace *<span data-count="11">&gt;</span> take_variable
+  &gt;&gt;<span data-count="11">=</span> function
+  | <span data-count="105">x</span> when not (is_banne<span data-count="105">d</span> x) -&gt; <span data-count="60">r</span>eturn (Variable (Global, Identifier x))
+  | <span data-count="45">_</span> -&gt; fail "can't name a variable with a taken word"
 ;;
 
 let p_class_variable =
-  t_self *<span data-count="10">&gt;</span> take_variable
-  &gt;&gt;<span data-count="10">=</span> function
+  t_self *<span data-count="11">&gt;</span> take_variable
+  &gt;&gt;<span data-count="11">=</span> function
   | <span data-count="0">x</span> when not (is_banne<span data-count="0">d</span> x) -&gt; <span data-count="0">r</span>eturn (Variable (Class, Identifier x))
   | <span data-count="0">_</span> -&gt; fail "can't name a variable with a taken word"
 ;;
 
 let p_if el columns =
-  <span data-count="70">l</span>et* exp = t_if *<span data-count="70">&gt;</span> skip_whitespace *<span data-count="70">&gt;</span> el &lt;<span data-count="70">*</span> cha<span data-count="70">r</span> ':' in
+  <span data-count="75">l</span>et* exp = t_if *<span data-count="75">&gt;</span> skip_whitespace *<span data-count="75">&gt;</span> el &lt;<span data-count="75">*</span> cha<span data-count="75">r</span> ':' in
   <span data-count="6">r</span>eturn (SpecialStatementWithColumns (columns, IfElse (exp, [], [])))
 ;;
 
 let p_else columns =
-  <span data-count="70">t</span>_else *<span data-count="70">&gt;</span> t_column *&gt; retur<span data-count="70">n</span> (SpecialStatementWithColumns (columns, Else []))
+  <span data-count="75">t</span>_else *<span data-count="75">&gt;</span> t_column *&gt; retur<span data-count="75">n</span> (SpecialStatementWithColumns (columns, Else []))
 ;;
 
 let p_identifier =
-  skip_whitespace *<span data-count="10">&gt;</span> peek_char
-  &gt;&gt;<span data-count="10">=</span> function
-  | <span data-count="217">S</span>ome c when is_valid_first_cha<span data-count="217">r</span> c -&gt;
-    <span data-count="204">t</span>ake_variable
+  skip_whitespace *<span data-count="11">&gt;</span> peek_char
+  &gt;&gt;<span data-count="11">=</span> function
+  | <span data-count="228">S</span>ome c when is_valid_first_cha<span data-count="228">r</span> c -&gt;
+    <span data-count="213">t</span>ake_variable
     &gt;&gt;= (function
-     | <span data-count="204">x</span> when not (is_banne<span data-count="204">d</span> x) -&gt; <span data-count="159">r</span>etur<span data-count="159">n</span> (Identifier x) &lt;* skip_whitespace
-     | <span data-count="45">_</span> -&gt; fail "can't name a variable with a taken word")
-  | <span data-count="14">_</span> -&gt; fail "banned first character"
+     | <span data-count="213">x</span> when not (is_banne<span data-count="213">d</span> x) -&gt; <span data-count="164">r</span>etur<span data-count="164">n</span> (Identifier x) &lt;* skip_whitespace
+     | <span data-count="49">_</span> -&gt; fail "can't name a variable with a taken word")
+  | <span data-count="16">_</span> -&gt; fail "banned first character"
 ;;
 
-let p_identifiers = sep_b<span data-count="10">y</span> t_comma p_identifier
-let p_func_call el = <span data-count="50">l</span>ift_func_call p_identifier (round_bracket<span data-count="50">s</span> el)
+let p_identifiers = sep_b<span data-count="11">y</span> t_comma p_identifier
+let p_func_call el = <span data-count="52">l</span>ift_func_call p_identifier (round_bracket<span data-count="52">s</span> el)
 
 let p_return e columns =
-  <span data-count="70">l</span>et* exp = t_return *<span data-count="70">&gt;</span> e in
-  <span data-count="13">r</span>eturn (StatementWithColumns (columns, Return exp))
+  <span data-count="75">l</span>et* exp = t_return *<span data-count="75">&gt;</span> e in
+  <span data-count="15">r</span>eturn (StatementWithColumns (columns, Return exp))
 ;;
 
 let p_func columns =
-  <span data-count="70">l</span>et* identifier = t_def *<span data-count="70">&gt;</span> p_identifier in
-  <span data-count="10">l</span>et* arguments = toke<span data-count="10">n</span> "(" *<span data-count="10">&gt;</span> p_identifiers in
-  <span data-count="10">t</span>oke<span data-count="10">n</span> ")"
-  *<span data-count="10">&gt;</span> t_column
-  *&gt; retur<span data-count="10">n</span> (SpecialStatementWithColumns (columns, Function (identifier, arguments, [])))
+  <span data-count="75">l</span>et* identifier = t_def *<span data-count="75">&gt;</span> p_identifier in
+  <span data-count="12">l</span>et* arguments = toke<span data-count="12">n</span> "(" *<span data-count="12">&gt;</span> p_identifiers in
+  <span data-count="12">t</span>oke<span data-count="12">n</span> ")"
+  *<span data-count="12">&gt;</span> t_column
+  *&gt; retur<span data-count="12">n</span> (SpecialStatementWithColumns (columns, Function (identifier, arguments, [])))
 ;;
 
 let p_while expr columns =
-  <span data-count="70">l</span>et* guard = t_while *<span data-count="70">&gt;</span> expr &lt;<span data-count="70">*</span> t_column in
+  <span data-count="75">l</span>et* guard = t_while *<span data-count="75">&gt;</span> expr &lt;<span data-count="75">*</span> t_column in
   <span data-count="2">r</span>eturn (SpecialStatementWithColumns (columns, While (guard, [])))
 ;;
 
 let p_for e columns =
-  <span data-count="70">l</span>et* iterator = t_for *<span data-count="70">&gt;</span> p_global_variable in
+  <span data-count="75">l</span>et* iterator = t_for *<span data-count="75">&gt;</span> p_global_variable in
   <span data-count="1">l</span>et* range = t_in *<span data-count="1">&gt;</span> t_range *<span data-count="1">&gt;</span> round_bracket<span data-count="1">s</span> (sep_b<span data-count="1">y</span> t_comma e) &lt;<span data-count="1">*</span> t_column in
   <span data-count="1">r</span>eturn (SpecialStatementWithColumns (columns, For (iterator, range, [])))
 ;;
 
 let p_class columns =
-  <span data-count="70">l</span>et* identifier = t_class *<span data-count="70">&gt;</span> p_identifier &lt;<span data-count="70">*</span> t_column in
+  <span data-count="75">l</span>et* identifier = t_class *<span data-count="75">&gt;</span> p_identifier &lt;<span data-count="75">*</span> t_column in
   <span data-count="3">r</span>eturn (SpecialStatementWithColumns (columns, Class (identifier, [])))
 ;;
 
 let p_field =
   let* identfier = p_identifier in
-  <span data-count="52">l</span>et* field = t_dot *<span data-count="52">&gt;</span> p_identifier in
+  <span data-count="53">l</span>et* field = t_dot *<span data-count="53">&gt;</span> p_identifier in
   <span data-count="2">r</span>eturn (Field (identfier, field))
 ;;
 
 let p_method_call el =
-  <span data-count="50">l</span>et* objectIdentifier = p_identifier in
+  <span data-count="52">l</span>et* objectIdentifier = p_identifier in
   <span data-count="33">l</span>et* methodIdentifier = t_dot *<span data-count="33">&gt;</span> p_identifier in
   <span data-count="2">l</span>et* arguments =
     round_bracket<span data-count="2">s</span>
@@ -2090,40 +2090,40 @@ let p_method_call el =
 ;;
 
 let p_assign e columns =
-  <span data-count="70">l</span>et* left = choic<span data-count="70">e</span> [ p_class_variable; p_field; p_global_variable ] in
-  <span data-count="31">l</span>et* right = t_assign *<span data-count="31">&gt;</span> skip_whitespace *<span data-count="31">&gt;</span> e in
+  <span data-count="75">l</span>et* left = choic<span data-count="75">e</span> [ p_class_variable; p_field; p_global_variable ] in
+  <span data-count="32">l</span>et* right = t_assign *<span data-count="32">&gt;</span> skip_whitespace *<span data-count="32">&gt;</span> e in
   <span data-count="9">r</span>eturn (StatementWithColumns (columns, Assign (left, right)))
 ;;
 
 let anon_func e =
-  <span data-count="50">l</span>et* vars = t_lambda *<span data-count="50">&gt;</span> skip_whitespace *<span data-count="50">&gt;</span> p_identifiers in
+  <span data-count="52">l</span>et* vars = t_lambda *<span data-count="52">&gt;</span> skip_whitespace *<span data-count="52">&gt;</span> p_identifiers in
   <span data-count="2">l</span>et* body = t_column *<span data-count="2">&gt;</span> e in
   <span data-count="2">r</span>eturn (Lambda (vars, body))
 ;;
 
 let p_interpolationStrElemEndingWithCurly =
-  let* x = take_interpolString &lt;<span data-count="10">*</span> t_curlyLeft in
+  let* x = take_interpolString &lt;<span data-count="11">*</span> t_curlyLeft in
   <span data-count="2">r</span>eturn @@ Str (String x)
 ;;
 
 let p_interpolationVarElem =
-  let* x = take_interpolIdentifier &lt;<span data-count="10">*</span> t_curlyRight in
+  let* x = take_interpolIdentifier &lt;<span data-count="11">*</span> t_curlyRight in
   <span data-count="2">r</span>eturn @@ Var (Identifier x)
 ;;
 
 let p_interpolationStrElemLast =
-  let* x = take_string &lt;<span data-count="10">*</span> t_quote in
+  let* x = take_string &lt;<span data-count="11">*</span> t_quote in
   <span data-count="2">r</span>eturn @@ Str (String x)
 ;;
 
 let p_fString =
   let* elems =
     t_f
-    *<span data-count="10">&gt;</span> t_quote
-    *<span data-count="10">&gt;</span> man<span data-count="10">y</span>
+    *<span data-count="11">&gt;</span> t_quote
+    *<span data-count="11">&gt;</span> man<span data-count="11">y</span>
          (p_interpolationStrElemEndingWithCurly
-          &lt;|<span data-count="10">&gt;</span> p_interpolationVarElem
-          &lt;|<span data-count="10">&gt;</span> p_interpolationStrElemLast)
+          &lt;|<span data-count="11">&gt;</span> p_interpolationVarElem
+          &lt;|<span data-count="11">&gt;</span> p_interpolationStrElemLast)
   in
   <span data-count="2">r</span>eturn @@ FString elems
 ;;
@@ -2134,10 +2134,10 @@ let p_list exp =
 ;;
 
 (* Multiple parsers *)
-let mp_high_pr_op = choic<span data-count="10">e</span> [ p_mul; p_div; p_mod ]
-let mp_low_pr_op = choic<span data-count="10">e</span> [ p_add; p_sub ]
-let gp_comparison_ops = choic<span data-count="10">e</span> [ p_eq; p_not_eq; p_gr_eq; p_less_eq; p_greater; p_less ]
-let gp_logic_ops = choic<span data-count="10">e</span> [ p_and; p_or ]
+let mp_high_pr_op = choic<span data-count="11">e</span> [ p_mul; p_div; p_mod ]
+let mp_low_pr_op = choic<span data-count="11">e</span> [ p_add; p_sub ]
+let gp_comparison_ops = choic<span data-count="11">e</span> [ p_eq; p_not_eq; p_gr_eq; p_less_eq; p_greater; p_less ]
+let gp_logic_ops = choic<span data-count="11">e</span> [ p_and; p_or ]
 
 let optionUnpacker = function
   | <span data-count="0">S</span>ome c -&gt; c
@@ -2153,26 +2153,26 @@ type dispatch =
 
 let p_exp_or_stmt =
   let p_expression exp_or_stmt =
-    <span data-count="420">f</span>ix (fun p_expression -&gt;
-      <span data-count="53">l</span>et expression_list = sep_by t_comma p_expression in
-      <span data-count="53">l</span>et exp =
-        let* ch1 = take_whil<span data-count="53">e</span> is_whitespace_or_eol *<span data-count="53">&gt;</span> peek_char_fail in
-        <span data-count="130">m</span>atch ch1 with
-        | <span data-count="130">x</span> when is_valid_first_cha<span data-count="130">r</span> x -&gt;
-          <span data-count="50">c</span>hoice
+    <span data-count="450">f</span>ix (fun p_expression -&gt;
+      <span data-count="56">l</span>et expression_list = sep_by t_comma p_expression in
+      <span data-count="56">l</span>et exp =
+        let* ch1 = take_whil<span data-count="56">e</span> is_whitespace_or_eol *<span data-count="56">&gt;</span> peek_char_fail in
+        <span data-count="135">m</span>atch ch1 with
+        | <span data-count="135">x</span> when is_valid_first_cha<span data-count="135">r</span> x -&gt;
+          <span data-count="52">c</span>hoice
             [ p_class_variable
-            ; p_func_cal<span data-count="50">l</span> expression_list
-            ; p_method_cal<span data-count="50">l</span> p_expression
+            ; p_func_cal<span data-count="52">l</span> expression_list
+            ; p_method_cal<span data-count="52">l</span> p_expression
             ; p_field
             ; p_fString
             ; p_global_variable
-            ; anon_fun<span data-count="50">c</span> p_expression
+            ; anon_fun<span data-count="52">c</span> p_expression
             ]
-        | <span data-count="80">x</span> when is_digi<span data-count="80">t</span> x -&gt; <span data-count="58">p</span>_integer
+        | <span data-count="83">x</span> when is_digi<span data-count="83">t</span> x -&gt; <span data-count="60">p</span>_integer
         | <span data-count="3">'</span>\"' -&gt; p_string
         | <span data-count="0">'</span>[' -&gt; p_list p_expression
         | <span data-count="17">'</span>(' -&gt; round_brackets p_expression
-        | <span data-count="2">_</span> -&gt; fail "unsupported expression"
+        | <span data-count="3">_</span> -&gt; fail "unsupported expression"
       in
       List.fold_left
         chainl1
@@ -2180,18 +2180,18 @@ let p_exp_or_stmt =
         [ mp_high_pr_op; mp_low_pr_op; gp_comparison_ops; gp_logic_ops ])
   in
   let p_statement exp_or_stmt =
-    <span data-count="10">f</span>ix (fun p_statement -&gt;
-      <span data-count="9">l</span>et* count_columns = man<span data-count="9">y</span> (strin<span data-count="9">g</span> "\t" &lt;|<span data-count="9">&gt;</span> strin<span data-count="9">g</span> "    ") in
-      <span data-count="70">l</span>et columns = List.length count_columns in
-      <span data-count="70">p</span>_assig<span data-count="70">n</span> (p_expressio<span data-count="70">n</span> exp_or_stmt) columns
-      &lt;|<span data-count="70">&gt;</span> p_i<span data-count="70">f</span> (p_expressio<span data-count="70">n</span> exp_or_stmt) columns
-      &lt;|<span data-count="70">&gt;</span> p_whil<span data-count="70">e</span> (p_expressio<span data-count="70">n</span> exp_or_stmt) columns
-      &lt;|<span data-count="70">&gt;</span> p_fo<span data-count="70">r</span> (p_expressio<span data-count="70">n</span> exp_or_stmt) columns
-      &lt;|<span data-count="70">&gt;</span> p_fun<span data-count="70">c</span> columns
-      &lt;|<span data-count="70">&gt;</span> p_retur<span data-count="70">n</span> (p_expressio<span data-count="70">n</span> exp_or_stmt) columns
-      &lt;|<span data-count="70">&gt;</span> p_clas<span data-count="70">s</span> columns
-      &lt;|<span data-count="70">&gt;</span> p_els<span data-count="70">e</span> columns
-      &lt;|&gt; (p_expressio<span data-count="70">n</span> exp_or_stmt &gt;&gt;<span data-count="70">|</span> expression_with_column<span data-count="70">s</span> columns))
+    <span data-count="11">f</span>ix (fun p_statement -&gt;
+      <span data-count="10">l</span>et* count_columns = man<span data-count="10">y</span> (strin<span data-count="10">g</span> "\t" &lt;|<span data-count="10">&gt;</span> strin<span data-count="10">g</span> "    ") in
+      <span data-count="75">l</span>et columns = List.length count_columns in
+      <span data-count="75">p</span>_assig<span data-count="75">n</span> (p_expressio<span data-count="75">n</span> exp_or_stmt) columns
+      &lt;|<span data-count="75">&gt;</span> p_i<span data-count="75">f</span> (p_expressio<span data-count="75">n</span> exp_or_stmt) columns
+      &lt;|<span data-count="75">&gt;</span> p_whil<span data-count="75">e</span> (p_expressio<span data-count="75">n</span> exp_or_stmt) columns
+      &lt;|<span data-count="75">&gt;</span> p_fo<span data-count="75">r</span> (p_expressio<span data-count="75">n</span> exp_or_stmt) columns
+      &lt;|<span data-count="75">&gt;</span> p_fun<span data-count="75">c</span> columns
+      &lt;|<span data-count="75">&gt;</span> p_retur<span data-count="75">n</span> (p_expressio<span data-count="75">n</span> exp_or_stmt) columns
+      &lt;|<span data-count="75">&gt;</span> p_clas<span data-count="75">s</span> columns
+      &lt;|<span data-count="75">&gt;</span> p_els<span data-count="75">e</span> columns
+      &lt;|&gt; (p_expressio<span data-count="75">n</span> exp_or_stmt &gt;&gt;<span data-count="75">|</span> expression_with_column<span data-count="75">s</span> columns))
   in
   { p_expression; p_statement }
 ;;
@@ -2200,7 +2200,7 @@ let extract_body = function
   | <span data-count="8">E</span>lse body -&gt; body
   | <span data-count="12">I</span>fElse (_, body, _) -&gt; body
   | <span data-count="2">F</span>or (_, _, body) -&gt; body
-  | <span data-count="34">F</span>unction (_, _, body) -&gt; body
+  | <span data-count="40">F</span>unction (_, _, body) -&gt; body
   | <span data-count="14">C</span>lass (_, body) -&gt; body
   | <span data-count="4">W</span>hile (_, body) -&gt; body
   | <span data-count="0">_</span> -&gt; []
@@ -2210,56 +2210,56 @@ let insert_body body = function
   | <span data-count="8">E</span>lse _ -&gt; Else body
   | <span data-count="8">I</span>fElse (exp, _, else_body) -&gt; IfElse (exp, body, else_body)
   | <span data-count="2">F</span>or (exp1, exp2, _) -&gt; For (exp1, exp2, body)
-  | <span data-count="30">F</span>unction (identifier, params, _) -&gt; Function (identifier, params, body)
+  | <span data-count="34">F</span>unction (identifier, params, _) -&gt; Function (identifier, params, body)
   | <span data-count="13">C</span>lass (exp, _) -&gt; Class (exp, body)
   | <span data-count="4">W</span>hile (exp, _) -&gt; While (exp, body)
   | <span data-count="0">_</span> -&gt; Error
 ;;
 
 let align_pseudo_statement pseudo_statement =
-  <span data-count="31">l</span>et empty_body = function
+  <span data-count="32">l</span>et empty_body = function
     | <span data-count="0">[</span>] -&gt; true
-    | <span data-count="9">_</span> -&gt; false
+    | <span data-count="11">_</span> -&gt; false
   in
   let rec helper acc = function
-    | <span data-count="74">[</span>] -&gt; return acc
-    | <span data-count="75">S</span>tatementWithColumns (columns1, body1) :: tail -&gt;
+    | <span data-count="77">[</span>] -&gt; return acc
+    | <span data-count="80">S</span>tatementWithColumns (columns1, body1) :: tail -&gt;
       (match acc with
-       | <span data-count="37">[</span>] -&gt; helper (StatementWithColumns (columns1, body1) :: acc) tail
-       | <span data-count="38">h</span> :: tl -&gt;
+       | <span data-count="39">[</span>] -&gt; helper (StatementWithColumns (columns1, body1) :: acc) tail
+       | <span data-count="41">h</span> :: tl -&gt;
          (match h with
           | <span data-count="3">S</span>tatementWithColumns (columns2, _) when columns2 = columns1 -&gt;
             <span data-count="3">h</span>elper (StatementWithColumns (columns1, body1) :: acc) tail
-          | <span data-count="35">S</span>pecialStatementWithColumns (columns2, body2) when columns2 &gt;= columns1 -&gt;
-            <span data-count="3">(</span>match empty_body (extract_bod<span data-count="3">y</span> body2) with
+          | <span data-count="38">S</span>pecialStatementWithColumns (columns2, body2) when columns2 &gt;= columns1 -&gt;
+            <span data-count="4">(</span>match empty_body (extract_bod<span data-count="4">y</span> body2) with
              | <span data-count="0">t</span>rue -&gt; fail "empty statement list"
-             | <span data-count="3">_</span> -&gt; helper (StatementWithColumns (columns1, body1) :: acc) tail)
-          | <span data-count="32">S</span>pecialStatementWithColumns (columns2, body2) -&gt;
+             | <span data-count="4">_</span> -&gt; helper (StatementWithColumns (columns1, body1) :: acc) tail)
+          | <span data-count="34">S</span>pecialStatementWithColumns (columns2, body2) -&gt;
             let* new_statements =
-              helpe<span data-count="32">r</span> (extract_bod<span data-count="32">y</span> body2) [ StatementWithColumns (columns1, body1) ]
+              helpe<span data-count="34">r</span> (extract_bod<span data-count="34">y</span> body2) [ StatementWithColumns (columns1, body1) ]
             in
-            <span data-count="32">h</span>elper
-              (SpecialStatementWithColumns (columns2, insert_bod<span data-count="32">y</span> new_statements body2)
+            <span data-count="34">h</span>elper
+              (SpecialStatementWithColumns (columns2, insert_bod<span data-count="34">y</span> new_statements body2)
                :: tl)
               tail
           | <span data-count="0">_</span> -&gt; fail "unsupported order of statemtns"))
-    | <span data-count="37">S</span>pecialStatementWithColumns (columns1, body1) :: tail -&gt;
+    | <span data-count="39">S</span>pecialStatementWithColumns (columns1, body1) :: tail -&gt;
       (match acc with
-       | <span data-count="20">[</span>] -&gt; helper (SpecialStatementWithColumns (columns1, body1) :: acc) tail
-       | <span data-count="17">h</span> :: tl -&gt;
+       | <span data-count="21">[</span>] -&gt; helper (SpecialStatementWithColumns (columns1, body1) :: acc) tail
+       | <span data-count="18">h</span> :: tl -&gt;
          (match h with
           | <span data-count="0">S</span>tatementWithColumns (columns2, _) when columns2 &lt; columns1 -&gt;
             <span data-count="0">f</span>ail "unsupported order of statemtns"
           | <span data-count="0">S</span>tatementWithColumns (columns2, _) -&gt;
             helper (SpecialStatementWithColumns (columns1, body1) :: acc) tail
-          | <span data-count="17">S</span>pecialStatementWithColumns (columns2, body2) when columns2 &gt; columns1 -&gt;
+          | <span data-count="18">S</span>pecialStatementWithColumns (columns2, body2) when columns2 &gt; columns1 -&gt;
             <span data-count="0">(</span>match empty_body (extract_bod<span data-count="0">y</span> body2) with
              | <span data-count="0">t</span>rue -&gt; fail "empty statement list"
              | <span data-count="0">_</span> -&gt; helper (SpecialStatementWithColumns (columns1, body1) :: acc) tail)
-          | <span data-count="17">S</span>pecialStatementWithColumns (columns2, body2) when columns2 = columns1 -&gt;
-            <span data-count="6">(</span>match empty_body (extract_bod<span data-count="6">y</span> body2) with
+          | <span data-count="18">S</span>pecialStatementWithColumns (columns2, body2) when columns2 = columns1 -&gt;
+            <span data-count="7">(</span>match empty_body (extract_bod<span data-count="7">y</span> body2) with
              | <span data-count="0">t</span>rue -&gt; fail "empty statement list"
-             | <span data-count="6">_</span> -&gt; helper (SpecialStatementWithColumns (columns1, body1) :: acc) tail)
+             | <span data-count="7">_</span> -&gt; helper (SpecialStatementWithColumns (columns1, body1) :: acc) tail)
           | <span data-count="11">S</span>pecialStatementWithColumns (columns2, body2) -&gt;
             let* new_statements =
               helpe<span data-count="11">r</span>
@@ -2277,7 +2277,7 @@ let align_pseudo_statement pseudo_statement =
 ;;
 
 let remove_columns_and_join_elses list =
-  <span data-count="31">l</span>et join_if_and_else else_statements = function
+  <span data-count="32">l</span>et join_if_and_else else_statements = function
     | <span data-count="4">I</span>fElse (guard, if_statements, else_body) -&gt;
       (match else_body with
        | <span data-count="4">[</span>] -&gt; return (IfElse (guard, if_statements, else_statements))
@@ -2285,8 +2285,8 @@ let remove_columns_and_join_elses list =
     | <span data-count="0">_</span> -&gt; fail "an error occured while parsing: couldn't join if and else"
   in
   let rec helper acc = function
-    | <span data-count="53">[</span>] -&gt; return acc
-    | <span data-count="26">S</span>pecialStatementWithColumns (_, pseudo_statement) :: tl -&gt;
+    | <span data-count="56">[</span>] -&gt; return acc
+    | <span data-count="28">S</span>pecialStatementWithColumns (_, pseudo_statement) :: tl -&gt;
       (match pseudo_statement with
        | <span data-count="6">I</span>fElse (_, _, _) -&gt;
          (match acc with
@@ -2299,31 +2299,31 @@ let remove_columns_and_join_elses list =
           | <span data-count="0">_</span> -&gt;
             let* body = helpe<span data-count="0">r</span> [] (extract_bod<span data-count="0">y</span> pseudo_statement) in
             <span data-count="0">h</span>elper (insert_bod<span data-count="0">y</span> body pseudo_statement :: acc) tl)
-       | <span data-count="20">_</span> -&gt;
-         let* body = helpe<span data-count="20">r</span> [] (extract_bod<span data-count="20">y</span> pseudo_statement) in
-         <span data-count="20">h</span>elper (insert_bod<span data-count="20">y</span> body pseudo_statement :: acc) tl)
-    | <span data-count="39">S</span>tatementWithColumns (_, pseudo_statement) :: tl -&gt;
+       | <span data-count="22">_</span> -&gt;
+         let* body = helpe<span data-count="22">r</span> [] (extract_bod<span data-count="22">y</span> pseudo_statement) in
+         <span data-count="22">h</span>elper (insert_bod<span data-count="22">y</span> body pseudo_statement :: acc) tl)
+    | <span data-count="42">S</span>tatementWithColumns (_, pseudo_statement) :: tl -&gt;
       helper (pseudo_statement :: acc) tl
     | <span data-count="0">_</span> -&gt; return []
   in
-  let* pseudo_ast = helpe<span data-count="31">r</span> [] list in
-  <span data-count="31">l</span>et* finalAst = map<span data-count="31">1</span> (fun x -&gt; <span data-count="36">c</span>onvert_pseudoast_to_ast x) pseudo_ast in
-  <span data-count="31">r</span>eturn finalAst
+  let* pseudo_ast = helpe<span data-count="32">r</span> [] list in
+  <span data-count="32">l</span>et* finalAst = map<span data-count="32">1</span> (fun x -&gt; <span data-count="39">c</span>onvert_pseudoast_to_ast x) pseudo_ast in
+  <span data-count="32">r</span>eturn finalAst
 ;;
 
 (* Final parsers *)
-let parse p s = <span data-count="8">p</span>arse_string ~consume:All p s
+let parse p s = <span data-count="9">p</span>arse_string ~consume:All p s
 
 let pyParser =
   let* pseudo_statement =
-    take_whil<span data-count="10">e</span> (fun c -&gt; <span data-count="41">i</span>s_eol c)
-    *<span data-count="10">&gt;</span> sep_b<span data-count="10">y</span> t_eol (p_exp_or_stmt.p_statemen<span data-count="10">t</span> p_exp_or_stmt)
+    take_whil<span data-count="11">e</span> (fun c -&gt; <span data-count="42">i</span>s_eol c)
+    *<span data-count="11">&gt;</span> sep_b<span data-count="11">y</span> t_eol (p_exp_or_stmt.p_statemen<span data-count="11">t</span> p_exp_or_stmt)
   in
-  <span data-count="31">l</span>et* intermediate_ast = align_pseudo_statemen<span data-count="31">t</span> pseudo_statement in
-  <span data-count="31">r</span>emove_columns_and_join_elses intermediate_ast
+  <span data-count="32">l</span>et* intermediate_ast = align_pseudo_statemen<span data-count="32">t</span> pseudo_statement in
+  <span data-count="32">r</span>emove_columns_and_join_elses intermediate_ast
 ;;
 
-let parser s = <span data-count="8">p</span>arse pyParser s
+let parser s = <span data-count="9">p</span>arse pyParser s
 
 let test_parse_res parser input =
   <span data-count="23">A</span>ngstrom.parse_string ~consume:Consume.Prefix parser input
@@ -2341,12 +2341,12 @@ let%expect_test _ =
   <span data-count="1">[</span>%expect
     {|
         (Expression
-           (FunctionCall ((Identifier "print"), [(Const (String "Hello World"))]))) |}<span data-count="21">]</span>
+           (FunctionCall ((Identifier "print"), [(Const (String "Hello World"))]))) |}<span data-count="23">]</span>
 ;;
 
 let%expect_test _ =
   <span data-count="1">p</span>arser_tester pyParser show_statement "1";
-  <span data-count="1">[</span>%expect {|(Expression (Const (Int 1))) |}<span data-count="21">]</span>
+  <span data-count="1">[</span>%expect {|(Expression (Const (Int 1))) |}<span data-count="23">]</span>
 ;;
 
 let%expect_test _ =
@@ -2359,7 +2359,7 @@ let%expect_test _ =
       (IfElse (
          (BoolOp (Equal, (Variable (Global, (Identifier "y"))), (Const (Int 3)))),
          [(Assign ((Variable (Global, (Identifier "x"))), (Const (Int 0))))],
-         [])) |}<span data-count="21">]</span>
+         [])) |}<span data-count="23">]</span>
 ;;
 
 let%expect_test _ =
@@ -2368,7 +2368,7 @@ let%expect_test _ =
     {|
     (Expression
        (FunctionCall ((Identifier "myFunction"),
-          [(Variable (Global, (Identifier "x")))]))) |}<span data-count="21">]</span>
+          [(Variable (Global, (Identifier "x")))]))) |}<span data-count="23">]</span>
 ;;
 
 let%expect_test _ =
@@ -2387,7 +2387,7 @@ let%expect_test _ =
               (ArithOp (Add, (Variable (Global, (Identifier "x"))), (Const (Int 1))
                  )))
            ]
-         )) |}<span data-count="21">]</span>
+         )) |}<span data-count="23">]</span>
 ;;
 
 let%expect_test _ =
@@ -2398,7 +2398,7 @@ let%expect_test _ =
     {|
       (While (
          (BoolOp (Equal, (Variable (Global, (Identifier "y"))), (Const (Int 2)))),
-         [(Assign ((Variable (Global, (Identifier "x"))), (Const (Int 2))))])) |}<span data-count="21">]</span>
+         [(Assign ((Variable (Global, (Identifier "x"))), (Const (Int 2))))])) |}<span data-count="23">]</span>
 ;;
 
 let%expect_test _ =
@@ -2429,7 +2429,7 @@ let%expect_test _ =
                ]
              ))
            ]
-         )) |}<span data-count="21">]</span>
+         )) |}<span data-count="23">]</span>
 ;;
 
 let%expect_test _ =
@@ -2437,7 +2437,7 @@ let%expect_test _ =
   <span data-count="1">[</span>%expect
     {|
     (Expression
-       (BoolOp (Equal, (Variable (Global, (Identifier "y"))), (Const (Int 2))))) |}<span data-count="21">]</span>
+       (BoolOp (Equal, (Variable (Global, (Identifier "y"))), (Const (Int 2))))) |}<span data-count="23">]</span>
 ;;
 
 let%expect_test _ =
@@ -2446,7 +2446,7 @@ let%expect_test _ =
     {|
     (Expression
        (BoolOp (GreaterOrEqual, (Variable (Global, (Identifier "y"))),
-          (Const (Int 2))))) |}<span data-count="21">]</span>
+          (Const (Int 2))))) |}<span data-count="23">]</span>
 ;;
 
 let%expect_test _ =
@@ -2454,7 +2454,7 @@ let%expect_test _ =
   <span data-count="1">[</span>%expect
     {|
     (Expression
-       (BoolOp (Greater, (Variable (Global, (Identifier "y"))), (Const (Int 2))))) |}<span data-count="21">]</span>
+       (BoolOp (Greater, (Variable (Global, (Identifier "y"))), (Const (Int 2))))) |}<span data-count="23">]</span>
 ;;
 
 let%expect_test _ =
@@ -2462,7 +2462,7 @@ let%expect_test _ =
   <span data-count="1">[</span>%expect
     {|
     (Expression
-       (BoolOp (Less, (Variable (Global, (Identifier "y"))), (Const (Int 2))))) |}<span data-count="21">]</span>
+       (BoolOp (Less, (Variable (Global, (Identifier "y"))), (Const (Int 2))))) |}<span data-count="23">]</span>
 ;;
 
 let%expect_test _ =
@@ -2471,7 +2471,7 @@ let%expect_test _ =
     {|
     (Expression
        (BoolOp (LessOrEqual, (Variable (Global, (Identifier "y"))),
-          (Const (Int 2))))) |}<span data-count="21">]</span>
+          (Const (Int 2))))) |}<span data-count="23">]</span>
 ;;
 
 let%expect_test _ =
@@ -2480,7 +2480,7 @@ let%expect_test _ =
     {|
     (Expression
        (BoolOp (NotEqual, (Variable (Global, (Identifier "y"))), (Const (Int 2))
-          ))) |}<span data-count="21">]</span>
+          ))) |}<span data-count="23">]</span>
 ;;
 
 let%expect_test _ =
@@ -2489,7 +2489,7 @@ let%expect_test _ =
     {|
     (Expression
        (BoolOp (And, (Variable (Global, (Identifier "x"))),
-          (Variable (Global, (Identifier "y")))))) |}<span data-count="21">]</span>
+          (Variable (Global, (Identifier "y")))))) |}<span data-count="23">]</span>
 ;;
 
 let%expect_test _ =
@@ -2498,7 +2498,7 @@ let%expect_test _ =
     {|
     (Expression
        (BoolOp (Or, (Variable (Global, (Identifier "x"))),
-          (Variable (Global, (Identifier "y")))))) |}<span data-count="21">]</span>
+          (Variable (Global, (Identifier "y")))))) |}<span data-count="23">]</span>
 ;;
 
 let%expect_test _ =
@@ -2515,7 +2515,7 @@ let%expect_test _ =
     (IfElse (
        (BoolOp (Greater, (Variable (Global, (Identifier "x"))), (Const (Int 0)))),
        [(Assign ((Variable (Global, (Identifier "y"))), (Const (Int 2))))],
-       [(Assign ((Variable (Global, (Identifier "y"))), (Const (Int 1))))])) |}<span data-count="21">]</span>
+       [(Assign ((Variable (Global, (Identifier "y"))), (Const (Int 1))))])) |}<span data-count="23">]</span>
 ;;
 
 let%expect_test _ =
@@ -2530,7 +2530,7 @@ for i in range(0, 3):
            (FunctionCall ((Identifier "print"),
               [(Variable (Global, (Identifier "i")))])))
          ]
-       )) |}<span data-count="21">]</span>
+       )) |}<span data-count="23">]</span>
 ;;
 
 let%expect_test _ =
@@ -2540,7 +2540,7 @@ let%expect_test _ =
   <span data-count="1">[</span>%expect
     {|
     (While ((BoolOp (Equal, (Const (Int 1)), (Const (Int 1)))),
-       [(Expression (FunctionCall ((Identifier "print"), [(Const (Int 1))])))])) |}<span data-count="21">]</span>
+       [(Expression (FunctionCall ((Identifier "print"), [(Const (Int 1))])))])) |}<span data-count="23">]</span>
 ;;
 
 let%expect_test _ =
@@ -2558,7 +2558,7 @@ let%expect_test _ =
        [(Function ((Identifier "method1"), [(Identifier "x")],
            [(Return (Const (Int 3)))]));
          (Function ((Identifier "method2"), [], [(Return (Const (Int 2)))]))]
-       )) |}<span data-count="21">]</span>
+       )) |}<span data-count="23">]</span>
 ;;
 
 let%expect_test _ =
@@ -2568,7 +2568,7 @@ let%expect_test _ =
     (Expression
        (MethodCall ((Identifier "someClass"), (Identifier "someField"),
           [(Const (Int 10)); (ArithOp (Add, (Const (Int 20)), (Const (Int 10))))]
-          ))) |}<span data-count="21">]</span>
+          ))) |}<span data-count="23">]</span>
 ;;
 
 let%expect_test _ =
@@ -2576,7 +2576,7 @@ let%expect_test _ =
   <span data-count="1">[</span>%expect
     {|
     (Assign ((Field ((Identifier "someClass"), (Identifier "someField"))),
-       (Variable (Global, (Identifier "someValue"))))) |}<span data-count="21">]</span>
+       (Variable (Global, (Identifier "someValue"))))) |}<span data-count="23">]</span>
 ;;
 
 let%expect_test _ =
@@ -2587,7 +2587,7 @@ let%expect_test _ =
        (Lambda ([(Identifier "a"); (Identifier "b")],
           (ArithOp (Mul, (Variable (Global, (Identifier "a"))),
              (Variable (Global, (Identifier "b")))))
-          ))) |}<span data-count="21">]</span>
+          ))) |}<span data-count="23">]</span>
 ;;
 
 let%expect_test _ =
@@ -2597,7 +2597,7 @@ let%expect_test _ =
     (Expression
        (FString
           [(Str (String "string")); (Var (Identifier "var"));
-            (Str (String "str"))])) |}<span data-count="21">]</span>
+            (Str (String "str"))])) |}<span data-count="23">]</span>
 ;;
 
 let%test _ = <span data-count="1">t</span>rue = is_banne<span data-count="1">d</span> "return"
