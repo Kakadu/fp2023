@@ -40,3 +40,6 @@
 
   $ dune exec logic_test
   Passed
+
+  $ dune exec change_func_test
+  2

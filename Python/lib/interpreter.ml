@@ -181,14 +181,6 @@ module Eval (M : MONADERROR) = struct
 
   (* Miscellaneous *)
 
-  let rec print_list = function
-    | [] -> ()
-    | e :: l ->
-      print_string e;
-      print_string " ";
-      print_list l
-  ;;
-
   let combine_args_and_params args (params : value list) =
     List.map (fun x -> { identifier = fst x; value = snd x }) (List.combine args params)
   ;;
@@ -196,14 +188,6 @@ module Eval (M : MONADERROR) = struct
   (* Debugging & Testing functions *)
 
   let get_str_from_identifier (Identifier i) = i
-
-  let rec print_funcs = function
-    | [] -> ()
-    | func :: remaining_functions ->
-      print_string (get_str_from_identifier func.identifier);
-      print_string " ";
-      print_funcs remaining_functions
-  ;;
 
   let pack_to_string = function
     | String a -> return a

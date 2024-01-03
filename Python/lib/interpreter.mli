@@ -70,10 +70,8 @@ module Eval : functor (M : MONADERROR) -> sig
   val change_or_add_class : environment -> environment -> environment
   val get_func : Ast.identifier -> environment -> function_symb
   val get_class : Ast.identifier -> environment -> environment
-  val print_list : string list -> unit
   val combine_args_and_params : Ast.identifier list -> Ast.value list -> var_symb list
   val get_str_from_identifier : Ast.identifier -> string
-  val print_funcs : function_symb list -> unit
   val pack_to_string : Ast.value -> string M.t
 
   type dispatch =

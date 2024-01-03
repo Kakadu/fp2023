@@ -114,3 +114,16 @@
 
 (cram
  (deps %{bin:logic_test}))
+
+(executable
+ (name change_func_test)
+ (public_name change_func_test)
+ (modules change_func_test)
+ (libraries Python.Lib)
+ (preprocess
+  (pps ppx_show))
+ (instrumentation
+  (backend bisect_ppx)))
+
+(cram
+ (deps %{bin:change_func_test}))
