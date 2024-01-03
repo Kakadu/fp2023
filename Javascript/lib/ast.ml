@@ -13,8 +13,6 @@ type bin_op =
 type typename =
   | Number of float
   | String of string
-  | VarType
-  | FuncType
 [@@deriving eq, show {with_path = false}]
 
 type expression =
@@ -30,7 +28,6 @@ type var_init =
 {
   var_identifier: string;
   is_const: bool;
-  var_type: typename;
   value: expression option
 }
 
