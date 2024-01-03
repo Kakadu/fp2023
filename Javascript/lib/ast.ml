@@ -22,9 +22,10 @@ type expression =
   | Const of typename
   | Var of string
   | FunctionCall of string * expression list
+  | ArrowFunction of expression list * statement
 [@@deriving eq, show {with_path = false}]
 
-type var_init =
+and var_init =
 {
   var_identifier: string;
   is_const: bool;
