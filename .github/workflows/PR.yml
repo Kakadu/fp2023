@@ -31,9 +31,10 @@ jobs:
         with:
           fetch-depth: 0                # fix me later
 
-      #- run: opam pin add https://github.com/Kakadu/mylinter.git --no-action
-      #- name: Installing a linter
-      #  run: opam install zanuda --yes
+      - run: |
+          opam pin add https://github.com/Kakadu/zanuda.git --no-action
+          opam reinstall zanuda --yes
+
 
       - name: List installed OPAM packages
         run: opam list
