@@ -358,7 +358,7 @@ module Eval (M : MONADERROR) = struct
             fStringList
         in
         i_expr exp_or_stmt env (Const (String (String.concat "" strList)))
-      | _ -> error "unexpected expression"
+      | _ -> error "Interpretation error"
     in
     let rec i_stmt (i_exp_or_stmt : dispatch) (env : environment) = function
       | Expression exp ->
@@ -421,7 +421,7 @@ module Eval (M : MONADERROR) = struct
       | Function (i, some_params, some_body) ->
         let new_func_env = { identifier = i; params = some_params; body = some_body } in
         return (change_or_add_func new_func_env env)
-      | _ -> error "unexpected statement"
+      | _ -> error "Interpretation error"
     in
     { i_expr; i_stmt }
   ;;

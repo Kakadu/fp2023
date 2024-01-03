@@ -38,3 +38,5 @@
   $ dune exec anon_func_test
   1
 
+  $ dune exec logic_test
+  Passed
