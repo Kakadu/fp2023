@@ -28,6 +28,12 @@ let test_pp_tAst pr = print_pars pr pp_tast
 (* ep_operation tests: *)
 
 let%expect_test "Operations - arithmetic" =
+  test_pp_expr ep_operation {|1 + 2|};
+  [%expect {|
+    (EBin_op (Plus, (EConst (VInt 1)), (EConst (VInt 2)))) |}]
+;;
+
+let%expect_test "Operations - arithmetic" =
   test_pp_expr
     ep_operation
     {|-(!(a +  2 - (    t.a.b     /     (a%b))*2))   + some(new myClass) + (-3)|};
@@ -118,8 +124,7 @@ let%expect_test "Declaration + assign" =
 
 let%expect_test "Declaration only" =
   test_pp_statement ep_decl {|string        egor|};
-  [%expect
-    {|
+  [%expect {|
     (SDecl ((Var_decl ((TVar (TNullable TString)), (Id "egor"))), None)) |}]
 ;;
 
@@ -127,8 +132,7 @@ let%expect_test "Declaration only" =
 
 let%expect_test "" =
   test_pp_statement ep_try_catch_fin {|try {}|};
-  [%expect
-    {| STry_catch_fin {try_s = (Steps []); catch_s = None; finally_s = None} |}]
+  [%expect {| STry_catch_fin {try_s = (Steps []); catch_s = None; finally_s = None} |}]
 ;;
 
 let%expect_test "" =
@@ -393,6 +397,17 @@ let%expect_test _ =
                 return num * Fac(num - 1);
             }
         }
+        public int Fuc(int num, string dr, Program rer)
+        {
+            if (num == 1)
+            {
+                return 1;
+            }
+            else 
+            {
+                return ((1 + Fuc(2, str, myclass)) == 1) || ((myclass.Fuc(1, "d", myclass) != 1));
+            }
+        }
      }|};
   [%expect
     {|
@@ -431,6 +446,52 @@ let%expect_test _ =
                                                  (EConst (VInt 1))))
                                                ])
                                           ))
+                                       ))))
+                            ]))
+                 ))
+               ])
+          ));
+       (Method (
+          { m_modif = (Some (MAccess MPublic));
+            m_type = (TReturn (TNot_Nullable TInt)); m_id = (Id "Fuc");
+            m_args =
+            (Args
+               [(Var_decl ((TVar (TNot_Nullable TInt)), (Id "num")));
+                 (Var_decl ((TVar (TNullable TString)), (Id "dr")));
+                 (Var_decl ((TVar (TNullable (TClass (Id "Program")))),
+                    (Id "rer")))
+                 ])
+            },
+          (Steps
+             [(SIf_else (
+                 (EBin_op (Equal, (EIdentifier (Id "num")), (EConst (VInt 1)))),
+                 (Steps [(SReturn (Some (EConst (VInt 1))))]),
+                 (Some (Steps
+                          [(SReturn
+                              (Some (EBin_op (Or,
+                                       (EBin_op (Equal,
+                                          (EBin_op (Plus, (EConst (VInt 1)),
+                                             (EMethod_invoke (
+                                                (EIdentifier (Id "Fuc")),
+                                                (Params
+                                                   [(EConst (VInt 2));
+                                                     (EIdentifier (Id "str"));
+                                                     (EIdentifier (Id "myclass"))
+                                                     ])
+                                                ))
+                                             )),
+                                          (EConst (VInt 1)))),
+                                       (EBin_op (NotEqual,
+                                          (EMethod_invoke (
+                                             (EPoint_access (
+                                                (EIdentifier (Id "myclass")),
+                                                (EIdentifier (Id "Fuc")))),
+                                             (Params
+                                                [(EConst (VInt 1));
+                                                  (EConst (VString "d"));
+                                                  (EIdentifier (Id "myclass"))])
+                                             )),
+                                          (EConst (VInt 1))))
                                        ))))
                             ]))
                  ))

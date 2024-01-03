@@ -6,7 +6,8 @@
  (preprocess
   (pps ppx_expect ppx_deriving.show ppx_inline_test ppx_deriving.eq))
  (instrumentation
-  (backend bisect_ppx)))
+  (backend bisect_ppx))
+  (inline_tests))
 
 (library
  (name pars_tests)
