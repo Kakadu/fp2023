@@ -24,7 +24,6 @@ type expression =
   | Const of typename
   | Var of string
   | FunctionCall of string * expression list
-  | DebugExp of expression list
 [@@deriving eq, show {with_path = false}]
 
 type var_init =
@@ -39,7 +38,7 @@ and fun_init =
 {
   fun_identifier: string;
   arguments: expression list;
-  body: statement option
+  body: statement
 }
 
 and statement =
@@ -47,9 +46,7 @@ and statement =
   | Expression of expression
   | VarDeck of var_init
   | FunDeck of fun_init
-  | If of expression * statement * statement option
+  | If of expression * statement * statement
   | Return of expression
-  | EmptyStm
-  | DebugStm of string
   | Programm of statement list
 [@@deriving eq, show { with_path = false }]

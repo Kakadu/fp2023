@@ -160,7 +160,6 @@ let%expect_test _ =
   [%expect{|
     (Programm
        [(Expression (BinOp (Add, (Const (Number 4.)), (Const (Number 5.)))));
-         EmptyStm;
          (Expression (BinOp (Mul, (Const (Number 2.)), (Const (Number 3.)))))])|}]
 ;;
 
@@ -208,15 +207,19 @@ let%expect_test "if1" =
   [%expect{|
     (Programm
        [(If ((BinOp (Equal, (Var "a"), (Const (Number 4.)))),
-           (VarDeck
-              { var_identifier = "a"; is_const = false; var_type = VarType;
-                value = (Some (BinOp (Add, (Var "b"), (Const (Number 6.))))) }),
-           (Some (VarDeck
-                    { var_identifier = "b"; is_const = false; var_type = VarType;
-                      value =
-                      (Some (BinOp (Add, (Const (Number 6.)), (Const (Number 7.))
-                               )))
-                      }))
+           (Block
+              [(VarDeck
+                  { var_identifier = "a"; is_const = false; var_type = VarType;
+                    value = (Some (BinOp (Add, (Var "b"), (Const (Number 6.)))))
+                    })
+                ]),
+           (Block
+              [(VarDeck
+                  { var_identifier = "b"; is_const = false; var_type = VarType;
+                    value =
+                    (Some (BinOp (Add, (Const (Number 6.)), (Const (Number 7.)))))
+                    })
+                ])
            ))
          ])|}]
 ;;
@@ -238,19 +241,20 @@ let%expect_test "factorial" =
          (FunDeck
             { fun_identifier = "calculateFact"; arguments = [(Var "fact")];
               body =
-              (Some (Block
-                       [(If (
-                           (BinOp (NotEqual, (Var "fact"), (Const (Number 0.)))),
-                           (Return
-                              (BinOp (Mul, (Var "fact"),
-                                 (FunctionCall ("calculateFact",
-                                    [(BinOp (Sub, (Var "fact"),
-                                        (Const (Number 1.))))
-                                      ]
-                                    ))
-                                 ))),
-                           (Some (Return (Const (Number 1.))))))
-                         ]))
+              (Block
+                 [(If ((BinOp (NotEqual, (Var "fact"), (Const (Number 0.)))),
+                     (Block
+                        [(Return
+                            (BinOp (Mul, (Var "fact"),
+                               (FunctionCall ("calculateFact",
+                                  [(BinOp (Sub, (Var "fact"), (Const (Number 1.))
+                                      ))
+                                    ]
+                                  ))
+                               )))
+                          ]),
+                     (Block [(Return (Const (Number 1.)))])))
+                   ])
               })
          ])|}]
 ;;

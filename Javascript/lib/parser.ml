@@ -77,26 +77,14 @@ let is_valid_identifier_ch ch =
 
 let read_word = take_while is_valid_identifier_ch
 
-let next_is_kwd = 
-  let rec self = function
-  | a :: tail -> string a *> satisfy is_empty *> return true <|> self tail
-  | _ -> return false in
-  (self keywords >>= fun c ->
-    if c then fail "" else return false)
-  <|> return true
-
-let empty = take_while(is_empty)
-let empty1 = take_while1(is_empty)
-let spaces = take_while(is_space)
+let empty = skip_while(is_empty)
+let empty1 = take_while1(is_empty) *> return ()
+let spaces = skip_while(is_space)
 let token_space p = spaces *> p
 let token p = empty *> p
 let token1 p = empty1 *> p
 let token_ch ch = token @@ char ch *> return ()
 let token_str s = token @@ string s
-let token_end_of_stm_exc ?(exp = "") s = 
-  token ((next_is_kwd >>= (fun c -> if c then fail exp else nothing))
-  *> (take_while is_end >>= (function | "" -> nothing | _ -> fail exp))
-  *> s)
 
 let between p l r= l *> p <* r
 let lp = token_ch '('
@@ -106,19 +94,13 @@ let rc = token_ch '}'
 let parens p = between p lp rp
 let cur_parens p = between p lc rc
 
-let to_end_of_stm = 
-  empty >>= (fun chs -> 
-    end_of_input 
-    <|> skip is_end 
-    <|> (peek_char_fail >>= function | '}' -> nothing | _ -> fail "")
-    <|> (next_is_kwd >>= (fun c -> 
-      if c && (String.exists is_line_break chs) 
-      then nothing else fail "incorrect end of statement")))
+let empty_stm = 
+  empty *> 
+  end_of_input 
+  <|> skip is_end
 
-let is_false_fail cond ?(error_msg="") input = 
-  if cond input 
-    then return input 
-    else fail error_msg
+let to_end_of_stm =
+  empty_stm <|> empty
 
 let some n = Some n
 let number n = Number n
@@ -142,7 +124,7 @@ let valid_identifier =
   (fix(fun self -> 
     lift2 (^) (satisfy is_valid_identifier_ch >>| Char.escaped) self <|> return "") <?> "invalid chars of var name")
   >>= fun name -> 
-    if is_keyword name then fail "name of keyword shouldn't be a keyword" else return name
+    if is_keyword name then fail "name of identifier shouldn't be a keyword" else return name
   (*TODO: Error, Here is some problem with it*)
 
 
@@ -203,14 +185,13 @@ let var_parser (init_word: string) =
 let parse_return =
   token @@ expression_parser () >>| (fun c -> Return c) <* to_end_of_stm
 
-let parse_empty_stm =
-  to_end_of_stm >>| fun _ -> EmptyStm
+let parse_empty_stms =
+  many empty_stm
 
 let rec func_parser = fun () ->
   token valid_identifier >>= fun name -> 
     token @@ parse_arguments () >>= fun arguments -> 
-      (to_end_of_stm >>| fun _ -> None) <|>
-      (lc *> parse_statements rc >>| (fun c -> Some(Block c)) <* to_end_of_stm)
+      (parse_block_or_stm () <* to_end_of_stm)
       >>| fun body -> FunDeck { 
           fun_identifier = name; 
           arguments = arguments; 
@@ -218,19 +199,19 @@ let rec func_parser = fun () ->
         }
 
 and parse_block_or_stm = fun () ->
-  (lc *> parse_statements rc >>| fun c -> Block c)
-  <|> parse_stm ()
+  (cur_parens (many @@ parse_stm ())
+  <|> (parse_stm () >>| fun stm -> [stm])) >>| fun stms -> Block stms
 
 and if_parser = fun () ->
   token @@ parens (expression_parser ()) >>= fun condition ->
    parse_block_or_stm () <?> "invalid then statement" >>= fun then_stm ->
-    ((token_str "else" *> token1(parse_block_or_stm () >>| some)) <|> return None) <?> "invalid else statement"
-     >>| fun else_stm ->
+    token_str "else" *> token1 (parse_block_or_stm ()) <?> "invalid else statement" 
+    <|> return (Block [])
+    >>| fun else_stm ->
       If (condition, then_stm, else_stm)
 
 and parse_stm = fun () ->
-  token (
-    parse_empty_stm <|>
+  parse_empty_stms *> token (
     (expression_parser () >>| expression) <|>
     (read_word >>= 
     (fun word -> match word with
