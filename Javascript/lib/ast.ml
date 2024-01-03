@@ -47,6 +47,8 @@ and statement =
   | Expression of expression
   | VarDeck of var_init
   | FunDeck of fun_init
+  | While of expression * statement
+  | For of expression * statement
   | If of expression * statement * statement option
   | Return of expression
   | EmptyStm

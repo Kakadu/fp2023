@@ -44,7 +44,7 @@ let is_end = function
   | _ -> false
 ;;
 
-let keywords = [ "let"; "const"; "function"; "if"; "return"; "else" ]
+let keywords = [ "let"; "const"; "function"; "if"; "return"; "else"; "while"; "for" ]
 let is_keyword ch = List.mem ch keywords
 
 let rec return_eq_element el_for_comp trans = function
@@ -92,7 +92,7 @@ let token_end_of_stm_exc ?(exp = "") s =
 let between p l r = l *> p <* r
 let lp = token_ch '('
 let rp = token_ch ')'
-let lc = token_ch '{'
+let lc = token_str "{"
 let rc = token_ch '}'
 let ls = token_ch '['
 let rs = token_ch ']'
@@ -187,6 +187,8 @@ and bop_parser = function
   | a :: b -> chainl1 (bop_parser b) (op_parse a)
   | _ -> mini_expression_parser ()
 
+and array_parser () = sq_parens @@ sep_by (token_str ",") (expression_parser ()) >>| array
+
 and mini_expression_parser () =
   token
     (choice
@@ -195,6 +197,7 @@ and mini_expression_parser () =
        ; parse_number >>| const
        ; parse_str >>| const
        ; valid_identifier >>| var
+       ; array_parser ()
        ])
   <?> "invalid part of expression"
 
@@ -237,13 +240,27 @@ let rec func_parser () =
 and parse_block_or_stm () =
   lc *> parse_statements rc >>| (fun c -> Block c) <|> parse_stm ()
 
+and while_parser () =
+  token @@ parens (expression_parser ())
+  >>= fun condition ->
+  token (parse_block_or_stm ())
+  <?> "incorrect while loop body"
+  >>| fun body -> While (condition, body)
+
+and for_parser () =
+  token @@ parens (expression_parser ())
+  >>= fun condition ->
+  token (parse_block_or_stm ())
+  <?> "incorrect while loop body"
+  >>| fun body -> For (condition, body)
+
 and if_parser () =
   token @@ parens (expression_parser ())
   >>= fun condition ->
-  parse_block_or_stm ()
+  token (parse_block_or_stm ())
   <?> "invalid then statement"
   >>= fun then_stm ->
-  token_str "else" *> token1 (parse_block_or_stm () >>| some)
+  token_str "else" *> token (parse_block_or_stm () >>| some)
   <|> return None
   <?> "invalid else statement"
   >>| fun else_stm -> If (condition, then_stm, else_stm)
@@ -255,13 +272,16 @@ and parse_stm () =
      <|> (read_word
           >>= fun word ->
           match word with
-          | "let" | "const" -> token1 @@ var_parser word <?> "wrong var statement"
-          | "function" -> token1 @@ func_parser () <?> "wrong function statement"
-          | "if" -> token1 @@ if_parser () <?> "wrong if statement"
+          | "let" | "const" -> var_parser word <?> "wrong var statement"
+          | "function" -> func_parser () <?> "wrong function statement"
+          | "while" -> while_parser () <?> "wrong while loop statement"
+          | "for" -> for_parser () <?> "wrong for loop statement"
+          | "if" -> if_parser () <?> "wrong if statement"
           | "return" -> token parse_return <?> "wrong return statement"
           | "" ->
             peek_char_fail
-            >>= fun ch -> fail @@ "there is unexpected symbol: '" ^ Char.escaped ch ^ "'"
+            >>= fun ch ->
+            fail @@ "there is an unexpected symbol: '" ^ Char.escaped ch ^ "'"
           | _ -> fail @@ "there is an invalid keyword: \"" ^ word ^ "\""))
   <* empty
   <?> "incorrect statement"
