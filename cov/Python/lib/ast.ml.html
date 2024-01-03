@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8"/>
     <title>ast.ml &mdash; Coverage report</title>
-    <meta name="description" content="37.25% coverage in lib/ast.ml">
+    <meta name="description" content="39.22% coverage in lib/ast.ml">
     <link rel="stylesheet" href="../coverage.css"/>
     <script src="../highlight.pack.js"></script>
     <script>hljs.initHighlightingOnLoad();</script>
@@ -15,7 +15,7 @@
           <span class="dirname">lib/</span>ast.ml
         </a>
       </h1>
-      <h2>37.25%</h2>
+      <h2>39.22%</h2>
     </div>
     <div id="navbar">
       <span class="some-visited" style="top:8.97%"></span>
@@ -47,7 +47,7 @@
       <span class="unvisited" style="bottom:33.33%"></span>
       <span class="unvisited" style="bottom:32.05%"></span>
       <span class="some-visited" style="bottom:30.77%"></span>
-      <span class="unvisited" style="bottom:29.49%"></span>
+      <span class="some-visited" style="bottom:29.49%"></span>
       <span class="unvisited" style="bottom:28.21%"></span>
       <span class="some-visited" style="bottom:26.92%"></span>
       <span class="some-visited" style="bottom:25.64%"></span>
@@ -120,7 +120,7 @@
 <a id="L52"></a><span class="unvisited"> </span>
 <a id="L53"></a><span class="unvisited"> </span>
 <a id="L54"></a><span class="some-visited"> </span>
-<a id="L55"></a><span class="unvisited"> </span>
+<a id="L55"></a><span class="some-visited"> </span>
 <a id="L56"></a><span class="unvisited"> </span>
 <a id="L57"></a><span class="some-visited"> </span>
 <a id="L58"></a><span class="some-visited"> </span>
@@ -232,8 +232,8 @@
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
 (*Standart data types: integers, strings, lists*)
-<span data-count="105">t</span>ype value =
-  <span data-count="0">|</span> Int of in<span data-count="32">t</span>
+<span data-count="114">t</span>ype value =
+  <span data-count="0">|</span> Int of in<span data-count="35">t</span>
   <span data-count="0">|</span> String of strin<span data-count="3">g</span>
   <span data-count="0">|</span> List of <span data-count="0">v</span>alue lis<span data-count="0">t</span>
   <span data-count="0">|</span> Bool of boo<span data-count="0">l</span>
@@ -275,22 +275,22 @@
 [@@deriving eq, show { with_path = false }<span data-count="6">]</span>
 
 (*Standart expressions*)
-<span data-count="543">t</span>ype expression =
+<span data-count="561">t</span>ype expression =
   <span data-count="0">|</span> Const of valu<span data-count="0">e</span>
   <span data-count="0">|</span> Variable of modifier * identifie<span data-count="0">r</span>
   <span data-count="0">|</span> ArithOp of arith_op * expression * expressio<span data-count="0">n</span>
   <span data-count="0">|</span> BoolOp of bool_op * expression * expressio<span data-count="0">n</span>
   <span data-count="0">|</span> FunctionCall of identifier * <span data-count="36">e</span>xpression lis<span data-count="12">t</span>
-  <span data-count="0">|</span> ListExp of <span data-count="0">e</span>xpression lis<span data-count="0">t</span>
+  <span data-count="0">|</span> ListExp of <span data-count="13">e</span>xpression lis<span data-count="3">t</span>
   <span data-count="0">|</span> Field of identifier * identifie<span data-count="0">r</span>
   <span data-count="0">|</span> MethodCall of identifier * identifier * <span data-count="10">e</span>xpression lis<span data-count="3">t</span>
   <span data-count="0">|</span> Lambda of <span data-count="9">i</span>dentifier lis<span data-count="2">t</span> * expressio<span data-count="0">n</span>
   <span data-count="0">|</span> Object of identifier * <span data-count="0">e</span>xpression lis<span data-count="0">t</span>
   <span data-count="0">|</span> FString of <span data-count="13">f</span>_string_type lis<span data-count="3">t</span>
-[@@deriving eq, show { with_path = false }<span data-count="440">]</span>
+[@@deriving eq, show { with_path = false }<span data-count="452">]</span>
 
 (*Standart statements*)
-<span data-count="228">t</span>ype statement =
+<span data-count="233">t</span>ype statement =
   <span data-count="0">|</span> Expression of expressio<span data-count="0">n</span>
   <span data-count="0">|</span> Assign of expression * expressio<span data-count="0">n</span>
   <span data-count="0">|</span> Function of identifier * <span data-count="27">i</span>dentifier lis<span data-count="10">t</span> * <span data-count="34">s</span>tatement lis<span data-count="11">t</span>
@@ -300,7 +300,7 @@
   <span data-count="0">|</span> For of expression * <span data-count="10">e</span>xpression lis<span data-count="3">t</span> * <span data-count="6">s</span>tatement lis<span data-count="2">t</span>
   <span data-count="0">|</span> Class of identifier * <span data-count="10">s</span>tatement lis<span data-count="3">t</span>
   <span data-count="0">|</span> Return of expressio<span data-count="0">n</span>
-[@@deriving eq, show { with_path = false }<span data-count="150">]</span>
+[@@deriving eq, show { with_path = false }<span data-count="152">]</span>
 
 type flag =
   | No
