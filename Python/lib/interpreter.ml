@@ -135,7 +135,6 @@ module Eval (M : MONADERROR) = struct
   ;;
 
   let class_in_env i env = List.exists (fun (a : environment) -> i = a.id) env.classes
-  let class_in_env i env = List.exists (fun (a : environment) -> i = a.id) env.classes
 
   let change_func (new_func : function_symb) env =
     let new_funcs =
@@ -410,13 +409,8 @@ module Eval (M : MONADERROR) = struct
     { i_expr; i_stmt }
   ;;
 
-  let interpret_exp (e : expression) global_env =
-    i_exp_or_stmt.i_expr i_exp_or_stmt global_env e
-  ;;
-
-  let get_env global_env = fold_left (i_exp_or_stmt.i_stmt i_exp_or_stmt) global_env
-
   let interpret =
+    let get_env global_env = fold_left (i_exp_or_stmt.i_stmt i_exp_or_stmt) global_env in
     let env = global_env in
     get_env env
   ;;
