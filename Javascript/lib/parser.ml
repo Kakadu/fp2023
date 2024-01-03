@@ -44,7 +44,15 @@ let is_end = function
   | _ -> false
 ;;
 
-let keywords = [ "let"; "const"; "function"; "if"; "return"; "else"; "while"; "for" ]
+let keywords =
+  [ "let"; "var"; "const"; "function"; "if"; "return"; "else"; "while"; "for" ]
+;;
+
+let is_string_sign = function
+  | '\"' | '\'' -> true
+  | _ -> false
+;;
+
 let is_keyword ch = List.mem ch keywords
 
 let rec return_eq_element el_for_comp trans = function
@@ -61,72 +69,33 @@ let is_spec_symbol = function
 let is_valid_first_identifier_ch ch = is_letter ch || is_spec_symbol ch
 let is_valid_identifier_ch ch = is_valid_first_identifier_ch ch || is_digit ch
 let read_word = take_while is_valid_identifier_ch
-
-let next_is_kwd =
-  let rec self = function
-    | a :: tail -> string a *> satisfy is_empty *> return true <|> self tail
-    | _ -> return false
-  in
-  self keywords >>= (fun c -> if c then fail "" else return false) <|> return true
-;;
-
-let empty = take_while is_empty
-let empty1 = take_while1 is_empty
-let spaces = take_while is_space
+let empty = skip_while is_empty
+let empty1 = take_while1 is_empty *> return ()
+let spaces = skip_while is_space
 let token_space p = spaces *> p
 let token p = empty *> p
 let token1 p = empty1 *> p
 let token_ch ch = token @@ (char ch *> return ())
 let token_str s = token @@ string s
-
-let token_end_of_stm_exc ?(exp = "") s =
-  token
-    ((next_is_kwd >>= fun c -> if c then fail exp else nothing)
-     *> (take_while is_end
-         >>= function
-         | "" -> nothing
-         | _ -> fail exp)
-     *> s)
-;;
-
 let between p l r = l *> p <* r
 let lp = token_ch '('
 let rp = token_ch ')'
-let lc = token_str "{"
+let lc = token_ch '{'
 let rc = token_ch '}'
 let ls = token_ch '['
 let rs = token_ch ']'
-let sq_parens p = between p ls rs
 let parens p = between p lp rp
 let cur_parens p = between p lc rc
-
-let to_end_of_stm =
-  empty
-  >>= fun chs ->
-  end_of_input
-  <|> skip is_end
-  <|> (peek_char_fail
-       >>= function
-       | '}' -> nothing
-       | _ -> fail "")
-  <|> (next_is_kwd
-       >>= fun c ->
-       if c && String.exists is_line_break chs
-       then nothing
-       else fail "incorrect end of statement")
-;;
-
-let is_false_fail cond ?(error_msg = "") input =
-  if cond input then return input else fail error_msg
-;;
-
+let sq_parens p = between p ls rs
+let empty_stm = empty *> end_of_input <|> skip is_end
+let to_end_of_stm = empty_stm <|> empty
 let some n = Some n
 let number n = Number n
 let const c = Const c
 let var v = Var v
 let expression e = Expression e
 let fun_call name args = FunctionCall (name, args)
-let array a = Array_list a
+let array_list array = Array_list array
 
 let parse_number =
   lift3 (fun a b c -> a ^ b ^ c) (take_while is_digit) (string ".") (take_while is_digit)
@@ -139,7 +108,20 @@ let parse_number =
 
 (*TODO: -,NaN..., BigINT*)
 
-let parse_str = char '"' *> take_till (fun c -> c = '"') >>| fun s -> String s
+let parse_str =
+  satisfy is_string_sign
+  *> scan_string false (fun state ch ->
+    if state
+    then Some false
+    else if is_string_sign ch
+    then None
+    else (
+      match ch with
+      | '\\' -> Some true
+      | _ -> Some false))
+  >>| (fun s -> String s)
+  <* satisfy is_string_sign
+;;
 
 let valid_identifier =
   token
@@ -152,7 +134,9 @@ let valid_identifier =
           lift2 ( ^ ) (satisfy is_valid_identifier_ch >>| Char.escaped) self <|> return "")
         <?> "invalid chars of var name")
   >>= fun name ->
-  if is_keyword name then fail "name of keyword shouldn't be a keyword" else return name
+  if is_keyword name
+  then fail "name of identifier shouldn't be a keyword"
+  else return name
 ;;
 
 (*TODO: Error, Here is some problem with it*)
@@ -187,7 +171,7 @@ and bop_parser = function
   | a :: b -> chainl1 (bop_parser b) (op_parse a)
   | _ -> mini_expression_parser ()
 
-and array_parser () = sq_parens @@ sep_by (token_str ",") (expression_parser ()) >>| array
+and array_parser () = token @@ sq_parens (sep_by (char ',') (expression_parser ()))
 
 and mini_expression_parser () =
   token
@@ -197,7 +181,7 @@ and mini_expression_parser () =
        ; parse_number >>| const
        ; parse_str >>| const
        ; valid_identifier >>| var
-       ; array_parser ()
+       ; array_parser () >>| array_list
        ])
   <?> "invalid part of expression"
 
@@ -205,84 +189,89 @@ and expression_parser () =
   fix (fun _ -> bop_parser list_of_bops) <?> "incorrect expression"
 ;;
 
-let var_parser (init_word : string) =
-  valid_identifier
-  >>= fun identifier ->
-  token_str "=" *> expression_parser ()
-  <* to_end_of_stm
-  >>| some
-  <|> to_end_of_stm *> return None
-  <?> "incorrect definition"
-  >>| fun expr ->
-  VarDeck
-    { var_identifier = identifier
-    ; is_const = init_word = "const"
-    ; var_type = VarType
-    ; value = expr
-    }
-;;
-
-(*TODO: var support*)
-
 let parse_return = token @@ expression_parser () >>| (fun c -> Return c) <* to_end_of_stm
-let parse_empty_stm = to_end_of_stm >>| fun _ -> EmptyStm
+let parse_empty_stms = many empty_stm
 
 let rec func_parser () =
   token valid_identifier
   >>= fun name ->
   token @@ parse_arguments ()
   >>= fun arguments ->
-  to_end_of_stm
-  >>| (fun _ -> None)
-  <|> (lc *> parse_statements rc >>| (fun c -> Some (Block c)) <* to_end_of_stm)
+  parse_block_or_stm ()
+  <* to_end_of_stm
   >>| fun body -> FunDeck { fun_identifier = name; arguments; body }
 
+and var_parser (init_word : string) =
+  valid_identifier
+  >>= fun identifier ->
+  token_str "="
+  *> (token @@ (string "function" *> token (parse_arguments ()))
+      >>= (fun arguments ->
+            parse_block_or_stm ()
+            <* to_end_of_stm
+            >>| fun body -> FunDeck { fun_identifier = identifier; arguments; body })
+      <|> (expression_parser ()
+           <* to_end_of_stm
+           >>| some
+           <|> to_end_of_stm *> return None
+           <?> "incorrect definition"
+           >>| fun expr ->
+           VarDeck
+             { var_identifier = identifier; is_const = init_word = "const"; value = expr }
+          ))
+
 and parse_block_or_stm () =
-  lc *> parse_statements rc >>| (fun c -> Block c) <|> parse_stm ()
+  cur_parens (many @@ parse_stm ())
+  <|> (parse_stm () >>| fun stm -> [ stm ])
+  >>| fun stms -> Block stms
 
 and while_parser () =
   token @@ parens (expression_parser ())
   >>= fun condition ->
-  token (parse_block_or_stm ())
-  <?> "incorrect while loop body"
+  parse_block_or_stm ()
+  <?> "invalid while loop body"
+  <|> return (Block [])
   >>| fun body -> While (condition, body)
 
 and for_parser () =
   token @@ parens (expression_parser ())
   >>= fun condition ->
-  token (parse_block_or_stm ())
-  <?> "incorrect while loop body"
+  parse_block_or_stm ()
+  <?> "invalid for loop body"
+  <|> return (Block [])
   >>| fun body -> For (condition, body)
 
 and if_parser () =
   token @@ parens (expression_parser ())
   >>= fun condition ->
-  token (parse_block_or_stm ())
+  parse_block_or_stm ()
   <?> "invalid then statement"
   >>= fun then_stm ->
-  token_str "else" *> token (parse_block_or_stm () >>| some)
-  <|> return None
+  token_str "else" *> token1 (parse_block_or_stm ())
   <?> "invalid else statement"
+  <|> return (Block [])
   >>| fun else_stm -> If (condition, then_stm, else_stm)
 
 and parse_stm () =
-  token
-    (parse_empty_stm
-     <|> (expression_parser () >>| expression)
-     <|> (read_word
-          >>= fun word ->
-          match word with
-          | "let" | "const" -> var_parser word <?> "wrong var statement"
-          | "function" -> func_parser () <?> "wrong function statement"
-          | "while" -> while_parser () <?> "wrong while loop statement"
-          | "for" -> for_parser () <?> "wrong for loop statement"
-          | "if" -> if_parser () <?> "wrong if statement"
-          | "return" -> token parse_return <?> "wrong return statement"
-          | "" ->
-            peek_char_fail
-            >>= fun ch ->
-            fail @@ "there is an unexpected symbol: '" ^ Char.escaped ch ^ "'"
-          | _ -> fail @@ "there is an invalid keyword: \"" ^ word ^ "\""))
+  parse_empty_stms
+  *> token
+       (expression_parser ()
+        >>| expression
+        <|> (read_word
+             >>= fun word ->
+             match word with
+             | "let" | "const" | "var" ->
+               token1 @@ var_parser word <?> "wrong var statement"
+             | "function" -> token1 @@ func_parser () <?> "wrong function statement"
+             | "if" -> token1 @@ if_parser () <?> "wrong if statement"
+             | "while" -> token1 @@ while_parser () <?> "wrong while loop statement"
+             | "for" -> token1 @@ for_parser () <?> "wrong for loop statement"
+             | "return" -> token parse_return <?> "wrong return statement"
+             | "" ->
+               peek_char_fail
+               >>= fun ch ->
+               fail @@ "there is unexpected symbol: '" ^ Char.escaped ch ^ "'"
+             | _ -> fail @@ "there is an invalid keyword: \"" ^ word ^ "\""))
   <* empty
   <?> "incorrect statement"
 

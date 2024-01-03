@@ -40,7 +40,7 @@ let eq_error str res =
       false)
 ;;
 
-(** Number parser *)
+(** Expressions parsers *)
 
 let%expect_test _ =
   pp ~parse:parse_expression "4";
@@ -77,7 +77,31 @@ let%expect_test _ =
   [%expect {|Error: incorrect expression > invalid part of expression: no more choices|}]
 ;;
 
-(** Expressions *)
+let%expect_test _ =
+  pp ~parse:parse_expression "\"Hello world!\"";
+  [%expect {|(Expression (Const (String "Hello world!")))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression "\'Hello world!\'";
+  [%expect {|(Expression (Const (String "Hello world!")))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression "var1";
+  [%expect {|(Expression (Var "var1"))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression "func1(var1, func2(var1), 4+5)";
+  [%expect
+    {|
+    (Expression
+       (FunctionCall ("func1",
+          [(Var "var1"); (FunctionCall ("func2", [(Var "var1")]));
+            (BinOp (Add, (Const (Number 4.)), (Const (Number 5.))))]
+          )))|}]
+;;
 
 let%expect_test _ =
   pp ~parse:parse_expression "40 + 50";
@@ -137,7 +161,7 @@ let%expect_test _ =
 let%expect_test _ =
   pp "4 + 5; + 2 * 3";
   [%expect {|
-    Error: incorrect statement: there is an unexpected symbol: '+'|}]
+    Error: incorrect statement: there is unexpected symbol: '+'|}]
 ;;
 
 let%expect_test _ =
@@ -153,7 +177,6 @@ let%expect_test _ =
     {|
     (Programm
        [(Expression (BinOp (Add, (Const (Number 4.)), (Const (Number 5.)))));
-         EmptyStm;
          (Expression (BinOp (Mul, (Const (Number 2.)), (Const (Number 3.)))))])|}]
 ;;
 
@@ -180,7 +203,7 @@ let%expect_test _ =
 let%expect_test _ =
   pp "4 + (5 + 2) * 3)";
   [%expect {|
-    Error: incorrect statement: there is an unexpected symbol: ')'|}]
+    Error: incorrect statement: there is unexpected symbol: ')'|}]
 ;;
 
 let%expect_test _ =
@@ -192,21 +215,72 @@ let%expect_test _ =
           (BinOp (Mul, (Const (Number 2.)), (Const (Number 3.)))))))|}]
 ;;
 
+(** Statements *)
+
+let%expect_test _ =
+  pp "let a = 6";
+  [%expect
+    {|
+    (Programm
+       [(VarDeck
+           { var_identifier = "a"; is_const = false;
+             value = (Some (Const (Number 6.))) })
+         ]) |}]
+;;
+
+let%expect_test _ =
+  pp "var a = 6";
+  [%expect
+    {|
+    (Programm
+       [(VarDeck
+           { var_identifier = "a"; is_const = false;
+             value = (Some (Const (Number 6.))) })
+         ]) |}]
+;;
+
+let%expect_test _ =
+  pp "const a = 6";
+  [%expect
+    {|
+    (Programm
+       [(VarDeck
+           { var_identifier = "a"; is_const = true;
+             value = (Some (Const (Number 6.))) })
+         ]) |}]
+;;
+
+let%expect_test _ =
+  pp "let a = function(b1) {return b1+6;}";
+  [%expect
+    {|
+    (Programm
+       [(FunDeck
+           { fun_identifier = "a"; arguments = [(Var "b1")];
+             body =
+             (Block [(Return (BinOp (Add, (Var "b1"), (Const (Number 6.)))))]) })
+         ]) |}]
+;;
+
 let%expect_test "if1" =
   pp "if (a == 4) let a = b + 6; else let b = 6+7;";
   [%expect
     {|
     (Programm
        [(If ((BinOp (Equal, (Var "a"), (Const (Number 4.)))),
-           (VarDeck
-              { var_identifier = "a"; is_const = false; var_type = VarType;
-                value = (Some (BinOp (Add, (Var "b"), (Const (Number 6.))))) }),
-           (Some (VarDeck
-                    { var_identifier = "b"; is_const = false; var_type = VarType;
-                      value =
-                      (Some (BinOp (Add, (Const (Number 6.)), (Const (Number 7.))
-                               )))
-                      }))
+           (Block
+              [(VarDeck
+                  { var_identifier = "a"; is_const = false;
+                    value = (Some (BinOp (Add, (Var "b"), (Const (Number 6.)))))
+                    })
+                ]),
+           (Block
+              [(VarDeck
+                  { var_identifier = "b"; is_const = false;
+                    value =
+                    (Some (BinOp (Add, (Const (Number 6.)), (Const (Number 7.)))))
+                    })
+                ])
            ))
          ])|}]
 ;;
@@ -223,62 +297,77 @@ let%expect_test "factorial" =
     {|
     (Programm
        [(VarDeck
-           { var_identifier = "fact"; is_const = false; var_type = VarType;
+           { var_identifier = "fact"; is_const = false;
              value = (Some (Const (Number 4.))) });
          (FunDeck
             { fun_identifier = "calculateFact"; arguments = [(Var "fact")];
               body =
-              (Some (Block
-                       [(If (
-                           (BinOp (NotEqual, (Var "fact"), (Const (Number 0.)))),
-                           (Return
-                              (BinOp (Mul, (Var "fact"),
-                                 (FunctionCall ("calculateFact",
-                                    [(BinOp (Sub, (Var "fact"),
-                                        (Const (Number 1.))))
-                                      ]
-                                    ))
-                                 ))),
-                           (Some (Return (Const (Number 1.))))))
-                         ]))
+              (Block
+                 [(If ((BinOp (NotEqual, (Var "fact"), (Const (Number 0.)))),
+                     (Block
+                        [(Return
+                            (BinOp (Mul, (Var "fact"),
+                               (FunctionCall ("calculateFact",
+                                  [(BinOp (Sub, (Var "fact"), (Const (Number 1.))
+                                      ))
+                                    ]
+                                  ))
+                               )))
+                          ]),
+                     (Block [(Return (Const (Number 1.)))])))
+                   ])
               })
          ])|}]
 ;;
 
-let%expect_test "if2" =
-  pp "if (1) {\n    return 0;\n  }";
+let%expect_test "array_list" =
+  pp "var myArray = [1, 2, 3, 4, 5];";
   [%expect
     {|
-  (Programm 
-     [(If ((Const (Number 1.)), (Block [(Return (Const (Number 0.)))]), None))])
-  |}]
-;;
-
-let%expect_test "while1" =
-  pp "while (1) {\n    return 0;\n  }";
-  [%expect
-    {|
-  (Programm 
-     [(While ((Const (Number 1.)), (Block [(Return (Const (Number 0.)))])))])
-  |}]
-;;
-
-let%expect_test "while2" =
-  pp
-    "while (a != 0) {\n    let b = a - 1;\n    if (a == 2) {\n        return b;\n    }\n}";
-  [%expect
-    {|
-    (Programm
-       [(While ((BinOp (NotEqual, (Var "a"), (Const (Number 0.)))),
-           (Block
-              [(VarDeck
-                  { var_identifier = "b"; is_const = false; var_type = VarType;
-                    value = (Some (BinOp (Sub, (Var "a"), (Const (Number 1.)))))
-                    });
-                (If ((BinOp (Equal, (Var "a"), (Const (Number 2.)))),
-                   (Block [(Return (Var "b"))]), None))
-                ])
-           ))
-         ])
+(Programm
+   [(VarDeck
+       { var_identifier = "myArray"; is_const = false;
+         value =
+         (Some (Array_list
+                  [(Const (Number 1.)); (Const (Number 2.));
+                    (Const (Number 3.)); (Const (Number 4.));
+                    (Const (Number 5.))]))
+         })
+     ])
     |}]
+;;
+
+let%expect_test "while" =
+  pp
+    "while (a != 0 ) {\n\
+    \    var b = a - 1;\n\
+    \    if (a == 1) {\n\
+    \        return b;\n\
+    \    }\n\
+    \    else {\n\
+    \        return 0;\n\
+    \    }\n\
+    \    let a = a - 1;\n\
+     }";
+  [%expect
+    {|
+      
+(Programm
+   [(While ((BinOp (NotEqual, (Var "a"), (Const (Number 0.)))), 
+       (Block
+          [(VarDeck
+              { var_identifier = "b"; is_const = false; 
+                value = (Some (BinOp (Sub, (Var "a"), (Const (Number 1.)))))
+                }); 
+            (If ((BinOp (Equal, (Var "a"), (Const (Number 1.)))), 
+               (Block [(Return (Var "b"))]), 
+               (Block [(Return (Const (Number 0.)))]))); 
+            (VarDeck
+               { var_identifier = "a"; is_const = false; 
+                 value = (Some (BinOp (Sub, (Var "a"), (Const (Number 1.)))))
+                 })
+            ])
+       ))
+     ])
+      |}]
 ;;

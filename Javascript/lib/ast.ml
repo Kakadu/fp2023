@@ -14,8 +14,6 @@ type bin_op =
 type typename =
   | Number of float
   | String of string
-  | VarType
-  | FuncType
 [@@deriving eq, show { with_path = false }]
 
 type expression =
@@ -24,22 +22,20 @@ type expression =
   | Parens of expression
   | Const of typename
   | Var of string
-  | FunctionCall of string * expression list
-  | DebugExp of expression list
   | Array_list of expression list
+  | FunctionCall of string * expression list
 [@@deriving eq, show { with_path = false }]
 
 type var_init =
   { var_identifier : string
   ; is_const : bool
-  ; var_type : typename
   ; value : expression option
   }
 
 and fun_init =
   { fun_identifier : string
   ; arguments : expression list
-  ; body : statement option
+  ; body : statement
   }
 
 and statement =
@@ -49,9 +45,7 @@ and statement =
   | FunDeck of fun_init
   | While of expression * statement
   | For of expression * statement
-  | If of expression * statement * statement option
+  | If of expression * statement * statement
   | Return of expression
-  | EmptyStm
-  | DebugStm of string
   | Programm of statement list
 [@@deriving eq, show { with_path = false }]
