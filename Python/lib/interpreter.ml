@@ -409,9 +409,6 @@ module Eval (M : MONADERROR) = struct
     { i_expr; i_stmt }
   ;;
 
-  let interpret =
-    let get_env global_env = fold_left (i_exp_or_stmt.i_stmt i_exp_or_stmt) global_env in
-    let env = global_env in
-    get_env env
-  ;;
+  let get_env env = fold_left (i_exp_or_stmt.i_stmt i_exp_or_stmt) env
+  let interpret = get_env global_env
 end
