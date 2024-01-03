@@ -119,11 +119,6 @@ let is_whitespace_or_eol = function
   | _ -> false
 ;;
 
-let is_class = function
-  | 'A' .. 'Z' -> true
-  | _ -> false
-;;
-
 let is_curlyLeft = function
   | '{' -> true
   | _ -> false
@@ -200,11 +195,6 @@ let exp_eq e1 e2 = BoolOp (Equal, e1, e2)
 let exp_not_eq e1 e2 = BoolOp (NotEqual, e1, e2)
 let stmt_expression e = Expression e
 let expression_with_columns columns expr = StatementWithColumns (columns, Expression expr)
-let stmt_func i el sl columns = SpecialStatementWithColumns (columns, Function (i, el, sl))
-let stmt_if_else e sl1 sl2 = IfElse (e, sl1, sl2)
-let stmt_return e = Return e
-let stmt_assign e1 e2 = Assign (e1, e2)
-let stmt_while e sl = While (e, sl)
 let exp_func_call i el = FunctionCall (i, el)
 let exp_and e1 e2 = BoolOp (And, e1, e2)
 let exp_or e1 e2 = BoolOp (Or, e1, e2)
@@ -375,11 +365,6 @@ let mp_high_pr_op = choice [ p_mul; p_div; p_mod ]
 let mp_low_pr_op = choice [ p_add; p_sub ]
 let gp_comparison_ops = choice [ p_eq; p_not_eq; p_gr_eq; p_less_eq; p_greater; p_less ]
 let gp_logic_ops = choice [ p_and; p_or ]
-
-let optionUnpacker = function
-  | Some c -> c
-  | _ -> fail ""
-;;
 
 (* Main parsers *)
 
@@ -835,6 +820,12 @@ let%expect_test _ =
        (FString
           [(Str (String "string")); (Var (Identifier "var"));
             (Str (String "str"))])) |}]
+;;
+
+let%expect_test _ =
+  parser_tester pyParser show_statement "[1, 2, 3]";
+  [%expect
+    {| (Expression (ListExp [(Const (Int 1)); (Const (Int 2)); (Const (Int 3))])) |}]
 ;;
 
 let%test _ = true = is_banned "return"
