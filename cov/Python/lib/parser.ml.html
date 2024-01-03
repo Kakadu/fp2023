@@ -1752,7 +1752,7 @@ type pseudo_statement =
   | For of expression * expression list * pseudo_statement list
   | Class of identifier * pseudo_statement list
   | Return of expression
-  | Error
+  | ParsingError
 
 let rec map1 f = function
   | <span data-count="63">[</span>] -&gt; return []
@@ -2167,7 +2167,7 @@ let insert_body body = function
   | <span data-count="34">F</span>unction (identifier, params, _) -&gt; Function (identifier, params, body)
   | <span data-count="13">C</span>lass (exp, _) -&gt; Class (exp, body)
   | <span data-count="4">W</span>hile (exp, _) -&gt; While (exp, body)
-  | <span data-count="0">_</span> -&gt; Error
+  | <span data-count="0">_</span> -&gt; ParsingError
 ;;
 
 let align_pseudo_statement pseudo_statement =

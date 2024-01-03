@@ -994,7 +994,7 @@ module Eval (M : MONADERROR) = struct
     ; classes = []
     ; functions = []
     ; flag = No
-    ; return_v = None
+    ; return_v = Nil
     ; vars = []
     ; vals_to_print = []
     }
@@ -1006,7 +1006,7 @@ module Eval (M : MONADERROR) = struct
     ; classes = []
     ; functions = []
     ; flag = No
-    ; return_v = None
+    ; return_v = Nil
     ; vars = []
     ; vals_to_print = []
     }
@@ -1019,7 +1019,7 @@ module Eval (M : MONADERROR) = struct
     ; classes = []
     ; functions = []
     ; flag = No
-    ; return_v = None
+    ; return_v = Nil
     ; vals_to_print = []
     }
   ;;
@@ -1128,7 +1128,7 @@ module Eval (M : MONADERROR) = struct
         then <span data-count="21">r</span>eturn env.return_v
         else <span data-count="21">(</span>
           match body with
-          | <span data-count="0">[</span>] -&gt; return None
+          | <span data-count="0">[</span>] -&gt; return Nil
           | <span data-count="21">h</span>d :: tl -&gt;
             let* a = exp_or_stmt.i_stm<span data-count="21">t</span> exp_or_stmt env hd in
             <span data-count="21">a</span>pply a tl)
@@ -1200,7 +1200,7 @@ module Eval (M : MONADERROR) = struct
         (match identifier with
          | <span data-count="8">I</span>dentifier "print" when not (func_in_en<span data-count="8">v</span> (Identifier "print") env) -&gt;
            <span data-count="7">l</span>et rec print_exp_list = function
-             | <span data-count="7">[</span>] -&gt; return None
+             | <span data-count="7">[</span>] -&gt; return Nil
              | <span data-count="7">e</span>xp :: tl -&gt;
                let* value = i_exp<span data-count="7">r</span> exp_or_stmt env exp in
                <span data-count="7">l</span>et* str_val = pack_to_strin<span data-count="7">g</span> value in
@@ -1208,7 +1208,7 @@ module Eval (M : MONADERROR) = struct
                <span data-count="7">p</span>rint_exp_list tl
            in
            (match exp_list with
-            | <span data-count="0">[</span>] -&gt; return None
+            | <span data-count="0">[</span>] -&gt; return Nil
             | <span data-count="7">_</span> -&gt; print_exp_list exp_list)
          | <span data-count="0">I</span>dentifier "setattr" when not (func_in_en<span data-count="0">v</span> (Identifier "setattr") env) -&gt;
            <span data-count="0">l</span>et* className = i_exp<span data-count="0">r</span> exp_or_stmt env (List.h<span data-count="0">d</span> exp_list) in
@@ -1228,7 +1228,7 @@ module Eval (M : MONADERROR) = struct
              let funcI : function_symb = { fetchedMethod with identifier = funcId } in
              change_fun<span data-count="0">c</span> funcI fetchedClass
            in
-           i_expr exp_or_stmt (change_or_add_clas<span data-count="0">s</span> changedClass env) (Const None)
+           i_expr exp_or_stmt (change_or_add_clas<span data-count="0">s</span> changedClass env) (Const Nil)
          | <span data-count="21">_</span> -&gt;
            (match func_in_env identifier env with
             | <span data-count="0">f</span>alse -&gt; error "undefined Function"
