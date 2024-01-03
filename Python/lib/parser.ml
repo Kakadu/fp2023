@@ -22,24 +22,34 @@ type pseudo_statement =
   | Return of expression
   | Error
 
-let rec convert_pseudoast_to_ast = function
+let rec map1 f = function
+  | [] -> return []
+  | h :: tl -> f h >>= fun c -> map1 f tl >>= fun lst -> return (c :: lst)
+;;
+
+let rec convert_pseudoast_to_ast : pseudo_statement -> statement t = function
   | SpecialStatementWithColumns (_, body) -> convert_pseudoast_to_ast body
   | StatementWithColumns (_, body) -> convert_pseudoast_to_ast body
   | Function (identifier, params, body) ->
-    Ast.Function (identifier, params, List.map (fun a -> convert_pseudoast_to_ast a) body)
-  | Expression exp -> Expression exp
-  | Assign (left, right) -> Assign (left, right)
+    let* newBody = map1 (fun a -> convert_pseudoast_to_ast a) body in
+    return @@ Ast.Function (identifier, params, newBody)
+  | Expression exp -> return @@ Ast.Expression exp
+  | Assign (left, right) -> return @@ Ast.Assign (left, right)
   | IfElse (exp, if_body, else_body) ->
-    IfElse
-      ( exp
-      , List.map (fun x -> convert_pseudoast_to_ast x) if_body
-      , List.map (fun x -> convert_pseudoast_to_ast x) else_body )
-  | Return x -> Return x
-  | Class (exp, body) -> Class (exp, List.map (fun a -> convert_pseudoast_to_ast a) body)
+    let* newIfBody = map1 (fun x -> convert_pseudoast_to_ast x) if_body in
+    let* newElseBody = map1 (fun x -> convert_pseudoast_to_ast x) else_body in
+    return @@ Ast.IfElse (exp, newIfBody, newElseBody)
+  | Return x -> return @@ Ast.Return x
+  | Class (exp, body) ->
+    let* newBody = map1 (fun x -> convert_pseudoast_to_ast x) body in
+    return @@ Ast.Class (exp, newBody)
   | For (exp1, exp2, body) ->
-    For (exp1, exp2, List.map (fun a -> convert_pseudoast_to_ast a) body)
-  | While (exp, body) -> While (exp, List.map (fun a -> convert_pseudoast_to_ast a) body)
-  | _ -> Error
+    let* newBody = map1 (fun x -> convert_pseudoast_to_ast x) body in
+    return @@ Ast.For (exp1, exp2, newBody)
+  | While (exp, body) ->
+    let* newBody = map1 (fun x -> convert_pseudoast_to_ast x) body in
+    return @@ Ast.While (exp, newBody)
+  | _ -> fail "parsing error"
 ;;
 
 (* Taken names of expression & statements *)
@@ -534,7 +544,8 @@ let remove_columns_and_join_elses list =
     | _ -> return []
   in
   let* pseudo_ast = helper [] list in
-  return (List.map (fun x -> convert_pseudoast_to_ast x) pseudo_ast)
+  let* finalAst = map1 (fun x -> convert_pseudoast_to_ast x) pseudo_ast in
+  return finalAst
 ;;
 
 (* Final parsers *)

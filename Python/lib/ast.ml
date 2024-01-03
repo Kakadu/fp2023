@@ -71,7 +71,6 @@ type statement =
   | For of expression * expression list * statement list
   | Class of identifier * statement list
   | Return of expression
-  | Error
 [@@deriving eq, show { with_path = false }]
 
 type flag =

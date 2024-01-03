@@ -93,7 +93,6 @@ type statement =
   (** Else statemtn with a guards and its body *)
   | Class of identifier * statement list (** Class with its identifier and contents *)
   | Return of expression (** Return statement *)
-  | Error (** Error *)
 
 val equal_statement : statement -> statement -> bool
 val pp_statement : Format.formatter -> statement -> unit
