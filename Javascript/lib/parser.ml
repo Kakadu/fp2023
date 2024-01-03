@@ -48,12 +48,17 @@ let is_end = function
 
 let keywords = [
   "let";
+  "var";
   "const";
   "function";
   "if";
   "return";
   "else"
 ]
+
+let is_string_sign = function
+  | '\"' | '\'' -> true
+  | _ -> false
 
 let is_keyword ch = List.mem ch keywords;;
 
@@ -116,7 +121,17 @@ let parse_number =
 (*TODO: -,NaN..., BigINT*)
 
 let parse_str = 
-  char '"' *> take_till (fun c -> c = '"') >>| (fun s -> String s)
+  satisfy is_string_sign *> scan_string false (fun state ch -> 
+    if state 
+      then Some(false)
+      else 
+        if is_string_sign ch
+          then None
+          else
+            match ch with
+            | '\\' -> Some(true)
+            | _ -> Some(false)
+    ) >>| (fun s -> String s) <* satisfy is_string_sign
 
 let valid_identifier =
   token @@ lift2 (^) 
@@ -166,21 +181,6 @@ and mini_expression_parser = fun () ->
 and expression_parser = fun () ->
   fix(fun _ -> bop_parser list_of_bops)
   <?> "incorrect expression"
-  
-let var_parser (init_word: string) = 
-  valid_identifier
-  >>= (fun identifier ->
-    (token_str "=" *> expression_parser () <* to_end_of_stm >>| some) 
-    <|> (to_end_of_stm *> return None) <?> "incorrect definition"
-    >>| (fun expr -> VarDeck 
-    {
-      var_identifier = identifier;
-      is_const = init_word = "const";
-      var_type = VarType;
-      value = expr;
-    })
-  )  
-(*TODO: var support*)
 
 let parse_return =
   token @@ expression_parser () >>| (fun c -> Return c) <* to_end_of_stm
@@ -197,6 +197,26 @@ let rec func_parser = fun () ->
           arguments = arguments; 
           body = body 
         }
+
+and var_parser (init_word: string) = 
+  valid_identifier
+  >>= fun identifier ->
+    token_str "=" *> (
+    (token @@ string "function" *> token (parse_arguments ()) >>= fun arguments -> 
+        (parse_block_or_stm () <* to_end_of_stm)
+        >>| fun body -> FunDeck { 
+            fun_identifier = identifier; 
+            arguments = arguments; 
+            body = body 
+          })
+    <|> (expression_parser () <* to_end_of_stm >>| some
+    <|> (to_end_of_stm *> return None) <?> "incorrect definition"
+      >>| fun expr -> VarDeck 
+      {
+        var_identifier = identifier;
+        is_const = init_word = "const";
+        value = expr;
+      }))
 
 and parse_block_or_stm = fun () ->
   (cur_parens (many @@ parse_stm ())
@@ -215,7 +235,7 @@ and parse_stm = fun () ->
     (expression_parser () >>| expression) <|>
     (read_word >>= 
     (fun word -> match word with
-      | "let" | "const" -> token1 @@ var_parser word <?> "wrong var statement"
+      | "let" | "const" | "var" -> token1 @@ var_parser word <?> "wrong var statement"
       | "function" -> token1 @@ func_parser () <?> "wrong function statement"
       | "if" -> token1 @@ if_parser () <?> "wrong if statement"
       | "return" -> token parse_return <?> "wrong return statement"

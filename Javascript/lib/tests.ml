@@ -37,7 +37,7 @@ else (
 )
 ;;
 
-(** Number parser *)
+(** Expressions parsers *)
 
 let%expect_test _ =
   pp ~parse:parse_expression 
@@ -81,7 +81,34 @@ let%expect_test _ =
   [%expect{|Error: incorrect expression > invalid part of expression: no more choices|}]
 ;;
 
-(** Expressions *)
+let%expect_test _ =
+  pp ~parse:parse_expression 
+  "\"Hello world!\"";
+  [%expect{|(Expression (Const (String "Hello world!")))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression 
+  "\'Hello world!\'";
+  [%expect{|(Expression (Const (String "Hello world!")))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression 
+  "var1";
+  [%expect{|(Expression (Var "var1"))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression 
+  "func1(var1, func2(var1), 4+5)";
+  [%expect{|
+    (Expression
+       (FunctionCall ("func1",
+          [(Var "var1"); (FunctionCall ("func2", [(Var "var1")]));
+            (BinOp (Add, (Const (Number 4.)), (Const (Number 5.))))]
+          )))|}]
+;;
 
 let%expect_test _ =
   pp ~parse:parse_expression
@@ -199,7 +226,52 @@ let%expect_test _ =
           (BinOp (Mul, (Const (Number 2.)), (Const (Number 3.)))))))|}]
 ;;
 
+(** Statements *)
 
+let%expect_test _ =
+  pp
+  "let a = 6";
+  [%expect{|
+    (Programm
+       [(VarDeck
+           { var_identifier = "a"; is_const = false;
+             value = (Some (Const (Number 6.))) })
+         ]) |}]
+;;
+
+let%expect_test _ =
+  pp
+  "var a = 6";
+  [%expect{|
+    (Programm
+       [(VarDeck
+           { var_identifier = "a"; is_const = false;
+             value = (Some (Const (Number 6.))) })
+         ]) |}]
+;;
+
+let%expect_test _ =
+  pp
+  "const a = 6";
+  [%expect{|
+    (Programm
+       [(VarDeck
+           { var_identifier = "a"; is_const = true;
+             value = (Some (Const (Number 6.))) })
+         ]) |}]
+;;
+
+let%expect_test _ =
+  pp
+  "let a = function(b1) {return b1+6;}";
+  [%expect{|
+    (Programm
+       [(FunDeck
+           { fun_identifier = "a"; arguments = [(Var "b1")];
+             body =
+             (Block [(Return (BinOp (Add, (Var "b1"), (Const (Number 6.)))))]) })
+         ]) |}]
+;;
 
 let%expect_test "if1" =
   pp
@@ -209,13 +281,13 @@ let%expect_test "if1" =
        [(If ((BinOp (Equal, (Var "a"), (Const (Number 4.)))),
            (Block
               [(VarDeck
-                  { var_identifier = "a"; is_const = false; var_type = VarType;
+                  { var_identifier = "a"; is_const = false;
                     value = (Some (BinOp (Add, (Var "b"), (Const (Number 6.)))))
                     })
                 ]),
            (Block
               [(VarDeck
-                  { var_identifier = "b"; is_const = false; var_type = VarType;
+                  { var_identifier = "b"; is_const = false;
                     value =
                     (Some (BinOp (Add, (Const (Number 6.)), (Const (Number 7.)))))
                     })
@@ -236,7 +308,7 @@ let%expect_test "factorial" =
   [%expect{|
     (Programm
        [(VarDeck
-           { var_identifier = "fact"; is_const = false; var_type = VarType;
+           { var_identifier = "fact"; is_const = false;
              value = (Some (Const (Number 4.))) });
          (FunDeck
             { fun_identifier = "calculateFact"; arguments = [(Var "fact")];
