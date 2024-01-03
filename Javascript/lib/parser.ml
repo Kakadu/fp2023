@@ -140,11 +140,13 @@ let valid_identifier =
     lift2 (^) (satisfy is_valid_identifier_ch >>| Char.escaped) self <|> return "") <?> "invalid chars of var name")
   >>= fun name -> 
     if is_keyword name then fail "name of identifier shouldn't be a keyword" else return name
-  (*TODO: Error, Here is some problem with it*)
-
 
 let bop op first second = BinOp(op, first, second)
-let uop op = UnrecognizedOp(op)
+
+let parse_empty_stms =
+  many empty_stm
+
+(*----------bin operators----------*)
 
 let mul_div_rem_op = [("*", Mul); ("/", Div)] (*precedence 12*)
 let add_sub_op = [("+", Add); ("-", Sub)] (*precedence 11*)
@@ -161,6 +163,8 @@ let chainl1 parser op =
   | Some f -> parser >>| (fun x -> BinOp(f, acc, x)) >>= go
   | _ -> return acc in
   parser >>= fun init -> go init
+
+(*----------expression parsers----------*)
 
 let rec parse_arguments = fun () ->
   parens(sep_by (token_str ",") (expression_parser ())) <?> "incorrect function arguments"
@@ -182,14 +186,13 @@ and expression_parser = fun () ->
   fix(fun _ -> bop_parser list_of_bops)
   <?> "incorrect expression"
 
-let parse_return =
-  token @@ expression_parser () >>| (fun c -> Return c) <* to_end_of_stm
+(*----------statement parsers----------*)
 
-let parse_empty_stms =
-  many empty_stm
+and parse_return = fun () ->
+  expression_parser () >>| (fun c -> Return c) <* to_end_of_stm
 
-let rec func_parser = fun () ->
-  token valid_identifier >>= fun name -> 
+and func_parser = fun () ->
+  valid_identifier >>= fun name -> 
     token @@ parse_arguments () >>= fun arguments -> 
       (parse_block_or_stm () <* to_end_of_stm)
       >>| fun body -> FunDeck { 
@@ -223,7 +226,7 @@ and parse_block_or_stm = fun () ->
   <|> (parse_stm () >>| fun stm -> [stm])) >>| fun stms -> Block stms
 
 and if_parser = fun () ->
-  token @@ parens (expression_parser ()) >>= fun condition ->
+  parens (expression_parser ()) >>= fun condition ->
    parse_block_or_stm () <?> "invalid then statement" >>= fun then_stm ->
     token_str "else" *> token1 (parse_block_or_stm ()) <?> "invalid else statement" 
     <|> return (Block [])
@@ -238,7 +241,7 @@ and parse_stm = fun () ->
       | "let" | "const" | "var" -> token1 @@ var_parser word <?> "wrong var statement"
       | "function" -> token1 @@ func_parser () <?> "wrong function statement"
       | "if" -> token1 @@ if_parser () <?> "wrong if statement"
-      | "return" -> token parse_return <?> "wrong return statement"
+      | "return" -> token1 @@ parse_return () <?> "wrong return statement"
       | "" ->  peek_char_fail >>= fun ch -> fail @@ "there is unexpected symbol: '"^(Char.escaped ch)^"'"
       | _ -> fail @@ "there is an invalid keyword: \""^word^"\""
     ))) <* empty <?> "incorrect statement"
