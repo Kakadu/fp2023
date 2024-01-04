@@ -3,7 +3,6 @@
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
 open Ast
-open Format
 
 module type MONAD = sig
   type 'a t
@@ -345,7 +344,7 @@ module Eval (M : MONADERROR) = struct
     in
     let rec i_stmt (i_exp_or_stmt : dispatch) (env : environment) = function
       | Expression exp ->
-        let* some_val = i_expr i_exp_or_stmt env exp in
+        let* _ = i_expr i_exp_or_stmt env exp in
         return env
       | Return exp ->
         let* value = i_exp_or_stmt.i_expr i_exp_or_stmt env exp in

@@ -9,7 +9,6 @@ type value =
   | Bool of bool (** Bool type *)
   | Nil (** None type *)
 
-val equal_value : value -> value -> bool
 val pp_value : Format.formatter -> value -> unit
 val show_value : value -> string
 
@@ -20,13 +19,11 @@ type arith_op =
   | Div (** Integer arithmetic divison *)
   | Mod (** Integer arithmetic modulus *)
 
-val equal_arith_op : arith_op -> arith_op -> bool
 val pp_arith_op : Format.formatter -> arith_op -> unit
 val show_arith_op : arith_op -> string
 
 type identifier = Identifier of string (** A function or variable identifier *)
 
-val equal_identifier : identifier -> identifier -> bool
 val pp_identifier : Format.formatter -> identifier -> unit
 val show_identifier : identifier -> string
 
@@ -34,7 +31,6 @@ type modifier =
   | Global (** Variable in a global scope *)
   | Class (** Variable in a class scope *)
 
-val equal_modifier : modifier -> modifier -> bool
 val pp_modifier : Format.formatter -> modifier -> unit
 val show_modifier : modifier -> string
 
@@ -48,7 +44,6 @@ type bool_op =
   | LessOrEqual (** logical less or equals *)
   | Less (** logical less *)
 
-val equal_bool_op : bool_op -> bool_op -> bool
 val pp_bool_op : Format.formatter -> bool_op -> unit
 val show_bool_op : bool_op -> string
 
@@ -56,7 +51,6 @@ type f_string_type =
   | Str of value (** string in a f string *)
   | Var of identifier (** variable in a f string *)
 
-val equal_f_string_type : f_string_type -> f_string_type -> bool
 val pp_f_string_type : Format.formatter -> f_string_type -> unit
 val show_f_string_type : f_string_type -> string
 
@@ -76,7 +70,6 @@ type expression =
   | Object of identifier * expression list (** Instance of a class *)
   | FString of f_string_type list (** F string *)
 
-val equal_expression : expression -> expression -> bool
 val pp_expression : Format.formatter -> expression -> unit
 val show_expression : expression -> string
 
@@ -94,7 +87,6 @@ type statement =
   | Class of identifier * statement list (** Class with its identifier and contents *)
   | Return of expression (** Return statement *)
 
-val equal_statement : statement -> statement -> bool
 val pp_statement : Format.formatter -> statement -> unit
 val show_statement : statement -> string
 

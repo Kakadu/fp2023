@@ -9,7 +9,7 @@ type value =
   | List of value list
   | Bool of bool
   | Nil
-[@@deriving eq, show { with_path = false }]
+[@@deriving show { with_path = false }]
 
 (*Standart arithmetic operations *)
 type arith_op =
@@ -18,15 +18,15 @@ type arith_op =
   | Mul
   | Div
   | Mod
-[@@deriving eq, show { with_path = false }]
+[@@deriving show { with_path = false }]
 
 (*Funcions' name & args' name*)
-type identifier = Identifier of string [@@deriving eq, show { with_path = false }]
+type identifier = Identifier of string [@@deriving show { with_path = false }]
 
 type modifier =
   | Global
   | Class
-[@@deriving eq, show { with_path = false }]
+[@@deriving show { with_path = false }]
 
 (*Standart boolean operators*)
 type bool_op =
@@ -38,12 +38,12 @@ type bool_op =
   | Greater
   | LessOrEqual
   | Less
-[@@deriving eq, show { with_path = false }]
+[@@deriving show { with_path = false }]
 
 type f_string_type =
   | Str of value
   | Var of identifier
-[@@deriving eq, show { with_path = false }]
+[@@deriving show { with_path = false }]
 
 (*Standart expressions*)
 type expression =
@@ -58,7 +58,7 @@ type expression =
   | Lambda of identifier list * expression
   | Object of identifier * expression list
   | FString of f_string_type list
-[@@deriving eq, show { with_path = false }]
+[@@deriving show { with_path = false }]
 
 (*Standart statements*)
 type statement =
@@ -71,7 +71,7 @@ type statement =
   | For of expression * expression list * statement list
   | Class of identifier * statement list
   | Return of expression
-[@@deriving eq, show { with_path = false }]
+[@@deriving show { with_path = false }]
 
 type flag =
   | No
