@@ -37,7 +37,7 @@ else (
 )
 ;;
 
-(** Expressions parsers *)
+(**---------------Expressions parsers---------------*)
 
 let%expect_test _ =
   pp ~parse:parse_expression 
@@ -101,19 +101,37 @@ let%expect_test _ =
 
 let%expect_test _ =
   pp ~parse:parse_expression 
-  "func1(var1, func2(var1), 4+5)";
+  "func1(var1, func2(var1), 4)";
   [%expect{|
     (Expression
-       (FunctionCall ("func1",
-          [(Var "var1"); (FunctionCall ("func2", [(Var "var1")]));
-            (BinOp (Add, (Const (Number 4.)), (Const (Number 5.))))]
+       (FunctionCall ((Var "func1"),
+          [(Var "var1"); (FunctionCall ((Var "func2"), [(Var "var1")]));
+            (Const (Number 4.))]
           )))|}]
 ;;
 
 let%expect_test _ =
   pp ~parse:parse_expression
-  "40 + 50";
-  [%expect{|(Expression (BinOp (Add, (Const (Number 40.)), (Const (Number 50.)))))|}]
+  "+ 5";
+  [%expect{|(Expression (UnOp (Plus, (Const (Number 5.)))))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression
+  "- - 5";
+  [%expect{|(Expression (UnOp (Minus, (UnOp (Minus, (Const (Number 5.)))))))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression
+  "- + 5";
+  [%expect{|(Expression (UnOp (Minus, (UnOp (Plus, (Const (Number 5.)))))))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression
+  "- +";
+  [%expect{|Error: incorrect expression > invalid part of expression: no more choices|}]
 ;;
 
 let%expect_test _ =
@@ -124,11 +142,38 @@ let%expect_test _ =
 
 let%expect_test _ =
   pp ~parse:parse_expression
+  "40 + -50";
+  [%expect{|
+    (Expression
+       (BinOp (Add, (Const (Number 40.)), (UnOp (Minus, (Const (Number 50.)))))))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression
+  "40 + (-50)";
+  [%expect{|
+    (Expression
+       (BinOp (Add, (Const (Number 40.)), (UnOp (Minus, (Const (Number 50.)))))))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression
   "1 + 2 + 3";
   [%expect{|
     (Expression
        (BinOp (Add, (BinOp (Add, (Const (Number 1.)), (Const (Number 2.)))),
           (Const (Number 3.)))))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression
+  "1 + 2 - 3 + 4";
+  [%expect{|
+    (Expression
+       (BinOp (Add,
+          (BinOp (Sub, (BinOp (Add, (Const (Number 1.)), (Const (Number 2.)))),
+             (Const (Number 3.)))),
+          (Const (Number 4.)))))|}]
 ;;
 
 let%expect_test _ =
@@ -171,7 +216,12 @@ let%expect_test _ =
   pp
   "4 + 5; + 2 * 3";
   [%expect{|
-    Error: incorrect statement: there is unexpected symbol: '+'|}]
+    (Programm
+       [(Expression (BinOp (Add, (Const (Number 4.)), (Const (Number 5.)))));
+         (Expression
+            (BinOp (Mul, (UnOp (Plus, (Const (Number 2.)))), (Const (Number 3.))
+               )))
+         ])|}]
 ;;
 
 let%expect_test _ =
@@ -226,7 +276,7 @@ let%expect_test _ =
           (BinOp (Mul, (Const (Number 2.)), (Const (Number 3.)))))))|}]
 ;;
 
-(** Statements *)
+(**---------------Statements parsers---------------*)
 
 let%expect_test _ =
   pp
@@ -266,10 +316,140 @@ let%expect_test _ =
   "let a = function(b1) {return b1+6;}";
   [%expect{|
     (Programm
-       [(FunDeck
-           { fun_identifier = "a"; arguments = [(Var "b1")];
-             body =
-             (Block [(Return (BinOp (Add, (Var "b1"), (Const (Number 6.)))))]) })
+       [(VarDeck
+           { var_identifier = "a"; is_const = false;
+             value =
+             (Some (AnonFunction (["b1"],
+                      (Block
+                         [(Return (BinOp (Add, (Var "b1"), (Const (Number 6.)))))
+                           ])
+                      )))
+             })
+         ]) |}]
+;;
+
+let%expect_test _ =
+  pp
+  "let a = (b1) => {return b1+6;}";
+  [%expect{|
+    (Programm
+       [(VarDeck
+           { var_identifier = "a"; is_const = false;
+             value =
+             (Some (AnonFunction (["b1"],
+                      (Block
+                         [(Return (BinOp (Add, (Var "b1"), (Const (Number 6.)))))
+                           ])
+                      )))
+             })
+         ]) |}]
+;;
+
+let%expect_test _ =
+  pp
+  "let a = (b1) => b1+6";
+  [%expect{|
+    (Programm
+       [(VarDeck
+           { var_identifier = "a"; is_const = false;
+             value =
+             (Some (AnonFunction (["b1"],
+                      (Block
+                         [(Return (BinOp (Add, (Var "b1"), (Const (Number 6.)))))
+                           ])
+                      )))
+             })
+         ]) |}]
+;;
+
+let%expect_test _ =
+  pp
+  "let a = function(b1) {return b1+6;}(4)";
+  [%expect{|
+    (Programm
+       [(VarDeck
+           { var_identifier = "a"; is_const = false;
+             value =
+             (Some (FunctionCall (
+                      (AnonFunction (["b1"],
+                         (Block
+                            [(Return
+                                (BinOp (Add, (Var "b1"), (Const (Number 6.)))))
+                              ])
+                         )),
+                      [(Const (Number 4.))])))
+             })
+         ]) |}]
+;;
+
+let%expect_test _ =
+  pp
+  "let a = ((b1) => {return b1+6;})(4)";
+  [%expect{|
+    (Programm
+       [(VarDeck
+           { var_identifier = "a"; is_const = false;
+             value =
+             (Some (FunctionCall (
+                      (AnonFunction (["b1"],
+                         (Block
+                            [(Return
+                                (BinOp (Add, (Var "b1"), (Const (Number 6.)))))
+                              ])
+                         )),
+                      [(Const (Number 4.))])))
+             })
+         ]) |}]
+;;
+
+let%expect_test _ =
+  pp
+  "let a = ((b1) => b1+6)(4)";
+  [%expect{|
+    (Programm
+       [(VarDeck
+           { var_identifier = "a"; is_const = false;
+             value =
+             (Some (FunctionCall (
+                      (AnonFunction (["b1"],
+                         (Block
+                            [(Return
+                                (BinOp (Add, (Var "b1"), (Const (Number 6.)))))
+                              ])
+                         )),
+                      [(Const (Number 4.))])))
+             })
+         ]) |}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression 
+  "func1(4)+(5+6)";
+  [%expect{|
+    (Expression
+       (BinOp (Add, (FunctionCall ((Var "func1"), [(Const (Number 4.))])),
+          (BinOp (Add, (Const (Number 5.)), (Const (Number 6.)))))))|}]
+;;
+
+let%expect_test _ =
+  pp
+  "let a = ((b1) => b1+6)(4)+5";
+  [%expect{|
+    (Programm
+       [(VarDeck
+           { var_identifier = "a"; is_const = false;
+             value =
+             (Some (BinOp (Add,
+                      (FunctionCall (
+                         (AnonFunction (["b1"],
+                            (Block
+                               [(Return
+                                   (BinOp (Add, (Var "b1"), (Const (Number 6.)))))
+                                 ])
+                            )),
+                         [(Const (Number 4.))])),
+                      (Const (Number 5.)))))
+             })
          ]) |}]
 ;;
 
@@ -311,14 +491,14 @@ let%expect_test "factorial" =
            { var_identifier = "fact"; is_const = false;
              value = (Some (Const (Number 4.))) });
          (FunDeck
-            { fun_identifier = "calculateFact"; arguments = [(Var "fact")];
+            { fun_identifier = "calculateFact"; arguments = ["fact"];
               body =
               (Block
                  [(If ((BinOp (NotEqual, (Var "fact"), (Const (Number 0.)))),
                      (Block
                         [(Return
                             (BinOp (Mul, (Var "fact"),
-                               (FunctionCall ("calculateFact",
+                               (FunctionCall ((Var "calculateFact"),
                                   [(BinOp (Sub, (Var "fact"), (Const (Number 1.))
                                       ))
                                     ]
