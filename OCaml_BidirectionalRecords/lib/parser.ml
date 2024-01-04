@@ -102,8 +102,15 @@ let pptuple pexpr =
 
 (* records *)
 
-let record = pbrackets (lift2 List.cons tvar (many1 (pstoken ";" *> tvar)))
-let precord = pstoken "type" *> varname *> pstoken "=" *> record
+let record pexpr =
+  pbrackets (lift2 List.cons pexpr (many1 (pstoken ";" *> pexpr)) >>| fun x -> ERecord x)
+;;
+
+let precord pexpr = pstoken "type" *> varname *> pstoken "=" *> record pexpr
+
+(* let pprecord pexpr =
+  lift2 (fun name field -> { name; field}) varname (precord pexpr)
+;; *)
 
 (* expressions *)
 
@@ -160,7 +167,7 @@ let plet pexpr =
 
 let pexpr =
   fix (fun expr ->
-    let expr = choice [ peconst; pevar; pparens expr; plist expr ] in
+    let expr = choice [ peconst; pevar; pparens expr; plist expr; precord expr ] in
     let expr = peapp expr <|> expr in
     let expr = chainl1 expr (mult <|> div) in
     let expr = chainl1 expr (add <|> sub) in
