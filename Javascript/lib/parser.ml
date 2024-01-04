@@ -146,6 +146,10 @@ let bop op first second = BinOp(op, first, second)
 let parse_empty_stms =
   many empty_stm
 
+(*----------unary operators----------*)
+
+let pre_un_op = [("+", Plus); ("-", Minus)] (*precedence 14*)
+
 (*----------bin operators----------*)
 
 let mul_div_rem_op = [("*", Mul); ("/", Div)] (*precedence 12*)
@@ -164,6 +168,7 @@ let chainl1 parser op =
   | _ -> return acc in
   parser >>= fun init -> go init
 
+
 (*----------expression parsers----------*)
 
 let rec parse_arguments = fun () ->
@@ -171,6 +176,11 @@ let rec parse_arguments = fun () ->
 
 and bop_parser = function
   | a :: b -> chainl1 (bop_parser b) (op_parse a)
+  | _ -> pre_uop_parser ()
+
+and pre_uop_parser = fun () ->
+  (token @@ op_parse pre_un_op >>| fun op -> Some op) <|> return None >>= function
+  | Some op -> pre_uop_parser () >>| (fun ex -> UnOp(op, ex))
   | _ -> mini_expression_parser ()
 
 and mini_expression_parser = fun () ->
