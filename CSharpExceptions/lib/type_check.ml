@@ -219,6 +219,15 @@ module Type_checker = struct
     (a >>= fun a1 -> b >>= fun b1 -> c >>= fun c1 -> return (f a1 b1 c1)) st
   ;;
 
+  let lift4 : ('a -> 'b -> 'c -> 'd -> 'e) -> 'a tt -> 'b tt -> 'c tt -> 'd tt -> 'e tt =
+    fun f a b c d st ->
+    lift2
+      (fun (a1, b1) (c1, d1) -> f a1 b1 c1 d1)
+      (lift2 (fun a1 b1 -> a1, b1) a b)
+      (lift2 (fun c1 d1 -> c1, d1) c d)
+      st
+  ;;
+
   let ( *> ) : 'a tt -> 'b tt -> 'b tt = fun a b st -> (lift2 (fun _ x -> x) a b) st
   let ( <* ) : 'a tt -> 'b tt -> 'a tt = fun a b st -> (lift2 (fun x _ -> x) a b) st
 
@@ -233,7 +242,7 @@ module Type_checker = struct
   let choice : 'a tt list -> 'a tt =
     fun l ->
     match l with
-    | [] -> fail (Other_error "Empty choice")
+    | [] -> fail (Other_error "Empty choice\n")
     | h :: tl -> List.fold_left ( <|> ) h tl
   ;;
 
@@ -275,7 +284,7 @@ let to_type_v = function
 ;;
 
 let to_type_m = function
-  | Void -> Result.error "Not assignable type"
+  | Void -> Result.error "Not assignable type\n"
   | TReturn x -> Result.ok (Value_sig (TVar x))
 ;;
 
@@ -288,7 +297,7 @@ let to_assign_t = function
   | Value_sig (TVar a_tp) -> Result.ok a_tp
   | Metod_sig { m_modif = _; m_type; _ } ->
     (match m_type with
-     | Void -> Result.error "Non-assignable type"
+     | Void -> Result.error "Non-assignable type\n"
      | TReturn a_tp -> Result.ok a_tp)
   | Constructor_sig { con_modif = _; con_id; _ } -> Result.ok (TNullable (TClass con_id))
   | Fild_sig { f_modif = _; f_type = TVar tp; _ } -> Result.ok tp
@@ -307,7 +316,7 @@ let compare a b f =
   let b_tp_res = opt_to_assign_t b in
   match a_tp_res, b_tp_res with
   | Result.Error _, Result.Error _ | _, Result.Error _ | Result.Error _, _ ->
-    Result.error "Non-comparable types"
+    Result.error "Non-comparable types\n"
   | Result.Ok a_tp_opt, Result.Ok b_tp_opt -> f (a_tp_opt, b_tp_opt)
 ;;
 
@@ -325,7 +334,7 @@ let ( =!= ) a b =
     | Some (TNullable _), None -> Result.ok a_tp_opt
     | None, Some (TNullable _) -> Result.ok b_tp_opt
     | None, None -> Result.ok None
-    | _, _ -> Result.error "Types are not equal"
+    | _, _ -> Result.error "Types are not equal\n"
   in
   compare a b helper
 ;;
@@ -340,7 +349,7 @@ let ( =!> ) a b =
       match a_tp_opt, b_tp_opt with
       | Some (TNullable (TBase a_tp)), Some (TNot_Nullable b_tp)
         when equal_base_type a_tp b_tp -> Result.ok a_tp_opt
-      | _, _ -> Result.error "Types are not equal."
+      | _, _ -> Result.error "Types are not equal.\n"
     in
     compare a b helper
 ;;
@@ -366,7 +375,7 @@ let map2_opt f l1 l2 =
   let len2 = List.length l2 in
   match Int.equal len1 len2 with
   | true -> Result.ok (List.map2 f l1 l2)
-  | false -> Result.error "len(list1) != len(list2)"
+  | false -> Result.error "len(list1) != len(list2)\n"
 ;;
 
 let check_method_ tp args params =
@@ -397,7 +406,7 @@ let check_invoke sign env_prms =
     let tp = Value_sig (TVar (TNullable (TClass con_id))) in
     (match con_args, base_params with
      | Args args, None -> check_method_ tp args env_prms
-     | _ -> fail (Other_error "Inheritance with constructors is not supported"))
+     | _ -> fail (Other_error "Inheritance with constructors is not supported\n"))
   | _ -> fail Type_mismatch
 ;;
 
@@ -445,14 +454,14 @@ let is_public sign =
   | Fild_sig { f_modif = Some (FAccess MPublic); _ }
   | Metod_sig { m_modif = Some (MAccess MPublic); _ }
   | Constructor_sig { con_modif = Some MPublic; _ } -> return sign
-  | _ -> fail (Access_error "Attempt to get a private class member")
+  | _ -> fail (Access_error "Attempt to get a private class member\n")
 ;;
 
 let rec find_class_member expr cl_decl =
   let find_mem id =
     match get_class_member_sign cl_decl id with
     | Some x -> return x
-    | None -> fail (Other_error "Parsing error in EPoint_access")
+    | None -> fail (Other_error "Parsing error in EPoint_access\n")
   in
   let get_next_decl_id mem_id =
     find_mem mem_id
@@ -461,13 +470,13 @@ let rec find_class_member expr cl_decl =
     | Fild_sig { f_modif = _; f_type = TVar (TNullable (TClass id)); _ } -> return id
     | Metod_sig { m_modif = _; m_type = TReturn (TNullable (TClass id)); _ } -> return id
     | Constructor_sig { con_modif = _; con_id; _ } -> return con_id
-    | _ -> fail (Access_error "Magic case")
+    | _ -> fail (Access_error "Magic case\n")
   in
   match expr with
   | EIdentifier id -> find_mem id >>= is_public
   | EPoint_access (EIdentifier id, expr1) ->
     get_next_decl_id id >>= find_global >>= find_class_member expr1
-  | _ -> fail (Other_error "Parsing error in EPoint_access")
+  | _ -> fail (Other_error "Parsing error in EPoint_access\n")
 ;;
 
 let check_point_acc e1 e2 =
@@ -480,10 +489,10 @@ let check_point_acc e1 e2 =
         | Fild_sig { f_modif = _; f_type = TVar (TNullable (TClass id_)); _ } ->
           return id_
         | Value_sig (TVar (TNullable (TClass id_))) -> return id_
-        | _ -> fail (Other_error "Error during parsing in Epoint_access")
+        | _ -> fail (Other_error "Error during parsing in Epoint_access\n")
       in
       local_find >>= get_class >>= global_find >>= find_class_member e2 >>= is_public
-    | _ -> fail (Other_error "Error during parsing in Epoint_access")
+    | _ -> fail (Other_error "Error during parsing in Epoint_access\n")
   in
   helper >>| fun x -> Some x
 ;;
@@ -499,7 +508,7 @@ let env_string = Value_sig (TVar (TNullable TString))
 let operands_eq oper1 oper2 =
   match oper1, oper2 with
   | None, None | None, _ | _, None ->
-    fail (Other_error "Using keyword Null with math operations")
+    fail (Other_error "Using keyword Null with math operations\n")
   | _ -> eq_t_env_opt oper1 oper2
 ;;
 
@@ -578,26 +587,22 @@ let return_check e_opt =
   | _ -> fail Type_mismatch
 ;;
 
-(*
-   | Constructor_sig of constructor_sign
-   | Value_sig of var_type
-   | Fild_sig of fild_sign
-*)
+let is_exception_ con_id =
+  read_global (Code_ident con_id)
+  >>= function
+  | Exception_ctx _ -> return TP_Ok
+  | _ -> fail (Other_error "throw can be used only with exceprions\n")
+;;
+
 let throw_check env_obj =
-  let is_exception con_id =
-    read_global (Code_ident con_id)
-    >>= function
-    | Exception_ctx _ -> return TP_Ok
-    | _ -> fail (Other_error "throw can be used only with exceprions")
-  in
   let get_class_id =
     match env_obj with
     | Some (Constructor_sig { con_modif = _; con_id; _ }) -> return con_id
     | Some (Fild_sig { f_modif = _; f_type = TVar (TNullable (TClass id)) }) -> return id
     | Some (Value_sig (TVar (TNullable (TClass id)))) -> return id
-    | _ -> fail (Other_error "throw can be used only with exceprions")
+    | _ -> fail (Other_error "throw can be used only with exceprions\n")
   in
-  get_class_id >>= is_exception
+  get_class_id >>= is_exception_
 ;;
 
 let add_local_decl id tp =
@@ -622,7 +627,49 @@ let if_else_check e st st_opt st_check =
   lift3 f exp_res st_res st_opt_res
 ;;
 
-(* TODO: Доделать штуки с return *)
+let un_opt_ mnd x =
+  match x with
+  | Some x -> mnd x *> return TP_Ok
+  | None -> return TP_Ok
+;;
+
+let for_check init_opt e1_opt e2_opt s h =
+  let f _ _ _ _ = TP_Ok in
+  let init_opt_res = un_opt_ h init_opt in
+  let e1_opt_res = un_opt_ check_expr e1_opt in
+  let e2_opt_res = un_opt_ check_expr e2_opt in
+  let s_res = h s in
+  lift4 f init_opt_res e1_opt_res e2_opt_res s_res
+;;
+
+let catch_s_check_ h = function
+  | None -> return TP_Ok
+  | Some (edecl_opt, s) ->
+    (match edecl_opt with
+     | None -> h s
+     | Some (Var_decl (tp, id), e_opt) ->
+       let tp = Value_sig tp in
+       let add = add_local_decl id tp in
+       let is_exc_ =
+         match tp with
+         | Value_sig (TVar (TNullable (TClass exc_id))) -> is_exception_ exc_id
+         | _ -> fail (Other_error "Parsing error in catch statement\n")
+       in
+       (match e_opt with
+        | Some e -> is_exc_ *> add *> cond_check_ e *> return TP_Ok
+        | None -> is_exc_ *> add *> return TP_Ok))
+;;
+
+let try_catch_fin_check try_s catch_s finally_s h =
+  let f _ _ _ = TP_Ok in
+  let try_s_res = local_scope (h try_s) in
+  let catch_s_res = local_scope (catch_s_check_ h catch_s) in
+  let fin_s_res = local_scope (un_opt_ h finally_s) in
+  match catch_s, finally_s with
+  | None, None -> fail (Other_error "After try shold be catch or finally\n")
+  | _ -> lift3 f try_s_res catch_s_res fin_s_res
+;;
+
 let check_statement stat =
   let rec helper = function
     | SExpr e -> check_expr e *> return TP_Ok
@@ -639,10 +686,12 @@ let check_statement stat =
       (match e_opt with
        | Some e -> var_exp_check e tp *> add
        | None -> add)
-    | SIf_else (e, st, st1) -> if_else_check e st st1 helper
-    | SWhile (e, st) -> cond_check_ e *> helper st
-    (*  *)
-    | SFor _ | STry_catch_fin _ -> return TP_Ok
+    | SIf_else (e, s, st1) -> local_scope (if_else_check e s st1 helper)
+    | SWhile (e, s) -> local_scope (cond_check_ e *> helper s)
+    | SFor { f_init_p; f_cond_p; f_iter_p; f_body } ->
+      local_scope (for_check f_init_p f_cond_p f_iter_p f_body helper)
+    | STry_catch_fin { try_s; catch_s; finally_s } ->
+      try_catch_fin_check try_s catch_s finally_s helper
   in
   helper stat
 ;;
