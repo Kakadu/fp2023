@@ -266,7 +266,7 @@ let iload var tp ptr align =
   <span data-count="2161">l</span>et* ptr = get_const_from_valu<span data-count="2161">e</span> ptr &gt;&gt;<span data-count="2161">=</span> is_ptr in
   (* if   ptr mod align == 0
      then *)
-  <span data-count="2161">l</span>et* cnst = Memory.take_cnst_in_hea<span data-count="2161">p</span> ptr tp in
+  <span data-count="2161">l</span>et* cnst = Memory.take_cnst_from_hea<span data-count="2161">p</span> ptr tp in
   <span data-count="2161">w</span>rite_var var cnst
 ;;
 

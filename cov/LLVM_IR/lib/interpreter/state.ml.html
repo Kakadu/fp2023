@@ -264,7 +264,7 @@ module MapString = struct
 
   let pp pp_v ppf m =
     <span data-count="0">F</span>ormat.fprintf ppf "@[[@[";
-    <span data-count="0">i</span>ter (fun k v -&gt; <span data-count="0">F</span>ormat.fprintf ppf "@[\"%s\": %a@],@\n" k pp_v v) m;
+    <span data-count="0">i</span>ter (fun k v -&gt; <span data-count="0">F</span>ormat.fprintf ppf "@[\"%S\": %a@],@\n" k pp_v v) m;
     <span data-count="0">F</span>ormat.fprintf ppf "@]]@]"
   ;;
 end

@@ -383,7 +383,7 @@ module MapString = struct
 
   let pp pp_v ppf m =
     <span data-count="0">F</span>ormat.fprintf ppf "@[[@[";
-    <span data-count="0">i</span>ter (fun k v -&gt; <span data-count="0">F</span>ormat.fprintf ppf "@[\"%s\": %a@],@\n" k pp_v v) m;
+    <span data-count="0">i</span>ter (fun k v -&gt; <span data-count="0">F</span>ormat.fprintf ppf "@[\"%S\": %a@],@\n" k pp_v v) m;
     <span data-count="0">F</span>ormat.fprintf ppf "@]]@]"
   ;;
 end
@@ -396,7 +396,7 @@ let check_var : Ast.variable -&gt; (state, unit) t =
     fun name map -&gt;
     <span data-count="1291">l</span>et value = MapString.find_opt name map in
     <span data-count="1291">m</span>atch value with
-    | <span data-count="5">S</span>ome _ -&gt; fail (Printf.sprint<span data-count="5">f</span> "Variable %s already was assignmented" name)
+    | <span data-count="5">S</span>ome _ -&gt; fail (Printf.sprint<span data-count="5">f</span> "Variable %s already was assigned" name)
     | <span data-count="1286">N</span>one -&gt; return ()
   in
   fun variable -&gt;

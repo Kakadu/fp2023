@@ -300,7 +300,7 @@ let%expect_test _ =
   @bb = global i32 32, align 4 |};
   <span data-count="1">[</span>%expect {|
     SSA check failed:
-     Variable bb already was assignmented |}<span data-count="7">]</span>
+     Variable bb already was assigned |}<span data-count="7">]</span>
 ;;
 
 let%expect_test _ =
@@ -313,7 +313,7 @@ let%expect_test _ =
      } |};
   <span data-count="1">[</span>%expect {|
     SSA check failed:
-     Variable bb already was assignmented |}<span data-count="7">]</span>
+     Variable bb already was assigned |}<span data-count="7">]</span>
 ;;
 
 let%expect_test _ =
@@ -327,7 +327,7 @@ let%expect_test _ =
     "@dd = global i32 0, align 4\ndefine i32 @bb(i32 %0, i32 %1, i35 %0){ret i32 0}";
   <span data-count="1">[</span>%expect {|
     SSA check failed:
-     Variable 0 already was assignmented |}<span data-count="7">]</span>
+     Variable 0 already was assigned |}<span data-count="7">]</span>
 ;;
 
 let%expect_test _ =
@@ -364,7 +364,7 @@ let%expect_test _ =
         } |};
   <span data-count="1">[</span>%expect {|
     SSA check failed:
-     Variable 6 already was assignmented |}<span data-count="7">]</span>
+     Variable 6 already was assigned |}<span data-count="7">]</span>
 ;;
 
 let%expect_test _ =
