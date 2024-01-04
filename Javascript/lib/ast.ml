@@ -1,6 +1,11 @@
 (** Copyright 2023, Kuarni, AlexShmak *)
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
+type un_op =
+  | Plus
+  | Minus
+[@@deriving eq, show {with_path = false}]
+
 type bin_op =
   | Add
   | Sub
@@ -16,6 +21,7 @@ type typename =
 [@@deriving eq, show {with_path = false}]
 
 type expression =
+  | UnOp of un_op * expression
   | BinOp of bin_op * expression * expression
   | UnrecognizedOp of bin_op
   | Parens of expression
