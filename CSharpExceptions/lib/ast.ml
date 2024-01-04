@@ -142,9 +142,11 @@ type constructor_sign =
   }
 [@@deriving show { with_path = false }]
 
+type main_sign = meth_type [@@deriving show { with_path = false }]
+
 type class_member =
   | Fild of fild_sign * expr option
-  | Main of statement
+  | Main of main_sign * statement
   | Method of method_sign * statement (* statment - Steps *)
   | Constructor of constructor_sign * statement (* statment - Steps *)
 [@@deriving show { with_path = false }]

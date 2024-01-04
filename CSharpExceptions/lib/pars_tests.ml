@@ -401,6 +401,7 @@ let%expect_test _ =
         {
             if (num == 1)
             {
+               A1 = 2;
                 return 1;
             }
             else 
@@ -465,7 +466,11 @@ let%expect_test _ =
           (Steps
              [(SIf_else (
                  (EBin_op (Equal, (EIdentifier (Id "num")), (EConst (VInt 1)))),
-                 (Steps [(SReturn (Some (EConst (VInt 1))))]),
+                 (Steps
+                    [(SExpr
+                        (EBin_op (Assign, (EIdentifier (Id "A1")),
+                           (EConst (VInt 2)))));
+                      (SReturn (Some (EConst (VInt 1))))]),
                  (Some (Steps
                           [(SReturn
                               (Some (EBin_op (Or,

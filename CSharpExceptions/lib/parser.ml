@@ -484,9 +484,9 @@ let ep_method_member =
   lift2 (fun mt bd -> Method (mt, bd)) (return mt) ep_steps
   >>= function
   | Method (m, body) when maybe_main_ m ->
-    (match is_main_ m with
-     | true -> return (Main body)
-     | false -> fail "")
+    (match (is_main_ m), m with
+     | true, {m_modif=_; m_type; _} -> return (Main (m_type, body))
+     | false, _ -> fail "")
   | m -> return m
 ;;
 
