@@ -112,7 +112,6 @@ let number n = Number n
 let const c = Const c
 let var v = Var v
 let expression e = Expression e
-let fun_call name args = FunctionCall(name, args)
 
 let parse_number = 
   lift3 (fun a b c -> a^b^c) (take_while is_digit) (string ".") (take_while is_digit) 
@@ -168,11 +167,32 @@ let chainl1 parser op =
   | _ -> return acc in
   parser >>= fun init -> go init
 
-
 (*----------expression parsers----------*)
 
 let rec parse_arguments = fun () ->
   parens(sep_by (token_str ",") (expression_parser ())) <?> "incorrect function arguments"
+  
+and parse_arrow_func = fun () ->
+  token parse_args_names >>= fun args ->
+    token_str "=>" *>
+    token ((cur_parens (many @@ parse_stm ()) >>| fun stms -> Block stms) <|>
+    (expression_parser () >>| fun exp -> Block [Return exp])) >>| fun body ->
+      AnonFunction(args, body)
+
+and parse_anon_func = fun () ->
+  token_str "function" *> token parse_args_names >>= fun args-> 
+    (parse_block_or_stm () <* to_end_of_stm)
+    >>| fun body -> AnonFunction(args, body)
+
+and parse_func_call = fun () ->
+  lift2
+  (fun f args -> FunctionCall(f, args))
+  (choice [
+    valid_identifier >>| var;
+    parse_anon_func ();
+    parens @@ expression_parser ()
+  ])
+  (parse_arguments ())
 
 and bop_parser = function
   | a :: b -> chainl1 (bop_parser b) (op_parse a)
@@ -186,28 +206,16 @@ and pre_uop_parser = fun () ->
 and mini_expression_parser = fun () ->
   token (choice [
       parse_arrow_func ();
+      parse_func_call ();
       parens @@ expression_parser ();
-      lift2 fun_call valid_identifier (parse_arguments ());
       parse_anon_func ();
       parse_number >>| const;
       parse_str >>| const;
       valid_identifier >>| var
     ]) <?> "invalid part of expression"
 
-and parse_arrow_func = fun () ->
-  token parse_args_names >>= fun args ->
-    token_str "=>" *>
-    token ((cur_parens (many @@ parse_stm ()) >>| fun stms -> Block stms) <|>
-    (expression_parser () >>| fun exp -> Block [Return exp])) >>| fun body ->
-      AnonFunction(args, body)
-
-and parse_anon_func = fun () ->
-  token_str "function" *> token parse_args_names >>= fun args-> 
-    (parse_block_or_stm () <* to_end_of_stm)
-    >>| fun body -> AnonFunction(args, body)
-
 and expression_parser = fun () ->
-  fix(fun _ -> bop_parser list_of_bops)
+  fix(fun _ -> bop_parser list_of_bops <* empty)
   <?> "incorrect expression"
 
 (*----------statement parsers----------*)

@@ -27,7 +27,7 @@ type expression =
   | Parens of expression
   | Const of typename
   | Var of string
-  | FunctionCall of string * expression list
+  | FunctionCall of expression * expression list
   | AnonFunction of string list * statement
 [@@deriving eq, show {with_path = false}]
 
