@@ -316,10 +316,49 @@ let%expect_test _ =
   "let a = function(b1) {return b1+6;}";
   [%expect{|
     (Programm
-       [(FunDeck
-           { fun_identifier = "a"; arguments = [(Var "b1")];
-             body =
-             (Block [(Return (BinOp (Add, (Var "b1"), (Const (Number 6.)))))]) })
+       [(VarDeck
+           { var_identifier = "a"; is_const = false;
+             value =
+             (Some (AnonFunction (["b1"],
+                      (Block
+                         [(Return (BinOp (Add, (Var "b1"), (Const (Number 6.)))))
+                           ])
+                      )))
+             })
+         ]) |}]
+;;
+
+let%expect_test _ =
+  pp
+  "let a = (b1) => {return b1+6;}";
+  [%expect{|
+    (Programm
+       [(VarDeck
+           { var_identifier = "a"; is_const = false;
+             value =
+             (Some (AnonFunction (["b1"],
+                      (Block
+                         [(Return (BinOp (Add, (Var "b1"), (Const (Number 6.)))))
+                           ])
+                      )))
+             })
+         ]) |}]
+;;
+
+let%expect_test _ =
+  pp
+  "let a = (b1) => b1+6";
+  [%expect{|
+    (Programm
+       [(VarDeck
+           { var_identifier = "a"; is_const = false;
+             value =
+             (Some (AnonFunction (["b1"],
+                      (Block
+                         [(Return (BinOp (Add, (Var "b1"), (Const (Number 6.)))))
+                           ])
+                      )))
+             })
          ]) |}]
 ;;
 
@@ -361,7 +400,7 @@ let%expect_test "factorial" =
            { var_identifier = "fact"; is_const = false;
              value = (Some (Const (Number 4.))) });
          (FunDeck
-            { fun_identifier = "calculateFact"; arguments = [(Var "fact")];
+            { fun_identifier = "calculateFact"; arguments = ["fact"];
               body =
               (Block
                  [(If ((BinOp (NotEqual, (Var "fact"), (Const (Number 0.)))),
