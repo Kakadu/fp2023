@@ -1476,7 +1476,7 @@ and launch_other_operation : Ast.other_operation -&gt; (state, instr_launch_res)
    | <span data-count="2">A</span>st.Select (var, cond_tp, cond, res_tp, v1, v2) -&gt;
      Other.iselec<span data-count="2">t</span> var cond_tp cond res_tp v1 v2
    | <span data-count="105">A</span>st.Call (var, res_tp, fnc, params) -&gt; ical<span data-count="105">l</span> var res_tp fnc params)
-  *&gt; retur<span data-count="797">n</span> None
+  *&gt; retur<span data-count="797">n</span> NoRes
 
 and launch_instruction : Ast.instruction -&gt; (state, instr_launch_res) t = function
   | <span data-count="1209">A</span>st.Terminator inst -&gt; Terminator.launch_terminator_instruction inst
@@ -1498,7 +1498,7 @@ and launch_block : Ast.variable -&gt; (state, Ast.const) t =
   <span data-count="1209">m</span>atch last_instr with
   | <span data-count="1069">J</span>mp x -&gt; write_last_bloc<span data-count="1069">k</span> bb_var *&gt; launch_bloc<span data-count="1069">k</span> x
   | <span data-count="140">R</span>et x -&gt; return x
-  | <span data-count="0">N</span>one -&gt; fail "Impossible error: last instruction in block should have some result\n"
+  | <span data-count="0">N</span>oRes -&gt; fail "Impossible error: last instruction in block should have some result\n"
 
 and launch_function : Ast.func -&gt; Ast.const list -&gt; (state, Ast.const) t =
   fun fnc params_val -&gt;

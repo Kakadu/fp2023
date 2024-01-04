@@ -301,7 +301,7 @@ open Ihelp.State
 type instr_launch_res =
   | Ret of Ast.const
   | Jmp of Ast.variable
-  | None
+  | NoRes
 
 let to_ptr x = <span data-count="866">A</span>st.CPointer (Ast.PointerInt x)
 

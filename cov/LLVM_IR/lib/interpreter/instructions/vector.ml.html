@@ -191,7 +191,7 @@ let iextractelement var _vec_tp vec_val _itp ival =
 ;;
 
 let real_insert var vec_val ind new_val =
-  <span data-count="1">l</span>et new_lst = List.mapi (fun c x -&gt; <span data-count="3">i</span>f c == ind then <span data-count="1">n</span>ew_val else <span data-count="2">x</span>) vec_val in
+  <span data-count="1">l</span>et new_lst = List.mapi (fun c x -&gt; <span data-count="3">i</span>f c = ind then <span data-count="1">n</span>ew_val else <span data-count="2">x</span>) vec_val in
   <span data-count="1">w</span>rite_var var (Ast.CVector new_lst)
 ;;
 
@@ -231,7 +231,7 @@ let launch_vector_instruction : Ast.vector_instruction -&gt; (state, instr_launc
      iinsertelemen<span data-count="1">t</span> var vec_tp vec_val new_val itp ival
    | <span data-count="1">A</span>st.Shufflevector (var, vec_tp, vec1, vec2, m, vec3) -&gt;
      ishufflevecto<span data-count="1">r</span> var vec_tp vec1 vec2 m vec3)
-  *&gt; retur<span data-count="3">n</span> None
+  *&gt; retur<span data-count="3">n</span> NoRes
 ;;
 </code></pre>
       </div>

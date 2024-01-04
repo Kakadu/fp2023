@@ -224,7 +224,7 @@ let aggregate_const_by_const = function
 let single_insert new_val lst ind =
   <span data-count="3">i</span>f ind &gt;= List.lengt<span data-count="3">h</span> lst
   then <span data-count="0">f</span>ail "Runtime error: try get element outside of aggregate type"
-  else <span data-count="3">r</span>eturn (List.map<span data-count="3">i</span> (fun c x -&gt; <span data-count="7">i</span>f c == ind then <span data-count="3">n</span>ew_val else <span data-count="4">x</span>) lst)
+  else <span data-count="3">r</span>eturn (List.map<span data-count="3">i</span> (fun c x -&gt; <span data-count="7">i</span>f c = ind then <span data-count="3">n</span>ew_val else <span data-count="4">x</span>) lst)
 ;;
 
 let rec real_insert var new_val agg_const ints =
@@ -270,7 +270,7 @@ let launch_aggregate_instruction
      iextractvalu<span data-count="1">e</span> var agg_tp agg_val ints
    | <span data-count="2">A</span>st.Insertvalue (var, agg_tp, agg_val, v_tp, v, ints) -&gt;
      iinsertvalu<span data-count="2">e</span> var agg_tp agg_val v_tp v ints)
-  *&gt; retur<span data-count="3">n</span> None
+  *&gt; retur<span data-count="3">n</span> NoRes
 ;;
 </code></pre>
       </div>

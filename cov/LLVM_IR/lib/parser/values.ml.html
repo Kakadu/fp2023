@@ -564,7 +564,7 @@ and parse_const_integer size =
   <span data-count="1158">c</span>hoice
     [ (let* sign = choic<span data-count="1158">e</span> [ cha<span data-count="1158">r</span> '-' *<span data-count="1158">&gt;</span> retur<span data-count="1158">n</span> (-1L); retur<span data-count="1158">n</span> 1L ] in
        <span data-count="453">p</span>arse_integer64 &gt;&gt;| fun value -&gt; <span data-count="447">C</span>ommon.IrInts.create (Int64.mu<span data-count="447">l</span> sign value) size)
-    ; (if size == 1
+    ; (if size = 1
        then
          <span data-count="183">c</span>hoic<span data-count="183">e</span>
            [ wor<span data-count="183">d</span> "true" *<span data-count="183">&gt;</span> retur<span data-count="183">n</span> (Common.IrInts.creat<span data-count="183">e</span> 1L size)

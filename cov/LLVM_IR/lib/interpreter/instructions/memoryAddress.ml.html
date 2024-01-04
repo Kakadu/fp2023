@@ -255,7 +255,7 @@ let ialloca variable tp value align =
 let istore _tp value ptr align =
   <span data-count="691">l</span>et* value = get_const_from_valu<span data-count="691">e</span> value in
   <span data-count="691">l</span>et* ptr = get_const_from_valu<span data-count="691">e</span> ptr &gt;&gt;<span data-count="691">=</span> is_ptr in
-  (* if ptr mod align == 0
+  (* if ptr mod align = 0
      then *)
   <span data-count="691">M</span>emory.put_cnst_in_heap ptr value
 ;;
@@ -264,7 +264,7 @@ let istore _tp value ptr align =
 
 let iload var tp ptr align =
   <span data-count="2161">l</span>et* ptr = get_const_from_valu<span data-count="2161">e</span> ptr &gt;&gt;<span data-count="2161">=</span> is_ptr in
-  (* if   ptr mod align == 0
+  (* if   ptr mod align = 0
      then *)
   <span data-count="2161">l</span>et* cnst = Memory.take_cnst_from_hea<span data-count="2161">p</span> ptr tp in
   <span data-count="2161">w</span>rite_var var cnst
@@ -314,7 +314,7 @@ let igetelementptr var v_tp ptr_tp ptr ilist =
     let* ptrs = get_const_from_valu<span data-count="3">e</span> ptr &gt;&gt;<span data-count="3">=</span> is_vecto<span data-count="3">r</span> is_ptr in
     <span data-count="3">l</span>et ptr_len = List.length ptrs in
     <span data-count="3">l</span>et* vec_ind = map_lis<span data-count="3">t</span> f ilist in
-    <span data-count="3">i</span>f not (List.for_al<span data-count="3">l</span> (fun l -&gt; <span data-count="5">p</span>tr_len == List.lengt<span data-count="5">h</span> l) vec_ind)
+    <span data-count="3">i</span>f not (List.for_al<span data-count="3">l</span> (fun l -&gt; <span data-count="5">p</span>tr_len = List.lengt<span data-count="5">h</span> l) vec_ind)
     then <span data-count="1">f</span>ail "Vectors have different size in getlementptr"
     else <span data-count="2">(</span>
       let indss = transpose vec_ind in
@@ -339,7 +339,7 @@ let launch_memory_address_operation
    | <span data-count="2161">A</span>st.Load (var, tp, ptr, align) -&gt; iloa<span data-count="2161">d</span> var tp ptr align
    | <span data-count="540">A</span>st.Getelementptr (var, v_tp, ptr_tp, ptr, ilist) -&gt;
      igetelementpt<span data-count="540">r</span> var v_tp ptr_tp ptr ilist)
-  *&gt; retur<span data-count="3675">n</span> None
+  *&gt; retur<span data-count="3675">n</span> NoRes
 ;;
 </code></pre>
       </div>

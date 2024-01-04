@@ -210,7 +210,7 @@ let launch_binary_operation : Ast.binary_operation -&gt; (state, instr_launch_re
    | <span data-count="15">A</span>st.Fdiv (var, tp, v1, v2) -&gt; write_binop_re<span data-count="15">s</span> tp real_fdiv is_float v1 v2 var
    | <span data-count="0">A</span>st.Frem (var, tp, v1, v2) -&gt; write_binop_re<span data-count="0">s</span> tp real_frem is_float v1 v2 var
    | <span data-count="6">A</span>st.Fsub (var, tp, v1, v2) -&gt; write_binop_re<span data-count="6">s</span> tp real_fsub is_float v1 v2 var)
-  *&gt; retur<span data-count="577">n</span> None
+  *&gt; retur<span data-count="577">n</span> NoRes
 ;;
 </code></pre>
       </div>

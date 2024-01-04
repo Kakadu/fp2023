@@ -104,7 +104,7 @@ let launch_unary_operation : Ast.unary_operation -&gt; (state, instr_launch_res)
   fun instr -&gt;
   <span data-count="4">(</span>match instr with
    | <span data-count="4">A</span>st.Fneg (variable, tp, value) -&gt; ifne<span data-count="4">g</span> variable tp value)
-  *&gt; retur<span data-count="4">n</span> None
+  *&gt; retur<span data-count="4">n</span> NoRes
 ;;
 </code></pre>
       </div>

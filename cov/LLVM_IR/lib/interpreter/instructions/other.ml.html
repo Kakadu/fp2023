@@ -352,7 +352,7 @@ let real_icmp trans right_vals x y =
   <span data-count="642">l</span>et x = trans x in
   <span data-count="642">l</span>et y = trans y in
   <span data-count="642">l</span>et res = Int64.compare x y in
-  <span data-count="642">m</span>atch List.find_opt (fun x -&gt; <span data-count="985">x</span> == res) right_vals with
+  <span data-count="642">m</span>atch List.find_opt (fun x -&gt; <span data-count="985">x</span> = res) right_vals with
   | <span data-count="348">S</span>ome _ -&gt; Common.IrInts.create 1L 1
   | <span data-count="294">N</span>one -&gt; Common.IrInts.create 0L 1
 ;;
@@ -399,7 +399,7 @@ let parse_fcmp_mode str =
 let real_fcmp addcmp right_vals x y =
   <span data-count="2">l</span>et res = Float.compare x y in
   <span data-count="2">l</span>et b =
-    match List.find_opt (fun x -&gt; <span data-count="2">x</span> == res) right_vals with
+    match List.find_opt (fun x -&gt; <span data-count="2">x</span> = res) right_vals with
     | <span data-count="2">S</span>ome _ -&gt; true
     | <span data-count="0">N</span>one -&gt; false
   in
@@ -444,7 +444,7 @@ let iselect var cond_tp cond res_tp v1 v2 =
     match cond_tp with
     | <span data-count="1">A</span>st.TVector (n, _) -&gt;
       (match res_tp with
-       | <span data-count="1">A</span>st.TVector (m, _) when m == n -&gt;
+       | <span data-count="1">A</span>st.TVector (m, _) when m = n -&gt;
          <span data-count="1">l</span>et* v1 = is_vecto<span data-count="1">r</span> return v1 in
          <span data-count="1">l</span>et* v2 = is_vecto<span data-count="1">r</span> return v2 in
          <span data-count="1">l</span>et vvs = List.combine v1 v2 in
