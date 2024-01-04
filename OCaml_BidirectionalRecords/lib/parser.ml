@@ -12,16 +12,30 @@ let parse p s = parse_string ~consume:Consume.All p s
 
 let is_keyword = function
   | "let"
+  | "and"
+  | "end"
   | "if"
   | "then"
   | "else"
   | "fun"
   | "function"
+  | "include"
+  | "for"
   | "rec"
   | "true"
+  | "object"
+  | "of"
+  | "open"
+  | "or"
+  | "sig"
+  | "struct"
+  | "val"
   | "false"
   | "match"
+  | "module"
+  | "exception"
   | "with"
+  | "while"
   | "in"
   | "type" -> true
   | _ -> false
@@ -112,6 +126,8 @@ let precord pexpr = pstoken "type" *> varname *> pstoken "=" *> record pexpr
   lift2 (fun name field -> { name; field}) varname (precord pexpr)
 ;; *)
 
+(* TODO *)
+
 (* expressions *)
 
 let peconst = const >>| fun x -> EConst x
@@ -177,3 +193,10 @@ let pexpr =
     let expr = plet expr <|> expr in
     expr)
 ;;
+
+(* TODO
+
+   - match
+   - unary operations
+   - functions
+*)
