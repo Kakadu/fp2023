@@ -141,10 +141,10 @@ let valid_identifier =
   >>= fun name -> 
     if is_keyword name then fail "name of identifier shouldn't be a keyword" else return name
 
-let bop op first second = BinOp(op, first, second)
-
 let parse_empty_stms =
   many empty_stm
+
+let parse_args_names = parens(sep_by (token_str ",") (valid_identifier)) <?> "incorrect function arguments"
 
 (*----------unary operators----------*)
 
@@ -185,12 +185,26 @@ and pre_uop_parser = fun () ->
 
 and mini_expression_parser = fun () ->
   token (choice [
+      parse_arrow_func ();
       parens @@ expression_parser ();
       lift2 fun_call valid_identifier (parse_arguments ());
+      parse_anon_func ();
       parse_number >>| const;
       parse_str >>| const;
       valid_identifier >>| var
     ]) <?> "invalid part of expression"
+
+and parse_arrow_func = fun () ->
+  token parse_args_names >>= fun args ->
+    token_str "=>" *>
+    token ((cur_parens (many @@ parse_stm ()) >>| fun stms -> Block stms) <|>
+    (expression_parser () >>| fun exp -> Block [Return exp])) >>| fun body ->
+      AnonFunction(args, body)
+
+and parse_anon_func = fun () ->
+  token_str "function" *> token parse_args_names >>= fun args-> 
+    (parse_block_or_stm () <* to_end_of_stm)
+    >>| fun body -> AnonFunction(args, body)
 
 and expression_parser = fun () ->
   fix(fun _ -> bop_parser list_of_bops)
@@ -203,7 +217,7 @@ and parse_return = fun () ->
 
 and func_parser = fun () ->
   valid_identifier >>= fun name -> 
-    token @@ parse_arguments () >>= fun arguments -> 
+    token parse_args_names >>= fun arguments -> 
       (parse_block_or_stm () <* to_end_of_stm)
       >>| fun body -> FunDeck { 
           fun_identifier = name; 
@@ -214,22 +228,15 @@ and func_parser = fun () ->
 and var_parser (init_word: string) = 
   valid_identifier
   >>= fun identifier ->
-    token_str "=" *> (
-    (token @@ string "function" *> token (parse_arguments ()) >>= fun arguments -> 
-        (parse_block_or_stm () <* to_end_of_stm)
-        >>| fun body -> FunDeck { 
-            fun_identifier = identifier; 
-            arguments = arguments; 
-            body = body 
-          })
-    <|> (expression_parser () <* to_end_of_stm >>| some
-    <|> (to_end_of_stm *> return None) <?> "incorrect definition"
-      >>| fun expr -> VarDeck 
+    (option false (token_str "=" *> return true) >>= function
+    | true -> expression_parser () >>| some
+    | _ -> return None) <* to_end_of_stm >>| fun expr ->
+      VarDeck 
       {
         var_identifier = identifier;
         is_const = init_word = "const";
         value = expr;
-      }))
+      }
 
 and parse_block_or_stm = fun () ->
   (cur_parens (many @@ parse_stm ())

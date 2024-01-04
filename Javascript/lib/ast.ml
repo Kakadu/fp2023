@@ -28,7 +28,7 @@ type expression =
   | Const of typename
   | Var of string
   | FunctionCall of string * expression list
-  | ArrowFunction of expression list * statement
+  | AnonFunction of string list * statement
 [@@deriving eq, show {with_path = false}]
 
 and var_init =
@@ -41,7 +41,7 @@ and var_init =
 and fun_init =
 {
   fun_identifier: string;
-  arguments: expression list;
+  arguments: string list;
   body: statement
 }
 
