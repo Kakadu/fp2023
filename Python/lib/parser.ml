@@ -17,7 +17,6 @@ type pseudo_statement =
   | IfElse of expression * pseudo_statement list * pseudo_statement list
   | Else of pseudo_statement list
   | While of expression * pseudo_statement list
-  | For of expression * expression list * pseudo_statement list
   | Class of identifier * pseudo_statement list
   | Return of expression
   | ParsingError
@@ -43,9 +42,6 @@ let rec convert_pseudoast_to_ast : pseudo_statement -> statement t = function
   | Class (exp, body) ->
     let* newBody = map1 (fun x -> convert_pseudoast_to_ast x) body in
     return @@ Ast.Class (exp, newBody)
-  | For (exp1, exp2, body) ->
-    let* newBody = map1 (fun x -> convert_pseudoast_to_ast x) body in
-    return @@ Ast.For (exp1, exp2, newBody)
   | While (exp, body) ->
     let* newBody = map1 (fun x -> convert_pseudoast_to_ast x) body in
     return @@ Ast.While (exp, newBody)
@@ -165,7 +161,6 @@ let t_add = token "+"
 let t_if = token "if"
 let t_else = token "else"
 let t_while = token "while"
-let t_for = token "for"
 let t_in = token "in"
 let t_range = token "range"
 let t_and = token "and"
@@ -287,12 +282,6 @@ let p_while expr columns =
   return (SpecialStatementWithColumns (columns, While (guard, [])))
 ;;
 
-let p_for e columns =
-  let* iterator = t_for *> p_global_variable in
-  let* range = t_in *> t_range *> round_brackets (sep_by t_comma e) <* t_column in
-  return (SpecialStatementWithColumns (columns, For (iterator, range, [])))
-;;
-
 let p_class columns =
   let* identifier = t_class *> p_identifier <* t_column in
   return (SpecialStatementWithColumns (columns, Class (identifier, [])))
@@ -408,7 +397,6 @@ let p_exp_or_stmt =
       p_assign (p_expression exp_or_stmt) columns
       <|> p_if (p_expression exp_or_stmt) columns
       <|> p_while (p_expression exp_or_stmt) columns
-      <|> p_for (p_expression exp_or_stmt) columns
       <|> p_func columns
       <|> p_return (p_expression exp_or_stmt) columns
       <|> p_class columns
@@ -421,7 +409,6 @@ let p_exp_or_stmt =
 let extract_body = function
   | Else body -> body
   | IfElse (_, body, _) -> body
-  | For (_, _, body) -> body
   | Function (_, _, body) -> body
   | Class (_, body) -> body
   | While (_, body) -> body
@@ -431,7 +418,6 @@ let extract_body = function
 let insert_body body = function
   | Else _ -> Else body
   | IfElse (exp, _, else_body) -> IfElse (exp, body, else_body)
-  | For (exp1, exp2, _) -> For (exp1, exp2, body)
   | Function (identifier, params, _) -> Function (identifier, params, body)
   | Class (exp, _) -> Class (exp, body)
   | While (exp, _) -> While (exp, body)
@@ -738,21 +724,6 @@ let%expect_test _ =
        (BoolOp (Greater, (Variable (Global, (Identifier "x"))), (Const (Int 0)))),
        [(Assign ((Variable (Global, (Identifier "y"))), (Const (Int 2))))],
        [(Assign ((Variable (Global, (Identifier "y"))), (Const (Int 1))))])) |}]
-;;
-
-let%expect_test _ =
-  parser_tester pyParser show_statement {|
-for i in range(0, 3):
-    print(i) |};
-  [%expect
-    {|
-    (For ((Variable (Global, (Identifier "i"))),
-       [(Const (Int 0)); (Const (Int 3))],
-       [(Expression
-           (FunctionCall ((Identifier "print"),
-              [(Variable (Global, (Identifier "i")))])))
-         ]
-       )) |}]
 ;;
 
 let%expect_test _ =

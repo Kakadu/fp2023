@@ -56,7 +56,6 @@ type expression =
   | Field of identifier * identifier
   | MethodCall of identifier * identifier * expression list
   | Lambda of identifier list * expression
-  | Object of identifier * expression list
   | FString of f_string_type list
 [@@deriving show { with_path = false }]
 
@@ -68,7 +67,6 @@ type statement =
   | IfElse of expression * statement list * statement list
   | Else of statement list
   | While of expression * statement list
-  | For of expression * expression list * statement list
   | Class of identifier * statement list
   | Return of expression
 [@@deriving show { with_path = false }]

@@ -240,6 +240,12 @@ module Eval (M : MONADERROR) = struct
         (match a, b with
          | Int a1, Int b1 -> return (Int (a1 * b1))
          | _ -> error "unexpected type")
+      | ArithOp (Mod, a, b) ->
+        let* a = i_expr exp_or_stmt env a in
+        let* b = i_expr exp_or_stmt env b in
+        (match a, b with
+         | Int a1, Int b1 -> return (Int (a1 mod b1))
+         | _ -> error "unexpected type")
       | BoolOp (Equal, a, b) ->
         let* a = i_expr exp_or_stmt env a in
         let* b = i_expr exp_or_stmt env b in
@@ -340,7 +346,8 @@ module Eval (M : MONADERROR) = struct
             fStringList
         in
         i_expr exp_or_stmt env (Const (String (String.concat "" strList)))
-      | _ -> error "Interpretation error"
+      | Lambda _ -> return Nil
+      | Field (classId, fieldId) -> return (get_var fieldId (get_class classId env)).value
     in
     let rec i_stmt (i_exp_or_stmt : dispatch) (env : environment) = function
       | Expression exp ->
@@ -403,7 +410,7 @@ module Eval (M : MONADERROR) = struct
       | Function (i, some_params, some_body) ->
         let new_func_env = { identifier = i; params = some_params; body = some_body } in
         return (change_or_add_func new_func_env env)
-      | _ -> error "Interpretation error"
+      | Else _ -> error "loose else statement"
     in
     { i_expr; i_stmt }
   ;;

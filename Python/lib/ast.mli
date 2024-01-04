@@ -67,7 +67,6 @@ type expression =
   | MethodCall of identifier * identifier * expression list
   (** A method call class.method() *)
   | Lambda of identifier list * expression (** Anonymous function *)
-  | Object of identifier * expression list (** Instance of a class *)
   | FString of f_string_type list (** F string *)
 
 val pp_expression : Format.formatter -> expression -> unit
@@ -82,8 +81,6 @@ type statement =
   (** If else statemtn with a guard both if and else body *)
   | Else of statement list (** Else statemtn with its body *)
   | While of expression * statement list (** Else statemtn with a guard and its body *)
-  | For of expression * expression list * statement list
-  (** Else statemtn with a guards and its body *)
   | Class of identifier * statement list (** Class with its identifier and contents *)
   | Return of expression (** Return statement *)
 
