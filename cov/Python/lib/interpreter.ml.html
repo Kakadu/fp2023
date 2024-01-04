@@ -1115,7 +1115,7 @@ module Eval (M : MONADERROR) = struct
   let i_exp_or_stmt =
     let rec i_expr (exp_or_stmt : dispatch) (env : environment) exp =
       <span data-count="201">l</span>et rec apply env body =
-        <span data-count="42">i</span>f env.flag == Return_f
+        <span data-count="42">i</span>f env.flag = Return_f
         then <span data-count="21">r</span>eturn env.return_v
         else <span data-count="21">(</span>
           match body with
