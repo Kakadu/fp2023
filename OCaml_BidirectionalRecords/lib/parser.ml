@@ -135,7 +135,7 @@ let pevar = tvar >>| fun x -> EVar x
 let peapp e = chainl1 e (return (fun e1 e2 -> EApp (e1, e2)))
 
 let petuple pexpr =
-  lift2 List.cons pexpr (many1 (pstoken "," *> pexpr)) >>| fun x -> ETuple x
+  pparens (lift2 List.cons pexpr (many1 (pstoken "," *> pexpr)) >>| fun x -> ETuple x)
 ;;
 
 let plist pexpr = psqparens (sep_by (pstoken ";") pexpr >>| fun x -> EList x)
