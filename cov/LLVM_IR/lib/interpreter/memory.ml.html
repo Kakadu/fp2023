@@ -150,7 +150,7 @@ open State
 
 let align_addr addr align isUp =
   <span data-count="366">l</span>et res = addr / align * align in
-  if res != addr then <span data-count="53">i</span>f isUp then <span data-count="8">r</span>es + align else <span data-count="45">r</span>es else <span data-count="313">r</span>es
+  if res &lt;&gt; addr then <span data-count="53">i</span>f isUp then <span data-count="8">r</span>es + align else <span data-count="45">r</span>es else <span data-count="313">r</span>es
 ;;
 
 let put_bytes_in_heap : int -&gt; char list -&gt; (state, unit) t =

@@ -184,7 +184,7 @@ let write_conversion_res operat is_elem s_tp_decon d_tp_decon s_tp s_val d_tp va
   <span data-count="890">l</span>et* res =
     match s_tp, d_tp with
     | <span data-count="2">A</span>st.TVector (n1, s_el_tp), Ast.TVector (n2, d_el_tp) -&gt;
-      if n1 != n2
+      if n1 &lt;&gt; n2
       then <span data-count="1">f</span>ai<span data-count="1">l</span> "Source vector and destination have different size"
       else <span data-count="1">v</span>ectorize<span data-count="1">1</span> (opera<span data-count="1">t</span> (s_tp_deco<span data-count="1">n</span> s_el_tp) (d_tp_deco<span data-count="1">n</span> d_el_tp)) is_elem s_val
     | <span data-count="888">_</span> -&gt;
