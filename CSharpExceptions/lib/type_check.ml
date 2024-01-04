@@ -95,7 +95,7 @@ type t_env_value =
 [@@deriving show { with_path = false }]
 
 type t_loc_env = t_env_value IdentMap.t
-type type_check_ctx = text * t_loc_env * meth_type
+type type_check_ctx = text * t_loc_env * meth_type option
 
 type type_ =
   | Mtype_ of meth_type
@@ -129,81 +129,8 @@ module Type_checker = struct
 
   let save : ctx_env -> unit tt = fun new_ctx _ -> new_ctx, Result.ok ()
 
-  let save_local : t_loc_env -> unit tt =
-    fun l_env c_env ->
-    match c_env with
-    | code, _, tp -> (code, l_env, tp), Result.ok ()
-  ;;
-
-  let save_local_el : ident -> t_env_value -> unit tt =
-    fun id t_val c_env ->
-    match c_env with
-    | _, local_env, _ ->
-      let new_l = IdentMap.add id t_val local_env in
-      save_local new_l c_env
-  ;;
-
-  let save_global : text -> unit tt =
-    fun g_env c_env ->
-    match c_env with
-    | _, local_env, tp -> (g_env, local_env, tp), Result.ok ()
-  ;;
-
-  let save_global_el : code_ident -> code_ctx -> unit tt =
-    fun id ctx c_env ->
-    match c_env with
-    | code, _, _ ->
-      let new_l = CodeMap.add id ctx code in
-      save_global new_l c_env
-  ;;
-
-  let save_scope_tp : meth_type -> unit tt =
-    fun new_scope_tp st ->
-    match st with
-    | code, local_env, _ -> (code, local_env, new_scope_tp), Result.ok ()
-  ;;
-
-  let read : ctx_env tt = fun st -> (return st) st
-
-  let read_local : ident -> t_env_value tt =
-    fun id c_env ->
-    match c_env with
-    | _, local_env, _ ->
-      (match IdentMap.find_opt id local_env with
-       | Some x -> return x c_env
-       | None -> fail (Not_find_ident id) c_env)
-  ;;
-
-  let read_local_opt : ident -> t_env_value option tt =
-    fun id c_env ->
-    match c_env with
-    | _, local_env, _ ->
-      (match IdentMap.find_opt id local_env with
-       | Some x -> return (Some x) c_env
-       | None -> return None c_env)
-  ;;
-
-  let read_global : code_ident -> code_ctx tt =
-    fun id c_env ->
-    let id_ =
-      match id with
-      | Code_ident x -> x
-    in
-    match c_env with
-    | code, _, _ ->
-      (match CodeMap.find_opt id code with
-       | Some x -> return x c_env
-       | None -> fail (Not_find_ident id_) c_env)
-  ;;
-
-  let read_scope_tp : meth_type tt =
-    fun st ->
-    match st with
-    | _, _, scope_tp -> (return scope_tp) st
-  ;;
-
-  let run : 'a tt -> meth_type -> ctx_env * ('a, error) Result.t =
-    fun f m_tp -> f (CodeMap.empty, IdentMap.empty, m_tp)
+  let run : 'a tt -> ctx_env * ('a, error) Result.t =
+    fun f -> f (CodeMap.empty, IdentMap.empty, None)
   ;;
 
   let continue : 'a tt -> ctx_env -> ctx_env * ('a, error) Result.t =
@@ -260,6 +187,78 @@ module Type_checker = struct
     fun custom_f mlst ->
     let f acc cur = acc >>= fun _ -> custom_f cur >>= fun _ -> return () in
     List.fold_left f (return ()) mlst
+  ;;
+
+  let save_local : t_loc_env -> unit tt =
+    fun l_env c_env ->
+    match c_env with
+    | code, _, tp -> (code, l_env, tp), Result.ok ()
+  ;;
+
+  let save_local_el : ident -> t_env_value -> unit tt =
+    fun id t_val c_env ->
+    match c_env with
+    | _, local_env, _ ->
+      let new_l = IdentMap.add id t_val local_env in
+      save_local new_l c_env
+  ;;
+
+  let save_global : text -> unit tt =
+    fun g_env c_env ->
+    match c_env with
+    | _, local_env, tp -> (g_env, local_env, tp), Result.ok ()
+  ;;
+
+  let save_global_el : code_ident -> code_ctx -> unit tt =
+    fun id ctx c_env ->
+    match c_env with
+    | code, _, _ ->
+      let new_l = CodeMap.add id ctx code in
+      save_global new_l c_env
+  ;;
+
+  let save_scope_tp : meth_type option -> unit tt =
+    fun new_scope_tp st ->
+    match st with
+    | code, local_env, _ -> (code, local_env, new_scope_tp), Result.ok ()
+  ;;
+
+  let read : ctx_env tt = fun st -> (return st) st
+
+  let read_local : ident -> t_env_value tt =
+    fun id c_env ->
+    match c_env with
+    | _, local_env, _ ->
+      (match IdentMap.find_opt id local_env with
+       | Some x -> return x c_env
+       | None -> fail (Not_find_ident id) c_env)
+  ;;
+
+  let read_local_opt : ident -> t_env_value option tt =
+    fun id c_env -> (read_local id >>| (fun x -> Some x) <|> return None) c_env
+  ;;
+
+  let read_global : code_ident -> code_ctx tt =
+    fun id c_env ->
+    let id_ =
+      match id with
+      | Code_ident x -> x
+    in
+    match c_env with
+    | code, _, _ ->
+      (match CodeMap.find_opt id code with
+       | Some x -> return x c_env
+       | None -> fail (Not_find_ident id_) c_env)
+  ;;
+
+  let read_global_opt : code_ident -> code_ctx option tt =
+    fun id c_env -> (read_global id >>| (fun x -> Some x) <|> return None) c_env
+  ;;
+
+  let read_scope_tp : meth_type option tt =
+    fun st ->
+    match st with
+    | _, _, scope_tp -> (return scope_tp) st
   ;;
 end
 
@@ -582,8 +581,8 @@ let return_check e_opt =
   read_scope_tp
   >>= fun tp ->
   match e_opt, tp with
-  | None, Void -> return TP_Ok
-  | Some e, TReturn r -> var_exp_check e (Value_sig (TVar r))
+  | None, Some Void -> return TP_Ok
+  | Some e, Some (TReturn r) -> var_exp_check e (Value_sig (TVar r))
   | _ -> fail Type_mismatch
 ;;
 
@@ -605,14 +604,25 @@ let throw_check env_obj =
   get_class_id >>= is_exception_
 ;;
 
-let add_local_decl id tp =
+let add_local id tp =
   let is_exist = read_local_opt id in
   is_exist
   >>= function
-  | None -> save_local_el id tp *> return TP_Ok
+  | None -> save_local_el id tp
   | Some _ -> fail (Double_definition_of id)
 ;;
 
+let add_global id tp =
+  let is_exist = read_global_opt id in
+  is_exist
+  >>= function
+  | None -> save_global_el id tp
+  | Some _ ->
+    let (Code_ident id) = id in
+    fail (Double_definition_of id)
+;;
+
+let add_local_decl id tp = add_local id tp *> return TP_Ok
 let cond_check_ e = base_type_eq2 (check_expr e) (Some env_bool) (Some env_bool_null)
 
 let if_else_check e st st_opt st_check =
@@ -686,15 +696,70 @@ let check_statement stat =
       (match e_opt with
        | Some e -> var_exp_check e tp *> add
        | None -> add)
-    | SIf_else (e, s, st1) -> local_scope (if_else_check e s st1 helper)
-    | SWhile (e, s) -> local_scope (cond_check_ e *> helper s)
+    | SIf_else (e, s, st1) -> local_scope @@ if_else_check e s st1 helper
+    | SWhile (e, s) -> local_scope @@ (cond_check_ e *> helper s)
     | SFor { f_init_p; f_cond_p; f_iter_p; f_body } ->
-      local_scope (for_check f_init_p f_cond_p f_iter_p f_body helper)
+      local_scope @@ for_check f_init_p f_cond_p f_iter_p f_body helper
     | STry_catch_fin { try_s; catch_s; finally_s } ->
       try_catch_fin_check try_s catch_s finally_s helper
   in
   helper stat
 ;;
+
+let memb_check = function
+  | Fild (sign, e_opt) ->
+    (match e_opt with
+     | Some e -> var_exp_check e (Fild_sig sign)
+     | None -> return TP_Ok)
+  | Method ({ m_modif = _; m_type; _ }, s) ->
+    local_scope @@ (save_scope_tp (Some m_type) *> check_statement s)
+  | Main (m_type, s) -> local_scope @@ (save_scope_tp (Some m_type) *> check_statement s)
+  | Constructor ({ con_modif = _; con_id; _ }, s) ->
+    let cons_tp = TReturn (TNullable (TClass con_id)) in
+    local_scope @@ (save_scope_tp (Some cons_tp) *> check_statement s)
+;;
+
+let class_check cl_decl =
+  let { cl_modif = _; cl_id; parent; cl_mems } = cl_decl in
+  let add_class =
+    match parent with
+    | Some id when equal_ident id (Id "Exception") ->
+      add_global (Code_ident cl_id) (Exception_ctx cl_decl)
+    | None -> add_global (Code_ident cl_id) (Class_ctx cl_decl)
+    | _ ->
+      fail
+        (Other_error
+           "Only rudimentary class inheritance is supported from Exception class\n")
+  in
+  let f = function
+    | Fild _ | Main _ | Method _ -> return ()
+    | Constructor (sign, _) ->
+      let { con_modif = _; con_id; _ } = sign in
+      (match equal_ident con_id cl_id with
+       | true -> add_local con_id (Constructor_sig sign)
+       | false -> fail (Other_error "The constructor name must match the class name\n"))
+  in
+  let add_constructor = iter_left f cl_mems in
+  let g = function
+    | Main _ | Constructor _ -> return ()
+    | Fild (sign, _) ->
+      let { f_modif = _; f_type = _; f_id } = sign in
+      add_local f_id (Fild_sig sign)
+    | Method (sign, _) ->
+      let { m_modif = _; m_type = _; m_id; _ } = sign in
+      add_local m_id (Metod_sig sign)
+  in
+  let add_members = iter_left g cl_mems in
+  let helper el = memb_check el *> return () in
+  add_class
+  *> add_constructor
+  *> (local_scope @@ (add_members *> iter_left helper cl_mems))
+;;
+
+let type_check ast = 
+  let (Ast ast) = ast in
+  let helper = iter_left class_check ast in
+  run helper
 
 (* TODO: Переписать тесты, а то какаду ругаться будет( *)
 
@@ -704,8 +769,8 @@ let show_wrap form = function
   | Result.Error _ -> Format.print_string "Type check error\n"
 ;;
 
-let expr_show_wrap h m_tp =
-  let _, ans = run (check_expr h) m_tp in
+let expr_show_wrap h =
+  let _, ans = run (check_expr h) in
   show_wrap pp_t_env_value ans
 ;;
 
@@ -843,16 +908,16 @@ let ctx : type_check_ctx =
       local
   in
   let local = IdentMap.add (Id "str") (Value_sig (TVar (TNullable TString))) local in
-  global, local, tp
+  global, local, None
 ;;
 
 let%expect_test _ =
-  expr_show_wrap (EBin_op (Plus, EConst (VInt 3), EConst (VInt 2))) tp;
+  expr_show_wrap (EBin_op (Plus, EConst (VInt 3), EConst (VInt 2)));
   [%expect {| (Value_sig (TVar (TNot_Nullable TInt))) |}]
 ;;
 
 let%expect_test _ =
-  expr_show_wrap (EConst (VChar 'a')) tp;
+  expr_show_wrap (EConst (VChar 'a'));
   [%expect {| (Value_sig (TVar (TNot_Nullable TChar))) |}]
 ;;
 
