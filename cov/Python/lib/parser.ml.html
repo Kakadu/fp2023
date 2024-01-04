@@ -1803,7 +1803,7 @@ let is_banned = function
 (* Checkers *)
 let is_digit = function
   | <span data-count="130">'</span>0' .. '9' -&gt; true
-  | <span data-count="85">_</span> -&gt; false
+  | <span data-count="86">_</span> -&gt; false
 ;;
 
 let is_space = function
@@ -1818,7 +1818,7 @@ let is_sign = function
 
 let is_valid_first_char = function
   | <span data-count="256">'</span>a' .. 'z' | <span data-count="9">'</span>A' .. 'Z' -&gt; true
-  | <span data-count="103">_</span> -&gt; false
+  | <span data-count="104">_</span> -&gt; false
 ;;
 
 let is_eol = function
@@ -1828,7 +1828,7 @@ let is_eol = function
 
 let is_whitespace = function
   | <span data-count="651">'</span> ' -&gt; true
-  | <span data-count="2451">_</span> -&gt; false
+  | <span data-count="2466">_</span> -&gt; false
 ;;
 
 let is_stmt_sep = function
@@ -1848,7 +1848,7 @@ let is_quotes = function
 
 let is_whitespace_or_eol = function
   | <span data-count="64">'</span> ' | <span data-count="0">'</span>\n' -&gt; true
-  | <span data-count="142">_</span> -&gt; false
+  | <span data-count="143">_</span> -&gt; false
 ;;
 
 let is_curlyLeft = function
@@ -1862,14 +1862,14 @@ let is_curlyRight = function
 ;;
 
 let chainl1 e op =
-  <span data-count="228">l</span>et rec go acc = <span data-count="495">l</span>ift<span data-count="495">2</span> (fun f x -&gt; <span data-count="40">f</span> acc x) op e &gt;&gt;<span data-count="495">=</span> go &lt;|&gt; retur<span data-count="495">n</span> acc in
-  e &gt;&gt;= fun init -&gt; <span data-count="455">g</span>o init
+  <span data-count="228">l</span>et rec go acc = <span data-count="499">l</span>ift<span data-count="499">2</span> (fun f x -&gt; <span data-count="40">f</span> acc x) op e &gt;&gt;<span data-count="499">=</span> go &lt;|&gt; retur<span data-count="499">n</span> acc in
+  e &gt;&gt;= fun init -&gt; <span data-count="459">g</span>o init
 ;;
 
 (* Skippers *)
 let skip_whitespace = skip_whil<span data-count="11">e</span> is_whitespace
-let between t1 t2 e1 = <span data-count="73">t</span>1 *<span data-count="73">&gt;</span> skip_whitespace *<span data-count="73">&gt;</span> e1 &lt;<span data-count="73">*</span> skip_whitespace &lt;* t2
-let round_brackets e1 = <span data-count="72">b</span>etween (strin<span data-count="72">g</span> "(") (strin<span data-count="72">g</span> ")") e1
+let between t1 t2 e1 = <span data-count="74">t</span>1 *<span data-count="74">&gt;</span> skip_whitespace *<span data-count="74">&gt;</span> e1 &lt;<span data-count="74">*</span> skip_whitespace &lt;* t2
+let round_brackets e1 = <span data-count="73">b</span>etween (strin<span data-count="73">g</span> "(") (strin<span data-count="73">g</span> ")") e1
 let square_brackets e1 = <span data-count="1">b</span>etween (strin<span data-count="1">g</span> "[") (strin<span data-count="1">g</span> "]") e1
 let skip_stmt_sep = skip_whil<span data-count="11">e</span> is_stmt_sep
 (* Takers*)
@@ -2111,8 +2111,8 @@ let p_exp_or_stmt =
       <span data-count="57">l</span>et expression_list = sep_by t_comma p_expression in
       <span data-count="57">l</span>et exp =
         let* ch1 = take_whil<span data-count="57">e</span> is_whitespace_or_eol *<span data-count="57">&gt;</span> peek_char_fail in
-        <span data-count="139">m</span>atch ch1 with
-        | <span data-count="139">x</span> when is_valid_first_cha<span data-count="139">r</span> x -&gt;
+        <span data-count="140">m</span>atch ch1 with
+        | <span data-count="140">x</span> when is_valid_first_cha<span data-count="140">r</span> x -&gt;
           <span data-count="52">c</span>hoice
             [ p_class_variable
             ; p_func_cal<span data-count="52">l</span> expression_list
@@ -2122,10 +2122,10 @@ let p_exp_or_stmt =
             ; p_global_variable
             ; anon_fun<span data-count="52">c</span> p_expression
             ]
-        | <span data-count="87">x</span> when is_digi<span data-count="87">t</span> x -&gt; <span data-count="63">p</span>_integer
+        | <span data-count="88">x</span> when is_digi<span data-count="88">t</span> x -&gt; <span data-count="63">p</span>_integer
         | <span data-count="3">'</span>\"' -&gt; p_string
         | <span data-count="1">'</span>[' -&gt; p_list p_expression
-        | <span data-count="17">'</span>(' -&gt; round_brackets p_expression
+        | <span data-count="18">'</span>(' -&gt; round_brackets p_expression
         | <span data-count="3">_</span> -&gt; fail "unsupported expression"
       in
       List.fold_left

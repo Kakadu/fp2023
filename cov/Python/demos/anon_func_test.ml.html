@@ -53,7 +53,7 @@ open Python_Lib.Interpreter
 open Eval (Result)
 
 let anon =
-  let res = parser "Successor = lambda x : x + 1\nprint(Successor(0))" in
+  let res = parser "Successor = lambda x : (x + 1)\nprint(Successor(0))" in
   <span data-count="1">m</span>atch res with
   | <span data-count="1">O</span>k v -&gt; interpre<span data-count="1">t</span> v
   | <span data-count="0">E</span>rror v -&gt; Error v
