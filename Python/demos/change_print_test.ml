@@ -2,12 +2,6 @@ open Python_Lib.Parser
 open Python_Lib.Interpreter
 open Eval (Result)
 
-let unpacker (Ok x) = x
-
-let env =
-  unpacker (interpret (unpacker (parser "\ndef print():\n    return 1\ntest = print()")))
-;;
-
 let res =
   let rec print_vars = function
     | [] -> ()
@@ -19,7 +13,14 @@ let res =
          print_string v;
          print_string " ";
          print_vars remaining_vars
-       | Error e -> print_string "Test change failed")
+       | Error _ -> print_string "Test change failed")
   in
-  print_vars env.vars
+  let stmts = parser "\ndef print():\n    return 1\ntest = print()" in
+  match stmts with
+  | Ok ast ->
+    let env = interpret ast in
+    (match env with
+     | Ok env -> print_vars env.vars
+     | Error _ -> print_string "change print func test failed")
+  | Error _ -> print_string "change print func test failed"
 ;;

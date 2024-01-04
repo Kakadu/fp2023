@@ -2,20 +2,7 @@ open Python_Lib.Parser
 open Python_Lib.Interpreter
 open Eval (Result)
 
-let unpacker (Ok x) = x
-
 let res =
-  let env =
-    unpacker
-      (interpret
-         (unpacker
-            (parser
-               "class MyClass:\n\
-                \tdef method1(x):\n\
-                \t\treturn 3\n\
-                \tdef method2():\n\
-                \t\treturn 2")))
-  in
   let rec print_classes : environment list -> unit = function
     | [] -> ()
     | classs :: remaining_classes ->
@@ -23,5 +10,15 @@ let res =
       print_string " ";
       print_classes remaining_classes
   in
-  print_classes env.classes
+  let stmts =
+    parser
+      "class MyClass:\n\tdef method1(x):\n\t\treturn 3\n\tdef method2():\n\t\treturn 2"
+  in
+  match stmts with
+  | Ok ast ->
+    let env = interpret ast in
+    (match env with
+     | Ok env -> print_classes env.classes
+     | Error _ -> print_string "change print func test failed")
+  | Error _ -> print_string "change print func test failed"
 ;;
