@@ -180,3 +180,48 @@ let%expect_test _ =
                   (ExprLit (LitBool false)))),
                (ExprVar "false"), (ExprVar "true"))))))) |}]
 ;;
+
+let%expect_test _ =
+  ptest pdecl pp_decl {|x = if True then 45 else 70 + 60|};
+  [%expect
+    {|
+    (DeclLet
+       ((PatVar "x"),
+        (ExprIf ((ExprLit (LitBool true)), (ExprLit (LitInt 45)),
+           (ExprBinOp (Add, (ExprLit (LitInt 70)), (ExprLit (LitInt 60)))))))) |}]
+;;
+
+let%expect_test _ =
+  ptest pdecl pp_decl {|f [] = 2 + 2|};
+  [%expect
+    {|
+    (DeclLet
+       ((PatVar "f"),
+        (ExprFunc
+           (PatNil, (ExprBinOp (Add, (ExprLit (LitInt 2)), (ExprLit (LitInt 2)))))))) |}]
+;;
+
+let%expect_test _ =
+  ptest ppat pp_pat {|[1,2,x]|};
+  [%expect
+    {|
+    (PatCons ((PatLit (LitInt 1)),
+       (PatCons ((PatLit (LitInt 2)), (PatCons ((PatVar "x"), PatNil)))))) |}]
+;;
+
+let%expect_test _ =
+  ptest ppat pp_pat {|(x:xs:xsw)|};
+  [%expect
+    {|
+    (PatCons ((PatVar "x"), (PatCons ((PatVar "xs"), (PatVar "xsw"))))) |}]
+;;
+
+
+let%expect_test _ =
+  ptest ppat pp_pat {|(x, y)|};
+  [%expect
+    {|
+    (PatTuple [(PatVar "x"); (PatVar "y")]) |}]
+;;
+
+
