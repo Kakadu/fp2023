@@ -350,8 +350,8 @@ let%expect_test _ =
   [%expect{|
     (Programm
        [(VarDeck
-           { var_identifier = "a"; is_const = false;
-             value = (Some (Const (Number 6.))) })
+           { var_identifier = "a"; is_const = false; value = (Const (Number 6.))
+             })
          ]) |}]
 ;;
 
@@ -361,8 +361,8 @@ let%expect_test _ =
   [%expect{|
     (Programm
        [(VarDeck
-           { var_identifier = "a"; is_const = false;
-             value = (Some (Const (Number 6.))) })
+           { var_identifier = "a"; is_const = false; value = (Const (Number 6.))
+             })
          ]) |}]
 ;;
 
@@ -372,8 +372,7 @@ let%expect_test _ =
   [%expect{|
     (Programm
        [(VarDeck
-           { var_identifier = "a"; is_const = true;
-             value = (Some (Const (Number 6.))) })
+           { var_identifier = "a"; is_const = true; value = (Const (Number 6.)) })
          ]) |}]
 ;;
 
@@ -385,11 +384,9 @@ let%expect_test _ =
        [(VarDeck
            { var_identifier = "a"; is_const = false;
              value =
-             (Some (AnonFunction (["b1"],
-                      (Block
-                         [(Return (BinOp (Add, (Var "b1"), (Const (Number 6.)))))
-                           ])
-                      )))
+             (AnonFunction (["b1"],
+                (Block [(Return (BinOp (Add, (Var "b1"), (Const (Number 6.)))))])
+                ))
              })
          ]) |}]
 ;;
@@ -402,11 +399,9 @@ let%expect_test _ =
        [(VarDeck
            { var_identifier = "a"; is_const = false;
              value =
-             (Some (AnonFunction (["b1"],
-                      (Block
-                         [(Return (BinOp (Add, (Var "b1"), (Const (Number 6.)))))
-                           ])
-                      )))
+             (AnonFunction (["b1"],
+                (Block [(Return (BinOp (Add, (Var "b1"), (Const (Number 6.)))))])
+                ))
              })
          ]) |}]
 ;;
@@ -419,11 +414,9 @@ let%expect_test _ =
        [(VarDeck
            { var_identifier = "a"; is_const = false;
              value =
-             (Some (AnonFunction (["b1"],
-                      (Block
-                         [(Return (BinOp (Add, (Var "b1"), (Const (Number 6.)))))
-                           ])
-                      )))
+             (AnonFunction (["b1"],
+                (Block [(Return (BinOp (Add, (Var "b1"), (Const (Number 6.)))))])
+                ))
              })
          ]) |}]
 ;;
@@ -436,14 +429,12 @@ let%expect_test _ =
        [(VarDeck
            { var_identifier = "a"; is_const = false;
              value =
-             (Some (FunctionCall (
-                      (AnonFunction (["b1"],
-                         (Block
-                            [(Return
-                                (BinOp (Add, (Var "b1"), (Const (Number 6.)))))
-                              ])
-                         )),
-                      [(Const (Number 4.))])))
+             (FunctionCall (
+                (AnonFunction (["b1"],
+                   (Block
+                      [(Return (BinOp (Add, (Var "b1"), (Const (Number 6.)))))])
+                   )),
+                [(Const (Number 4.))]))
              })
          ]) |}]
 ;;
@@ -456,14 +447,12 @@ let%expect_test _ =
        [(VarDeck
            { var_identifier = "a"; is_const = false;
              value =
-             (Some (FunctionCall (
-                      (AnonFunction (["b1"],
-                         (Block
-                            [(Return
-                                (BinOp (Add, (Var "b1"), (Const (Number 6.)))))
-                              ])
-                         )),
-                      [(Const (Number 4.))])))
+             (FunctionCall (
+                (AnonFunction (["b1"],
+                   (Block
+                      [(Return (BinOp (Add, (Var "b1"), (Const (Number 6.)))))])
+                   )),
+                [(Const (Number 4.))]))
              })
          ]) |}]
 ;;
@@ -476,14 +465,12 @@ let%expect_test _ =
        [(VarDeck
            { var_identifier = "a"; is_const = false;
              value =
-             (Some (FunctionCall (
-                      (AnonFunction (["b1"],
-                         (Block
-                            [(Return
-                                (BinOp (Add, (Var "b1"), (Const (Number 6.)))))
-                              ])
-                         )),
-                      [(Const (Number 4.))])))
+             (FunctionCall (
+                (AnonFunction (["b1"],
+                   (Block
+                      [(Return (BinOp (Add, (Var "b1"), (Const (Number 6.)))))])
+                   )),
+                [(Const (Number 4.))]))
              })
          ]) |}]
 ;;
@@ -496,16 +483,15 @@ let%expect_test _ =
        [(VarDeck
            { var_identifier = "a"; is_const = false;
              value =
-             (Some (BinOp (Add,
-                      (FunctionCall (
-                         (AnonFunction (["b1"],
-                            (Block
-                               [(Return
-                                   (BinOp (Add, (Var "b1"), (Const (Number 6.)))))
-                                 ])
-                            )),
-                         [(Const (Number 4.))])),
-                      (Const (Number 5.)))))
+             (BinOp (Add,
+                (FunctionCall (
+                   (AnonFunction (["b1"],
+                      (Block
+                         [(Return (BinOp (Add, (Var "b1"), (Const (Number 6.)))))
+                           ])
+                      )),
+                   [(Const (Number 4.))])),
+                (Const (Number 5.))))
              })
          ]) |}]
 ;;
@@ -519,15 +505,13 @@ let%expect_test "if1" =
            (Block
               [(VarDeck
                   { var_identifier = "a"; is_const = false;
-                    value = (Some (BinOp (Add, (Var "b"), (Const (Number 6.)))))
-                    })
+                    value = (BinOp (Add, (Var "b"), (Const (Number 6.)))) })
                 ]),
            (Block
               [(VarDeck
                   { var_identifier = "b"; is_const = false;
                     value =
-                    (Some (BinOp (Add, (Const (Number 6.)), (Const (Number 7.)))))
-                    })
+                    (BinOp (Add, (Const (Number 6.)), (Const (Number 7.)))) })
                 ])
            ))
          ])|}]
@@ -552,7 +536,10 @@ let%expect_test "if1" =
   [%expect{|
     (Programm
        [(Block
-           [(VarDeck { var_identifier = "x"; is_const = false; value = None })])
+           [(VarDeck
+               { var_identifier = "x"; is_const = false;
+                 value = (Const Undefined) })
+             ])
          ])|}]
 ;;
 
@@ -569,7 +556,7 @@ let%expect_test "factorial" =
     (Programm
        [(VarDeck
            { var_identifier = "fact"; is_const = false;
-             value = (Some (Const (Number 4.))) });
+             value = (Const (Number 4.)) });
          (FunDeck
             { fun_identifier = "calculateFact"; arguments = ["fact"];
               body =

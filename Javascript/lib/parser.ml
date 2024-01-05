@@ -251,8 +251,8 @@ and parse_var (init_word: string) =
   valid_identifier
   >>= fun identifier ->
     (option false (token_str "=" *> return true) >>= function
-    | true -> start_parse_expression () >>| some
-    | _ -> return None) <* to_end_of_stm >>| fun expr ->
+    | true -> start_parse_expression ()
+    | _ -> return (Const(Undefined))) <* to_end_of_stm >>| fun expr ->
       VarDeck 
       {
         var_identifier = identifier;
