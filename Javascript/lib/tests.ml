@@ -445,6 +445,24 @@ let%expect_test _ =
 
 let%expect_test _ =
   pp
+  "i;";
+  [%expect{|
+    (Programm [(Expression (Var "i"))])|}]
+;;
+
+let%expect_test _ =
+  pp
+  "i = i+ 1;";
+  [%expect{|
+    (Programm
+       [(Expression
+           (BinOp (Assign, (Var "i"),
+              (BinOp (Add, (Var "i"), (Const (Number 1.)))))))
+         ])|}]
+;;
+
+let%expect_test _ =
+  pp
   "let a = 6";
   [%expect{|
     (Programm
@@ -453,9 +471,42 @@ let%expect_test _ =
              })
          ]) |}]
 ;;
+
+let%expect_test _ =
+  pp
+  "let a;";
+  [%expect{|
+    (Programm
+       [(VarDeck
+           { var_identifier = "a"; is_const = false; value = (Const Undefined) })
+         ]) |}]
+;;
+
+
+let%expect_test _ =
+  pp
+  "let a";
+  [%expect{|
+    (Programm
+       [(VarDeck
+           { var_identifier = "a"; is_const = false; value = (Const Undefined) })
+         ]) |}]
+;;
+
 let%expect_test _ =
   pp
   "let let1 = 6";
+  [%expect{|
+    (Programm
+       [(VarDeck
+           { var_identifier = "let1"; is_const = false;
+             value = (Const (Number 6.)) })
+         ]) |}]
+;;
+
+let%expect_test _ =
+  pp
+  "let let1 = 6;";
   [%expect{|
     (Programm
        [(VarDeck
@@ -625,6 +676,19 @@ let%expect_test _ =
 
 let%expect_test _ =
   pp
+  "function a() {
+    return this1;
+  } ;";
+  [%expect{|
+    (Programm
+       [(FunDeck
+           { fun_identifier = "a"; arguments = [];
+             body = (Block [(Return (Var "this1"))]) })
+         ])|}]
+;;
+
+let%expect_test _ =
+  pp
   "let a = { isA: true}
   let b = {isB: true}
   b.__proto__ = a";
@@ -664,6 +728,27 @@ let%expect_test _ =
 let%expect_test "if1" =
   pp
   "if (a == 4) let a = b + 6; else let b = 6+7;";
+  [%expect{|
+    (Programm
+       [(If ((BinOp (Equal, (Var "a"), (Const (Number 4.)))),
+           (Block
+              [(VarDeck
+                  { var_identifier = "a"; is_const = false;
+                    value = (BinOp (Add, (Var "b"), (Const (Number 6.)))) })
+                ]),
+           (Block
+              [(VarDeck
+                  { var_identifier = "b"; is_const = false;
+                    value =
+                    (BinOp (Add, (Const (Number 6.)), (Const (Number 7.)))) })
+                ])
+           ))
+         ])|}]
+;;
+
+let%expect_test "if2" =
+  pp
+  "if (a == 4) {let a = b + 6;} else {let b = 6+7;};";
   [%expect{|
     (Programm
        [(If ((BinOp (Equal, (Var "a"), (Const (Number 4.)))),
