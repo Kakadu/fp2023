@@ -150,42 +150,36 @@ let parse_args_names = parens(sep_by (token_str ",") (valid_identifier)) <?> "in
 
 let parse_comma parser = sep_by (token_ch ',') (parser) <* (token_ch ',' <|> return ' ')
 
+let parse_op ops =
+  choice
+    (List.map (fun (js_op, op) -> string js_op *> (return op)) ops)
+
 (*----------unary operators----------*)
 
 let pre_un_op = [("+", Plus); ("-", Minus)] (*precedence 14*)
 
 (*----------bin operators----------*)
 
-let prop_accs = ([(".", PropAccs)], 17) (*precedence 17*)
-let mul_div_rem_op = ([("*", Mul); ("/", Div)], 12) (*precedence 12*)
-let add_sub_op = ([("+", Add); ("-", Sub)], 11) (*precedence 11*)
-let equality_op = ([("==", Equal); ("!=", NotEqual)], 8) (*precedence 8*)
-let assign_op = ([("=", Assign)], 3) (*precedence 3*)
+(*([(JS name, Ast bin_op), JS precedence])*)
+let prop_accs = [(".", PropAccs)]
+let mul_div_rem_op = [("*", Mul); ("/", Div)]
+let add_sub_op = [("+", Add); ("-", Sub)]
+let equality_op = [("==", Equal); ("!=", NotEqual)]
+let assign_op = [("=", Assign)]
 
 let list_of_bops = [assign_op; equality_op; add_sub_op; mul_div_rem_op; prop_accs] (*from lower to greater precedence*)
 
-let parse_op ops =
-  choice
-    (List.map (fun (js_op, op) -> string js_op *> (return op)) ops)
-
-let rec parse_spec_bop parser acc = function
-  | 17 -> (parens @@ parse_comma @@ start_parse_expression () >>| fun arg -> FunctionCall(acc, arg)) <|>
-    (sq_parens parser >>| fun x -> bop SqPropAccs acc x)
-  | _ -> fail "there is no special bop"
-
-and chainl1 parser (op, prec) =
+let chainl1 parser op =
   let rec go acc = 
     (token (parse_op op) >>| fun op -> Some op) <|>
     return None >>= function
   | Some f -> parser >>| (fun x -> bop f acc x) >>= go
-  | _ -> 
-    parse_spec_bop parser acc prec >>= go <|>
-    return acc in
+  | _ -> return acc in
   parser >>= fun init -> go init
 
 (*----------expression parsers----------*)
   
-and parse_arrow_func = fun () ->
+let rec parse_arrow_func = fun () ->
   token parse_args_names >>= fun args ->
     token_str "=>" *>
     token ((cur_parens (many @@ parse_stm ()) >>| fun stms -> Block stms) <|>
@@ -196,15 +190,6 @@ and parse_anon_func = fun () ->
   token_str "function" *> token parse_args_names >>= fun args-> 
     (parse_block_or_stm () <* to_end_of_stm)
     >>| fun body -> AnonFunction(args, body)
-
-and parse_bop = function
-  | a :: b -> chainl1 (parse_bop b) a
-  | _ -> parse_pre_uop ()
-
-and parse_pre_uop = fun () ->
-  (token @@ parse_op pre_un_op >>| fun op -> Some op) <|> return None >>= function
-  | Some op -> parse_pre_uop () >>| (fun ex -> UnOp(op, ex))
-  | _ -> parse_mini_expression ()
 
 and parse_object_deck = fun () ->
   cur_parens (parse_comma
@@ -227,6 +212,26 @@ and parse_mini_expression = fun () ->
       parse_str >>| const;
       valid_identifier >>| var
     ]) <?> "invalid part of expression"
+
+and parse_spec_bop = fun () ->
+  let rec go acc = choice [
+    (*Property call parser*)
+    (token_ch '.' *> read_word >>| fun prop -> bop PropAccs acc (Const (String prop)));
+    (*Bracket property call parser*)
+    (sq_parens @@ start_parse_expression () >>| fun x -> bop SqPropAccs acc x);
+    (*Fun call parser*)
+    (parens @@ parse_comma @@ start_parse_expression () >>| fun arg -> FunctionCall(acc, arg));
+  ] >>= go <|> return acc in
+  parse_mini_expression () >>= fun init -> go init
+    
+and parse_pre_uop = fun () ->
+  (token @@ parse_op pre_un_op >>| fun op -> Some op) <|> return None >>= function
+  | Some op -> parse_pre_uop () >>| (fun ex -> UnOp(op, ex))
+  | _ -> parse_spec_bop ()
+
+and parse_bop = function
+| a :: b -> chainl1 (parse_bop b) a
+| _ -> parse_pre_uop ()
 
 and start_parse_expression = fun () ->
   fix(fun _ -> parse_bop list_of_bops <* empty)

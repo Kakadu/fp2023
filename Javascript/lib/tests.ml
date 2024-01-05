@@ -322,7 +322,14 @@ let%expect_test _ =
   pp ~parse:parse_expression 
   "hello . word";
   [%expect{|
-    (Expression (BinOp (PropAccs, (Var "hello"), (Var "word"))))|}]
+    (Expression (BinOp (PropAccs, (Var "hello"), (Const (String "word")))))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression 
+  "hello.let";
+  [%expect{|
+    (Expression (BinOp (PropAccs, (Var "hello"), (Const (String "let")))))|}]
 ;;
 
 let%expect_test _ =
@@ -330,7 +337,8 @@ let%expect_test _ =
   "hello.word()";
   [%expect{|
     (Expression
-       (FunctionCall ((BinOp (PropAccs, (Var "hello"), (Var "word"))), [])))|}]
+       (FunctionCall ((BinOp (PropAccs, (Var "hello"), (Const (String "word")))),
+          [])))|}]
 ;;
 
 let%expect_test _ =
@@ -339,7 +347,7 @@ let%expect_test _ =
   [%expect{|
     (Expression
        (BinOp (PropAccs, (ObjectDef [((Var "hello"), (Var "word"))]),
-          (Var "hello"))))|}]
+          (Const (String "hello")))))|}]
 ;;
 
 (**---------------Statements parsers---------------*)
