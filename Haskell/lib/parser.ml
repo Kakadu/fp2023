@@ -62,10 +62,12 @@ let pstoken1 s = ptoken1 (string s)
 let between l r p = pstoken l *> p <* pstoken r
 let pparens p = between "(" ")" p
 let pbrackets p = between "[" "]" p
+
 let lit_int s = LitInt (int_of_string s)
 let lit_bool s = LitBool (bool_of_string @@ String.lowercase_ascii s)
 let lit_str s = LitString s
 let lit_char s = LitChar s
+
 let expr_var id = ExprVar id
 let expr_lit lit = ExprLit lit
 let expr_fun args expr = List.fold_right (fun p e -> ExprFunc (p, e)) args expr
@@ -76,12 +78,15 @@ let expr_cons e1 e2 = ExprCons (e1, e2)
 let expr_list l = List.fold_right (fun e1 e2 -> ExprCons (e1, e2)) l ExprNil
 let expr_nil _ = ExprNil
 let expr_let dl e = ExprLet (dl, e)
+
 let pat_var pat = PatVar pat
 let pat_lit lit = PatLit lit
 let pat_wild _ = PatWild
 let pat_nil _ = PatNil
-let pat_cons l = List.fold_right (fun e1 e2 -> PatCons (e1, e2)) l PatNil
+let pat_cons e1 e2 = PatCons (e1, e2)
+let pat_list l = List.fold_right (fun e1 e2 -> PatCons (e1, e2)) l PatNil
 let pat_tuple l = PatTuple l
+
 let dec_let pat expr = DeclLet (pat, expr)
 let bind p e = p, e
 
@@ -96,7 +101,7 @@ let pname =
   if is_keyword s
   then fail "Parsing error: keyword reserved"
   else if s = "_"
-  then fail "Parsing error: wildcard `_` isn't supported"
+  then fail "Parsing error: variable name can't be \"_\""
   else return s
 ;;
 
@@ -116,18 +121,13 @@ let ppat =
   let pplit = pat_lit <$> plit in
   let pwild = pat_wild <$> pstoken "_" in
   let ppvar = pat_var <$> pname in
-  (* let pplist =
+  let pplist =
     let contents = sep_by (char ',') @@ ptoken pattern in
     pbrackets contents >>| pat_list
-  in *)
-  let ppnil = pat_nil <$> pstoken "[]" in
-  (* тут идет вызов паттерна, в котором идет еще вызов паттерна от pptuple*)
-  (*
-     let pcons =
-    let contents = sep_by (char ':') @@ ptoken pattern in
-    contents >>| fun l -> pat_cons l 
   in
-  *)
+  let ppnil = pat_nil <$> pstoken "[]" in
+  let pcons = pparens @@ chainr1 pattern (pstoken ":" *> return pat_cons)
+  in
   let pptuple =
     let contents = sep_by (char ',') @@ ptoken pattern in
     pparens contents
@@ -137,7 +137,7 @@ let ppat =
   in
   choice
     ~failure_msg:"Parsing error: can't parse pattern"
-    [ ppnil; pptuple; pplit; ppvar; pwild ]
+    [ ppnil; pptuple; pplit; ppvar; pwild; pplist; pcons ]
 ;;
 
 (* Expressions *)
