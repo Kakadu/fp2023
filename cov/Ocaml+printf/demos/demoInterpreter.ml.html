@@ -297,8 +297,8 @@ let pp_typ ppf typ =
       (match l with
        | <span data-count="0">h</span> :: tl -&gt;
          List.fold_left
-           (fun _ item -&gt; <span data-count="0">F</span>ormat.fprintf ppf " * %a" pp_typ item)
-           (Format.fprint<span data-count="0">f</span> ppf "(%a" pp_typ h)
+           (fun _ item -&gt; <span data-count="0">F</span>ormat.fprintf ppf " * %a" helper item)
+           (Format.fprint<span data-count="0">f</span> ppf "(%a" helper h)
            tl;
          <span data-count="0">F</span>ormat.fprintf ppf ")"
        | <span data-count="0">_</span> -&gt; Format.fprintf ppf "Impossible state")
