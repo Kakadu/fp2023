@@ -54,7 +54,9 @@ let keywords = [
   "else";
   "this";
   "true";
-  "false"
+  "false";
+  "undefined";
+  "null"
 ]
 
 let is_string_sign = function
@@ -226,6 +228,8 @@ and parse_mini_expression = fun () ->
       parens @@ start_parse_expression ();
       parse_anon_func ();
       string "this" <* end_of_word >>| var;
+      string "null" <* end_of_word >>| (fun _ -> const Null);
+      string "undefined" <* end_of_word >>| (fun _ -> const Undefined);
       parse_number >>| const;
       parse_bool >>| const;
       parse_str >>| const;

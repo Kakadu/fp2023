@@ -21,8 +21,9 @@ type bin_op =
 type typename =
   | Number of float
   | String of string
-  | Undefined
   | Bool of bool
+  | Undefined
+  | Null
 [@@deriving eq, show {with_path = false}]
 
 type expression =

@@ -119,6 +119,18 @@ let%expect_test _ =
 
 let%expect_test _ =
   pp ~parse:parse_expression 
+  "null";
+  [%expect{|(Expression (Const Null))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression 
+  "undefined";
+  [%expect{|(Expression (Const Undefined))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression 
   "func1(var1, func2(var1), 4)";
   [%expect{|
     (Expression
@@ -608,6 +620,44 @@ let%expect_test _ =
                     (BinOp (PropAccs, (Var "this1"), (Const (String "name")))))
                   ])
              })
+         ])|}]
+;;
+
+let%expect_test _ =
+  pp
+  "let a = { isA: true}
+  let b = {isB: true}
+  b.__proto__ = a";
+  [%expect{|
+    (Programm
+       [(VarDeck
+           { var_identifier = "a"; is_const = false;
+             value = (ObjectDef [((Const (String "isA")), (Const (Bool true)))])
+             });
+         (VarDeck
+            { var_identifier = "b"; is_const = false;
+              value = (ObjectDef [((Const (String "isB")), (Const (Bool true)))])
+              });
+         (Expression
+            (BinOp (Assign,
+               (BinOp (PropAccs, (Var "b"), (Const (String "__proto__")))),
+               (Var "a"))))
+         ])|}]
+;;
+
+let%expect_test _ =
+  pp
+  "let a = { isA: true}
+  let b = { __proto__: a}";
+  [%expect{|
+    (Programm
+       [(VarDeck
+           { var_identifier = "a"; is_const = false;
+             value = (ObjectDef [((Const (String "isA")), (Const (Bool true)))])
+             });
+         (VarDeck
+            { var_identifier = "b"; is_const = false;
+              value = (ObjectDef [((Const (String "__proto__")), (Var "a"))]) })
          ])|}]
 ;;
 
