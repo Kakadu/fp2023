@@ -63,14 +63,15 @@
 <a id="L39"></a><span class="visited"> </span>
 <a id="L40"></a><span class="visited"> </span>
 <a id="L41"></a><span class="visited"> </span>
-<a id="L42"></a><span > </span>
+<a id="L42"></a><span class="visited"> </span>
 <a id="L43"></a><span > </span>
 <a id="L44"></a><span > </span>
 <a id="L45"></a><span > </span>
-<a id="L46"></a><span class="visited"> </span>
-<a id="L47"></a><span > </span>
-<a id="L48"></a><span class="visited"> </span>
-<a id="L49"></a><span > </span>
+<a id="L46"></a><span > </span>
+<a id="L47"></a><span class="visited"> </span>
+<a id="L48"></a><span > </span>
+<a id="L49"></a><span class="visited"> </span>
+<a id="L50"></a><span > </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -124,6 +125,7 @@
 <a href="#L47">47</a>
 <a href="#L48">48</a>
 <a href="#L49">49</a>
+<a href="#L50">50</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2023-2024, Vadim Yakshigulov *)
 
@@ -135,44 +137,45 @@ open Directive
 open Angstrom
 open Operand
 
-let parse_label_decl = label_decl &lt;$<span data-count="5">&gt;</span> label_name &lt;<span data-count="5">*</span> cha<span data-count="5">r</span> ':'
+let parse_label_decl = label_decl &lt;$<span data-count="6">&gt;</span> label_name &lt;<span data-count="6">*</span> cha<span data-count="6">r</span> ':'
 
 let parse_instruction =
   let gen_instruction mnemonic choices =
-    <span data-count="90">s</span>tring_c<span data-count="90">i</span> mnemonic
-    *<span data-count="90">&gt;</span> spaces
-    *&gt; choic<span data-count="90">e</span> ~failure_msg:("No more operand choises for " ^ mnemonic) choices
+    <span data-count="114">s</span>tring_c<span data-count="114">i</span> mnemonic
+    *<span data-count="114">&gt;</span> spaces
+    *&gt; choic<span data-count="114">e</span> ~failure_msg:("No more operand choises for " ^ mnemonic) choices
   in
-  choic<span data-count="5">e</span>
-    [ gen_instructio<span data-count="5">n</span> "mov" [ instructio<span data-count="5">n</span> mov &lt;$<span data-count="5">&gt;</span> parse_reg_64_imm_a ]
-    ; gen_instructio<span data-count="5">n</span> "push" [ instructio<span data-count="5">n</span> push &lt;$<span data-count="5">&gt;</span> parse_reg_64 ]
-    ; gen_instructio<span data-count="5">n</span> "add" [ instructio<span data-count="5">n</span> add &lt;$<span data-count="5">&gt;</span> parse_reg_64_reg_64 ]
-    ; gen_instructio<span data-count="5">n</span> "xor" [ instructio<span data-count="5">n</span> xor &lt;$<span data-count="5">&gt;</span> parse_reg_64_reg_64 ]
-    ; gen_instructio<span data-count="5">n</span> "syscall" [ instructio<span data-count="5">n</span> syscall &lt;$<span data-count="5">&gt;</span> parse_nothing ]
-    ; gen_instructio<span data-count="5">n</span> "pop" [ instructio<span data-count="5">n</span> pop &lt;$<span data-count="5">&gt;</span> parse_reg_64 ]
-    ; gen_instructio<span data-count="5">n</span> "jmp" [ instructio<span data-count="5">n</span> jmp &lt;$<span data-count="5">&gt;</span> parse_label_operand ]
-    ; gen_instructio<span data-count="5">n</span> "sub" [ instructio<span data-count="5">n</span> sub &lt;$<span data-count="5">&gt;</span> parse_reg_64_imm_a ]
-    ; gen_instructio<span data-count="5">n</span> "cmp" [ instructio<span data-count="5">n</span> cmp &lt;$<span data-count="5">&gt;</span> parse_reg_64_imm_a ]
-    ; gen_instructio<span data-count="5">n</span> "jle" [ instructio<span data-count="5">n</span> jle &lt;$<span data-count="5">&gt;</span> parse_label_operand ]
-    ; gen_instructio<span data-count="5">n</span> "jne" [ instructio<span data-count="5">n</span> jne &lt;$<span data-count="5">&gt;</span> parse_label_operand ]
-    ; gen_instructio<span data-count="5">n</span> "je" [ instructio<span data-count="5">n</span> je &lt;$<span data-count="5">&gt;</span> parse_label_operand ]
-    ; gen_instructio<span data-count="5">n</span>
+  choic<span data-count="6">e</span>
+    [ gen_instructio<span data-count="6">n</span> "mov" [ instructio<span data-count="6">n</span> mov &lt;$<span data-count="6">&gt;</span> parse_reg_64_imm_a ]
+    ; gen_instructio<span data-count="6">n</span> "push" [ instructio<span data-count="6">n</span> push &lt;$<span data-count="6">&gt;</span> parse_reg_64 ]
+    ; gen_instructio<span data-count="6">n</span> "add" [ instructio<span data-count="6">n</span> add &lt;$<span data-count="6">&gt;</span> parse_reg_64_reg_64 ]
+    ; gen_instructio<span data-count="6">n</span> "xor" [ instructio<span data-count="6">n</span> xor &lt;$<span data-count="6">&gt;</span> parse_reg_64_reg_64 ]
+    ; gen_instructio<span data-count="6">n</span> "syscall" [ instructio<span data-count="6">n</span> syscall &lt;$<span data-count="6">&gt;</span> parse_nothing ]
+    ; gen_instructio<span data-count="6">n</span> "pop" [ instructio<span data-count="6">n</span> pop &lt;$<span data-count="6">&gt;</span> parse_reg_64 ]
+    ; gen_instructio<span data-count="6">n</span> "jmp" [ instructio<span data-count="6">n</span> jmp &lt;$<span data-count="6">&gt;</span> parse_label_operand ]
+    ; gen_instructio<span data-count="6">n</span> "sub" [ instructio<span data-count="6">n</span> sub &lt;$<span data-count="6">&gt;</span> parse_reg_64_imm_a ]
+    ; gen_instructio<span data-count="6">n</span> "cmp" [ instructio<span data-count="6">n</span> cmp &lt;$<span data-count="6">&gt;</span> parse_reg_64_imm_a ]
+    ; gen_instructio<span data-count="6">n</span> "jle" [ instructio<span data-count="6">n</span> jle &lt;$<span data-count="6">&gt;</span> parse_label_operand ]
+    ; gen_instructio<span data-count="6">n</span> "jne" [ instructio<span data-count="6">n</span> jne &lt;$<span data-count="6">&gt;</span> parse_label_operand ]
+    ; gen_instructio<span data-count="6">n</span> "je" [ instructio<span data-count="6">n</span> je &lt;$<span data-count="6">&gt;</span> parse_label_operand ]
+    ; gen_instructio<span data-count="6">n</span>
         "movq"
-        [ instructio<span data-count="5">n</span> movq &lt;$<span data-count="5">&gt;</span> parse_reg_128_reg_64
-        ; instructio<span data-count="5">n</span> movq &lt;$<span data-count="5">&gt;</span> parse_reg_64_reg_128
+        [ instructio<span data-count="6">n</span> movq &lt;$<span data-count="6">&gt;</span> parse_reg_128_reg_64
+        ; instructio<span data-count="6">n</span> movq &lt;$<span data-count="6">&gt;</span> parse_reg_64_reg_128
         ]
-    ; gen_instructio<span data-count="5">n</span> "movapd" [ instructio<span data-count="5">n</span> movapd &lt;$<span data-count="5">&gt;</span> parse_reg_128_reg_128 ]
-    ; gen_instructio<span data-count="5">n</span> "punpckhqdq" [ instructio<span data-count="5">n</span> punpckhqdq &lt;$<span data-count="5">&gt;</span> parse_reg_128_reg_128 ]
-    ; gen_instructio<span data-count="5">n</span> "addpd" [ instructio<span data-count="5">n</span> addpd &lt;$<span data-count="5">&gt;</span> parse_reg_128_reg_128 ]
-    ; gen_instructio<span data-count="5">n</span> "pinsrq" [ instructio<span data-count="5">n</span> pinsrq &lt;$<span data-count="5">&gt;</span> parse_reg_128_reg_64_imm_a ]
-    ; gen_instructio<span data-count="5">n</span> "mulpd" [ instructio<span data-count="5">n</span> mulpd &lt;$<span data-count="5">&gt;</span> parse_reg_128_reg_128 ]
+    ; gen_instructio<span data-count="6">n</span> "movapd" [ instructio<span data-count="6">n</span> movapd &lt;$<span data-count="6">&gt;</span> parse_reg_128_reg_128 ]
+    ; gen_instructio<span data-count="6">n</span> "punpckhqdq" [ instructio<span data-count="6">n</span> punpckhqdq &lt;$<span data-count="6">&gt;</span> parse_reg_128_reg_128 ]
+    ; gen_instructio<span data-count="6">n</span> "addpd" [ instructio<span data-count="6">n</span> addpd &lt;$<span data-count="6">&gt;</span> parse_reg_128_reg_128 ]
+    ; gen_instructio<span data-count="6">n</span> "pinsrq" [ instructio<span data-count="6">n</span> pinsrq &lt;$<span data-count="6">&gt;</span> parse_reg_128_reg_64_imm_a ]
+    ; gen_instructio<span data-count="6">n</span> "mulpd" [ instructio<span data-count="6">n</span> mulpd &lt;$<span data-count="6">&gt;</span> parse_reg_128_reg_128 ]
+    ; gen_instructio<span data-count="6">n</span> "haddpd" [ instructio<span data-count="6">n</span> haddpd &lt;$<span data-count="6">&gt;</span> parse_reg_128_reg_128 ]
     ]
 ;;
 
 let parse_statement =
-  choic<span data-count="5">e</span>
+  choic<span data-count="6">e</span>
     ~failure_msg:"parse_statement"
-    [ parse_instruction; directive &lt;$<span data-count="5">&gt;</span> parse_directive; parse_label_decl ]
+    [ parse_instruction; directive &lt;$<span data-count="6">&gt;</span> parse_directive; parse_label_decl ]
 ;;
 </code></pre>
       </div>

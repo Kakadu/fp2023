@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8"/>
     <title>state.ml &mdash; Coverage report</title>
-    <meta name="description" content="78.89% coverage in lib/interpreter/state.ml">
+    <meta name="description" content="80.00% coverage in lib/interpreter/state.ml">
     <link rel="stylesheet" href="../../coverage.css"/>
     <script src="../../highlight.pack.js"></script>
     <script>hljs.initHighlightingOnLoad();</script>
@@ -15,12 +15,11 @@
           <span class="dirname">lib/interpreter/</span>state.ml
         </a>
       </h1>
-      <h2>78.89%</h2>
+      <h2>80.00%</h2>
     </div>
     <div id="navbar">
       <span class="unvisited" style="top:6.59%"></span>
       <span class="unvisited" style="top:10.99%"></span>
-      <span class="unvisited" style="bottom:40.66%"></span>
       <span class="unvisited" style="bottom:32.42%"></span>
       <span class="unvisited" style="bottom:28.02%"></span>
       <span class="unvisited" style="bottom:17.03%"></span>
@@ -144,7 +143,7 @@
 <a id="L105"></a><span > </span>
 <a id="L106"></a><span > </span>
 <a id="L107"></a><span > </span>
-<a id="L108"></a><span class="unvisited"> </span>
+<a id="L108"></a><span class="visited"> </span>
 <a id="L109"></a><span > </span>
 <a id="L110"></a><span > </span>
 <a id="L111"></a><span > </span>
@@ -416,21 +415,21 @@ open Ast
 module StateErrorMonad = struct
   type ('st, 'a) t = 'st -&gt; 'st * ('a, string) Result.t
 
-  let return x : _ = <span data-count="428">f</span>un st -&gt; <span data-count="521">s</span>t, Result.o<span data-count="521">k</span> x
+  let return x : _ = <span data-count="643">f</span>un st -&gt; <span data-count="758">s</span>t, Result.o<span data-count="758">k</span> x
   let fail err st = <span data-count="0">s</span>t, Result.erro<span data-count="0">r</span> err
 
   let ( &gt;&gt;= ) : 's 'a 'b. ('s, 'a) t -&gt; ('a -&gt; ('s, 'b) t) -&gt; ('s, 'b) t =
     fun x f : _ -&gt;
-    <span data-count="957">f</span>un st -&gt;
-    <span data-count="1052">l</span>et st, x = x st in
-    <span data-count="1052">m</span>atch x with
-    | <span data-count="1052">R</span>esult.Ok x -&gt; f x st
+    <span data-count="1180">f</span>un st -&gt;
+    <span data-count="1409">l</span>et st, x = x st in
+    <span data-count="1409">m</span>atch x with
+    | <span data-count="1409">R</span>esult.Ok x -&gt; f x st
     | <span data-count="0">R</span>esult.Error s -&gt; st, Result.Error s
   ;;
 
-  let read : ('st, 'st) t = fun st -&gt; <span data-count="423">s</span>t, Result.Ok st
-  let write : 'st -&gt; ('st, unit) t = fun st _old_state -&gt; <span data-count="110">s</span>t, Result.Ok ()
-  let run : ('st, 'a) t -&gt; 'st -&gt; 'st * ('a, string) Result.t = fun f st -&gt; <span data-count="2">f</span> st
+  let read : ('st, 'st) t = fun st -&gt; <span data-count="520">s</span>t, Result.Ok st
+  let write : 'st -&gt; ('st, unit) t = fun st _old_state -&gt; <span data-count="134">s</span>t, Result.Ok ()
+  let run : ('st, 'a) t -&gt; 'st -&gt; 'st * ('a, string) Result.t = fun f st -&gt; <span data-count="3">f</span> st
   let ( let* ) = ( &gt;&gt;= )
 end
 
@@ -448,19 +447,19 @@ module GlobalState = struct
     }
 
   let initialize_registers_with filter_fn value =
-    <span data-count="6">l</span>et add_to_map map (key, value) = <span data-count="72">S</span>tringMap.add key value map in
+    <span data-count="8">l</span>et add_to_map map (key, value) = <span data-count="96">S</span>tringMap.add key value map in
     Variants_of_register.descriptions
-    |&gt; List.filter (fun (name, _) -&gt; <span data-count="144">f</span>ilter_fn name)
-    |&gt; <span data-count="6">L</span>ist.map (fun (name, _) -&gt; <span data-count="72">n</span>ame, value)
-    |&gt; <span data-count="6">L</span>ist.fold_left add_to_map StringMap.empty
+    |&gt; List.filter (fun (name, _) -&gt; <span data-count="192">f</span>ilter_fn name)
+    |&gt; <span data-count="8">L</span>ist.map (fun (name, _) -&gt; <span data-count="96">n</span>ame, value)
+    |&gt; <span data-count="8">L</span>ist.fold_left add_to_map StringMap.empty
   ;;
 
   let initialize_registers =
-    initialize_registers_wit<span data-count="3">h</span> (fun name -&gt; <span data-count="72">n</span>ot (String.starts_wit<span data-count="72">h</span> ~prefix:"Xmm" name)) 0
+    initialize_registers_wit<span data-count="4">h</span> (fun name -&gt; <span data-count="96">n</span>ot (String.starts_wit<span data-count="96">h</span> ~prefix:"Xmm" name)) 0
   ;;
 
   let initialize_xmm_registers =
-    initialize_registers_wit<span data-count="3">h</span> (fun name -&gt; <span data-count="72">S</span>tring.starts_with ~prefix:"Xmm" name) (0, 0)
+    initialize_registers_wit<span data-count="4">h</span> (fun name -&gt; <span data-count="96">S</span>tring.starts_with ~prefix:"Xmm" name) (0, 0)
   ;;
 
   let initial_state =
@@ -475,35 +474,35 @@ module GlobalState = struct
   ;;
 
   let update updater =
-    <span data-count="103">l</span>et* state = read in
-    <span data-count="110">l</span>et* new_state = update<span data-count="110">r</span> state in
-    <span data-count="110">w</span>rite new_state
+    <span data-count="127">l</span>et* state = read in
+    <span data-count="134">l</span>et* new_state = update<span data-count="134">r</span> state in
+    <span data-count="134">w</span>rite new_state
   ;;
 
   let show state =
-    <span data-count="2">l</span>et show_map title show_value map =
-      <span data-count="4">l</span>et show_item (key, value) = <span data-count="48">P</span>rintf.sprintf "%s: %s" key (show_valu<span data-count="48">e</span> value) in
+    <span data-count="3">l</span>et show_map title show_value map =
+      <span data-count="6">l</span>et show_item (key, value) = <span data-count="72">P</span>rintf.sprintf "%s: %s" key (show_valu<span data-count="72">e</span> value) in
       Printf.sprintf
         "%s:\n%s"
         title
-        (List.map show_item (StringMap.binding<span data-count="4">s</span> map) |&gt; <span data-count="4">S</span>tring.conca<span data-count="4">t</span> "\n")
+        (List.map show_item (StringMap.binding<span data-count="6">s</span> map) |&gt; <span data-count="6">S</span>tring.conca<span data-count="6">t</span> "\n")
     in
     let show_list title format_item list =
-      <span data-count="2">P</span>rintf.sprintf "%s: %s" title (List.map format_item list |&gt; <span data-count="2">S</span>tring.conca<span data-count="2">t</span> ", ")
+      <span data-count="3">P</span>rintf.sprintf "%s: %s" title (List.map format_item list |&gt; <span data-count="3">S</span>tring.conca<span data-count="3">t</span> ", ")
     in
     let show_registers = show_map "Registers" string_of_int state.registers in
-    <span data-count="2">l</span>et show_xmm_registers =
+    <span data-count="3">l</span>et show_xmm_registers =
       show_map
         "XMM Registers"
-        (fun (a, b) -&gt; <span data-count="16">P</span>rintf.sprintf "(%d, %d)" a b)
+        (fun (a, b) -&gt; <span data-count="24">P</span>rintf.sprintf "(%d, %d)" a b)
         state.xmm_registers
     in
-    <span data-count="2">l</span>et show_stack = show_list "Stack" string_of_int state.stack in
-    <span data-count="2">l</span>et show_label_to_jump =
-      Printf.sprintf "Label to jump: %s" (Option.valu<span data-count="2">e</span> ~default:"None" state.label_to_jmp)
+    <span data-count="3">l</span>et show_stack = show_list "Stack" string_of_int state.stack in
+    <span data-count="3">l</span>et show_label_to_jump =
+      Printf.sprintf "Label to jump: %s" (Option.valu<span data-count="3">e</span> ~default:"None" state.label_to_jmp)
     in
-    <span data-count="2">l</span>et show_zero_flag = Printf.sprintf "Zero flag: %d" state.zero_flag in
-    <span data-count="2">[</span> show_registers; show_xmm_registers; show_stack; show_label_to_jump; show_zero_flag ]
+    <span data-count="3">l</span>et show_zero_flag = Printf.sprintf "Zero flag: %d" state.zero_flag in
+    <span data-count="3">[</span> show_registers; show_xmm_registers; show_stack; show_label_to_jump; show_zero_flag ]
     |&gt; String.concat "\n"
   ;;
 end
@@ -513,7 +512,7 @@ open GlobalState
 (** Readers *)
 let read_label_to_jmp =
   let* state = read in
-  <span data-count="0">r</span>eturn state.label_to_jmp
+  <span data-count="116">r</span>eturn state.label_to_jmp
 ;;
 
 let read_zero_flag =
@@ -532,27 +531,27 @@ let peek_reg =
 ;;
 
 let read_generic_reg reg get_registers =
-  <span data-count="117">l</span>et key = Variants_of_register.to_name reg in
-  <span data-count="117">l</span>et* state = read in
-  <span data-count="116">m</span>atch StringMap.find_opt key (get_register<span data-count="116">s</span> state) with
-  | <span data-count="116">S</span>ome x -&gt; return x
+  <span data-count="144">l</span>et key = Variants_of_register.to_name reg in
+  <span data-count="144">l</span>et* state = read in
+  <span data-count="143">m</span>atch StringMap.find_opt key (get_register<span data-count="143">s</span> state) with
+  | <span data-count="143">S</span>ome x -&gt; return x
   | <span data-count="0">N</span>one -&gt; fail "Reading from uninitialized register"
 ;;
 
-let read_reg reg = <span data-count="105">r</span>ead_generic_reg reg (fun state -&gt; <span data-count="104">s</span>tate.registers)
-let read_xmm_reg reg = <span data-count="12">r</span>ead_generic_reg reg (fun state -&gt; <span data-count="12">s</span>tate.xmm_registers)
+let read_reg reg = <span data-count="115">r</span>ead_generic_reg reg (fun state -&gt; <span data-count="114">s</span>tate.registers)
+let read_xmm_reg reg = <span data-count="29">r</span>ead_generic_reg reg (fun state -&gt; <span data-count="29">s</span>tate.xmm_registers)
 
 (** Writers *)
 let write_reg reg value =
-  <span data-count="58">l</span>et key = Variants_of_register.to_name reg in
-  <span data-count="58">u</span>pdate (fun state -&gt;
-    <span data-count="58">r</span>eturn { state with registers = StringMap.ad<span data-count="58">d</span> key value state.registers })
+  <span data-count="66">l</span>et key = Variants_of_register.to_name reg in
+  <span data-count="66">u</span>pdate (fun state -&gt;
+    <span data-count="66">r</span>eturn { state with registers = StringMap.ad<span data-count="66">d</span> key value state.registers })
 ;;
 
 let write_xmm_reg reg value =
-  <span data-count="8">l</span>et key = Variants_of_register.to_name reg in
-  <span data-count="8">u</span>pdate (fun state -&gt;
-    <span data-count="8">r</span>eturn { state with xmm_registers = StringMap.ad<span data-count="8">d</span> key value state.xmm_registers })
+  <span data-count="20">l</span>et key = Variants_of_register.to_name reg in
+  <span data-count="20">u</span>pdate (fun state -&gt;
+    <span data-count="20">r</span>eturn { state with xmm_registers = StringMap.ad<span data-count="20">d</span> key value state.xmm_registers })
 ;;
 
 let push_reg reg =
@@ -573,7 +572,7 @@ let pop_to_reg reg =
   | <span data-count="0">N</span>one -&gt; fail "Pop from empty stack is prohibited"
 ;;
 
-let reset_label_to_jmp = updat<span data-count="3">e</span> (fun state -&gt; <span data-count="10">r</span>eturn { state with label_to_jmp = None })
+let reset_label_to_jmp = updat<span data-count="4">e</span> (fun state -&gt; <span data-count="11">r</span>eturn { state with label_to_jmp = None })
 
 let write_label_to_jmp label =
   <span data-count="8">u</span>pdate (fun state -&gt; <span data-count="8">r</span>eturn { state with label_to_jmp = Some label })
@@ -586,7 +585,7 @@ let write_carry_flag value =
 ;;
 
 let write_exit_code code =
-  <span data-count="4">u</span>pdate (fun state -&gt; <span data-count="4">r</span>eturn { state with exit_code = Some code })
+  <span data-count="6">u</span>pdate (fun state -&gt; <span data-count="6">r</span>eturn { state with exit_code = Some code })
 ;;
 </code></pre>
       </div>

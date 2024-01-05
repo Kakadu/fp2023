@@ -81,18 +81,18 @@ open Statement
 open Angstrom
 
 let parse_ast =
-  let comment = cha<span data-count="5">r</span> ';' *<span data-count="5">&gt;</span> skip_whil<span data-count="5">e</span> (fun c -&gt; <span data-count="945">n</span>ot (is_end_of_lin<span data-count="945">e</span> c)) &lt;?&gt; "comment" in
-  <span data-count="5">s</span>kip_empty_lines
-  *<span data-count="5">&gt;</span> sep_by<span data-count="5">1</span> (end_of_line *<span data-count="5">&gt;</span> skip_empty_lines) (tri<span data-count="5">m</span> parse_statement &lt;<span data-count="5">*</span> optio<span data-count="5">n</span> () comment)
-  &lt;<span data-count="5">*</span> skip_empty_lines
+  let comment = cha<span data-count="6">r</span> ';' *<span data-count="6">&gt;</span> skip_whil<span data-count="6">e</span> (fun c -&gt; <span data-count="1141">n</span>ot (is_end_of_lin<span data-count="1141">e</span> c)) &lt;?&gt; "comment" in
+  <span data-count="6">s</span>kip_empty_lines
+  *<span data-count="6">&gt;</span> sep_by<span data-count="6">1</span> (end_of_line *<span data-count="6">&gt;</span> skip_empty_lines) (tri<span data-count="6">m</span> parse_statement &lt;<span data-count="6">*</span> optio<span data-count="6">n</span> () comment)
+  &lt;<span data-count="6">*</span> skip_empty_lines
 ;;
 
-let parse parser str = <span data-count="5">A</span>ngstrom.parse_string ~consume:Consume.Prefix parser str
+let parse parser str = <span data-count="7">A</span>ngstrom.parse_string ~consume:Consume.Prefix parser str
 
 let parse_show parser show str =
-  <span data-count="3">m</span>atch parse parser str with
+  <span data-count="4">m</span>atch parse parser str with
   | <span data-count="0">R</span>esult.Error e -&gt; Format.printf "Error: %s" e
-  | <span data-count="3">R</span>esult.Ok ast -&gt; Format.printf "%s\n" (sho<span data-count="3">w</span> ast)
+  | <span data-count="4">R</span>esult.Ok ast -&gt; Format.printf "%s\n" (sho<span data-count="4">w</span> ast)
 ;;
 </code></pre>
       </div>

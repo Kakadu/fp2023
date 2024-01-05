@@ -151,52 +151,52 @@ open Common
 open Register
 open Immediate
 
-let parse_reg_32 = reg_32 &lt;$<span data-count="5">&gt;</span> parse_32_register
-let parse_reg_64 = reg_64 &lt;$<span data-count="5">&gt;</span> parse_64_register
-let parse_reg_128 = reg_128 &lt;$<span data-count="5">&gt;</span> parse_128_register
-let parse_imm_a = imm_a &lt;$<span data-count="5">&gt;</span> parse_immidiate
+let parse_reg_32 = reg_32 &lt;$<span data-count="6">&gt;</span> parse_32_register
+let parse_reg_64 = reg_64 &lt;$<span data-count="6">&gt;</span> parse_64_register
+let parse_reg_128 = reg_128 &lt;$<span data-count="6">&gt;</span> parse_128_register
+let parse_imm_a = imm_a &lt;$<span data-count="6">&gt;</span> parse_immidiate
 
 let parse_mem_32_mem_32 =
-  lift<span data-count="5">2</span> mem_32_mem_32 parse_32_register_ref (comma *<span data-count="5">&gt;</span> parse_32_register_ref)
+  lift<span data-count="6">2</span> mem_32_mem_32 parse_32_register_ref (comma *<span data-count="6">&gt;</span> parse_32_register_ref)
 ;;
 
 let parse_mem_64_mem_64 =
-  lift<span data-count="5">2</span> mem_64_mem_64 parse_64_register_ref (comma *<span data-count="5">&gt;</span> parse_64_register_ref)
+  lift<span data-count="6">2</span> mem_64_mem_64 parse_64_register_ref (comma *<span data-count="6">&gt;</span> parse_64_register_ref)
 ;;
 
 let parse_reg_32_reg_32 =
-  lift<span data-count="5">2</span> reg_32_reg_32 parse_32_register (comma *<span data-count="5">&gt;</span> parse_32_register)
+  lift<span data-count="6">2</span> reg_32_reg_32 parse_32_register (comma *<span data-count="6">&gt;</span> parse_32_register)
 ;;
 
 let parse_reg_64_reg_64 =
-  lift<span data-count="5">2</span> reg_64_reg_64 parse_64_register (comma *<span data-count="5">&gt;</span> parse_64_register)
+  lift<span data-count="6">2</span> reg_64_reg_64 parse_64_register (comma *<span data-count="6">&gt;</span> parse_64_register)
 ;;
 
-let parse_mem_32 = mem_32 &lt;$<span data-count="5">&gt;</span> parse_32_register_ref
-let parse_mem_64 = mem_64 &lt;$<span data-count="5">&gt;</span> parse_64_register_ref
-let parse_label_operand = label &lt;$<span data-count="5">&gt;</span> label_name
-let parse_nothing = retur<span data-count="5">n</span> nothing
-let parse_reg_32_imm_a = lift<span data-count="5">2</span> reg_32_imm_a parse_32_register (comma *<span data-count="5">&gt;</span> parse_immidiate)
-let parse_reg_64_imm_a = lift<span data-count="5">2</span> reg_64_imm_a parse_64_register (comma *<span data-count="5">&gt;</span> parse_immidiate)
+let parse_mem_32 = mem_32 &lt;$<span data-count="6">&gt;</span> parse_32_register_ref
+let parse_mem_64 = mem_64 &lt;$<span data-count="6">&gt;</span> parse_64_register_ref
+let parse_label_operand = label &lt;$<span data-count="6">&gt;</span> label_name
+let parse_nothing = retur<span data-count="6">n</span> nothing
+let parse_reg_32_imm_a = lift<span data-count="6">2</span> reg_32_imm_a parse_32_register (comma *<span data-count="6">&gt;</span> parse_immidiate)
+let parse_reg_64_imm_a = lift<span data-count="6">2</span> reg_64_imm_a parse_64_register (comma *<span data-count="6">&gt;</span> parse_immidiate)
 
 let parse_reg_128_reg_128 =
-  lift<span data-count="5">2</span> reg_128_reg_128 parse_128_register (comma *<span data-count="5">&gt;</span> parse_128_register)
+  lift<span data-count="6">2</span> reg_128_reg_128 parse_128_register (comma *<span data-count="6">&gt;</span> parse_128_register)
 ;;
 
 let parse_reg_128_reg_64 =
-  lift<span data-count="5">2</span> reg_128_reg_64 parse_128_register (comma *<span data-count="5">&gt;</span> parse_64_register)
+  lift<span data-count="6">2</span> reg_128_reg_64 parse_128_register (comma *<span data-count="6">&gt;</span> parse_64_register)
 ;;
 
 let parse_reg_64_reg_128 =
-  lift<span data-count="5">2</span> reg_64_reg_128 parse_64_register (comma *<span data-count="5">&gt;</span> parse_128_register)
+  lift<span data-count="6">2</span> reg_64_reg_128 parse_64_register (comma *<span data-count="6">&gt;</span> parse_128_register)
 ;;
 
 let parse_reg_128_reg_64_imm_a =
-  lift<span data-count="5">3</span>
+  lift<span data-count="6">3</span>
     reg_128_reg_64_imm_a
     parse_128_register
-    (comma *<span data-count="5">&gt;</span> parse_64_register)
-    (comma *<span data-count="5">&gt;</span> parse_immidiate)
+    (comma *<span data-count="6">&gt;</span> parse_64_register)
+    (comma *<span data-count="6">&gt;</span> parse_immidiate)
 ;;
 </code></pre>
       </div>

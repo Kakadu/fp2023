@@ -98,27 +98,27 @@ open Common
 open Ast
 
 let is_hex_digit = function
-  | <span data-count="55">'</span>0' .. '9' | <span data-count="0">'</span>a' .. 'f' | <span data-count="0">'</span>A' .. 'F' -&gt; true
-  | <span data-count="47">_</span> -&gt; false
+  | <span data-count="85">'</span>0' .. '9' | <span data-count="0">'</span>a' .. 'f' | <span data-count="0">'</span>A' .. 'F' -&gt; true
+  | <span data-count="75">_</span> -&gt; false
 ;;
 
 let hex_of_string s = <span data-count="0">i</span>nt_of_string ("0x" ^ s)
 
 let parse_hex_with_prefix =
-  strin<span data-count="5">g</span> "0x" *<span data-count="5">&gt;</span> take_while<span data-count="5">1</span> is_hex_digit &gt;&gt;<span data-count="5">|</span> hex_of_string &lt;?<span data-count="5">&gt;</span> "parse_hex_with_prefix"
+  strin<span data-count="6">g</span> "0x" *<span data-count="6">&gt;</span> take_while<span data-count="6">1</span> is_hex_digit &gt;&gt;<span data-count="6">|</span> hex_of_string &lt;?<span data-count="6">&gt;</span> "parse_hex_with_prefix"
 ;;
 
-let parse_hex_with_postfix = take_while<span data-count="5">1</span> is_hex_digit &lt;<span data-count="5">*</span> cha<span data-count="5">r</span> 'h' &gt;&gt;<span data-count="5">|</span> hex_of_string
-let parse_hex = choic<span data-count="5">e</span> [ parse_hex_with_prefix; parse_hex_with_postfix ] &lt;?<span data-count="5">&gt;</span> "parse_hex"
+let parse_hex_with_postfix = take_while<span data-count="6">1</span> is_hex_digit &lt;<span data-count="6">*</span> cha<span data-count="6">r</span> 'h' &gt;&gt;<span data-count="6">|</span> hex_of_string
+let parse_hex = choic<span data-count="6">e</span> [ parse_hex_with_prefix; parse_hex_with_postfix ] &lt;?<span data-count="6">&gt;</span> "parse_hex"
 
 let parse_decimal =
-  let parse_sign = strin<span data-count="5">g</span> "+" &lt;|<span data-count="5">&gt;</span> strin<span data-count="5">g</span> "-" &lt;?&gt; "sign" in
-  <span data-count="5">l</span>ift<span data-count="5">2</span> ( ^ ) (optio<span data-count="5">n</span> "" parse_sign) (take_while<span data-count="5">1</span> is_decimal_digit)
-  &gt;&gt;<span data-count="5">|</span> int_of_string
-  &lt;?<span data-count="5">&gt;</span> "parse_decimal"
+  let parse_sign = strin<span data-count="6">g</span> "+" &lt;|<span data-count="6">&gt;</span> strin<span data-count="6">g</span> "-" &lt;?&gt; "sign" in
+  <span data-count="6">l</span>ift<span data-count="6">2</span> ( ^ ) (optio<span data-count="6">n</span> "" parse_sign) (take_while<span data-count="6">1</span> is_decimal_digit)
+  &gt;&gt;<span data-count="6">|</span> int_of_string
+  &lt;?<span data-count="6">&gt;</span> "parse_decimal"
 ;;
 
-let parse_immidiate = imm_int &lt;$<span data-count="5">&gt;</span> (parse_hex &lt;|<span data-count="5">&gt;</span> parse_decimal) &lt;?<span data-count="5">&gt;</span> "parse_imm_int"
+let parse_immidiate = imm_int &lt;$<span data-count="6">&gt;</span> (parse_hex &lt;|<span data-count="6">&gt;</span> parse_decimal) &lt;?<span data-count="6">&gt;</span> "parse_imm_int"
 </code></pre>
       </div>
     </div>

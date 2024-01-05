@@ -162,59 +162,59 @@ open Angstrom
 open Ast
 
 let parse_32_register =
-  choic<span data-count="5">e</span>
+  choic<span data-count="6">e</span>
     ~failure_msg:"parse_32_register"
-    [ string_c<span data-count="5">i</span> "eax" *<span data-count="5">&gt;</span> retur<span data-count="5">n</span> eax
-    ; string_c<span data-count="5">i</span> "ebx" *<span data-count="5">&gt;</span> retur<span data-count="5">n</span> ebx
-    ; string_c<span data-count="5">i</span> "ecx" *<span data-count="5">&gt;</span> retur<span data-count="5">n</span> ecx
-    ; string_c<span data-count="5">i</span> "edx" *<span data-count="5">&gt;</span> retur<span data-count="5">n</span> edx
-    ; string_c<span data-count="5">i</span> "esp" *<span data-count="5">&gt;</span> retur<span data-count="5">n</span> esp
-    ; string_c<span data-count="5">i</span> "ebp" *<span data-count="5">&gt;</span> retur<span data-count="5">n</span> ebp
-    ; string_c<span data-count="5">i</span> "esi" *<span data-count="5">&gt;</span> retur<span data-count="5">n</span> esi
-    ; string_c<span data-count="5">i</span> "edi" *<span data-count="5">&gt;</span> retur<span data-count="5">n</span> edi
+    [ string_c<span data-count="6">i</span> "eax" *<span data-count="6">&gt;</span> retur<span data-count="6">n</span> eax
+    ; string_c<span data-count="6">i</span> "ebx" *<span data-count="6">&gt;</span> retur<span data-count="6">n</span> ebx
+    ; string_c<span data-count="6">i</span> "ecx" *<span data-count="6">&gt;</span> retur<span data-count="6">n</span> ecx
+    ; string_c<span data-count="6">i</span> "edx" *<span data-count="6">&gt;</span> retur<span data-count="6">n</span> edx
+    ; string_c<span data-count="6">i</span> "esp" *<span data-count="6">&gt;</span> retur<span data-count="6">n</span> esp
+    ; string_c<span data-count="6">i</span> "ebp" *<span data-count="6">&gt;</span> retur<span data-count="6">n</span> ebp
+    ; string_c<span data-count="6">i</span> "esi" *<span data-count="6">&gt;</span> retur<span data-count="6">n</span> esi
+    ; string_c<span data-count="6">i</span> "edi" *<span data-count="6">&gt;</span> retur<span data-count="6">n</span> edi
     ]
 ;;
 
 let parse_64_register =
-  choic<span data-count="5">e</span>
+  choic<span data-count="6">e</span>
     ~failure_msg:"parse_64_register"
-    [ string_c<span data-count="5">i</span> "rax" *<span data-count="5">&gt;</span> retur<span data-count="5">n</span> rax
-    ; string_c<span data-count="5">i</span> "rbx" *<span data-count="5">&gt;</span> retur<span data-count="5">n</span> rbx
-    ; string_c<span data-count="5">i</span> "rcx" *<span data-count="5">&gt;</span> retur<span data-count="5">n</span> rcx
-    ; string_c<span data-count="5">i</span> "rdx" *<span data-count="5">&gt;</span> retur<span data-count="5">n</span> rdx
-    ; string_c<span data-count="5">i</span> "rsp" *<span data-count="5">&gt;</span> retur<span data-count="5">n</span> rsp
-    ; string_c<span data-count="5">i</span> "rbp" *<span data-count="5">&gt;</span> retur<span data-count="5">n</span> rbp
-    ; string_c<span data-count="5">i</span> "rsi" *<span data-count="5">&gt;</span> retur<span data-count="5">n</span> rsi
-    ; string_c<span data-count="5">i</span> "rdi" *<span data-count="5">&gt;</span> retur<span data-count="5">n</span> rdi
+    [ string_c<span data-count="6">i</span> "rax" *<span data-count="6">&gt;</span> retur<span data-count="6">n</span> rax
+    ; string_c<span data-count="6">i</span> "rbx" *<span data-count="6">&gt;</span> retur<span data-count="6">n</span> rbx
+    ; string_c<span data-count="6">i</span> "rcx" *<span data-count="6">&gt;</span> retur<span data-count="6">n</span> rcx
+    ; string_c<span data-count="6">i</span> "rdx" *<span data-count="6">&gt;</span> retur<span data-count="6">n</span> rdx
+    ; string_c<span data-count="6">i</span> "rsp" *<span data-count="6">&gt;</span> retur<span data-count="6">n</span> rsp
+    ; string_c<span data-count="6">i</span> "rbp" *<span data-count="6">&gt;</span> retur<span data-count="6">n</span> rbp
+    ; string_c<span data-count="6">i</span> "rsi" *<span data-count="6">&gt;</span> retur<span data-count="6">n</span> rsi
+    ; string_c<span data-count="6">i</span> "rdi" *<span data-count="6">&gt;</span> retur<span data-count="6">n</span> rdi
     ]
 ;;
 
 let parse_128_register =
-  choic<span data-count="5">e</span>
+  choic<span data-count="6">e</span>
     ~failure_msg:"parse_128_register"
-    [ string_c<span data-count="5">i</span> "xmm0" *<span data-count="5">&gt;</span> retur<span data-count="5">n</span> xmm0
-    ; string_c<span data-count="5">i</span> "xmm1" *<span data-count="5">&gt;</span> retur<span data-count="5">n</span> xmm1
-    ; string_c<span data-count="5">i</span> "xmm2" *<span data-count="5">&gt;</span> retur<span data-count="5">n</span> xmm2
-    ; string_c<span data-count="5">i</span> "xmm3" *<span data-count="5">&gt;</span> retur<span data-count="5">n</span> xmm3
-    ; string_c<span data-count="5">i</span> "xmm4" *<span data-count="5">&gt;</span> retur<span data-count="5">n</span> xmm4
-    ; string_c<span data-count="5">i</span> "xmm5" *<span data-count="5">&gt;</span> retur<span data-count="5">n</span> xmm5
-    ; string_c<span data-count="5">i</span> "xmm6" *<span data-count="5">&gt;</span> retur<span data-count="5">n</span> xmm6
-    ; string_c<span data-count="5">i</span> "xmm7" *<span data-count="5">&gt;</span> retur<span data-count="5">n</span> xmm7
+    [ string_c<span data-count="6">i</span> "xmm0" *<span data-count="6">&gt;</span> retur<span data-count="6">n</span> xmm0
+    ; string_c<span data-count="6">i</span> "xmm1" *<span data-count="6">&gt;</span> retur<span data-count="6">n</span> xmm1
+    ; string_c<span data-count="6">i</span> "xmm2" *<span data-count="6">&gt;</span> retur<span data-count="6">n</span> xmm2
+    ; string_c<span data-count="6">i</span> "xmm3" *<span data-count="6">&gt;</span> retur<span data-count="6">n</span> xmm3
+    ; string_c<span data-count="6">i</span> "xmm4" *<span data-count="6">&gt;</span> retur<span data-count="6">n</span> xmm4
+    ; string_c<span data-count="6">i</span> "xmm5" *<span data-count="6">&gt;</span> retur<span data-count="6">n</span> xmm5
+    ; string_c<span data-count="6">i</span> "xmm6" *<span data-count="6">&gt;</span> retur<span data-count="6">n</span> xmm6
+    ; string_c<span data-count="6">i</span> "xmm7" *<span data-count="6">&gt;</span> retur<span data-count="6">n</span> xmm7
     ]
 ;;
 
-let between_brackets parser = <span data-count="15">b</span>etwee<span data-count="15">n</span> (cha<span data-count="15">r</span> '[') (cha<span data-count="15">r</span> ']') parser &lt;?&gt; "between_brackets"
+let between_brackets parser = <span data-count="18">b</span>etwee<span data-count="18">n</span> (cha<span data-count="18">r</span> '[') (cha<span data-count="18">r</span> ']') parser &lt;?&gt; "between_brackets"
 
 let parse_32_register_ref =
-  between_bracket<span data-count="5">s</span> parse_32_register &gt;&gt;<span data-count="5">|</span> register_ref &lt;?<span data-count="5">&gt;</span> "parse_32_register_ref"
+  between_bracket<span data-count="6">s</span> parse_32_register &gt;&gt;<span data-count="6">|</span> register_ref &lt;?<span data-count="6">&gt;</span> "parse_32_register_ref"
 ;;
 
 let parse_64_register_ref =
-  between_bracket<span data-count="5">s</span> parse_64_register &gt;&gt;<span data-count="5">|</span> register_ref &lt;?<span data-count="5">&gt;</span> "parse_64_register_ref"
+  between_bracket<span data-count="6">s</span> parse_64_register &gt;&gt;<span data-count="6">|</span> register_ref &lt;?<span data-count="6">&gt;</span> "parse_64_register_ref"
 ;;
 
 let parse_128_register_ref =
-  between_bracket<span data-count="5">s</span> parse_128_register &gt;&gt;<span data-count="5">|</span> register_ref &lt;?<span data-count="5">&gt;</span> "parse_128_register_ref"
+  between_bracket<span data-count="6">s</span> parse_128_register &gt;&gt;<span data-count="6">|</span> register_ref &lt;?<span data-count="6">&gt;</span> "parse_128_register_ref"
 ;;
 </code></pre>
       </div>

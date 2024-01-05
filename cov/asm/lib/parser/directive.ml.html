@@ -77,16 +77,16 @@ open Ast
 
 let parse_section =
   let sections = [ ".data"; ".text" ] in
-  let parser = choice (List.ma<span data-count="5">p</span> string sections) in
-  <span data-count="5">s</span>ection &lt;$<span data-count="5">&gt;</span> string_c<span data-count="5">i</span> "section" *<span data-count="5">&gt;</span> tri<span data-count="5">m</span> parser
+  let parser = choice (List.ma<span data-count="6">p</span> string sections) in
+  <span data-count="6">s</span>ection &lt;$<span data-count="6">&gt;</span> string_c<span data-count="6">i</span> "section" *<span data-count="6">&gt;</span> tri<span data-count="6">m</span> parser
 ;;
 
 let parse_global =
   let parser = label_name in
-  global &lt;$<span data-count="5">&gt;</span> string_c<span data-count="5">i</span> "global" *<span data-count="5">&gt;</span> tri<span data-count="5">m</span> parser
+  global &lt;$<span data-count="6">&gt;</span> string_c<span data-count="6">i</span> "global" *<span data-count="6">&gt;</span> tri<span data-count="6">m</span> parser
 ;;
 
-let parse_directive = choic<span data-count="5">e</span> [ parse_global; parse_section ]
+let parse_directive = choic<span data-count="6">e</span> [ parse_global; parse_section ]
 </code></pre>
       </div>
     </div>

@@ -97,18 +97,18 @@ open Parser
 
 let () =
   let input = Stdio.In_channel.input_all stdin in
-  <span data-count="2">l</span>et parsed_ast =
+  <span data-count="3">l</span>et parsed_ast =
     match parse parse_ast input with
     | <span data-count="0">R</span>esult.Error e -&gt;
       Format.printf "Error: %s" e;
       <span data-count="0">e</span>xi<span data-count="0">t</span> 1
-    | <span data-count="2">R</span>esult.Ok x -&gt; x
+    | <span data-count="3">R</span>esult.Ok x -&gt; x
   in
   parse_show parse_ast show_ast input;
-  <span data-count="2">l</span>et eval = eval_ast parsed_ast in
-  <span data-count="2">l</span>et state, result = run eval initial_state in
-  <span data-count="2">m</span>atch result with
-  | <span data-count="2">R</span>esult.Ok _ -&gt; Format.print<span data-count="2">f</span> "%s" (GlobalState.sho<span data-count="2">w</span> state)
+  <span data-count="3">l</span>et eval = eval_ast parsed_ast in
+  <span data-count="3">l</span>et state, result = run eval initial_state in
+  <span data-count="3">m</span>atch result with
+  | <span data-count="3">R</span>esult.Ok _ -&gt; Format.print<span data-count="3">f</span> "%s" (GlobalState.sho<span data-count="3">w</span> state)
   | <span data-count="0">R</span>esult.Error err -&gt; Format.print<span data-count="0">f</span> "%s" err
 ;;
 </code></pre>
