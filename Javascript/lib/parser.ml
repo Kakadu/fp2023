@@ -51,7 +51,8 @@ let keywords = [
   "function";
   "if";
   "return";
-  "else"
+  "else";
+  "this"
 ]
 
 let is_string_sign = function
@@ -196,9 +197,15 @@ and parse_object_deck = fun () ->
     (both (choice [
       sq_parens @@ start_parse_expression ();
       parse_str >>| const;
-      valid_identifier >>| var
+      valid_identifier >>| fun x -> const (String x)
     ])
-    (token_ch ':' *> start_parse_expression ())) 
+    (token_ch ':' *> start_parse_expression ()) <|>
+    (*method parser*)
+    (valid_identifier >>= fun name -> 
+      token parse_args_names >>= fun arguments -> 
+        (parse_block_or_stm () <* to_end_of_stm)
+        >>| fun body -> (const (String name), AnonFunction(arguments, body))
+    ))
   ) >>| fun properties ->
     ObjectDef properties
 
@@ -210,7 +217,8 @@ and parse_mini_expression = fun () ->
       parse_anon_func ();
       parse_number >>| const;
       parse_str >>| const;
-      valid_identifier >>| var
+      valid_identifier >>| var;
+      string "this" >>| var
     ]) <?> "invalid part of expression"
 
 and parse_spec_bop = fun () ->
