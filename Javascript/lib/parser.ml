@@ -260,9 +260,12 @@ and parse_var (init_word: string) =
         value = expr;
       }
 
+and parse_block = fun () -> fix(fun _ ->
+  cur_parens (many @@ parse_stm ()) >>| fun stms -> Block stms)
+
 and parse_block_or_stm = fun () ->
-  (cur_parens (many @@ parse_stm ())
-  <|> (parse_stm () >>| fun stm -> [stm])) >>| fun stms -> Block stms
+  parse_block () <|> 
+  (parse_stm () >>| fun stm -> Block [stm])
 
 and parse_if = fun () ->
   parens (start_parse_expression ()) >>= fun condition ->
@@ -274,6 +277,7 @@ and parse_if = fun () ->
 
 and parse_stm = fun () ->
   parse_empty_stms *> token (
+    parse_block () <|>
     (start_parse_expression () >>| expression) <|>
     (read_word >>= 
     (fun word -> match word with
