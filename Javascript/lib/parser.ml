@@ -8,8 +8,6 @@ type error = [ `ParsingError of string ]
 
 let chars2string chars = List.fold_left (fun a b -> a ^ Char.escaped b) "" chars
 
-let nothing = return ()
-
 let is_space = function 
   | ' '
   | '\t' -> true
@@ -53,7 +51,12 @@ let keywords = [
   "function";
   "if";
   "return";
-  "else"
+  "else";
+  "this";
+  "true";
+  "false";
+  "undefined";
+  "null"
 ]
 
 let is_string_sign = function
@@ -82,13 +85,20 @@ let is_valid_identifier_ch ch =
 
 let read_word = take_while is_valid_identifier_ch
 
+let end_of_word = peek_char >>= function
+| Some ch -> if is_valid_identifier_ch ch 
+  then fail "it isn't end of word" 
+  else return ()
+| _ -> return ()
+
 let empty = skip_while(is_empty)
 let empty1 = take_while1(is_empty) *> return ()
 let spaces = skip_while(is_space)
 let token_space p = spaces *> p
 let token p = empty *> p
 let token1 p = empty1 *> p
-let token_ch ch = token @@ char ch *> return ()
+let token_btw p = empty *> p <* empty
+let token_ch ch = token_btw @@ char ch
 let token_str s = token @@ string s
 
 let between p l r= l *> p <* r
@@ -96,8 +106,11 @@ let lp = token_ch '('
 let rp = token_ch ')'
 let lc = token_ch '{'
 let rc = token_ch '}'
+let ls = token_ch '['
+let rs = token_ch ']'
 let parens p = between p lp rp
 let cur_parens p = between p lc rc
+let sq_parens p = between p ls rs
 
 let empty_stm = 
   empty *> 
@@ -109,15 +122,19 @@ let to_end_of_stm =
 
 let some n = Some n
 let number n = Number n
+let bool b = Bool b
 let const c = Const c
 let var v = Var v
 let expression e = Expression e
+let bop f acc x = BinOp(f, acc, x)
 
 let parse_number = 
   lift3 (fun a b c -> a^b^c) (take_while is_digit) (string ".") (take_while is_digit) 
   <|> take_while1 is_digit >>= (function |"." -> fail "incorrect number" | _ as num -> return num)
   >>| (fun n -> number @@ float_of_string n)
 (*TODO: -,NaN..., BigINT*)
+
+let parse_bool = (string "true" *> return true) <|> (string "false" *> return false) >>| bool <* end_of_word
 
 let parse_str = 
   satisfy is_string_sign *> scan_string false (fun state ch -> 
@@ -145,34 +162,37 @@ let parse_empty_stms =
 
 let parse_args_names = parens(sep_by (token_str ",") (valid_identifier)) <?> "incorrect function arguments"
 
+let parse_comma parser = sep_by (token_ch ',') (parser) <* (token_ch ',' <|> return ' ')
+
+let parse_op ops =
+  choice
+    (List.map (fun (js_op, op) -> string js_op *> (return op)) ops)
+
 (*----------unary operators----------*)
 
 let pre_un_op = [("+", Plus); ("-", Minus)] (*precedence 14*)
 
 (*----------bin operators----------*)
 
+(*([(JS name, Ast bin_op), JS precedence])*)
 let mul_div_rem_op = [("*", Mul); ("/", Div)] (*precedence 12*)
 let add_sub_op = [("+", Add); ("-", Sub)] (*precedence 11*)
 let equality_op = [("==", Equal); ("!=", NotEqual)] (*precedence 8*)
+let assign_op = [("=", Assign)] (*precedence 2*)
 
-let list_of_bops = [equality_op; add_sub_op; mul_div_rem_op] (*from lower to greater precedence*)
-
-let parse_op ops =
-  choice
-    (List.map (fun (js_op, op) -> string js_op *> (return op)) ops)
+let list_of_bops = [assign_op; equality_op; add_sub_op; mul_div_rem_op] (*from lower to greater precedence*)
 
 let chainl1 parser op =
-  let rec go acc = (token op >>| fun op -> Some op) <|> return None >>= function
-  | Some f -> parser >>| (fun x -> BinOp(f, acc, x)) >>= go
+  let rec go acc = 
+    (token (parse_op op) >>| fun op -> Some op) <|>
+    return None >>= function
+  | Some f -> parser >>| (fun x -> bop f acc x) >>= go
   | _ -> return acc in
   parser >>= fun init -> go init
 
 (*----------expression parsers----------*)
-
-let rec parse_arguments = fun () ->
-  parens(sep_by (token_str ",") (start_parse_expression ())) <?> "incorrect function arguments"
   
-and parse_arrow_func = fun () ->
+let rec parse_arrow_func = fun () ->
   token parse_args_names >>= fun args ->
     token_str "=>" *>
     token ((cur_parens (many @@ parse_stm ()) >>| fun stms -> Block stms) <|>
@@ -184,35 +204,57 @@ and parse_anon_func = fun () ->
     (parse_block_or_stm () <* to_end_of_stm)
     >>| fun body -> AnonFunction(args, body)
 
-and parse_func_call = fun () ->
-  lift2
-  (fun f args -> FunctionCall(f, args))
-  (choice [
-    valid_identifier >>| var;
-    parse_anon_func ();
-    parens @@ start_parse_expression ()
-  ])
-  (parse_arguments ())
-
-and parse_bop = function
-  | a :: b -> chainl1 (parse_bop b) (parse_op a)
-  | _ -> parse_pre_uop ()
-
-and parse_pre_uop = fun () ->
-  (token @@ parse_op pre_un_op >>| fun op -> Some op) <|> return None >>= function
-  | Some op -> parse_pre_uop () >>| (fun ex -> UnOp(op, ex))
-  | _ -> parse_mini_expression ()
+and parse_object_deck = fun () ->
+  cur_parens (parse_comma
+    (both (choice [
+      sq_parens @@ start_parse_expression ();
+      parse_str >>| const;
+      valid_identifier >>| fun x -> const (String x)
+    ])
+    (token_ch ':' *> start_parse_expression ()) <|>
+    (*method parser*)
+    (valid_identifier >>= fun name -> 
+      token parse_args_names >>= fun arguments -> 
+        (parse_block_or_stm () <* to_end_of_stm)
+        >>| fun body -> (const (String name), AnonFunction(arguments, body))
+    ))
+  ) >>| fun properties ->
+    ObjectDef properties
 
 and parse_mini_expression = fun () ->
   token (choice [
+      parse_object_deck ();
       parse_arrow_func ();
-      parse_func_call ();
       parens @@ start_parse_expression ();
       parse_anon_func ();
+      string "this" <* end_of_word >>| var;
+      string "null" <* end_of_word >>| (fun _ -> const Null);
+      string "undefined" <* end_of_word >>| (fun _ -> const Undefined);
       parse_number >>| const;
+      parse_bool >>| const;
       parse_str >>| const;
       valid_identifier >>| var
     ]) <?> "invalid part of expression"
+
+and parse_spec_bop = fun () ->
+  let rec go acc = choice [
+    (*Property call parser*)
+    (token_ch '.' *> read_word >>| fun prop -> bop PropAccs acc (Const (String prop)));
+    (*Bracket property call parser*)
+    (sq_parens @@ start_parse_expression () >>| fun x -> bop SqPropAccs acc x);
+    (*Fun call parser*)
+    (parens @@ parse_comma @@ start_parse_expression () >>| fun arg -> FunctionCall(acc, arg));
+  ] >>= go <|> return acc in
+  parse_mini_expression () >>= fun init -> go init
+    
+and parse_pre_uop = fun () ->
+  (token @@ parse_op pre_un_op >>| fun op -> Some op) <|> return None >>= function
+  | Some op -> parse_pre_uop () >>| (fun ex -> UnOp(op, ex))
+  | _ -> parse_spec_bop ()
+
+and parse_bop = function
+| a :: b -> chainl1 (parse_bop b) a
+| _ -> parse_pre_uop ()
 
 and start_parse_expression = fun () ->
   fix(fun _ -> parse_bop list_of_bops <* empty)
@@ -237,8 +279,8 @@ and parse_var (init_word: string) =
   valid_identifier
   >>= fun identifier ->
     (option false (token_str "=" *> return true) >>= function
-    | true -> start_parse_expression () >>| some
-    | _ -> return None) <* to_end_of_stm >>| fun expr ->
+    | true -> start_parse_expression ()
+    | _ -> return (Const(Undefined))) <* to_end_of_stm >>| fun expr ->
       VarDeck 
       {
         var_identifier = identifier;
@@ -246,9 +288,12 @@ and parse_var (init_word: string) =
         value = expr;
       }
 
+and parse_block = fun () -> fix(fun _ ->
+  cur_parens (many @@ parse_stm ()) >>| fun stms -> Block stms)
+
 and parse_block_or_stm = fun () ->
-  (cur_parens (many @@ parse_stm ())
-  <|> (parse_stm () >>| fun stm -> [stm])) >>| fun stms -> Block stms
+  parse_block () <|> 
+  (parse_stm () >>| fun stm -> Block [stm])
 
 and parse_if = fun () ->
   parens (start_parse_expression ()) >>= fun condition ->
@@ -260,6 +305,7 @@ and parse_if = fun () ->
 
 and parse_stm = fun () ->
   parse_empty_stms *> token (
+    parse_block () <|>
     (start_parse_expression () >>| expression) <|>
     (read_word >>= 
     (fun word -> match word with

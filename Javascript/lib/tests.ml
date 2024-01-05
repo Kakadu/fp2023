@@ -101,6 +101,36 @@ let%expect_test _ =
 
 let%expect_test _ =
   pp ~parse:parse_expression 
+  "true";
+  [%expect{|(Expression (Const (Bool true)))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression 
+  "false";
+  [%expect{|(Expression (Const (Bool false)))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression 
+  "false1";
+  [%expect{|(Expression (Var "false1"))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression 
+  "null";
+  [%expect{|(Expression (Const Null))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression 
+  "undefined";
+  [%expect{|(Expression (Const Undefined))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression 
   "func1(var1, func2(var1), 4)";
   [%expect{|
     (Expression
@@ -276,150 +306,13 @@ let%expect_test _ =
           (BinOp (Mul, (Const (Number 2.)), (Const (Number 3.)))))))|}]
 ;;
 
-(**---------------Statements parsers---------------*)
-
 let%expect_test _ =
-  pp
-  "let a = 6";
+  pp ~parse:parse_expression 
+  "func1(4)+(5+6)";
   [%expect{|
-    (Programm
-       [(VarDeck
-           { var_identifier = "a"; is_const = false;
-             value = (Some (Const (Number 6.))) })
-         ]) |}]
-;;
-
-let%expect_test _ =
-  pp
-  "var a = 6";
-  [%expect{|
-    (Programm
-       [(VarDeck
-           { var_identifier = "a"; is_const = false;
-             value = (Some (Const (Number 6.))) })
-         ]) |}]
-;;
-
-let%expect_test _ =
-  pp
-  "const a = 6";
-  [%expect{|
-    (Programm
-       [(VarDeck
-           { var_identifier = "a"; is_const = true;
-             value = (Some (Const (Number 6.))) })
-         ]) |}]
-;;
-
-let%expect_test _ =
-  pp
-  "let a = function(b1) {return b1+6;}";
-  [%expect{|
-    (Programm
-       [(VarDeck
-           { var_identifier = "a"; is_const = false;
-             value =
-             (Some (AnonFunction (["b1"],
-                      (Block
-                         [(Return (BinOp (Add, (Var "b1"), (Const (Number 6.)))))
-                           ])
-                      )))
-             })
-         ]) |}]
-;;
-
-let%expect_test _ =
-  pp
-  "let a = (b1) => {return b1+6;}";
-  [%expect{|
-    (Programm
-       [(VarDeck
-           { var_identifier = "a"; is_const = false;
-             value =
-             (Some (AnonFunction (["b1"],
-                      (Block
-                         [(Return (BinOp (Add, (Var "b1"), (Const (Number 6.)))))
-                           ])
-                      )))
-             })
-         ]) |}]
-;;
-
-let%expect_test _ =
-  pp
-  "let a = (b1) => b1+6";
-  [%expect{|
-    (Programm
-       [(VarDeck
-           { var_identifier = "a"; is_const = false;
-             value =
-             (Some (AnonFunction (["b1"],
-                      (Block
-                         [(Return (BinOp (Add, (Var "b1"), (Const (Number 6.)))))
-                           ])
-                      )))
-             })
-         ]) |}]
-;;
-
-let%expect_test _ =
-  pp
-  "let a = function(b1) {return b1+6;}(4)";
-  [%expect{|
-    (Programm
-       [(VarDeck
-           { var_identifier = "a"; is_const = false;
-             value =
-             (Some (FunctionCall (
-                      (AnonFunction (["b1"],
-                         (Block
-                            [(Return
-                                (BinOp (Add, (Var "b1"), (Const (Number 6.)))))
-                              ])
-                         )),
-                      [(Const (Number 4.))])))
-             })
-         ]) |}]
-;;
-
-let%expect_test _ =
-  pp
-  "let a = ((b1) => {return b1+6;})(4)";
-  [%expect{|
-    (Programm
-       [(VarDeck
-           { var_identifier = "a"; is_const = false;
-             value =
-             (Some (FunctionCall (
-                      (AnonFunction (["b1"],
-                         (Block
-                            [(Return
-                                (BinOp (Add, (Var "b1"), (Const (Number 6.)))))
-                              ])
-                         )),
-                      [(Const (Number 4.))])))
-             })
-         ]) |}]
-;;
-
-let%expect_test _ =
-  pp
-  "let a = ((b1) => b1+6)(4)";
-  [%expect{|
-    (Programm
-       [(VarDeck
-           { var_identifier = "a"; is_const = false;
-             value =
-             (Some (FunctionCall (
-                      (AnonFunction (["b1"],
-                         (Block
-                            [(Return
-                                (BinOp (Add, (Var "b1"), (Const (Number 6.)))))
-                              ])
-                         )),
-                      [(Const (Number 4.))])))
-             })
-         ]) |}]
+    (Expression
+       (BinOp (Add, (FunctionCall ((Var "func1"), [(Const (Number 4.))])),
+          (BinOp (Add, (Const (Number 5.)), (Const (Number 6.)))))))|}]
 ;;
 
 let%expect_test _ =
@@ -432,6 +325,266 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
+  pp ~parse:parse_expression 
+  "{name : 4, [\"name\"+5] : 4 + 9}";
+  [%expect{|
+    (Expression
+       (ObjectDef
+          [((Const (String "name")), (Const (Number 4.)));
+            ((BinOp (Add, (Const (String "name")), (Const (Number 5.)))),
+             (BinOp (Add, (Const (Number 4.)), (Const (Number 9.)))))
+            ]))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression 
+  "{name : 4, [\"name\"+5] : 4 + 9,}";
+  [%expect{|
+    (Expression
+       (ObjectDef
+          [((Const (String "name")), (Const (Number 4.)));
+            ((BinOp (Add, (Const (String "name")), (Const (Number 5.)))),
+             (BinOp (Add, (Const (Number 4.)), (Const (Number 9.)))))
+            ]))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression 
+  "{
+      name : \"Kakadu\",
+      sayName() {
+        return this.name;
+      },
+      like : \"OCaml\",
+    }";
+  [%expect{|
+    (Expression
+       (ObjectDef
+          [((Const (String "name")), (Const (String "Kakadu")));
+            ((Const (String "sayName")),
+             (AnonFunction ([],
+                (Block
+                   [(Return
+                       (BinOp (PropAccs, (Var "this"), (Const (String "name")))))
+                     ])
+                )));
+            ((Const (String "like")), (Const (String "OCaml")))]))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression 
+  "{
+      name : \"Kakadu\",
+      sayName : function () {
+        return this.name;
+      },
+      like : \"OCaml\",
+    }";
+  [%expect{|
+    (Expression
+       (ObjectDef
+          [((Const (String "name")), (Const (String "Kakadu")));
+            ((Const (String "sayName")),
+             (AnonFunction ([],
+                (Block
+                   [(Return
+                       (BinOp (PropAccs, (Var "this"), (Const (String "name")))))
+                     ])
+                )));
+            ((Const (String "like")), (Const (String "OCaml")))]))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression 
+  "hello[\"word\"]";
+  [%expect{|
+    (Expression (BinOp (SqPropAccs, (Var "hello"), (Const (String "word")))))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression 
+  "hello[a+b]";
+  [%expect{|
+    (Expression
+       (BinOp (SqPropAccs, (Var "hello"), (BinOp (Add, (Var "a"), (Var "b"))))))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression 
+  "hello . word";
+  [%expect{|
+    (Expression (BinOp (PropAccs, (Var "hello"), (Const (String "word")))))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression 
+  "hello.let";
+  [%expect{|
+    (Expression (BinOp (PropAccs, (Var "hello"), (Const (String "let")))))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression 
+  "hello.word()";
+  [%expect{|
+    (Expression
+       (FunctionCall ((BinOp (PropAccs, (Var "hello"), (Const (String "word")))),
+          [])))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression 
+  "{hello : word}.hello";
+  [%expect{|
+    (Expression
+       (BinOp (PropAccs, (ObjectDef [((Const (String "hello")), (Var "word"))]),
+          (Const (String "hello")))))|}]
+;;
+
+(**---------------Statements parsers---------------*)
+
+let%expect_test _ =
+  pp
+  "let a = 6";
+  [%expect{|
+    (Programm
+       [(VarDeck
+           { var_identifier = "a"; is_const = false; value = (Const (Number 6.))
+             })
+         ]) |}]
+;;
+let%expect_test _ =
+  pp
+  "let let1 = 6";
+  [%expect{|
+    (Programm
+       [(VarDeck
+           { var_identifier = "let1"; is_const = false;
+             value = (Const (Number 6.)) })
+         ]) |}]
+;;
+
+let%expect_test _ =
+  pp
+  "var a = 6";
+  [%expect{|
+    (Programm
+       [(VarDeck
+           { var_identifier = "a"; is_const = false; value = (Const (Number 6.))
+             })
+         ]) |}]
+;;
+
+let%expect_test _ =
+  pp
+  "const a = 6";
+  [%expect{|
+    (Programm
+       [(VarDeck
+           { var_identifier = "a"; is_const = true; value = (Const (Number 6.)) })
+         ]) |}]
+;;
+
+let%expect_test _ =
+  pp
+  "let a = function(b1) {return b1+6;}";
+  [%expect{|
+    (Programm
+       [(VarDeck
+           { var_identifier = "a"; is_const = false;
+             value =
+             (AnonFunction (["b1"],
+                (Block [(Return (BinOp (Add, (Var "b1"), (Const (Number 6.)))))])
+                ))
+             })
+         ]) |}]
+;;
+
+let%expect_test _ =
+  pp
+  "let a = (b1) => {return b1+6;}";
+  [%expect{|
+    (Programm
+       [(VarDeck
+           { var_identifier = "a"; is_const = false;
+             value =
+             (AnonFunction (["b1"],
+                (Block [(Return (BinOp (Add, (Var "b1"), (Const (Number 6.)))))])
+                ))
+             })
+         ]) |}]
+;;
+
+let%expect_test _ =
+  pp
+  "let a = (b1) => b1+6";
+  [%expect{|
+    (Programm
+       [(VarDeck
+           { var_identifier = "a"; is_const = false;
+             value =
+             (AnonFunction (["b1"],
+                (Block [(Return (BinOp (Add, (Var "b1"), (Const (Number 6.)))))])
+                ))
+             })
+         ]) |}]
+;;
+
+let%expect_test _ =
+  pp
+  "let a = function(b1) {return b1+6;}(4)";
+  [%expect{|
+    (Programm
+       [(VarDeck
+           { var_identifier = "a"; is_const = false;
+             value =
+             (FunctionCall (
+                (AnonFunction (["b1"],
+                   (Block
+                      [(Return (BinOp (Add, (Var "b1"), (Const (Number 6.)))))])
+                   )),
+                [(Const (Number 4.))]))
+             })
+         ]) |}]
+;;
+
+let%expect_test _ =
+  pp
+  "let a = ((b1) => {return b1+6;})(4)";
+  [%expect{|
+    (Programm
+       [(VarDeck
+           { var_identifier = "a"; is_const = false;
+             value =
+             (FunctionCall (
+                (AnonFunction (["b1"],
+                   (Block
+                      [(Return (BinOp (Add, (Var "b1"), (Const (Number 6.)))))])
+                   )),
+                [(Const (Number 4.))]))
+             })
+         ]) |}]
+;;
+
+let%expect_test _ =
+  pp
+  "let a = ((b1) => b1+6)(4)";
+  [%expect{|
+    (Programm
+       [(VarDeck
+           { var_identifier = "a"; is_const = false;
+             value =
+             (FunctionCall (
+                (AnonFunction (["b1"],
+                   (Block
+                      [(Return (BinOp (Add, (Var "b1"), (Const (Number 6.)))))])
+                   )),
+                [(Const (Number 4.))]))
+             })
+         ]) |}]
+;;
+
+let%expect_test _ =
   pp
   "let a = ((b1) => b1+6)(4)+5";
   [%expect{|
@@ -439,18 +592,73 @@ let%expect_test _ =
        [(VarDeck
            { var_identifier = "a"; is_const = false;
              value =
-             (Some (BinOp (Add,
-                      (FunctionCall (
-                         (AnonFunction (["b1"],
-                            (Block
-                               [(Return
-                                   (BinOp (Add, (Var "b1"), (Const (Number 6.)))))
-                                 ])
-                            )),
-                         [(Const (Number 4.))])),
-                      (Const (Number 5.)))))
+             (BinOp (Add,
+                (FunctionCall (
+                   (AnonFunction (["b1"],
+                      (Block
+                         [(Return (BinOp (Add, (Var "b1"), (Const (Number 6.)))))
+                           ])
+                      )),
+                   [(Const (Number 4.))])),
+                (Const (Number 5.))))
              })
          ]) |}]
+;;
+
+let%expect_test _ =
+  pp
+  "function a() {
+    return this1.name;
+  }";
+  [%expect{|
+    (Programm
+       [(FunDeck
+           { fun_identifier = "a"; arguments = [];
+             body =
+             (Block
+                [(Return
+                    (BinOp (PropAccs, (Var "this1"), (Const (String "name")))))
+                  ])
+             })
+         ])|}]
+;;
+
+let%expect_test _ =
+  pp
+  "let a = { isA: true}
+  let b = {isB: true}
+  b.__proto__ = a";
+  [%expect{|
+    (Programm
+       [(VarDeck
+           { var_identifier = "a"; is_const = false;
+             value = (ObjectDef [((Const (String "isA")), (Const (Bool true)))])
+             });
+         (VarDeck
+            { var_identifier = "b"; is_const = false;
+              value = (ObjectDef [((Const (String "isB")), (Const (Bool true)))])
+              });
+         (Expression
+            (BinOp (Assign,
+               (BinOp (PropAccs, (Var "b"), (Const (String "__proto__")))),
+               (Var "a"))))
+         ])|}]
+;;
+
+let%expect_test _ =
+  pp
+  "let a = { isA: true}
+  let b = { __proto__: a}";
+  [%expect{|
+    (Programm
+       [(VarDeck
+           { var_identifier = "a"; is_const = false;
+             value = (ObjectDef [((Const (String "isA")), (Const (Bool true)))])
+             });
+         (VarDeck
+            { var_identifier = "b"; is_const = false;
+              value = (ObjectDef [((Const (String "__proto__")), (Var "a"))]) })
+         ])|}]
 ;;
 
 let%expect_test "if1" =
@@ -462,17 +670,41 @@ let%expect_test "if1" =
            (Block
               [(VarDeck
                   { var_identifier = "a"; is_const = false;
-                    value = (Some (BinOp (Add, (Var "b"), (Const (Number 6.)))))
-                    })
+                    value = (BinOp (Add, (Var "b"), (Const (Number 6.)))) })
                 ]),
            (Block
               [(VarDeck
                   { var_identifier = "b"; is_const = false;
                     value =
-                    (Some (BinOp (Add, (Const (Number 6.)), (Const (Number 7.)))))
-                    })
+                    (BinOp (Add, (Const (Number 6.)), (Const (Number 7.)))) })
                 ])
            ))
+         ])|}]
+;;
+
+let%expect_test "if1" =
+  pp
+  "
+  {
+    let let;
+  }";
+  [%expect{|
+    Error: incorrect statement: there is unexpected symbol: '{'|}]
+;;
+
+let%expect_test "if1" =
+  pp
+  "
+  {
+    let x;
+  }";
+  [%expect{|
+    (Programm
+       [(Block
+           [(VarDeck
+               { var_identifier = "x"; is_const = false;
+                 value = (Const Undefined) })
+             ])
          ])|}]
 ;;
 
@@ -489,7 +721,7 @@ let%expect_test "factorial" =
     (Programm
        [(VarDeck
            { var_identifier = "fact"; is_const = false;
-             value = (Some (Const (Number 4.))) });
+             value = (Const (Number 4.)) });
          (FunDeck
             { fun_identifier = "calculateFact"; arguments = ["fact"];
               body =
