@@ -101,6 +101,24 @@ let%expect_test _ =
 
 let%expect_test _ =
   pp ~parse:parse_expression 
+  "true";
+  [%expect{|(Expression (Const (Bool true)))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression 
+  "false";
+  [%expect{|(Expression (Const (Bool false)))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression 
+  "false1";
+  [%expect{|(Expression (Var "false1"))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression 
   "func1(var1, func2(var1), 4)";
   [%expect{|
     (Expression
@@ -423,6 +441,16 @@ let%expect_test _ =
              })
          ]) |}]
 ;;
+let%expect_test _ =
+  pp
+  "let let1 = 6";
+  [%expect{|
+    (Programm
+       [(VarDeck
+           { var_identifier = "let1"; is_const = false;
+             value = (Const (Number 6.)) })
+         ]) |}]
+;;
 
 let%expect_test _ =
   pp
@@ -563,6 +591,24 @@ let%expect_test _ =
                 (Const (Number 5.))))
              })
          ]) |}]
+;;
+
+let%expect_test _ =
+  pp
+  "function a() {
+    return this1.name;
+  }";
+  [%expect{|
+    (Programm
+       [(FunDeck
+           { fun_identifier = "a"; arguments = [];
+             body =
+             (Block
+                [(Return
+                    (BinOp (PropAccs, (Var "this1"), (Const (String "name")))))
+                  ])
+             })
+         ])|}]
 ;;
 
 let%expect_test "if1" =

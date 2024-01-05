@@ -52,7 +52,9 @@ let keywords = [
   "if";
   "return";
   "else";
-  "this"
+  "this";
+  "true";
+  "false"
 ]
 
 let is_string_sign = function
@@ -80,6 +82,12 @@ let is_valid_identifier_ch ch =
   is_valid_first_identifier_ch ch || is_digit ch
 
 let read_word = take_while is_valid_identifier_ch
+
+let end_of_word = peek_char >>= function
+| Some ch -> if is_valid_identifier_ch ch 
+  then fail "it isn't end of word" 
+  else return ()
+| _ -> return ()
 
 let empty = skip_while(is_empty)
 let empty1 = take_while1(is_empty) *> return ()
@@ -112,6 +120,7 @@ let to_end_of_stm =
 
 let some n = Some n
 let number n = Number n
+let bool b = Bool b
 let const c = Const c
 let var v = Var v
 let expression e = Expression e
@@ -122,6 +131,8 @@ let parse_number =
   <|> take_while1 is_digit >>= (function |"." -> fail "incorrect number" | _ as num -> return num)
   >>| (fun n -> number @@ float_of_string n)
 (*TODO: -,NaN..., BigINT*)
+
+let parse_bool = (string "true" *> return true) <|> (string "false" *> return false) >>| bool <* end_of_word
 
 let parse_str = 
   satisfy is_string_sign *> scan_string false (fun state ch -> 
@@ -162,13 +173,12 @@ let pre_un_op = [("+", Plus); ("-", Minus)] (*precedence 14*)
 (*----------bin operators----------*)
 
 (*([(JS name, Ast bin_op), JS precedence])*)
-let prop_accs = [(".", PropAccs)]
-let mul_div_rem_op = [("*", Mul); ("/", Div)]
-let add_sub_op = [("+", Add); ("-", Sub)]
-let equality_op = [("==", Equal); ("!=", NotEqual)]
-let assign_op = [("=", Assign)]
+let mul_div_rem_op = [("*", Mul); ("/", Div)] (*precedence 12*)
+let add_sub_op = [("+", Add); ("-", Sub)] (*precedence 11*)
+let equality_op = [("==", Equal); ("!=", NotEqual)] (*precedence 8*)
+let assign_op = [("=", Assign)] (*precedence 2*)
 
-let list_of_bops = [assign_op; equality_op; add_sub_op; mul_div_rem_op; prop_accs] (*from lower to greater precedence*)
+let list_of_bops = [assign_op; equality_op; add_sub_op; mul_div_rem_op] (*from lower to greater precedence*)
 
 let chainl1 parser op =
   let rec go acc = 
@@ -215,10 +225,11 @@ and parse_mini_expression = fun () ->
       parse_arrow_func ();
       parens @@ start_parse_expression ();
       parse_anon_func ();
+      string "this" <* end_of_word >>| var;
       parse_number >>| const;
+      parse_bool >>| const;
       parse_str >>| const;
-      valid_identifier >>| var;
-      string "this" >>| var
+      valid_identifier >>| var
     ]) <?> "invalid part of expression"
 
 and parse_spec_bop = fun () ->
