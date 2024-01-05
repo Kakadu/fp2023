@@ -8,6 +8,7 @@ type un_op =
 
 type bin_op =
   | PropAccs
+  | SqPropAccs
   | Add
   | Sub
   | Mul
