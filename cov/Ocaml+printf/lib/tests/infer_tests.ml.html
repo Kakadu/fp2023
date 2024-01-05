@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8"/>
     <title>infer_tests.ml &mdash; Coverage report</title>
-    <meta name="description" content="99.17% coverage in lib/tests/infer_tests.ml">
+    <meta name="description" content="99.21% coverage in lib/tests/infer_tests.ml">
     <link rel="stylesheet" href="../../coverage.css"/>
     <script src="../../highlight.pack.js"></script>
     <script>hljs.initHighlightingOnLoad();</script>
@@ -15,10 +15,10 @@
           <span class="dirname">lib/tests/</span>infer_tests.ml
         </a>
       </h1>
-      <h2>99.17%</h2>
+      <h2>99.21%</h2>
     </div>
     <div id="navbar">
-      <span class="unvisited" style="top:6.90%"></span>
+      <span class="unvisited" style="top:6.34%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -284,6 +284,29 @@
 <a id="L259"></a><span class="visited"> </span>
 <a id="L260"></a><span class="visited"> </span>
 <a id="L261"></a><span > </span>
+<a id="L262"></a><span > </span>
+<a id="L263"></a><span > </span>
+<a id="L264"></a><span class="visited"> </span>
+<a id="L265"></a><span > </span>
+<a id="L266"></a><span > </span>
+<a id="L267"></a><span > </span>
+<a id="L268"></a><span class="visited"> </span>
+<a id="L269"></a><span > </span>
+<a id="L270"></a><span > </span>
+<a id="L271"></a><span > </span>
+<a id="L272"></a><span class="visited"> </span>
+<a id="L273"></a><span > </span>
+<a id="L274"></a><span > </span>
+<a id="L275"></a><span > </span>
+<a id="L276"></a><span > </span>
+<a id="L277"></a><span > </span>
+<a id="L278"></a><span > </span>
+<a id="L279"></a><span > </span>
+<a id="L280"></a><span > </span>
+<a id="L281"></a><span > </span>
+<a id="L282"></a><span class="visited"> </span>
+<a id="L283"></a><span class="visited"> </span>
+<a id="L284"></a><span > </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -549,6 +572,29 @@
 <a href="#L259">259</a>
 <a href="#L260">260</a>
 <a href="#L261">261</a>
+<a href="#L262">262</a>
+<a href="#L263">263</a>
+<a href="#L264">264</a>
+<a href="#L265">265</a>
+<a href="#L266">266</a>
+<a href="#L267">267</a>
+<a href="#L268">268</a>
+<a href="#L269">269</a>
+<a href="#L270">270</a>
+<a href="#L271">271</a>
+<a href="#L272">272</a>
+<a href="#L273">273</a>
+<a href="#L274">274</a>
+<a href="#L275">275</a>
+<a href="#L276">276</a>
+<a href="#L277">277</a>
+<a href="#L278">278</a>
+<a href="#L279">279</a>
+<a href="#L280">280</a>
+<a href="#L281">281</a>
+<a href="#L282">282</a>
+<a href="#L283">283</a>
+<a href="#L284">284</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2023, aartdem *)
 
@@ -557,10 +603,10 @@
 open Ocaml_printf_lib
 
 let infer_expr_and_print_typ str =
-  <span data-count="35">l</span>et parsed = Result.get_ok (Parser.run_parser_exp<span data-count="35">r</span> str) in
-  <span data-count="35">m</span>atch Inferencer.run_infer_expr parsed with
-  | <span data-count="21">O</span>k (ty, _) -&gt; Format.printf "%a" Inferencer.pp_typ ty
-  | <span data-count="14">E</span>rror err -&gt; Format.printf "%a" Inferencer.pp_error err
+  <span data-count="37">l</span>et parsed = Result.get_ok (Parser.run_parser_exp<span data-count="37">r</span> str) in
+  <span data-count="37">m</span>atch Inferencer.run_infer_expr parsed with
+  | <span data-count="22">O</span>k (ty, _) -&gt; Format.printf "%a" Inferencer.pp_typ ty
+  | <span data-count="15">E</span>rror err -&gt; Format.printf "%a" Inferencer.pp_error err
 ;;
 
 let infer_program_and_print_env str =
@@ -810,6 +856,29 @@ let%expect_test _ =
 let%expect_test _ =
   <span data-count="1">l</span>et _ = infer_expr_and_print_typ {|fun f x -&gt; x x|} in
   <span data-count="1">[</span>%expect {| Occurs check failed |}<span data-count="9">]</span>
+;;
+
+let%expect_test _ =
+  <span data-count="1">l</span>et _ = infer_expr_and_print_typ {|
+  let rec fix f x = f (fix f) x in 
+  fix 
+  |} in
+  <span data-count="1">[</span>%expect {| (('_8 -&gt; '_9) -&gt; '_8 -&gt; '_9) -&gt; '_8 -&gt; '_9 |}<span data-count="9">]</span>
+;;
+
+let%expect_test "Formatted Logging" =
+  <span data-count="1">l</span>et _ =
+    infer_expr_and_print_typ
+      {| 
+      let log ppf  = 
+        if true then printf ppf
+        else  printf ppf
+      in 
+      log "%s" "asdf"
+        |}
+  in
+  <span data-count="1">[</span>%expect {|
+    Occurs check failed |}<span data-count="9">]</span>
 ;;
 </code></pre>
       </div>
