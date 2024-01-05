@@ -300,7 +300,7 @@ let%expect_test _ =
   [%expect{|
     (Expression
        (ObjectDef
-          [((Var "name"), (Const (Number 4.)));
+          [((Const (String "name")), (Const (Number 4.)));
             ((BinOp (Add, (Const (String "name")), (Const (Number 5.)))),
              (BinOp (Add, (Const (Number 4.)), (Const (Number 9.)))))
             ]))|}]
@@ -312,10 +312,71 @@ let%expect_test _ =
   [%expect{|
     (Expression
        (ObjectDef
-          [((Var "name"), (Const (Number 4.)));
+          [((Const (String "name")), (Const (Number 4.)));
             ((BinOp (Add, (Const (String "name")), (Const (Number 5.)))),
              (BinOp (Add, (Const (Number 4.)), (Const (Number 9.)))))
             ]))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression 
+  "{
+      name : \"Kakadu\",
+      sayName() {
+        return this.name;
+      },
+      like : \"OCaml\",
+    }";
+  [%expect{|
+    (Expression
+       (ObjectDef
+          [((Const (String "name")), (Const (String "Kakadu")));
+            ((Const (String "sayName")),
+             (AnonFunction ([],
+                (Block
+                   [(Return
+                       (BinOp (PropAccs, (Var "this"), (Const (String "name")))))
+                     ])
+                )));
+            ((Const (String "like")), (Const (String "OCaml")))]))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression 
+  "{
+      name : \"Kakadu\",
+      sayName : function () {
+        return this.name;
+      },
+      like : \"OCaml\",
+    }";
+  [%expect{|
+    (Expression
+       (ObjectDef
+          [((Const (String "name")), (Const (String "Kakadu")));
+            ((Const (String "sayName")),
+             (AnonFunction ([],
+                (Block
+                   [(Return
+                       (BinOp (PropAccs, (Var "this"), (Const (String "name")))))
+                     ])
+                )));
+            ((Const (String "like")), (Const (String "OCaml")))]))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression 
+  "hello[\"word\"]";
+  [%expect{|
+    (Expression (BinOp (SqPropAccs, (Var "hello"), (Const (String "word")))))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression 
+  "hello[a+b]";
+  [%expect{|
+    (Expression
+       (BinOp (SqPropAccs, (Var "hello"), (BinOp (Add, (Var "a"), (Var "b"))))))|}]
 ;;
 
 let%expect_test _ =
@@ -346,7 +407,7 @@ let%expect_test _ =
   "{hello : word}.hello";
   [%expect{|
     (Expression
-       (BinOp (PropAccs, (ObjectDef [((Var "hello"), (Var "word"))]),
+       (BinOp (PropAccs, (ObjectDef [((Const (String "hello")), (Var "word"))]),
           (Const (String "hello")))))|}]
 ;;
 
