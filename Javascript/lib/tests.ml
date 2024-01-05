@@ -533,6 +533,29 @@ let%expect_test "if1" =
          ])|}]
 ;;
 
+let%expect_test "if1" =
+  pp
+  "
+  {
+    let let;
+  }";
+  [%expect{|
+    Error: incorrect statement: there is unexpected symbol: '{'|}]
+;;
+
+let%expect_test "if1" =
+  pp
+  "
+  {
+    let x;
+  }";
+  [%expect{|
+    (Programm
+       [(Block
+           [(VarDeck { var_identifier = "x"; is_const = false; value = None })])
+         ])|}]
+;;
+
 let%expect_test "factorial" =
   pp
   "let fact = 4
