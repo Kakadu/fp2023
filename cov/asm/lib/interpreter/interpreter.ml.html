@@ -537,11 +537,11 @@ let eval_statement = function
        <span data-count="3">w</span>rite_xmm_reg r1 (high1 * high2, low1 * low2))
   | <span data-count="10">I</span>nstruction (Pinsrq, args) -&gt;
     (match args with
-     | <span data-count="10">R</span>eg_128_reg_64_imm_a (r1, r2, Imm_int i) when (i land 1) = 0 -&gt;
+     | <span data-count="10">R</span>eg_128_reg_64_imm_a (r1, r2, Imm_int i) when i land 1 = 0 -&gt;
        <span data-count="5">l</span>et* high, _low = read_xmm_re<span data-count="5">g</span> r1 in
        <span data-count="5">l</span>et* v2 = read_re<span data-count="5">g</span> r2 in
        <span data-count="5">w</span>rite_xmm_reg r1 (high, v2)
-     | <span data-count="5">R</span>eg_128_reg_64_imm_a (r1, r2, Imm_int i) when (i land 1) = 1 -&gt;
+     | <span data-count="5">R</span>eg_128_reg_64_imm_a (r1, r2, Imm_int i) when i land 1 = 1 -&gt;
        <span data-count="5">l</span>et* _high, low = read_xmm_re<span data-count="5">g</span> r1 in
        <span data-count="5">l</span>et* v2 = read_re<span data-count="5">g</span> r2 in
        <span data-count="5">w</span>rite_xmm_reg r1 (v2, low)
