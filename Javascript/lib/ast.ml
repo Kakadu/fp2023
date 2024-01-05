@@ -22,6 +22,7 @@ type typename =
   | Number of float
   | String of string
   | Undefined
+  | Bool of bool
 [@@deriving eq, show {with_path = false}]
 
 type expression =
