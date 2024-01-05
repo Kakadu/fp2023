@@ -330,7 +330,7 @@ let%expect_test _ =
   "hello.word()";
   [%expect{|
     (Expression
-       (BinOp (PropAccs, (Var "hello"), (FunctionCall ((Var "word"), [])))))|}]
+       (FunctionCall ((BinOp (PropAccs, (Var "hello"), (Var "word"))), [])))|}]
 ;;
 
 let%expect_test _ =
