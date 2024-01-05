@@ -7,12 +7,14 @@ type un_op =
 [@@deriving eq, show {with_path = false}]
 
 type bin_op =
+  | PropAccs
   | Add
   | Sub
   | Mul
   | Div
   | Equal
   | NotEqual
+  | Assign
 [@@deriving eq, show {with_path = false}]
 
 type typename =
@@ -23,12 +25,11 @@ type typename =
 type expression =
   | UnOp of un_op * expression
   | BinOp of bin_op * expression * expression
-  | UnrecognizedOp of bin_op
-  | Parens of expression
   | Const of typename
   | Var of string
   | FunctionCall of expression * expression list
   | AnonFunction of string list * statement
+  | ObjectDef of (expression * expression) list
 [@@deriving eq, show {with_path = false}]
 
 and var_init =
