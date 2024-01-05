@@ -201,7 +201,7 @@ let rec parse_arrow_func = fun () ->
 
 and parse_anon_func = fun () ->
   token_str "function" *> token parse_args_names >>= fun args-> 
-    (parse_block_or_stm () <* to_end_of_stm)
+    (parse_block_or_stm ())
     >>| fun body -> AnonFunction(args, body)
 
 and parse_object_deck = fun () ->
@@ -215,7 +215,7 @@ and parse_object_deck = fun () ->
     (*method parser*)
     (valid_identifier >>= fun name -> 
       token parse_args_names >>= fun arguments -> 
-        (parse_block_or_stm () <* to_end_of_stm)
+        (parse_block_or_stm ())
         >>| fun body -> (const (String name), AnonFunction(arguments, body))
     ))
   ) >>| fun properties ->
@@ -263,12 +263,12 @@ and start_parse_expression = fun () ->
 (*----------statement parsers----------*)
 
 and parse_return = fun () ->
-  start_parse_expression () >>| (fun c -> Return c) <* to_end_of_stm
+  start_parse_expression () >>| (fun c -> Return c)
 
 and parse_func = fun () ->
   valid_identifier >>= fun name -> 
     token parse_args_names >>= fun arguments -> 
-      (parse_block_or_stm () <* to_end_of_stm)
+      (parse_block_or_stm ())
       >>| fun body -> FunDeck { 
           fun_identifier = name; 
           arguments = arguments; 
@@ -280,7 +280,7 @@ and parse_var (init_word: string) =
   >>= fun identifier ->
     (option false (token_str "=" *> return true) >>= function
     | true -> start_parse_expression ()
-    | _ -> return (Const(Undefined))) <* to_end_of_stm >>| fun expr ->
+    | _ -> return (Const(Undefined))) >>| fun expr ->
       VarDeck 
       {
         var_identifier = identifier;
@@ -305,7 +305,7 @@ and parse_if = fun () ->
 
 and parse_stm = fun () ->
   parse_empty_stms *> token (
-    parse_block () <|>
+    (parse_block ()) <|>
     (start_parse_expression () >>| expression) <|>
     (read_word >>= 
     (fun word -> match word with
@@ -315,7 +315,7 @@ and parse_stm = fun () ->
       | "return" -> token1 @@ parse_return () <?> "wrong return statement"
       | "" ->  peek_char_fail >>= fun ch -> fail @@ "there is unexpected symbol: '"^(Char.escaped ch)^"'"
       | _ -> fail @@ "there is an invalid keyword: \""^word^"\""
-    ))) <* empty <?> "incorrect statement"
+    ))) <* to_end_of_stm <?> "incorrect statement"
 
 and parse_statements stopper =
     many_till (parse_stm ()) stopper
