@@ -21,6 +21,7 @@ type bin_op =
 type typename =
   | Number of float
   | String of string
+  | Undefined
 [@@deriving eq, show {with_path = false}]
 
 type expression =
@@ -37,7 +38,7 @@ and var_init =
 {
   var_identifier: string;
   is_const: bool;
-  value: expression option
+  value: expression
 }
 
 and fun_init =
