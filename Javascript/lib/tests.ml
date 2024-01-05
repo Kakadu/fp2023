@@ -276,6 +276,72 @@ let%expect_test _ =
           (BinOp (Mul, (Const (Number 2.)), (Const (Number 3.)))))))|}]
 ;;
 
+let%expect_test _ =
+  pp ~parse:parse_expression 
+  "func1(4)+(5+6)";
+  [%expect{|
+    (Expression
+       (BinOp (Add, (FunctionCall ((Var "func1"), [(Const (Number 4.))])),
+          (BinOp (Add, (Const (Number 5.)), (Const (Number 6.)))))))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression 
+  "func1(4)+(5+6)";
+  [%expect{|
+    (Expression
+       (BinOp (Add, (FunctionCall ((Var "func1"), [(Const (Number 4.))])),
+          (BinOp (Add, (Const (Number 5.)), (Const (Number 6.)))))))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression 
+  "{name : 4, [\"name\"+5] : 4 + 9}";
+  [%expect{|
+    (Expression
+       (ObjectDef
+          [((Var "name"), (Const (Number 4.)));
+            ((BinOp (Add, (Const (String "name")), (Const (Number 5.)))),
+             (BinOp (Add, (Const (Number 4.)), (Const (Number 9.)))))
+            ]))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression 
+  "{name : 4, [\"name\"+5] : 4 + 9,}";
+  [%expect{|
+    (Expression
+       (ObjectDef
+          [((Var "name"), (Const (Number 4.)));
+            ((BinOp (Add, (Const (String "name")), (Const (Number 5.)))),
+             (BinOp (Add, (Const (Number 4.)), (Const (Number 9.)))))
+            ]))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression 
+  "hello . word";
+  [%expect{|
+    (Expression (BinOp (PropAccs, (Var "hello"), (Var "word"))))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression 
+  "hello.word()";
+  [%expect{|
+    (Expression
+       (BinOp (PropAccs, (Var "hello"), (FunctionCall ((Var "word"), [])))))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression 
+  "{hello : word}.hello";
+  [%expect{|
+    (Expression
+       (BinOp (PropAccs, (ObjectDef [((Var "hello"), (Var "word"))]),
+          (Var "hello"))))|}]
+;;
+
 (**---------------Statements parsers---------------*)
 
 let%expect_test _ =
@@ -420,15 +486,6 @@ let%expect_test _ =
                       [(Const (Number 4.))])))
              })
          ]) |}]
-;;
-
-let%expect_test _ =
-  pp ~parse:parse_expression 
-  "func1(4)+(5+6)";
-  [%expect{|
-    (Expression
-       (BinOp (Add, (FunctionCall ((Var "func1"), [(Const (Number 4.))])),
-          (BinOp (Add, (Const (Number 5.)), (Const (Number 6.)))))))|}]
 ;;
 
 let%expect_test _ =

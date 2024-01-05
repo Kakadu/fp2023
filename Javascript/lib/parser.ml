@@ -8,8 +8,6 @@ type error = [ `ParsingError of string ]
 
 let chars2string chars = List.fold_left (fun a b -> a ^ Char.escaped b) "" chars
 
-let nothing = return ()
-
 let is_space = function 
   | ' '
   | '\t' -> true
@@ -88,7 +86,8 @@ let spaces = skip_while(is_space)
 let token_space p = spaces *> p
 let token p = empty *> p
 let token1 p = empty1 *> p
-let token_ch ch = token @@ char ch *> return ()
+let token_btw p = empty *> p <* empty
+let token_ch ch = token_btw @@ char ch
 let token_str s = token @@ string s
 
 let between p l r= l *> p <* r
@@ -96,8 +95,11 @@ let lp = token_ch '('
 let rp = token_ch ')'
 let lc = token_ch '{'
 let rc = token_ch '}'
+let ls = token_ch '['
+let rs = token_ch ']'
 let parens p = between p lp rp
 let cur_parens p = between p lc rc
+let sq_parens p = between p ls rs
 
 let empty_stm = 
   empty *> 
@@ -151,11 +153,13 @@ let pre_un_op = [("+", Plus); ("-", Minus)] (*precedence 14*)
 
 (*----------bin operators----------*)
 
+let prop_accs = [(".", PropAccs)] (*precedence 17*)
 let mul_div_rem_op = [("*", Mul); ("/", Div)] (*precedence 12*)
 let add_sub_op = [("+", Add); ("-", Sub)] (*precedence 11*)
 let equality_op = [("==", Equal); ("!=", NotEqual)] (*precedence 8*)
+let assign_op = [("=", Assign)] (*precedence 3*)
 
-let list_of_bops = [equality_op; add_sub_op; mul_div_rem_op] (*from lower to greater precedence*)
+let list_of_bops = [assign_op; equality_op; add_sub_op; mul_div_rem_op; prop_accs] (*from lower to greater precedence*)
 
 let parse_op ops =
   choice
@@ -170,7 +174,7 @@ let chainl1 parser op =
 (*----------expression parsers----------*)
 
 let rec parse_arguments = fun () ->
-  parens(sep_by (token_str ",") (start_parse_expression ())) <?> "incorrect function arguments"
+  parens(sep_by (token_ch ',') (start_parse_expression ())) <?> "incorrect function arguments"
   
 and parse_arrow_func = fun () ->
   token parse_args_names >>= fun args ->
@@ -203,8 +207,20 @@ and parse_pre_uop = fun () ->
   | Some op -> parse_pre_uop () >>| (fun ex -> UnOp(op, ex))
   | _ -> parse_mini_expression ()
 
+and parse_object_deck = fun () ->
+  cur_parens ((sep_by (token_ch ',')
+    (both (choice [
+      sq_parens @@ start_parse_expression ();
+      parse_str >>| const;
+      valid_identifier >>| var
+    ])
+    (token_ch ':' *> start_parse_expression ())) 
+  ) <* (token_ch ',' <|> return ' ')) >>| fun properties ->
+    ObjectDef properties
+
 and parse_mini_expression = fun () ->
   token (choice [
+      parse_object_deck ();
       parse_arrow_func ();
       parse_func_call ();
       parens @@ start_parse_expression ();
