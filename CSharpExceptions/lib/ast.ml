@@ -95,6 +95,7 @@ type expr =
 and params = Params of expr list [@@deriving show { with_path = false }]
 
 type var_decl = Var_decl of var_type * ident [@@deriving show { with_path = false }]
+(* TODO: Переименовать на параметры *)
 type args = Args of var_decl list [@@deriving show { with_path = false }]
 
 type statement =

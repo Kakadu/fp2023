@@ -54,7 +54,7 @@ SPDX-License-Identifier: CC0-1.0
                    ))
                  ])
             ));
-          (Main
+          (Main (Void,
              (Steps
                 [(SDecl (
                     (Var_decl ((TVar (TNot_Nullable TInt)), (Id "number"))),
@@ -65,7 +65,8 @@ SPDX-License-Identifier: CC0-1.0
                   (SReturn
                      (Some (EMethod_invoke ((EIdentifier (Id "Fac")),
                               (Params [(EIdentifier (Id "number"))])))))
-                  ]))
+                  ])
+             ))
           ]
         }
        ])
