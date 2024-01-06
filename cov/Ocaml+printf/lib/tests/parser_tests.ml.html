@@ -323,6 +323,22 @@
 <a id="L299"></a><span class="visited"> </span>
 <a id="L300"></a><span class="visited"> </span>
 <a id="L301"></a><span > </span>
+<a id="L302"></a><span > </span>
+<a id="L303"></a><span > </span>
+<a id="L304"></a><span class="visited"> </span>
+<a id="L305"></a><span class="visited"> </span>
+<a id="L306"></a><span > </span>
+<a id="L307"></a><span > </span>
+<a id="L308"></a><span > </span>
+<a id="L309"></a><span > </span>
+<a id="L310"></a><span > </span>
+<a id="L311"></a><span > </span>
+<a id="L312"></a><span > </span>
+<a id="L313"></a><span > </span>
+<a id="L314"></a><span > </span>
+<a id="L315"></a><span > </span>
+<a id="L316"></a><span class="visited"> </span>
+<a id="L317"></a><span > </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -628,6 +644,22 @@
 <a href="#L299">299</a>
 <a href="#L300">300</a>
 <a href="#L301">301</a>
+<a href="#L302">302</a>
+<a href="#L303">303</a>
+<a href="#L304">304</a>
+<a href="#L305">305</a>
+<a href="#L306">306</a>
+<a href="#L307">307</a>
+<a href="#L308">308</a>
+<a href="#L309">309</a>
+<a href="#L310">310</a>
+<a href="#L311">311</a>
+<a href="#L312">312</a>
+<a href="#L313">313</a>
+<a href="#L314">314</a>
+<a href="#L315">315</a>
+<a href="#L316">316</a>
+<a href="#L317">317</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2023, aartdem *)
 
@@ -636,8 +668,8 @@
 open Ocaml_printf_lib
 
 let parse_and_print str =
-  <span data-count="17">m</span>atch Parser.run_parser_program str with
-  | <span data-count="15">R</span>esult.Ok program -&gt; Format.printf "%a\n" Ast.pp_program program
+  <span data-count="18">m</span>atch Parser.run_parser_program str with
+  | <span data-count="16">R</span>esult.Ok program -&gt; Format.printf "%a\n" Ast.pp_program program
   | <span data-count="2">R</span>esult.Error str -&gt; Format.printf "Parsing error%s\n" str
 ;;
 
@@ -762,13 +794,13 @@ let%expect_test _ =
     {|
     [(Let_decl
         (false, (LCIdent "tuple1"),
-         (Expr_tuple
-            [(Expr_const (Int 1)); (Expr_val (LCIdent "x"));
+         (Expr_tuple ((Expr_const (Int 1)),
+            [(Expr_val (LCIdent "x"));
               (Bin_op (Add, (Expr_const (Int 1)), (Expr_const (Int 2))));
-              (Expr_tuple
-                 [(Expr_const (Int 1)); (Expr_const (Int 2));
-                   (Expr_const (Int 3))])
-              ])))
+              (Expr_tuple ((Expr_const (Int 1)),
+                 [(Expr_const (Int 2)); (Expr_const (Int 3))]))
+              ]
+            ))))
       ] |}<span data-count="9">]</span>
 ;;
 
@@ -833,16 +865,16 @@ let%expect_test _ =
          (Expr_let (
             (false, (LCIdent "f"),
              (Expr_fun (
-                (Pat_tuple
-                   [(Pat_cons_list ((Pat_val (LCIdent "t")),
-                       (Pat_cons_list ((Pat_const (Int 1)),
-                          (Pat_cons_list (
-                             (Pat_tuple
-                                [(Pat_const (Int 1)); (Pat_const (Int 2))]),
-                             (Pat_val (LCIdent "y"))))
-                          ))
-                       ));
-                     (Pat_const (Int 3))]),
+                (Pat_tuple (
+                   (Pat_cons_list ((Pat_val (LCIdent "t")),
+                      (Pat_cons_list ((Pat_const (Int 1)),
+                         (Pat_cons_list (
+                            (Pat_tuple ((Pat_const (Int 1)),
+                               [(Pat_const (Int 2))])),
+                            (Pat_val (LCIdent "y"))))
+                         ))
+                      )),
+                   [(Pat_const (Int 3))])),
                 (Expr_val (LCIdent "a"))))),
             (Expr_val (LCIdent "f"))))))
       ] |}<span data-count="9">]</span>
@@ -929,6 +961,22 @@ let%expect_test _ =
   <span data-count="1">l</span>et _ = parse_and_print {|let str = "\x"|} in
   <span data-count="1">[</span>%expect {|
     Parsing error: no more choices |}<span data-count="9">]</span>
+;;
+
+let%expect_test _ =
+  <span data-count="1">l</span>et _ = parse_and_print {|let f (a, b) = a + b;; let a = f (1, 2)|} in
+  <span data-count="1">[</span>%expect
+    {|
+    [(Let_decl
+        (false, (LCIdent "f"),
+         (Expr_fun (
+            (Pat_tuple ((Pat_val (LCIdent "a")), [(Pat_val (LCIdent "b"))])),
+            (Bin_op (Add, (Expr_val (LCIdent "a")), (Expr_val (LCIdent "b"))))))));
+      (Let_decl
+         (false, (LCIdent "a"),
+          (Expr_app ((Expr_val (LCIdent "f")),
+             (Expr_tuple ((Expr_const (Int 1)), [(Expr_const (Int 2))]))))))
+      ] |}<span data-count="9">]</span>
 ;;
 </code></pre>
       </div>

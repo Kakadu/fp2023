@@ -692,12 +692,12 @@ let%expect_test _ =
 
 let%expect_test _ =
   <span data-count="1">l</span>et _ = infer_expr_and_print_typ {|fun (a,b,c,d) -&gt; a + d|} in
-  <span data-count="1">[</span>%expect {| (int * '_4 * '_3 * int) -&gt; int |}<span data-count="9">]</span>
+  <span data-count="1">[</span>%expect {| (int * '_5 * '_4 * int) -&gt; int |}<span data-count="9">]</span>
 ;;
 
 let%expect_test _ =
   <span data-count="1">l</span>et _ = infer_expr_and_print_typ {|fun (a,b,(2::t),d) -&gt; a + d|} in
-  <span data-count="1">[</span>%expect {| (int * '_5 * int list * int) -&gt; int |}<span data-count="9">]</span>
+  <span data-count="1">[</span>%expect {| (int * '_6 * int list * int) -&gt; int |}<span data-count="9">]</span>
 ;;
 
 let%expect_test _ =

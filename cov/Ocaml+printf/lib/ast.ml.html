@@ -221,8 +221,8 @@
 (** Empty list means empty string *)
 <span data-count="0">t</span>ype fstring = <span data-count="0">f</span>mt_item lis<span data-count="0">t</span> [@@deriving show { with_path = false }<span data-count="0">]</span>
 
-<span data-count="168">t</span>ype const =
-  | Int of in<span data-count="47">t</span> (** 1 *)
+<span data-count="174">t</span>ype const =
+  | Int of in<span data-count="49">t</span> (** 1 *)
   | Bool of boo<span data-count="3">l</span> (** true *)
   | Char of cha<span data-count="0">r</span> (** 'a' *)
   | String of strin<span data-count="6">g</span> (** "abc" *)
@@ -233,7 +233,7 @@
   | Un_minus (** - *)
 [@@deriving show { with_path = false }]
 
-<span data-count="20">t</span>ype bin_op =
+<span data-count="21">t</span>ype bin_op =
   | Add (** + *)
   | Sub (** - *)
   | Mul (** * *)
@@ -250,19 +250,19 @@
   | Concat_format (** ^^ *)
 [@@deriving show { with_path = false }]
 
-<span data-count="225">t</span>ype val_name = LCIdent of strin<span data-count="75">g</span> (** variable_name1 *)
+<span data-count="246">t</span>ype val_name = LCIdent of strin<span data-count="82">g</span> (** variable_name1 *)
 [@@deriving show { with_path = false }]
 
-<span data-count="111">t</span>ype pattern =
+<span data-count="124">t</span>ype pattern =
   | Pat_any (** _ *)
   | Pat_val of val_name (** abc *)
   | Pat_const of const (** 1 *)
-  | Pat_tuple of <span data-count="18">p</span>attern lis<span data-count="4">t</span> (** (1, 2) *)
+  | Pat_tuple of pattern * <span data-count="18">p</span>attern lis<span data-count="6">t</span> (** (1, 2) *)
   | Pat_cons_list of pattern * pattern (** 1::[] or [1;2] *)
   | Pat_empty_list (** [] *)
-[@@deriving show { with_path = false }<span data-count="66">]</span>
+[@@deriving show { with_path = false }<span data-count="74">]</span>
 
-<span data-count="985">t</span>ype expr =
+<span data-count="1040">t</span>ype expr =
   | Expr_const of const (** 1 *)
   | Un_op of un_op * expr (** -1 *)
   | Bin_op of bin_op * expr * expr (** 2 + 2 *)
@@ -274,7 +274,7 @@
   | Expr_match of expr * <span data-count="10">(</span><span data-count="4">p</span>attern * expr) lis<span data-count="3">t</span> (** match x with | 1 -&gt; 0 | _ -&gt; 1 *)
   | Expr_empty_list (** [] *)
   | Expr_cons_list of expr * expr (** 1::[] or [1;2] *)
-  | Expr_tuple of <span data-count="30">e</span>xpr lis<span data-count="7">t</span> (** (1, a, 'c') *)
+  | Expr_tuple of expr * <span data-count="30">e</span>xpr lis<span data-count="9">t</span> (** (1, a, 'c') *)
   | Expr_seq of expr * expr (** e1; e2 *)
   | Expr_fstring of fstring (*** "abc%d %c" *)
   (* hard-coded functions *)
@@ -285,14 +285,14 @@
   | Expr_length (** length str *)
 [@@deriving show { with_path = false }]
 
-<span data-count="0">a</span>nd decl = <span data-count="46">b</span>oo<span data-count="23">l</span> * val_name * exp<span data-count="783">r</span>
+<span data-count="0">a</span>nd decl = <span data-count="50">b</span>oo<span data-count="25">l</span> * val_name * exp<span data-count="827">r</span>
 
-<span data-count="84">t</span>ype toplevel =
+<span data-count="92">t</span>ype toplevel =
   | Let_decl of decl (** let a = 1 *)
   | Expr of expr (** printf "abc" *)
-[@@deriving show { with_path = false }<span data-count="42">]</span>
+[@@deriving show { with_path = false }<span data-count="46">]</span>
 
-<span data-count="21">t</span>ype program = <span data-count="100">t</span>oplevel lis<span data-count="21">t</span> [@@deriving show { with_path = false }<span data-count="42">]</span>
+<span data-count="23">t</span>ype program = <span data-count="109">t</span>oplevel lis<span data-count="23">t</span> [@@deriving show { with_path = false }<span data-count="46">]</span>
 </code></pre>
       </div>
     </div>
