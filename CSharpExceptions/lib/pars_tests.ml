@@ -173,8 +173,9 @@ let%expect_test "" =
     {|
       STry_catch_fin {try_s = (Steps []);
         catch_s =
-        (Some ((Some ((Var_decl ((TVar (TNullable (TClass (Id "Excaption")))),
-                         (Id "e"))),
+        (Some ((Some ((CDecl
+                         (Var_decl ((TVar (TNullable (TClass (Id "Excaption")))),
+                            (Id "e")))),
                       None)),
                (Steps [])));
         finally_s = (Some (Steps []))} |}]
@@ -186,8 +187,9 @@ let%expect_test "" =
     {|
       STry_catch_fin {try_s = (Steps []);
         catch_s =
-        (Some ((Some ((Var_decl ((TVar (TNullable (TClass (Id "Excaption")))),
-                         (Id "e"))),
+        (Some ((Some ((CDecl
+                         (Var_decl ((TVar (TNullable (TClass (Id "Excaption")))),
+                            (Id "e")))),
                       (Some (EIdentifier (Id "e"))))),
                (Steps [])));
         finally_s = (Some (Steps []))} |}]

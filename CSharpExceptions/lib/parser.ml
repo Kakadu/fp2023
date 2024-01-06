@@ -2,8 +2,6 @@
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-(* TODO: implement parser here *)
-
 open Base
 open Angstrom
 open Ast
@@ -126,6 +124,13 @@ let p_bool =
   | false -> fail "Not a bool"
 ;;
 
+let p_null =
+  s_token
+  >>= function
+  | "null" -> return Null
+  | _ -> fail "Not a null"
+;;
+
 let p_ident =
   s_token
   >>= fun str ->
@@ -196,10 +201,14 @@ let ep_number = val_to_expr p_number
 let ep_char = val_to_expr p_char
 let ep_string = val_to_expr p_string
 let ep_bool = val_to_expr p_bool
-let ep_identifier = ep_spaces p_ident >>= fun x -> return (EIdentifier x)
+let ep_null = val_to_expr p_null
+let ep_ident = ep_spaces p_ident
+let ep_identifier = ep_ident >>= fun x -> return (EIdentifier x)
 
 let ep_value =
-  choice ?failure_msg:(Some "Not a value") [ ep_bool; ep_char; ep_number; ep_string ]
+  choice
+    ?failure_msg:(Some "Not a value")
+    [ ep_bool; ep_char; ep_number; ep_string; ep_null ]
 ;;
 
 let ep_dot = ep_spaces @@ (char '.' *> return (fun e1 e2 -> EPoint_access (e1, e2)))
@@ -300,10 +309,7 @@ let ep_return =
 ;;
 
 let ep_throw =
-  lift2
-    (fun _ ex -> SThrow ex)
-    (ep_keyword_ "throw")
-    (ep_operation >>= (fun x -> return x))
+  lift2 (fun _ ex -> SThrow ex) (ep_keyword_ "throw") (ep_operation >>= fun x -> return x)
 ;;
 
 (* Loops and brunches parsing *)
@@ -372,9 +378,14 @@ let ep_brunch_loop_ ep_body =
 let ep_try_block_ ep_body = ep_is_ "try" ~then_:ep_body
 
 let ep_catch_block_ ep_body =
+  let cdecl x = return (CDecl x) in
+  let cident x = return (CIdent x) in
   let p_filter = option None (get_opt @@ ep_is_ "when" ~then_:(ep_parens ep_operation)) in
   let p_cond =
-    lift2 (fun decl filter -> Some (decl, filter)) (ep_parens @@ ep_var_decl) p_filter
+    lift2
+      (fun decl filter -> Some (decl, filter))
+      (ep_parens @@ (ep_var_decl >>= cdecl <|> (ep_ident >>= cident)))
+      p_filter
   in
   let p_catch = p_cond <|> ep_parens (return None) in
   lift2 (fun cond body -> cond, body) (ep_is_ "catch" ~then_:p_catch) ep_body
@@ -484,8 +495,8 @@ let ep_method_member =
   lift2 (fun mt bd -> Method (mt, bd)) (return mt) ep_steps
   >>= function
   | Method (m, body) when maybe_main_ m ->
-    (match (is_main_ m), m with
-     | true, {m_modif=_; m_type; _} -> return (Main (m_type, body))
+    (match is_main_ m, m with
+     | true, { m_modif = _; m_type; _ } -> return (Main (m_type, body))
      | false, _ -> fail "")
   | m -> return m
 ;;

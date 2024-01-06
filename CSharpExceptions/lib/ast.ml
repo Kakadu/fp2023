@@ -47,16 +47,15 @@ type meth_type =
 type access_modifier =
   | MPublic
   | MPrivate
-  | MProtected (* TODO: rudimental, can be used as a MPrivate *)
+  | MProtected (* UNSOPPORTED: rudimental, can be used as a MPrivate *)
 [@@deriving show { with_path = false }]
 
 type method_modifier =
-  | MAccess of access_modifier 
-  | MStatic (* TODO: UNSOPPORTED only with main *)
+  | MAccess of access_modifier
+  | MStatic (* UNSOPPORTED: only with main *)
 [@@deriving show { with_path = false }]
 
-type fild_modifier = FAccess of access_modifier
-[@@deriving show { with_path = false }]
+type fild_modifier = FAccess of access_modifier [@@deriving show { with_path = false }]
 
 type bin_op =
   | Asterisk (* [*] *)
@@ -95,8 +94,14 @@ type expr =
 and params = Params of expr list [@@deriving show { with_path = false }]
 
 type var_decl = Var_decl of var_type * ident [@@deriving show { with_path = false }]
+
 (* TODO: Переименовать на параметры *)
 type args = Args of var_decl list [@@deriving show { with_path = false }]
+
+type catch_decl =
+  | CDecl of var_decl
+  | CIdent of ident
+[@@deriving show { with_path = false }]
 
 type statement =
   | SExpr of expr
@@ -115,7 +120,8 @@ type statement =
       }
   | STry_catch_fin of
       { try_s : statement
-      ; catch_s : ((var_decl * expr option) option * statement) option (*!!! only new decl in catch_cond |-> (catch_cond * filter_opt)_opt * body *)
+      ; catch_s : ((catch_decl * expr option) option * statement) option
+          (*!!! only new decl in catch_cond |-> (catch_cond * filter_opt)_opt * body *)
       ; finally_s : statement option
       }
 [@@deriving show { with_path = false }]
@@ -148,8 +154,8 @@ type main_sign = meth_type [@@deriving show { with_path = false }]
 type class_member =
   | Fild of fild_sign * expr option
   | Main of main_sign * statement
-  | Method of method_sign * statement (* statment - Steps *)
-  | Constructor of constructor_sign * statement (* statment - Steps *)
+  | Method of method_sign * statement
+  | Constructor of constructor_sign * statement
 [@@deriving show { with_path = false }]
 
 type class_decl =
