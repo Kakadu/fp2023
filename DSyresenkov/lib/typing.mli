@@ -5,8 +5,6 @@
 (* Set of variables *)
 type id = string [@@deriving show { with_path = false }]
 
-module VarSet : Set.S with type elt = int
-
 (* Base types *)
 type base_type =
   | BInt (** Basic integer type *)
@@ -30,5 +28,3 @@ type error =
   | NotImplemented (** Still not implemented features *)
 
 val pp_error : Format.formatter -> error -> unit
-
-type scheme = S of VarSet.t * ty

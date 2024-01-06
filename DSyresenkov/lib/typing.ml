@@ -7,10 +7,6 @@ open Format
 
 type id = string [@@deriving show { with_path = false }]
 
-module VarSet = struct
-  include Stdlib.Set.Make (Int)
-end
-
 (* Base types *)
 type base_type =
   | BInt (** Basic integer type *)
@@ -67,5 +63,3 @@ let pp_error fmt = function
     fprintf fmt "Failed to unify types %a and %a" pp_ty l pp_ty r
   | NotImplemented -> Stdlib.print_endline "Expression contains not implemented features"
 ;;
-
-type scheme = S of VarSet.t * ty
