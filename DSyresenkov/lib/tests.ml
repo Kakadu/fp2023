@@ -171,6 +171,20 @@ module InferTests = struct
     [%expect {| ('0 -> '0) * ('1 -> '2 -> '1 * '2) |}]
   ;;
 
+  let%expect_test _ =
+    pp_parse_and_infer
+      {| let permutation_of_123 l =
+        match l with
+        | 1 :: 2 :: 3 :: []
+        | 1 :: 3 :: 2 :: []
+        | 2 :: 1 :: 3 :: []
+        | 2 :: 3 :: 1 :: []
+        | 3 :: 1 :: 2 :: []
+        | 3 :: 2 :: 1 :: [] -> true
+        | _ -> false |};
+    [%expect {| int list -> bool |}]
+  ;;
+
   (* Errors *)
 
   let%expect_test _ =
@@ -202,5 +216,17 @@ module InferTests = struct
     pp_parse_and_infer
       "let f x = match x with | a :: b -> a | ((a :: true) :: c) :: tl -> c ";
     [%expect {| Failed to unify types '4 list and bool |}]
+  ;;
+
+  let%expect_test _ =
+    pp_parse_and_infer
+      "let f x = match x with | a :: b :: y :: tl | a :: b :: z :: tl -> tl";
+    [%expect {| Variable z doesn't occure in some 'or' patterns |}]
+  ;;
+
+  let%expect_test _ =
+    pp_parse_and_infer "let f x = match x with | a :: 1 :: _ | a :: false :: _ -> a";
+    [%expect
+      {| Variable a has different types in 'or' patterns: int and bool are not equal |}]
   ;;
 end

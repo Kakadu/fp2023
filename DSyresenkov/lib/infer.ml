@@ -62,6 +62,27 @@ module Type = struct
     in
     helper VarSet.empty
   ;;
+
+  let equal : ty -> ty -> bool =
+    let rec helper l r =
+      match l, r with
+      | TBase l, TBase r -> l = r
+      | TVar _, TVar _ -> true
+      | TArrow (l1, r1), TArrow (l2, r2) -> helper l1 r1 && helper r2 l2
+      | TTuple (l1, l2, ls), TTuple (r1, r2, rs) ->
+        helper l1 r1
+        && helper l2 r2
+        &&
+          (match
+             Base.List.fold2 ls rs ~init:true ~f:(fun acc l r -> acc && helper l r)
+           with
+          | Ok r -> r
+          | Unequal_lengths -> false)
+      | TList l, TList r -> helper l r
+      | _ -> false
+    in
+    helper
+  ;;
 end
 
 module Subst = struct
@@ -72,10 +93,10 @@ module Subst = struct
 
   let empty : t = Base.Map.empty (module Base.Int)
 
-  let single_subst (k, v) =
+  let singleton (k, v) =
     if Type.occurs_in k v
     then fail (OccursCheckFailed (k, v))
-    else return (Base.Map.set empty ~key:k ~data:v)
+    else return (Base.Map.singleton (module Base.Int) k v)
   ;;
 
   let apply (subst : t) =
@@ -98,7 +119,7 @@ module Subst = struct
     | TBase l, TBase r when l = r -> return empty
     | TBase _, TBase _ -> fail (UnificationFailed (l, r))
     | TVar l, TVar r when l = r -> return empty
-    | TVar b, t | t, TVar b -> single_subst (b, t)
+    | TVar b, t | t, TVar b -> singleton (b, t)
     | TArrow (l1, r1), TArrow (l2, r2) ->
       let* subs1 = unify l1 l2 in
       let* subs2 = unify (apply subs1 r1) (apply subs1 r2) in
@@ -119,18 +140,18 @@ module Subst = struct
 
   and extend (subst : t) (k, v) : (t, error) R.t =
     match Base.Map.find subst k with
+    | Some v2 ->
+      let* subst2 = unify v v2 in
+      compose subst subst2
     | None ->
       let v = apply subst v in
-      let* subst2 = single_subst (k, v) in
+      let* subst2 = singleton (k, v) in
       Base.Map.fold subst ~init:(return subst2) ~f:(fun ~key:k ~data:v acc ->
         let* acc = acc in
         let v = apply subst2 v in
         if Type.occurs_in k v
         then fail (OccursCheckFailed (k, v))
         else return (Base.Map.set acc ~key:k ~data:v))
-    | Some v2 ->
-      let* subst2 = unify v v2 in
-      compose subst subst2
 
   and compose subst1 subst2 =
     Base.Map.fold subst1 ~init:(return subst2) ~f:(fun ~key:k ~data:v acc ->
@@ -154,9 +175,13 @@ module Scheme = struct
     let subst2 = VarSet.fold s ~init:subst ~f:(fun acc k -> Base.Map.remove acc k) in
     S (s, Subst.apply subst2 ty)
   ;;
+
+  let equal (S (s1, ty1)) (S (s2, ty2)) = VarSet.equal s1 s2 && Type.equal ty1 ty2
 end
 
 module TypeEnv = struct
+  include Base.Map
+
   type t = (id, Scheme.t, Base.String.comparator_witness) Base.Map.t
 
   let empty : t = Base.Map.empty (module Base.String)
@@ -174,6 +199,25 @@ module TypeEnv = struct
   let extend : t -> id * Scheme.t -> t =
     fun env (id, sch) -> Base.Map.set env ~key:id ~data:sch
   ;;
+
+  let equal : t -> t -> bool = Base.Map.equal Scheme.equal
+
+  (* Returns set of variable id's which occure only in one of two enviroments *)
+  let vars_diff : t -> t -> id list =
+    fun env1 env2 ->
+    Base.Map.fold2 env1 env2 ~init:[] ~f:(fun ~key:id ~data:v acc ->
+      match v with
+      | `Left _ | `Right _ -> id :: acc
+      | `Both _ -> acc)
+  ;;
+
+  let schemes_diff : t -> t -> (id * Scheme.t * Scheme.t) list =
+    fun env1 env2 ->
+    Base.Map.fold2 env1 env2 ~init:[] ~f:(fun ~key:id ~data:v acc ->
+      match v with
+      | `Both (l, r) when not (Scheme.equal l r) -> (id, l, r) :: acc
+      | _ -> acc)
+  ;;
 end
 
 open R
@@ -182,14 +226,16 @@ open R.Syntax
 let unify = Subst.unify
 let fresh_var = fresh >>= fun x -> return (TVar x)
 
+(* Create instance of type from scheme *)
 let instantiate (Scheme.S (s, ty)) =
   VarSet.fold s ~init:(return ty) ~f:(fun ty name ->
     let* ty = ty in
     let* fv = fresh_var in
-    let* subst = Subst.single_subst (name, fv) in
+    let* subst = Subst.singleton (name, fv) in
     return (Subst.apply subst ty))
 ;;
 
+(* Make scheme from type *)
 let generalize : TypeEnv.t -> ty -> Scheme.t =
   fun env ty ->
   let free = VarSet.diff (Type.free_vars ty) (TypeEnv.free_vars env) in
@@ -247,7 +293,26 @@ let infer_pattern : TypeEnv.t -> pattern -> (TypeEnv.t * ty, error) R.t =
       let ty_last = Subst.apply subst ty_last in
       let env = TypeEnv.apply env subst in
       return (TypeEnv.apply env subst, Subst.apply subst ty_last)
-    | POr _ -> fail NotImplemented
+    | POr (p1, p2, ps) ->
+      let* env1, ty1 = helper env p1 in
+      let* env, ty =
+        Base.List.fold_left
+          (p2 :: ps)
+          ~init:(return (env1, ty1))
+          ~f:(fun acc p ->
+            let* env1, ty1 = acc in
+            let* env2, ty2 = helper env p in
+            match TypeEnv.vars_diff env1 env2 with
+            | h :: _ -> fail (OrPatternBoundsDiff h)
+            | [] ->
+              (match TypeEnv.schemes_diff env1 env2 with
+               | (id, Scheme.S (_, ty1), Scheme.S (_, ty2)) :: _ ->
+                 fail (OrPatternTypeDiff (id, ty1, ty2))
+               | _ ->
+                 let* subst = unify ty1 ty2 in
+                 return (env1, Subst.apply subst ty1)))
+      in
+      return (env, ty)
   in
   helper
 ;;
