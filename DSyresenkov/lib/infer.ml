@@ -10,8 +10,8 @@ type fresh = int
 module R = struct
   type ('a, 'err) t = int -> int * ('a, 'err) Result.t
 
-  let return x st = st, Result.Ok x
-  let fail err st = st, Result.Error err
+  let return : 'a -> ('a, 'err) t = fun x st -> st, Result.Ok x
+  let fail : 'err -> ('a, 'err) t = fun err st -> st, Result.Error err
 
   let ( >>= ) : ('a, 'err) t -> ('a -> ('b, 'err) t) -> ('b, 'err) t =
     fun m f st ->
@@ -36,8 +36,6 @@ module VarSet = struct
 
   let empty = Base.Set.empty (module Base.Int)
 end
-
-type scheme = S of VarSet.t * ty
 
 module Type = struct
   let rec occurs_in v = function
@@ -80,7 +78,7 @@ module Subst = struct
     else return (Base.Map.set empty ~key:k ~data:v)
   ;;
 
-  let apply subst =
+  let apply (subst : t) =
     let rec helper = function
       | TBase b -> TBase b
       | TVar b ->
@@ -119,7 +117,7 @@ module Subst = struct
     | TList ty1, TList ty2 -> unify ty1 ty2
     | _ -> fail (UnificationFailed (l, r))
 
-  and extend subst (k, v) =
+  and extend (subst : t) (k, v) : (t, error) R.t =
     match Base.Map.find subst k with
     | None ->
       let v = apply subst v in
@@ -148,9 +146,9 @@ module Subst = struct
 end
 
 module Scheme = struct
-  let free_vars : scheme -> VarSet.t =
-    fun (S (s, ty)) -> VarSet.diff (Type.free_vars ty) s
-  ;;
+  type t = S of VarSet.t * ty
+
+  let free_vars : t -> VarSet.t = fun (S (s, ty)) -> VarSet.diff (Type.free_vars ty) s
 
   let apply (S (s, ty)) subst =
     let subst2 = VarSet.fold s ~init:subst ~f:(fun acc k -> Base.Map.remove acc k) in
@@ -159,7 +157,7 @@ module Scheme = struct
 end
 
 module TypeEnv = struct
-  type t = (id, scheme, Base.String.comparator_witness) Base.Map.t
+  type t = (id, Scheme.t, Base.String.comparator_witness) Base.Map.t
 
   let empty : t = Base.Map.empty (module Base.String)
 
@@ -173,7 +171,7 @@ module TypeEnv = struct
     fun env subst -> Base.Map.map env ~f:(fun sch -> Scheme.apply sch subst)
   ;;
 
-  let extend : t -> id * scheme -> t =
+  let extend : t -> id * Scheme.t -> t =
     fun env (id, sch) -> Base.Map.set env ~key:id ~data:sch
   ;;
 end
@@ -184,7 +182,7 @@ open R.Syntax
 let unify = Subst.unify
 let fresh_var = fresh >>= fun x -> return (TVar x)
 
-let instantiate (S (s, ty)) =
+let instantiate (Scheme.S (s, ty)) =
   VarSet.fold s ~init:(return ty) ~f:(fun ty name ->
     let* ty = ty in
     let* fv = fresh_var in
@@ -192,10 +190,10 @@ let instantiate (S (s, ty)) =
     return (Subst.apply subst ty))
 ;;
 
-let generalize : TypeEnv.t -> ty -> scheme =
+let generalize : TypeEnv.t -> ty -> Scheme.t =
   fun env ty ->
   let free = VarSet.diff (Type.free_vars ty) (TypeEnv.free_vars env) in
-  S (free, ty)
+  Scheme.S (free, ty)
 ;;
 
 let lookup_env : TypeEnv.t -> id -> (Subst.t * ty, error) R.t =
@@ -226,7 +224,7 @@ let infer_pattern : TypeEnv.t -> pattern -> (TypeEnv.t * ty, error) R.t =
          let* tv = fresh_var in
          let env = TypeEnv.extend env (x, S (VarSet.empty, tv)) in
          return (env, tv)
-       | Some (S (_, ty)) -> return (env, ty))
+       | Some (Scheme.S (_, ty)) -> return (env, ty))
     | PCons (p1, p2, ps) ->
       let p1, ps, plast =
         match List.rev ps with
@@ -376,14 +374,14 @@ let infer : TypeEnv.t -> expr -> (Subst.t * ty, error) R.t =
   helper
 ;;
 
-let run_infer e = Result.map snd (run (infer TypeEnv.empty e))
+let run_infer ?(env = TypeEnv.empty) e = Result.map snd (run (infer env e))
 
 let check_program env program =
   let check_expr env e =
     let* _, ty = infer env e in
     match e with
     | ELet (_, x, _, None) ->
-      let env = TypeEnv.extend env (x, S (VarSet.empty, ty)) in
+      let env = TypeEnv.extend env (x, Scheme.S (VarSet.empty, ty)) in
       return (env, ty)
     | _ -> return (env, ty)
   in
@@ -393,4 +391,4 @@ let check_program env program =
     return env)
 ;;
 
-let typecheck env program = run (check_program env program)
+let typecheck ?(env = TypeEnv.empty) program = run (check_program env program)
