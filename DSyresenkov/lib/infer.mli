@@ -5,8 +5,16 @@
 open Ast
 open Typing
 
+module VarSet : sig
+  type t = (int, Base.Int.comparator_witness) Base.Set.t
+end
+
+type scheme = S of VarSet.t * ty
+
 module TypeEnv : sig
   type t = (id, scheme, Base.String.comparator_witness) Base.Map.t
+
+  val empty : t
 end
 
 val run_infer : expr -> (ty, error) result
