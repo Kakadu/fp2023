@@ -1,0 +1,366 @@
+(** Copyright 2021-2023, Georgy Sichkar *)
+
+(** SPDX-License-Identifier: LGPL-3.0-or-later *)
+
+open Csharp_Exc_Lib.Parser
+open Csharp_Exc_Lib.Type_check
+
+(* =======================TESTS========================== *)
+let check_stand str =
+  match parse_ast str with
+  | Result.Error x -> Format.print_string ("Parsing error: " ^ x ^ "\n")
+  | Result.Ok x ->
+    (match type_check x with
+     | _, Result.Error x -> Format.printf "Type_check error: %a@\n" pp_error x
+     | _, Result.Ok _ -> Format.print_string "Type_check success\n")
+;;
+
+(* ******************** Positive ******************** *)
+
+let%expect_test "Base factorial type check" =
+  let s =
+    {| 
+      class Program
+      {
+          int Fac(int num)
+          { 
+              if (num == 1)
+              {
+                  return 1;
+              }
+              else 
+              {
+                  return num * Fac(num - 1);
+              }
+          }
+
+          static int Main(){
+              return Fac(100);
+          }
+      }
+|}
+  in
+  check_stand s;
+  [%expect {| Type_check success |}]
+;;
+
+let%expect_test "Base program" =
+  let s =
+    {| 
+      class Program
+      {
+          int Fac(int num)
+          {  }
+
+          static void Main(){
+              return ;
+          }
+      }
+|}
+  in
+  check_stand s;
+  [%expect {| Type_check success |}]
+;;
+
+let%expect_test "Type checks" =
+  let s =
+    {| 
+      class Program
+      {
+        int i = 23;
+        char c = 'c';
+        bool b;
+        string s;
+        
+        int? i_n = null;
+        char? c_n;
+        bool? b_n = true;
+        string s_n = null;
+
+        int Fac(int num, string str, Program prg)
+        { 
+          s = "kek";
+          b = !(1 == 2 != false && 1 + 2 % 3 == 1 / -2 * 100 || true);
+          b_n = c_n == null;
+          return Fac(i, s, null);
+        }
+
+        static void Main(){
+            return;
+        }
+      }
+|}
+  in
+  check_stand s;
+  [%expect {| Type_check success |}]
+;;
+
+let%expect_test "Loops & branches" =
+  let s =
+    {|     
+    class Program
+    {    
+        static void Main()
+        { 
+          for (;;) {
+            for(int a;;){
+              for(int b; b <= 10;){
+                for(;; b = b + 10){
+                  break;
+                }
+                break;
+              }
+              break;
+            }
+            int a; 
+          }
+
+          while(true){
+            while(1 == 1){
+              break;
+            }
+            break;
+          }
+
+          if(2 == 3){
+            bool? b = true;
+            if (b == null)
+              {} else 
+              if ('d' == 's') {} else {}
+          }
+          bool b;
+            return;
+        }
+    }
+    
+|}
+  in
+  check_stand s;
+  [%expect {| Type_check success |}]
+;;
+
+(* TODO: new и конструктор на этапе тайпчека не связаны, проверять на интерпритации, что new + конструктор и никак иначе (бага) *)
+let%expect_test "Many classes" =
+  let s =
+    {|    
+    class A
+    {
+      public int a = 12;
+
+      public int f() {
+        return 1;
+      }
+    }
+
+    class B
+    {
+      public A bA = new A();
+
+      public int res = bA.f();
+
+      public void f(int c) {
+        return;
+      }
+    }
+    
+    class Program
+    {    
+        static void Main()
+        {
+          B b1 = new B();
+          int? res = b1.bA.a;
+          res = null;
+        }
+    }
+|}
+  in
+  check_stand s;
+  [%expect {| Type_check success |}]
+;;
+
+let%expect_test "Throw exceptions" =
+  let s =
+    {| 
+      class E:Exception
+      {}
+
+      class Program
+      {
+          int Fac(int num)
+          {  }
+
+          static void Main(){
+              throw new E();
+              return ;
+          }
+      }
+|}
+  in
+  check_stand s;
+  [%expect {| Type_check success |}]
+;;
+
+let%expect_test "Try_catch" =
+  let s =
+    {| 
+      class E:Exception
+      {
+        public string msg;
+      }
+
+      class Program
+      {
+          int Fac(int num)
+          {  }
+          
+          static void Main(){
+              try{}
+              catch(){}
+
+              try{}
+              finally{}
+
+              try{}
+              catch(){}
+              finally{}
+
+              try{}
+              catch(E){}
+
+              try{}
+              catch(E) when(1 == 1){}
+
+              try{}
+              catch(E e) when(e.msg == "error") {}
+              finally{}
+              
+              return ;
+          }
+      }
+|}
+  in
+  check_stand s;
+  [%expect {| Type_check success |}]
+;;
+
+(* ******************** Negative ******************** *)
+
+let%expect_test "Double definition" =
+  let s =
+    {| 
+      class Program
+      {
+          bool? b;
+          int Fac(int num)
+          { 
+            bool b;
+           }
+
+          static void Main(){
+              return ;
+          }
+      }
+|}
+  in
+  check_stand s;
+  [%expect {| Type_check error: (Double_definition_of (Id "b")) |}]
+;;
+
+let%expect_test "Double \"Main\" definition " =
+  let s =
+    {| 
+      class Program
+      {
+          int Fac(int num)
+          {  }
+
+          static void Main(){
+              return ;
+          }
+      }
+
+      class D{}
+
+      class E{
+        static void Main(){
+              return ;
+          }
+      }
+|}
+  in
+  check_stand s;
+  [%expect {| Type_check error: (Double_definition_of (Id "Main")) |}]
+;;
+
+let%expect_test "Double method declaration" =
+  let s =
+    {| 
+      class Program
+      {
+          int Fac(int num)
+          {  }
+
+          int Fac(int num)
+          {  }
+
+          static void Main(){
+              return ;
+          }
+      }
+|}
+  in
+  check_stand s;
+  [%expect {| Type_check error: (Double_definition_of (Id "Fac")) |}]
+;;
+
+let%expect_test "Access check" =
+  let s =
+    {| 
+      class Program
+      {
+          int Fac(int num)
+          {  }
+
+          static void Main(){
+              return ;
+          }
+      }
+
+      class D{}
+
+      class E{
+        static int My(){
+          Program p = new Program();
+              p.Fac(1);
+              return 1;
+          }
+      }
+|}
+  in
+  check_stand s;
+  [%expect
+    {| Type_check error: (Access_error "Attempt to get a private class member\n") |}]
+;;
+
+let%expect_test "Throw some class" =
+  let s =
+    {| 
+      class C
+      {}
+
+      class Program
+      {
+          int Fac(int num)
+          {  }
+
+          static void Main(){
+              throw new C();
+              return ;
+          }
+      }
+|}
+  in
+  check_stand s;
+  [%expect
+    {| Type_check error: (Other_error "throw can be used only with exceprions\n") |}]
+;;

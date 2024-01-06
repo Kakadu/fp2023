@@ -40,7 +40,6 @@ module Ident = struct
   let compare = compare
 end
 
-(* TODO: переписать красиво *)
 type code_ident = Code_ident of ident
 type env_ident = Env_ident of ident
 
@@ -60,33 +59,11 @@ module IdentMap = Stdlib.Map.Make (Ident)
 module CodeMap = Stdlib.Map.Make (Code_id)
 module EnvMap = Stdlib.Map.Make (Env_id)
 
-type excaption = Exception of ident
-
 type code_ctx =
   | Exception_ctx of class_decl
-    (* TODO: переделывать классы с наследованием в этот тип, так как нормального наследования у меня нет *)
-  | Class_ctx of class_decl (* Сюда просто перепихнуть инфу *)
+  | Class_ctx of class_decl
 
-type instance =
-  (* TODO: Очень осторожно работать с этим... *)
-  | Copy of env_ident (* ident - имя instance в локальном окружении *)
-  | State of state
-(* Генерируется при создании экземпляра *)
-
-and state = code_ident * env_value EnvMap.t
-
-and env_value =
-  | VInstance of instance
-  | Value of value_
-
-type env = env_value EnvMap.t
 type text = code_ctx CodeMap.t
-
-type runtime_ctx =
-  { code : text
-  ; local_env : env
-  ; self : state
-  }
 
 type t_env_value =
   | Metod_sig of method_sign
@@ -98,12 +75,9 @@ type t_env_value =
 type t_loc_env = t_env_value IdentMap.t
 type type_check_ctx = text * t_loc_env * meth_type option * code_ident option
 
-type type_ =
-  | Mtype_ of meth_type
-  | Vtype_ of var_type
-
 type error =
-  | Not_find_ident of ident
+  | Not_find_ident
+  | Not_find_ident_of of ident
   | Type_mismatch
   | Double_definition
   | Double_definition_of of ident
@@ -239,7 +213,7 @@ module Type_checker = struct
     | _, local_env, _, _ ->
       (match IdentMap.find_opt id local_env with
        | Some x -> return x c_env
-       | None -> fail (Not_find_ident id) c_env)
+       | None -> fail (Not_find_ident_of id) c_env)
   ;;
 
   let read_local_opt : ident -> t_env_value option tt =
@@ -256,7 +230,7 @@ module Type_checker = struct
     | code, _, _, _ ->
       (match CodeMap.find_opt id code with
        | Some x -> return x c_env
-       | None -> fail (Not_find_ident id_) c_env)
+       | None -> fail (Not_find_ident_of id_) c_env)
   ;;
 
   let read_global_opt : code_ident -> code_ctx option tt =
@@ -534,10 +508,9 @@ let check_bin_op op (env1, env2) =
   let int_op = base_type_eq2 (Some env_int) (Some env_int_null) in
   let int_bool_op = int_op *> return (Some env_bool) in
   let bool_op = base_type_eq2 (Some env_bool) (Some env_bool_null) in
-  let char_op = base_type_eq2 (Some env_char) (Some env_char_null) in
   (*  *)
-  let string_op = is_operands_eq >>= eq_t_env_opt (Some env_string) in
-  let compare_op = choice [ int_op; bool_op; char_op; string_op ] in
+  let compare_op = eq_t_env_opt env1 env2 in
+  (* TODO: Тут разрешил проверку на равенство классов, придумать, как обрабатывать в интерпритаторе *)
   match op with
   | Asterisk | Plus | Minus | Division | Mod -> int_op
   | Less | LessOrEqual | More | MoreOrEqual -> int_bool_op
@@ -551,26 +524,45 @@ let check_un_op op env1 =
   | UMinus -> base_type_eq2 env1 (Some env_int) (Some env_int_null)
   | UNot -> base_type_eq2 env1 (Some env_bool) (Some env_bool_null)
   | New ->
-    (* TODO: ВСЕ КОНСТРУКТОРЫ ДОЛЖНЫ БЫТЬ В ЛОКАЛЬНОЙ ОБЛАСТИ ВИДИМОСТИ *)
     env1
     >>= (function
      | Some (Constructor_sig { con_modif = _; con_id; _ }) ->
        return (Some (Value_sig (TVar (TNullable (TClass con_id)))))
+     | Some (Value_sig (TVar (TNullable (TClass id)))) ->
+       read_global (Code_ident id)
+       *> return (Some (Value_sig (TVar (TNullable (TClass id)))))
      | _ -> fail Type_mismatch)
 ;;
 
+(* TODO: here an error *)
+
 let check_expr exp =
+  let get_local_ident id = read_local id >>| fun id -> Some id in
   let rec helper = function
     | EConst x ->
       (* TODO: отсюда берется None, потому что у Null нет типа *)
       return (to_type_v @@ to_var_type @@ to_atype x)
-    | EIdentifier x -> read_local x >>| fun x -> Some x
+    | EIdentifier x -> get_local_ident x
     | EMethod_invoke (e2, Params prms) ->
-      helper e2
+      let is_Eident = function
+        | EIdentifier x -> get_local_ident x
+        | _ -> fail (Other_error "Just for skip")
+      in
+      let is_EPoint_acc = function
+        | EPoint_access (e1, e2) -> check_point_acc e1 e2
+        | _ -> fail Type_mismatch
+      in
+      is_Eident e2
+      <|> is_EPoint_acc e2
       >>= fun x ->
       let env_val_prms = params_check helper prms in
       check_invoke x env_val_prms
-    | EPoint_access (e1, e2) -> check_point_acc e1 e2
+    | EPoint_access (e1, e2) ->
+      let is_EPoint_acc = function
+        | Some (Fild_sig _) -> return ()
+        | _ -> fail Not_find_ident
+      in
+      check_point_acc e1 e2 >>= fun res -> is_EPoint_acc res *> return res
     | EBin_op (op, e1, e2) ->
       lift2 (fun x y -> x, y) (helper e1) (helper e2) >>= check_bin_op op
     | EUn_op (op, e1) -> check_un_op op (helper e1)
@@ -592,7 +584,7 @@ type tp_checked =
 
 let var_exp_check e env_tp =
   let r_tp x = Some x in
-  (check_expr e >>| fun e_tp -> r_tp env_tp =!> e_tp) *> return TP_Ok
+  (check_expr e >>= fun e_tp -> greater_t_env_opt (r_tp env_tp) e_tp) *> return TP_Ok
 ;;
 
 let return_check e_opt =
@@ -664,7 +656,7 @@ let un_opt_ mnd x =
 let for_check init_opt e1_opt e2_opt s h =
   let f _ _ _ _ = TP_Ok in
   let init_opt_res = un_opt_ h init_opt in
-  let e1_opt_res = un_opt_ check_expr e1_opt in
+  let e1_opt_res = un_opt_ cond_check_ e1_opt in
   let e2_opt_res = un_opt_ check_expr e2_opt in
   let s_res = h s in
   lift4 f init_opt_res e1_opt_res e2_opt_res s_res
@@ -675,7 +667,8 @@ let catch_s_check_ h = function
   | Some (edecl_opt, s) ->
     (match edecl_opt with
      | None -> h s
-     | Some (Var_decl (tp, id), e_opt) ->
+     | Some (CIdent id, _) -> read_global (Code_ident id) *> return TP_Ok
+     | Some (CDecl (Var_decl (tp, id)), e_opt) ->
        let tp = Value_sig tp in
        let add = add_local_decl id tp in
        let is_exc_ =
@@ -712,7 +705,7 @@ let check_statement stat =
       let tp = Value_sig tp in
       let add = add_local_decl id tp in
       (match e_opt with
-       | Some e -> var_exp_check e tp *> add
+       | Some e -> add *> var_exp_check e tp
        | None -> add)
     | SIf_else (e, s, st1) -> local_scope @@ if_else_check e s st1 helper
     | SWhile (e, s) -> local_scope @@ (cond_check_ e *> helper s)
@@ -746,6 +739,12 @@ let memb_check = function
     @@ (save_scope_tp (Some cons_tp) *> add_params con_args *> check_statement s)
 ;;
 
+let create_cons_sign con_modif con_id con_args base_params =
+  { con_modif; con_id; con_args; base_params }
+;;
+
+let default_cons id = create_cons_sign (Some MPublic) id (Args []) None
+
 let class_check cl_decl =
   let { cl_modif = _; cl_id; parent; cl_mems } = cl_decl in
   let is_main id msg =
@@ -775,7 +774,11 @@ let class_check cl_decl =
        | true -> add_local con_id (Constructor_sig sign)
        | false -> fail (Other_error "The constructor name must match the class name\n"))
   in
-  let add_constructor_and_main = iter_left f cl_mems in
+  (* if Constructor in class haven't been initialized *)
+  let mb_con = Constructor_sig (default_cons cl_id) in
+  let add_constructor_and_main =
+    iter_left f cl_mems *> (add_local cl_id mb_con <|> return ())
+  in
   let g = function
     | Main _ | Constructor _ -> return ()
     | Fild (sign, _) ->
@@ -799,343 +802,6 @@ let type_check ast =
   (* TODO: Добавить всякие предустановленные методы в изначальное локальное окружение *)
   (* TODO: на выходе надо будет учитывать поле, отвечающее за id класса с Main + code_ctx <-| это будет переиспользоваться в интерпритаторе *)
   (* TODO: Написать тесты на все... *)
-  (* TODO: Отрефакторить: убрать мусорные штуки, проверить на дублирование, обобщить монаду + вынести в другой файл  *)
+  (* TODO: Отрефакторить: убрать мусорные штуки, проверить на дублирование, обобщить монаду + вынести в другой файл *)
   run helper
-;;
-
-(* TODO: Переписать тесты, а то какаду ругаться будет( *)
-
-let show_wrap form = function
-  | Result.Ok (Some x) -> Format.printf "%a@\n" form x
-  | Result.Ok None -> Format.print_string "There were Null\n"
-  | Result.Error _ -> Format.print_string "Type check error\n"
-;;
-
-let expr_show_wrap h =
-  let _, ans = run (check_expr h) in
-  show_wrap pp_t_env_value ans
-;;
-
-let expr_show_wrap_cont ctx h =
-  let _, ans = continue (check_expr h) ctx in
-  show_wrap pp_t_env_value ans
-;;
-
-(* let *)
-
-let cl =
-  { cl_modif = None
-  ; cl_id = Id "Program"
-  ; parent = Some (Id "Exception")
-  ; cl_mems =
-      [ Fild
-          ( { f_modif = None; f_type = TVar (TNullable (TBase TInt)); f_id = Id "A1" }
-          , Some (EConst (VInt 0)) )
-      ; Fild
-          ( { f_modif = Some (FAccess MPublic)
-            ; f_type = TVar (TNullable (TClass (Id "MyClass")))
-            ; f_id = Id "A2"
-            }
-          , None )
-      ; Constructor
-          ( { con_modif = Some MPublic
-            ; con_id = Id "Program"
-            ; con_args = Args [ Var_decl (TVar (TNot_Nullable TInt), Id "num") ]
-            ; base_params =
-                Some (Params [ EConst (VInt 1); EConst (VInt 2); EConst (VInt 3) ])
-            }
-          , Steps
-              [ SIf_else
-                  ( EBin_op (Equal, EIdentifier (Id "num"), EConst (VInt 1))
-                  , Steps [ SReturn (Some (EConst (VInt 1))) ]
-                  , Some
-                      (Steps
-                         [ SReturn
-                             (Some
-                                (EBin_op
-                                   ( Asterisk
-                                   , EIdentifier (Id "num")
-                                   , EMethod_invoke
-                                       ( EIdentifier (Id "Fac")
-                                       , Params
-                                           [ EBin_op
-                                               ( Minus
-                                               , EIdentifier (Id "num")
-                                               , EConst (VInt 1) )
-                                           ] ) )))
-                         ]) )
-              ] )
-      ; Method
-          ( { m_modif = Some (MAccess MPublic)
-            ; m_type = TReturn (TNot_Nullable TInt)
-            ; m_id = Id "Fuc"
-            ; m_args =
-                Args
-                  [ Var_decl (TVar (TNot_Nullable TInt), Id "num")
-                  ; Var_decl (TVar (TNullable TString), Id "dr")
-                  ; Var_decl (TVar (TNullable (TClass (Id "Program"))), Id "rer")
-                  ]
-            }
-          , Steps
-              [ SIf_else
-                  ( EBin_op (Equal, EIdentifier (Id "num"), EConst (VInt 1))
-                  , Steps [ SReturn (Some (EConst (VInt 1))) ]
-                  , Some
-                      (Steps
-                         [ SReturn
-                             (Some
-                                (EBin_op
-                                   ( Asterisk
-                                   , EIdentifier (Id "num")
-                                   , EMethod_invoke
-                                       ( EIdentifier (Id "Fac")
-                                       , Params
-                                           [ EBin_op
-                                               ( Minus
-                                               , EIdentifier (Id "num")
-                                               , EConst (VInt 1) )
-                                           ] ) )))
-                         ]) )
-              ] )
-      ]
-  }
-;;
-
-let cons =
-  { con_modif = Some MPublic
-  ; con_id = Id "Program"
-  ; con_args =
-      Args
-        [ Var_decl (TVar (TNot_Nullable TInt), Id "num")
-        ; Var_decl (TVar (TNullable TString), Id "dr")
-        ; Var_decl (TVar (TNullable (TClass (Id "Program"))), Id "rer")
-        ]
-  ; base_params = None
-  }
-;;
-
-let meth =
-  { m_modif = Some (MAccess MPublic)
-  ; m_type = TReturn (TNot_Nullable TInt)
-  ; m_id = Id "Fuc"
-  ; m_args =
-      Args
-        [ Var_decl (TVar (TNot_Nullable TInt), Id "num")
-        ; Var_decl (TVar (TNullable TString), Id "dr")
-        ; Var_decl (TVar (TNullable (TClass (Id "Program"))), Id "rer")
-        ]
-  }
-;;
-
-let f2 =
-  { f_modif = Some (FAccess MPublic)
-  ; f_type = TVar (TNullable (TClass (Id "MyClass")))
-  ; f_id = Id "A2"
-  }
-;;
-
-let f1 = { f_modif = None; f_type = TVar (TNullable (TBase TInt)); f_id = Id "A1" }
-let tp = TReturn (TNot_Nullable TInt)
-
-let ctx : type_check_ctx =
-  let global = CodeMap.empty in
-  let global = CodeMap.add (Code_ident (Id "Program")) (Class_ctx cl) global in
-  let local = IdentMap.empty in
-  let local = IdentMap.add (Id "A1") (Fild_sig f1) local in
-  let local = IdentMap.add (Id "A2") (Fild_sig f2) local in
-  let local = IdentMap.add (Id "Program") (Constructor_sig cons) local in
-  let local = IdentMap.add (Id "Fuc") (Metod_sig meth) local in
-  let local =
-    IdentMap.add
-      (Id "myclass")
-      (Value_sig (TVar (TNullable (TClass (Id "Program")))))
-      local
-  in
-  let local = IdentMap.add (Id "str") (Value_sig (TVar (TNullable TString))) local in
-  global, local, None, None
-;;
-
-let%expect_test _ =
-  expr_show_wrap (EBin_op (Plus, EConst (VInt 3), EConst (VInt 2)));
-  [%expect {| (Value_sig (TVar (TNot_Nullable TInt))) |}]
-;;
-
-let%expect_test _ =
-  expr_show_wrap (EConst (VChar 'a'));
-  [%expect {| (Value_sig (TVar (TNot_Nullable TChar))) |}]
-;;
-
-let%expect_test _ =
-  expr_show_wrap_cont
-    ctx
-    (EBin_op
-       ( Or
-       , EBin_op
-           ( Equal
-           , EBin_op
-               ( Plus
-               , EConst (VInt 1)
-               , EMethod_invoke
-                   ( EIdentifier (Id "Fuc")
-                   , Params
-                       [ EConst (VInt 2)
-                       ; EIdentifier (Id "str")
-                       ; EIdentifier (Id "myclass")
-                       ] ) )
-           , EConst (VInt 1) )
-       , EConst (VBool true) ));
-  [%expect {| (Value_sig (TVar (TNot_Nullable TBool))) |}]
-;;
-
-let%expect_test _ =
-  expr_show_wrap_cont ctx (EIdentifier (Id "myclass"));
-  [%expect {| (Value_sig (TVar (TNullable (TClass (Id "Program"))))) |}]
-;;
-
-let%expect_test _ =
-  expr_show_wrap_cont ctx (EUn_op (New, EIdentifier (Id "Program")));
-  [%expect {| (Value_sig (TVar (TNullable (TClass (Id "Program"))))) |}]
-;;
-
-let%expect_test _ =
-  expr_show_wrap_cont ctx (EUn_op (UMinus, EConst (VInt 1)));
-  [%expect {| (Value_sig (TVar (TNot_Nullable TInt))) |}]
-;;
-
-let%expect_test _ =
-  expr_show_wrap_cont
-    ctx
-    (EMethod_invoke
-       ( EIdentifier (Id "Fuc")
-       , Params [ EConst (VInt 2); EIdentifier (Id "str"); EIdentifier (Id "myclass") ] ));
-  [%expect {| (Value_sig (TVar (TNot_Nullable TInt))) |}]
-;;
-
-let%expect_test _ =
-  expr_show_wrap_cont
-    ctx
-    (EBin_op
-       ( Plus
-       , EConst (VInt 1)
-       , EMethod_invoke
-           ( EIdentifier (Id "Fuc")
-           , Params
-               [ EConst (VInt 2); EIdentifier (Id "str"); EIdentifier (Id "myclass") ] )
-       ));
-  [%expect {| (Value_sig (TVar (TNot_Nullable TInt))) |}]
-;;
-
-let%expect_test _ =
-  expr_show_wrap_cont ctx (EIdentifier (Id "A1"));
-  [%expect
-    {|
-    (Fild_sig
-       { f_modif = None; f_type = (TVar (TNullable (TBase TInt)));
-         f_id = (Id "A1") }) |}]
-;;
-
-let%expect_test _ =
-  expr_show_wrap_cont ctx (EBin_op (Assign, EIdentifier (Id "A1"), EConst (VInt 2)));
-  [%expect {| (Value_sig (TVar (TNullable (TBase TInt)))) |}]
-;;
-
-let%expect_test _ =
-  expr_show_wrap_cont
-    ctx
-    (EBin_op
-       ( Equal
-       , EBin_op
-           ( Plus
-           , EConst (VInt 1)
-           , EMethod_invoke
-               ( EIdentifier (Id "Fuc")
-               , Params
-                   [ EConst (VInt 2); EIdentifier (Id "str"); EIdentifier (Id "myclass") ]
-               ) )
-       , EConst (VInt 1) ));
-  [%expect {| (Value_sig (TVar (TNot_Nullable TBool))) |}]
-;;
-
-let%expect_test _ =
-  expr_show_wrap_cont
-    ctx
-    (EMethod_invoke
-       ( EPoint_access (EIdentifier (Id "myclass"), EIdentifier (Id "Fuc"))
-       , Params [ EConst (VInt 1); EConst (VString "d"); EIdentifier (Id "myclass") ] ));
-  [%expect {|
-    (Value_sig (TVar (TNot_Nullable TInt))) |}]
-;;
-
-(* =======================TESTS========================== *)
-let check_stand str =
-  match parse_ast str with
-  | Result.Error x -> Format.print_string ("Parsing error: " ^ x ^ "\n")
-  | Result.Ok x ->
-    (match type_check x with
-     | _, Result.Error x -> Format.printf "Type_check error: %a@\n" pp_error x
-     | _, Result.Ok _ -> Format.print_string "Type_check success\n")
-;;
-
-let%expect_test _ =
-  let s =
-    {| 
-class Program
-{
-    int c;
-    int d = 1 + 1;
-    int Fac(int num)
-    { 
-        string str;
-        c = 2;
-        if (num == 1)
-        {
-            return 1;
-        }
-        else 
-        {
-            return num * Fac(num - 1);
-        }
-    }
-
-    static void Main(){
-        c = 3;
-        return ;
-    }
-}
-|}
-  in
-  check_stand s;
-  [%expect {| Type_check success |}]
-;;
-
-let%expect_test _ =
-  let s =
-    {| 
-class Program
-{
-    int c;
-    int d = 1 + 1;
-    int Fac(int num)
-    { 
-        string str;
-        c = 2;
-        if (num == 1)
-        {
-            return 1;
-        }
-        else 
-        {
-            return num * Fac(num - 1);
-        }
-    }
-
-    static void Main(){
-        c = 3;
-        return ;
-    }
-}
-|}
-  in
-  check_stand s;
-  [%expect {| Type_check success |}]
 ;;

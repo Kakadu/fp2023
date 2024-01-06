@@ -7,11 +7,11 @@
   (pps ppx_expect ppx_deriving.show ppx_inline_test ppx_deriving.eq))
  (instrumentation
   (backend bisect_ppx))
-  (inline_tests))
+ (inline_tests))
 
 (library
  (name pars_tests)
- (modules pars_tests)
+ (modules pars_tests type_check_tests)
  (libraries csharp_Exc_Lib)
  (preprocess
   (pps ppx_expect ppx_deriving.show ppx_inline_test))
