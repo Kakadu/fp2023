@@ -146,6 +146,14 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
+  pp ~parse:parse_expression "a = b = c";
+  [%expect
+    {|
+    (Expression
+       (BinOp (Assign, (Var "a"), (BinOp (Assign, (Var "b"), (Var "c"))))))|}]
+;;
+
+let%expect_test _ =
   pp ~parse:parse_expression "1 + 2 - 3 + 4";
   [%expect
     {|

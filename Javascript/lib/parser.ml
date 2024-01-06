@@ -179,18 +179,22 @@ let pre_un_op = [ "+", Plus; "-", Minus ] (*precedence 14*)
 
 (*----------bin operators----------*)
 
-(*([(JS name, Ast bin_op), JS precedence])*)
-let mul_div_rem_op = [ "*", Mul; "/", Div ] (*precedence 12*)
-let add_sub_op = [ "+", Add; "-", Sub ] (*precedence 11*)
-let equality_op = [ "==", Equal; "!=", NotEqual ] (*precedence 8*)
-let assign_op = [ "=", Assign ] (*precedence 2*)
+type associativity =
+  | Left
+  | Right
+
+(*[(JS name, Ast bin_op)], associativity*)
+let mul_div_rem_op = [ "*", Mul; "/", Div ], Left (*precedence 12*)
+let add_sub_op = [ "+", Add; "-", Sub ], Left (*precedence 11*)
+let equality_op = [ "==", Equal; "!=", NotEqual ], Left (*precedence 8*)
+let assign_op = [ "=", Assign ], Right (*precedence 2*)
 
 (*from lower to greater precedence*)
 let list_of_bops = [ assign_op; equality_op; add_sub_op; mul_div_rem_op ]
 
 let chainl1 parser op =
   let rec go acc =
-    token (parse_op op)
+    token_btw (parse_op op)
     >>| (fun op -> Some op)
     <|> return None
     >>= function
@@ -198,6 +202,17 @@ let chainl1 parser op =
     | _ -> return acc
   in
   parser >>= fun init -> go init
+;;
+
+let rec chainr1 parser op =
+  parser
+  >>= fun acc ->
+  token_btw (parse_op op)
+  >>| (fun op -> Some op)
+  <|> return None
+  >>= function
+  | Some f -> chainr1 parser op >>| bop f acc
+  | _ -> return acc
 ;;
 
 (*----------expression parsers----------*)
@@ -277,7 +292,10 @@ and parse_pre_uop () =
   | _ -> parse_spec_bop ()
 
 and parse_bop = function
-  | a :: b -> chainl1 (parse_bop b) a
+  | a :: b ->
+    (match a with
+     | bops, Left -> chainl1 (parse_bop b) bops
+     | bops, Right -> chainr1 (parse_bop b) bops)
   | _ -> parse_pre_uop ()
 
 and start_parse_expression () =
