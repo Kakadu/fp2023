@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8"/>
     <title>interpret_tests.ml &mdash; Coverage report</title>
-    <meta name="description" content="98.51% coverage in lib/tests/interpret_tests.ml">
+    <meta name="description" content="98.57% coverage in lib/tests/interpret_tests.ml">
     <link rel="stylesheet" href="../../coverage.css"/>
     <script src="../../highlight.pack.js"></script>
     <script>hljs.initHighlightingOnLoad();</script>
@@ -15,10 +15,10 @@
           <span class="dirname">lib/tests/</span>interpret_tests.ml
         </a>
       </h1>
-      <h2>98.51%</h2>
+      <h2>98.57%</h2>
     </div>
     <div id="navbar">
-      <span class="unvisited" style="top:13.07%"></span>
+      <span class="unvisited" style="top:12.57%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -199,6 +199,13 @@
 <a id="L174"></a><span class="visited"> </span>
 <a id="L175"></a><span class="visited"> </span>
 <a id="L176"></a><span > </span>
+<a id="L177"></a><span > </span>
+<a id="L178"></a><span > </span>
+<a id="L179"></a><span > </span>
+<a id="L180"></a><span > </span>
+<a id="L181"></a><span class="visited"> </span>
+<a id="L182"></a><span class="visited"> </span>
+<a id="L183"></a><span > </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -379,6 +386,13 @@
 <a href="#L174">174</a>
 <a href="#L175">175</a>
 <a href="#L176">176</a>
+<a href="#L177">177</a>
+<a href="#L178">178</a>
+<a href="#L179">179</a>
+<a href="#L180">180</a>
+<a href="#L181">181</a>
+<a href="#L182">182</a>
+<a href="#L183">183</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2023, aartdem *)
 
@@ -397,11 +411,11 @@ let eval_expr_and_print str =
 ;;
 
 let eval_program_and_print str =
-  <span data-count="3">l</span>et res = Result.get_ok (Parser.run_parser_progra<span data-count="3">m</span> str) in
-  <span data-count="3">l</span>et _, res = Result.get_ok (Inferencer.run_infer_progra<span data-count="3">m</span> res) in
-  <span data-count="3">l</span>et res = Interpreter.run_eval_program res in
-  <span data-count="3">m</span>atch res with
-  | <span data-count="3">B</span>ase.Result.Ok v -&gt; Format.printf "%a" Interpreter.EnvValues.pp_env_values v
+  <span data-count="4">l</span>et res = Result.get_ok (Parser.run_parser_progra<span data-count="4">m</span> str) in
+  <span data-count="4">l</span>et _, res = Result.get_ok (Inferencer.run_infer_progra<span data-count="4">m</span> res) in
+  <span data-count="4">l</span>et res = Interpreter.run_eval_program res in
+  <span data-count="4">m</span>atch res with
+  | <span data-count="4">B</span>ase.Result.Ok v -&gt; Format.printf "%a" Interpreter.EnvValues.pp_env_values v
   | <span data-count="0">B</span>ase.Result.Error err -&gt; Format.printf "%a" Interpreter.pp_error err
 ;;
 
@@ -426,9 +440,9 @@ let%expect_test _ =
     let str = "1234567"
     let c = get str 1
     let b = false;;
-    printf "string: %s; bool: %B\nnum: %d; char: %c" "abcdef" b 123 c
-    let fmt1 = format_of_string "char2 %c string %s"
-    let fmt2 = "char1 %c" ^^ fmt1
+    printf "string: %s; bool: %B\nnum: %d; char: %c\n" "abcdef" b 123 c
+    let fmt1 = format_of_string "char2: %c; string: %s\n"
+    let fmt2 = "char1: %c; " ^^ fmt1
     let fmt3 = format_of_string fmt2
     let my_printf = printf fmt3;;
     my_printf str.[(length str - 1)] c "str"
@@ -436,14 +450,14 @@ let%expect_test _ =
   in
   <span data-count="1">[</span>%expect
     {|
-    char1 7char2 2 string str
     string: abcdef; bool: false
     num: 123; char: 2
+    char1: 7; char2: 2; string: str
     val b = false
     val c = '2'
-    val fmt1 = "char2 %c string %s" format
-    val fmt2 = "char1 %cchar2 %c string %s" format
-    val fmt3 = "char1 %cchar2 %c string %s" format
+    val fmt1 = "char2: %c; string: %s\n" format
+    val fmt2 = "char1: %c; char2: %c; string: %s\n" format
+    val fmt3 = "char1: %c; char2: %c; string: %s\n" format
     val my_printf = &lt;fun&gt;
     val str = "1234567" |}<span data-count="9">]</span>
 ;;
@@ -555,6 +569,13 @@ let%expect_test _ =
 let%expect_test _ =
   <span data-count="1">l</span>et _ = eval_expr_and_print {|let f x = match x with | h::tl -&gt; 1 in f []|} in
   <span data-count="1">[</span>%expect {| Matching failure |}<span data-count="9">]</span>
+;;
+
+(* I have two functions: "eval_program_and_print" and "eval_expr_and_print"
+   In this test you wrote a declaration, so I replaced function *)
+let%expect_test _ =
+  <span data-count="1">l</span>et _ = eval_program_and_print {|let f x = format_of_string x|} in
+  <span data-count="1">[</span>%expect {| val f = &lt;fun&gt; |}<span data-count="9">]</span>
 ;;
 </code></pre>
       </div>

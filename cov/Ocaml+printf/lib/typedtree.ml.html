@@ -112,22 +112,22 @@ module TypeVarSet = struct
   include Stdlib.Set.Make (Int)
 
   let pp ppf s =
-    <span data-count="10">F</span>ormat.printf "[ ";
-    <span data-count="10">i</span>ter (Format.fprint<span data-count="10">f</span> ppf "%d; ") s;
-    <span data-count="10">F</span>ormat.printf "]"
+    <span data-count="12">F</span>ormat.printf "[ ";
+    <span data-count="12">i</span>ter (Format.fprint<span data-count="12">f</span> ppf "%d; ") s;
+    <span data-count="12">F</span>ormat.printf "]"
   ;;
 end
 
 type scheme = Scheme of TypeVarSet.t * typ
 
-let type_var x = <span data-count="52">T</span>Var x
+let type_var x = <span data-count="64">T</span>Var x
 let int_typ = TPrim "int"
 let bool_typ = TPrim "bool"
 let char_typ = TPrim "char"
 let string_typ = TPrim "string"
 let unit_typ = TUnit
-let format_typ x = <span data-count="81">T</span>FString x
-let arrow l r = <span data-count="534">T</span>Arr (l, r)
+let format_typ x = <span data-count="106">T</span>FString x
+let arrow l r = <span data-count="601">T</span>Arr (l, r)
 let ( @-&gt; ) = arrow
 </code></pre>
       </div>

@@ -250,7 +250,7 @@ open Ocaml_printf_lib
 
 (* match typed variables to letters *)
 let assign_names typ =
-  <span data-count="13">l</span>et calc_name letter num =
+  <span data-count="15">l</span>et calc_name letter num =
     <span data-count="2">"</span>\'"
     ^
     if num = 0
@@ -266,32 +266,32 @@ let assign_names typ =
       (match Base.Map.add names ~key:n ~data:(calc_nam<span data-count="2">e</span> letter num) with
        | <span data-count="1">`</span>Ok new_names -&gt; new_names, nex<span data-count="1">t</span> letter num
        | <span data-count="1">`</span>Duplicate -&gt; names, (letter, num))
-    | <span data-count="8">T</span>Arr (l, r) -&gt;
+    | <span data-count="9">T</span>Arr (l, r) -&gt;
       let names, (letter, num) = helper names letter num l in
-      <span data-count="8">h</span>elper names letter num r
-    | <span data-count="4">T</span>List t -&gt; helper names letter num t
+      <span data-count="9">h</span>elper names letter num r
+    | <span data-count="5">T</span>List t -&gt; helper names letter num t
     | <span data-count="0">T</span>Tuple list -&gt;
       List.fold_left
         (fun (names, (letter, num)) -&gt; <span data-count="0">h</span>elper names letter num)
         (names, (letter, num))
         list
-    | <span data-count="19">_</span> -&gt; names, (letter, num)
+    | <span data-count="22">_</span> -&gt; names, (letter, num)
   in
-  let names, (_, _) = helper (Base.Map.empt<span data-count="13">y</span> (module Base.Int)) 'a' 0 typ in
-  <span data-count="13">n</span>ames
+  let names, (_, _) = helper (Base.Map.empt<span data-count="15">y</span> (module Base.Int)) 'a' 0 typ in
+  <span data-count="15">n</span>ames
 ;;
 
 (* pretty print types with letters *)
 let pp_typ ppf typ =
-  <span data-count="13">l</span>et open Typedtree in
+  <span data-count="15">l</span>et open Typedtree in
   let names = assign_names typ in
-  <span data-count="13">l</span>et rec helper ppf = function
+  <span data-count="15">l</span>et rec helper ppf = function
     | <span data-count="2">T</span>Var n -&gt; Format.fprintf ppf "%s" (Base.Map.find_ex<span data-count="2">n</span> names n)
-    | <span data-count="18">T</span>Prim s -&gt; Format.fprintf ppf "%s" s
-    | <span data-count="11">T</span>Arr (l, r) -&gt;
+    | <span data-count="21">T</span>Prim s -&gt; Format.fprintf ppf "%s" s
+    | <span data-count="12">T</span>Arr (l, r) -&gt;
       (match l, r with
        | <span data-count="0">T</span>Arr (_, _), _ -&gt; Format.fprintf ppf "(%a) -&gt; %a" helper l helper r
-       | <span data-count="11">_</span> -&gt; Format.fprintf ppf "%a -&gt; %a" helper l helper r)
+       | <span data-count="12">_</span> -&gt; Format.fprintf ppf "%a -&gt; %a" helper l helper r)
     | <span data-count="4">T</span>Unit -&gt; Format.fprintf ppf "unit"
     | <span data-count="0">T</span>Tuple l -&gt;
       (match l with
@@ -302,7 +302,7 @@ let pp_typ ppf typ =
            tl;
          <span data-count="0">F</span>ormat.fprintf ppf ")"
        | <span data-count="0">_</span> -&gt; Format.fprintf ppf "Impossible state")
-    | <span data-count="4">T</span>List t -&gt; Format.fprintf ppf "%a list" helper t
+    | <span data-count="5">T</span>List t -&gt; Format.fprintf ppf "%a list" helper t
     | <span data-count="1">T</span>FString t -&gt; Format.fprintf ppf "%a format_string" helper t
   in
   helper ppf typ
@@ -310,37 +310,37 @@ let pp_typ ppf typ =
 
 (* print scheme without binded vars *)
 let pp_scheme ppf = function
-  | <span data-count="13">T</span>ypedtree.Scheme (_, t) -&gt; Format.fprintf ppf "%a" pp_typ t
+  | <span data-count="15">T</span>ypedtree.Scheme (_, t) -&gt; Format.fprintf ppf "%a" pp_typ t
 ;;
 
 let print_res typed_env env_values =
-  <span data-count="7">l</span>et open Interpreter in
+  <span data-count="9">l</span>et open Interpreter in
   let open Inferencer in
   let std = EnvValues.std in
   let without_std =
     Base.Map.filter_keys env_values ~f:(fun name -&gt;
-      <span data-count="41">m</span>atch EnvValues.find std name with
-      | <span data-count="13">N</span>one -&gt; true
-      | <span data-count="28">S</span>ome _ -&gt; false)
+      <span data-count="51">m</span>atch EnvValues.find std name with
+      | <span data-count="15">N</span>one -&gt; true
+      | <span data-count="36">S</span>ome _ -&gt; false)
   in
-  <span data-count="7">B</span>ase.Map.iteri without_std ~f:(fun ~key ~data -&gt;
-    <span data-count="13">m</span>atch TypeEnv.find typed_env key with
-    | <span data-count="13">S</span>ome sch -&gt; Format.printf "val %s : %a = %a\n" key pp_scheme sch pp_value data
+  <span data-count="9">B</span>ase.Map.iteri without_std ~f:(fun ~key ~data -&gt;
+    <span data-count="15">m</span>atch TypeEnv.find typed_env key with
+    | <span data-count="15">S</span>ome sch -&gt; Format.printf "val %s : %a = %a\n" key pp_scheme sch pp_value data
     | <span data-count="0">N</span>one -&gt; Format.printf "Value %s is not in typed environment\n" key)
 ;;
 
 let () =
   let str = Stdio.In_channel.input_all Stdlib.stdin in
-  <span data-count="7">l</span>et parsed = Parser.run_parser_program str in
-  <span data-count="7">m</span>atch parsed with
+  <span data-count="9">l</span>et parsed = Parser.run_parser_program str in
+  <span data-count="9">m</span>atch parsed with
   | <span data-count="0">R</span>esult.Error err -&gt; Format.print<span data-count="0">f</span> "Parsing error%s\n" err
-  | <span data-count="7">R</span>esult.Ok parsed -&gt;
+  | <span data-count="9">R</span>esult.Ok parsed -&gt;
     (match Inferencer.run_infer_program parsed with
      | <span data-count="0">E</span>rror err -&gt; Format.print<span data-count="0">f</span> "Type inference error. %a" Inferencer.pp_error err
-     | <span data-count="7">O</span>k (typed_env, new_ast) -&gt;
+     | <span data-count="9">O</span>k (typed_env, new_ast) -&gt;
        (match Interpreter.run_eval_program new_ast with
         | <span data-count="0">E</span>rror err -&gt; Format.print<span data-count="0">f</span> "Interpretation error. %a" Interpreter.pp_error err
-        | <span data-count="7">O</span>k env_values -&gt; print_re<span data-count="7">s</span> typed_env env_values))
+        | <span data-count="9">O</span>k env_values -&gt; print_re<span data-count="9">s</span> typed_env env_values))
 ;;
 </code></pre>
       </div>
