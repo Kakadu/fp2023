@@ -18,3 +18,4 @@ Features in progress (and TODOs):
 - List a :: b syntax
 - Comments parser
 - Interpreter
+- Tuple patterns

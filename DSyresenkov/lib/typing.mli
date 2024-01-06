@@ -25,6 +25,8 @@ type error =
   | OccursCheckFailed of int * ty (** OCaml's Occurs check *)
   | UndeclaredVariable of id (** Attempt to use non-initialized variable *)
   | UnificationFailed of ty * ty (** Failed to unify left and right types *)
+  | OrPatternBoundsDiff of id (** Variable id doesn't occure in some of Or patterns *)
+  | OrPatternTypeDiff of id * ty * ty (** Types of some bounds in Or pattern differ *)
   | NotImplemented (** Still not implemented features *)
 
 val pp_error : Format.formatter -> error -> unit

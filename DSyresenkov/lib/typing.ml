@@ -53,6 +53,8 @@ type error =
   | OccursCheckFailed of int * ty (** OCaml's Occurs check *)
   | UndeclaredVariable of id (** Attempt to use non-initialized variable *)
   | UnificationFailed of ty * ty (** Failed to unify left and right types *)
+  | OrPatternBoundsDiff of id (** Variable id doesn't occure in some of Or patterns *)
+  | OrPatternTypeDiff of id * ty * ty (** Types of some bounds in Or pattern differ *)
   | NotImplemented (** Still not implemented features *)
 
 let pp_error fmt = function
@@ -61,5 +63,16 @@ let pp_error fmt = function
   | UndeclaredVariable id -> fprintf fmt "Unbound value %s" id
   | UnificationFailed (l, r) ->
     fprintf fmt "Failed to unify types %a and %a" pp_ty l pp_ty r
+  | OrPatternBoundsDiff id ->
+    fprintf fmt "Variable %s doesn't occure in some 'or' patterns" id
+  | OrPatternTypeDiff (id, ty1, ty2) ->
+    fprintf
+      fmt
+      "Variable %s has different types in 'or' patterns: %a and %a are not equal"
+      id
+      pp_ty
+      ty1
+      pp_ty
+      ty2
   | NotImplemented -> Stdlib.print_endline "Expression contains not implemented features"
 ;;
