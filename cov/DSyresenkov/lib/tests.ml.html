@@ -576,7 +576,7 @@ module InferTests = struct
     | []   -&gt; acc
     | h :: t -&gt; fold_left op (op acc h) t
     |};
-    <span data-count="1">[</span>%expect {| ('12 -&gt; '5 -&gt; '12) -&gt; '12 -&gt; '5 list -&gt; '12 |}<span data-count="5">]</span>
+    <span data-count="1">[</span>%expect {| ('12 -&gt; '6 -&gt; '12) -&gt; '12 -&gt; '6 list -&gt; '12 |}<span data-count="5">]</span>
   ;;
 
   let%expect_test _ =
@@ -596,7 +596,7 @@ module InferTests = struct
     | h :: [] -&gt; false
     | _ -&gt; true
     |};
-    <span data-count="1">[</span>%expect {| '3 list -&gt; bool |}<span data-count="5">]</span>
+    <span data-count="1">[</span>%expect {| '7 list -&gt; bool |}<span data-count="5">]</span>
   ;;
 
   let%expect_test _ =
