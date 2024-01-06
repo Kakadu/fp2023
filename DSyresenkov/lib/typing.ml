@@ -5,7 +5,7 @@
 (* Set of variables *)
 open Format
 
-type id = string [@@deriving show { with_path = false }]
+type id = string
 
 (* Base types *)
 type base_type =

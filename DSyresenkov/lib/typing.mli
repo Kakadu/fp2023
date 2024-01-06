@@ -3,7 +3,7 @@
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
 (* Set of variables *)
-type id = string [@@deriving show { with_path = false }]
+type id = string
 
 (* Base types *)
 type base_type =
