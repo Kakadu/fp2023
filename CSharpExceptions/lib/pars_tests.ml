@@ -22,8 +22,8 @@ let print_pars ps form str = show_wrap form (parse_option ~p:ps str)
 let test_pp_expr pr = print_pars pr pp_expr
 let test_pp_statement pr = print_pars pr pp_statement
 let test_pp_class_member pr = print_pars pr pp_class_member
-let test_pp_class_decl pr = print_pars pr pp_class_decl
-let test_pp_tAst pr = print_pars pr pp_tast
+let test_pp_class_decl = print_pars ep_class pp_class_decl
+let test_pp_tAst = print_pars ep_classes pp_tast
 
 (* ep_operation tests: *)
 
@@ -383,7 +383,6 @@ let%expect_test "Method parsing" =
 
 let%expect_test _ =
   test_pp_class_decl
-    ep_class
     {|class Program : Exception
      {
         int A1 = 0;
@@ -510,7 +509,6 @@ let%expect_test _ =
 
 let%expect_test _ =
   test_pp_class_decl
-    ep_class
     {|class Program : Exception
      {
         int A1 = 0;
@@ -572,7 +570,6 @@ let%expect_test _ =
 
 let%expect_test _ =
   test_pp_tAst
-    ep_classes
     {| class Program : Exception
      {
         int A1 = 0;
@@ -639,7 +636,6 @@ let%expect_test _ =
 
 let%expect_test _ =
   test_pp_tAst
-    ep_classes
     {| class Program : Exception
      {
         int A1 = 0;
@@ -717,4 +713,68 @@ let%expect_test _ =
             ]
           };
          { cl_modif = None; cl_id = (Id "trueF"); parent = None; cl_mems = [] }]) |}]
+;;
+
+let%expect_test _ =
+  test_pp_tAst {| class Exception{} |};
+  [%expect
+    {|
+    (Ast
+       [{ cl_modif = None; cl_id = (Id "Exception"); parent = None; cl_mems = []
+          }
+         ]) |}]
+;;
+
+let%expect_test _ =
+  test_pp_tAst
+    {| class FileInfo{
+         string path;
+         bool Exists = false;
+
+         FileInfo(string path_)
+         {
+            path = path_;
+         }
+
+         string ReadAllText () {}
+
+         void AppendAllText(string info) {}
+
+    } |};
+  [%expect
+    {|
+    (Ast
+       [{ cl_modif = None; cl_id = (Id "FileInfo"); parent = None;
+          cl_mems =
+          [(Fild (
+              { f_modif = None; f_type = (TVar (TNullable TString));
+                f_id = (Id "path") },
+              None));
+            (Fild (
+               { f_modif = None; f_type = (TVar (TNot_Nullable TBool));
+                 f_id = (Id "Exists") },
+               (Some (EConst (VBool false)))));
+            (Constructor (
+               { con_modif = None; con_id = (Id "FileInfo");
+                 con_args =
+                 (Args [(Var_decl ((TVar (TNullable TString)), (Id "path_")))]);
+                 base_params = None },
+               (Steps
+                  [(SExpr
+                      (EBin_op (Assign, (EIdentifier (Id "path")),
+                         (EIdentifier (Id "path_")))))
+                    ])
+               ));
+            (Method (
+               { m_modif = None; m_type = (TReturn (TNullable TString));
+                 m_id = (Id "ReadAllText"); m_args = (Args []) },
+               (Steps [])));
+            (Method (
+               { m_modif = None; m_type = Void; m_id = (Id "AppendAllText");
+                 m_args =
+                 (Args [(Var_decl ((TVar (TNullable TString)), (Id "info")))]) },
+               (Steps [])))
+            ]
+          }
+         ]) |}]
 ;;

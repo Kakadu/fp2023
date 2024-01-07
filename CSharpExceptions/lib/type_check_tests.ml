@@ -2,10 +2,11 @@
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
+open Csharp_Exc_Lib.Errors
 open Csharp_Exc_Lib.Parser
 open Csharp_Exc_Lib.Type_check
 
-(* =======================TESTS========================== *)
+(* ******************** TESTS ******************** *)
 let check_stand str =
   match parse_ast str with
   | Result.Error x -> Format.print_string ("Parsing error: " ^ x ^ "\n")
@@ -53,6 +54,27 @@ let%expect_test "Base program" =
           {  }
 
           static void Main(){
+              return ;
+          }
+      }
+|}
+  in
+  check_stand s;
+  [%expect {| Type_check success |}]
+;;
+
+let%expect_test "Base program 2" =
+  let s =
+    {| 
+    class Program1
+    {
+      Program1(int a){}
+    }
+
+      class Program
+      {
+          static void Main(){
+              Program1 p = new Program1(1);
               return ;
           }
       }
@@ -112,7 +134,6 @@ let%expect_test "Loops & branches" =
               }
               break;
             }
-            int a; 
           }
 
           while(true){
@@ -128,7 +149,6 @@ let%expect_test "Loops & branches" =
               {} else 
               if ('d' == 's') {} else {}
           }
-          bool b;
             return;
         }
     }
@@ -139,7 +159,6 @@ let%expect_test "Loops & branches" =
   [%expect {| Type_check success |}]
 ;;
 
-(* TODO: new и конструктор на этапе тайпчека не связаны, проверять на интерпритации, что new + конструктор и никак иначе (бага) *)
 let%expect_test "Many classes" =
   let s =
     {|    
@@ -363,4 +382,35 @@ let%expect_test "Throw some class" =
   check_stand s;
   [%expect
     {| Type_check error: (Other_error "throw can be used only with exceprions\n") |}]
+;;
+
+let%expect_test "FileInfo_decl" =
+  let s =
+    {|
+      class FileInfo{
+        string path;
+        bool Exists = false;
+
+        FileInfo(string path_)
+        {
+          path = path_;
+        }
+
+        string ReadAllText () {}
+
+        void AppendAllText(string info) {}
+
+        } 
+    |}
+  in
+  check_stand s;
+  [%expect {| Type_check error: (Double_definition_of (Id "FileInfo")) |}]
+;;
+
+let%expect_test "Exception_decl" =
+  let s = {|
+        class Exception{} 
+    |} in
+  check_stand s;
+  [%expect {| Type_check error: (Double_definition_of (Id "Exception")) |}]
 ;;
