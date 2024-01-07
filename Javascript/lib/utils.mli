@@ -6,6 +6,7 @@ type 'a t = ('a, string) Result.t
 
 val ( >>= ) : 'a t -> ('a -> 'b t) -> 'b t
 val ( >>| ) : 'a t -> ('a -> 'b) -> 'b t
+val ( <?> ) : 'a t -> string -> 'a t
 val return : 'a -> 'a t
 val uerror : string -> 'a t
 val map : ('a -> 'b t) -> 'a list -> 'b list t
