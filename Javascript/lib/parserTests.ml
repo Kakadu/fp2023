@@ -39,6 +39,16 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
+  pp ~parse:parse_expression "Infinity";
+  [%expect {|(Expression (Const (Number infinity)))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression "NaN";
+  [%expect {|(Expression (Const (Number nan)))|}]
+;;
+
+let%expect_test _ =
   pp ~parse:parse_expression ".";
   [%expect {|Error: incorrect expression > invalid part of expression: no more choices|}]
 ;;
