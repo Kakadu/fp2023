@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>ast.ml &mdash; Coverage report</title>
+    <meta name="description" content="84.21% coverage in lib/ast.ml">
+    <link rel="stylesheet" href="../coverage.css"/>
+    <script src="../highlight.pack.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+  </head>
+  <body>
+    <div id="header">
+      <h1>
+        <a href="../index.html">
+          <span class="dirname">lib/</span>ast.ml
+        </a>
+      </h1>
+      <h2>84.21%</h2>
+    </div>
+    <div id="navbar">
+      <span class="some-visited" style="top:4.76%"></span>
+      <span class="unvisited" style="top:12.38%"></span>
+      <span class="unvisited" style="top:13.33%"></span>
+      <span class="unvisited" style="bottom:40.95%"></span>
+    </div>
+    <div id="report">
+      <div id="lines-layer">
+        <pre>
+<a id="L1"></a><span > </span>
+<a id="L2"></a><span > </span>
+<a id="L3"></a><span > </span>
+<a id="L4"></a><span > </span>
+<a id="L5"></a><span class="some-visited"> </span>
+<a id="L6"></a><span > </span>
+<a id="L7"></a><span class="visited"> </span>
+<a id="L8"></a><span > </span>
+<a id="L9"></a><span > </span>
+<a id="L10"></a><span > </span>
+<a id="L11"></a><span > </span>
+<a id="L12"></a><span class="visited"> </span>
+<a id="L13"></a><span class="unvisited"> </span>
+<a id="L14"></a><span class="unvisited"> </span>
+<a id="L15"></a><span > </span>
+<a id="L16"></a><span > </span>
+<a id="L17"></a><span class="visited"> </span>
+<a id="L18"></a><span > </span>
+<a id="L19"></a><span > </span>
+<a id="L20"></a><span > </span>
+<a id="L21"></a><span > </span>
+<a id="L22"></a><span > </span>
+<a id="L23"></a><span > </span>
+<a id="L24"></a><span > </span>
+<a id="L25"></a><span > </span>
+<a id="L26"></a><span > </span>
+<a id="L27"></a><span > </span>
+<a id="L28"></a><span > </span>
+<a id="L29"></a><span > </span>
+<a id="L30"></a><span > </span>
+<a id="L31"></a><span > </span>
+<a id="L32"></a><span class="visited"> </span>
+<a id="L33"></a><span > </span>
+<a id="L34"></a><span > </span>
+<a id="L35"></a><span > </span>
+<a id="L36"></a><span > </span>
+<a id="L37"></a><span class="visited"> </span>
+<a id="L38"></a><span class="visited"> </span>
+<a id="L39"></a><span class="visited"> </span>
+<a id="L40"></a><span > </span>
+<a id="L41"></a><span > </span>
+<a id="L42"></a><span > </span>
+<a id="L43"></a><span class="visited"> </span>
+<a id="L44"></a><span > </span>
+<a id="L45"></a><span > </span>
+<a id="L46"></a><span > </span>
+<a id="L47"></a><span > </span>
+<a id="L48"></a><span class="visited"> </span>
+<a id="L49"></a><span class="visited"> </span>
+<a id="L50"></a><span > </span>
+<a id="L51"></a><span class="visited"> </span>
+<a id="L52"></a><span > </span>
+<a id="L53"></a><span > </span>
+<a id="L54"></a><span > </span>
+<a id="L55"></a><span > </span>
+<a id="L56"></a><span class="visited"> </span>
+<a id="L57"></a><span > </span>
+<a id="L58"></a><span > </span>
+<a id="L59"></a><span > </span>
+<a id="L60"></a><span > </span>
+<a id="L61"></a><span > </span>
+<a id="L62"></a><span class="unvisited"> </span>
+<a id="L63"></a><span > </span>
+<a id="L64"></a><span > </span>
+<a id="L65"></a><span > </span>
+<a id="L66"></a><span > </span>
+<a id="L67"></a><span > </span>
+<a id="L68"></a><span > </span>
+<a id="L69"></a><span class="visited"> </span>
+<a id="L70"></a><span > </span>
+<a id="L71"></a><span > </span>
+<a id="L72"></a><span > </span>
+<a id="L73"></a><span > </span>
+<a id="L74"></a><span > </span>
+<a id="L75"></a><span > </span>
+<a id="L76"></a><span > </span>
+<a id="L77"></a><span > </span>
+<a id="L78"></a><span class="visited"> </span>
+<a id="L79"></a><span > </span>
+<a id="L80"></a><span > </span>
+<a id="L81"></a><span > </span>
+<a id="L82"></a><span class="visited"> </span>
+<a id="L83"></a><span > </span>
+<a id="L84"></a><span > </span>
+<a id="L85"></a><span > </span>
+<a id="L86"></a><span > </span>
+<a id="L87"></a><span class="visited"> </span>
+<a id="L88"></a><span > </span>
+<a id="L89"></a><span class="visited"> </span>
+<a id="L90"></a><span class="visited"> </span>
+<a id="L91"></a><span > </span>
+<a id="L92"></a><span class="visited"> </span>
+<a id="L93"></a><span > </span>
+<a id="L94"></a><span class="visited"> </span>
+<a id="L95"></a><span > </span>
+<a id="L96"></a><span class="visited"> </span>
+<a id="L97"></a><span > </span>
+<a id="L98"></a><span > </span>
+<a id="L99"></a><span > </span>
+<a id="L100"></a><span > </span>
+<a id="L101"></a><span > </span>
+<a id="L102"></a><span class="visited"> </span>
+<a id="L103"></a><span > </span>
+<a id="L104"></a><span > </span>
+<a id="L105"></a><span class="visited"> </span>
+</pre>
+      </div>
+      <div id="text-layer">
+        <pre id="line-numbers">
+<a href="#L1">  1</a>
+<a href="#L2">  2</a>
+<a href="#L3">  3</a>
+<a href="#L4">  4</a>
+<a href="#L5">  5</a>
+<a href="#L6">  6</a>
+<a href="#L7">  7</a>
+<a href="#L8">  8</a>
+<a href="#L9">  9</a>
+<a href="#L10"> 10</a>
+<a href="#L11"> 11</a>
+<a href="#L12"> 12</a>
+<a href="#L13"> 13</a>
+<a href="#L14"> 14</a>
+<a href="#L15"> 15</a>
+<a href="#L16"> 16</a>
+<a href="#L17"> 17</a>
+<a href="#L18"> 18</a>
+<a href="#L19"> 19</a>
+<a href="#L20"> 20</a>
+<a href="#L21"> 21</a>
+<a href="#L22"> 22</a>
+<a href="#L23"> 23</a>
+<a href="#L24"> 24</a>
+<a href="#L25"> 25</a>
+<a href="#L26"> 26</a>
+<a href="#L27"> 27</a>
+<a href="#L28"> 28</a>
+<a href="#L29"> 29</a>
+<a href="#L30"> 30</a>
+<a href="#L31"> 31</a>
+<a href="#L32"> 32</a>
+<a href="#L33"> 33</a>
+<a href="#L34"> 34</a>
+<a href="#L35"> 35</a>
+<a href="#L36"> 36</a>
+<a href="#L37"> 37</a>
+<a href="#L38"> 38</a>
+<a href="#L39"> 39</a>
+<a href="#L40"> 40</a>
+<a href="#L41"> 41</a>
+<a href="#L42"> 42</a>
+<a href="#L43"> 43</a>
+<a href="#L44"> 44</a>
+<a href="#L45"> 45</a>
+<a href="#L46"> 46</a>
+<a href="#L47"> 47</a>
+<a href="#L48"> 48</a>
+<a href="#L49"> 49</a>
+<a href="#L50"> 50</a>
+<a href="#L51"> 51</a>
+<a href="#L52"> 52</a>
+<a href="#L53"> 53</a>
+<a href="#L54"> 54</a>
+<a href="#L55"> 55</a>
+<a href="#L56"> 56</a>
+<a href="#L57"> 57</a>
+<a href="#L58"> 58</a>
+<a href="#L59"> 59</a>
+<a href="#L60"> 60</a>
+<a href="#L61"> 61</a>
+<a href="#L62"> 62</a>
+<a href="#L63"> 63</a>
+<a href="#L64"> 64</a>
+<a href="#L65"> 65</a>
+<a href="#L66"> 66</a>
+<a href="#L67"> 67</a>
+<a href="#L68"> 68</a>
+<a href="#L69"> 69</a>
+<a href="#L70"> 70</a>
+<a href="#L71"> 71</a>
+<a href="#L72"> 72</a>
+<a href="#L73"> 73</a>
+<a href="#L74"> 74</a>
+<a href="#L75"> 75</a>
+<a href="#L76"> 76</a>
+<a href="#L77"> 77</a>
+<a href="#L78"> 78</a>
+<a href="#L79"> 79</a>
+<a href="#L80"> 80</a>
+<a href="#L81"> 81</a>
+<a href="#L82"> 82</a>
+<a href="#L83"> 83</a>
+<a href="#L84"> 84</a>
+<a href="#L85"> 85</a>
+<a href="#L86"> 86</a>
+<a href="#L87"> 87</a>
+<a href="#L88"> 88</a>
+<a href="#L89"> 89</a>
+<a href="#L90"> 90</a>
+<a href="#L91"> 91</a>
+<a href="#L92"> 92</a>
+<a href="#L93"> 93</a>
+<a href="#L94"> 94</a>
+<a href="#L95"> 95</a>
+<a href="#L96"> 96</a>
+<a href="#L97"> 97</a>
+<a href="#L98"> 98</a>
+<a href="#L99"> 99</a>
+<a href="#L100">100</a>
+<a href="#L101">101</a>
+<a href="#L102">102</a>
+<a href="#L103">103</a>
+<a href="#L104">104</a>
+<a href="#L105">105</a>
+</pre>
+<pre><code class="ocaml">(** Copyright 2023, Artem-Rzhankoff *)
+
+(** SPDX-License-Identifier: LGPL-3.0-or-later *)
+
+<span data-count="0">t</span>ype ident = <span data-count="86">s</span>tring [@@deriving show { with_path = false }]
+
+<span data-count="11">t</span>ype private_flag =
+  | Private
+  | Public
+[@@deriving show { with_path = false }]
+
+<span data-count="16">t</span>ype rec_flag =
+  <span data-count="0">|</span> Nonrecursive
+  <span data-count="0">|</span> Recursive
+[@@deriving eq, show { with_path = false }]
+
+<span data-count="13">t</span>ype bin_op =
+  | Asterisk (** [*] *)
+  | Divider (** [\ ]*)
+  | Plus (** [+] *)
+  | Sub (** [-] *)
+  | Eq (** [=] *)
+  | Neq (** [!=]*)
+  | Lt (** [&lt;] *)
+  | Ltq (** [&lt;=]*)
+  | Gt (** [&gt;] *)
+  | Gtq (** [&gt;=]*)
+  | And (** [&amp;&amp;]*)
+  | Or (** [||]*)
+[@@deriving show { with_path = false }]
+
+<span data-count="1">t</span>ype unary_op =
+  | Minus (** [-]*)
+  | Not (** [not]*)
+[@@deriving show { with_path = false }]
+
+<span data-count="119">t</span>ype const =
+  | Const_int of in<span data-count="36">t</span> (** Integers constants such as [52] *)
+  | Const_bool of boo<span data-count="3">l</span> (** Boolean constant: [true], [false]*)
+  | Const_nil (** Represents empty list [[]] *)
+[@@deriving show { with_path = false }]
+
+<span data-count="185">t</span>ype pattern =
+  | Pat_const of const (** Patterns such as [1], [true] *)
+  | Pat_var of ident (** A variable pattern such as [x] *)
+  | Pat_cons of pattern * pattern (** The pattern such as [P1::P2] *)
+  | Pat_any (** The pattern [_] *)
+  | Pat_tuple of <span data-count="18">p</span>attern lis<span data-count="4">t</span> (** Patterns [(P1, ..., P2)]*)
+[@@deriving show { with_path = false }<span data-count="99">]</span>
+
+<span data-count="824">t</span>ype expression =
+  | Exp_constant of const (** Expressions constant such as [1], [true] *)
+  | Exp_unary_op of unary_op * expression
+  | Exp_bin_op of bin_op * expression * expression
+  | Exp_ident of ident (** Identifiers such as [x] *)
+  | Exp_tuple of <span data-count="40">e</span>xpression lis<span data-count="9">t</span> (** Expressions [(E1, ..., En)]*)
+  | Exp_function of pattern * expression (** [fun P1 -&gt; E] *)
+  | Exp_let of decl * expression
+  (** [Exp_let({d_rec=flag; P; E}, E')] represents:
+      - [let P = E in E'] when [flag] is {{!rec_flag.Nonrecursive} [Nonrecursive]}
+      - [let rec P = E in E'] when [d_rec] is {{!rec_flag.Recursive} [Recursive]} *)
+  | Exp_match of expression * <span data-count="0">(</span><span data-count="0">p</span>attern * expression) lis<span data-count="0">t</span>
+  (** [match E0 with P1 -&gt; E1 | .. | Pn -&gt; En] *)
+  | Exp_ifthenelse of expression * expression * expression (** [if E1 then E2 else E3] *)
+  | Exp_apply of expression * expression (** [E0 E1] *)
+  | Exp_object of obj (** [object ... end]*)
+  | Exp_send of expression * ident (** [E # m]*)
+  (*  | Exp_list of expression list (** [[E1; ..; En]]*)*)
+  | Exp_override of <span data-count="15">(</span><span data-count="6">i</span>dent * expression) lis<span data-count="3">t</span> (** [{&lt; x1 = E1; ...; xn = En &gt;}] *)
+  | Exp_list of expression * expression
+  (** The expression such as [E1::E2]
+      This also represents lists [E1; ... En] via [E]*)
+[@@deriving show { with_path = false }]
+
+(** Represents:
+    - [let P = E] when [d_rec] is {{!rec_flag.Nonrecursive} [Nonrecursive]}
+    - [let rec P = E] when [d_rec] is {{!rec_flag.Recursive} [Recursive]} *)
+<span data-count="160">a</span>nd decl =
+  { d_rec : rec_flag
+  ; d_pat : pattern
+  ; d_expr : expression
+  <span data-count="48">}</span>
+
+(** Values of type {!obj} represents:
+    - [object(selfpat) ... end]
+    - [object ... end] when {{!obj.o_self} [o_self] is {{!pattern.Pat_any} [Pat_any]}} *)
+<span data-count="56">a</span>nd obj =
+  { o_self : pattern
+  ; o_fields : <span data-count="68">o</span>bj_field lis<span data-count="15">t</span>
+  <span data-count="16">}</span>
+
+<span data-count="15">a</span>nd obj_field =
+  | Obj_val of ident * expression (** [val x = E] *)
+  | Obj_method of private_flag * ident * expressio<span data-count="716">n</span> (** [method x = E]*)
+
+<span data-count="96">t</span>ype structure_item =
+  | Str_eval of expression (** [E] *)
+  | Str_value of decl
+  (** [Str_value({is_rec; P; E})] represents:
+      - [let P = E] when {{!rec_flag.Nonrecursive}[Nonrecursive]
+      - [let rec P = E] when [d_rec] is {{!rec_flag.Recursive}[Recursive]} *)
+[@@deriving show { with_path = false }<span data-count="48">]</span>
+
+(** Represents whole program with all statements *)
+<span data-count="47">t</span>ype program = <span data-count="119">s</span>tructure_item lis<span data-count="24">t</span> [@@deriving show { with_path = false }<span data-count="48">]</span>
+</code></pre>
+      </div>
+    </div>
+    <script src="../coverage.js"></script>
+  </body>
+</html>
