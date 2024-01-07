@@ -6,17 +6,17 @@
 
 (license LGPL-3.0-or-later)
 
-(authors "FIXME Vasya Pupkin")
+(authors "Artem-Rzhankoff")
 
-(maintainers "FIXME Vasya Pupkin")
+(maintainers "Artem-Rzhankoff")
 
-(bug_reports "FIXME where to put bug reports about the code")
+(bug_reports "https://t.me/arty0m_1982")
 
-(homepage "FIXME Homepage")
+(homepage "https://github.com/Artem-Rzhankoff/fp2023")
 
 (package
  (name OcamlOOP)
- (synopsis "FIXME An interpreter for language")
+ (synopsis "An interpreter for OCamlOOP")
  (description
   "FIXME. A longer description, for example, which are the most interesing features being supported, etc.")
  (version 0.1)
