@@ -43,7 +43,8 @@ let keywords = function
   | "false"
   | "match"
   | "with"
-  | "function" -> true
+  | "function"
+  | "Measure" -> true
   | _ -> false
 ;;
 
@@ -54,12 +55,29 @@ let token1 s = take_empty1 *> s
 let stoken s = take_empty *> string s
 let stoken1 s = take_empty1 *> string s
 let brackets p = stoken "(" *> p <* stoken ")"
-let brackets1 p = stoken1 "(" *> p <* stoken1 ")"
+let square_brackets p = stoken "[" *> p <* stoken "]"
+let angle_brackets p = stoken "<" *> p <* stoken ">"
 let quotes p = stoken "\"" *> p <* stoken "\""
 let parens_or_not p = p <|> brackets p
 let chainl1 e op =
   let rec go acc = lift2 (fun f x -> f acc x) op e >>= go <|> return acc 
   in e >>= fun init -> go init
+;;
+ 
+(** Ident parse *)
+
+let parse_id =
+  take_empty *> take_while1 ident_symbol
+  >>= fun res ->
+  if String.length res == 0
+    then fail "Not identifier"
+  else if keywords res
+    then fail "You can not use keywords as vars"
+  else if Char.is_digit @@ String.get res 0
+    then fail "Identifier first sumbol is letter, not digit"
+  else if Char.is_uppercase @@ String.get res 0
+    then fail "Identifier first sumbol is not small letter"
+  else return res
 ;;
 
 (** Types constructor *)
@@ -70,6 +88,8 @@ let fbool x = FBool x
 let fstring x = FString x
 let fnil = FNil
 let funit = FUnit
+let measure_type s = Measure_type s
+let measure_float f m = Measure_float (f, m)
 
 (** Types parse *)
 
@@ -96,9 +116,9 @@ let parse_sign_float =
   choice [ stoken "+" *> return 1.0; stoken "-" *> return (-1.0); return 1.0 ]
 ;;
 
-let parse_ffloat =
-  let parse_digit = take_while1 digit in
-  let parse_decimal = stoken "." *> take_while1 digit 
+let parse_ffloat = 
+  let parse_digit = take_empty *> take_while digit in
+  let parse_decimal = stoken "." *> take_while digit 
   in lift3 (fun s int_part fraction_part ->
     let float_value = float_of_string (int_part ^ "." ^ fraction_part) in
     ffloat (s *. float_value))
@@ -110,24 +130,15 @@ let parse_ffloat =
 let parse_fnil = stoken "[]" *> return fnil
 let parse_funit = stoken "()" *> return funit
 
-let parse_types = parse_ffloat <|> parse_fint <|> parse_fbool <|> parse_fstring <|> parse_fnil <|> parse_funit
-
-
-(** Ident parse *)
-
-let parse_id =
-  take_empty *> take_while1 ident_symbol
-  >>= fun res ->
-  if String.length res == 0
-    then fail "Not identifier"
-  else if keywords res
-    then fail "You can not use keywords as vars"
-  else if Char.is_digit @@ String.get res 0
-    then fail "Identifier first sumbol is letter, not digit"
-  else if Char.is_uppercase @@ String.get res 0
-    then fail "Identifier first sumbol is not small letter"
-  else return res
+let parse_measure_type = square_brackets (angle_brackets (stoken "Measure"))  *> stoken "type" *> parse_id >>| fun x -> measure_type x
+let construct_measure_float = take_empty *> (angle_brackets (parse_id >>| fun x -> measure_type x))
+let parse_measure_float = 
+  lift2 (fun f m -> (measure_float f m))
+  parse_ffloat
+  construct_measure_float
 ;;
+
+let parse_types = parse_measure_float <|> parse_ffloat <|> parse_fint <|> parse_fbool <|> parse_fstring <|> parse_fnil <|> parse_funit <|> parse_measure_type 
 
 (** Pattern constructor *)
 
@@ -135,13 +146,29 @@ let pwild = PWild
 let pconst x = PConst x
 let pvar x = PVar x
 let ptuple z = PTuple z
+let plist l = PList l
 let pcons ht tl = PCons (ht, tl)
 
 (** Pattern parse *)
 
-let parse_pconst = parse_types >>| fun x -> PConst x
-let parse_pvar = parse_id >>| fun x -> PVar x
+let parse_pconst = parse_types >>| fun x -> pconst x 
+let parse_pvar = parse_id >>| fun x -> pvar x
 let parse_pwild = stoken "_" *> return pwild
+let parse_plist l = square_brackets (sep_by1 (stoken ";") l)
+
+let rec create_cons = function
+  | [] -> pconst fnil
+  | hd :: [] when equal_pattern hd (pconst fnil) -> pconst fnil
+  | [f; s] -> pcons f s
+  | hd :: tl -> pcons hd (create_cons tl)
+;;
+
+let parse_cons parser constructor =
+  lift2
+    (fun a b -> constructor @@ (a :: b))
+    (parser <* stoken "::")
+    (sep_by1 (stoken "::") parser)
+;;
 
 let parse_tuple parser constructor =
   lift2
@@ -151,22 +178,28 @@ let parse_tuple parser constructor =
 ;;
 
 type pdispatch =
-  { tuple : pdispatch -> pattern t; 
-  tuple_brackets : pdispatch -> pattern t;
-  value : pdispatch -> pattern t; 
-  pattern : pdispatch -> pattern t
+  { 
+    cons: pdispatch -> pattern t;
+    tuple : pdispatch -> pattern t; 
+    tuple_brackets : pdispatch -> pattern t;
+    list: pdispatch -> pattern t;
+    value : pdispatch -> pattern t; 
+    pattern : pdispatch -> pattern t
   }
 
 let pack = 
   let pattern pack = choice 
     [
+      pack.cons pack;
       pack.tuple pack;
+      pack.list pack;
       pack.tuple_brackets pack;
       pack.value pack
     ]
   in 
   let parser pack = choice 
     [
+      pack.list pack;
       pack.tuple_brackets pack;
       pack.value pack
     ]  
@@ -174,10 +207,14 @@ let pack =
   let value _ = parse_pwild <|> parse_pvar <|> parse_pconst
   in let tuple_brackets pack = fix @@ fun _ -> take_empty *> (brackets @@ parse_tuple (parser pack) ptuple)
   in let tuple pack = fix @@ fun _ -> take_empty *> parse_tuple (parser pack) ptuple
+  in let list pack = fix @@ fun _ -> plist <$> parse_plist @@ pack.pattern pack <|> brackets @@ pack.list pack
+  in let cons pack = fix @@ fun _ -> take_empty *> parse_cons (parser pack) create_cons
   in 
     {
+      cons;
       tuple;
       tuple_brackets;
+      list;
       value;
       pattern
     } 
@@ -190,26 +227,32 @@ let parse_pattern = pack.pattern pack
 let eifelse i t e = EIfElse (i, t, e)
 let elet name body = ELet (name, body)
 let eletrec name body = ELetRec (name, body)
+let etuple z = ETuple z
+let elist l = EList l
 let efun id body = EFun (id, body)
 let eapp f a = EApp (f, a)
 let evar x = EVar x
+let ematch c pl = EMatch (c, pl)
 
 (** Expression parse *)
 
 let parse_evar = parse_id >>| evar 
 let parse_econst = parse_types >>| fun x -> EConst x
-let parse_arg = many @@ parens_or_not parse_pvar
-let parse_arg1 = many1 @@ parens_or_not parse_pvar
+let parse_arg = many @@ parens_or_not parse_pattern
+let parse_arg1 = many1 @@ parens_or_not parse_pattern
 
 type edispatch =
   {
     evar : edispatch -> expression t;
-    etypes : edispatch -> expression t;
+    econst : edispatch -> expression t;
     eifelse : edispatch -> expression t;
     elet: edispatch -> expression t;
-    eletrec: edispatch -> expression t;
     ebinaryop: edispatch -> expression t;
+    etuple: edispatch -> expression t;
+    elist: edispatch -> expression t;
     eapp: edispatch -> expression t;
+    efun: edispatch -> expression t;
+    ematch: edispatch -> expression t;
     expression: edispatch -> expression t
   }
 
@@ -227,8 +270,16 @@ let construct_efun arg body =
   in helper arg
 ;;
 
+let parse_efun expr =
+  take_empty
+  *> lift2
+       (fun arg exp -> construct_efun arg exp)
+       (stoken "fun" *> parse_arg1)
+       (stoken "->" *> expr)
+;;
+
 let parse_rec =
-  stoken "let" *> option "false" (stoken1 "rec") >>| fun x -> x != "false"
+  take_empty *> stoken "let" *> option "false" (stoken1 "rec") >>| fun x -> x != "false"
 ;;
 
 let eletfun parse_expr =
@@ -240,6 +291,15 @@ let eletfun parse_expr =
     parse_id
     parse_arg
     (stoken "=" *> parse_expr)
+;;
+
+let ematch matching parse_expr =
+  let wand = stoken "|" *> parse_pattern in
+  let arrow = stoken "->" *> parse_expr in
+  let expr = lift2 (fun value arrow_value -> value, arrow_value) wand arrow in
+  let exprs = many1 expr in
+  let pematch = stoken "match" *> matching <* stoken "with" in
+  take_empty *> lift2 ematch pematch exprs
 ;;
 
 (** Binary operations constructors *)
@@ -298,14 +358,18 @@ let parse_eapp parse_expr =
 ;;
 
 let pack =
-  let etypes _ = parse_econst
+  let econst _ = parse_econst
   in let evar _ = parse_evar 
-  in let lets pack = choice [ pack.elet pack; pack.eletrec pack ]
+  in let lets pack = choice [ pack.elet pack ]
   in let expression pack = choice 
     [
       lets pack;
       pack.eifelse pack;
       pack.eapp pack;
+      pack.etuple pack;
+      pack.elist pack;
+      pack.efun pack;
+      pack.ematch pack
     ]
   in
   let eifelse pack = 
@@ -315,17 +379,32 @@ let pack =
           [
             pack.eifelse pack;
             pack.eapp pack;
+            pack.efun pack;
+            pack.ematch pack;
           ]
       in eifelse parse_eifelse (pack.expression pack)
+  in let efun pack = parens_or_not @@ fix @@ fun _ -> parse_efun @@ pack.expression pack
+  in let ematch pack =
+    fix @@ fun _ ->
+      let ematch_parse =
+        parens_or_not @@ choice 
+          [ 
+            pack.eapp pack; 
+            pack.eifelse pack; 
+            pack.ematch pack 
+          ]
+      in
+      parens_or_not @@ ematch ematch_parse (pack.expression pack)
   in 
   let ebinaryop pack =
     fix @@ fun _ -> 
       let parse_ebinaryop = choice
         [
+          pack.econst pack;
+          brackets @@ pack.ematch pack;
           brackets @@ pack.eifelse pack;
           brackets @@ pack.ebinaryop pack;
           brackets @@ pack.eapp pack;
-          pack.etypes pack;
           pack.evar pack
         ]
       in parens_or_not @@ parse_binaryop parse_ebinaryop
@@ -333,28 +412,47 @@ let pack =
     fix @@ fun _ -> 
       let parse_eapp_pack = choice
         [
+          pack.etuple pack;
+          pack.etuple pack;
           pack.ebinaryop pack;
           brackets @@ pack.eifelse pack;
-          brackets @@ pack.eapp pack
+          brackets @@ pack.eapp pack;
+          brackets @@ pack.ematch pack
         ]
       in parse_eapp parse_eapp_pack 
   in 
   let parse_lets pack = choice
     [
       pack.eapp pack;
-      pack.eifelse pack
+      pack.eifelse pack;
+      pack.etuple pack;
+      pack.elist pack;
+      pack.efun pack;
+      pack.ematch pack
+    ]
+  in 
+  let value pack = choice
+    [ 
+      pack.evar pack;
+      pack.econst pack;
+      pack.etuple pack;
+      pack.elist pack
     ]
   in let elet pack = fix @@ fun _ -> eletfun @@ parse_lets pack
-  in let eletrec pack = fix @@ fun _ -> eletfun @@ parse_lets pack
+  in let etuple pack = fix @@ fun _ -> brackets (parse_tuple (value pack) etuple)
+  in let elist pack = fix @@ fun _ -> elist <$> parse_plist @@ pack.expression pack <|> brackets @@ pack.elist pack
   in 
   {
     evar;
-    etypes;
+    econst;
     eifelse;
     elet;
-    eletrec;
+    etuple;
+    elist;
     ebinaryop;
     eapp;
+    efun;
+    ematch;
     expression
   }
 ;;
