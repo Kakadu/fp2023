@@ -56,6 +56,8 @@ let keywords =
   ; "false"
   ; "undefined"
   ; "null"
+  ; "NaN"
+  ; "Infinity"
   ]
 ;;
 
@@ -121,6 +123,8 @@ let bop f acc x = BinOp (f, acc, x)
 let parse_number =
   lift3 (fun a b c -> a ^ b ^ c) (take_while is_digit) (string ".") (take_while is_digit)
   <|> take_while1 is_digit
+  <|> (string "NaN" <|> string "Infinity")
+  <* end_of_word
   >>= (function
          | "." -> fail "incorrect number"
          | _ as num -> return num)
