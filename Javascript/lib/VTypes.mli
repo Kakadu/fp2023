@@ -6,63 +6,55 @@ open Ast
 open Utils
 
 type vt_error =
-  | NotSupported
+  | NotSupported of string
   | AstError of string
   | ReferenceError of string
   | RangeError of string
   | InternalError of string
-  | TypeError of string
+  | TypeError of string * string
   | SyntaxError of string
 
-type value =
-  | VNumber of float
-  | VString of string
-  | VBool of bool
-  | VUndefined
-  | VNull
-  | VFunction of fun_ctx
-  | VObject of obj_ctx
-
-and fun_ctx =
-  { fun_id : string
-  ; args : string list
+type fun_ctx =
+  { args : string list
   ; body : statement
   }
 
-and obj_ctx =
-  { obj_id : string
-  ; proto : obj_ctx
-  ; fields : (string * value) list
-  }
-
-type var_ctx =
-  { var_id : string
-  ; is_const : bool
-  ; value : value
-  }
-
 type scope =
-  | Global of fun_preset list * obj_preset list
+  | Global
   | Function
   | ArrowFunction
   | Object
   | Block
 
-and fun_preset =
-  { fun_id : string
-  ; body : ctx -> value list -> ctx t
+type obj_type =
+  | TFunPreset of (ctx -> value list -> ctx t)
+  | TFunction of fun_ctx
+  | TArrowFun of fun_ctx
+  | TObject
+
+and obj_ctx =
+  { proto : obj_ctx
+  ; fields : (string * value) list
+  ; obj_type : obj_type
   }
 
-and obj_preset =
-  { obj_id : string
-  ; fields : fun_preset list
+and value =
+  | VNumber of float
+  | VString of string
+  | VBool of bool
+  | VUndefined
+  | VNull
+  | VObject of obj_ctx
+
+and let_ctx =
+  { var_id : string
+  ; is_const : bool
+  ; value : value
   }
 
 and ctx =
   { parent : ctx option
-  ; funs : fun_ctx list
-  ; vars : var_ctx list
-  ; objs : obj_ctx list
+  ; vars : let_ctx list
   ; v_return : value
   ; stdout : string
   ; scope : scope
