@@ -19,11 +19,6 @@ let pp ?(parse = parse) str =
   if Result.is_ok result then pp_ok result else pp_error result
 ;;
 
-let vvalues_to_str = function
-  | VNumber x -> Float.to_string x
-  | _ -> "Cannot convert to string"
-;;
-
 let pi str =
   match interpret str with
   | Result.Ok x -> Format.eprintf "Programm return: %s" @@ vvalues_to_str x
