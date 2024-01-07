@@ -5,7 +5,7 @@
 type un_op =
   | Plus
   | Minus
-[@@deriving eq, show { with_path = false }]
+[@@deriving show { with_path = false }]
 
 type bin_op =
   | PropAccs
@@ -17,7 +17,7 @@ type bin_op =
   | Equal
   | NotEqual
   | Assign
-[@@deriving eq, show { with_path = false }]
+[@@deriving show { with_path = false }]
 
 type typename =
   | Number of float
@@ -25,7 +25,7 @@ type typename =
   | Bool of bool
   | Undefined
   | Null
-[@@deriving eq, show { with_path = false }]
+[@@deriving show { with_path = false }]
 
 type expression =
   | UnOp of un_op * expression
@@ -35,7 +35,7 @@ type expression =
   | FunctionCall of expression * expression list
   | AnonFunction of string list * statement
   | ObjectDef of (expression * expression) list
-[@@deriving eq, show { with_path = false }]
+[@@deriving show { with_path = false }]
 
 and var_init =
   { var_identifier : string
@@ -57,4 +57,4 @@ and statement =
   | If of expression * statement * statement
   | Return of expression
   | Programm of statement list
-[@@deriving eq, show { with_path = false }]
+[@@deriving show { with_path = false }]

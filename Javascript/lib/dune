@@ -1,19 +1,20 @@
 (library
  (name javascript_lib)
  (public_name Javascript.Lib)
- (modules Ast Parser Print)
+ (modules Ast Parser Print Utils Interpreter VTypes)
+ (modules_without_implementation VTypes)
  (libraries base angstrom)
  (preprocess
-  (pps ppx_expect ppx_deriving.show ppx_deriving.eq))
+  (pps ppx_expect ppx_deriving.show))
  (instrumentation
   (backend bisect_ppx)))
 
 (library
  (name tests)
- (modules Tests)
+ (modules ParserTests InterpreterTests)
  (libraries javascript_lib)
  (preprocess
-  (pps ppx_expect ppx_deriving.show ppx_deriving.eq ppx_assert))
+  (pps ppx_expect ppx_deriving.show))
  (instrumentation
   (backend bisect_ppx))
  (inline_tests))

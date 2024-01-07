@@ -3,7 +3,6 @@
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
 open Javascript_lib
-open Ast
 open Parser
 open Print
 
@@ -37,6 +36,16 @@ let%expect_test _ =
 let%expect_test _ =
   pp ~parse:parse_expression "1000000";
   [%expect {|(Expression (Const (Number 1000000.)))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression "Infinity";
+  [%expect {|(Expression (Const (Number infinity)))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression "NaN";
+  [%expect {|(Expression (Const (Number nan)))|}]
 ;;
 
 let%expect_test _ =
