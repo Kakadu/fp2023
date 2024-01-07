@@ -9,6 +9,12 @@ let return = Result.ok
 let uerror = Result.error
 let ( >>| ) x f = x >>= fun r -> return @@ f r
 
+let ( <?> ) x str =
+  match x with
+  | Result.Ok _ -> x
+  | Result.Error a -> Result.Error (str ^ " > " ^ a)
+;;
+
 let rec map f = function
   | [] -> return []
   | h :: tl -> f h >>= fun c -> map f tl >>= fun lst -> return (c :: lst)
