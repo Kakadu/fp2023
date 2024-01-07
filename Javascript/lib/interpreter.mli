@@ -4,5 +4,6 @@
 
 open VTypes
 
+val vvalues_to_str : value -> string
 val interpret_ast : Ast.statement -> (value, string) result
 val interpret : string -> (value, string) result
