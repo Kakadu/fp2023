@@ -21,7 +21,6 @@ let cannot_match_self = Infer Cannot_match_self
 (* A self-referncing object can only be represent using a keyword `self` (in contrast to OCaml) *)
 let self_reference_alias = "self"
 
-
 (*=======================References=======================
   - The solution is based on https://gitlab.com/Kakadu/fp2020course-materials/-/blob/master/code/miniml/inferencer.ml?ref_type=heads
     - New features have been implemented and some errors in the code have been fixed

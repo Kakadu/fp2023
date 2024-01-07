@@ -12,10 +12,9 @@
  (modules demo)
  (libraries OcamlOOP.Lib stdio)
  (preprocess
- (pps ppx_show ppx_deriving.eq))
+  (pps ppx_show ppx_deriving.eq))
  (instrumentation
-  (backend bisect_ppx))
- )
+  (backend bisect_ppx)))
 
 (cram
-  (deps %{bin:demo}))
+ (deps %{bin:demo}))

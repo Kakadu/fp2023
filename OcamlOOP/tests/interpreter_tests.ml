@@ -26,7 +26,8 @@ let%expect_test _ =
 
 let%expect_test _ =
   let () =
-    run_interpreter {|let a = ((fun x -> x), (fun y -> y)) < ((fun z -> z), (fun a -> a))|}
+    run_interpreter
+      {|let a = ((fun x -> x), (fun y -> y)) < ((fun z -> z), (fun a -> a))|}
   in
   [%expect {| Invalid argument for compare: functional value |}]
 ;;
@@ -181,12 +182,12 @@ let get_b = b#get
 
 let%expect_test _ =
   let () = run_interpreter input in
-  [%expect {|
+  [%expect
+    {|
     val a : < increase : 'a; get : int > as 'a = <obj>
     val b : < increase : 'a; get : int > as 'a = <obj>
     val get_b : int = 3 |}]
 ;;
-
 
 let input =
   {|
@@ -251,4 +252,3 @@ let%expect_test _ =
       val tail_rev_l : < get : int list; add : int -> 'a; rev : 'a; tail : 'a; remove : int -> 'a > as 'a = <obj>
       val tail_v : int list = [4; 6] |}]
 ;;
-
