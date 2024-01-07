@@ -5,38 +5,6 @@
  (release
   (flags
    (:standard -warn-error -A -w -58))))
- 
-(executable
- (name demo_fact)
- (public_name demo_fact)
- (modules demo_fact)
- (libraries OcamlOOP.Lib)
- (preprocess
- (pps ppx_show ppx_deriving.eq))
- (instrumentation
-  (backend bisect_ppx)))
-
-(executable
- (name demo_obj)
- (public_name demo_obj)
- (modules demo_obj)
- (libraries OcamlOOP.Lib)
- (preprocess
- (pps ppx_show ppx_deriving.eq))
- (instrumentation
-  (backend bisect_ppx))
- )
-
-(executable
- (name demo_obj1)
- (public_name demo_obj1)
- (modules demo_obj1)
- (libraries OcamlOOP.Lib)
- (preprocess
- (pps ppx_show ppx_deriving.eq))
- (instrumentation
-  (backend bisect_ppx))
- )
 
 (executable
  (name demo)
@@ -50,4 +18,4 @@
  )
 
 (cram
-  (deps %{bin:demo_fact} %{bin:demo_obj} %{bin:demo_obj1} %{bin:demo}))
+  (deps %{bin:demo}))
