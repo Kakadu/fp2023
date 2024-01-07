@@ -2,7 +2,7 @@ open Ocamladt_lib
 
 let () =
   let s =
-    "let rec factorial_recursive = fun (n: int) -> if n <= 1 then 1 else n * \
+    "let rec factorial_recursive = fun n -> if n <= 1 then 1 else n * \
      factorial_recursive (n - 1)"
   in
   match Parser.parse s with
