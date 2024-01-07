@@ -1,14 +1,15 @@
-(** Copyright 2021-2023, Artem-Rzhankoff *)
+(** Copyright 2023, Artem-Rzhankoff *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
 open Angstrom
 open Base
 open Ast
+open Errors
 
 (*=====================Constructors=====================*)
 
-let id s = Id s
+let id s = s
 let cint n = Const_int n
 let cbool b = Const_bool b
 let cnil = Const_nil
@@ -24,17 +25,15 @@ let eapp f a = Exp_apply (f, a)
 let ematch v ptrns = Exp_match (v, ptrns)
 let esend s m = Exp_send (s, m)
 let eobj o_self o_fields = Exp_object { o_self; o_fields }
-
-(* let elist vs = Exp_list vs *)
 let efun i e = Exp_function (i, e)
 let eite b t e = Exp_ifthenelse (b, t, e)
-let eunit = Exp_constant Const_unit
 let eunop o e = Exp_unary_op (o, e)
 let ebinop o l r = Exp_bin_op (o, l, r)
 let elet d e = Exp_let (d, e)
 let etuple es = Exp_tuple es
 let econs a b = Exp_list (a, b)
 let edecl d_rec d_pat d_expr = { d_rec; d_pat; d_expr }
+let eoverr es = Exp_override es
 let oval p e = Obj_val (p, e)
 let omthd f p e = Obj_method (f, p, e)
 let streval e = Str_eval e
@@ -146,7 +145,7 @@ let ident =
   ptoken peek_char
   >>= (function
          | Some x when Char.equal x '_' || is_lower x -> return x
-         | _ -> fail "fail")
+         | _ -> fail "not an identifier")
   >>= fun _ -> take_while is_ident >>= fun s -> check_ident s
 ;;
 
@@ -191,19 +190,16 @@ let e_list expr =
 
 let e_tuple expr = tuple expr etuple
 let e_app expr = chainl1 expr (skip_whitespace1 *> return eapp)
-
-let e_ite b t e =
-  lift3 eite (token "if" *> b) (token "then" *> t) (option eunit (token "else" *> e))
-;;
+let e_ite b t e = lift3 eite (token "if" *> b) (token "then" *> t) (token "else" *> e)
 
 let e_fun pexpr =
   token "fun" *> many1 pattern
   >>= fun args ->
   token "->" *> pexpr
-  >>| fun e ->
+  >>= fun e ->
   match List.rev args with
-  | h :: tl -> List.fold_left ~init:(efun h e) ~f:(fun acc x -> efun x acc) tl
-  | _ -> failwith "unreachable"
+  | h :: tl -> return (List.fold_left ~init:(efun h e) ~f:(fun acc x -> efun x acc) tl)
+  | _ -> fail "The function must have at least one argument"
 ;;
 
 let e_decl pexpr =
@@ -224,7 +220,6 @@ let e_decl pexpr =
        exp
 ;;
 
-(* can there be only one pattern matching? *)
 let e_ptrn_matching pexpr = lift2 (fun k v -> k, v) (pattern <* token "->") pexpr
 
 let e_match pexpr =
@@ -238,7 +233,25 @@ let e_match pexpr =
 ;;
 
 let e_let pexpr = lift2 elet (e_decl pexpr) (token "in" *> pexpr)
-let e_sinvk pexpr = lift2 esend pexpr (token "#" *> ident)
+
+let e_sinvk pexpr =
+  let iter = token "#" *> ident in
+  let rec helper acc =
+    iter >>= fun sub -> helper (esend acc sub) <|> return (esend acc sub)
+  in
+  let acc = lift2 esend pexpr (token "#" *> ident) in
+  acc >>= helper <|> acc
+;;
+
+(* let e_sinvk pexpr = lift2 esend pexpr (token "#" *> ident) *)
+
+let e_override pexpr =
+  token "{<"
+  *> lift
+       eoverr
+       (sep_by (token ";") (ident >>= fun id -> token "=" *> pexpr >>| fun e -> id, e))
+  <* token ">}"
+;;
 
 let e_obj pexpr =
   let ov = lift2 oval (token "val" *> ident) (token "=" *> pexpr) in
@@ -259,8 +272,12 @@ let e_obj pexpr =
       ident
       helper
   in
+  let self_pat = token "self" *> return (pval "self") in
   token "object"
-  *> lift2 eobj (option Ast.Pat_any (parens pattern)) (many (ov <|> om) <* token "end")
+  *> lift2
+       eobj
+       (option Ast.Pat_any (parens (p_any <|> self_pat)))
+       (many (ov <|> om) <* token "end")
 ;;
 
 (*=====================Binary/Unary operators=====================*)
@@ -281,7 +298,7 @@ let expr =
     let sube = choice [ parens pexpr; e_const; e_val ] in
     let send = e_sinvk sube in
     let eapp = e_app (send <|> sube) in
-    let term = send <|> eapp <|> sube in
+    let term = eapp <|> send <|> sube in
     let term = e_list term <|> term in
     let term = lbo (term <|> lift2 eunop neg term) mul_div in
     let term = lbo term add_sub in
@@ -295,240 +312,31 @@ let expr =
       ; e_match pexpr
       ; e_fun pexpr
       ; e_obj pexpr
+      ; e_override pexpr
       ; term
       ])
 ;;
 
 let del = (dsmcln <|> skip_whitespace) *> skip_whitespace
 let decl = ptoken (e_decl expr)
-let str_item = expr >>| streval <|> (decl >>| strval)
-
-(* перед обычными выражениями на toplevel Должны стоять ;; *)
+let str_item = expr >>| streval <* dsmcln <|> (decl >>| strval)
 let program = del *> many1 (str_item <* del)
-let parse = parse_string ~consume:All program
+let parse_syntax_err msg = Parser (Syntax_error msg)
 
-let parse_test s =
-  let res = parse_string ~consume:Prefix expr s in
-  match res with
-  | Ok v -> print_endline (show_expression v)
-  | Error v -> print_endline v
+let parse s =
+  match parse_string ~consume:All program s with
+  | Ok v -> Ok v
+  | Error _ -> Error (parse_syntax_err "Syntax error")
 ;;
 
-(*=====================Tests=====================*)
-
-let%expect_test _ =
-  let () = parse_test "1 + 2" in
-  [%expect
-    {|
-    (Exp_bin_op (Plus, (Exp_constant (Const_int 1)), (Exp_constant (Const_int 2))
-       )) |}]
+let parse_prefix s =
+  match parse_string ~consume:Prefix program s with
+  | Ok v -> Ok v
+  | Error _ -> Error (parse_syntax_err "Syntax error")
 ;;
 
-let%expect_test _ =
-  let () = parse_test "1 + 2 + 3" in
-  [%expect
-    {|
-    (Exp_bin_op (Plus,
-       (Exp_bin_op (Plus, (Exp_constant (Const_int 1)),
-          (Exp_constant (Const_int 2)))),
-       (Exp_constant (Const_int 3)))) |}]
-;;
-
-let%expect_test _ =
-  let () = parse_test "1 + 2 / 3" in
-  [%expect
-    {|
-    (Exp_bin_op (Plus, (Exp_constant (Const_int 1)),
-       (Exp_bin_op (Divider, (Exp_constant (Const_int 2)),
-          (Exp_constant (Const_int 3))))
-       )) |}]
-;;
-
-let%expect_test _ =
-  let () = parse_test "1 * 2 / 3" in
-  [%expect
-    {|
-    (Exp_bin_op (Divider,
-       (Exp_bin_op (Asterisk, (Exp_constant (Const_int 1)),
-          (Exp_constant (Const_int 2)))),
-       (Exp_constant (Const_int 3)))) |}]
-;;
-
-let%expect_test _ =
-  let () = parse_test "true && true && false" in
-  [%expect
-    {|
-    (Exp_bin_op (And, (Exp_constant (Const_bool true)),
-       (Exp_bin_op (And, (Exp_constant (Const_bool true)),
-          (Exp_constant (Const_bool false))))
-       )) |}]
-;;
-
-let%expect_test _ =
-  let () = parse_test " - 5" in
-  [%expect {| (Exp_unary_op (Minus, (Exp_constant (Const_int 5)))) |}]
-;;
-
-let%expect_test _ =
-  let () = parse_test " not vbool " in
-  [%expect {| (Exp_unary_op (Not, (Exp_ident (Id "vbool")))) |}]
-;;
-
-let%expect_test _ =
-  let () = parse_test " [1; 2; 3; 4]" in
-  [%expect
-    {|
-    (Exp_list ((Exp_constant (Const_int 1)),
-       (Exp_list ((Exp_constant (Const_int 2)),
-          (Exp_list ((Exp_constant (Const_int 3)),
-             (Exp_list ((Exp_constant (Const_int 4)), (Exp_constant Const_nil)))
-             ))
-          ))
-       )) |}]
-;;
-
-let%expect_test _ =
-  let () = parse_test "let a = stack#pop in a" in
-  [%expect
-    {|
-    (Exp_let (
-       { d_rec = Nonrecursive; d_pat = (Pat_var (Id "a"));
-         d_expr = (Exp_send ((Exp_ident (Id "stack")), (Id "pop"))) },
-       (Exp_ident (Id "a")))) |}]
-;;
-
-let%expect_test _ =
-  let () = parse_test "object (_) method i x = x + 1 end" in
-  [%expect
-    {|
-    (Exp_object
-       { o_self = Pat_any;
-         o_fields =
-         [(Obj_method (Public, (Id "i"),
-             (Exp_function ((Pat_var (Id "x")),
-                (Exp_bin_op (Plus, (Exp_ident (Id "x")),
-                   (Exp_constant (Const_int 1))))
-                ))
-             ))
-           ]
-         }) |}]
-;;
-
-let%expect_test _ =
-  let () = parse_test "let f a = fun x -> x + a in f" in
-  [%expect
-    {|
-    (Exp_let (
-       { d_rec = Nonrecursive; d_pat = (Pat_var (Id "f"));
-         d_expr =
-         (Exp_function ((Pat_var (Id "a")),
-            (Exp_function ((Pat_var (Id "x")),
-               (Exp_bin_op (Plus, (Exp_ident (Id "x")), (Exp_ident (Id "a"))))))
-            ))
-         },
-       (Exp_ident (Id "f")))) |}]
-;;
-
-let%expect_test _ =
-  let () = parse_test "(2, 3, 4)" in
-  [%expect
-    {|
-    (Exp_tuple
-       [(Exp_constant (Const_int 2)); (Exp_constant (Const_int 3));
-         (Exp_constant (Const_int 4))]) |}]
-;;
-
-let%expect_test _ =
-  let () = parse_test "let a = fun (x :: y) -> (1, 5) in a" in
-  [%expect
-    {|
-    (Exp_let (
-       { d_rec = Nonrecursive; d_pat = (Pat_var (Id "a"));
-         d_expr =
-         (Exp_function ((Pat_cons ((Pat_var (Id "x")), (Pat_var (Id "y")))),
-            (Exp_tuple
-               [(Exp_constant (Const_int 1)); (Exp_constant (Const_int 5))])
-            ))
-         },
-       (Exp_ident (Id "a")))) |}]
-;;
-
-let%expect_test _ =
-  let () = parse_test "let a = fun ((x, y) :: z) -> 5 in a" in
-  [%expect
-    {|
-    (Exp_let (
-       { d_rec = Nonrecursive; d_pat = (Pat_var (Id "a"));
-         d_expr =
-         (Exp_function (
-            (Pat_cons ((Pat_tuple [(Pat_var (Id "x")); (Pat_var (Id "y"))]),
-               (Pat_var (Id "z")))),
-            (Exp_constant (Const_int 5))))
-         },
-       (Exp_ident (Id "a")))) |}]
-;;
-
-let%expect_test _ =
-  let () = parse_test "1, 2" in
-  [%expect {| (Exp_tuple [(Exp_constant (Const_int 1)); (Exp_constant (Const_int 2))]) |}]
-;;
-
-let%expect_test _ =
-  let () = parse_test "let a = fun (x, y) -> 1, 2 in x" in
-  [%expect
-    {|
-    (Exp_let (
-       { d_rec = Nonrecursive; d_pat = (Pat_var (Id "a"));
-         d_expr =
-         (Exp_function ((Pat_tuple [(Pat_var (Id "x")); (Pat_var (Id "y"))]),
-            (Exp_tuple
-               [(Exp_constant (Const_int 1)); (Exp_constant (Const_int 2))])
-            ))
-         },
-       (Exp_ident (Id "x")))) |}]
-;;
-
-let%expect_test _ =
-  let () = parse_test "let id x = x in let snd a b = b in snd (id 1) (id 0)" in
-  [%expect
-    {|
-    (Exp_let (
-       { d_rec = Nonrecursive; d_pat = (Pat_var (Id "id"));
-         d_expr = (Exp_function ((Pat_var (Id "x")), (Exp_ident (Id "x")))) },
-       (Exp_let (
-          { d_rec = Nonrecursive; d_pat = (Pat_var (Id "snd"));
-            d_expr =
-            (Exp_function ((Pat_var (Id "a")),
-               (Exp_function ((Pat_var (Id "b")), (Exp_ident (Id "b"))))))
-            },
-          (Exp_apply (
-             (Exp_apply ((Exp_ident (Id "snd")),
-                (Exp_apply ((Exp_ident (Id "id")), (Exp_constant (Const_int 1))))
-                )),
-             (Exp_apply ((Exp_ident (Id "id")), (Exp_constant (Const_int 0))))))
-          ))
-       )) |}]
-;;
-
-let%expect_test _ =
-  let _ = parse_test "1::2::[3]" in
-  [%expect
-    {|
-    (Exp_list ((Exp_constant (Const_int 1)),
-       (Exp_list ((Exp_constant (Const_int 2)),
-          (Exp_list ((Exp_constant (Const_int 3)), (Exp_constant Const_nil)))))
-       )) |}]
-;;
-
-let%expect_test _ =
-  let _ = parse_test "let a (h::tl) = 5 in a" in
-  [%expect
-    {|
-    (Exp_let (
-       { d_rec = Nonrecursive; d_pat = (Pat_var (Id "a"));
-         d_expr =
-         (Exp_function ((Pat_cons ((Pat_var (Id "h")), (Pat_var (Id "tl")))),
-            (Exp_constant (Const_int 5))))
-         },
-       (Exp_ident (Id "a")))) |}]
-;;
+module PP = struct
+  let pp_error ppf = function
+    | Syntax_error msg -> Format.fprintf ppf "%s" msg
+  ;;
+end

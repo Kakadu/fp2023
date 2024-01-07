@@ -1,8 +1,8 @@
-(** Copyright 2021-2023, Kakadu and contributors *)
+(** Copyright 2023, Artem-Rzhankoff *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-type ident = Id of string [@@deriving show { with_path = false }]
+type ident = string [@@deriving show { with_path = false }]
 
 type private_flag =
   | Private
@@ -38,7 +38,6 @@ type const =
   | Const_int of int (** Integers constants such as [52] *)
   | Const_bool of bool (** Boolean constant: [true], [false]*)
   | Const_nil (** Represents empty list [[]] *)
-  | Const_unit
 [@@deriving show { with_path = false }]
 
 type pattern =
@@ -67,6 +66,7 @@ type expression =
   | Exp_object of obj (** [object ... end]*)
   | Exp_send of expression * ident (** [E # m]*)
   (*  | Exp_list of expression list (** [[E1; ..; En]]*)*)
+  | Exp_override of (ident * expression) list (** [{< x1 = E1; ...; xn = En >}] *)
   | Exp_list of expression * expression
   (** The expression such as [E1::E2]
       This also represents lists [E1; ... En] via [E]*)
@@ -99,18 +99,7 @@ type structure_item =
   (** [Str_value({is_rec; P; E})] represents:
       - [let P = E] when {{!rec_flag.Nonrecursive}[Nonrecursive]
       - [let rec P = E] when [d_rec] is {{!rec_flag.Recursive}[Recursive]} *)
-[@@deriving show {with_path = false}]
+[@@deriving show { with_path = false }]
 
 (** Represents whole program with all statements *)
-type program = structure_item list
-[@@deriving show {with_path = false}]
-
-
-
-(* object (self) ... end *)
-(* c#m --> вызываем метод m в классе c *)
-
-(* self в объекте позволяет вызывать методы в нем же и передавать объект функциям вне класса *)
-(* self также можно опустить, если не нужно ссылаться на себя *)
-(* значения не надо указывать в типе, тк они в камле не показываются, только типы методов *)
-(* то есть обращаться можем только к методам, но при этом методы могут не принимать параметров *)
+type program = structure_item list [@@deriving show { with_path = false }]

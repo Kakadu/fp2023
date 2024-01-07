@@ -1,18 +1,17 @@
-(** Copyright 2021-2023, Artem-Rzhankoff *)
+(** Copyright 2023, Artem-Rzhankoff *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
 open Ast
 open Base
+open Errors
 
-type error =
-  | Division_by_zero
-  | Match_failure
-  | Invalid_compare_arg of string
-  | Ill_right_side_rec of string
-  | Ill_typed
-  | Unbound_var of string
-  | Not_implemented
+let division_by_zero = Interpreter Division_by_zero
+let match_failure = Interpreter Match_failure
+let invalid_compare_arg s = Interpreter (Invalid_compare_arg s)
+let ill_right_side_rec s = Interpreter (Ill_right_side_rec s)
+let ill_typed = Interpreter Ill_typed
+let unbound_var s = Interpreter (Unbound_var s)
 
 type name = string
 
@@ -41,6 +40,7 @@ type var =
   | Var_fun of pattern * rec_flag * enviroment * expression
   | Var_list of var list
   | Var_tuple of var list
+  | Var_object of enviroment
 
 and enviroment = (name, var, String.comparator_witness) Map.t
 
@@ -49,6 +49,7 @@ let vbool b = Var_bool b
 let vfun p r env e = Var_fun (p, r, env, e)
 let vtuple vs = Var_tuple vs
 let vlist vs = Var_list vs
+let vobj fs = Var_object fs
 
 module ENV (M : MONAD_ERROR) = struct
   open M
@@ -57,18 +58,18 @@ module ENV (M : MONAD_ERROR) = struct
 
   let lookup env name =
     match Map.find env name with
-    | None -> fail (Unbound_var name)
+    | None -> fail (unbound_var name)
     | Some v -> return v
   ;;
 
-  let extend env n v = Map.update env n ~f:(fun _ -> v)
+  let extend env ~k v = Map.update env k ~f:(fun _ -> v)
 
   let rec extend_by_apply env = function
     | Pat_const (Const_int i1), Var_int i2 when i1 = i2 -> return env
     | Pat_const (Const_bool b1), Var_bool b2 when Bool.equal b1 b2 -> return env
     | Pat_const Const_nil, Var_list [] -> return env
-    | Pat_const _, _ -> fail Match_failure
-    | Pat_var (Id name), var -> return @@ extend env name var
+    | Pat_const _, _ -> fail match_failure
+    | Pat_var name, var -> return @@ extend env ~k:name var
     | Pat_any, _ -> return env
     | Pat_cons (p1, p2), Var_list (h :: tl) ->
       let* env = extend_by_apply env (p2, Var_list tl) in
@@ -80,12 +81,16 @@ module ENV (M : MONAD_ERROR) = struct
            extend_by_apply env (p, v))
        with
        | Ok env -> env
-       | _ -> fail Ill_typed)
-    | _ -> fail Ill_typed
+       | _ -> fail ill_typed)
+    | _ -> fail ill_typed
+  ;;
+
+  let override_fields env new_fields =
+    List.fold_left new_fields ~init:env ~f:(fun env (name, v) -> extend env ~k:name v)
   ;;
 end
 
-module INTERPRETER (M : MONAD_ERROR) : sig
+module EVAL (M : MONAD_ERROR) : sig
   val run : enviroment -> expression -> (var, error) M.t
   val eval_program : program -> (enviroment, error) M.t
 end = struct
@@ -93,7 +98,7 @@ end = struct
   open ENV (M)
 
   let specify_unbound = function
-    | Unbound_var v -> Ill_right_side_rec v
+    | Interpreter (Unbound_var v) -> ill_right_side_rec v
     | other -> other
   ;;
 
@@ -101,13 +106,13 @@ end = struct
     let bin_op_helper = function
       | Asterisk, Var_int i1, Var_int i2 -> return (vint (i1 * i2))
       | Divider, Var_int i1, Var_int i2 ->
-        if i2 = 0 then fail Division_by_zero else return (vint (i1 / i2))
+        if i2 = 0 then fail division_by_zero else return (vint (i1 / i2))
       | Plus, Var_int i1, Var_int i2 -> return (vint (i1 + i2))
       | Sub, Var_int i1, Var_int i2 -> return (vint (i1 - i2))
       | And, Var_bool b1, Var_bool b2 -> return (vbool (b1 && b2))
       | Or, Var_bool b1, Var_bool b2 -> return (vbool (b1 || b2))
       | Or, _, _ | And, _, _ | Sub, _, _ | Plus, _, _ | Divider, _, _ | Asterisk, _, _ ->
-        fail Ill_typed
+        fail ill_typed
       | op, v1, v2 ->
         let rec compare = function
           | (Var_int _ as v1), (Var_int _ as v2) | (Var_bool _ as v1), (Var_bool _ as v2)
@@ -119,9 +124,9 @@ end = struct
              | 0, Var_tuple _ -> compare (vtuple tl1, vtuple tl2)
              | 0, Var_list _ -> compare (vlist tl1, vlist tl2)
              | _ -> return cmp_res)
-          | Var_fun _, Var_fun _ -> fail (Invalid_compare_arg "functional")
-          (* obj *)
-          | _ -> fail Ill_typed
+          | Var_fun _, Var_fun _ -> fail (invalid_compare_arg "functional")
+          | Var_object _, Var_object _ -> return 1
+          | _ -> fail ill_typed
         in
         let+ compare_args = compare (v1, v2) in
         (match op with
@@ -137,14 +142,13 @@ end = struct
         (match c with
          | Const_int i -> return (vint i)
          | Const_bool b -> return (vbool b)
-         | Const_nil -> return (vlist [])
-         | _ -> fail Not_implemented)
+         | Const_nil -> return (vlist []))
       | Exp_unary_op (op, e) ->
         let* e = helper env e in
         (match op, e with
          | Minus, Var_int i -> return (vint (-i))
          | Not, Var_bool b -> return (vbool (not b))
-         | _ -> fail Ill_typed)
+         | _ -> fail ill_typed)
       | Exp_bin_op (op, e1, e2) ->
         let* v1 = helper env e1 in
         let* v2 = helper env e2 in
@@ -154,12 +158,12 @@ end = struct
         (match cond with
          | Var_bool true -> helper env et
          | Var_bool false -> helper env ee
-         | _ -> fail Ill_typed)
+         | _ -> fail ill_typed)
       | Exp_function (p, e) -> return (vfun p Nonrecursive env e)
-      | Exp_ident (Id name) ->
+      | Exp_ident name ->
         let+ var = lookup env name in
         (match var with
-         | Var_fun (p, Recursive, _, e) -> vfun p Recursive (extend env name var) e
+         | Var_fun (p, Recursive, _, e) -> vfun p Recursive (extend env ~k:name var) e
          | _ -> var)
       | Exp_apply (e1, e2) ->
         let* v1 = helper env e1 in
@@ -168,7 +172,7 @@ end = struct
          | Var_fun (pat, _, fun_env, exp) ->
            let* new_env = extend_by_apply fun_env (pat, v2) in
            helper new_env exp
-         | _ -> fail Ill_typed)
+         | _ -> fail ill_typed)
       | Exp_let ({ d_rec = Nonrecursive; d_pat; d_expr }, exp) ->
         let* v = helper env d_expr in
         let* env1 = extend_by_apply env (d_pat, v) in
@@ -195,18 +199,51 @@ end = struct
         let* vtl = helper env tl in
         (match vtl with
          | Var_list vs -> return (vlist (vh :: vs))
-         | _ -> fail Ill_typed)
+         | _ -> fail ill_typed)
       | Exp_match (e, cases) ->
         let* v = helper env e in
         let* env, exp =
           EList.find_map_assoc_list
             cases
             ~f:(fun pat -> extend_by_apply env (pat, v))
-            ~err:Match_failure
+            ~err:match_failure
         in
         helper env exp
-      | Exp_send _ -> fail Not_implemented
-      | Exp_object _ -> fail Not_implemented
+      | Exp_send (obj, meth) ->
+        let* v = helper env obj in
+        (match v with
+         | Var_object env ->
+           let* mval = lookup env meth in
+           (match mval with
+            | Var_fun (pat, _, _, exp) ->
+              let* new_env = extend_by_apply env (pat, v) in
+              helper new_env exp
+            | _ -> fail ill_typed)
+         | _ -> fail ill_typed)
+      | Exp_object { o_self; o_fields } ->
+        let+ env =
+          EList.fold_left o_fields ~init:(return env) ~f:(fun env ->
+              function
+              | Obj_val (name, exp) ->
+                let+ v = helper env exp in
+                extend env ~k:name v
+              | Obj_method (_, name, exp) ->
+                let env = extend env ~k:name (vfun o_self Nonrecursive env exp) in
+                return env)
+        in
+        vobj env
+      | Exp_override fields ->
+        let* obj = lookup env "self" in
+        let* vfields =
+          EList.fold_left fields ~init:(return []) ~f:(fun acc (name, exp) ->
+            let+ v = helper env exp in
+            (name, v) :: acc)
+        in
+        (match obj with
+         | Var_object obj_env ->
+           let new_env = override_fields obj_env vfields in
+           return (vobj new_env)
+         | _ -> fail ill_typed)
     in
     helper
   ;;
@@ -240,7 +277,7 @@ end = struct
   let run env = eval_expression env
 end
 
-module INTERPR = INTERPRETER (struct
+module Interpreter = EVAL (struct
     include Base.Result
 
     let fail e = Result.Error e
@@ -268,7 +305,7 @@ module INTERPR = INTERPRETER (struct
     end
   end)
 
-module Pretty_printer = struct
+module PP = struct
   open Format
 
   let pp_error ppf = function
@@ -285,15 +322,15 @@ module Pretty_printer = struct
         ppf
         "Ill typed of expression. This error means that type checked worth worked"
     | Unbound_var name -> fprintf ppf "Unound value %s" name
-    | Not_implemented -> fprintf ppf "not impl"
   ;;
 
-  let pp_eval ppf ty =
-    let () = fprintf ppf "%a = " Pp_infer.pp_type ty in
+  let pp_eval ppf name ty =
+    let () = fprintf ppf "val %s : %a = " name Inferencer.PP.pp_type ty in
     let rec helper ppf = function
       | Var_int i -> fprintf ppf "%d" i
       | Var_bool b -> fprintf ppf "%b" b
       | Var_fun _ -> fprintf ppf "<fun>"
+      | Var_object _ -> fprintf ppf "<obj>"
       | Var_list vs ->
         fprintf
           ppf
@@ -316,117 +353,31 @@ module Pretty_printer = struct
 
   let pp_program ppf infer_env interpr_env =
     let open Typedtree in
-    Map.iter2 infer_env interpr_env ~f:(fun ~key:_ ~data:el ->
-      match el with
+    Map.iter2 infer_env interpr_env ~f:(fun ~key ~data ->
+      match data with
       | `Both (S (_, ty), v) ->
-        pp_eval ppf ty v;
+        pp_eval ppf key ty v;
         print_newline ()
       | _ -> ())
   ;;
 end
 
-let run_interpreter s =
-  let open Result in
-  let open Angstrom in
-  let run_parser = parse_string ~consume:Prefix Parser.program s in
-  match run_parser with
-  | Error e -> print_endline e
-  | Ok statements ->
-    (match Infer.check_program statements with
-     | Error e -> Pp_infer.pp_error Format.std_formatter e
-     | Ok st ->
-       (match INTERPR.eval_program statements with
-        | Error e -> Pretty_printer.pp_error Format.std_formatter e
-        | Ok vs -> Pretty_printer.pp_program Format.std_formatter st vs))
+open Result
+
+let eval s =
+  Parser.parse_prefix s
+  >>= fun statements ->
+  Inferencer.check_program statements
+  >>= fun ty_env -> Interpreter.eval_program statements >>| fun var_env -> ty_env, var_env
 ;;
 
-
-
-let%expect_test _ =
-  let () =
-    run_interpreter
-      "let rec fact x = if x = 0 then 1 else x * fact (x-1) let eval =  fact 5"
-  in
-  [%expect {|
-    int = 120
-    int -> int = <fun> |}]
-;;
-
-let%expect_test _ =
-  let () = run_interpreter "let a x = if x then 1 else 5;; let eval = a false" in
-  [%expect {|
-    bool -> int = <fun>
-    int = 5 |}]
-;;
-
-let%expect_test _ =
-  let () =
-    run_interpreter "let a = ((fun x -> x), (fun y -> y)) < ((fun z -> z), (fun a -> a))"
-  in
-  [%expect {| Invalid argument for compare: functional value |}]
-;;
-
-let%expect_test _ =
-  let () = run_interpreter "let a = (5, 6, 10, 34)" in
-  [%expect {| int * int * int * int = (5, 6, 10, 34) |}]
-;;
-
-let%expect_test _ =
-  let () = run_interpreter "let l = [5; 234; 22; -299; 50]" in
-  [%expect {| int list = [5; 234; 22; -299; 50] |}]
-;;
-
-let%expect_test _ =
-  let () = run_interpreter "let l = [324; true]" in
-  [%expect {| This expression has type int but an expression was expected of type bool |}]
-;;
-
-(* pattern-matching *)
-
-let%expect_test _ =
-  let () =
-    run_interpreter "let a x = match x with 1 -> true | _ -> false;; let b = a 3"
-  in
-  [%expect {|
-    int -> bool = <fun>
-    bool = false |}]
-;;
-
-let%expect_test _ =
-  let () = run_interpreter "let (5, a) = (4, 3)" in
-  [%expect {| Match failure |}]
-;;
-
-
-let%expect_test _ =
-  let () =
-    run_interpreter
-      "let match_list = let l = [1; 2; 3; 4] in match l with (1::b) -> b | _ -> []"
-  in
-  [%expect {| int list = [2; 3; 4] |}]
-;;
-
-
-let%expect_test _ =
-  let () = run_interpreter "let a = []" in
-  [%expect {| 'a list = [] |}]
-;;
-
-(*
-   let%expect_test _ =
-   let () = run_interpreter "" in
-   [%expect {||}]
-   ;;
-*)
-
-let%expect_test _ =
-  let () =
-    run_interpreter "let tuple = ((fun x -> x + 1), (fun b -> if b then 1 else 0))"
-  in
-  [%expect {| (int -> int) * (bool -> int) = (<fun>, <fun>) |}]
-;;
-
-let%expect_test _ =
-  let () = run_interpreter "let rec a = a" in
-  [%expect {| This kind of expression is not allowed as right-hand side of `let rec a' |}]
+let eval_with_printing s =
+  let ppf = Format.std_formatter in
+  match eval s with
+  | Ok (ty_env, var_env) -> PP.pp_program ppf ty_env var_env
+  | Error err ->
+    (match err with
+     | Parser e -> Parser.PP.pp_error ppf e
+     | Infer e -> Inferencer.PP.pp_error ppf e
+     | Interpreter e -> PP.pp_error ppf e)
 ;;
