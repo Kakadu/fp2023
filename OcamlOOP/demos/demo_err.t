@@ -22,3 +22,7 @@ In contrast to OCaml, it is forbidden to use an override expression without init
   $ cat << EOF | dune exec demo - 
   > let rec a = a
   This kind of expression is not allowed as right-hand side of `let rec a'
+  $ cat << EOF | dune exec demo -
+  > let is_eight x = match x with 8 -> true
+  > let eval = is_eight 7
+  Match failure

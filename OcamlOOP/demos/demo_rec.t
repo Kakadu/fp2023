@@ -37,3 +37,8 @@
   val reverse : 'a list -> 'a list = <fun>
   val reverse_bool : bool list = [false; true]
   val reverse_int : int list = [5; 4; 3; 2; 1]
+  $ cat << EOF | dune exec demo -
+  > let rec fix f x = f (fix f) x
+  > let fact = fix (fun self n -> if n <= 1 then 1 else n * self (n-1))
+  val fact : int -> int = <fun>
+  val fix : (('a -> 'b) -> 'a -> 'b) -> 'a -> 'b = <fun>
