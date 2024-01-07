@@ -69,12 +69,12 @@ open Ocaml_printf_lib
 
 let () =
   let str = Stdio.In_channel.input_all Stdlib.stdin in
-  <span data-count="2">l</span>et parsed = Parser.run_parser_program str in
-  <span data-count="2">m</span>atch parsed with
+  <span data-count="4">l</span>et parsed = Parser.run_parser_program str in
+  <span data-count="4">m</span>atch parsed with
   | <span data-count="0">R</span>esult.Error err -&gt; Format.print<span data-count="0">f</span> "Parsing error%s\n" err
-  | <span data-count="2">R</span>esult.Ok parsed -&gt;
+  | <span data-count="4">R</span>esult.Ok parsed -&gt;
     (match Inferencer.run_infer_program parsed with
-     | <span data-count="2">O</span>k (env, _) -&gt; Format.print<span data-count="2">f</span> "%a" Inferencer.TypeEnv.pp_env env
+     | <span data-count="4">O</span>k (env, _) -&gt; Format.print<span data-count="4">f</span> "%a" Inferencer.TypeEnv.pp_env env
      | <span data-count="0">E</span>rror err -&gt; Format.print<span data-count="0">f</span> "%a" Inferencer.pp_error err)
 ;;
 </code></pre>

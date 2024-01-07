@@ -40,22 +40,14 @@
 <a id="L16"></a><span > </span>
 <a id="L17"></a><span > </span>
 <a id="L18"></a><span class="visited"> </span>
-<a id="L19"></a><span class="visited"> </span>
-<a id="L20"></a><span class="visited"> </span>
+<a id="L19"></a><span > </span>
+<a id="L20"></a><span > </span>
 <a id="L21"></a><span > </span>
 <a id="L22"></a><span > </span>
 <a id="L23"></a><span > </span>
-<a id="L24"></a><span > </span>
-<a id="L25"></a><span > </span>
-<a id="L26"></a><span class="visited"> </span>
-<a id="L27"></a><span > </span>
-<a id="L28"></a><span > </span>
-<a id="L29"></a><span > </span>
-<a id="L30"></a><span > </span>
-<a id="L31"></a><span > </span>
-<a id="L32"></a><span class="visited"> </span>
-<a id="L33"></a><span class="visited"> </span>
-<a id="L34"></a><span > </span>
+<a id="L24"></a><span class="visited"> </span>
+<a id="L25"></a><span class="visited"> </span>
+<a id="L26"></a><span > </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -86,14 +78,6 @@
 <a href="#L24">24</a>
 <a href="#L25">25</a>
 <a href="#L26">26</a>
-<a href="#L27">27</a>
-<a href="#L28">28</a>
-<a href="#L29">29</a>
-<a href="#L30">30</a>
-<a href="#L31">31</a>
-<a href="#L32">32</a>
-<a href="#L33">33</a>
-<a href="#L34">34</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2023, aartdem *)
 
@@ -108,26 +92,18 @@ type typ =
   | TList of typ (** list type *)
   | TFString of typ (** example: "%d%s" has type TFString (int -&gt; char -&gt; unit) *)
 
-module TypeVarSet = struct
-  include Stdlib.Set.Make (Int)
-
-  let pp ppf s =
-    <span data-count="12">F</span>ormat.printf "[ ";
-    <span data-count="12">i</span>ter (Format.fprint<span data-count="12">f</span> ppf "%d; ") s;
-    <span data-count="12">F</span>ormat.printf "]"
-  ;;
-end
+module TypeVarSet = Stdlib.Set.Make (Int)
 
 type scheme = Scheme of TypeVarSet.t * typ
 
-let type_var x = <span data-count="64">T</span>Var x
+let type_var x = <span data-count="76">T</span>Var x
 let int_typ = TPrim "int"
 let bool_typ = TPrim "bool"
 let char_typ = TPrim "char"
 let string_typ = TPrim "string"
 let unit_typ = TUnit
-let format_typ x = <span data-count="106">T</span>FString x
-let arrow l r = <span data-count="577">T</span>Arr (l, r)
+let format_typ x = <span data-count="115">T</span>FString x
+let arrow l r = <span data-count="639">T</span>Arr (l, r)
 let ( @-&gt; ) = arrow
 </code></pre>
       </div>
