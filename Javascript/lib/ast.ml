@@ -61,11 +61,11 @@ and for_loop =
 and statement =
   | Block of statement list
   | Expression of expression
-  | VarDeck of var_init
-  | FunDeck of fun_init
+  | VarInit of var_init
+  | FunInit of fun_init
   | If of expression * statement * statement
   | While of expression * statement
-  | ForDeck of for_loop
+  | For of for_loop
   | Return of expression
   | Programm of statement list
 [@@deriving show { with_path = false }]
