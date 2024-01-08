@@ -1,4 +1,4 @@
-(** Copyright 2021-2023, tepa46 *)
+(** Copyright 2023-2024, tepa46 *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
@@ -371,4 +371,4 @@ let pdecl =
 
 let parse_semicolon = many @@ check_chunk ";;"
 let parse_program = parse_semicolon *> many (pdecl <* parse_semicolon)
-let parse str = parse_string ~consume:All parse_program str
+let parse str = parse_string ~consume:Prefix parse_program str

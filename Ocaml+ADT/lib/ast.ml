@@ -1,4 +1,4 @@
-(** Copyright 2021-2023, tepa46 *)
+(** Copyright 2023-2024, tepa46 *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 

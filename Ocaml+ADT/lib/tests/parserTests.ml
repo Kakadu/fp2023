@@ -1,3 +1,7 @@
+(** Copyright 2023-2024, tepa46 *)
+
+(** SPDX-License-Identifier: LGPL-3.0-or-later *)
+
 open Ocamladt_lib
 open Format
 

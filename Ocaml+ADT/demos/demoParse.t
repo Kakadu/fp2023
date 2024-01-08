@@ -1,4 +1,6 @@
-  $ dune exec demoFact
+  $ dune exec demoParse << EOF
+  > let rec factorial_recursive = fun n -> if n <= 1 then 1 else n * factorial_recursive (n - 1)
+  > EOF
   [(DLet
       ((DRec true), (LName "factorial_recursive"), (DType TEmptyType),
        (EFun ((PVar (LName "n")),
