@@ -26,8 +26,8 @@ let num_to_string n =
   else Float.to_string n
 ;;
 
-(*JS use diffrent conversion to string in .toString and in print.
-  It's the reason why vvalues_to_str and to_vstring is diffrent functions*)
+(*JS uses diffrent conversion to string in .toString and in print.
+  It's the reason why vvalues_to_str and to_vstring are diffrent functions*)
 let vvalues_to_str = function
   | VNumber x -> num_to_string x
   | VBool true -> "true"
