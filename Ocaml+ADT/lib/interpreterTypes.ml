@@ -38,13 +38,13 @@ and pp_value fmt = function
   | VList lst -> fprintf fmt "[%a]" pp_value_list lst
   | VTuple tuple -> fprintf fmt "(%a)" pp_value_tuple tuple
   | VAdt (type_name, type_value) -> fprintf fmt "%S %a" type_name pp_value type_value
-  | VFun (pattern, _, _) -> fprintf fmt "fun(%a)" pp_pattern pattern
-  | VLetRec (let_rec_name, let_rec_exp) ->
-    fprintf fmt "let rec %S(%a)" let_rec_name pp_value let_rec_exp
+  | VFun (_, _, _) -> fprintf fmt "<fun>"
+  | VLetRec (_, _) ->
+    fprintf fmt "<let rec>" 
 ;;
 
 let pp_env fmt (environment : env) =
-  StringMap.iter (fun key data -> fprintf fmt "%S: %a" key pp_value data) environment
+  StringMap.iter (fun key data -> fprintf fmt "%S: %a\n" key pp_value data) environment
 ;;
 
 type failure =
