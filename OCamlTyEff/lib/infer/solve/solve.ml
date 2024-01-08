@@ -43,23 +43,72 @@ open SolveMonad.Let_syntax
 open SolveMonad.Let
 
 module Unify = struct
-  let occurs_check_ty var ty = VarSet.mem (Ty.vars ty) (Var_ty var)
+  let rec rewrite_eff lbl1 = function
+    | Eff.Eff_row (lbl2, eff_rest2) when Eff.Label.equal lbl1 lbl2 ->
+        return (Sub.empty, eff_rest2)
+    | Eff_row (lbl2, Eff.Eff_var var2) ->
+        let* fresh_eff = fresh_var >>| fun var -> Eff.Eff_var var in
+        return
+          ( Sub.singleton_eff var2 (Eff.Eff_row (lbl1, fresh_eff))
+          , Eff.Eff_row (lbl2, fresh_eff) )
+    | Eff_row (lbl2, eff_rest2) ->
+        let* sub, eff = rewrite_eff lbl1 eff_rest2 in
+        return (sub, Eff.Eff_row (lbl2, eff))
+    | _ ->
+        assert false
 
+  let rec eff_tail = function
+    | Eff.Eff_total ->
+        None
+    | Eff_var var ->
+        Some var
+    | Eff_row (_, eff_rest) ->
+        eff_tail eff_rest
+
+  let occurs_check_eff var eff = VarSet.mem (Eff.vars eff) (Var_eff var)
+  let rec unify_eff eff1 eff2 =
+    match (eff1, eff2) with
+    | eff1, eff2 when Eff.equal eff1 eff2 ->
+        return Sub.empty
+    | Eff.Eff_var var, eff | eff, Eff.Eff_var var ->
+        if occurs_check_eff var eff then fail @@ OccursInEff (var, eff)
+        else return @@ Sub.singleton_eff var eff
+    | Eff_row (lbl1, eff1_rest), (Eff_row (_, _) as row2) -> (
+        let* sub1, eff2_rest = rewrite_eff lbl1 row2 in
+
+        match eff_tail eff1_rest with
+        | Some tail when Sub.mem sub1 tail ->
+            fail @@ RecursiveEffRows
+        | None | Some _ ->
+            let* sub2 =
+              unify_eff
+                (Sub.apply_to_eff sub1 eff1_rest)
+                (Sub.apply_to_eff sub1 eff2_rest)
+            in
+            return @@ Sub.compose sub2 sub1 )
+    | _, _ ->
+        fail @@ UnificationFailEff (eff1, eff2)
+
+  let occurs_check_ty var ty = VarSet.mem (Ty.vars ty) (Var_ty var)
   let rec unify ty1 ty2 =
     match (ty1, ty2) with
     | ty1, ty2 when Ty.equal ty1 ty2 ->
         return Sub.empty
     | Ty.Ty_var var, ty | ty, Ty.Ty_var var ->
-        if occurs_check_ty var ty then fail @@ TyError.OccursIn (var, ty)
+        if occurs_check_ty var ty then fail @@ OccursInTy (var, ty)
         else return @@ Sub.singleton_ty var ty
-    | Ty_arr (l1, _, r1), Ty_arr (l2, _, r2) ->
-        unify_many [l1; r1] [l2; r2]
+    | Ty_arr (l1, eff1, r1), Ty_arr (l2, eff2, r2) ->
+        let* sub1 = unify_many [l1; r1] [l2; r2] in
+        let* sub2 =
+          unify_eff (Sub.apply_to_eff sub1 eff1) (Sub.apply_to_eff sub1 eff2)
+        in
+        return @@ Sub.compose sub1 sub2
     | Ty_tuple tys1, Ty_tuple tys2 ->
         unify_many tys1 tys2
     | Ty_con (id1, tys1), Ty_con (id2, tys2) when Ident.equal id1 id2 ->
         unify_many tys1 tys2
     | _ ->
-        fail @@ UnificationFail (ty1, ty2)
+        fail @@ UnificationFailTy (ty1, ty2)
 
   (**
     Unifies types from tys1 with types
@@ -140,8 +189,10 @@ let solve cs =
           let* s1 = Unify.unify t1 t2 in
           let* s2 = solve' (Sub.apply_to_constrs s1 cs) in
           return @@ Sub.compose s2 s1
-      | EffEqConstr (_, _), _ ->
-          return @@ Sub.empty
+      | EffEqConstr (eff1, eff2), cs ->
+          let* s1 = Unify.unify_eff eff1 eff2 in
+          let* s2 = solve' (Sub.apply_to_constrs s1 cs) in
+          return @@ Sub.compose s2 s1
       | ImplInstConstr (t1, mset, t2), cs ->
           solve' @@ ConstrSet.add cs (ExplInstConstr (t1, generalize mset t2))
       | ExplInstConstr (ty, sc), cs ->

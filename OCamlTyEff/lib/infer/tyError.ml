@@ -8,9 +8,12 @@ open Ast
 
 type t =
   | UnificationMismatch
-  | UnificationFail of Ty.t * Ty.t
+  | UnificationFailTy of Ty.t * Ty.t
+  | UnificationFailEff of Eff.t * Eff.t
   | UnboundVariable of Ident.t
-  | OccursIn of Var.t * Ty.t
+  | OccursInTy of Var.t * Ty.t
+  | OccursInEff of Var.t * Eff.t
+  | RecursiveEffRows
   | PatVarBoundSeveralTimes of Ident.t
   | ConstructorArityMismatch of Ident.t
   | NotVarLHSRec
