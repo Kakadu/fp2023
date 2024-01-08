@@ -2,17 +2,32 @@
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-let pars str =
+let pars_class str =
   match Parser.parse_ast str with
   | Result.Ok (Ast (x :: _)) -> Some x
   | _ -> None
 ;;
 
-let fileInfo_name = Ast.Id "FileInfo"
+let exception_name = Ast.Id "Exception"
 
-let fileInfo_decl =
+let exception_decl =
+  let info = {|
+        class Exception{} 
+    |} in
+  pars_class info
+;;
+
+let pars_ast str =
+  match Parser.parse_ast str with
+  | Result.Ok x -> Some x
+  | _ -> None
+;;
+
+let base_lib_decl =
   let info =
     {|
+      class Division_by_zero : Exception {}
+
       class FileInfo{
         string path;
         bool Exists = false;
@@ -33,14 +48,5 @@ let fileInfo_decl =
         } 
     |}
   in
-  pars info
-;;
-
-let exception_name = Ast.Id "Exception"
-
-let exception_decl =
-  let info = {|
-        class Exception{} 
-    |} in
-  pars info
+  pars_ast info
 ;;

@@ -61,8 +61,8 @@ module Eval_env = struct
   type t_env_value =
     | ILink_access of address
     | IBase_value of value_
-    | IMethod of method_sign*statement
-    | IConstructor of method_sign*statement
+    | IMethod of method_sign * statement
+    | IConstructor of method_sign * statement
 
   type t_env_value_opt = t_env_value option
   type t_loc_env = address * t_env_value_opt IdentMap.t
@@ -83,5 +83,4 @@ module Eval_env = struct
 
   let to_info x = Info x
   let to_return x = Return x
-
 end

@@ -350,7 +350,7 @@ let is_exception_ con_id =
   read_global (Code_ident con_id)
   >>= function
   | Exception_ctx _ -> return TP_Ok
-  | _ -> fail (Other_error "throw can be used only with exceprions\n")
+  | _ -> fail (Other_error "throw can be used only with exceptions\n")
 ;;
 
 let throw_check env_obj =
@@ -549,20 +549,32 @@ let class_check cl_decl =
   >>= fun x -> add_class x *> (local_scope @@ (add_members *> iter_left helper cl_mems))
 ;;
 
-let run_with_base_lib f =
+let run_with_base_exception =
   let cd = CodeMap.empty in
-  let start_st cd = cd, IdentMap.empty, None, None in
-  match Base_lib.fileInfo_decl, Base_lib.exception_decl with
-  | Some first, Some second ->
-    CodeMap.add (Code_ident Base_lib.fileInfo_name) (Class_ctx first) cd
-    |> CodeMap.add (Code_ident Base_lib.exception_name) (Exception_ctx second)
-    |> start_st
-    |> continue f
-  | _, _ -> run (fail (Other_error "Base_lib Not connected"))
+  match Base_lib.exception_decl with
+  | Some second ->
+    let hm = CodeMap.add (Code_ident Base_lib.exception_name) (Exception_ctx second) cd in
+    continue (return ()) (hm, IdentMap.empty, None, None)
+  | _ -> run (fail (Other_error "Base_lib Not connected"))
+;;
+
+let type_check_ ast =
+  let (Ast ast) = ast in
+  let type_checker_ = iter_left class_check ast in
+  match run_with_base_exception with
+  | (ctx, _, _, _), Result.Ok _ -> continue type_checker_ (ctx, IdentMap.empty, None, None)
+  | _, Result.Error info -> run (fail info)
 ;;
 
 let type_check ast =
   let (Ast ast) = ast in
   let type_checker_ = iter_left class_check ast in
-  run_with_base_lib type_checker_
+  let lib_ctx =
+    match Base_lib.base_lib_decl with
+    | Some lib -> type_check_ lib
+    | None -> run (fail (Other_error "Base_lib Not connected"))
+  in
+  match lib_ctx with
+  | (ctx, _, _, _), Result.Ok _ -> continue type_checker_ (ctx, IdentMap.empty, None, None)
+  | _, Result.Error info -> run (fail info)
 ;;

@@ -6,18 +6,7 @@ open Ast
 open Errors
 open Env_types.Common_env
 
-module type MONAD = sig
-  type ('st, 'a, 'err) t = 'st -> 'st * ('a, 'err) Result.t
-
-  val return : 'a -> ('st, 'a, 'err) t
-  val fail : 'err -> ('st, 'a, 'err) t
-  val ( >>= ) : ('st, 'a, 'err) t -> ('a -> ('st, 'b, 'err) t) -> ('st, 'b, 'err) t
-  val save : 'st -> ('st, unit, 'err) t
-  val continue : ('st, 'a, 'err) t -> 'st -> 'st * ('a, 'err) Result.t
-  val ( <|> ) : ('st, 'a, 'err) t -> ('st, 'a, 'err) t -> ('st, 'a, 'err) t
-end
-
-module TC_Kernel : MONAD = struct
+module Base_monad = struct
   type ('st, 'a, 'err) t = 'st -> 'st * ('a, 'err) Result.t
 
   let return : 'a -> ('st, 'a, 'err) t = fun x st -> st, Result.ok x
@@ -44,45 +33,37 @@ module TC_Kernel : MONAD = struct
     | Result.Ok x -> return x st
     | Result.Error _ -> a2 st
   ;;
-end
-
-module Base_monad (M : MONAD) = struct
-  open M
-
-  type ('st, 'a, 'err) t = ('st, 'a, 'err) M.t
 
   let lift2
     : ('a -> 'b -> 'c) -> ('st, 'a, 'err) t -> ('st, 'b, 'err) t -> ('st, 'c, 'err) t
     =
-    fun f a b st -> (a >>= fun a1 -> b >>= fun b1 -> return (f a1 b1)) st
+    fun f a b -> a >>= fun a1 -> b >>= fun b1 -> return (f a1 b1)
   ;;
 
   let lift3
     :  ('a -> 'b -> 'c -> 'd) -> ('st, 'a, 'err) t -> ('st, 'b, 'err) t
     -> ('st, 'c, 'err) t -> ('st, 'd, 'err) t
     =
-    fun f a b c st ->
-    (a >>= fun a1 -> b >>= fun b1 -> c >>= fun c1 -> return (f a1 b1 c1)) st
+    fun f a b c -> a >>= fun a1 -> b >>= fun b1 -> c >>= fun c1 -> return (f a1 b1 c1)
   ;;
 
   let lift4
     :  ('a -> 'b -> 'c -> 'd -> 'e) -> ('st, 'a, 'err) t -> ('st, 'b, 'err) t
     -> ('st, 'c, 'err) t -> ('st, 'd, 'err) t -> ('st, 'e, 'err) t
     =
-    fun f a b c d st ->
+    fun f a b c d ->
     lift2
       (fun (a1, b1) (c1, d1) -> f a1 b1 c1 d1)
       (lift2 (fun a1 b1 -> a1, b1) a b)
       (lift2 (fun c1 d1 -> c1, d1) c d)
-      st
   ;;
 
   let ( *> ) : ('st, 'a, 'err) t -> ('st, 'b, 'err) t -> ('st, 'b, 'err) t =
-    fun a b st -> (lift2 (fun _ x -> x) a b) st
+    fun a b -> lift2 (fun _ x -> x) a b
   ;;
 
   let ( <* ) : ('st, 'a, 'err) t -> ('st, 'b, 'err) t -> ('st, 'a, 'err) t =
-    fun a b st -> (lift2 (fun x _ -> x) a b) st
+    fun a b -> lift2 (fun x _ -> x) a b
   ;;
 
   let ( >>| ) : ('st, 'a, 'err) t -> ('a -> 'b) -> ('st, 'b, 'err) t =
@@ -102,34 +83,19 @@ module Base_monad (M : MONAD) = struct
   ;;
 end
 
-module Env_Monad (M : MONAD) = struct
-  include Base_monad (M)
-  include M
+module Type_check_Monad = struct
+  open Env_types.Type_check_env
+  include Base_monad
 
-  type ('st, 'a) t = ('st, 'a, error) Base_monad(M).t
+  type ctx_env = type_check_ctx
+  type 'a t = ctx_env -> ctx_env * ('a, error) Result.t
 
-  let choice : ('st, 'a) t list -> ('st, 'a) t =
+  let choice : 'a t list -> 'a t =
     fun l ->
     match l with
     | [] -> fail (Other_error "Empty choice\n")
     | h :: tl -> List.fold_left ( <|> ) h tl
   ;;
-end
-(* =================================================================== *)
-
-
-module I_Kernel = struct
-  include TC_Kernel
-
-  
-end
-
-module Type_check_Monad = struct
-  include Env_Monad (TC_Kernel)
-  open Env_types.Type_check_env
-
-  type ctx_env = type_check_ctx
-  type 'a t = (ctx_env, 'a) Env_Monad(TC_Kernel).t
 
   let run : 'a t -> ctx_env * ('a, error) Result.t =
     fun f -> f (CodeMap.empty, IdentMap.empty, None, None)
@@ -217,44 +183,49 @@ module Type_check_Monad = struct
 end
 
 module Eval_Monad = struct
-  include Env_Monad (TC_Kernel)
   open Env_types.Eval_env
+  include Base_monad
 
   type ctx_env = interpret_ctx
-  type 'a t = (interpret_ctx, 'a tp_return) Env_Monad(TC_Kernel).t
-
-  let old_return = return
-  let return : 'a -> 'a t = fun elem st -> old_return (to_info elem) st
-  let return_res : 'a option -> 'a t = fun elem st -> old_return (to_return elem) st
-  let return_break : 'a t = fun st -> old_return Break st
-
-  let get_class : code_ident -> code_ctx t =
-    fun id st ->
-    let code, _, _, _ = st in
-    let (Code_ident id_) = id in
-    match CodeMap.find_opt id code with
-    | Some x -> return x st
-    | None -> fail (Not_find_ident_of id_) st
-  ;;
-
-  let get_memory_el : address -> mem_el t =
-    fun ad st ->
-    let _, _, (_, memory_map), _ = st in
-    match MemMap.find_opt ad memory_map with
-    | Some x -> return x st
-    | None -> fail Non_existent_address st
-  ;;
-
-  (* let get_local_elem: ident -> code_ctx t =
-     fun id st ->
-     let _, (ad, l_env), _, _ = st in
-     let get_from_env = match IdentMap.find_opt id l_env with
-     | Some x -> return x st
-     | None -> fail(Not_find_ident) st
-     in
-     let get_from_mem = get_memory_el ad in
-
-     ;; *)
-
-  (* let *)
+  type 'a t = ctx_env -> ctx_env * ('a, error) Result.t
 end
+(* module Eval_Monad = struct
+   open Env_types.Eval_env
+
+   type ctx_env = interpret_ctx
+
+   let old_return = return
+   let return : 'a -> 'a t = fun elem st -> old_return (to_info elem) st
+   let return_res : 'a option -> 'a t = fun elem st -> old_return (to_return elem) st
+   let return_break : 'a t = fun st -> old_return Break st
+
+   let get_class : code_ident -> code_ctx t =
+   fun id st ->
+   let code, _, _, _ = st in
+   let (Code_ident id_) = id in
+   match CodeMap.find_opt id code with
+   | Some x -> return x st
+   | None -> fail (Not_find_ident_of id_) st
+   ;;
+
+   let get_memory_el : address -> mem_el t =
+   fun ad st ->
+   let _, _, (_, memory_map), _ = st in
+   match MemMap.find_opt ad memory_map with
+   | Some x -> return x st
+   | None -> fail Non_existent_address st
+   ;;
+
+   (* let get_local_elem: ident -> code_ctx t =
+   fun id st ->
+   let _, (ad, l_env), _, _ = st in
+   let get_from_env = match IdentMap.find_opt id l_env with
+   | Some x -> return x st
+   | None -> fail(Not_find_ident) st
+   in
+   let get_from_mem = get_memory_el ad in
+
+   ;; *)
+
+   (* let *)
+   end *)

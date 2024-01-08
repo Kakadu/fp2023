@@ -247,6 +247,12 @@ let%expect_test "Try_catch" =
               catch(E){}
 
               try{}
+              catch(Division_by_zero e){}
+
+              try{}
+              catch(Exception e){}
+
+              try{}
               catch(E) when(1 == 1){}
 
               try{}
@@ -381,7 +387,7 @@ let%expect_test "Throw some class" =
   in
   check_stand s;
   [%expect
-    {| Type_check error: (Other_error "throw can be used only with exceprions\n") |}]
+    {| Type_check error: (Other_error "throw can be used only with exceptions\n") |}]
 ;;
 
 let%expect_test "FileInfo_decl" =
