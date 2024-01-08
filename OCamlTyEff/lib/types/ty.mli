@@ -6,7 +6,8 @@ open! Base
 
 type t =
   | Ty_var of Var.t  (** A type variable such as ['a] *)
-  | Ty_arr of t * t  (** [Ty_arr(T1, T2)] represents [T1 -> T2] *)
+  | Ty_arr of t * Eff.t * t
+      (** [Ty_arr(T1, Eff, T2)] represents [T1 -Eff-> T2] *)
   | Ty_tuple of t list
       (** [Ty_tuple([T1 ; ... ; Tn])] represents [T1 * ... * Tn].
           Invariant: [n >= 2].

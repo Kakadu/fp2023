@@ -86,7 +86,7 @@ let infer_structure_item env str_item =
             match sc with
             | Forall (_, Ty_con (_, _)) ->
                 assert_eq arity NoArgs
-            | Forall (_, Ty_arr (_, Ty_con (_, _))) ->
+            | Forall (_, Ty_arr (_, _, Ty_con (_, _))) ->
                 assert_eq arity SomeArgs
             | _ ->
                 mismatch )

@@ -94,7 +94,7 @@ module GenMonad = struct
 end
 
 let ( ! ) tv = Ty.Ty_var tv
-let ( @> ) ty_arg ty_res = Ty.Ty_arr (ty_arg, ty_res)
+let ( @> ) ty_arg ty_res = Ty.Ty_arr (ty_arg, Eff_total, ty_res)
 let ( == ) t1 t2 = Constr.EqConstr (t1, t2)
 let ( ++ ) = Assumptions.merge
 let ( -- ) asm = List.fold ~init:asm ~f:Assumptions.remove
