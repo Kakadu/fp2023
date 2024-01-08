@@ -346,12 +346,12 @@ and parse_while () =
   >>| fun body -> While (condition, body)
 
 and parse_for () =
-  lp *> (parse_stm ()) <?> "invalid for loop variable"
-  >>= fun variable -> (parse_stm ()) <?> "invalid for loop variable condition"
-  >>= fun condition -> (parse_stm () <* rp) <?> "invalid variable change statement"
-  >>= fun state -> parse_stm () <?> "invalid for loop body"
+  parens ((parse_stm ()) <?> "invalid for loop variable"
+  >>= fun init -> (parse_stm ()) <?> "invalid for loop variable condition"
+  >>= fun condition -> (parse_stm ()) >>= fun change -> return (init, condition, change)) <?> "invalid variable change statement" 
+  >>= fun (init, condition, change) -> parse_block_or_stm () <?> "invalid for loop body"
   >>| fun body -> 
-  ForDeck { variable = variable; condition = condition; var_state = state; loop_body = body }
+  ForDeck { for_init = init; for_condition = condition; for_change = change; for_body = body }
 
 and parse_if () =
   parens (start_parse_expression ())

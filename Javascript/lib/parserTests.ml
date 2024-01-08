@@ -844,17 +844,17 @@ let%expect_test "for" =
     {|
       (Programm
          [(ForDeck
-             { variable =
+             { for_init =
                (VarDeck
                   { var_identifier = "i"; is_const = false; 
                     value = (Const (Number 0.)) });
-               condition = 
+               for_condition = 
                (Expression (BinOp (NotEqual, (Var "i"), (Const (Number 10.)))));
-               var_state =
+               for_change =
                (Expression
                   (BinOp (Assign, (Var "i"), 
                      (BinOp (Add, (Var "i"), (Const (Number 1.)))))));
-               loop_body =
+               for_body =
                (Block
                   [(VarDeck 
                       { var_identifier = "a"; is_const = false; value = (Var "i") });
