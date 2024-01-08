@@ -1,10 +1,10 @@
 (library
  (name ocamlOOP_lib)
  (public_name OcamlOOP.Lib)
- (modules Parser Ast)
- (inline_tests)
+ (modules parser ast typedtree inferencer interpreter errors)
+ (libraries base angstrom)
  (preprocess
-  (pps ppx_show ppx_expect ppx_deriving.eq))
- (libraries ppx_show.runtime base angstrom)
+  (pps ppx_expect ppx_deriving.show ppx_deriving.eq))
+ (inline_tests)
  (instrumentation
   (backend bisect_ppx)))
