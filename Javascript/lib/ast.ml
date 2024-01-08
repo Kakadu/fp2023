@@ -51,10 +51,10 @@ and fun_init =
   }
 
 and for_loop = 
-  { variable : statement
-  ; condition : statement
-  ; var_state : statement
-  ; loop_body : statement
+  { for_init : statement
+  ; for_condition : statement
+  ; for_change : statement
+  ; for_body : statement
   }
 
 and statement =
