@@ -8,10 +8,13 @@ open Ast
 
 type t =
   | UnificationMismatch  (** Lists of types to unify have different lengths *)
-  | UnificationFail of Ty.t * Ty.t  (** Failed to unify two types *)
+  | UnificationFailTy of Ty.t * Ty.t  (** Failed to unify two types *)
+  | UnificationFailEff of Eff.t * Eff.t  (** Failed to unify two effects *)
   | UnboundVariable of Ident.t
       (** Failed to find a variable in the environment *)
-  | OccursIn of Var.t * Ty.t  (** Type variable occurs in a type *)
+  | OccursInTy of Var.t * Ty.t  (** Type variable occurs in a type *)
+  | OccursInEff of Var.t * Eff.t  (** Effect variable occurs in an effect *)
+  | RecursiveEffRows  (** Recursive effect rows *)
   | PatVarBoundSeveralTimes of Ident.t
       (** Pattern(s) bound the same variable several times. E.g. `let x, x = ..` *)
   | ConstructorArityMismatch of Ident.t
