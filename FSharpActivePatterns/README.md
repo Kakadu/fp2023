@@ -7,14 +7,16 @@ License: LGPL for implementation code + WTFPL for test examles in miniLanguage
 Author: Vitaliy Dyachkov, vitaliy.dyach@gmail.com
 
 Functions performed:
-- Nothing
+- Parser of Binary operations, functions, lists, tuples and active patterns
+- Interpreter
+- Partially made type checker
 
 Features under development:
-- Parser
-- Interpreter of non-recursive functions
-- Ability to describe and use active patterns
+- Type checker: 
+  1) Let MultipleChoice
+- Cram test
 
-
+(TODO: Поменять readme, может даже не забуду)
 ##### Замечания по стилю кодирования
 
 - Если merge request не проходит CI -- проверяться не будет
@@ -24,7 +26,8 @@ Features under development:
 
   Такие суровые ограничения вводятся, чтобы замечания не игнорировались.
 
-- Иимена типов и функций -- snake_case
+
+- Имена типов и функций -- snake_case
 - Имена типов модулей и модулей -- CamelCase
 - Ворнинги должны быть пофикшены
 - Не стесняйтесь писать `if ... then ... else` вместо `match ... with true -> .. | false -> ...`
@@ -89,5 +92,3 @@ let x = if long_expression then true else false in ...
 ```ocaml
 let x = long_expression in ...
 ```
-
-- 1

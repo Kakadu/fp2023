@@ -2,4 +2,4 @@
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-val main_parse : string -> (Ast.expr list, string) result
+val eval_program : Ast.program -> (Ast.value, Errorinter.error) result
