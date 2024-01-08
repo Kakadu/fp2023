@@ -43,15 +43,15 @@ open SolveMonad.Let_syntax
 open SolveMonad.Let
 
 module Unify = struct
-  let occurs_check tv ty = VarSet.mem (Ty.vars ty) tv
+  let occurs_check_ty var ty = VarSet.mem (Ty.vars ty) (Var_ty var)
 
   let rec unify ty1 ty2 =
     match (ty1, ty2) with
     | ty1, ty2 when Ty.equal ty1 ty2 ->
         return Sub.empty
-    | Ty.Ty_var tv, ty | ty, Ty.Ty_var tv ->
-        if occurs_check tv ty then fail @@ TyError.OccursIn (tv, ty)
-        else return @@ Sub.singleton tv ty
+    | Ty.Ty_var var, ty | ty, Ty.Ty_var var ->
+        if occurs_check_ty var ty then fail @@ TyError.OccursIn (var, ty)
+        else return @@ Sub.singleton_ty var ty
     | Ty_arr (l1, _, r1), Ty_arr (l2, _, r2) ->
         unify_many [l1; r1] [l2; r2]
     | Ty_tuple tys1, Ty_tuple tys2 ->
@@ -73,8 +73,8 @@ module Unify = struct
         let* s1 = unify ty1 ty2 in
         let* s2 =
           unify_many
-            (List.map tys1 ~f:(Sub.apply s1))
-            (List.map tys2 ~f:(Sub.apply s1))
+            (List.map tys1 ~f:(Sub.apply_to_ty s1))
+            (List.map tys2 ~f:(Sub.apply_to_ty s1))
         in
         return @@ Sub.compose s2 s1
     | _ ->
@@ -86,18 +86,26 @@ let generalize free ty = Scheme.Forall (VarSet.diff (Ty.vars ty) free, ty)
 let instantiate (Scheme.Forall (quantified, ty)) =
   (* construct substitution that maps quantified vars to fresh vars *)
   let* subst =
-    VarSet.fold quantified ~init:(return Sub.empty) ~f:(fun acc var ->
-        let* fresh_var = fresh_var >>| fun tv -> Ty.Ty_var tv in
-        let single = Sub.singleton var fresh_var in
+    VarSet.fold quantified ~init:(return Sub.empty) ~f:(fun acc elt ->
+        let* fresh = fresh_var in
+        let single =
+          match elt with
+          | Var_ty var ->
+              Sub.singleton_ty var (Ty_var fresh)
+          | Var_eff var ->
+              Sub.singleton_eff var (Eff_var fresh)
+        in
         let* acc = acc in
         return @@ Sub.compose single acc )
   in
-  return @@ Sub.apply subst ty
+  return @@ Sub.apply_to_ty subst ty
 
 let activevars =
   let activevars_single = function
-    | Constr.EqConstr (ty1, ty2) ->
+    | Constr.TyEqConstr (ty1, ty2) ->
         VarSet.union (Ty.vars ty1) (Ty.vars ty2)
+    | EffEqConstr (eff1, eff2) ->
+        VarSet.union (Eff.vars eff1) (Eff.vars eff2)
     | ImplInstConstr (ty1, mset, ty2) ->
         VarSet.union (Ty.vars ty1) (VarSet.inter mset (Ty.vars ty2))
     | ExplInstConstr (ty, sc) ->
@@ -112,7 +120,7 @@ let solve cs =
       ConstrSet.find_map cs ~f:(fun constr ->
           let rest = ConstrSet.remove cs constr in
           match constr with
-          | EqConstr (_, _) | ExplInstConstr (_, _) ->
+          | TyEqConstr (_, _) | EffEqConstr (_, _) | ExplInstConstr (_, _) ->
               Some (constr, rest)
           | ImplInstConstr (_, mset, t2)
             when VarSet.is_empty
@@ -128,14 +136,16 @@ let solve cs =
         return Sub.empty
     | Some constr -> (
       match constr with
-      | EqConstr (t1, t2), cs ->
+      | TyEqConstr (t1, t2), cs ->
           let* s1 = Unify.unify t1 t2 in
           let* s2 = solve' (Sub.apply_to_constrs s1 cs) in
           return @@ Sub.compose s2 s1
+      | EffEqConstr (_, _), _ ->
+          return @@ Sub.empty
       | ImplInstConstr (t1, mset, t2), cs ->
           solve' @@ ConstrSet.add cs (ExplInstConstr (t1, generalize mset t2))
       | ExplInstConstr (ty, sc), cs ->
           let* ty' = instantiate sc in
-          solve' @@ ConstrSet.add cs (EqConstr (ty, ty')) )
+          solve' @@ ConstrSet.add cs (TyEqConstr (ty, ty')) )
   in
   SolveMonad.run @@ solve' cs

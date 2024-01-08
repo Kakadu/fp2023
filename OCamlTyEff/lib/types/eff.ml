@@ -38,7 +38,7 @@ let pp ppf =
 
 let rec vars = function
   | Eff_var var ->
-      VarSet.singleton var
+      VarSet.singleton_eff var
   | Eff_row (_, eff_rest) ->
       vars eff_rest
   | Eff_total ->

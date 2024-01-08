@@ -15,7 +15,7 @@ let tuple tys = Ty.Ty_tuple tys
 
 let no_vars ty = Scheme.Forall (VarSet.empty, ty)
 
-let single_var ty = Scheme.Forall (VarSet.singleton @@ Var "a", ty)
+let single_var ty = Scheme.Forall (VarSet.singleton_ty @@ Var "a", ty)
 let alpha = var "a"
 
 let arith = Ty.int @> Ty.int @> Ty.int

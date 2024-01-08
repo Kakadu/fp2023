@@ -7,8 +7,10 @@ open Types
 
 module Constr : sig
   type t =
-    | EqConstr of Ty.t * Ty.t
-        (** [EqConstr(t1, t2)] reflects that t1 and t2 should be unified *)
+    | TyEqConstr of Ty.t * Ty.t
+        (** [TyEqConstr(t1, t2)] reflects that t1 and t2 should be unified *)
+    | EffEqConstr of Eff.t * Eff.t
+        (** [EffEqConstr(eff1, eff2)] reflects that eff1 and eff2 should be unified *)
     | ExplInstConstr of Ty.t * Scheme.t
         (** [ExplInstConstr(ty, sc)] states that ty has to be a generic instance of sc *)
     | ImplInstConstr of Ty.t * VarSet.t * Ty.t
@@ -17,7 +19,6 @@ module Constr : sig
           of the type scheme that is obtained by generalizing type t2
           with respect to the set of monomorphic type variables M
         *)
-
   val pp : Format.formatter -> t -> unit
 end
 
