@@ -49,7 +49,7 @@ let string = Ty_con (Ident "string", [])
 
 let rec vars = function
   | Ty_var x ->
-      VarSet.singleton x
+      VarSet.singleton_ty x
   | Ty_arr (ty1, eff, ty2) ->
       VarSet.union_list [vars ty1; Eff.vars eff; vars ty2]
   | Ty_tuple tys ->

@@ -62,7 +62,11 @@ module GenMonad = struct
 
     let varset = Reader.read
     let extend_varset vars m =
-      Reader.local (fun cur -> VarSet.union cur @@ VarSet.of_list vars) m
+      Reader.local
+        (fun cur ->
+          VarSet.union cur @@ VarSet.of_list
+          @@ Base.List.map vars ~f:(fun var -> VarSet.Elt.Var_ty var) )
+        m
 
     let add_constrs constrs = Writer.write @@ ConstrSet.of_list constrs
     let add_con_assumpt con_id arity =

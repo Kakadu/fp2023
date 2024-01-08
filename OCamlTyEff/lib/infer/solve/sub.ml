@@ -6,17 +6,41 @@ open! Base
 open Types
 open Constraints
 
-type t = (Var.t, Ty.t, Var.comparator_witness) Map.t
+type substitute = Ty of Ty.t | Eff of Eff.t
+
+type t = (Var.t, substitute, Var.comparator_witness) Map.t
 
 let empty = Map.empty (module Var)
-let singleton = Map.singleton (module Var)
+let singleton_ty var ty = Map.singleton (module Var) var (Ty ty)
+let singleton_eff var eff = Map.singleton (module Var) var (Eff eff)
 
-let apply sub =
+let mem = Map.mem
+
+let apply_to_eff sub =
   let rec helper = function
-    | Ty.Ty_var tv as ty ->
-        Map.find sub tv |> Option.value ~default:ty
-    | Ty_arr (t1, _, t2) ->
-        Ty_arr (helper t1, Eff_total, helper t2)
+    | Eff.Eff_var var as eff -> (
+      match Map.find sub var with
+      | Some (Eff new_eff) ->
+          new_eff
+      | Some (Ty _) | None ->
+          eff )
+    | Eff_row (lbl, eff_rest) ->
+        Eff_row (lbl, helper eff_rest)
+    | Eff_total as eff ->
+        eff
+  in
+  helper
+
+let apply_to_ty sub =
+  let rec helper = function
+    | Ty.Ty_var var as ty -> (
+      match Map.find sub var with
+      | Some (Ty new_ty) ->
+          new_ty
+      | Some (Eff _) | None ->
+          ty )
+    | Ty_arr (t1, eff, t2) ->
+        Ty_arr (helper t1, apply_to_eff sub eff, helper t2)
     | Ty_con (id, tys) ->
         Ty_con (id, List.map tys ~f:helper)
     | Ty_tuple tys ->
@@ -27,31 +51,47 @@ let apply sub =
 let apply_to_varset sub =
   (* construct new varset by adding all vars occuring in types
      on the right hand side of respective substitutions *)
-  VarSet.fold ~init:VarSet.empty ~f:(fun acc tv ->
+  VarSet.fold ~init:VarSet.empty
+    ~f:(fun acc ((Var_ty var | Var_eff var) as elt) ->
       let newvars =
-        Map.find sub tv
-        |> Option.value_map ~default:(VarSet.singleton tv) ~f:Ty.vars
+        match Map.find sub var with
+        | Some (Eff eff) ->
+            Eff.vars eff
+        | Some (Ty ty) ->
+            Ty.vars ty
+        | None ->
+            VarSet.singleton elt
       in
       VarSet.union acc newvars )
 
 let apply_to_scheme sub (Scheme.Forall (quantified, ty)) =
   (* don't apply substitution to quantified type variables *)
-  let sub' = VarSet.fold quantified ~init:sub ~f:Map.remove in
-  Scheme.Forall (quantified, apply sub' ty)
+  let sub' =
+    VarSet.fold quantified ~init:sub ~f:(fun acc (Var_ty var | Var_eff var) ->
+        Map.remove acc var )
+  in
+  Scheme.Forall (quantified, apply_to_ty sub' ty)
 
 let apply_to_constrs sub =
   let apply_single : Constr.t -> Constr.t = function
-    | EqConstr (t1, t2) ->
-        EqConstr (apply sub t1, apply sub t2)
+    | TyEqConstr (t1, t2) ->
+        TyEqConstr (apply_to_ty sub t1, apply_to_ty sub t2)
+    | EffEqConstr (eff1, eff2) ->
+        EffEqConstr (apply_to_eff sub eff1, apply_to_eff sub eff2)
     | ImplInstConstr (t1, mset, t2) ->
-        ImplInstConstr (apply sub t1, apply_to_varset sub mset, apply sub t2)
+        ImplInstConstr
+          (apply_to_ty sub t1, apply_to_varset sub mset, apply_to_ty sub t2)
     | ExplInstConstr (ty, sc) ->
-        ExplInstConstr (apply sub ty, apply_to_scheme sub sc)
+        ExplInstConstr (apply_to_ty sub ty, apply_to_scheme sub sc)
   in
   ConstrSet.map ~f:apply_single
 
 let compose s1 s2 =
   Map.merge_skewed
     ~combine:(fun ~key:_ _ v2 -> v2)
-    (Map.map s2 ~f:(apply s1))
+    (Map.map s2 ~f:(function
+      | Ty ty ->
+          Ty (apply_to_ty s1 ty)
+      | Eff eff ->
+          Eff (apply_to_eff s1 eff) ) )
     s1

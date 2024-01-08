@@ -8,7 +8,8 @@ open Types
 module Constr = struct
   module T = struct
     type t =
-      | EqConstr of Ty.t * Ty.t
+      | TyEqConstr of Ty.t * Ty.t
+      | EffEqConstr of Eff.t * Eff.t
       | ExplInstConstr of Ty.t * Scheme.t
       | ImplInstConstr of Ty.t * VarSet.t * Ty.t
     [@@deriving ord, sexp_of, show {with_path= false}]
