@@ -13,6 +13,7 @@ type bin_op =
   | Sub
   | Mul
   | Div
+  (* | Rem --> implement Remainder operator *)
   | Equal
   | NotEqual
   | Assign
