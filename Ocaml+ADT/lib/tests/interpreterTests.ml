@@ -1,16 +1,9 @@
+(** Copyright 2023-2024, tepa46 *)
+
+(** SPDX-License-Identifier: LGPL-3.0-or-later *)
+
 open Ocamladt_lib
 open Format
-
-let pp_expected_result_item fmt item =
-  let item_name, item_value = item in
-  fprintf fmt "%S: %a" item_name InterpreterTypes.pp_value item_value
-;;
-
-let rec pp_expected_result fmt = function
-  | [] -> ()
-  | h :: tl -> fprintf fmt "%a\n%a" pp_expected_result_item h pp_expected_result tl
-;;
-
 let parse_and_interpret_result str =
   match Parser.parse str with
   | Ok parse_result ->
@@ -87,7 +80,7 @@ let%expect_test _ =
 let%expect_test _ =
   let _ =
     parse_and_interpret_result
-      "let a: int -> bool = fun x -> match x with | Tepa 4 -> true | _ -> false\n\
+      "let a = fun x -> match x with | Tepa 4 -> true | _ -> false\n\
       \ let n = a (Tepa 4)"
   in
   [%expect {|
@@ -98,7 +91,7 @@ let%expect_test _ =
 let%expect_test _ =
   let _ =
     parse_and_interpret_result
-      "let a: int -> bool = fun x -> match x with | Tepa 4 -> true | _ -> false\n\
+      "let a = fun x -> match x with | Tepa 4 -> true | _ -> false\n\
       \ let n = a (Tepa 5)"
   in
   [%expect {|
@@ -109,7 +102,7 @@ let%expect_test _ =
 let%expect_test _ =
   let _ =
     parse_and_interpret_result
-      "let a: int -> bool = fun x -> match x with | Tepa 4 -> true | _ -> false\n\
+      "let a = fun x -> match x with | Tepa 4 -> true | _ -> false\n\
       \ let n = a (NeTepa 5)"
   in
   [%expect {|
@@ -127,7 +120,7 @@ let%expect_test _ =
   in
   [%expect {|
     "h": <fun>
-    "m": [5; 6; ]
+    "m": [5; 6]
     "n": 4
     "tl": <fun> |}]
 ;;
@@ -163,7 +156,7 @@ let%expect_test _ =
   [%expect
     {|
       "h": <fun>
-      "m": ["Tepa" 45; "Tepa" 44; ]
+      "m": ["Tepa" 45; "Tepa" 44]
       "n": "Tepa" 46
       "tl": <fun> |}]
 ;;
@@ -186,4 +179,37 @@ let%expect_test _ =
 let%expect_test _ =
   let _ = parse_and_interpret_result {|let n = 5 + "S"|} in
   [%expect {| ExecError: 5 # "S" |}]
+;;
+
+let%expect_test _ =
+  let _ =
+    parse_and_interpret_result
+      "let a = fun x -> match x with | Tree (_, _) -> true | _ -> false\n\
+      \ let n = a (Tree (Tree (Tree (2, 3), 2), Tree(2, 3)))"
+  in
+  [%expect {|
+    "a": <fun>
+    "n": true |}]
+;;
+
+let%expect_test _ =
+  let _ =
+    parse_and_interpret_result
+      "let a = fun x -> match x with | [] -> false | h :: tl -> true\n\
+      \ let n = a (44 :: 45 :: 56)"
+  in
+  [%expect {|
+    "a": <fun>
+    "n": true |}]
+;;
+
+let%expect_test _ =
+  let _ =
+    parse_and_interpret_result
+      "let a = fun x -> match x with | [] -> false | h :: tl -> true\n\
+      \ let n = a []"
+  in
+  [%expect {|
+    "a": <fun>
+    "n": false |}]
 ;;

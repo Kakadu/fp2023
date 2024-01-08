@@ -1,3 +1,7 @@
+(** Copyright 2023-2024, tepa46 *)
+
+(** SPDX-License-Identifier: LGPL-3.0-or-later *)
+
 open Ast
 open InterpreterTypes
 
@@ -135,7 +139,8 @@ end = struct
 
   let rec exec_var var env =
     match var with
-    | LName var | UName var -> find_decl var env
+    | LName var -> find_decl var env
+    | UName _ -> fail @@ ExprTypeError "unexpected Uname"
 
   and exec_tuple tuple env =
     let* lst = all (List.map (fun tuple_item -> exec tuple_item env) tuple) in

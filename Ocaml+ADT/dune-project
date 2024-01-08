@@ -16,8 +16,8 @@
 
 (package
  (name Ocaml+ADT) ;
- (synopsis "Ocaml with ADT")
- (description "Ocaml implementation with ADT support")
+ (synopsis "OCaml with ADT")
+ (description "OCaml implementation with ADT support")
  (version 0.1)
  (depends
   dune

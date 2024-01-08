@@ -1,3 +1,7 @@
+(** Copyright 2023-2024, tepa46 *)
+
+(** SPDX-License-Identifier: LGPL-3.0-or-later *)
+
 open Ast
 open Format
 module StringMap = Map.Make (String)
@@ -25,10 +29,12 @@ let vletrec let_name let_value = VLetRec (let_name, let_value)
 
 let rec pp_value_list fmt = function
   | [] -> ()
+  | [ h ] -> fprintf fmt "%a" pp_value h
   | h :: tl -> fprintf fmt "%a; %a" pp_value h pp_value_list tl
 
 and pp_value_tuple fmt = function
   | [] -> ()
+  | [ h ] -> fprintf fmt "%a" pp_value h
   | h :: tl -> fprintf fmt "%a, %a" pp_value h pp_value_tuple tl
 
 and pp_value fmt = function
@@ -39,8 +45,7 @@ and pp_value fmt = function
   | VTuple tuple -> fprintf fmt "(%a)" pp_value_tuple tuple
   | VAdt (type_name, type_value) -> fprintf fmt "%S %a" type_name pp_value type_value
   | VFun (_, _, _) -> fprintf fmt "<fun>"
-  | VLetRec (_, _) ->
-    fprintf fmt "<let rec>" 
+  | VLetRec (_, _) -> fprintf fmt "<let rec>"
 ;;
 
 let pp_env fmt (environment : env) =
