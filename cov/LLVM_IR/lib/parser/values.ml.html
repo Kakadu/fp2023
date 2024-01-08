@@ -487,46 +487,46 @@ open CommonParser
 open Types
 
 let rec parse_const tp =
-  <span data-count="2508">l</span>et rec makeList i arg = <span data-count="297">i</span>f i = 0 then <span data-count="78">[</span>] else <span data-count="219">a</span>rg :: makeLis<span data-count="219">t</span> (i - 1) arg in
+  <span data-count="3060">l</span>et rec makeList i arg = <span data-count="377">i</span>f i = 0 then <span data-count="98">[</span>] else <span data-count="279">a</span>rg :: makeLis<span data-count="279">t</span> (i - 1) arg in
   match tp with
   | <span data-count="1">A</span>st.TVoid -&gt; return Ast.CVoid
-  | <span data-count="1158">A</span>st.TInteger size -&gt; parse_const_integer size
+  | <span data-count="1432">A</span>st.TInteger size -&gt; parse_const_integer size
   | <span data-count="149">A</span>st.TFloat -&gt; parse_const_float
-  | <span data-count="783">A</span>st.TPointer -&gt; parse_const_pointer
-  | <span data-count="65">A</span>st.TVector (size, vtp) -&gt;
-    parse_const_aggregate_typ<span data-count="65">e</span> '&lt;' '&gt;' (makeLis<span data-count="65">t</span> size vtp)
-    &gt;&gt;= fun lst -&gt; <span data-count="32">r</span>eturn (Ast.CVector lst)
+  | <span data-count="939">A</span>st.TPointer -&gt; parse_const_pointer
+  | <span data-count="85">A</span>st.TVector (size, vtp) -&gt;
+    parse_const_aggregate_typ<span data-count="85">e</span> '&lt;' '&gt;' (makeLis<span data-count="85">t</span> size vtp)
+    &gt;&gt;= fun lst -&gt; <span data-count="36">r</span>eturn (Ast.CVector lst)
   | <span data-count="13">A</span>st.TArr (size, atp) -&gt;
     parse_const_aggregate_typ<span data-count="13">e</span> '[' ']' (makeLis<span data-count="13">t</span> size atp)
     &gt;&gt;= fun lst -&gt; <span data-count="11">r</span>eturn (Ast.CArr lst)
   | <span data-count="13">A</span>st.TStruct slst -&gt;
     parse_const_aggregate_typ<span data-count="13">e</span> '{' '}' slst &gt;&gt;= fun lst -&gt; <span data-count="8">r</span>eturn (Ast.CStruct lst)
-  | <span data-count="326">_</span> -&gt; fail "Parser error: Get unknown type"
+  | <span data-count="428">_</span> -&gt; fail "Parser error: Get unknown type"
 
 and parse_const_aggregate_type ob cb tp_list =
-  <span data-count="91">c</span>ha<span data-count="91">r</span> ob
-  *<span data-count="91">&gt;</span> whitespaces
-  *<span data-count="91">&gt;</span> sep_b<span data-count="91">y</span>
+  <span data-count="111">c</span>ha<span data-count="111">r</span> ob
+  *<span data-count="111">&gt;</span> whitespaces
+  *<span data-count="111">&gt;</span> sep_b<span data-count="111">y</span>
        comma
-       (whitespaces *<span data-count="91">&gt;</span> parse_main_type
-        &gt;&gt;<span data-count="91">=</span> fun tp -&gt; <span data-count="147">w</span>hitespaces *<span data-count="147">&gt;</span> parse_cons<span data-count="147">t</span> tp &gt;&gt;| fun c -&gt; <span data-count="146">t</span>p, c)
-  &lt;<span data-count="91">*</span> whitespaces
-  &lt;<span data-count="91">*</span> cha<span data-count="91">r</span> cb
+       (whitespaces *<span data-count="111">&gt;</span> parse_main_type
+        &gt;&gt;<span data-count="111">=</span> fun tp -&gt; <span data-count="159">w</span>hitespaces *<span data-count="159">&gt;</span> parse_cons<span data-count="159">t</span> tp &gt;&gt;| fun c -&gt; <span data-count="158">t</span>p, c)
+  &lt;<span data-count="111">*</span> whitespaces
+  &lt;<span data-count="111">*</span> cha<span data-count="111">r</span> cb
   &gt;&gt;= fun lst -&gt;
-  <span data-count="53">l</span>et readed_types =
+  <span data-count="57">l</span>et readed_types =
     List.map
       (function
-        | <span data-count="146">t</span>p, _ -&gt; tp)
+        | <span data-count="158">t</span>p, _ -&gt; tp)
       lst
   in
-  <span data-count="53">l</span>et consts =
+  <span data-count="57">l</span>et consts =
     List.map
       (function
-        | <span data-count="146">_</span>, c -&gt; c)
+        | <span data-count="158">_</span>, c -&gt; c)
       lst
   in
-  <span data-count="53">i</span>f List.equal Ast.equal_tp readed_types tp_list
-  then <span data-count="51">r</span>eturn consts
+  <span data-count="57">i</span>f List.equal Ast.equal_tp readed_types tp_list
+  then <span data-count="55">r</span>eturn consts
   else <span data-count="2">f</span>ail "Parser error: constant vector/array length mismatch"
 
 and parse_const_array size vector_tp =
@@ -550,35 +550,35 @@ and parse_const_array size vector_tp =
 
 and parse_const_pointer =
   parse_global_variable
-  &gt;&gt;<span data-count="26">|</span> (fun var -&gt; <span data-count="71">A</span>st.CPointer (Ast.PointerGlob var))
-  &lt;|<span data-count="26">&gt;</span> wor<span data-count="26">d</span> "null" *<span data-count="26">&gt;</span> retur<span data-count="26">n</span> (Ast.CPointer (Ast.PointerInt 0))
+  &gt;&gt;<span data-count="28">|</span> (fun var -&gt; <span data-count="75">A</span>st.CPointer (Ast.PointerGlob var))
+  &lt;|<span data-count="28">&gt;</span> wor<span data-count="28">d</span> "null" *<span data-count="28">&gt;</span> retur<span data-count="28">n</span> (Ast.CPointer (Ast.PointerInt 0))
 
 and parse_const_float =
   parse_word
-  &gt;&gt;<span data-count="26">=</span> fun str -&gt;
+  &gt;&gt;<span data-count="28">=</span> fun str -&gt;
   <span data-count="50">m</span>atch Float.of_string_opt str with
   | <span data-count="50">S</span>ome res -&gt; return (Ast.CFloat res)
   | <span data-count="0">N</span>one -&gt; fail "Can't parse float"
 
 and parse_const_integer size =
-  <span data-count="1158">c</span>hoice
-    [ (let* sign = choic<span data-count="1158">e</span> [ cha<span data-count="1158">r</span> '-' *<span data-count="1158">&gt;</span> retur<span data-count="1158">n</span> (-1L); retur<span data-count="1158">n</span> 1L ] in
-       <span data-count="453">p</span>arse_integer64 &gt;&gt;| fun value -&gt; <span data-count="447">C</span>ommon.IrInts.create (Int64.mu<span data-count="447">l</span> sign value) size)
+  <span data-count="1432">c</span>hoice
+    [ (let* sign = choic<span data-count="1432">e</span> [ cha<span data-count="1432">r</span> '-' *<span data-count="1432">&gt;</span> retur<span data-count="1432">n</span> (-1L); retur<span data-count="1432">n</span> 1L ] in
+       <span data-count="541">p</span>arse_integer64 &gt;&gt;| fun value -&gt; <span data-count="535">C</span>ommon.IrInts.create (Int64.mu<span data-count="535">l</span> sign value) size)
     ; (if size = 1
        then
-         <span data-count="183">c</span>hoic<span data-count="183">e</span>
-           [ wor<span data-count="183">d</span> "true" *<span data-count="183">&gt;</span> retur<span data-count="183">n</span> (Common.IrInts.creat<span data-count="183">e</span> 1L size)
-           ; wor<span data-count="183">d</span> "false" *<span data-count="183">&gt;</span> retur<span data-count="183">n</span> (Common.IrInts.creat<span data-count="183">e</span> 0L size)
+         <span data-count="231">c</span>hoic<span data-count="231">e</span>
+           [ wor<span data-count="231">d</span> "true" *<span data-count="231">&gt;</span> retur<span data-count="231">n</span> (Common.IrInts.creat<span data-count="231">e</span> 1L size)
+           ; wor<span data-count="231">d</span> "false" *<span data-count="231">&gt;</span> retur<span data-count="231">n</span> (Common.IrInts.creat<span data-count="231">e</span> 0L size)
            ]
-       else <span data-count="975">f</span>ai<span data-count="975">l</span> "Parser error: can't parse i1 const")
+       else <span data-count="1201">f</span>ai<span data-count="1201">l</span> "Parser error: can't parse i1 const")
     ]
 ;;
 
 let parse_value tp =
-  <span data-count="2337">w</span>hitespaces
-  *&gt; choic<span data-count="2337">e</span>
-       [ (parse_local_variable &gt;&gt;<span data-count="2337">|</span> fun var -&gt; <span data-count="1910">A</span>st.FromVariable (var, tp))
-       ; (parse_cons<span data-count="2337">t</span> tp &gt;&gt;<span data-count="2337">|</span> fun const -&gt; <span data-count="456">A</span>st.Const const)
+  <span data-count="2877">w</span>hitespaces
+  *&gt; choic<span data-count="2877">e</span>
+       [ (parse_local_variable &gt;&gt;<span data-count="2877">|</span> fun var -&gt; <span data-count="2376">A</span>st.FromVariable (var, tp))
+       ; (parse_cons<span data-count="2877">t</span> tp &gt;&gt;<span data-count="2877">|</span> fun const -&gt; <span data-count="540">A</span>st.Const const)
        ]
 ;;
 
@@ -587,7 +587,7 @@ let%expect_test _ =
     (parse_additional_type &lt;<span data-count="1">*</span> whitespaces &gt;&gt;<span data-count="1">=</span> fun f -&gt; <span data-count="1">p</span>arse_value f)
     Ast.show_value
     "void ";
-  <span data-count="1">[</span>%expect {| (Const CVoid) |}<span data-count="53">]</span>
+  <span data-count="1">[</span>%expect {| (Const CVoid) |}<span data-count="57">]</span>
 ;;
 
 let%expect_test _ =
@@ -595,7 +595,7 @@ let%expect_test _ =
     (parse_additional_type &lt;<span data-count="1">*</span> whitespaces &gt;&gt;<span data-count="1">=</span> fun f -&gt; <span data-count="1">p</span>arse_value f)
     Ast.show_value
     "float 2.3 ";
-  <span data-count="1">[</span>%expect {| (Const (CFloat 2.3)) |}<span data-count="53">]</span>
+  <span data-count="1">[</span>%expect {| (Const (CFloat 2.3)) |}<span data-count="57">]</span>
 ;;
 
 let%expect_test _ =
@@ -603,7 +603,7 @@ let%expect_test _ =
     (parse_additional_type &lt;<span data-count="1">*</span> whitespaces &gt;&gt;<span data-count="1">=</span> fun f -&gt; <span data-count="1">p</span>arse_value f)
     Ast.show_value
     "i1 432 ";
-  <span data-count="1">[</span>%expect {| (Const (CInteger (1, 0L))) |}<span data-count="53">]</span>
+  <span data-count="1">[</span>%expect {| (Const (CInteger (1, 0L))) |}<span data-count="57">]</span>
 ;;
 
 let%expect_test _ =
@@ -611,7 +611,7 @@ let%expect_test _ =
     (parse_additional_type &lt;<span data-count="1">*</span> whitespaces &gt;&gt;<span data-count="1">=</span> fun f -&gt; <span data-count="1">p</span>arse_value f)
     Ast.show_value
     "ptr @G ";
-  <span data-count="1">[</span>%expect {| (Const (CPointer (PointerGlob (GlobalVar "G")))) |}<span data-count="53">]</span>
+  <span data-count="1">[</span>%expect {| (Const (CPointer (PointerGlob (GlobalVar "G")))) |}<span data-count="57">]</span>
 ;;
 
 let%expect_test _ =
@@ -619,7 +619,7 @@ let%expect_test _ =
     (parse_additional_type &lt;<span data-count="1">*</span> whitespaces &gt;&gt;<span data-count="1">=</span> fun f -&gt; <span data-count="1">p</span>arse_value f)
     Ast.show_value
     "{i32, float} { i32 4, float 17.0} ";
-  <span data-count="1">[</span>%expect {| (Const (CStruct [(CInteger (32, 4L)); (CFloat 17.)])) |}<span data-count="53">]</span>
+  <span data-count="1">[</span>%expect {| (Const (CStruct [(CInteger (32, 4L)); (CFloat 17.)])) |}<span data-count="57">]</span>
 ;;
 
 let%expect_test _ =
@@ -632,7 +632,7 @@ let%expect_test _ =
     (Const
        (CVector
           [(CInteger (32, 42L)); (CInteger (32, 11L)); (CInteger (32, 74L));
-            (CInteger (32, 100L))])) |}<span data-count="53">]</span>
+            (CInteger (32, 100L))])) |}<span data-count="57">]</span>
 ;;
 
 let%expect_test _ =
@@ -645,7 +645,7 @@ let%expect_test _ =
     (Const
        (CArr
           [(CArr [(CInteger (32, 1L)); (CInteger (32, 3L))]);
-            (CArr [(CInteger (32, 2L)); (CInteger (32, 4L))])])) |}<span data-count="53">]</span>
+            (CArr [(CInteger (32, 2L)); (CInteger (32, 4L))])])) |}<span data-count="57">]</span>
 ;;
 
 let%expect_test _ =
@@ -653,7 +653,7 @@ let%expect_test _ =
     (parse_additional_type &lt;<span data-count="1">*</span> whitespaces &gt;&gt;<span data-count="1">=</span> fun f -&gt; <span data-count="0">p</span>arse_value f)
     Ast.show_value
     "{i32, int43} { i32 4, float 17.0} ";
-  <span data-count="1">[</span>%expect {| Error |}<span data-count="53">]</span>
+  <span data-count="1">[</span>%expect {| Error |}<span data-count="57">]</span>
 ;;
 
 let%expect_test _ =
@@ -661,7 +661,7 @@ let%expect_test _ =
     (parse_additional_type &lt;<span data-count="1">*</span> whitespaces &gt;&gt;<span data-count="1">=</span> fun f -&gt; <span data-count="1">p</span>arse_value f)
     Ast.show_value
     "&lt;4 x i32&gt; &lt; i32 42, i32 11, i32 100 &gt; ";
-  <span data-count="1">[</span>%expect {| Error |}<span data-count="53">]</span>
+  <span data-count="1">[</span>%expect {| Error |}<span data-count="57">]</span>
 ;;
 
 let%expect_test _ =
@@ -669,7 +669,7 @@ let%expect_test _ =
     (parse_additional_type &lt;<span data-count="1">*</span> whitespaces &gt;&gt;<span data-count="1">=</span> fun f -&gt; <span data-count="1">p</span>arse_value f)
     Ast.show_value
     "[2 x [2 x i32]] [[2 x i32] [i32 1, i31 3], [2 x i32] [i32 2, i32 4]] ";
-  <span data-count="1">[</span>%expect {| Error |}<span data-count="53">]</span>
+  <span data-count="1">[</span>%expect {| Error |}<span data-count="57">]</span>
 ;;
 
 let%expect_test _ =
@@ -677,24 +677,24 @@ let%expect_test _ =
     (parse_additional_type &lt;<span data-count="1">*</span> whitespaces &gt;&gt;<span data-count="1">=</span> fun f -&gt; <span data-count="1">p</span>arse_value f)
     Ast.show_value
     "i32 %12 ";
-  <span data-count="1">[</span>%expect {| (FromVariable ((LocalVar "12"), (TInteger 32))) |}<span data-count="53">]</span>
+  <span data-count="1">[</span>%expect {| (FromVariable ((LocalVar "12"), (TInteger 32))) |}<span data-count="57">]</span>
 ;;
 
 let parse_type_with_value =
-  parse_additional_type &gt;&gt;<span data-count="26">=</span> fun tp -&gt; <span data-count="1829">p</span>arse_valu<span data-count="1829">e</span> tp &gt;&gt;| fun value -&gt; <span data-count="1829">t</span>p, value
+  parse_additional_type &gt;&gt;<span data-count="28">=</span> fun tp -&gt; <span data-count="2223">p</span>arse_valu<span data-count="2223">e</span> tp &gt;&gt;| fun value -&gt; <span data-count="2223">t</span>p, value
 ;;
 
 let parse_type_with_value2 =
   parse_additional_type
-  &gt;&gt;<span data-count="26">=</span> fun tp -&gt;
-  <span data-count="217">p</span>arse_valu<span data-count="217">e</span> tp &gt;&gt;= fun v1 -&gt; <span data-count="217">c</span>omma *<span data-count="217">&gt;</span> parse_valu<span data-count="217">e</span> tp &gt;&gt;| fun v2 -&gt; <span data-count="217">t</span>p, v1, v2
+  &gt;&gt;<span data-count="28">=</span> fun tp -&gt;
+  <span data-count="277">p</span>arse_valu<span data-count="277">e</span> tp &gt;&gt;= fun v1 -&gt; <span data-count="277">c</span>omma *<span data-count="277">&gt;</span> parse_valu<span data-count="277">e</span> tp &gt;&gt;| fun v2 -&gt; <span data-count="277">t</span>p, v1, v2
 ;;
 
 let type_with_value tp =
-  <span data-count="166">p</span>arse_type_with_value
+  <span data-count="186">p</span>arse_type_with_value
   &gt;&gt;= function
-  | <span data-count="1077">p</span>arsed_type, value when parsed_type = tp -&gt; <span data-count="994">r</span>eturn value
-  | <span data-count="83">_</span> -&gt; fail "Parser error: get unexpected type"
+  | <span data-count="1347">p</span>arsed_type, value when parsed_type = tp -&gt; <span data-count="1240">r</span>eturn value
+  | <span data-count="107">_</span> -&gt; fail "Parser error: get unexpected type"
 ;;
 </code></pre>
       </div>

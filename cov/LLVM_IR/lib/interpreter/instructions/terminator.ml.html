@@ -177,26 +177,26 @@
 open Ihelp.State
 open CommonInterpInstructions
 
-let real_ret res = <span data-count="140">r</span>eturn (Ret res)
+let real_ret res = <span data-count="172">r</span>eturn (Ret res)
 
 let iret _tp value =
-  <span data-count="140">l</span>et* res = get_const_from_valu<span data-count="140">e</span> value in
-  <span data-count="140">r</span>eal_ret res
+  <span data-count="172">l</span>et* res = get_const_from_valu<span data-count="172">e</span> value in
+  <span data-count="172">r</span>eal_ret res
 ;;
 
-let real_jmp bl = <span data-count="1069">r</span>eturn (Jmp bl)
+let real_jmp bl = <span data-count="1533">r</span>eturn (Jmp bl)
 
 let ibr label =
-  <span data-count="417">l</span>et* bl = get_bb_var_from_labe<span data-count="417">l</span> label in
-  <span data-count="417">r</span>eal_jmp bl
+  <span data-count="612">l</span>et* bl = get_bb_var_from_labe<span data-count="612">l</span> label in
+  <span data-count="612">r</span>eal_jmp bl
 ;;
 
 let ibrcond cond label1 label2 =
-  <span data-count="652">l</span>et* cond = get_const_from_valu<span data-count="652">e</span> cond in
-  <span data-count="652">l</span>et* label1 = get_bb_var_from_labe<span data-count="652">l</span> label1 in
-  <span data-count="652">l</span>et* label2 = get_bb_var_from_labe<span data-count="652">l</span> label2 in
-  <span data-count="652">l</span>et* cond = is_boo<span data-count="652">l</span> cond in
-  <span data-count="652">i</span>f cond then <span data-count="348">r</span>eal_jmp label1 else <span data-count="304">r</span>eal_jmp label2
+  <span data-count="921">l</span>et* cond = get_const_from_valu<span data-count="921">e</span> cond in
+  <span data-count="921">l</span>et* label1 = get_bb_var_from_labe<span data-count="921">l</span> label1 in
+  <span data-count="921">l</span>et* label2 = get_bb_var_from_labe<span data-count="921">l</span> label2 in
+  <span data-count="921">l</span>et* cond = is_boo<span data-count="921">l</span> cond in
+  <span data-count="921">i</span>f cond then <span data-count="469">r</span>eal_jmp label1 else <span data-count="452">r</span>eal_jmp label2
 ;;
 
 let real_switch sw dc cases =
@@ -226,9 +226,9 @@ let iswitch tp switcher default_case additional_cases =
 let launch_terminator_instruction
   : Ast.terminator_instruction -&gt; (state, instr_launch_res) t
   = function
-  | <span data-count="140">A</span>st.Ret (tp, value) -&gt; iret tp value
-  | <span data-count="417">A</span>st.Br label -&gt; ibr label
-  | <span data-count="652">A</span>st.BrCond (cond, label1, label2) -&gt; ibrcond cond label1 label2
+  | <span data-count="172">A</span>st.Ret (tp, value) -&gt; iret tp value
+  | <span data-count="612">A</span>st.Br label -&gt; ibr label
+  | <span data-count="921">A</span>st.BrCond (cond, label1, label2) -&gt; ibrcond cond label1 label2
   | <span data-count="0">A</span>st.Switch (tp, switcher, default_case, additional_cases) -&gt;
     iswitch tp switcher default_case additional_cases
   | <span data-count="0">A</span>st.Unreachable -&gt; fail "Launch 'unreachable' instruction"

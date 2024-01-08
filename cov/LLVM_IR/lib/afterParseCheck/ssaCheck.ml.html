@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8"/>
     <title>ssaCheck.ml &mdash; Coverage report</title>
-    <meta name="description" content="66.04% coverage in lib/afterParseCheck/ssaCheck.ml">
+    <meta name="description" content="68.87% coverage in lib/afterParseCheck/ssaCheck.ml">
     <link rel="stylesheet" href="../../coverage.css"/>
     <script src="../../highlight.pack.js"></script>
     <script>hljs.initHighlightingOnLoad();</script>
@@ -15,7 +15,7 @@
           <span class="dirname">lib/afterParseCheck/</span>ssaCheck.ml
         </a>
       </h1>
-      <h2>66.04%</h2>
+      <h2>68.87%</h2>
     </div>
     <div id="navbar">
       <span class="unvisited" style="top:7.01%"></span>
@@ -25,7 +25,6 @@
       <span class="unvisited" style="top:39.49%"></span>
       <span class="unvisited" style="top:40.13%"></span>
       <span class="unvisited" style="top:41.40%"></span>
-      <span class="unvisited" style="top:42.04%"></span>
       <span class="unvisited" style="top:42.68%"></span>
       <span class="unvisited" style="top:45.22%"></span>
       <span class="unvisited" style="top:45.86%"></span>
@@ -34,7 +33,6 @@
       <span class="unvisited" style="top:47.77%"></span>
       <span class="unvisited" style="top:48.41%"></span>
       <span class="unvisited" style="bottom:49.04%"></span>
-      <span class="unvisited" style="bottom:48.41%"></span>
       <span class="unvisited" style="bottom:47.77%"></span>
       <span class="unvisited" style="bottom:46.50%"></span>
       <span class="unvisited" style="bottom:41.40%"></span>
@@ -46,7 +44,6 @@
       <span class="unvisited" style="bottom:36.31%"></span>
       <span class="unvisited" style="bottom:31.85%"></span>
       <span class="unvisited" style="bottom:27.39%"></span>
-      <span class="unvisited" style="bottom:26.75%"></span>
       <span class="unvisited" style="bottom:26.11%"></span>
       <span class="unvisited" style="bottom:18.47%"></span>
     </div>
@@ -118,7 +115,7 @@
 <a id="L63"></a><span class="unvisited"> </span>
 <a id="L64"></a><span class="visited"> </span>
 <a id="L65"></a><span class="unvisited"> </span>
-<a id="L66"></a><span class="unvisited"> </span>
+<a id="L66"></a><span class="visited"> </span>
 <a id="L67"></a><span class="unvisited"> </span>
 <a id="L68"></a><span > </span>
 <a id="L69"></a><span > </span>
@@ -133,7 +130,7 @@
 <a id="L78"></a><span > </span>
 <a id="L79"></a><span > </span>
 <a id="L80"></a><span class="unvisited"> </span>
-<a id="L81"></a><span class="unvisited"> </span>
+<a id="L81"></a><span class="visited"> </span>
 <a id="L82"></a><span class="unvisited"> </span>
 <a id="L83"></a><span > </span>
 <a id="L84"></a><span class="unvisited"> </span>
@@ -167,7 +164,7 @@
 <a id="L112"></a><span class="visited"> </span>
 <a id="L113"></a><span class="visited"> </span>
 <a id="L114"></a><span class="unvisited"> </span>
-<a id="L115"></a><span class="unvisited"> </span>
+<a id="L115"></a><span class="visited"> </span>
 <a id="L116"></a><span class="unvisited"> </span>
 <a id="L117"></a><span class="visited"> </span>
 <a id="L118"></a><span class="visited"> </span>
@@ -394,50 +391,50 @@ type state = map_var * map_var
 let check_var : Ast.variable -&gt; (state, unit) t =
   let find_var : string -&gt; map_var -&gt; (state, unit) t =
     fun name map -&gt;
-    <span data-count="1291">l</span>et value = MapString.find_opt name map in
-    <span data-count="1291">m</span>atch value with
+    <span data-count="1609">l</span>et value = MapString.find_opt name map in
+    <span data-count="1609">m</span>atch value with
     | <span data-count="5">S</span>ome _ -&gt; fail (Printf.sprint<span data-count="5">f</span> "Variable %s already was assigned" name)
-    | <span data-count="1286">N</span>one -&gt; return ()
+    | <span data-count="1604">N</span>one -&gt; return ()
   in
   fun variable -&gt;
-    <span data-count="1291">l</span>et* local, glob = read in
-    <span data-count="1291">m</span>atch variable with
-    | <span data-count="51">A</span>st.GlobalVar name -&gt; find_var name glob
-    | <span data-count="1240">A</span>st.LocalVar name -&gt; find_var name local
+    <span data-count="1609">l</span>et* local, glob = read in
+    <span data-count="1609">m</span>atch variable with
+    | <span data-count="57">A</span>st.GlobalVar name -&gt; find_var name glob
+    | <span data-count="1552">A</span>st.LocalVar name -&gt; find_var name local
 ;;
 
 let write_var : Ast.variable -&gt; state -&gt; (state, unit) t =
   fun key (old_local, old_global) -&gt;
-  <span data-count="1286">m</span>atch key with
-  | <span data-count="49">A</span>st.GlobalVar name -&gt; write (old_local, MapString.ad<span data-count="49">d</span> name true old_global)
-  | <span data-count="1237">A</span>st.LocalVar name -&gt; write (MapString.ad<span data-count="1237">d</span> name true old_local, old_global)
+  <span data-count="1604">m</span>atch key with
+  | <span data-count="55">A</span>st.GlobalVar name -&gt; write (old_local, MapString.ad<span data-count="55">d</span> name true old_global)
+  | <span data-count="1549">A</span>st.LocalVar name -&gt; write (MapString.ad<span data-count="1549">d</span> name true old_local, old_global)
 ;;
 
 let try_add_var : Ast.variable -&gt; (state, unit) t =
   fun var -&gt;
-  <span data-count="1291">c</span>heck_va<span data-count="1291">r</span> var
+  <span data-count="1609">c</span>heck_va<span data-count="1609">r</span> var
   *&gt;
   let* st = read in
-  <span data-count="1286">w</span>rite_var var st
+  <span data-count="1604">w</span>rite_var var st
 ;;
 
 let ssa_instruction : Ast.instruction -&gt; (state, unit) t =
   let terminator = function
-    | <span data-count="237">_</span> -&gt; return ()
+    | <span data-count="305">_</span> -&gt; return ()
   and unary = function
     | <span data-count="2">A</span>st.Fneg (var, _, _) -&gt; try_add_var var
   and binary = function
-    | <span data-count="39">A</span>st.Add body
+    | <span data-count="57">A</span>st.Add body
     | <span data-count="2">A</span>st.Fadd body
-    | <span data-count="21">A</span>st.Mul body
+    | <span data-count="29">A</span>st.Mul body
     | <span data-count="8">A</span>st.Fmul body
-    | <span data-count="27">A</span>st.Sub body
+    | <span data-count="35">A</span>st.Sub body
     | <span data-count="6">A</span>st.Fsub body
     | <span data-count="0">A</span>st.Udiv body
     | <span data-count="0">A</span>st.Sdiv body
     | <span data-count="4">A</span>st.Fdiv body
     | <span data-count="0">A</span>st.Urem body
-    | <span data-count="0">A</span>st.Srem body
+    | <span data-count="2">A</span>st.Srem body
     | <span data-count="0">A</span>st.Frem body -&gt;
       let var, _, _, _ = body in
       try_add_var var
@@ -452,20 +449,20 @@ let ssa_instruction : Ast.instruction -&gt; (state, unit) t =
       try_add_var var
   and vector = function
     | <span data-count="0">A</span>st.Extractelement (var, _, _, _, _)
-    | <span data-count="0">A</span>st.Insertelement (var, _, _, _, _, _)
+    | <span data-count="8">A</span>st.Insertelement (var, _, _, _, _, _)
     | <span data-count="0">A</span>st.Shufflevector (var, _, _, _, _, _) -&gt; try_add_var var
   and aggregate = function
     | <span data-count="0">A</span>st.Extractvalue (var, _, _, _) | <span data-count="0">A</span>st.Insertvalue (var, _, _, _, _, _) -&gt;
       try_add_var var
   and memory = function
-    | <span data-count="121">A</span>st.Alloca (var, _, _, _)
-    | <span data-count="380">A</span>st.Load (var, _, _, _)
-    | <span data-count="92">A</span>st.Getelementptr (var, _, _, _, _) -&gt; try_add_var var
-    | <span data-count="198">A</span>st.Store _ -&gt; return ()
+    | <span data-count="149">A</span>st.Alloca (var, _, _, _)
+    | <span data-count="466">A</span>st.Load (var, _, _, _)
+    | <span data-count="106">A</span>st.Getelementptr (var, _, _, _, _) -&gt; try_add_var var
+    | <span data-count="240">A</span>st.Store _ -&gt; return ()
   and conversion = function
     | <span data-count="0">A</span>st.TruncTo body
     | <span data-count="0">A</span>st.ZextTo body
-    | <span data-count="102">A</span>st.SextTo body
+    | <span data-count="128">A</span>st.SextTo body
     | <span data-count="0">A</span>st.FptouiTo body
     | <span data-count="0">A</span>st.FptosiTo body
     | <span data-count="0">A</span>st.UitofpTo body
@@ -475,59 +472,59 @@ let ssa_instruction : Ast.instruction -&gt; (state, unit) t =
       let var, _, _, _ = body in
       try_add_var var
   and other = function
-    | <span data-count="79">A</span>st.Icmp (var, _, _, _, _)
+    | <span data-count="103">A</span>st.Icmp (var, _, _, _, _)
     | <span data-count="2">A</span>st.Fcmp (var, _, _, _, _)
-    | <span data-count="8">A</span>st.Phi (var, _, _)
+    | <span data-count="16">A</span>st.Phi (var, _, _)
     | <span data-count="0">A</span>st.Select (var, _, _, _, _, _)
-    | <span data-count="38">A</span>st.Call (var, _, _, _) -&gt; try_add_var var
+    | <span data-count="42">A</span>st.Call (var, _, _, _) -&gt; try_add_var var
   in
   function
-  | <span data-count="237">T</span>erminator inst -&gt; terminator inst
+  | <span data-count="305">T</span>erminator inst -&gt; terminator inst
   | <span data-count="2">U</span>nary inst -&gt; unary inst
-  | <span data-count="107">B</span>inary inst -&gt; binary inst
+  | <span data-count="143">B</span>inary inst -&gt; binary inst
   | <span data-count="0">B</span>itwiseBinary inst -&gt; bitwise inst
-  | <span data-count="0">V</span>ector inst -&gt; vector inst
+  | <span data-count="8">V</span>ector inst -&gt; vector inst
   | <span data-count="0">A</span>ggregate inst -&gt; aggregate inst
-  | <span data-count="791">M</span>emoryAddress inst -&gt; memory inst
-  | <span data-count="108">C</span>onversion inst -&gt; conversion inst
-  | <span data-count="127">O</span>ther inst -&gt; other inst
+  | <span data-count="961">M</span>emoryAddress inst -&gt; memory inst
+  | <span data-count="134">C</span>onversion inst -&gt; conversion inst
+  | <span data-count="163">O</span>ther inst -&gt; other inst
 ;;
 
 let ssa_block_var : Ast.variable * Ast.const -&gt; (state, unit) t =
   fun (var, block) -&gt;
-  <span data-count="239">t</span>ry_add_va<span data-count="239">r</span> var
+  <span data-count="307">t</span>ry_add_va<span data-count="307">r</span> var
   *&gt;
   match block with
-  | <span data-count="239">A</span>st.CLabel inst_lst -&gt; map_lis<span data-count="239">t</span> ssa_instruction inst_lst *<span data-count="239">&gt;</span> retur<span data-count="239">n</span> ()
+  | <span data-count="307">A</span>st.CLabel inst_lst -&gt; map_lis<span data-count="307">t</span> ssa_instruction inst_lst *<span data-count="307">&gt;</span> retur<span data-count="307">n</span> ()
   | <span data-count="0">_</span> -&gt; fai<span data-count="0">l</span> "Impossible error: get not block in block const"
 ;;
 
 let ssa_fnc : Ast.func -&gt; (state, unit) t =
   fun fnc -&gt;
-  <span data-count="42">l</span>et* old_st = read in
-  <span data-count="41">l</span>et _old_loc, old_glob = old_st in
+  <span data-count="48">l</span>et* old_st = read in
+  <span data-count="47">l</span>et _old_loc, old_glob = old_st in
   let new_st = MapString.empty, old_glob in
-  let* _ = writ<span data-count="41">e</span> new_st in
-  <span data-count="41">l</span>et* _check_args = map_lis<span data-count="41">t</span> try_add_var fnc.parameters in
-  <span data-count="40">l</span>et* _check_blocks = map_lis<span data-count="40">t</span> ssa_block_var fnc.basic_blocks in
-  <span data-count="38">w</span>rit<span data-count="38">e</span> old_st *&gt; retur<span data-count="38">n</span> ()
+  let* _ = writ<span data-count="47">e</span> new_st in
+  <span data-count="47">l</span>et* _check_args = map_lis<span data-count="47">t</span> try_add_var fnc.parameters in
+  <span data-count="46">l</span>et* _check_blocks = map_lis<span data-count="46">t</span> ssa_block_var fnc.basic_blocks in
+  <span data-count="44">w</span>rit<span data-count="44">e</span> old_st *&gt; retur<span data-count="44">n</span> ()
 ;;
 
 let ssa_glob_list : Ast.glob_list -&gt; (state, unit) t =
   fun glob_lst -&gt;
-  <span data-count="18">l</span>et ssa_glob_elem (_, var, value, _) =
-    <span data-count="51">t</span>ry_add_va<span data-count="51">r</span> var
+  <span data-count="20">l</span>et ssa_glob_elem (_, var, value, _) =
+    <span data-count="57">t</span>ry_add_va<span data-count="57">r</span> var
     *&gt;
     match value with
-    | <span data-count="42">A</span>st.CFunc fnc -&gt; ssa_fn<span data-count="42">c</span> fnc
+    | <span data-count="48">A</span>st.CFunc fnc -&gt; ssa_fn<span data-count="48">c</span> fnc
     | <span data-count="9">_</span> -&gt; retur<span data-count="9">n</span> ()
   in
-  map_lis<span data-count="18">t</span> ssa_glob_elem glob_lst *&gt; retur<span data-count="18">n</span> ()
+  map_lis<span data-count="20">t</span> ssa_glob_elem glob_lst *&gt; retur<span data-count="20">n</span> ()
 ;;
 
 let run_ssa_glob_list glob_lst =
-  <span data-count="18">l</span>et _, res = run (ssa_glob_lis<span data-count="18">t</span> glob_lst) (MapString.empty, MapString.empty) in
-  <span data-count="18">r</span>es
+  <span data-count="20">l</span>et _, res = run (ssa_glob_lis<span data-count="20">t</span> glob_lst) (MapString.empty, MapString.empty) in
+  <span data-count="20">r</span>es
 ;;
 </code></pre>
       </div>

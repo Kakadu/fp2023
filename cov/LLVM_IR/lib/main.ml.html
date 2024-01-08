@@ -86,16 +86,16 @@
 open Ihelp
 
 let interpretate_programm prog =
-  <span data-count="10">l</span>et p_res = Parser.Parsing.parse_program prog in
-  <span data-count="10">m</span>atch p_res with
-  | <span data-count="10">R</span>esult.Ok ast -&gt;
+  <span data-count="12">l</span>et p_res = Parser.Parsing.parse_program prog in
+  <span data-count="12">m</span>atch p_res with
+  | <span data-count="12">R</span>esult.Ok ast -&gt;
     let c_res = Checks.SsaCheck.run_ssa_glob_list ast in
-    <span data-count="10">(</span>match c_res with
-     | <span data-count="9">R</span>esult.Ok _ -&gt;
+    <span data-count="12">(</span>match c_res with
+     | <span data-count="11">R</span>esult.Ok _ -&gt;
        let i_res = Interpreter.Interpreting.run_interpretate_on_ast ast in
-       <span data-count="9">(</span>match i_res with
-        | <span data-count="9">_</span>, Result.Ok res -&gt;
-          Printf.printf "Programm return: \n\t %s" (Ast.show_cons<span data-count="9">t</span> res)
+       <span data-count="11">(</span>match i_res with
+        | <span data-count="11">_</span>, Result.Ok res -&gt;
+          Printf.printf "Programm return: \n\t %s" (Ast.show_cons<span data-count="11">t</span> res)
         | <span data-count="0">s</span>t, Result.Error s -&gt;
           let _ = Printf.printf "Got error during interpretation \n\t%s" s in
           <span data-count="0">l</span>et _ = Printf.printf "\n\n%s" (State.show_stat<span data-count="0">e</span> st) in

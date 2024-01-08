@@ -278,31 +278,31 @@ open Values
 [@@deriving show { with_path = false }<span data-count="11">]</span>
 
 let parse_function_annotation =
-  lift<span data-count="26">3</span>
+  lift<span data-count="28">3</span>
     (fun ret name args -&gt;
-      <span data-count="80">l</span>et arg_types =
+      <span data-count="86">l</span>et arg_types =
         List.map
           (function
-            | <span data-count="67">t</span>p, _ -&gt; tp)
+            | <span data-count="77">t</span>p, _ -&gt; tp)
           args
       in
-      <span data-count="80">l</span>et arg_vars =
+      <span data-count="86">l</span>et arg_vars =
         List.map
           (function
-            | <span data-count="67">_</span>, var -&gt; var)
+            | <span data-count="77">_</span>, var -&gt; var)
           args
       in
-      <span data-count="80">{</span> self = name; parameters = arg_vars; tp = Ast.TFunc (ret, arg_types) })
-    (whitespaces *<span data-count="26">&gt;</span> parse_additional_type)
+      <span data-count="86">{</span> self = name; parameters = arg_vars; tp = Ast.TFunc (ret, arg_types) })
+    (whitespaces *<span data-count="28">&gt;</span> parse_additional_type)
     parse_global_variable
     (whitespaces
-     *<span data-count="26">&gt;</span> cha<span data-count="26">r</span> '('
-     *<span data-count="26">&gt;</span> sep_b<span data-count="26">y</span>
+     *<span data-count="28">&gt;</span> cha<span data-count="28">r</span> '('
+     *<span data-count="28">&gt;</span> sep_b<span data-count="28">y</span>
           comma
           (whitespaces
-           *<span data-count="26">&gt;</span> lift<span data-count="26">2</span> (fun tp name -&gt; <span data-count="67">t</span>p, name) parse_main_type parse_local_variable)
-     &lt;<span data-count="26">*</span> whitespaces
-     &lt;<span data-count="26">*</span> cha<span data-count="26">r</span> ')')
+           *<span data-count="28">&gt;</span> lift<span data-count="28">2</span> (fun tp name -&gt; <span data-count="77">t</span>p, name) parse_main_type parse_local_variable)
+     &lt;<span data-count="28">*</span> whitespaces
+     &lt;<span data-count="28">*</span> cha<span data-count="28">r</span> ')')
 ;;
 
 let%expect_test _ =
@@ -311,53 +311,53 @@ let%expect_test _ =
     {|
     { self = (GlobalVar "fac");
       tp = (TFunc ((TInteger 32), [(TInteger 32); (TInteger 34)]));
-      parameters = [(LocalVar "0"); (LocalVar "1")] } |}<span data-count="53">]</span>
+      parameters = [(LocalVar "0"); (LocalVar "1")] } |}<span data-count="57">]</span>
 ;;
 
 let parse_basic_block_variable =
-  whitespaces *<span data-count="26">&gt;</span> parse_name &lt;<span data-count="26">*</span> whitespaces &lt;<span data-count="26">*</span> cha<span data-count="26">r</span> ':' &gt;&gt;<span data-count="26">|</span> fun name -&gt; <span data-count="215">A</span>st.LocalVar name
+  whitespaces *<span data-count="28">&gt;</span> parse_name &lt;<span data-count="28">*</span> whitespaces &lt;<span data-count="28">*</span> cha<span data-count="28">r</span> ':' &gt;&gt;<span data-count="28">|</span> fun name -&gt; <span data-count="279">A</span>st.LocalVar name
 ;;
 
 let parse_basic_block_body =
   let rec help lst =
-    <span data-count="1239">I</span>nstructions.parse_instruction
+    <span data-count="1517">I</span>nstructions.parse_instruction
     &gt;&gt;= fun instr -&gt;
-    <span data-count="1504">m</span>atch instr with
-    | <span data-count="291">A</span>st.Terminator _ -&gt; return (instr :: lst)
-    | <span data-count="1213">_</span> -&gt; help (instr :: lst)
+    <span data-count="1848">m</span>atch instr with
+    | <span data-count="359">A</span>st.Terminator _ -&gt; return (instr :: lst)
+    | <span data-count="1489">_</span> -&gt; help (instr :: lst)
   in
-  hel<span data-count="26">p</span> [] &gt;&gt;<span data-count="26">|</span> List.rev
+  hel<span data-count="28">p</span> [] &gt;&gt;<span data-count="28">|</span> List.rev
 ;;
 
 let parse_start_basic_block =
-  lift<span data-count="26">2</span>
-    (fun self instructions -&gt; <span data-count="79">s</span>elf, Ast.CLabel instructions)
-    (parse_basic_block_variable &lt;|<span data-count="26">&gt;</span> retur<span data-count="26">n</span> (Ast.LocalVar "&lt;start&gt;"))
+  lift<span data-count="28">2</span>
+    (fun self instructions -&gt; <span data-count="85">s</span>elf, Ast.CLabel instructions)
+    (parse_basic_block_variable &lt;|<span data-count="28">&gt;</span> retur<span data-count="28">n</span> (Ast.LocalVar "&lt;start&gt;"))
     parse_basic_block_body
 ;;
 
 let parse_basic_block =
-  lift<span data-count="26">2</span>
-    (fun self instructions -&gt; <span data-count="212">s</span>elf, Ast.CLabel instructions)
+  lift<span data-count="28">2</span>
+    (fun self instructions -&gt; <span data-count="274">s</span>elf, Ast.CLabel instructions)
     parse_basic_block_variable
     parse_basic_block_body
 ;;
 
 let parse_function_body =
   whitespaces
-  *<span data-count="26">&gt;</span> cha<span data-count="26">r</span> '{'
-  *<span data-count="26">&gt;</span> whitespaces
-  *<span data-count="26">&gt;</span> lift<span data-count="26">2</span> (fun h tl -&gt; <span data-count="79">h</span> :: tl) parse_start_basic_block (man<span data-count="26">y</span> parse_basic_block)
-  &lt;<span data-count="26">*</span> whitespaces
-  &lt;<span data-count="26">*</span> cha<span data-count="26">r</span> '}'
+  *<span data-count="28">&gt;</span> cha<span data-count="28">r</span> '{'
+  *<span data-count="28">&gt;</span> whitespaces
+  *<span data-count="28">&gt;</span> lift<span data-count="28">2</span> (fun h tl -&gt; <span data-count="85">h</span> :: tl) parse_start_basic_block (man<span data-count="28">y</span> parse_basic_block)
+  &lt;<span data-count="28">*</span> whitespaces
+  &lt;<span data-count="28">*</span> cha<span data-count="28">r</span> '}'
 ;;
 
 let parse_function =
-  whitespaces *<span data-count="26">&gt;</span> wor<span data-count="26">d</span> "define" *<span data-count="26">&gt;</span> parse_function_annotation
-  &gt;&gt;<span data-count="26">=</span> fun annot -&gt;
-  <span data-count="79">p</span>arse_function_body
+  whitespaces *<span data-count="28">&gt;</span> wor<span data-count="28">d</span> "define" *<span data-count="28">&gt;</span> parse_function_annotation
+  &gt;&gt;<span data-count="28">=</span> fun annot -&gt;
+  <span data-count="85">p</span>arse_function_body
   &gt;&gt;= fun bbs -&gt;
-  <span data-count="79">r</span>eturn
+  <span data-count="85">r</span>eturn
     ( annot.tp
     , annot.self
     , Ast.CFunc
@@ -366,7 +366,7 @@ let parse_function =
 ;;
 
 let parse_glob_var =
-  let* variable = whitespaces *<span data-count="26">&gt;</span> parse_global_variable &lt;<span data-count="26">*</span> whitespaces &lt;<span data-count="26">*</span> cha<span data-count="26">r</span> '=' in
+  let* variable = whitespaces *<span data-count="28">&gt;</span> parse_global_variable &lt;<span data-count="28">*</span> whitespaces &lt;<span data-count="28">*</span> cha<span data-count="28">r</span> '=' in
   <span data-count="24">l</span>et* tp = whitespaces *<span data-count="24">&gt;</span> wor<span data-count="24">d</span> "global" *<span data-count="24">&gt;</span> whitespaces *<span data-count="24">&gt;</span> parse_main_type in
   <span data-count="24">l</span>et* const = whitespaces *<span data-count="24">&gt;</span> parse_cons<span data-count="24">t</span> tp in
   <span data-count="24">l</span>et* alignment = Instructions.parse_align in
@@ -374,10 +374,10 @@ let parse_glob_var =
 ;;
 
 let start_parse : Ast.glob_list t =
-  man<span data-count="26">y</span> (choic<span data-count="26">e</span> [ parse_function; parse_glob_var ]) &lt;<span data-count="26">*</span> whitespaces
+  man<span data-count="28">y</span> (choic<span data-count="28">e</span> [ parse_function; parse_glob_var ]) &lt;<span data-count="28">*</span> whitespaces
 ;;
 
-let parse_program prog = <span data-count="54">A</span>ngstrom.parse_string ~consume:Consume.All start_parse prog
+let parse_program prog = <span data-count="56">A</span>ngstrom.parse_string ~consume:Consume.All start_parse prog
 </code></pre>
       </div>
     </div>

@@ -303,7 +303,7 @@ type instr_launch_res =
   | Jmp of Ast.variable
   | NoRes
 
-let to_ptr x = <span data-count="866">A</span>st.CPointer (Ast.PointerInt x)
+let to_ptr x = <span data-count="1186">A</span>st.CPointer (Ast.PointerInt x)
 
 let err_type exp get =
   <span data-count="0">f</span>ail (Printf.sprint<span data-count="0">f</span> "expected %s, but get %s\n" (Ast.show_t<span data-count="0">p</span> exp) (Ast.show_t<span data-count="0">p</span> get))
@@ -312,12 +312,12 @@ let err_type exp get =
 let err_type_c exp cnst = <span data-count="0">e</span>rr_type exp (Ast.const_to_t<span data-count="0">p</span> cnst)
 
 let get_const_from_value : Ast.value -&gt; (state, Ast.const) t = function
-  | <span data-count="1718">A</span>st.Const x -&gt; return x
-  | <span data-count="7716">A</span>st.FromVariable (var, exp_tp) -&gt;
-    let* cnst = read_va<span data-count="7716">r</span> var in
-    <span data-count="7716">l</span>et real_tp = Ast.const_to_tp cnst in
-    <span data-count="7716">i</span>f Ast.tp_equal real_tp exp_tp
-    then <span data-count="7716">r</span>eturn cnst
+  | <span data-count="2415">A</span>st.Const x -&gt; return x
+  | <span data-count="11010">A</span>st.FromVariable (var, exp_tp) -&gt;
+    let* cnst = read_va<span data-count="11010">r</span> var in
+    <span data-count="11010">l</span>et real_tp = Ast.const_to_tp cnst in
+    <span data-count="11010">i</span>f Ast.tp_equal real_tp exp_tp
+    then <span data-count="11010">r</span>eturn cnst
     else
       <span data-count="0">f</span>ail
         (Printf.sprint<span data-count="0">f</span>
@@ -328,20 +328,20 @@ let get_const_from_value : Ast.value -&gt; (state, Ast.const) t = function
 ;;
 
 let is_block cnst =
-  <span data-count="1216">m</span>atch cnst with
-  | <span data-count="1216">A</span>st.CLabel x -&gt; return x
+  <span data-count="1712">m</span>atch cnst with
+  | <span data-count="1712">A</span>st.CLabel x -&gt; return x
   | <span data-count="0">_</span> -&gt; err_type_c Ast.TLabel cnst
 ;;
 
 let is_bool cnst =
-  <span data-count="655">m</span>atch cnst with
-  | <span data-count="655">A</span>st.CInteger (1, x) -&gt; return (Int64.equa<span data-count="655">l</span> 1L x)
+  <span data-count="924">m</span>atch cnst with
+  | <span data-count="924">A</span>st.CInteger (1, x) -&gt; return (Int64.equa<span data-count="924">l</span> 1L x)
   | <span data-count="0">_</span> -&gt; err_type_c (Ast.TInteger 1) cnst
 ;;
 
 let is_int cnst =
-  <span data-count="4025">m</span>atch cnst with
-  | <span data-count="4025">A</span>st.CInteger (_, x) -&gt; return x
+  <span data-count="5843">m</span>atch cnst with
+  | <span data-count="5843">A</span>st.CInteger (_, x) -&gt; return x
   | <span data-count="0">_</span> -&gt; err_type_c (Ast.TInteger 0) cnst
 ;;
 
@@ -352,15 +352,15 @@ let is_float cnst =
 ;;
 
 let rec is_ptr cnst =
-  <span data-count="3410">m</span>atch cnst with
-  | <span data-count="3398">A</span>st.CPointer (Ast.PointerInt x) -&gt; return x
+  <span data-count="4830">m</span>atch cnst with
+  | <span data-count="4818">A</span>st.CPointer (Ast.PointerInt x) -&gt; return x
   | <span data-count="12">A</span>st.CPointer (Ast.PointerGlob x) -&gt; read_va<span data-count="12">r</span> x &gt;&gt;= is_ptr
   | <span data-count="0">_</span> -&gt; err_type_c Ast.TPointer cnst
 ;;
 
 let is_vector is_elem cnst =
-  <span data-count="25">m</span>atch cnst with
-  | <span data-count="25">A</span>st.CVector x -&gt; map_list is_elem x
+  <span data-count="56">m</span>atch cnst with
+  | <span data-count="56">A</span>st.CVector x -&gt; map_list is_elem x
   | <span data-count="0">c</span> -&gt; err_type_c (Ast.TVector (0, Ast.const_to_t<span data-count="0">p</span> c)) cnst
 ;;
 
@@ -380,39 +380,39 @@ let vectorize1 operat is_elem value =
 ;;
 
 let vectorize2 operat is_elem v1 v2 =
-  <span data-count="3">l</span>et* v1 = get_const_from_valu<span data-count="3">e</span> v1 &gt;&gt;<span data-count="3">=</span> is_vecto<span data-count="3">r</span> is_elem in
-  <span data-count="3">l</span>et* v2 = get_const_from_valu<span data-count="3">e</span> v2 &gt;&gt;<span data-count="3">=</span> is_vecto<span data-count="3">r</span> is_elem in
-  <span data-count="3">r</span>eturn (Ast.CVector (List.map<span data-count="3">2</span> operat v1 v2))
+  <span data-count="8">l</span>et* v1 = get_const_from_valu<span data-count="8">e</span> v1 &gt;&gt;<span data-count="8">=</span> is_vecto<span data-count="8">r</span> is_elem in
+  <span data-count="8">l</span>et* v2 = get_const_from_valu<span data-count="8">e</span> v2 &gt;&gt;<span data-count="8">=</span> is_vecto<span data-count="8">r</span> is_elem in
+  <span data-count="8">r</span>eturn (Ast.CVector (List.map<span data-count="8">2</span> operat v1 v2))
 ;;
 
 let launch_binary_body_operation operat is_elem x y =
-  <span data-count="576">l</span>et* x = get_const_from_valu<span data-count="576">e</span> x &gt;&gt;<span data-count="576">=</span> is_elem in
-  <span data-count="576">l</span>et* y = get_const_from_valu<span data-count="576">e</span> y &gt;&gt;<span data-count="576">=</span> is_elem in
-  <span data-count="576">t</span>ry retur<span data-count="575">n</span> (opera<span data-count="575">t</span> x y) with
+  <span data-count="866">l</span>et* x = get_const_from_valu<span data-count="866">e</span> x &gt;&gt;<span data-count="866">=</span> is_elem in
+  <span data-count="866">l</span>et* y = get_const_from_valu<span data-count="866">e</span> y &gt;&gt;<span data-count="866">=</span> is_elem in
+  <span data-count="866">t</span>ry retur<span data-count="865">n</span> (opera<span data-count="865">t</span> x y) with
   | <span data-count="1">D</span>ivision_by_zero -&gt; fail "Runtime error: Division by 0"
 ;;
 
 let launch_binary_body_operation_vectorizated tp operat is_elem x y =
-  <span data-count="578">m</span>atch tp with
-  | <span data-count="2">A</span>st.TVector (_, elem_tp) -&gt; vectorize2 (opera<span data-count="2">t</span> elem_tp) is_elem x y
-  | <span data-count="576">_</span> -&gt; launch_binary_body_operation (opera<span data-count="576">t</span> tp) is_elem x y
+  <span data-count="873">m</span>atch tp with
+  | <span data-count="7">A</span>st.TVector (_, elem_tp) -&gt; vectorize2 (opera<span data-count="7">t</span> elem_tp) is_elem x y
+  | <span data-count="866">_</span> -&gt; launch_binary_body_operation (opera<span data-count="866">t</span> tp) is_elem x y
 ;;
 
 let write_binop_res tp real_add is_int v1 v2 var =
-  <span data-count="578">l</span>et* res = launch_binary_body_operation_vectorizate<span data-count="578">d</span> tp real_add is_int v1 v2 in
-  <span data-count="577">w</span>rite_var var res
+  <span data-count="873">l</span>et* res = launch_binary_body_operation_vectorizate<span data-count="873">d</span> tp real_add is_int v1 v2 in
+  <span data-count="872">w</span>rite_var var res
 ;;
 
 let check_to_int operat tp x y =
-  <span data-count="482">m</span>atch tp with
-  | <span data-count="482">A</span>st.TInteger sz -&gt; operat sz x y
+  <span data-count="787">m</span>atch tp with
+  | <span data-count="787">A</span>st.TInteger sz -&gt; operat sz x y
   | <span data-count="0">_</span> -&gt;
     let _ = Printf.printf "Impossible error: get wrong type at binary/biwise operation" in
     <span data-count="0">A</span>st.CVoid
 ;;
 
 let get_bb_var_from_label = function
-  | <span data-count="1814">A</span>st.FromVariable (x, _) -&gt; return x
+  | <span data-count="2635">A</span>st.FromVariable (x, _) -&gt; return x
   | <span data-count="0">A</span>st.Const _ -&gt; fail "expected get basic block"
 ;;
 </code></pre>

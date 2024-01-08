@@ -149,26 +149,26 @@
 open State
 
 let align_addr addr align isUp =
-  <span data-count="366">l</span>et res = addr / align * align in
-  if res &lt;&gt; addr then <span data-count="53">i</span>f isUp then <span data-count="8">r</span>es + align else <span data-count="45">r</span>es else <span data-count="313">r</span>es
+  <span data-count="506">l</span>et res = addr / align * align in
+  if res &lt;&gt; addr then <span data-count="85">i</span>f isUp then <span data-count="8">r</span>es + align else <span data-count="77">r</span>es else <span data-count="421">r</span>es
 ;;
 
 let put_bytes_in_heap : int -&gt; char list -&gt; (state, unit) t =
   fun addr lst -&gt;
-  <span data-count="774">l</span>et indxs = List.init (List.lengt<span data-count="774">h</span> lst) (fun x -&gt; <span data-count="4076">a</span>ddr + x) in
-  <span data-count="774">l</span>et bts = List.to_seq (List.combin<span data-count="774">e</span> indxs lst) in
-  <span data-count="774">w</span>rite_bytes bts
+  <span data-count="1119">l</span>et indxs = List.init (List.lengt<span data-count="1119">h</span> lst) (fun x -&gt; <span data-count="5726">a</span>ddr + x) in
+  <span data-count="1119">l</span>et bts = List.to_seq (List.combin<span data-count="1119">e</span> indxs lst) in
+  <span data-count="1119">w</span>rite_bytes bts
 ;;
 
 let put_cnst_in_heap : int -&gt; Ast.const -&gt; (state, unit) t =
   fun addr cnst -&gt;
-  <span data-count="739">l</span>et* cnst =
+  <span data-count="1067">l</span>et* cnst =
     match cnst with
     | <span data-count="0">A</span>st.CPointer (Ast.PointerGlob x) -&gt; read_va<span data-count="0">r</span> x
-    | <span data-count="739">c</span>ns -&gt; retur<span data-count="739">n</span> cns
+    | <span data-count="1067">c</span>ns -&gt; retur<span data-count="1067">n</span> cns
   in
-  <span data-count="739">l</span>et* lst = Serialisation.serialise_with_stat<span data-count="739">e</span> cnst in
-  <span data-count="739">p</span>ut_bytes_in_heap addr lst
+  <span data-count="1067">l</span>et* lst = Serialisation.serialise_with_stat<span data-count="1067">e</span> cnst in
+  <span data-count="1067">p</span>ut_bytes_in_heap addr lst
 ;;
 
 (* let put_cnst_in_heap_align : int -&gt; Ast.const -&gt; int -&gt; (state, unit) t =
@@ -177,27 +177,27 @@ let put_cnst_in_heap : int -&gt; Ast.const -&gt; (state, unit) t =
 
 let take_cnst_from_heap : int -&gt; Ast.tp -&gt; (state, Ast.const) t =
   fun addr tp -&gt;
-  <span data-count="2161">l</span>et indxs = List.init (Serialisation.raw_date_le<span data-count="2161">n</span> tp) (fun x -&gt; <span data-count="9929">a</span>ddr + x) in
-  <span data-count="2161">l</span>et* bts = map_lis<span data-count="2161">t</span> read_byte indxs in
-  <span data-count="2161">r</span>eturn (Serialisation.deserialis<span data-count="2161">e</span> tp bts)
+  <span data-count="3075">l</span>et indxs = List.init (Serialisation.raw_date_le<span data-count="3075">n</span> tp) (fun x -&gt; <span data-count="14005">a</span>ddr + x) in
+  <span data-count="3075">l</span>et* bts = map_lis<span data-count="3075">t</span> read_byte indxs in
+  <span data-count="3075">r</span>eturn (Serialisation.deserialis<span data-count="3075">e</span> tp bts)
 ;;
 
 let alloc_stack_align : int -&gt; int -&gt; (state, int) t =
   fun len align -&gt;
-  <span data-count="353">l</span>et* old_local, old_global, old_heap, old_stack, old_block = read in
-  <span data-count="353">l</span>et addr = align_addr (old_stack - len) align false in
-  <span data-count="353">w</span>rit<span data-count="353">e</span> (old_local, old_global, old_heap, addr, old_block) *&gt; retur<span data-count="353">n</span> addr
+  <span data-count="493">l</span>et* old_local, old_global, old_heap, old_stack, old_block = read in
+  <span data-count="493">l</span>et addr = align_addr (old_stack - len) align false in
+  <span data-count="493">w</span>rit<span data-count="493">e</span> (old_local, old_global, old_heap, addr, old_block) *&gt; retur<span data-count="493">n</span> addr
 ;;
 
 let free_stack : int -&gt; (state, unit) t =
   fun new_stack -&gt;
-  <span data-count="140">l</span>et* old_local, old_global, old_heap, old_stack, old_block = read in
-  <span data-count="140">l</span>et new_heap =
+  <span data-count="172">l</span>et* old_local, old_global, old_heap, old_stack, old_block = read in
+  <span data-count="172">l</span>et new_heap =
     MapInt.filter
-      (fun cur_addr _ -&gt; <span data-count="15573">n</span>ot (cur_addr &lt; new_stack &amp;&amp; <span data-count="1728">c</span>ur_addr &gt;= old_stack))
+      (fun cur_addr _ -&gt; <span data-count="20699">n</span>ot (cur_addr &lt; new_stack &amp;&amp; <span data-count="2280">c</span>ur_addr &gt;= old_stack))
       old_heap
   in
-  <span data-count="140">w</span>rite (old_local, old_global, new_heap, new_stack, old_block)
+  <span data-count="172">w</span>rite (old_local, old_global, new_heap, new_stack, old_block)
 ;;
 </code></pre>
       </div>

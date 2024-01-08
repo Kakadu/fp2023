@@ -246,34 +246,34 @@ open State
 open CommonInterpInstructions
 
 let ialloca variable tp value align =
-  <span data-count="283">l</span>et* n = get_const_from_valu<span data-count="283">e</span> value &gt;&gt;<span data-count="283">=</span> is_int in
-  <span data-count="283">l</span>et sz = Int64.to_in<span data-count="283">t</span> n * Serialisation.raw_date_le<span data-count="283">n</span> tp in
-  let* addr = Memory.alloc_stack_alig<span data-count="283">n</span> sz align in
-  <span data-count="283">w</span>rite_var variable (to_pt<span data-count="283">r</span> addr)
+  <span data-count="389">l</span>et* n = get_const_from_valu<span data-count="389">e</span> value &gt;&gt;<span data-count="389">=</span> is_int in
+  <span data-count="389">l</span>et sz = Int64.to_in<span data-count="389">t</span> n * Serialisation.raw_date_le<span data-count="389">n</span> tp in
+  let* addr = Memory.alloc_stack_alig<span data-count="389">n</span> sz align in
+  <span data-count="389">w</span>rite_var variable (to_pt<span data-count="389">r</span> addr)
 ;;
 
 let istore _tp value ptr align =
-  <span data-count="691">l</span>et* value = get_const_from_valu<span data-count="691">e</span> value in
-  <span data-count="691">l</span>et* ptr = get_const_from_valu<span data-count="691">e</span> ptr &gt;&gt;<span data-count="691">=</span> is_ptr in
+  <span data-count="1002">l</span>et* value = get_const_from_valu<span data-count="1002">e</span> value in
+  <span data-count="1002">l</span>et* ptr = get_const_from_valu<span data-count="1002">e</span> ptr &gt;&gt;<span data-count="1002">=</span> is_ptr in
   (* if ptr mod align = 0
      then *)
-  <span data-count="691">M</span>emory.put_cnst_in_heap ptr value
+  <span data-count="1002">M</span>emory.put_cnst_in_heap ptr value
 ;;
 
 (* else fail "Runtime error: get unaligned pointer for store" *)
 
 let iload var tp ptr align =
-  <span data-count="2161">l</span>et* ptr = get_const_from_valu<span data-count="2161">e</span> ptr &gt;&gt;<span data-count="2161">=</span> is_ptr in
+  <span data-count="3075">l</span>et* ptr = get_const_from_valu<span data-count="3075">e</span> ptr &gt;&gt;<span data-count="3075">=</span> is_ptr in
   (* if   ptr mod align = 0
      then *)
-  <span data-count="2161">l</span>et* cnst = Memory.take_cnst_from_hea<span data-count="2161">p</span> ptr tp in
-  <span data-count="2161">w</span>rite_var var cnst
+  <span data-count="3075">l</span>et* cnst = Memory.take_cnst_from_hea<span data-count="3075">p</span> ptr tp in
+  <span data-count="3075">w</span>rite_var var cnst
 ;;
 
 (* else fail "Runtime error: get unaligned pointer for load" *)
 
 let rec rec_real_getelementprt tp ptr = function
-  | <span data-count="540">[</span>] -&gt; return ptr
+  | <span data-count="735">[</span>] -&gt; return ptr
   | <span data-count="56">x</span> :: tl -&gt;
     let* delta_and_ntp =
       match tp with
@@ -293,14 +293,14 @@ let rec rec_real_getelementprt tp ptr = function
 
 let real_getelemetptr tp ptr = function
   | <span data-count="0">[</span>] -&gt; return (to_pt<span data-count="0">r</span> ptr)
-  | <span data-count="541">x</span> :: tl -&gt;
-    let ptr = ptr + (Serialisation.raw_date_le<span data-count="541">n</span> tp * x) in
-    let* fin_ptr = rec_real_getelementpr<span data-count="541">t</span> tp ptr tl in
-    <span data-count="540">r</span>eturn (to_pt<span data-count="540">r</span> fin_ptr)
+  | <span data-count="736">x</span> :: tl -&gt;
+    let ptr = ptr + (Serialisation.raw_date_le<span data-count="736">n</span> tp * x) in
+    let* fin_ptr = rec_real_getelementpr<span data-count="736">t</span> tp ptr tl in
+    <span data-count="735">r</span>eturn (to_pt<span data-count="735">r</span> fin_ptr)
 ;;
 
 let igetelementptr var v_tp ptr_tp ptr ilist =
-  <span data-count="540">l</span>et rec transpose = function
+  <span data-count="735">l</span>et rec transpose = function
     | <span data-count="2">[</span>] -&gt; []
     | <span data-count="3">[</span>] :: xss -&gt; transpose xss
     | <span data-count="4">(</span>x :: xs) :: xss -&gt;
@@ -321,25 +321,25 @@ let igetelementptr var v_tp ptr_tp ptr ilist =
       <span data-count="2">l</span>et cnsts = List.map2 (real_getelemetpt<span data-count="2">r</span> v_tp) ptrs indss in
       <span data-count="2">l</span>et* cnst = map_lis<span data-count="2">t</span> (fun s -&gt; <span data-count="4">s</span> &gt;&gt;= return) cnsts &gt;&gt;<span data-count="2">|</span> fun x -&gt; <span data-count="2">A</span>st.CVector x in
       <span data-count="2">w</span>rite_var var cnst)
-  | <span data-count="537">_</span> -&gt;
-    let f (_, b) = <span data-count="591">g</span>et_const_from_valu<span data-count="591">e</span> b &gt;&gt;<span data-count="591">=</span> is_int &gt;&gt;| Int64.to_int in
-    let* inds = map_lis<span data-count="537">t</span> f ilist in
-    <span data-count="537">l</span>et* ptr = get_const_from_valu<span data-count="537">e</span> ptr &gt;&gt;<span data-count="537">=</span> is_ptr in
-    <span data-count="537">l</span>et* cnst = real_getelemetpt<span data-count="537">r</span> v_tp ptr inds in
-    <span data-count="536">w</span>rite_var var cnst
+  | <span data-count="732">_</span> -&gt;
+    let f (_, b) = <span data-count="786">g</span>et_const_from_valu<span data-count="786">e</span> b &gt;&gt;<span data-count="786">=</span> is_int &gt;&gt;| Int64.to_int in
+    let* inds = map_lis<span data-count="732">t</span> f ilist in
+    <span data-count="732">l</span>et* ptr = get_const_from_valu<span data-count="732">e</span> ptr &gt;&gt;<span data-count="732">=</span> is_ptr in
+    <span data-count="732">l</span>et* cnst = real_getelemetpt<span data-count="732">r</span> v_tp ptr inds in
+    <span data-count="731">w</span>rite_var var cnst
 ;;
 
 let launch_memory_address_operation
   : Ast.memory_address_instruction -&gt; (state, instr_launch_res) t
   =
   fun instr -&gt;
-  <span data-count="3675">(</span>match instr with
-   | <span data-count="283">A</span>st.Alloca (variable, tp, value, align) -&gt; ialloc<span data-count="283">a</span> variable tp value align
-   | <span data-count="691">A</span>st.Store (tp, value, ptr, align) -&gt; istor<span data-count="691">e</span> tp value ptr align
-   | <span data-count="2161">A</span>st.Load (var, tp, ptr, align) -&gt; iloa<span data-count="2161">d</span> var tp ptr align
-   | <span data-count="540">A</span>st.Getelementptr (var, v_tp, ptr_tp, ptr, ilist) -&gt;
-     igetelementpt<span data-count="540">r</span> var v_tp ptr_tp ptr ilist)
-  *&gt; retur<span data-count="3675">n</span> NoRes
+  <span data-count="5201">(</span>match instr with
+   | <span data-count="389">A</span>st.Alloca (variable, tp, value, align) -&gt; ialloc<span data-count="389">a</span> variable tp value align
+   | <span data-count="1002">A</span>st.Store (tp, value, ptr, align) -&gt; istor<span data-count="1002">e</span> tp value ptr align
+   | <span data-count="3075">A</span>st.Load (var, tp, ptr, align) -&gt; iloa<span data-count="3075">d</span> var tp ptr align
+   | <span data-count="735">A</span>st.Getelementptr (var, v_tp, ptr_tp, ptr, ilist) -&gt;
+     igetelementpt<span data-count="735">r</span> var v_tp ptr_tp ptr ilist)
+  *&gt; retur<span data-count="5201">n</span> NoRes
 ;;
 </code></pre>
       </div>

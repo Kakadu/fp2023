@@ -296,34 +296,34 @@ let empty_state : state =
 
 let read_var : Ast.variable -&gt; (state, Ast.const) t =
   let find_var name map =
-    <span data-count="9172">l</span>et value = MapString.find_opt name map in
-    <span data-count="9172">m</span>atch value with
-    | <span data-count="9172">S</span>ome x -&gt; return x
+    <span data-count="13000">l</span>et value = MapString.find_opt name map in
+    <span data-count="13000">m</span>atch value with
+    | <span data-count="13000">S</span>ome x -&gt; return x
     | <span data-count="0">N</span>one -&gt; fail (Printf.sprint<span data-count="0">f</span> "Runtime error: Variable %s is not initialized" name)
   in
   fun variable -&gt;
-    <span data-count="9143">l</span>et* local, glob, _, _, _ = read in
-    <span data-count="9172">m</span>atch variable with
-    | <span data-count="240">A</span>st.GlobalVar name -&gt; find_var name glob
-    | <span data-count="8932">A</span>st.LocalVar name -&gt; find_var name local
+    <span data-count="12971">l</span>et* local, glob, _, _, _ = read in
+    <span data-count="13000">m</span>atch variable with
+    | <span data-count="278">A</span>st.GlobalVar name -&gt; find_var name glob
+    | <span data-count="12722">A</span>st.LocalVar name -&gt; find_var name local
 ;;
 
 let write_var : Ast.variable -&gt; Ast.const -&gt; (state, unit) t =
   fun key value -&gt;
-  <span data-count="6314">l</span>et* old_local, old_global, old_heap, old_stack, old_block = read in
-  <span data-count="6314">m</span>atch key with
-  | <span data-count="80">A</span>st.GlobalVar name -&gt;
-    write (old_local, MapString.ad<span data-count="80">d</span> name value old_global, old_heap, old_stack, old_block)
-  | <span data-count="6234">A</span>st.LocalVar name -&gt;
-    write (MapString.ad<span data-count="6234">d</span> name value old_local, old_global, old_heap, old_stack, old_block)
+  <span data-count="8945">l</span>et* old_local, old_global, old_heap, old_stack, old_block = read in
+  <span data-count="8945">m</span>atch key with
+  | <span data-count="86">A</span>st.GlobalVar name -&gt;
+    write (old_local, MapString.ad<span data-count="86">d</span> name value old_global, old_heap, old_stack, old_block)
+  | <span data-count="8859">A</span>st.LocalVar name -&gt;
+    write (MapString.ad<span data-count="8859">d</span> name value old_local, old_global, old_heap, old_stack, old_block)
 ;;
 
 let read_byte : int -&gt; (state, char) t =
   fun number -&gt;
-  <span data-count="9929">l</span>et* _, _, heap, _, _ = read in
-  <span data-count="9929">l</span>et bt = MapInt.find_opt number heap in
-  <span data-count="9929">m</span>atch bt with
-  | <span data-count="9929">S</span>ome x -&gt; return x
+  <span data-count="14005">l</span>et* _, _, heap, _, _ = read in
+  <span data-count="14005">l</span>et bt = MapInt.find_opt number heap in
+  <span data-count="14005">m</span>atch bt with
+  | <span data-count="14005">S</span>ome x -&gt; return x
   | <span data-count="0">N</span>one -&gt;
     fail (Printf.sprint<span data-count="0">f</span> "Runtime error: Byte number %x is not initialized" number)
 ;;
@@ -337,19 +337,19 @@ let read_bytes : int -&gt; int -&gt; (state, char list) t =
 
 let write_bytes : bytes -&gt; (state, unit) t =
   fun bts -&gt;
-  <span data-count="774">l</span>et* old_local, old_global, old_heap, old_stack, old_block = read in
-  <span data-count="774">w</span>rite (old_local, old_global, MapInt.add_se<span data-count="774">q</span> bts old_heap, old_stack, old_block)
+  <span data-count="1119">l</span>et* old_local, old_global, old_heap, old_stack, old_block = read in
+  <span data-count="1119">w</span>rite (old_local, old_global, MapInt.add_se<span data-count="1119">q</span> bts old_heap, old_stack, old_block)
 ;;
 
 let read_last_block : (state, Ast.variable) t =
   let* _, _, _, _, block = read in
-  <span data-count="47">r</span>eturn block
+  <span data-count="91">r</span>eturn block
 ;;
 
 let write_last_block : Ast.variable -&gt; (state, unit) t =
   fun block -&gt;
-  <span data-count="1069">l</span>et* old_local, old_global, old_heap, old_stack, _ = read in
-  <span data-count="1069">w</span>rite (old_local, old_global, old_heap, old_stack, block)
+  <span data-count="1533">l</span>et* old_local, old_global, old_heap, old_stack, _ = read in
+  <span data-count="1533">w</span>rite (old_local, old_global, old_heap, old_stack, block)
 ;;
 
 let print_loc_vars : (state, unit) t =

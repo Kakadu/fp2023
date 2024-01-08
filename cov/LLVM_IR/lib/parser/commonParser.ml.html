@@ -279,79 +279,79 @@ let test_parse p show str =
 ;;
 
 let whitespace = function
-  | <span data-count="148691">'</span> ' | <span data-count="0">'</span>\t' | <span data-count="9848">'</span>\n' | <span data-count="0">'</span>\r' -&gt; true
-  | <span data-count="125270">_</span> -&gt; false
+  | <span data-count="184731">'</span> ' | <span data-count="0">'</span>\t' | <span data-count="12120">'</span>\n' | <span data-count="0">'</span>\r' -&gt; true
+  | <span data-count="152158">_</span> -&gt; false
 ;;
 
 let comment =
-  cha<span data-count="26">r</span> ';'
-  *<span data-count="26">&gt;</span> retur<span data-count="26">n</span> ()
-  *<span data-count="26">&gt;</span> skip_whil<span data-count="26">e</span> (function
-    | <span data-count="1398">'</span>\n' -&gt; false
-    | <span data-count="20887">_</span> -&gt; true)
+  cha<span data-count="28">r</span> ';'
+  *<span data-count="28">&gt;</span> retur<span data-count="28">n</span> ()
+  *<span data-count="28">&gt;</span> skip_whil<span data-count="28">e</span> (function
+    | <span data-count="1838">'</span>\n' -&gt; false
+    | <span data-count="29529">_</span> -&gt; true)
 ;;
 
-let whitespaces = man<span data-count="26">y</span> (ski<span data-count="26">p</span> whitespace &lt;|<span data-count="26">&gt;</span> comment)
-let comma = whitespaces *<span data-count="26">&gt;</span> cha<span data-count="26">r</span> ',' &lt;<span data-count="26">*</span> whitespaces
+let whitespaces = man<span data-count="28">y</span> (ski<span data-count="28">p</span> whitespace &lt;|<span data-count="28">&gt;</span> comment)
+let comma = whitespaces *<span data-count="28">&gt;</span> cha<span data-count="28">r</span> ',' &lt;<span data-count="28">*</span> whitespaces
 
 let str_integer =
-  take_while<span data-count="26">1</span> (function
+  take_while<span data-count="28">1</span> (function
     | <span data-count="39647">'</span>0' .. '9' -&gt; true
-    | <span data-count="23174">_</span> -&gt; false)
+    | <span data-count="23184">_</span> -&gt; false)
 ;;
 
 let str_extended_integer =
-  take_while<span data-count="26">1</span> (function
+  take_while<span data-count="28">1</span> (function
     | <span data-count="8">'</span>a' .. 'f' -&gt; true
     | <span data-count="1">'</span>A' .. 'F' -&gt; true
-    | <span data-count="4515">'</span>0' .. '9' -&gt; true
-    | <span data-count="3019">_</span> -&gt; false)
+    | <span data-count="5453">'</span>0' .. '9' -&gt; true
+    | <span data-count="3657">_</span> -&gt; false)
 ;;
 
 let varname_char = function
-  | <span data-count="182566">'</span>a' .. 'z' -&gt; true
+  | <span data-count="227498">'</span>a' .. 'z' -&gt; true
   | <span data-count="147">'</span>A' .. 'Z' -&gt; true
-  | <span data-count="70">'</span>.' | <span data-count="0">'</span>$' | <span data-count="10">'</span>_' | <span data-count="5">'</span>-' | <span data-count="14">'</span>+' -&gt; true
-  | <span data-count="103765">_</span> -&gt; false
+  | <span data-count="70">'</span>.' | <span data-count="0">'</span>$' | <span data-count="530">'</span>_' | <span data-count="5">'</span>-' | <span data-count="14">'</span>+' -&gt; true
+  | <span data-count="130427">_</span> -&gt; false
 ;;
 
 let parse_word =
   let satisfy_char = function
-    | <span data-count="232954">a</span> when varname_cha<span data-count="232954">r</span> a -&gt; <span data-count="175386">t</span>rue
-    | <span data-count="10661">'</span>0' .. '9' -&gt; true
-    | <span data-count="46907">_</span> -&gt; false
+    | <span data-count="298404">a</span> when varname_cha<span data-count="298404">r</span> a -&gt; <span data-count="214184">t</span>rue
+    | <span data-count="22129">'</span>0' .. '9' -&gt; true
+    | <span data-count="62091">_</span> -&gt; false
   in
-  take_while<span data-count="26">1</span> satisfy_char
+  take_while<span data-count="28">1</span> satisfy_char
 ;;
 
 let word str =
-  <span data-count="47542">p</span>arse_word
-  &gt;&gt;= fun parsed -&gt; <span data-count="31152">i</span>f parsed = str then <span data-count="2676">r</span>eturn str else <span data-count="28476">f</span>ail "Parser error: Wrong word"
+  <span data-count="57962">p</span>arse_word
+  &gt;&gt;= fun parsed -&gt; <span data-count="37922">i</span>f parsed = str then <span data-count="3266">r</span>eturn str else <span data-count="34656">f</span>ail "Parser error: Wrong word"
 ;;
 
 let parse_integer64 =
-  let* prefix = choic<span data-count="26">e</span> [ strin<span data-count="26">g</span> "0x"; strin<span data-count="26">g</span> "0o"; strin<span data-count="26">g</span> "0b"; retur<span data-count="26">n</span> "" ] in
-  <span data-count="3030">l</span>et* int_body = str_extended_integer in
-  <span data-count="3027">m</span>atch Int64.of_string_opt (String.conca<span data-count="3027">t</span> "" [ prefix; int_body ]) with
-  | <span data-count="3023">S</span>ome x -&gt; return x
+  let* prefix = choic<span data-count="28">e</span> [ strin<span data-count="28">g</span> "0x"; strin<span data-count="28">g</span> "0o"; strin<span data-count="28">g</span> "0b"; retur<span data-count="28">n</span> "" ] in
+  <span data-count="3668">l</span>et* int_body = str_extended_integer in
+  <span data-count="3665">m</span>atch Int64.of_string_opt (String.conca<span data-count="3665">t</span> "" [ prefix; int_body ]) with
+  | <span data-count="3661">S</span>ome x -&gt; return x
   | <span data-count="4">N</span>one -&gt; fail "Parser error: can't parse int"
 ;;
 
-let parse_integer = parse_integer64 &gt;&gt;<span data-count="26">|</span> Int64.to_int
+let parse_integer = parse_integer64 &gt;&gt;<span data-count="28">|</span> Int64.to_int
 
 let parse_named_name =
-  lift<span data-count="26">2</span>
-    (fun first_char last_part -&gt; <span data-count="7425">S</span>tring.mak<span data-count="7425">e</span> 1 first_char ^ last_part)
-    (satisf<span data-count="26">y</span> varname_char)
-    (parse_word &lt;|<span data-count="26">&gt;</span> retur<span data-count="26">n</span> "")
+  lift<span data-count="28">2</span>
+    (fun first_char last_part -&gt; <span data-count="14079">S</span>tring.mak<span data-count="14079">e</span> 1 first_char ^ last_part)
+    (satisf<span data-count="28">y</span> varname_char)
+    (parse_word &lt;|<span data-count="28">&gt;</span> retur<span data-count="28">n</span> "")
 ;;
 
 let parse_unnamed_name =
-  lift<span data-count="26">2</span>
+  lift<span data-count="28">2</span>
     (fun name _ -&gt; <span data-count="23026">n</span>ame)
     str_integer
     (peek_char
-     &gt;&gt;<span data-count="26">=</span> fun c -&gt;
+     &gt;&gt;<span data-count="28">=</span> fun c -&gt;
      <span data-count="23027">m</span>atch c with
      | <span data-count="23022">S</span>ome c when varname_cha<span data-count="23022">r</span> c -&gt; <span data-count="1">f</span>ail "Parser error: deprecated name"
      | <span data-count="23026">_</span> -&gt; return ())
@@ -359,27 +359,27 @@ let parse_unnamed_name =
 
 let%expect_test _ =
   <span data-count="1">t</span>est_parse parse_unnamed_name (fun f -&gt; <span data-count="1">f</span>) "543554";
-  <span data-count="1">[</span>%expect {| 543554 |}<span data-count="53">]</span>
+  <span data-count="1">[</span>%expect {| 543554 |}<span data-count="57">]</span>
 ;;
 
 let%expect_test _ =
   <span data-count="1">t</span>est_parse parse_unnamed_name (fun f -&gt; <span data-count="0">f</span>) "543554d";
-  <span data-count="1">[</span>%expect {| Error |}<span data-count="53">]</span>
+  <span data-count="1">[</span>%expect {| Error |}<span data-count="57">]</span>
 ;;
 
 let%expect_test _ =
   <span data-count="1">t</span>est_parse parse_unnamed_name (fun f -&gt; <span data-count="1">f</span>) "54,";
-  <span data-count="1">[</span>%expect {| 54 |}<span data-count="53">]</span>
+  <span data-count="1">[</span>%expect {| 54 |}<span data-count="57">]</span>
 ;;
 
-let parse_name = parse_named_name &lt;|<span data-count="26">&gt;</span> parse_unnamed_name
+let parse_name = parse_named_name &lt;|<span data-count="28">&gt;</span> parse_unnamed_name
 
 let parse_local_variable =
-  whitespaces *<span data-count="26">&gt;</span> cha<span data-count="26">r</span> '%' *<span data-count="26">&gt;</span> parse_name &gt;&gt;<span data-count="26">|</span> fun name -&gt; <span data-count="30056">A</span>st.LocalVar name
+  whitespaces *<span data-count="28">&gt;</span> cha<span data-count="28">r</span> '%' *<span data-count="28">&gt;</span> parse_name &gt;&gt;<span data-count="28">|</span> fun name -&gt; <span data-count="36636">A</span>st.LocalVar name
 ;;
 
 let parse_global_variable =
-  whitespaces *<span data-count="26">&gt;</span> cha<span data-count="26">r</span> '@' *<span data-count="26">&gt;</span> parse_name &gt;&gt;<span data-count="26">|</span> fun name -&gt; <span data-count="175">A</span>st.GlobalVar name
+  whitespaces *<span data-count="28">&gt;</span> cha<span data-count="28">r</span> '@' *<span data-count="28">&gt;</span> parse_name &gt;&gt;<span data-count="28">|</span> fun name -&gt; <span data-count="185">A</span>st.GlobalVar name
 ;;
 </code></pre>
       </div>

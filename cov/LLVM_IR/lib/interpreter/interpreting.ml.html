@@ -1392,186 +1392,186 @@ open CommonInterpInstructions
 
 let assign_globs : Ast.glob_list -&gt; (state, unit) t =
   fun glob_lst -&gt;
-  <span data-count="42">l</span>et count_addr addr glob =
-    <span data-count="80">l</span>et tp, _, _, align = glob in
+  <span data-count="44">l</span>et count_addr addr glob =
+    <span data-count="86">l</span>et tp, _, _, align = glob in
     match tp with
-    | <span data-count="67">A</span>st.TFunc (_, _) -&gt; addr, addr
+    | <span data-count="73">A</span>st.TFunc (_, _) -&gt; addr, addr
     | <span data-count="13">_</span> -&gt;
       let na = Memory.align_addr addr align true in
       <span data-count="13">l</span>et res = na + Serialisation.raw_date_le<span data-count="13">n</span> tp in
       res, na
   in
   let _, addrs = List.fold_left_map count_addr glob_sect glob_lst in
-  <span data-count="42">l</span>et addrs_and_globs = List.combine addrs glob_lst in
-  <span data-count="42">l</span>et assign_glob : int * (Ast.tp * Ast.variable * Ast.const * int) -&gt; (state, unit) t =
+  <span data-count="44">l</span>et addrs_and_globs = List.combine addrs glob_lst in
+  <span data-count="44">l</span>et assign_glob : int * (Ast.tp * Ast.variable * Ast.const * int) -&gt; (state, unit) t =
     fun (addr, glob) -&gt;
-    <span data-count="80">l</span>et tp, var, value, _ = glob in
+    <span data-count="86">l</span>et tp, var, value, _ = glob in
     let cnst =
       match tp with
-      | <span data-count="67">A</span>st.TFunc (_, _) -&gt; value
+      | <span data-count="73">A</span>st.TFunc (_, _) -&gt; value
       | <span data-count="13">_</span> -&gt; Ast.CPointer (Ast.PointerInt addr)
     in
     write_var var cnst
   in
-  map_lis<span data-count="42">t</span> assign_glob addrs_and_globs *&gt; retur<span data-count="42">n</span> ()
+  map_lis<span data-count="44">t</span> assign_glob addrs_and_globs *&gt; retur<span data-count="44">n</span> ()
 ;;
 
 let allocate_globs : Ast.glob_list -&gt; (state, unit) t =
   fun glob_lst -&gt;
-  <span data-count="42">l</span>et alloc_glob : Ast.tp * Ast.variable * Ast.const * int -&gt; (state, unit) t =
+  <span data-count="44">l</span>et alloc_glob : Ast.tp * Ast.variable * Ast.const * int -&gt; (state, unit) t =
     fun (_, var, cnst, _) -&gt;
-    <span data-count="80">l</span>et* ptr_cnst = read_va<span data-count="80">r</span> var in
-    <span data-count="80">m</span>atch ptr_cnst with
+    <span data-count="86">l</span>et* ptr_cnst = read_va<span data-count="86">r</span> var in
+    <span data-count="86">m</span>atch ptr_cnst with
     | <span data-count="13">A</span>st.CPointer (Ast.PointerInt x) -&gt; Memory.put_cnst_in_heap x cnst
-    | <span data-count="67">_</span> -&gt; return ()
+    | <span data-count="73">_</span> -&gt; return ()
   in
-  map_lis<span data-count="42">t</span> alloc_glob glob_lst *&gt; retur<span data-count="42">n</span> ()
+  map_lis<span data-count="44">t</span> alloc_glob glob_lst *&gt; retur<span data-count="44">n</span> ()
 ;;
 
 let init_state : Ast.glob_list -&gt; (state, unit) t =
-  fun glob_lst -&gt; <span data-count="42">a</span>ssign_glob<span data-count="42">s</span> glob_lst *&gt; allocate_glob<span data-count="42">s</span> glob_lst
+  fun glob_lst -&gt; <span data-count="44">a</span>ssign_glob<span data-count="44">s</span> glob_lst *&gt; allocate_glob<span data-count="44">s</span> glob_lst
 ;;
 
 let is_fnc_tp = function
-  | <span data-count="287">A</span>st.TFunc (f_ret, f_args) -&gt; return (f_ret, f_args)
+  | <span data-count="351">A</span>st.TFunc (f_ret, f_args) -&gt; return (f_ret, f_args)
   | <span data-count="0">_</span> -&gt; fail "Impossible error: function have not function type"
 ;;
 
 let check_fnc_tp (fnc : Ast.func) ret_tp args =
-  <span data-count="105">l</span>et arg_tps = List.map Ast.const_to_tp args in
-  <span data-count="105">l</span>et* bf = is_fnc_t<span data-count="105">p</span> fnc.ftp in
-  <span data-count="105">l</span>et f_ret, f_args = bf in
-  if not (Ast.tp_equa<span data-count="105">l</span> f_ret ret_tp)
+  <span data-count="135">l</span>et arg_tps = List.map Ast.const_to_tp args in
+  <span data-count="135">l</span>et* bf = is_fnc_t<span data-count="135">p</span> fnc.ftp in
+  <span data-count="135">l</span>et f_ret, f_args = bf in
+  if not (Ast.tp_equa<span data-count="135">l</span> f_ret ret_tp)
   then
     <span data-count="0">f</span>ail
       (Printf.sprint<span data-count="0">f</span>
          "Try get %s from function with %s return"
          (Ast.show_t<span data-count="0">p</span> ret_tp)
          (Ast.show_t<span data-count="0">p</span> f_ret))
-  else <span data-count="105">i</span>f not (List.equa<span data-count="105">l</span> Ast.tp_equal f_args arg_tps)
+  else <span data-count="135">i</span>f not (List.equa<span data-count="135">l</span> Ast.tp_equal f_args arg_tps)
   then <span data-count="0">f</span>ail "Expected other function args"
-  else <span data-count="105">r</span>eturn ()
+  else <span data-count="135">r</span>eturn ()
 ;;
 
 let rec icall var res_tp fnc_val params =
-  <span data-count="105">l</span>et* cfnc = get_const_from_valu<span data-count="105">e</span> fnc_val in
-  <span data-count="105">l</span>et* args = map_lis<span data-count="105">t</span> get_const_from_value params in
-  <span data-count="105">m</span>atch cfnc with
-  | <span data-count="105">A</span>st.CPointer (Ast.PointerGlob x) -&gt;
-    let* cns = read_va<span data-count="105">r</span> x in
-    <span data-count="105">(</span>match cns with
-     | <span data-count="105">A</span>st.CFunc fnc -&gt;
-       let* _ = check_fnc_t<span data-count="105">p</span> fnc res_tp args in
-       <span data-count="105">l</span>et* res = launch_functio<span data-count="105">n</span> fnc args in
-       <span data-count="105">w</span>rite_var var res
+  <span data-count="135">l</span>et* cfnc = get_const_from_valu<span data-count="135">e</span> fnc_val in
+  <span data-count="135">l</span>et* args = map_lis<span data-count="135">t</span> get_const_from_value params in
+  <span data-count="135">m</span>atch cfnc with
+  | <span data-count="135">A</span>st.CPointer (Ast.PointerGlob x) -&gt;
+    let* cns = read_va<span data-count="135">r</span> x in
+    <span data-count="135">(</span>match cns with
+     | <span data-count="135">A</span>st.CFunc fnc -&gt;
+       let* _ = check_fnc_t<span data-count="135">p</span> fnc res_tp args in
+       <span data-count="135">l</span>et* res = launch_functio<span data-count="135">n</span> fnc args in
+       <span data-count="135">w</span>rite_var var res
      | <span data-count="0">c</span> -&gt; fail (Printf.sprint<span data-count="0">f</span> "Expect function got %s" (Ast.show_cons<span data-count="0">t</span> c)))
   | <span data-count="0">c</span> -&gt; fail (Printf.sprint<span data-count="0">f</span> "Expect pointer to function got %s" (Ast.show_cons<span data-count="0">t</span> c))
 
 and launch_other_operation : Ast.other_operation -&gt; (state, instr_launch_res) t =
   fun instr -&gt;
-  <span data-count="797">(</span>match instr with
-   | <span data-count="641">A</span>st.Icmp (var, com_mode, tp, v1, v2) -&gt; Other.iicm<span data-count="641">p</span> var com_mode tp v1 v2
+  <span data-count="1140">(</span>match instr with
+   | <span data-count="910">A</span>st.Icmp (var, com_mode, tp, v1, v2) -&gt; Other.iicm<span data-count="910">p</span> var com_mode tp v1 v2
    | <span data-count="2">A</span>st.Fcmp (var, com_mode, tp, v1, v2) -&gt; Other.ifcm<span data-count="2">p</span> var com_mode tp v1 v2
-   | <span data-count="47">A</span>st.Phi (var, tp, lst) -&gt; Other.iph<span data-count="47">i</span> var tp lst
+   | <span data-count="91">A</span>st.Phi (var, tp, lst) -&gt; Other.iph<span data-count="91">i</span> var tp lst
    | <span data-count="2">A</span>st.Select (var, cond_tp, cond, res_tp, v1, v2) -&gt;
      Other.iselec<span data-count="2">t</span> var cond_tp cond res_tp v1 v2
-   | <span data-count="105">A</span>st.Call (var, res_tp, fnc, params) -&gt; ical<span data-count="105">l</span> var res_tp fnc params)
-  *&gt; retur<span data-count="797">n</span> NoRes
+   | <span data-count="135">A</span>st.Call (var, res_tp, fnc, params) -&gt; ical<span data-count="135">l</span> var res_tp fnc params)
+  *&gt; retur<span data-count="1140">n</span> NoRes
 
 and launch_instruction : Ast.instruction -&gt; (state, instr_launch_res) t = function
-  | <span data-count="1209">A</span>st.Terminator inst -&gt; Terminator.launch_terminator_instruction inst
+  | <span data-count="1705">A</span>st.Terminator inst -&gt; Terminator.launch_terminator_instruction inst
   | <span data-count="4">A</span>st.Unary inst -&gt; Unary.launch_unary_operation inst
-  | <span data-count="577">A</span>st.Binary inst -&gt; Binary.launch_binary_operation inst
+  | <span data-count="872">A</span>st.Binary inst -&gt; Binary.launch_binary_operation inst
   | <span data-count="1">A</span>st.BitwiseBinary inst -&gt; Bitwise.launch_bitwise_operation inst
-  | <span data-count="3">A</span>st.Vector inst -&gt; Vector.launch_vector_instruction inst
+  | <span data-count="24">A</span>st.Vector inst -&gt; Vector.launch_vector_instruction inst
   | <span data-count="3">A</span>st.Aggregate inst -&gt; Aggregate.launch_aggregate_instruction inst
-  | <span data-count="3675">A</span>st.MemoryAddress inst -&gt; MemoryAddress.launch_memory_address_operation inst
-  | <span data-count="890">A</span>st.Conversion inst -&gt; Conversion.launch_conversion_instruction inst
-  | <span data-count="797">A</span>st.Other inst -&gt; launch_other_operation inst
+  | <span data-count="5201">A</span>st.MemoryAddress inst -&gt; MemoryAddress.launch_memory_address_operation inst
+  | <span data-count="1238">A</span>st.Conversion inst -&gt; Conversion.launch_conversion_instruction inst
+  | <span data-count="1140">A</span>st.Other inst -&gt; launch_other_operation inst
 
 and launch_block : Ast.variable -&gt; (state, Ast.const) t =
   fun bb_var -&gt;
   (* let _ = Printf.printf "%s\n" (Ast.show_variable bb_var) in *)
-  <span data-count="1216">l</span>et* bb = read_va<span data-count="1216">r</span> bb_var &gt;&gt;<span data-count="1216">=</span> is_block in
-  <span data-count="1216">l</span>et* instr_res = map_lis<span data-count="1216">t</span> launch_instruction bb in
-  <span data-count="1209">l</span>et last_instr = List.nth instr_res (List.lengt<span data-count="1209">h</span> instr_res - 1) in
-  <span data-count="1209">m</span>atch last_instr with
-  | <span data-count="1069">J</span>mp x -&gt; write_last_bloc<span data-count="1069">k</span> bb_var *&gt; launch_bloc<span data-count="1069">k</span> x
-  | <span data-count="140">R</span>et x -&gt; return x
+  <span data-count="1712">l</span>et* bb = read_va<span data-count="1712">r</span> bb_var &gt;&gt;<span data-count="1712">=</span> is_block in
+  <span data-count="1712">l</span>et* instr_res = map_lis<span data-count="1712">t</span> launch_instruction bb in
+  <span data-count="1705">l</span>et last_instr = List.nth instr_res (List.lengt<span data-count="1705">h</span> instr_res - 1) in
+  <span data-count="1705">m</span>atch last_instr with
+  | <span data-count="1533">J</span>mp x -&gt; write_last_bloc<span data-count="1533">k</span> bb_var *&gt; launch_bloc<span data-count="1533">k</span> x
+  | <span data-count="172">R</span>et x -&gt; return x
   | <span data-count="0">N</span>oRes -&gt; fail "Impossible error: last instruction in block should have some result\n"
 
 and launch_function : Ast.func -&gt; Ast.const list -&gt; (state, Ast.const) t =
   fun fnc params_val -&gt;
-  <span data-count="147">l</span>et* old_loc, old_glb, old_heap, old_stack, old_block = read in
-  <span data-count="147">w</span>rit<span data-count="147">e</span> (MapString.empty, old_glb, old_heap, old_stack, last_block_init)
+  <span data-count="179">l</span>et* old_loc, old_glb, old_heap, old_stack, old_block = read in
+  <span data-count="179">w</span>rit<span data-count="179">e</span> (MapString.empty, old_glb, old_heap, old_stack, last_block_init)
   *&gt;
-  let init_var (param, cnst) = <span data-count="982">w</span>rite_var param cnst in
+  let init_var (param, cnst) = <span data-count="1385">w</span>rite_var param cnst in
   let params_cnst = List.combine fnc.parameters params_val in
-  <span data-count="147">m</span>ap_lis<span data-count="147">t</span> init_var params_cnst
-  *<span data-count="147">&gt;</span> map_lis<span data-count="147">t</span> init_var fnc.basic_blocks
-  *<span data-count="147">&gt;</span>
+  <span data-count="179">m</span>ap_lis<span data-count="179">t</span> init_var params_cnst
+  *<span data-count="179">&gt;</span> map_lis<span data-count="179">t</span> init_var fnc.basic_blocks
+  *<span data-count="179">&gt;</span>
   let fb, _ = List.hd fnc.basic_blocks in
-  <span data-count="147">l</span>et* res = launch_bloc<span data-count="147">k</span> fb in
-  <span data-count="140">l</span>et* bf = is_fnc_t<span data-count="140">p</span> fnc.ftp in
-  <span data-count="140">l</span>et f_ret, _ = bf in
+  <span data-count="179">l</span>et* res = launch_bloc<span data-count="179">k</span> fb in
+  <span data-count="172">l</span>et* bf = is_fnc_t<span data-count="172">p</span> fnc.ftp in
+  <span data-count="172">l</span>et f_ret, _ = bf in
   let res_tp = Ast.const_to_tp res in
-  <span data-count="140">(</span>if Ast.tp_equal res_tp f_ret
-   then <span data-count="140">r</span>etur<span data-count="140">n</span> res
+  <span data-count="172">(</span>if Ast.tp_equal res_tp f_ret
+   then <span data-count="172">r</span>etur<span data-count="172">n</span> res
    else
      <span data-count="0">f</span>ai<span data-count="0">l</span>
        (Printf.sprint<span data-count="0">f</span>
           "Function try return %s when excpected %s"
           (Ast.show_t<span data-count="0">p</span> res_tp)
           (Ast.show_t<span data-count="0">p</span> f_ret)))
-  &lt;<span data-count="140">*</span> Memory.free_stac<span data-count="140">k</span> old_stack
+  &lt;<span data-count="172">*</span> Memory.free_stac<span data-count="172">k</span> old_stack
   &lt;* let* _, glb, heap, stack, _ = read in
-     <span data-count="140">w</span>rite (old_loc, glb, heap, stack, old_block)
+     <span data-count="172">w</span>rite (old_loc, glb, heap, stack, old_block)
 ;;
 
 let init_sys_args int_sz =
-  <span data-count="8">l</span>et argc = Common.IrInts.create (Int64.of_in<span data-count="8">t</span> (Array.lengt<span data-count="8">h</span> Sys.argv)) int_sz in
-  <span data-count="8">l</span>et lst_of_bytes =
+  <span data-count="10">l</span>et argc = Common.IrInts.create (Int64.of_in<span data-count="10">t</span> (Array.lengt<span data-count="10">h</span> Sys.argv)) int_sz in
+  <span data-count="10">l</span>et lst_of_bytes =
     Array.to_list
-      (Array.ma<span data-count="8">p</span> (fun s -&gt; <span data-count="35">L</span>ist.init (String.lengt<span data-count="35">h</span> s) (String.ge<span data-count="35">t</span> s)) Sys.argv)
+      (Array.ma<span data-count="10">p</span> (fun s -&gt; <span data-count="52">L</span>ist.init (String.lengt<span data-count="52">h</span> s) (String.ge<span data-count="52">t</span> s)) Sys.argv)
   in
-  <span data-count="8">l</span>et f bytes =
-    <span data-count="35">l</span>et bytes = List.append bytes [ Char.ch<span data-count="35">r</span> 0 ] in
-    <span data-count="35">l</span>et len = List.length bytes in
-    <span data-count="35">l</span>et* addr = Memory.alloc_stack_alig<span data-count="35">n</span> len 1 in
-    <span data-count="35">M</span>emory.put_bytes_in_hea<span data-count="35">p</span> addr bytes *&gt; retur<span data-count="35">n</span> addr
+  <span data-count="10">l</span>et f bytes =
+    <span data-count="52">l</span>et bytes = List.append bytes [ Char.ch<span data-count="52">r</span> 0 ] in
+    <span data-count="52">l</span>et len = List.length bytes in
+    <span data-count="52">l</span>et* addr = Memory.alloc_stack_alig<span data-count="52">n</span> len 1 in
+    <span data-count="52">M</span>emory.put_bytes_in_hea<span data-count="52">p</span> addr bytes *&gt; retur<span data-count="52">n</span> addr
   in
-  let* rev_addr_lst = map_lis<span data-count="8">t</span> f lst_of_bytes &gt;&gt;<span data-count="8">|</span> List.rev in
-  <span data-count="8">l</span>et f addr =
-    <span data-count="35">l</span>et* ptr_addr =
-      Memory.alloc_stack_alig<span data-count="35">n</span> (Serialisation.raw_date_le<span data-count="35">n</span> Ast.TPointer) 1
+  let* rev_addr_lst = map_lis<span data-count="10">t</span> f lst_of_bytes &gt;&gt;<span data-count="10">|</span> List.rev in
+  <span data-count="10">l</span>et f addr =
+    <span data-count="52">l</span>et* ptr_addr =
+      Memory.alloc_stack_alig<span data-count="52">n</span> (Serialisation.raw_date_le<span data-count="52">n</span> Ast.TPointer) 1
     in
-    <span data-count="35">M</span>emory.put_cnst_in_hea<span data-count="35">p</span> ptr_addr (to_pt<span data-count="35">r</span> addr) *&gt; retur<span data-count="35">n</span> ptr_addr
+    <span data-count="52">M</span>emory.put_cnst_in_hea<span data-count="52">p</span> ptr_addr (to_pt<span data-count="52">r</span> addr) *&gt; retur<span data-count="52">n</span> ptr_addr
   in
-  let* ptrs_addr = map_lis<span data-count="8">t</span> f rev_addr_lst in
-  <span data-count="8">l</span>et fin_addr = List.nth ptrs_addr (List.lengt<span data-count="8">h</span> ptrs_addr - 1) in
-  <span data-count="8">l</span>et argv = to_ptr fin_addr in
-  <span data-count="8">r</span>eturn [ argc; argv ]
+  let* ptrs_addr = map_lis<span data-count="10">t</span> f rev_addr_lst in
+  <span data-count="10">l</span>et fin_addr = List.nth ptrs_addr (List.lengt<span data-count="10">h</span> ptrs_addr - 1) in
+  <span data-count="10">l</span>et argv = to_ptr fin_addr in
+  <span data-count="10">r</span>eturn [ argc; argv ]
 ;;
 
 let launch_main =
-  let* main = read_va<span data-count="13">r</span> (Ast.GlobalVar "main") in
-  <span data-count="42">m</span>atch main with
+  let* main = read_va<span data-count="15">r</span> (Ast.GlobalVar "main") in
+  <span data-count="44">m</span>atch main with
   (* TODO: add check for main arguments*)
-  | <span data-count="42">A</span>st.CFunc x -&gt;
-    let* bf = is_fnc_t<span data-count="42">p</span> x.ftp in
-    <span data-count="42">l</span>et _, param = bf in
+  | <span data-count="44">A</span>st.CFunc x -&gt;
+    let* bf = is_fnc_t<span data-count="44">p</span> x.ftp in
+    <span data-count="44">l</span>et _, param = bf in
     (match param with
      | <span data-count="34">[</span>] -&gt; launch_function x []
-     | <span data-count="8">[</span> Ast.TInteger sz; Ast.TPointer ] -&gt; init_sys_arg<span data-count="8">s</span> sz &gt;&gt;= launch_functio<span data-count="8">n</span> x
+     | <span data-count="10">[</span> Ast.TInteger sz; Ast.TPointer ] -&gt; init_sys_arg<span data-count="10">s</span> sz &gt;&gt;= launch_functio<span data-count="10">n</span> x
      | <span data-count="0">_</span> -&gt; fail "Can not run main with unknown signature")
   | <span data-count="0">_</span> -&gt; fail "Error: main is not function\n"
 ;;
 
 let interpretate_ast : Ast.glob_list -&gt; (state, Ast.const) t =
-  fun glb_lst -&gt; <span data-count="42">i</span>nit_stat<span data-count="42">e</span> glb_lst *&gt; launch_main
+  fun glb_lst -&gt; <span data-count="44">i</span>nit_stat<span data-count="44">e</span> glb_lst *&gt; launch_main
 ;;
 
-let run_interpretate_on_ast ast = <span data-count="42">r</span>un (interpretate_as<span data-count="42">t</span> ast) empty_state
+let run_interpretate_on_ast ast = <span data-count="44">r</span>un (interpretate_as<span data-count="44">t</span> ast) empty_state
 
 let interp_test str =
   <span data-count="33">m</span>atch Parser.Parsing.parse_program str with
@@ -1594,7 +1594,7 @@ define &lt;3 x float&gt; @main(){
 }
       |};
   <span data-count="1">[</span>%expect {|
-    (CVector [(CFloat -1.2); (CFloat 3.4); (CFloat -5.6)]) |}<span data-count="27">]</span>
+    (CVector [(CFloat -1.2); (CFloat 3.4); (CFloat -5.6)]) |}<span data-count="31">]</span>
 ;;
 
 let%expect_test _ =
@@ -1608,7 +1608,7 @@ define &lt;3 x float&gt; @main(){
 }
       |};
   <span data-count="1">[</span>%expect {|
-    (CVector [(CFloat 8.8); (CFloat 11.4); (CFloat 1.4)]) |}<span data-count="27">]</span>
+    (CVector [(CFloat 8.8); (CFloat 11.4); (CFloat 1.4)]) |}<span data-count="31">]</span>
 ;;
 
 let%expect_test _ =
@@ -1621,7 +1621,7 @@ define i4 @main(){
   ret i4 %c
 }
       |};
-  <span data-count="1">[</span>%expect {| (CInteger (4, 12L)) |}<span data-count="27">]</span>
+  <span data-count="1">[</span>%expect {| (CInteger (4, 12L)) |}<span data-count="31">]</span>
 ;;
 
 let%expect_test _ =
@@ -1634,7 +1634,7 @@ define i4 @main(){
   ret i4 %c
 }
       |};
-  <span data-count="1">[</span>%expect {| (CInteger (4, 15L)) |}<span data-count="27">]</span>
+  <span data-count="1">[</span>%expect {| (CInteger (4, 15L)) |}<span data-count="31">]</span>
 ;;
 
 let%expect_test _ =
@@ -1647,7 +1647,7 @@ define i4 @main(){
   ret i4 %c
 }
       |};
-  <span data-count="1">[</span>%expect {| Error: Runtime error: Division by 0! |}<span data-count="27">]</span>
+  <span data-count="1">[</span>%expect {| Error: Runtime error: Division by 0! |}<span data-count="31">]</span>
 ;;
 
 let%expect_test _ =
@@ -1660,7 +1660,7 @@ define float @main(){
   ret float %c
 }
       |};
-  <span data-count="1">[</span>%expect {| (CFloat infinity) |}<span data-count="27">]</span>
+  <span data-count="1">[</span>%expect {| (CFloat infinity) |}<span data-count="31">]</span>
 ;;
 
 let%expect_test _ =
@@ -1675,7 +1675,7 @@ define &lt;4 x i1&gt; @main(){
     {|
       (CVector
          [(CInteger (1, 0L)); (CInteger (1, 1L)); (CInteger (1, 1L));
-           (CInteger (1, 0L))]) |}<span data-count="27">]</span>
+           (CInteger (1, 0L))]) |}<span data-count="31">]</span>
 ;;
 
 let%expect_test _ =
@@ -1687,7 +1687,7 @@ define float @main(){
 }
       |};
   <span data-count="1">[</span>%expect {|
-      (CFloat -3.4) |}<span data-count="27">]</span>
+      (CFloat -3.4) |}<span data-count="31">]</span>
 ;;
 
 let%expect_test _ =
@@ -1699,7 +1699,7 @@ define &lt;3 x float&gt; @main(){
 }
       |};
   <span data-count="1">[</span>%expect {|
-      (CVector [(CFloat 1.2); (CFloat 82.); (CFloat 5.6)]) |}<span data-count="27">]</span>
+      (CVector [(CFloat 1.2); (CFloat 82.); (CFloat 5.6)]) |}<span data-count="31">]</span>
 ;;
 
 let%expect_test _ =
@@ -1714,7 +1714,7 @@ define &lt;2 x float&gt; @main(){
 }
       |};
   <span data-count="1">[</span>%expect {|
-      (CVector [(CFloat -3.4); (CFloat 7.)]) |}<span data-count="27">]</span>
+      (CVector [(CFloat -3.4); (CFloat 7.)]) |}<span data-count="31">]</span>
 ;;
 
 let%expect_test _ =
@@ -1726,7 +1726,7 @@ define i32 @main(){
 }
       |};
   <span data-count="1">[</span>%expect {|
-      (CInteger (32, 32L)) |}<span data-count="27">]</span>
+      (CInteger (32, 32L)) |}<span data-count="31">]</span>
 ;;
 
 let%expect_test _ =
@@ -1741,7 +1741,7 @@ define {[3 x i32], float} @main(){
     {|
       (CStruct
          [(CArr [(CInteger (32, 21L)); (CInteger (32, 4L)); (CInteger (32, 43L))]);
-           (CFloat 50.)]) |}<span data-count="27">]</span>
+           (CFloat 50.)]) |}<span data-count="31">]</span>
 ;;
 
 let%expect_test _ =
@@ -1754,7 +1754,7 @@ define {[3 x i32], float} @main(){
       |};
   <span data-count="1">[</span>%expect
     {|
-      Error: Want to insert value with type (TInteger 32) instead of value with type TFloat! |}<span data-count="27">]</span>
+      Error: Want to insert value with type (TInteger 32) instead of value with type TFloat! |}<span data-count="31">]</span>
 ;;
 
 let%expect_test _ =
@@ -1771,7 +1771,7 @@ define {[3 x i32], float} @main(){
     {|
       (CStruct
          [(CArr [(CInteger (32, 21L)); (CInteger (32, 32L)); (CInteger (32, 43L))]);
-           (CFloat 50.)]) |}<span data-count="27">]</span>
+           (CFloat 50.)]) |}<span data-count="31">]</span>
 ;;
 
 let%expect_test _ =
@@ -1785,7 +1785,7 @@ define i32 @main(){
 }
       |};
   <span data-count="1">[</span>%expect {|
-      (CInteger (32, 312312L)) |}<span data-count="27">]</span>
+      (CInteger (32, 312312L)) |}<span data-count="31">]</span>
 ;;
 
 let%expect_test _ =
@@ -1799,7 +1799,7 @@ define ptr @main(){
 }
       |};
   <span data-count="1">[</span>%expect {|
-      Error: Runtime error: invalid getelementptr indices! |}<span data-count="27">]</span>
+      Error: Runtime error: invalid getelementptr indices! |}<span data-count="31">]</span>
 ;;
 
 let%expect_test _ =
@@ -1813,7 +1813,7 @@ define ptr @main(){
 }
       |};
   <span data-count="1">[</span>%expect {|
-      (CPointer (PointerInt 2032)) |}<span data-count="27">]</span>
+      (CPointer (PointerInt 2032)) |}<span data-count="31">]</span>
 ;;
 
 let%expect_test _ =
@@ -1829,7 +1829,7 @@ define &lt; 2 x ptr&gt; @main(){
       |};
   <span data-count="1">[</span>%expect
     {|
-      (CVector [(CPointer (PointerInt 2040)); (CPointer (PointerInt 2040))]) |}<span data-count="27">]</span>
+      (CVector [(CPointer (PointerInt 2040)); (CPointer (PointerInt 2040))]) |}<span data-count="31">]</span>
 ;;
 
 let%expect_test _ =
@@ -1845,7 +1845,7 @@ define &lt; 2 x ptr&gt; @main(){
       |};
   <span data-count="1">[</span>%expect
     {|
-      (CVector [(CPointer (PointerInt 2056)); (CPointer (PointerInt 2040))]) |}<span data-count="27">]</span>
+      (CVector [(CPointer (PointerInt 2056)); (CPointer (PointerInt 2040))]) |}<span data-count="31">]</span>
 ;;
 
 let%expect_test _ =
@@ -1860,7 +1860,7 @@ define &lt; 2 x ptr&gt; @main(){
 }
       |};
   <span data-count="1">[</span>%expect {|
-      Error: Vectors have different size in getlementptr! |}<span data-count="27">]</span>
+      Error: Vectors have different size in getlementptr! |}<span data-count="31">]</span>
 ;;
 
 let%expect_test _ =
@@ -1877,7 +1877,7 @@ define ptr @main(){
 }
       |};
   <span data-count="1">[</span>%expect {|
-      (CPointer (PointerInt 2000)) |}<span data-count="27">]</span>
+      (CPointer (PointerInt 2000)) |}<span data-count="31">]</span>
 ;;
 
 let%expect_test _ =
@@ -1895,7 +1895,7 @@ define  &lt;3 x i32&gt;  @main(){
   <span data-count="1">[</span>%expect
     {|
       (CVector
-         [(CInteger (32, 2000L)); (CInteger (32, 2004L)); (CInteger (32, 2008L))]) |}<span data-count="27">]</span>
+         [(CInteger (32, 2000L)); (CInteger (32, 2004L)); (CInteger (32, 2008L))]) |}<span data-count="31">]</span>
 ;;
 
 let%expect_test _ =
@@ -1911,7 +1911,7 @@ define  &lt;3 x i32&gt;  @main(){
 }
       |};
   <span data-count="1">[</span>%expect {|
-      Error: Source vector and destination have different size! |}<span data-count="27">]</span>
+      Error: Source vector and destination have different size! |}<span data-count="31">]</span>
 ;;
 
 let%expect_test _ =
@@ -1923,7 +1923,7 @@ define  float  @main(){
 }
       |};
   <span data-count="1">[</span>%expect {|
-      (CFloat -23.) |}<span data-count="27">]</span>
+      (CFloat -23.) |}<span data-count="31">]</span>
 ;;
 
 let%expect_test _ =
@@ -1936,7 +1936,7 @@ define  &lt;3 x i1&gt;  @main(){
       |};
   <span data-count="1">[</span>%expect
     {|
-      (CVector [(CInteger (1, 0L)); (CInteger (1, 1L)); (CInteger (1, 0L))]) |}<span data-count="27">]</span>
+      (CVector [(CInteger (1, 0L)); (CInteger (1, 1L)); (CInteger (1, 0L))]) |}<span data-count="31">]</span>
 ;;
 
 let%expect_test _ =
@@ -1947,7 +1947,7 @@ define  i1  @main(){
 }
       |};
   <span data-count="1">[</span>%expect {|
-      Error: get unknown icmp predicate! |}<span data-count="27">]</span>
+      Error: get unknown icmp predicate! |}<span data-count="31">]</span>
 ;;
 
 let%expect_test _ =
@@ -1958,7 +1958,7 @@ define  i1  @main(){
 }
       |};
   <span data-count="1">[</span>%expect {|
-      (CInteger (1, 1L)) |}<span data-count="27">]</span>
+      (CInteger (1, 1L)) |}<span data-count="31">]</span>
 ;;
 
 let%expect_test _ =
@@ -1974,7 +1974,7 @@ three:
   ret i32 %e
 }      |};
   <span data-count="1">[</span>%expect {|
-      (CInteger (32, 1L)) |}<span data-count="27">]</span>
+      (CInteger (32, 1L)) |}<span data-count="31">]</span>
 ;;
 
 let%expect_test _ =
@@ -1990,7 +1990,7 @@ three:
   ret i32 %e
 }      |};
   <span data-count="1">[</span>%expect {|
-      (CInteger (32, 0L)) |}<span data-count="27">]</span>
+      (CInteger (32, 0L)) |}<span data-count="31">]</span>
 ;;
 
 let%expect_test _ =
@@ -2006,7 +2006,7 @@ three:
   ret i32 %e
 }      |};
   <span data-count="1">[</span>%expect {|
-      Error: LLVM do crash-crash (clang-17.0.3 )! |}<span data-count="27">]</span>
+      Error: LLVM do crash-crash (clang-17.0.3 )! |}<span data-count="31">]</span>
 ;;
 
 let%expect_test _ =
@@ -2017,7 +2017,7 @@ define i32 @main(){
   ret i32 %e
 }      |};
   <span data-count="1">[</span>%expect {|
-      (CInteger (32, 42L)) |}<span data-count="27">]</span>
+      (CInteger (32, 42L)) |}<span data-count="31">]</span>
 ;;
 
 let%expect_test _ =
@@ -2028,7 +2028,7 @@ define &lt;2 x i32&gt; @main(){
   ret &lt;2 x i32&gt; %e
 }      |};
   <span data-count="1">[</span>%expect {|
-      (CVector [(CInteger (32, 11L)); (CInteger (32, 22L))]) |}<span data-count="27">]</span>
+      (CVector [(CInteger (32, 11L)); (CInteger (32, 22L))]) |}<span data-count="31">]</span>
 ;;
 
 let%expect_test _ =
@@ -2048,7 +2048,7 @@ c14:
 
 }      |};
   <span data-count="1">[</span>%expect {|
-      (CInteger (32, 1L)) |}<span data-count="27">]</span>
+      (CInteger (32, 1L)) |}<span data-count="31">]</span>
 ;;
 </code></pre>
       </div>

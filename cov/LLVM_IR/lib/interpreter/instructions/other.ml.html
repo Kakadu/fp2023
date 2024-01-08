@@ -333,44 +333,44 @@ open CommonInterpInstructions
 let real_frem _tp x y = <span data-count="0">A</span>st.CFloat (Float.re<span data-count="0">m</span> x y)
 
 let parse_icmp_mode str =
-  <span data-count="641">l</span>et open Common.IrInts in
+  <span data-count="910">l</span>et open Common.IrInts in
   match str with
-  | <span data-count="360">"</span>ne" -&gt; return (uget, [ -1; 1 ])
-  | <span data-count="56">"</span>eq" -&gt; return (uget, [ 0 ])
+  | <span data-count="489">"</span>ne" -&gt; return (uget, [ -1; 1 ])
+  | <span data-count="85">"</span>eq" -&gt; return (uget, [ 0 ])
   | <span data-count="0">"</span>ugt" -&gt; return (uget, [ 1 ])
   | <span data-count="0">"</span>uge" -&gt; return (uget, [ 0; 1 ])
   | <span data-count="0">"</span>ult" -&gt; return (uget, [ -1 ])
   | <span data-count="1">"</span>ule" -&gt; return (uget, [ -1; 0 ])
-  | <span data-count="68">"</span>sgt" -&gt; return (sget, [ 1 ])
+  | <span data-count="95">"</span>sgt" -&gt; return (sget, [ 1 ])
   | <span data-count="0">"</span>sge" -&gt; return (sget, [ 0; 1 ])
-  | <span data-count="155">"</span>slt" -&gt; return (sget, [ -1 ])
+  | <span data-count="239">"</span>slt" -&gt; return (sget, [ -1 ])
   | <span data-count="0">"</span>sle" -&gt; return (sget, [ -1; 0 ])
   | <span data-count="1">_</span> -&gt; fail "get unknown icmp predicate"
 ;;
 
 let real_icmp trans right_vals x y =
-  <span data-count="642">l</span>et x = trans x in
-  <span data-count="642">l</span>et y = trans y in
-  <span data-count="642">l</span>et res = Int64.compare x y in
-  <span data-count="642">m</span>atch List.find_opt (fun x -&gt; <span data-count="985">x</span> = res) right_vals with
-  | <span data-count="348">S</span>ome _ -&gt; Common.IrInts.create 1L 1
-  | <span data-count="294">N</span>one -&gt; Common.IrInts.create 0L 1
+  <span data-count="911">l</span>et x = trans x in
+  <span data-count="911">l</span>et y = trans y in
+  <span data-count="911">l</span>et res = Int64.compare x y in
+  <span data-count="911">m</span>atch List.find_opt (fun x -&gt; <span data-count="1368">x</span> = res) right_vals with
+  | <span data-count="469">S</span>ome _ -&gt; Common.IrInts.create 1L 1
+  | <span data-count="442">N</span>one -&gt; Common.IrInts.create 0L 1
 ;;
 
 let iicmp var com_mode tp v1 v2 =
-  <span data-count="641">l</span>et* buf = parse_icmp_mod<span data-count="641">e</span> com_mode in
-  <span data-count="640">l</span>et trans, right_vals = buf in
+  <span data-count="910">l</span>et* buf = parse_icmp_mod<span data-count="910">e</span> com_mode in
+  <span data-count="909">l</span>et trans, right_vals = buf in
   let* cnst =
     match tp with
     | <span data-count="1">A</span>st.TVector (_, Ast.TInteger sz) -&gt;
       vectorize<span data-count="1">2</span> (real_icm<span data-count="1">p</span> (fun x -&gt; <span data-count="6">t</span>rans x sz) right_vals) is_int v1 v2
-    | <span data-count="639">A</span>st.TInteger sz -&gt;
-      let* v1 = get_const_from_valu<span data-count="639">e</span> v1 &gt;&gt;<span data-count="639">=</span> is_int in
-      <span data-count="639">l</span>et* v2 = get_const_from_valu<span data-count="639">e</span> v2 &gt;&gt;<span data-count="639">=</span> is_int in
-      <span data-count="639">r</span>eturn (real_icm<span data-count="639">p</span> (fun x -&gt; <span data-count="1278">t</span>rans x sz) right_vals v1 v2)
+    | <span data-count="908">A</span>st.TInteger sz -&gt;
+      let* v1 = get_const_from_valu<span data-count="908">e</span> v1 &gt;&gt;<span data-count="908">=</span> is_int in
+      <span data-count="908">l</span>et* v2 = get_const_from_valu<span data-count="908">e</span> v2 &gt;&gt;<span data-count="908">=</span> is_int in
+      <span data-count="908">r</span>eturn (real_icm<span data-count="908">p</span> (fun x -&gt; <span data-count="1816">t</span>rans x sz) right_vals v1 v2)
     | <span data-count="0">t</span>p -&gt; fai<span data-count="0">l</span> (Printf.sprint<span data-count="0">f</span> "icmp compare ints, not %s" (Ast.show_t<span data-count="0">p</span> tp))
   in
-  <span data-count="640">w</span>rite_var var cnst
+  <span data-count="909">w</span>rite_var var cnst
 ;;
 
 let parse_fcmp_mode str =
@@ -423,15 +423,15 @@ let ifcmp var com_mode tp v1 v2 =
 ;;
 
 let iphi var _tp lst =
-  <span data-count="47">l</span>et f (v1, v2) =
-    <span data-count="93">l</span>et* v2 = get_bb_var_from_labe<span data-count="93">l</span> v2 in
-    <span data-count="93">r</span>eturn (v1, v2)
+  <span data-count="91">l</span>et f (v1, v2) =
+    <span data-count="181">l</span>et* v2 = get_bb_var_from_labe<span data-count="181">l</span> v2 in
+    <span data-count="181">r</span>eturn (v1, v2)
   in
-  let* lst = map_lis<span data-count="47">t</span> f lst in
-  <span data-count="47">l</span>et* last_block = read_last_block in
-  <span data-count="47">l</span>et res = List.find_opt (fun (_, label) -&gt; <span data-count="79">A</span>st.variable_equal label last_block) lst in
-  <span data-count="47">m</span>atch res with
-  | <span data-count="46">S</span>ome (v, _) -&gt; get_const_from_valu<span data-count="46">e</span> v &gt;&gt;= write_va<span data-count="46">r</span> var
+  let* lst = map_lis<span data-count="91">t</span> f lst in
+  <span data-count="91">l</span>et* last_block = read_last_block in
+  <span data-count="91">l</span>et res = List.find_opt (fun (_, label) -&gt; <span data-count="160">A</span>st.variable_equal label last_block) lst in
+  <span data-count="91">m</span>atch res with
+  | <span data-count="90">S</span>ome (v, _) -&gt; get_const_from_valu<span data-count="90">e</span> v &gt;&gt;= write_va<span data-count="90">r</span> var
   | <span data-count="1">N</span>one -&gt; fail "LLVM do crash-crash (clang-17.0.3 )"
 ;;
 

@@ -419,24 +419,24 @@
 open State
 
 let div_up x y =
-  <span data-count="2992">l</span>et res = x / y in
-  if y * res &lt;&gt; x then <span data-count="111">r</span>es + 1 else <span data-count="2881">r</span>es
+  <span data-count="4246">l</span>et res = x / y in
+  if y * res &lt;&gt; x then <span data-count="175">r</span>es + 1 else <span data-count="4071">r</span>es
 ;;
 
 let get_n_byte x n =
-  <span data-count="3955">C</span>har.chr
-    (Int64.to_in<span data-count="3955">t</span>
-       (Int64.shift_right_logica<span data-count="3955">l</span>
-          (Int64.logan<span data-count="3955">d</span> x (Int64.shift_lef<span data-count="3955">t</span> 0xffL (8 * n)))
+  <span data-count="5523">C</span>har.chr
+    (Int64.to_in<span data-count="5523">t</span>
+       (Int64.shift_right_logica<span data-count="5523">l</span>
+          (Int64.logan<span data-count="5523">d</span> x (Int64.shift_lef<span data-count="5523">t</span> 0xffL (8 * n)))
           (8 * n)))
 ;;
 
 let rec raw_date_len : Ast.tp -&gt; int = function
   | <span data-count="0">A</span>st.TVoid -&gt; 0
   | <span data-count="312">A</span>st.TFloat -&gt; 8
-  | <span data-count="2214">A</span>st.TInteger x -&gt; div_up x 8
-  | <span data-count="676">A</span>st.TPointer -&gt; 8
-  | <span data-count="35">A</span>st.TArr (n, tp) | <span data-count="6">A</span>st.TVector (n, tp) -&gt; raw_date_le<span data-count="41">n</span> tp * n
+  | <span data-count="3140">A</span>st.TInteger x -&gt; div_up x 8
+  | <span data-count="982">A</span>st.TPointer -&gt; 8
+  | <span data-count="35">A</span>st.TArr (n, tp) | <span data-count="8">A</span>st.TVector (n, tp) -&gt; raw_date_le<span data-count="43">n</span> tp * n
   | <span data-count="86">A</span>st.TStruct tps -&gt; List.fold_left (fun acc tp -&gt; <span data-count="180">a</span>cc + raw_date_le<span data-count="180">n</span> tp) 0 tps
   | <span data-count="0">A</span>st.TLabel | <span data-count="0">A</span>st.TFunc (_, _) -&gt;
     let _ = Printf.printf "Imposible error: func and label can't be serealized" in
@@ -444,8 +444,8 @@ let rec raw_date_len : Ast.tp -&gt; int = function
 ;;
 
 let serialise_int sz value =
-  <span data-count="778">l</span>et len = div_up sz 8 in
-  <span data-count="778">L</span>ist.init len (get_n_byt<span data-count="778">e</span> value)
+  <span data-count="1106">l</span>et len = div_up sz 8 in
+  <span data-count="1106">L</span>ist.init len (get_n_byt<span data-count="1106">e</span> value)
 ;;
 
 let serialise_flt flt =
@@ -463,10 +463,10 @@ let rec serialise_aggregate_tp cnsts =
 
 and serialise_with_state : Ast.const -&gt; (state, char list) t = function
   | <span data-count="1">A</span>st.CVoid -&gt; return []
-  | <span data-count="566">A</span>st.CInteger (sz, value) -&gt; return (serialise_in<span data-count="566">t</span> sz value)
+  | <span data-count="830">A</span>st.CInteger (sz, value) -&gt; return (serialise_in<span data-count="830">t</span> sz value)
   | <span data-count="103">A</span>st.CFloat flt -&gt; return (serialise_fl<span data-count="103">t</span> flt)
-  | <span data-count="109">A</span>st.CPointer (Ast.PointerInt integer) -&gt;
-    return (serialise_in<span data-count="109">t</span> 63 (Int64.of_in<span data-count="109">t</span> integer))
+  | <span data-count="173">A</span>st.CPointer (Ast.PointerInt integer) -&gt;
+    return (serialise_in<span data-count="173">t</span> 63 (Int64.of_in<span data-count="173">t</span> integer))
   | <span data-count="7">A</span>st.CVector cnst | <span data-count="5">A</span>st.CArr cnst | <span data-count="4">A</span>st.CStruct cnst -&gt; serialise_aggregate_tp cnst
   | <span data-count="0">A</span>st.CLabel _ | <span data-count="0">A</span>st.CFunc _ -&gt;
     fail "Imposible error: func and label can't be serealized"
@@ -474,11 +474,11 @@ and serialise_with_state : Ast.const -&gt; (state, char list) t = function
 ;;
 
 let bytes_to_int lst =
-  <span data-count="2196">l</span>et f el acc = <span data-count="10060">I</span>nt64.add (Int64.mu<span data-count="10060">l</span> acc 0x100L) (Int64.of_in<span data-count="10060">t</span> (Char.cod<span data-count="10060">e</span> el)) in
+  <span data-count="3110">l</span>et f el acc = <span data-count="14136">I</span>nt64.add (Int64.mu<span data-count="14136">l</span> acc 0x100L) (Int64.of_in<span data-count="14136">t</span> (Char.cod<span data-count="14136">e</span> el)) in
   List.fold_right f lst 0L
 ;;
 
-let deserialise_int sz lst = <span data-count="1533">C</span>ommon.IrInts.create (bytes_to_in<span data-count="1533">t</span> lst) sz
+let deserialise_int sz lst = <span data-count="2207">C</span>ommon.IrInts.create (bytes_to_in<span data-count="2207">t</span> lst) sz
 
 let deserialise_flt lst =
   <span data-count="111">l</span>et iflt = bytes_to_int lst in
@@ -486,8 +486,8 @@ let deserialise_flt lst =
 ;;
 
 let deserialise_ptr lst =
-  <span data-count="552">l</span>et iflt = Int64.to_int (bytes_to_in<span data-count="552">t</span> lst) in
-  <span data-count="552">A</span>st.CPointer (Ast.PointerInt iflt)
+  <span data-count="792">l</span>et iflt = Int64.to_int (bytes_to_in<span data-count="792">t</span> lst) in
+  <span data-count="792">A</span>st.CPointer (Ast.PointerInt iflt)
 ;;
 
 let rec bytes_to_cnst_lst : char list -&gt; Ast.tp list -&gt; Ast.const list =
@@ -524,11 +524,11 @@ and deserialise_struct tps lst = <span data-count="2">A</span>st.CStruct (bytes_
 
 and deserialise : Ast.tp -&gt; char list -&gt; Ast.const =
   fun tp lst -&gt;
-  <span data-count="2210">m</span>atch tp with
+  <span data-count="3124">m</span>atch tp with
   | <span data-count="1">A</span>st.TVoid -&gt; Ast.CVoid
-  | <span data-count="1533">A</span>st.TInteger sz -&gt; deserialise_int sz lst
+  | <span data-count="2207">A</span>st.TInteger sz -&gt; deserialise_int sz lst
   | <span data-count="111">A</span>st.TFloat -&gt; deserialise_flt lst
-  | <span data-count="552">A</span>st.TPointer -&gt; deserialise_ptr lst
+  | <span data-count="792">A</span>st.TPointer -&gt; deserialise_ptr lst
   | <span data-count="7">A</span>st.TVector (n, tp) -&gt; deserialise_vec n tp lst
   | <span data-count="4">A</span>st.TArr (n, tp) -&gt; deserialise_arr n tp lst
   | <span data-count="2">A</span>st.TStruct tps -&gt; deserialise_struct tps lst

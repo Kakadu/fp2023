@@ -181,21 +181,21 @@ open Ihelp.State
 open CommonInterpInstructions
 
 let write_conversion_res operat is_elem s_tp_decon d_tp_decon s_tp s_val d_tp var =
-  <span data-count="890">l</span>et* res =
+  <span data-count="1238">l</span>et* res =
     match s_tp, d_tp with
     | <span data-count="2">A</span>st.TVector (n1, s_el_tp), Ast.TVector (n2, d_el_tp) -&gt;
       if n1 &lt;&gt; n2
       then <span data-count="1">f</span>ai<span data-count="1">l</span> "Source vector and destination have different size"
       else <span data-count="1">v</span>ectorize<span data-count="1">1</span> (opera<span data-count="1">t</span> (s_tp_deco<span data-count="1">n</span> s_el_tp) (d_tp_deco<span data-count="1">n</span> d_el_tp)) is_elem s_val
-    | <span data-count="888">_</span> -&gt;
-      let* v = get_const_from_valu<span data-count="888">e</span> s_val &gt;&gt;<span data-count="888">=</span> is_elem in
-      <span data-count="888">r</span>eturn ((opera<span data-count="1776">t</span> (s_tp_deco<span data-count="888">n</span> s_tp) (d_tp_deco<span data-count="888">n</span> d_tp)) v)
+    | <span data-count="1236">_</span> -&gt;
+      let* v = get_const_from_valu<span data-count="1236">e</span> s_val &gt;&gt;<span data-count="1236">=</span> is_elem in
+      <span data-count="1236">r</span>eturn ((opera<span data-count="2472">t</span> (s_tp_deco<span data-count="1236">n</span> s_tp) (d_tp_deco<span data-count="1236">n</span> d_tp)) v)
   in
-  <span data-count="889">w</span>rite_var var res
+  <span data-count="1237">w</span>rite_var var res
 ;;
 
 let int_d = function
-  | <span data-count="1742">A</span>st.TInteger sz -&gt; sz
+  | <span data-count="2438">A</span>st.TInteger sz -&gt; sz
   | <span data-count="0">_</span> -&gt;
     let _ = Printf.printf "Impossible error: get wrong type at conversion operation" in
     <span data-count="0">-</span>1
@@ -204,7 +204,7 @@ let int_d = function
 let empty_d _tp = <span data-count="36">(</span>)
 let real_trunc _ssz dsz x = <span data-count="0">C</span>ommon.IrInts.create x dsz
 let real_zext = real_trunc
-let real_sext ssz dsz x = <span data-count="853">C</span>ommon.IrInts.create (Common.IrInts.sge<span data-count="853">t</span> x ssz) dsz
+let real_sext ssz dsz x = <span data-count="1201">C</span>ommon.IrInts.create (Common.IrInts.sge<span data-count="1201">t</span> x ssz) dsz
 let real_fptoui _ dsz x = <span data-count="0">C</span>ommon.IrInts.create (Int64.of_floa<span data-count="0">t</span> x) dsz
 let real_fptosi = real_fptoui
 let real_uitofp _ _ x = <span data-count="0">A</span>st.CFloat (Int64.to_floa<span data-count="0">t</span> x)
@@ -216,13 +216,13 @@ let launch_conversion_instruction
   : Ast.conversion_instruction -&gt; (state, instr_launch_res) t
   =
   fun instr -&gt;
-  <span data-count="890">(</span>match instr with
+  <span data-count="1238">(</span>match instr with
    | <span data-count="0">A</span>st.TruncTo (var, s_tp, s_val, d_tp) -&gt;
      write_conversion_re<span data-count="0">s</span> real_trunc is_int int_d int_d s_tp s_val d_tp var
    | <span data-count="0">A</span>st.ZextTo (var, s_tp, s_val, d_tp) -&gt;
      write_conversion_re<span data-count="0">s</span> real_zext is_int int_d int_d s_tp s_val d_tp var
-   | <span data-count="853">A</span>st.SextTo (var, s_tp, s_val, d_tp) -&gt;
-     write_conversion_re<span data-count="853">s</span> real_sext is_int int_d int_d s_tp s_val d_tp var
+   | <span data-count="1201">A</span>st.SextTo (var, s_tp, s_val, d_tp) -&gt;
+     write_conversion_re<span data-count="1201">s</span> real_sext is_int int_d int_d s_tp s_val d_tp var
    | <span data-count="0">A</span>st.FptosiTo (var, s_tp, s_val, d_tp) -&gt;
      write_conversion_re<span data-count="0">s</span> real_fptosi is_float empty_d int_d s_tp s_val d_tp var
    | <span data-count="0">A</span>st.FptouiTo (var, s_tp, s_val, d_tp) -&gt;
@@ -235,7 +235,7 @@ let launch_conversion_instruction
      write_conversion_re<span data-count="2">s</span> real_ptrtoint is_ptr empty_d int_d s_tp s_val d_tp var
    | <span data-count="0">A</span>st.InttoprtTo (var, s_tp, s_val, d_tp) -&gt;
      write_conversion_re<span data-count="0">s</span> real_inttoptr is_int int_d empty_d s_tp s_val d_tp var)
-  *&gt; retur<span data-count="890">n</span> NoRes
+  *&gt; retur<span data-count="1238">n</span> NoRes
 ;;
 </code></pre>
       </div>

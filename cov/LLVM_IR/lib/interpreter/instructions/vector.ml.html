@@ -175,13 +175,13 @@ open CommonInterpInstructions
 let real_extract var vec_val ind = <span data-count="1">w</span>rite_var var (List.nt<span data-count="1">h</span> vec_val ind)
 
 let get_data vec_val ival =
-  <span data-count="2">l</span>et* vec_val = get_const_from_valu<span data-count="2">e</span> vec_val &gt;&gt;<span data-count="2">=</span> is_vecto<span data-count="2">r</span> return in
-  <span data-count="2">l</span>et n = List.length vec_val in
-  <span data-count="2">l</span>et* ind = get_const_from_valu<span data-count="2">e</span> ival &gt;&gt;<span data-count="2">=</span> is_int in
-  <span data-count="2">l</span>et ind = Int64.to_int ind in
-  <span data-count="2">i</span>f ind &gt;= n
+  <span data-count="23">l</span>et* vec_val = get_const_from_valu<span data-count="23">e</span> vec_val &gt;&gt;<span data-count="23">=</span> is_vecto<span data-count="23">r</span> return in
+  <span data-count="23">l</span>et n = List.length vec_val in
+  <span data-count="23">l</span>et* ind = get_const_from_valu<span data-count="23">e</span> ival &gt;&gt;<span data-count="23">=</span> is_int in
+  <span data-count="23">l</span>et ind = Int64.to_int ind in
+  <span data-count="23">i</span>f ind &gt;= n
   then <span data-count="0">f</span>ail "Runtime error: try get element outside of vector"
-  else <span data-count="2">r</span>eturn (vec_val, ind)
+  else <span data-count="23">r</span>eturn (vec_val, ind)
 ;;
 
 let iextractelement var _vec_tp vec_val _itp ival =
@@ -191,14 +191,14 @@ let iextractelement var _vec_tp vec_val _itp ival =
 ;;
 
 let real_insert var vec_val ind new_val =
-  <span data-count="1">l</span>et new_lst = List.mapi (fun c x -&gt; <span data-count="3">i</span>f c = ind then <span data-count="1">n</span>ew_val else <span data-count="2">x</span>) vec_val in
-  <span data-count="1">w</span>rite_var var (Ast.CVector new_lst)
+  <span data-count="22">l</span>et new_lst = List.mapi (fun c x -&gt; <span data-count="66">i</span>f c = ind then <span data-count="22">n</span>ew_val else <span data-count="44">x</span>) vec_val in
+  <span data-count="22">w</span>rite_var var (Ast.CVector new_lst)
 ;;
 
 let iinsertelement var _vec_tp vec_val new_val _itp ival =
-  <span data-count="1">l</span>et* buf = get_dat<span data-count="1">a</span> vec_val ival in
-  <span data-count="1">l</span>et* new_val = get_const_from_valu<span data-count="1">e</span> new_val in
-  <span data-count="1">l</span>et vec_val, ind = buf in
+  <span data-count="22">l</span>et* buf = get_dat<span data-count="22">a</span> vec_val ival in
+  <span data-count="22">l</span>et* new_val = get_const_from_valu<span data-count="22">e</span> new_val in
+  <span data-count="22">l</span>et vec_val, ind = buf in
   real_insert var vec_val ind new_val
 ;;
 
@@ -224,14 +224,14 @@ let ishufflevector var _vec_tp vec1 vec2 _m vec3 =
 
 let launch_vector_instruction : Ast.vector_instruction -&gt; (state, instr_launch_res) t =
   fun instr -&gt;
-  <span data-count="3">(</span>match instr with
+  <span data-count="24">(</span>match instr with
    | <span data-count="1">A</span>st.Extractelement (var, vec_tp, vec_val, itp, ival) -&gt;
      iextractelemen<span data-count="1">t</span> var vec_tp vec_val itp ival
-   | <span data-count="1">A</span>st.Insertelement (var, vec_tp, vec_val, new_val, itp, ival) -&gt;
-     iinsertelemen<span data-count="1">t</span> var vec_tp vec_val new_val itp ival
+   | <span data-count="22">A</span>st.Insertelement (var, vec_tp, vec_val, new_val, itp, ival) -&gt;
+     iinsertelemen<span data-count="22">t</span> var vec_tp vec_val new_val itp ival
    | <span data-count="1">A</span>st.Shufflevector (var, vec_tp, vec1, vec2, m, vec3) -&gt;
      ishufflevecto<span data-count="1">r</span> var vec_tp vec1 vec2 m vec3)
-  *&gt; retur<span data-count="3">n</span> NoRes
+  *&gt; retur<span data-count="24">n</span> NoRes
 ;;
 </code></pre>
       </div>

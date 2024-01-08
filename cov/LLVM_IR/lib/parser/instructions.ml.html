@@ -1447,26 +1447,26 @@ open CommonParser
 open Values
 open Types
 
-let parse_instruction_result = parse_local_variable &lt;<span data-count="26">*</span> whitespaces &lt;<span data-count="26">*</span> cha<span data-count="26">r</span> '='
-let parse_align = comma *<span data-count="26">&gt;</span> wor<span data-count="26">d</span> "align" *<span data-count="26">&gt;</span> whitespaces *<span data-count="26">&gt;</span> parse_integer &lt;|<span data-count="26">&gt;</span> retur<span data-count="26">n</span> 1
+let parse_instruction_result = parse_local_variable &lt;<span data-count="28">*</span> whitespaces &lt;<span data-count="28">*</span> cha<span data-count="28">r</span> '='
+let parse_align = comma *<span data-count="28">&gt;</span> wor<span data-count="28">d</span> "align" *<span data-count="28">&gt;</span> whitespaces *<span data-count="28">&gt;</span> parse_integer &lt;|<span data-count="28">&gt;</span> retur<span data-count="28">n</span> 1
 
 let parse_terminator_instruction =
   let iret =
-    wor<span data-count="26">d</span> "ret" *<span data-count="26">&gt;</span> whitespaces *<span data-count="26">&gt;</span> parse_type_with_value
-    &gt;&gt;<span data-count="26">|</span> function
-    | <span data-count="80">t</span>p, value -&gt; Ast.Ret (tp, value)
+    wor<span data-count="28">d</span> "ret" *<span data-count="28">&gt;</span> whitespaces *<span data-count="28">&gt;</span> parse_type_with_value
+    &gt;&gt;<span data-count="28">|</span> function
+    | <span data-count="86">t</span>p, value -&gt; Ast.Ret (tp, value)
   and ibr =
-    wor<span data-count="26">d</span> "br" *<span data-count="26">&gt;</span> whitespaces *<span data-count="26">&gt;</span> type_with_valu<span data-count="26">e</span> Ast.TLabel &gt;&gt;<span data-count="26">|</span> fun value -&gt; <span data-count="131">A</span>st.Br value
+    wor<span data-count="28">d</span> "br" *<span data-count="28">&gt;</span> whitespaces *<span data-count="28">&gt;</span> type_with_valu<span data-count="28">e</span> Ast.TLabel &gt;&gt;<span data-count="28">|</span> fun value -&gt; <span data-count="169">A</span>st.Br value
   and ibr_cond =
-    wor<span data-count="26">d</span> "br"
-    *<span data-count="26">&gt;</span> lift<span data-count="26">3</span>
-         (fun b l1 l2 -&gt; <span data-count="83">A</span>st.BrCond (b, l1, l2))
-         (type_with_valu<span data-count="26">e</span> (Ast.TInteger 1) &lt;<span data-count="26">*</span> comma)
-         (type_with_valu<span data-count="26">e</span> Ast.TLabel &lt;<span data-count="26">*</span> comma)
-         (type_with_valu<span data-count="26">e</span> Ast.TLabel)
+    wor<span data-count="28">d</span> "br"
+    *<span data-count="28">&gt;</span> lift<span data-count="28">3</span>
+         (fun b l1 l2 -&gt; <span data-count="107">A</span>st.BrCond (b, l1, l2))
+         (type_with_valu<span data-count="28">e</span> (Ast.TInteger 1) &lt;<span data-count="28">*</span> comma)
+         (type_with_valu<span data-count="28">e</span> Ast.TLabel &lt;<span data-count="28">*</span> comma)
+         (type_with_valu<span data-count="28">e</span> Ast.TLabel)
   and iswitch =
-    wor<span data-count="26">d</span> "switch"
-    *<span data-count="26">&gt;</span> let* value_type, switch_value = parse_type_with_value &lt;<span data-count="26">*</span> comma in
+    wor<span data-count="28">d</span> "switch"
+    *<span data-count="28">&gt;</span> let* value_type, switch_value = parse_type_with_value &lt;<span data-count="28">*</span> comma in
        <span data-count="1">l</span>et* default_dest = type_with_valu<span data-count="1">e</span> Ast.TLabel in
        <span data-count="1">l</span>et* switch_list =
          whitespaces
@@ -1481,47 +1481,47 @@ let parse_terminator_instruction =
          &lt;<span data-count="1">*</span> cha<span data-count="1">r</span> ']'
        in
        <span data-count="1">r</span>eturn (Ast.Switch (value_type, switch_value, default_dest, switch_list))
-  and iunreachable = wor<span data-count="26">d</span> "unreachable" *<span data-count="26">&gt;</span> retur<span data-count="26">n</span> Ast.Unreachable in
-  whitespaces *<span data-count="26">&gt;</span> choic<span data-count="26">e</span> [ iret; ibr; ibr_cond; iswitch; iunreachable ]
+  and iunreachable = wor<span data-count="28">d</span> "unreachable" *<span data-count="28">&gt;</span> retur<span data-count="28">n</span> Ast.Unreachable in
+  whitespaces *<span data-count="28">&gt;</span> choic<span data-count="28">e</span> [ iret; ibr; ibr_cond; iswitch; iunreachable ]
 ;;
 
 let parse_unary_operation =
   let ifneg =
     let* res_var = parse_instruction_result in
-    <span data-count="1031">l</span>et* tp, value = whitespaces *<span data-count="1031">&gt;</span> wor<span data-count="1031">d</span> "fneg" *<span data-count="1031">&gt;</span> whitespaces *<span data-count="1031">&gt;</span> parse_type_with_value in
+    <span data-count="1265">l</span>et* tp, value = whitespaces *<span data-count="1265">&gt;</span> wor<span data-count="1265">d</span> "fneg" *<span data-count="1265">&gt;</span> whitespaces *<span data-count="1265">&gt;</span> parse_type_with_value in
     <span data-count="5">r</span>eturn (Ast.Fneg (res_var, tp, value))
   in
-  whitespaces *<span data-count="26">&gt;</span> choic<span data-count="26">e</span> [ ifneg ]
+  whitespaces *<span data-count="28">&gt;</span> choic<span data-count="28">e</span> [ ifneg ]
 ;;
 
 let parse_binary_operation =
   let help (mnem : string) (bin_op : Ast.binary_operation_body -&gt; Ast.binary_operation) =
-    <span data-count="312">p</span>arse_instruction_result
+    <span data-count="336">p</span>arse_instruction_result
     &gt;&gt;= fun var -&gt;
-    <span data-count="11203">w</span>hitespaces
-    *<span data-count="11203">&gt;</span> wor<span data-count="11203">d</span> mnem
-    *<span data-count="11203">&gt;</span> whitespaces
-    *<span data-count="11203">&gt;</span> optio<span data-count="11203">n</span> [] (wor<span data-count="11203">d</span> "nuw" *<span data-count="11203">&gt;</span> whitespaces)
-    *<span data-count="11203">&gt;</span> optio<span data-count="11203">n</span> [] (wor<span data-count="11203">d</span> "nsw" *<span data-count="11203">&gt;</span> whitespaces)
-    *<span data-count="11203">&gt;</span> whitespaces
-    *<span data-count="11203">&gt;</span> parse_type_with_value2
+    <span data-count="13683">w</span>hitespaces
+    *<span data-count="13683">&gt;</span> wor<span data-count="13683">d</span> mnem
+    *<span data-count="13683">&gt;</span> whitespaces
+    *<span data-count="13683">&gt;</span> optio<span data-count="13683">n</span> [] (wor<span data-count="13683">d</span> "nuw" *<span data-count="13683">&gt;</span> whitespaces)
+    *<span data-count="13683">&gt;</span> optio<span data-count="13683">n</span> [] (wor<span data-count="13683">d</span> "nsw" *<span data-count="13683">&gt;</span> whitespaces)
+    *<span data-count="13683">&gt;</span> whitespaces
+    *<span data-count="13683">&gt;</span> parse_type_with_value2
     &gt;&gt;= function
-    | <span data-count="127">t</span>p, v1, v2 -&gt; return (bin_o<span data-count="127">p</span> (var, tp, v1, v2))
+    | <span data-count="163">t</span>p, v1, v2 -&gt; return (bin_o<span data-count="163">p</span> (var, tp, v1, v2))
   in
   whitespaces
-  *<span data-count="26">&gt;</span> choic<span data-count="26">e</span>
-       [ hel<span data-count="26">p</span> "add" (fun x -&gt; <span data-count="48">A</span>st.Add x)
-       ; hel<span data-count="26">p</span> "fadd" (fun x -&gt; <span data-count="5">A</span>st.Fadd x)
-       ; hel<span data-count="26">p</span> "mul" (fun x -&gt; <span data-count="23">A</span>st.Mul x)
-       ; hel<span data-count="26">p</span> "fmul" (fun x -&gt; <span data-count="8">A</span>st.Fmul x)
-       ; hel<span data-count="26">p</span> "sub" (fun x -&gt; <span data-count="29">A</span>st.Sub x)
-       ; hel<span data-count="26">p</span> "fsub" (fun x -&gt; <span data-count="6">A</span>st.Fsub x)
-       ; hel<span data-count="26">p</span> "udiv" (fun x -&gt; <span data-count="0">A</span>st.Udiv x)
-       ; hel<span data-count="26">p</span> "sdiv" (fun x -&gt; <span data-count="1">A</span>st.Sdiv x)
-       ; hel<span data-count="26">p</span> "fdiv" (fun x -&gt; <span data-count="5">A</span>st.Fdiv x)
-       ; hel<span data-count="26">p</span> "urem" (fun x -&gt; <span data-count="0">A</span>st.Urem x)
-       ; hel<span data-count="26">p</span> "srem" (fun x -&gt; <span data-count="2">A</span>st.Srem x)
-       ; hel<span data-count="26">p</span> "frem" (fun x -&gt; <span data-count="0">A</span>st.Frem x)
+  *<span data-count="28">&gt;</span> choic<span data-count="28">e</span>
+       [ hel<span data-count="28">p</span> "add" (fun x -&gt; <span data-count="66">A</span>st.Add x)
+       ; hel<span data-count="28">p</span> "fadd" (fun x -&gt; <span data-count="5">A</span>st.Fadd x)
+       ; hel<span data-count="28">p</span> "mul" (fun x -&gt; <span data-count="31">A</span>st.Mul x)
+       ; hel<span data-count="28">p</span> "fmul" (fun x -&gt; <span data-count="8">A</span>st.Fmul x)
+       ; hel<span data-count="28">p</span> "sub" (fun x -&gt; <span data-count="37">A</span>st.Sub x)
+       ; hel<span data-count="28">p</span> "fsub" (fun x -&gt; <span data-count="6">A</span>st.Fsub x)
+       ; hel<span data-count="28">p</span> "udiv" (fun x -&gt; <span data-count="0">A</span>st.Udiv x)
+       ; hel<span data-count="28">p</span> "sdiv" (fun x -&gt; <span data-count="1">A</span>st.Sdiv x)
+       ; hel<span data-count="28">p</span> "fdiv" (fun x -&gt; <span data-count="5">A</span>st.Fdiv x)
+       ; hel<span data-count="28">p</span> "urem" (fun x -&gt; <span data-count="0">A</span>st.Urem x)
+       ; hel<span data-count="28">p</span> "srem" (fun x -&gt; <span data-count="4">A</span>st.Srem x)
+       ; hel<span data-count="28">p</span> "frem" (fun x -&gt; <span data-count="0">A</span>st.Frem x)
        ]
 ;;
 
@@ -1530,48 +1530,48 @@ let parse_bitwise_binary_operation =
     (mnem : string)
     (bin_op : Ast.binary_operation_body -&gt; Ast.bitwise_binary_operation)
     =
-    <span data-count="156">p</span>arse_instruction_result
+    <span data-count="168">p</span>arse_instruction_result
     &gt;&gt;= fun var -&gt;
-    <span data-count="5391">w</span>hitespaces *<span data-count="5391">&gt;</span> wor<span data-count="5391">d</span> mnem *<span data-count="5391">&gt;</span> whitespaces *<span data-count="5391">&gt;</span> parse_type_with_value2
+    <span data-count="6579">w</span>hitespaces *<span data-count="6579">&gt;</span> wor<span data-count="6579">d</span> mnem *<span data-count="6579">&gt;</span> whitespaces *<span data-count="6579">&gt;</span> parse_type_with_value2
     &gt;&gt;= function
     | <span data-count="3">t</span>p, v1, v2 -&gt; return (bin_o<span data-count="3">p</span> (var, tp, v1, v2))
   in
   whitespaces
-  *<span data-count="26">&gt;</span> choic<span data-count="26">e</span>
-       [ hel<span data-count="26">p</span> "shl" (fun x -&gt; <span data-count="0">A</span>st.Shl x)
-       ; hel<span data-count="26">p</span> "lshr" (fun x -&gt; <span data-count="0">A</span>st.Lshr x)
-       ; hel<span data-count="26">p</span> "ashr" (fun x -&gt; <span data-count="1">A</span>st.Ashr x)
-       ; hel<span data-count="26">p</span> "and" (fun x -&gt; <span data-count="0">A</span>st.And x)
-       ; hel<span data-count="26">p</span> "or" (fun x -&gt; <span data-count="0">A</span>st.Or x)
-       ; hel<span data-count="26">p</span> "xor" (fun x -&gt; <span data-count="2">A</span>st.Xor x)
+  *<span data-count="28">&gt;</span> choic<span data-count="28">e</span>
+       [ hel<span data-count="28">p</span> "shl" (fun x -&gt; <span data-count="0">A</span>st.Shl x)
+       ; hel<span data-count="28">p</span> "lshr" (fun x -&gt; <span data-count="0">A</span>st.Lshr x)
+       ; hel<span data-count="28">p</span> "ashr" (fun x -&gt; <span data-count="1">A</span>st.Ashr x)
+       ; hel<span data-count="28">p</span> "and" (fun x -&gt; <span data-count="0">A</span>st.And x)
+       ; hel<span data-count="28">p</span> "or" (fun x -&gt; <span data-count="0">A</span>st.Or x)
+       ; hel<span data-count="28">p</span> "xor" (fun x -&gt; <span data-count="2">A</span>st.Xor x)
        ]
 ;;
 
 let parse_vector_instruction =
   let iextractelement =
     let* res_var = parse_instruction_result in
-    <span data-count="896">l</span>et* vec_tp, vec_val =
-      whitespaces *<span data-count="896">&gt;</span> wor<span data-count="896">d</span> "extractelement" *<span data-count="896">&gt;</span> whitespaces *<span data-count="896">&gt;</span> parse_type_with_value
-      &lt;<span data-count="896">*</span> comma
+    <span data-count="1094">l</span>et* vec_tp, vec_val =
+      whitespaces *<span data-count="1094">&gt;</span> wor<span data-count="1094">d</span> "extractelement" *<span data-count="1094">&gt;</span> whitespaces *<span data-count="1094">&gt;</span> parse_type_with_value
+      &lt;<span data-count="1094">*</span> comma
     in
     <span data-count="2">l</span>et* int_tp, int_val = parse_type_with_value in
     <span data-count="2">r</span>eturn (Ast.Extractelement (res_var, vec_tp, vec_val, int_tp, int_val))
   and iinsertelement =
     let* res_var = parse_instruction_result in
-    <span data-count="894">l</span>et* vec_tp, vec_val =
-      whitespaces *<span data-count="894">&gt;</span> wor<span data-count="894">d</span> "insertelement" *<span data-count="894">&gt;</span> whitespaces *<span data-count="894">&gt;</span> parse_type_with_value &lt;<span data-count="894">*</span> comma
+    <span data-count="1092">l</span>et* vec_tp, vec_val =
+      whitespaces *<span data-count="1092">&gt;</span> wor<span data-count="1092">d</span> "insertelement" *<span data-count="1092">&gt;</span> whitespaces *<span data-count="1092">&gt;</span> parse_type_with_value &lt;<span data-count="1092">*</span> comma
     in
-    <span data-count="2">l</span>et* elem_val =
+    <span data-count="10">l</span>et* elem_val =
       match vec_tp with
-      | <span data-count="2">A</span>st.TVector (_, elem_tp) -&gt; type_with_valu<span data-count="2">e</span> elem_tp &lt;<span data-count="2">*</span> comma
+      | <span data-count="10">A</span>st.TVector (_, elem_tp) -&gt; type_with_valu<span data-count="10">e</span> elem_tp &lt;<span data-count="10">*</span> comma
       | <span data-count="0">_</span> -&gt; fai<span data-count="0">l</span> "Parser error: insertelement's first value should be vector type"
     in
-    <span data-count="2">l</span>et* int_tp, int_val = parse_type_with_value in
-    <span data-count="2">r</span>eturn (Ast.Insertelement (res_var, vec_tp, vec_val, elem_val, int_tp, int_val))
+    <span data-count="10">l</span>et* int_tp, int_val = parse_type_with_value in
+    <span data-count="10">r</span>eturn (Ast.Insertelement (res_var, vec_tp, vec_val, elem_val, int_tp, int_val))
   and ishufflevector =
     let* res_var = parse_instruction_result in
-    <span data-count="892">l</span>et* vec_tp, vec_v1 =
-      whitespaces *<span data-count="892">&gt;</span> wor<span data-count="892">d</span> "shufflevector" *<span data-count="892">&gt;</span> whitespaces *<span data-count="892">&gt;</span> parse_type_with_value &lt;<span data-count="892">*</span> comma
+    <span data-count="1082">l</span>et* vec_tp, vec_v1 =
+      whitespaces *<span data-count="1082">&gt;</span> wor<span data-count="1082">d</span> "shufflevector" *<span data-count="1082">&gt;</span> whitespaces *<span data-count="1082">&gt;</span> parse_type_with_value &lt;<span data-count="1082">*</span> comma
     in
     <span data-count="2">l</span>et* vec_v2 = type_with_valu<span data-count="2">e</span> vec_tp &lt;<span data-count="2">*</span> comma in
     <span data-count="2">l</span>et* mask_tp, mask_val = parse_type_with_value in
@@ -1580,62 +1580,62 @@ let parse_vector_instruction =
       return (Ast.Shufflevector (res_var, vec_tp, vec_v1, vec_v2, mask_size, mask_const))
     | <span data-count="0">_</span> -&gt; fail "Parser error: couldn't parse mask for shufflevector instruction"
   in
-  whitespaces *<span data-count="26">&gt;</span> choic<span data-count="26">e</span> [ iextractelement; iinsertelement; ishufflevector ]
+  whitespaces *<span data-count="28">&gt;</span> choic<span data-count="28">e</span> [ iextractelement; iinsertelement; ishufflevector ]
 ;;
 
 let parse_aggregate_instruction =
   let iextractvalue =
     let* res_var = parse_instruction_result in
-    <span data-count="890">l</span>et* agg_tp, agg_val =
-      whitespaces *<span data-count="890">&gt;</span> wor<span data-count="890">d</span> "extractvalue" *<span data-count="890">&gt;</span> whitespaces *<span data-count="890">&gt;</span> parse_type_with_value &lt;<span data-count="890">*</span> comma
+    <span data-count="1080">l</span>et* agg_tp, agg_val =
+      whitespaces *<span data-count="1080">&gt;</span> wor<span data-count="1080">d</span> "extractvalue" *<span data-count="1080">&gt;</span> whitespaces *<span data-count="1080">&gt;</span> parse_type_with_value &lt;<span data-count="1080">*</span> comma
     in
     <span data-count="2">l</span>et* indexes = sep_by<span data-count="2">1</span> comma parse_integer in
     <span data-count="2">r</span>eturn (Ast.Extractvalue (res_var, agg_tp, agg_val, indexes))
   and iinsertvalue =
     let* res_var = parse_instruction_result in
-    <span data-count="888">l</span>et* agg_tp, agg_val =
-      whitespaces *<span data-count="888">&gt;</span> wor<span data-count="888">d</span> "insertvalue" *<span data-count="888">&gt;</span> whitespaces *<span data-count="888">&gt;</span> parse_type_with_value &lt;<span data-count="888">*</span> comma
+    <span data-count="1078">l</span>et* agg_tp, agg_val =
+      whitespaces *<span data-count="1078">&gt;</span> wor<span data-count="1078">d</span> "insertvalue" *<span data-count="1078">&gt;</span> whitespaces *<span data-count="1078">&gt;</span> parse_type_with_value &lt;<span data-count="1078">*</span> comma
     in
     <span data-count="3">l</span>et* value_tp, value_val = parse_type_with_value &lt;<span data-count="3">*</span> comma in
     <span data-count="3">l</span>et* indexes = sep_by<span data-count="3">1</span> comma parse_integer in
     <span data-count="3">r</span>eturn (Ast.Insertvalue (res_var, agg_tp, agg_val, value_tp, value_val, indexes))
   in
-  whitespaces *<span data-count="26">&gt;</span> choic<span data-count="26">e</span> [ iextractvalue; iinsertvalue ]
+  whitespaces *<span data-count="28">&gt;</span> choic<span data-count="28">e</span> [ iextractvalue; iinsertvalue ]
 ;;
 
 let parse_memory_instruction =
   let ialloca =
-    lift<span data-count="26">4</span>
-      (fun var tp value align -&gt; <span data-count="131">A</span>st.Alloca (var, tp, value, align))
+    lift<span data-count="28">4</span>
+      (fun var tp value align -&gt; <span data-count="159">A</span>st.Alloca (var, tp, value, align))
       parse_instruction_result
-      (whitespaces *<span data-count="26">&gt;</span> wor<span data-count="26">d</span> "alloca" *<span data-count="26">&gt;</span> parse_main_type)
-      (comma *<span data-count="26">&gt;</span> parse_type_with_value
-       &gt;&gt;<span data-count="26">=</span> (function
+      (whitespaces *<span data-count="28">&gt;</span> wor<span data-count="28">d</span> "alloca" *<span data-count="28">&gt;</span> parse_main_type)
+      (comma *<span data-count="28">&gt;</span> parse_type_with_value
+       &gt;&gt;<span data-count="28">=</span> (function
               | <span data-count="2">A</span>st.TInteger _, value -&gt; return value
               | <span data-count="0">_</span> -&gt; fail "Parser error: excepted integer type")
-       &lt;|<span data-count="26">&gt;</span> retur<span data-count="26">n</span> (Ast.Const (Ast.CInteger (1, 1L))))
-      (whitespaces *<span data-count="26">&gt;</span> parse_align)
+       &lt;|<span data-count="28">&gt;</span> retur<span data-count="28">n</span> (Ast.Const (Ast.CInteger (1, 1L))))
+      (whitespaces *<span data-count="28">&gt;</span> parse_align)
   and istore =
-    lift<span data-count="26">3</span>
-      (fun (tp, value) vptr align -&gt; <span data-count="208">A</span>st.Store (tp, value, vptr, align))
-      (whitespaces *<span data-count="26">&gt;</span> wor<span data-count="26">d</span> "store" *<span data-count="26">&gt;</span> whitespaces *<span data-count="26">&gt;</span> parse_type_with_value)
-      (comma *<span data-count="26">&gt;</span> type_with_valu<span data-count="26">e</span> Ast.TPointer)
+    lift<span data-count="28">3</span>
+      (fun (tp, value) vptr align -&gt; <span data-count="250">A</span>st.Store (tp, value, vptr, align))
+      (whitespaces *<span data-count="28">&gt;</span> wor<span data-count="28">d</span> "store" *<span data-count="28">&gt;</span> whitespaces *<span data-count="28">&gt;</span> parse_type_with_value)
+      (comma *<span data-count="28">&gt;</span> type_with_valu<span data-count="28">e</span> Ast.TPointer)
       parse_align
   and iload =
-    lift<span data-count="26">4</span>
-      (fun res tp vptr align -&gt; <span data-count="392">A</span>st.Load (res, tp, vptr, align))
+    lift<span data-count="28">4</span>
+      (fun res tp vptr align -&gt; <span data-count="478">A</span>st.Load (res, tp, vptr, align))
       parse_instruction_result
-      (whitespaces *<span data-count="26">&gt;</span> wor<span data-count="26">d</span> "load" *<span data-count="26">&gt;</span> parse_main_type)
-      (comma *<span data-count="26">&gt;</span> type_with_valu<span data-count="26">e</span> Ast.TPointer)
+      (whitespaces *<span data-count="28">&gt;</span> wor<span data-count="28">d</span> "load" *<span data-count="28">&gt;</span> parse_main_type)
+      (comma *<span data-count="28">&gt;</span> type_with_valu<span data-count="28">e</span> Ast.TPointer)
       parse_align
   and igetelementptr =
     let* res_var = parse_instruction_result in
-    <span data-count="214">l</span>et* res_tp = whitespaces *<span data-count="214">&gt;</span> wor<span data-count="214">d</span> "getelementptr" *<span data-count="214">&gt;</span> parse_additional_type &lt;<span data-count="214">*</span> comma in
-    <span data-count="100">l</span>et* ptr_tp, ptr_val = parse_type_with_value in
-    <span data-count="100">l</span>et* index_lst = choic<span data-count="100">e</span> [ comma *<span data-count="100">&gt;</span> sep_by<span data-count="100">1</span> comma parse_type_with_value; retur<span data-count="100">n</span> [] ] in
-    <span data-count="100">r</span>eturn (Ast.Getelementptr (res_var, res_tp, ptr_tp, ptr_val, index_lst))
+    <span data-count="254">l</span>et* res_tp = whitespaces *<span data-count="254">&gt;</span> wor<span data-count="254">d</span> "getelementptr" *<span data-count="254">&gt;</span> parse_additional_type &lt;<span data-count="254">*</span> comma in
+    <span data-count="114">l</span>et* ptr_tp, ptr_val = parse_type_with_value in
+    <span data-count="114">l</span>et* index_lst = choic<span data-count="114">e</span> [ comma *<span data-count="114">&gt;</span> sep_by<span data-count="114">1</span> comma parse_type_with_value; retur<span data-count="114">n</span> [] ] in
+    <span data-count="114">r</span>eturn (Ast.Getelementptr (res_var, res_tp, ptr_tp, ptr_val, index_lst))
   in
-  whitespaces *<span data-count="26">&gt;</span> choic<span data-count="26">e</span> [ ialloca; istore; iload; igetelementptr ]
+  whitespaces *<span data-count="28">&gt;</span> choic<span data-count="28">e</span> [ ialloca; istore; iload; igetelementptr ]
 ;;
 
 let parse_conversion_instruction =
@@ -1643,93 +1643,93 @@ let parse_conversion_instruction =
     (mnem : string)
     (conv_inst : Ast.conversion_instruction_body -&gt; Ast.conversion_instruction)
     =
-    <span data-count="234">l</span>et* res_var = parse_instruction_result in
-    <span data-count="386">l</span>et* value_tp_src, value_val =
-      whitespaces *<span data-count="386">&gt;</span> wor<span data-count="386">d</span> mnem *<span data-count="386">&gt;</span> whitespaces *<span data-count="386">&gt;</span> parse_type_with_value
+    <span data-count="252">l</span>et* res_var = parse_instruction_result in
+    <span data-count="464">l</span>et* value_tp_src, value_val =
+      whitespaces *<span data-count="464">&gt;</span> wor<span data-count="464">d</span> mnem *<span data-count="464">&gt;</span> whitespaces *<span data-count="464">&gt;</span> parse_type_with_value
     in
-    <span data-count="114">l</span>et* value_tp_dst =
-      whitespaces *<span data-count="114">&gt;</span> wor<span data-count="114">d</span> "to" *<span data-count="114">&gt;</span> whitespaces *<span data-count="114">&gt;</span> parse_additional_type
+    <span data-count="140">l</span>et* value_tp_dst =
+      whitespaces *<span data-count="140">&gt;</span> wor<span data-count="140">d</span> "to" *<span data-count="140">&gt;</span> whitespaces *<span data-count="140">&gt;</span> parse_additional_type
     in
-    <span data-count="114">r</span>eturn (conv_ins<span data-count="114">t</span> (res_var, value_tp_src, value_val, value_tp_dst))
+    <span data-count="140">r</span>eturn (conv_ins<span data-count="140">t</span> (res_var, value_tp_src, value_val, value_tp_dst))
   in
   whitespaces
-  *<span data-count="26">&gt;</span> choic<span data-count="26">e</span>
-       [ hel<span data-count="26">p</span> "trunc" (fun x -&gt; <span data-count="0">A</span>st.TruncTo x)
-       ; hel<span data-count="26">p</span> "zext" (fun x -&gt; <span data-count="1">A</span>st.ZextTo x)
-       ; hel<span data-count="26">p</span> "sext" (fun x -&gt; <span data-count="102">A</span>st.SextTo x)
-       ; hel<span data-count="26">p</span> "fptoui" (fun x -&gt; <span data-count="1">A</span>st.FptouiTo x)
-       ; hel<span data-count="26">p</span> "fptosi" (fun x -&gt; <span data-count="0">A</span>st.FptosiTo x)
-       ; hel<span data-count="26">p</span> "uitofp" (fun x -&gt; <span data-count="0">A</span>st.UitofpTo x)
-       ; hel<span data-count="26">p</span> "sitofp" (fun x -&gt; <span data-count="7">A</span>st.SitofpTo x)
-       ; hel<span data-count="26">p</span> "ptrtoint" (fun x -&gt; <span data-count="2">A</span>st.PrttointTo x)
-       ; hel<span data-count="26">p</span> "inttoptr" (fun x -&gt; <span data-count="1">A</span>st.InttoprtTo x)
+  *<span data-count="28">&gt;</span> choic<span data-count="28">e</span>
+       [ hel<span data-count="28">p</span> "trunc" (fun x -&gt; <span data-count="0">A</span>st.TruncTo x)
+       ; hel<span data-count="28">p</span> "zext" (fun x -&gt; <span data-count="1">A</span>st.ZextTo x)
+       ; hel<span data-count="28">p</span> "sext" (fun x -&gt; <span data-count="128">A</span>st.SextTo x)
+       ; hel<span data-count="28">p</span> "fptoui" (fun x -&gt; <span data-count="1">A</span>st.FptouiTo x)
+       ; hel<span data-count="28">p</span> "fptosi" (fun x -&gt; <span data-count="0">A</span>st.FptosiTo x)
+       ; hel<span data-count="28">p</span> "uitofp" (fun x -&gt; <span data-count="0">A</span>st.UitofpTo x)
+       ; hel<span data-count="28">p</span> "sitofp" (fun x -&gt; <span data-count="7">A</span>st.SitofpTo x)
+       ; hel<span data-count="28">p</span> "ptrtoint" (fun x -&gt; <span data-count="2">A</span>st.PrttointTo x)
+       ; hel<span data-count="28">p</span> "inttoptr" (fun x -&gt; <span data-count="1">A</span>st.InttoprtTo x)
        ]
 ;;
 
 let parse_other_operation =
   let iicmp =
-    lift<span data-count="26">3</span>
-      (fun var cond (tp, v1, v2) -&gt; <span data-count="84">A</span>st.Icmp (var, cond, tp, v1, v2))
+    lift<span data-count="28">3</span>
+      (fun var cond (tp, v1, v2) -&gt; <span data-count="108">A</span>st.Icmp (var, cond, tp, v1, v2))
       parse_instruction_result
-      (whitespaces *<span data-count="26">&gt;</span> wor<span data-count="26">d</span> "icmp" *<span data-count="26">&gt;</span> whitespaces *<span data-count="26">&gt;</span> parse_word)
-      (whitespaces *<span data-count="26">&gt;</span> parse_type_with_value2)
+      (whitespaces *<span data-count="28">&gt;</span> wor<span data-count="28">d</span> "icmp" *<span data-count="28">&gt;</span> whitespaces *<span data-count="28">&gt;</span> parse_word)
+      (whitespaces *<span data-count="28">&gt;</span> parse_type_with_value2)
   and ifcmp =
-    lift<span data-count="26">3</span>
+    lift<span data-count="28">3</span>
       (fun var cond (tp, v1, v2) -&gt; <span data-count="3">A</span>st.Fcmp (var, cond, tp, v1, v2))
       parse_instruction_result
-      (whitespaces *<span data-count="26">&gt;</span> wor<span data-count="26">d</span> "fcmp" *<span data-count="26">&gt;</span> whitespaces *<span data-count="26">&gt;</span> parse_word)
-      (whitespaces *<span data-count="26">&gt;</span> parse_type_with_value2)
+      (whitespaces *<span data-count="28">&gt;</span> wor<span data-count="28">d</span> "fcmp" *<span data-count="28">&gt;</span> whitespaces *<span data-count="28">&gt;</span> parse_word)
+      (whitespaces *<span data-count="28">&gt;</span> parse_type_with_value2)
   and iphi =
     let* res_var = parse_instruction_result in
-    <span data-count="798">l</span>et* res_tp = whitespaces *<span data-count="798">&gt;</span> wor<span data-count="798">d</span> "phi" *<span data-count="798">&gt;</span> whitespaces *<span data-count="798">&gt;</span> parse_additional_type in
-    <span data-count="13">l</span>et* choose_lst =
-      sep_by<span data-count="13">1</span>
+    <span data-count="964">l</span>et* res_tp = whitespaces *<span data-count="964">&gt;</span> wor<span data-count="964">d</span> "phi" *<span data-count="964">&gt;</span> whitespaces *<span data-count="964">&gt;</span> parse_additional_type in
+    <span data-count="21">l</span>et* choose_lst =
+      sep_by<span data-count="21">1</span>
         comma
-        (whitespaces *<span data-count="13">&gt;</span> cha<span data-count="13">r</span> '[' *<span data-count="13">&gt;</span> parse_valu<span data-count="13">e</span> res_tp
-         &gt;&gt;<span data-count="13">=</span> (fun value -&gt;
-               <span data-count="25">c</span>omma *<span data-count="25">&gt;</span> parse_valu<span data-count="25">e</span> Ast.TLabel &gt;&gt;= fun label -&gt; <span data-count="25">r</span>eturn (value, label))
-         &lt;<span data-count="13">*</span> whitespaces
-         &lt;<span data-count="13">*</span> cha<span data-count="13">r</span> ']')
+        (whitespaces *<span data-count="21">&gt;</span> cha<span data-count="21">r</span> '[' *<span data-count="21">&gt;</span> parse_valu<span data-count="21">e</span> res_tp
+         &gt;&gt;<span data-count="21">=</span> (fun value -&gt;
+               <span data-count="41">c</span>omma *<span data-count="41">&gt;</span> parse_valu<span data-count="41">e</span> Ast.TLabel &gt;&gt;= fun label -&gt; <span data-count="41">r</span>eturn (value, label))
+         &lt;<span data-count="21">*</span> whitespaces
+         &lt;<span data-count="21">*</span> cha<span data-count="21">r</span> ']')
     in
-    <span data-count="13">r</span>eturn (Ast.Phi (res_var, res_tp, choose_lst))
+    <span data-count="21">r</span>eturn (Ast.Phi (res_var, res_tp, choose_lst))
   and iselect =
     let* res_var = parse_instruction_result in
-    <span data-count="785">l</span>et* cond_tp, cond_val =
-      whitespaces *<span data-count="785">&gt;</span> wor<span data-count="785">d</span> "select" *<span data-count="785">&gt;</span> whitespaces *<span data-count="785">&gt;</span> parse_type_with_value &lt;<span data-count="785">*</span> comma
+    <span data-count="943">l</span>et* cond_tp, cond_val =
+      whitespaces *<span data-count="943">&gt;</span> wor<span data-count="943">d</span> "select" *<span data-count="943">&gt;</span> whitespaces *<span data-count="943">&gt;</span> parse_type_with_value &lt;<span data-count="943">*</span> comma
     in
     <span data-count="3">l</span>et* value_tp, value_v1 = parse_type_with_value &lt;<span data-count="3">*</span> comma in
     <span data-count="3">l</span>et* value_v2 = type_with_valu<span data-count="3">e</span> value_tp in
     <span data-count="3">r</span>eturn (Ast.Select (res_var, cond_tp, cond_val, value_tp, value_v1, value_v2))
   and icall =
-    lift<span data-count="26">4</span>
-      (fun var ret_tp vptr arg_lst -&gt; <span data-count="45">A</span>st.Call (var, ret_tp, vptr, arg_lst))
+    lift<span data-count="28">4</span>
+      (fun var ret_tp vptr arg_lst -&gt; <span data-count="49">A</span>st.Call (var, ret_tp, vptr, arg_lst))
       parse_instruction_result
-      (whitespaces *<span data-count="26">&gt;</span> wor<span data-count="26">d</span> "call" *<span data-count="26">&gt;</span> whitespaces *<span data-count="26">&gt;</span> parse_additional_type)
-      (whitespaces *<span data-count="26">&gt;</span> parse_valu<span data-count="26">e</span> Ast.TPointer)
+      (whitespaces *<span data-count="28">&gt;</span> wor<span data-count="28">d</span> "call" *<span data-count="28">&gt;</span> whitespaces *<span data-count="28">&gt;</span> parse_additional_type)
+      (whitespaces *<span data-count="28">&gt;</span> parse_valu<span data-count="28">e</span> Ast.TPointer)
       (whitespaces
-       *<span data-count="26">&gt;</span> cha<span data-count="26">r</span> '('
-       *<span data-count="26">&gt;</span> sep_b<span data-count="26">y</span>
+       *<span data-count="28">&gt;</span> cha<span data-count="28">r</span> '('
+       *<span data-count="28">&gt;</span> sep_b<span data-count="28">y</span>
             comma
-            (whitespaces *<span data-count="26">&gt;</span> parse_type_with_value
-             &gt;&gt;<span data-count="26">=</span> function
-             | <span data-count="67">_</span>, value -&gt; return value)
-       &lt;<span data-count="26">*</span> whitespaces
-       &lt;<span data-count="26">*</span> cha<span data-count="26">r</span> ')')
+            (whitespaces *<span data-count="28">&gt;</span> parse_type_with_value
+             &gt;&gt;<span data-count="28">=</span> function
+             | <span data-count="73">_</span>, value -&gt; return value)
+       &lt;<span data-count="28">*</span> whitespaces
+       &lt;<span data-count="28">*</span> cha<span data-count="28">r</span> ')')
   in
-  whitespaces *<span data-count="26">&gt;</span> choic<span data-count="26">e</span> [ iicmp; ifcmp; iphi; iselect; icall ]
+  whitespaces *<span data-count="28">&gt;</span> choic<span data-count="28">e</span> [ iicmp; ifcmp; iphi; iselect; icall ]
 ;;
 
 let parse_instruction : Ast.instruction t =
-  choic<span data-count="26">e</span>
-    [ (parse_terminator_instruction &gt;&gt;<span data-count="26">|</span> fun ins -&gt; <span data-count="296">A</span>st.Terminator ins)
-    ; (parse_unary_operation &gt;&gt;<span data-count="26">|</span> fun ins -&gt; <span data-count="5">A</span>st.Unary ins)
-    ; (parse_binary_operation &gt;&gt;<span data-count="26">|</span> fun ins -&gt; <span data-count="127">A</span>st.Binary ins)
-    ; (parse_bitwise_binary_operation &gt;&gt;<span data-count="26">|</span> fun ins -&gt; <span data-count="3">A</span>st.BitwiseBinary ins)
-    ; (parse_vector_instruction &gt;&gt;<span data-count="26">|</span> fun ins -&gt; <span data-count="6">A</span>st.Vector ins)
-    ; (parse_aggregate_instruction &gt;&gt;<span data-count="26">|</span> fun ins -&gt; <span data-count="5">A</span>st.Aggregate ins)
-    ; (parse_other_operation &gt;&gt;<span data-count="26">|</span> fun ins -&gt; <span data-count="148">A</span>st.Other ins)
-    ; (parse_memory_instruction &gt;&gt;<span data-count="26">|</span> fun ins -&gt; <span data-count="831">A</span>st.MemoryAddress ins)
-    ; (parse_conversion_instruction &gt;&gt;<span data-count="26">|</span> fun ins -&gt; <span data-count="114">A</span>st.Conversion ins)
+  choic<span data-count="28">e</span>
+    [ (parse_terminator_instruction &gt;&gt;<span data-count="28">|</span> fun ins -&gt; <span data-count="364">A</span>st.Terminator ins)
+    ; (parse_unary_operation &gt;&gt;<span data-count="28">|</span> fun ins -&gt; <span data-count="5">A</span>st.Unary ins)
+    ; (parse_binary_operation &gt;&gt;<span data-count="28">|</span> fun ins -&gt; <span data-count="163">A</span>st.Binary ins)
+    ; (parse_bitwise_binary_operation &gt;&gt;<span data-count="28">|</span> fun ins -&gt; <span data-count="3">A</span>st.BitwiseBinary ins)
+    ; (parse_vector_instruction &gt;&gt;<span data-count="28">|</span> fun ins -&gt; <span data-count="14">A</span>st.Vector ins)
+    ; (parse_aggregate_instruction &gt;&gt;<span data-count="28">|</span> fun ins -&gt; <span data-count="5">A</span>st.Aggregate ins)
+    ; (parse_other_operation &gt;&gt;<span data-count="28">|</span> fun ins -&gt; <span data-count="184">A</span>st.Other ins)
+    ; (parse_memory_instruction &gt;&gt;<span data-count="28">|</span> fun ins -&gt; <span data-count="1001">A</span>st.MemoryAddress ins)
+    ; (parse_conversion_instruction &gt;&gt;<span data-count="28">|</span> fun ins -&gt; <span data-count="140">A</span>st.Conversion ins)
     ]
 ;;
 
@@ -1742,13 +1742,13 @@ let%expect_test _ =
   <span data-count="1">[</span>%expect
     {|
     (Terminator
-       (Ret ((TInteger 32), (FromVariable ((LocalVar "14"), (TInteger 32)))))) |}<span data-count="53">]</span>
+       (Ret ((TInteger 32), (FromVariable ((LocalVar "14"), (TInteger 32)))))) |}<span data-count="57">]</span>
 ;;
 
 let%expect_test _ =
   <span data-count="1">t</span>est_parse parse_instruction Ast.show_instruction "br label %13";
   <span data-count="1">[</span>%expect {|
-    (Terminator (Br (FromVariable ((LocalVar "13"), TLabel)))) |}<span data-count="53">]</span>
+    (Terminator (Br (FromVariable ((LocalVar "13"), TLabel)))) |}<span data-count="57">]</span>
 ;;
 
 let%expect_test _ =
@@ -1758,7 +1758,7 @@ let%expect_test _ =
     (Terminator
        (BrCond ((FromVariable ((LocalVar "5"), (TInteger 1))),
           (FromVariable ((LocalVar "6"), TLabel)),
-          (FromVariable ((LocalVar "7"), TLabel))))) |}<span data-count="53">]</span>
+          (FromVariable ((LocalVar "7"), TLabel))))) |}<span data-count="57">]</span>
 ;;
 
 let%expect_test _ =
@@ -1780,13 +1780,13 @@ let%expect_test _ =
             ((Const (CInteger (32, 2L))),
              (FromVariable ((LocalVar "ontwo"), TLabel)))
             ]
-          ))) |}<span data-count="53">]</span>
+          ))) |}<span data-count="57">]</span>
 ;;
 
 let%expect_test _ =
   <span data-count="1">t</span>est_parse parse_instruction Ast.show_instruction {| unreachable |};
   <span data-count="1">[</span>%expect {|
-    (Terminator Unreachable) |}<span data-count="53">]</span>
+    (Terminator Unreachable) |}<span data-count="57">]</span>
 ;;
 
 (* ##########################################################*)
@@ -1799,7 +1799,7 @@ let%expect_test _ =
     {|
     (Unary
        (Fneg ((LocalVar "23"), TFloat, (FromVariable ((LocalVar "val"), TFloat))
-          ))) |}<span data-count="53">]</span>
+          ))) |}<span data-count="57">]</span>
 ;;
 
 (* ##########################################################*)
@@ -1814,7 +1814,7 @@ let%expect_test _ =
        (Sub
           ((LocalVar "9"), (TInteger 32),
            (FromVariable ((LocalVar "8"), (TInteger 32))),
-           (Const (CInteger (32, 1L)))))) |}<span data-count="53">]</span>
+           (Const (CInteger (32, 1L)))))) |}<span data-count="57">]</span>
 ;;
 
 let%expect_test _ =
@@ -1825,7 +1825,7 @@ let%expect_test _ =
        (Mul
           ((LocalVar "12"), (TInteger 32),
            (FromVariable ((LocalVar "10"), (TInteger 32))),
-           (FromVariable ((LocalVar "11"), (TInteger 32)))))) |}<span data-count="53">]</span>
+           (FromVariable ((LocalVar "11"), (TInteger 32)))))) |}<span data-count="57">]</span>
 ;;
 
 (* ##########################################################*)
@@ -1839,7 +1839,7 @@ let%expect_test _ =
       (BitwiseBinary
          (Xor
             ((LocalVar "res"), (TInteger 32), (Const (CInteger (32, 26L))),
-             (FromVariable ((LocalVar "var"), (TInteger 32)))))) |}<span data-count="53">]</span>
+             (FromVariable ((LocalVar "var"), (TInteger 32)))))) |}<span data-count="57">]</span>
 ;;
 
 let%expect_test _ =
@@ -1849,7 +1849,7 @@ let%expect_test _ =
       (BitwiseBinary
          (Ashr
             ((LocalVar "res"), (TInteger 8), (Const (CInteger (8, 252L))),
-             (Const (CInteger (8, 221L)))))) |}<span data-count="53">]</span>
+             (Const (CInteger (8, 221L)))))) |}<span data-count="57">]</span>
 ;;
 
 (* ##########################################################*)
@@ -1866,7 +1866,7 @@ let%expect_test _ =
       (Vector
          (Extractelement ((LocalVar "result"), (TVector (4, (TInteger 32))),
             (FromVariable ((LocalVar "vec"), (TVector (4, (TInteger 32))))),
-            (TInteger 32), (Const (CInteger (32, 0L)))))) |}<span data-count="53">]</span>
+            (TInteger 32), (Const (CInteger (32, 0L)))))) |}<span data-count="57">]</span>
 ;;
 
 let%expect_test _ =
@@ -1880,7 +1880,7 @@ let%expect_test _ =
          (Insertelement ((LocalVar "result"), (TVector (4, (TInteger 32))),
             (FromVariable ((LocalVar "vec"), (TVector (4, (TInteger 32))))),
             (Const (CInteger (32, 1L))), (TInteger 32), (Const (CInteger (32, 0L)))
-            ))) |}<span data-count="53">]</span>
+            ))) |}<span data-count="57">]</span>
 ;;
 
 let%expect_test _ =
@@ -1899,7 +1899,7 @@ let%expect_test _ =
                [(CInteger (32, 0L)); (CInteger (32, 1L)); (CInteger (32, 2L));
                  (CInteger (32, 3L)); (CInteger (32, 4L)); (CInteger (32, 5L));
                  (CInteger (32, 6L)); (CInteger (32, 7L))])
-            ))) |}<span data-count="53">]</span>
+            ))) |}<span data-count="57">]</span>
 ;;
 
 (* #############################################################*)
@@ -1916,7 +1916,7 @@ let%expect_test _ =
       (Aggregate
          (Extractvalue ((LocalVar "result"), (TStruct [(TInteger 32); TFloat]),
             (FromVariable ((LocalVar "agg"), (TStruct [(TInteger 32); TFloat]))),
-            [0]))) |}<span data-count="53">]</span>
+            [0]))) |}<span data-count="57">]</span>
 ;;
 
 let%expect_test _ =
@@ -1931,7 +1931,7 @@ let%expect_test _ =
             (TStruct [(TInteger 32); (TStruct [TFloat])]),
             (FromVariable ((LocalVar "agg1"),
                (TStruct [(TInteger 32); (TStruct [TFloat])]))),
-            TFloat, (FromVariable ((LocalVar "val"), TFloat)), [1; 0]))) |}<span data-count="53">]</span>
+            TFloat, (FromVariable ((LocalVar "val"), TFloat)), [1; 0]))) |}<span data-count="57">]</span>
 ;;
 
 (* ##########################################################*)
@@ -1943,7 +1943,7 @@ let%expect_test _ =
   <span data-count="1">[</span>%expect
     {|
       (MemoryAddress
-         (Alloca ((LocalVar "2"), (TInteger 32), (Const (CInteger (1, 1L))), 4))) |}<span data-count="53">]</span>
+         (Alloca ((LocalVar "2"), (TInteger 32), (Const (CInteger (1, 1L))), 4))) |}<span data-count="57">]</span>
 ;;
 
 let%expect_test _ =
@@ -1951,7 +1951,7 @@ let%expect_test _ =
   <span data-count="1">[</span>%expect
     {|
       (MemoryAddress
-         (Alloca ((LocalVar "2"), (TInteger 32), (Const (CInteger (1, 1L))), 1))) |}<span data-count="53">]</span>
+         (Alloca ((LocalVar "2"), (TInteger 32), (Const (CInteger (1, 1L))), 1))) |}<span data-count="57">]</span>
 ;;
 
 let%expect_test _ =
@@ -1959,7 +1959,7 @@ let%expect_test _ =
   <span data-count="1">[</span>%expect
     {|
       (MemoryAddress
-         (Alloca ((LocalVar "2"), (TInteger 32), (Const (CInteger (32, 4L))), 4))) |}<span data-count="53">]</span>
+         (Alloca ((LocalVar "2"), (TInteger 32), (Const (CInteger (32, 4L))), 4))) |}<span data-count="57">]</span>
 ;;
 
 let%expect_test _ =
@@ -1968,7 +1968,7 @@ let%expect_test _ =
     {|
       (MemoryAddress
          (Alloca ((LocalVar "2"), (TInteger 32),
-            (FromVariable ((LocalVar "kakadu"), (TInteger 32))), 1))) |}<span data-count="53">]</span>
+            (FromVariable ((LocalVar "kakadu"), (TInteger 32))), 1))) |}<span data-count="57">]</span>
 ;;
 
 let%expect_test _ =
@@ -1977,7 +1977,7 @@ let%expect_test _ =
     {|
       (MemoryAddress
          (Load ((LocalVar "11"), (TInteger 32),
-            (FromVariable ((LocalVar "3"), TPointer)), 4))) |}<span data-count="53">]</span>
+            (FromVariable ((LocalVar "3"), TPointer)), 4))) |}<span data-count="57">]</span>
 ;;
 
 let%expect_test _ =
@@ -1986,7 +1986,7 @@ let%expect_test _ =
     {|
       (MemoryAddress
          (Store ((TInteger 32), (FromVariable ((LocalVar "12"), (TInteger 32))),
-            (FromVariable ((LocalVar "2"), TPointer)), 4))) |}<span data-count="53">]</span>
+            (FromVariable ((LocalVar "2"), TPointer)), 4))) |}<span data-count="57">]</span>
 ;;
 
 let%expect_test _ =
@@ -2003,7 +2003,7 @@ let%expect_test _ =
           [((TInteger 64), (Const (CInteger (64, 0L))));
             ((TInteger 32), (Const (CInteger (32, 1L))));
             ((TInteger 32), (Const (CInteger (32, 1L))))]
-          ))) |}<span data-count="53">]</span>
+          ))) |}<span data-count="57">]</span>
 ;;
 
 let%expect_test _ =
@@ -2040,7 +2040,7 @@ let%expect_test _ =
                    [(CInteger (64, 13L)); (CInteger (64, 13L));
                      (CInteger (64, 13L)); (CInteger (64, 13L))])))
             ]
-          ))) |}<span data-count="53">]</span>
+          ))) |}<span data-count="57">]</span>
 ;;
 
 (* ##########################################################*)
@@ -2053,7 +2053,7 @@ let%expect_test _ =
     {|
       (Conversion
          (InttoprtTo
-            ((LocalVar "Y"), (TInteger 32), (Const (CInteger (32, 255L))), TPointer))) |}<span data-count="53">]</span>
+            ((LocalVar "Y"), (TInteger 32), (Const (CInteger (32, 255L))), TPointer))) |}<span data-count="57">]</span>
 ;;
 
 let%expect_test _ =
@@ -2061,7 +2061,7 @@ let%expect_test _ =
   <span data-count="1">[</span>%expect
     {|
       (Conversion
-         (FptouiTo ((LocalVar "Y"), TFloat, (Const (CFloat 1.)), (TInteger 1)))) |}<span data-count="53">]</span>
+         (FptouiTo ((LocalVar "Y"), TFloat, (Const (CFloat 1.)), (TInteger 1)))) |}<span data-count="57">]</span>
 ;;
 
 let%expect_test _ =
@@ -2075,7 +2075,7 @@ let%expect_test _ =
          (ZextTo
             ((LocalVar "Z"), (TVector (2, (TInteger 16))),
              (Const (CVector [(CInteger (16, 8L)); (CInteger (16, 7L))])),
-             (TVector (2, (TInteger 32)))))) |}<span data-count="53">]</span>
+             (TVector (2, (TInteger 32)))))) |}<span data-count="57">]</span>
 ;;
 
 (* ##########################################################*)
@@ -2089,7 +2089,7 @@ let%expect_test _ =
     (Other
        (Icmp ((LocalVar "5"), "slt", (TInteger 32),
           (FromVariable ((LocalVar "4"), (TInteger 32))),
-          (Const (CInteger (32, 1L)))))) |}<span data-count="53">]</span>
+          (Const (CInteger (32, 1L)))))) |}<span data-count="57">]</span>
 ;;
 
 let%expect_test _ =
@@ -2099,7 +2099,7 @@ let%expect_test _ =
     (Other
        (Call ((LocalVar "10"), (TInteger 32),
           (Const (CPointer (PointerGlob (GlobalVar "fac")))),
-          [(FromVariable ((LocalVar "9"), (TInteger 32)))]))) |}<span data-count="53">]</span>
+          [(FromVariable ((LocalVar "9"), (TInteger 32)))]))) |}<span data-count="57">]</span>
 ;;
 
 let%expect_test _ =
@@ -2108,7 +2108,7 @@ let%expect_test _ =
     {|
     (Other
        (Fcmp ((LocalVar "res"), "one", TFloat, (Const (CFloat 4.)),
-          (Const (CFloat 5.))))) |}<span data-count="53">]</span>
+          (Const (CFloat 5.))))) |}<span data-count="57">]</span>
 ;;
 
 let%expect_test _ =
@@ -2125,7 +2125,7 @@ let%expect_test _ =
             ((FromVariable ((LocalVar "nextindvar"), (TInteger 32))),
              (FromVariable ((LocalVar "Loop"), TLabel)))
             ]
-          ))) |}<span data-count="53">]</span>
+          ))) |}<span data-count="57">]</span>
 ;;
 
 let%expect_test _ =
@@ -2135,7 +2135,7 @@ let%expect_test _ =
       (Other
          (Select ((LocalVar "X"), (TInteger 1), (Const (CInteger (1, 1L))),
             (TInteger 8), (Const (CInteger (8, 17L))), (Const (CInteger (8, 42L)))
-            ))) |}<span data-count="53">]</span>
+            ))) |}<span data-count="57">]</span>
 ;;
 </code></pre>
       </div>
