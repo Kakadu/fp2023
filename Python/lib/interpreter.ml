@@ -1,9 +1,8 @@
-(** Copyright 2021-2022, Averin Pavel *)
+(** Copyright 2023-2024, Averin Pavel *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
 open Ast
-open Format
 
 module type MONAD = sig
   type 'a t
@@ -55,11 +54,13 @@ module Eval (M : MONADERROR) = struct
     ; params : identifier list
     ; body : statement list
     }
+
   (* Environments *)
 
   type environment =
     { id : identifier
     ; local_envs : environment list
+    ; classes : environment list
     ; functions : function_symb list
     ; flag : flag
     ; return_v : value
@@ -70,9 +71,22 @@ module Eval (M : MONADERROR) = struct
   let local_env : environment =
     { id = Identifier "local"
     ; local_envs = []
+    ; classes = []
     ; functions = []
     ; flag = No
-    ; return_v = None
+    ; return_v = Nil
+    ; vars = []
+    ; vals_to_print = []
+    }
+  ;;
+
+  let temp_class_env =
+    { id = Identifier "temp"
+    ; local_envs = []
+    ; classes = []
+    ; functions = []
+    ; flag = No
+    ; return_v = Nil
     ; vars = []
     ; vals_to_print = []
     }
@@ -82,9 +96,10 @@ module Eval (M : MONADERROR) = struct
     { id = Identifier "global"
     ; vars = []
     ; local_envs = [ local_env ]
+    ; classes = []
     ; functions = []
     ; flag = No
-    ; return_v = None
+    ; return_v = Nil
     ; vals_to_print = []
     }
   ;;
@@ -118,7 +133,9 @@ module Eval (M : MONADERROR) = struct
     List.exists (fun (a : function_symb) -> i = a.identifier) env.functions
   ;;
 
-  let change_func new_func env =
+  let class_in_env i env = List.exists (fun (a : environment) -> i = a.id) env.classes
+
+  let change_func (new_func : function_symb) env =
     let new_funcs =
       List.map
         (fun (x : function_symb) ->
@@ -136,25 +153,31 @@ module Eval (M : MONADERROR) = struct
     | false -> { env with functions = x :: env.functions }
   ;;
 
+  let change_class (new_class : environment) env =
+    let new_classes =
+      List.map
+        (fun (x : environment) ->
+          if x.id = new_class.id
+          then { x with functions = new_class.functions; vars = new_class.vars }
+          else x)
+        env.classes
+    in
+    { env with classes = new_classes }
+  ;;
+
+  let change_or_add_class (x : environment) env =
+    match func_in_env x.id env with
+    | true -> change_class x env
+    | false -> { env with classes = x :: env.classes }
+  ;;
+
   let get_func i env =
     List.find (fun (x : function_symb) -> x.identifier = i) env.functions
   ;;
 
-  (* Miscellaneous *)
-  let pack_to_string = function
-    | String a -> a
-    | Int a -> Int.to_string a
-    | Bool a -> Bool.to_string a
-    | _ -> "Interpretation Error"
-  ;;
+  let get_class i env = List.find (fun (x : environment) -> x.id = i) env.classes
 
-  let rec print_list = function
-    | [] -> ()
-    | e :: l ->
-      print_string e;
-      print_string " ";
-      print_list l
-  ;;
+  (* Miscellaneous *)
 
   let combine_args_and_params args (params : value list) =
     List.map (fun x -> { identifier = fst x; value = snd x }) (List.combine args params)
@@ -164,20 +187,11 @@ module Eval (M : MONADERROR) = struct
 
   let get_str_from_identifier (Identifier i) = i
 
-  let rec print_funcs = function
-    | [] -> ()
-    | func :: remaining_functions ->
-      print_string (get_str_from_identifier func.identifier);
-      print_string " ";
-      print_funcs remaining_functions
-  ;;
-
-  let rec print_vars = function
-    | [] -> ()
-    | (var : var_symb) :: (remaining_vars : var_symb list) ->
-      print_string (get_str_from_identifier var.identifier);
-      print_string " ";
-      print_vars remaining_vars
+  let pack_to_string = function
+    | String a -> return a
+    | Int a -> return @@ Int.to_string a
+    | Bool a -> return @@ Bool.to_string a
+    | _ -> error "Interpretation Error"
   ;;
 
   (* Main functions *)
@@ -190,11 +204,11 @@ module Eval (M : MONADERROR) = struct
   let i_exp_or_stmt =
     let rec i_expr (exp_or_stmt : dispatch) (env : environment) exp =
       let rec apply env body =
-        if env.flag == Return_f
+        if env.flag = Return_f
         then return env.return_v
         else (
           match body with
-          | [] -> return None
+          | [] -> return Nil
           | hd :: tl ->
             let* a = exp_or_stmt.i_stmt exp_or_stmt env hd in
             apply a tl)
@@ -225,6 +239,12 @@ module Eval (M : MONADERROR) = struct
         let* b = i_expr exp_or_stmt env b in
         (match a, b with
          | Int a1, Int b1 -> return (Int (a1 * b1))
+         | _ -> error "unexpected type")
+      | ArithOp (Mod, a, b) ->
+        let* a = i_expr exp_or_stmt env a in
+        let* b = i_expr exp_or_stmt env b in
+        (match a, b with
+         | Int a1, Int b1 -> return (Int (a1 mod b1))
          | _ -> error "unexpected type")
       | BoolOp (Equal, a, b) ->
         let* a = i_expr exp_or_stmt env a in
@@ -258,23 +278,43 @@ module Eval (M : MONADERROR) = struct
         let* a = i_expr exp_or_stmt env a in
         let* b = i_expr exp_or_stmt env b in
         return (Bool (a = Bool true || b = Bool true))
-      | Variable i ->
+      | Variable (_, i) ->
         (match var_in_env i env with
          | true -> return (get_var i env).value
          | false -> error "undefined Variable")
       | FunctionCall (identifier, exp_list) ->
         (match identifier with
-         | Identifier "print" ->
+         | Identifier "print" when not (func_in_env (Identifier "print") env) ->
            let rec print_exp_list = function
-             | [] -> return None
+             | [] -> return Nil
              | exp :: tl ->
                let* value = i_expr exp_or_stmt env exp in
-               let () = Printf.printf "%s" (pack_to_string value) in
+               let* str_val = pack_to_string value in
+               let () = Printf.printf "%s" str_val in
                print_exp_list tl
            in
            (match exp_list with
-            | [] -> return None
+            | [] -> return Nil
             | _ -> print_exp_list exp_list)
+         | Identifier "setattr" when not (func_in_env (Identifier "setattr") env) ->
+           let* className = i_expr exp_or_stmt env (List.hd exp_list) in
+           let* packedToStrClass = pack_to_string className in
+           let classId = Identifier packedToStrClass in
+           let nameAndMethod = List.tl exp_list in
+           let* funcName = i_expr exp_or_stmt env (List.hd nameAndMethod) in
+           let* packedToStrFunc = pack_to_string funcName in
+           let funcId = Identifier packedToStrFunc in
+           let remaining = List.tl nameAndMethod in
+           let* methodName = i_expr exp_or_stmt env (List.hd remaining) in
+           let* packedToStrMethod = pack_to_string methodName in
+           let methodId = Identifier packedToStrMethod in
+           let fetchedClass = get_class classId env in
+           let fetchedMethod = get_func methodId env in
+           let changedClass =
+             let funcI : function_symb = { fetchedMethod with identifier = funcId } in
+             change_func funcI fetchedClass
+           in
+           i_expr exp_or_stmt (change_or_add_class changedClass env) (Const Nil)
          | _ ->
            (match func_in_env identifier env with
             | false -> error "undefined Function"
@@ -290,15 +330,49 @@ module Eval (M : MONADERROR) = struct
                 ; functions = [ get_func identifier env ]
                 }
                 (get_func identifier env).body))
-      | _ -> error "wip"
+      | MethodCall (classId, methodId, e) ->
+        let fetchedMethod = get_func methodId (get_class classId env) in
+        let temp_env = { env with functions = env.functions @ [ fetchedMethod ] } in
+        i_expr exp_or_stmt temp_env (FunctionCall (methodId, e))
+      | ListExp exps ->
+        let* calcList = map1 (fun exp -> i_expr exp_or_stmt env exp) exps in
+        return @@ List calcList
+      | FString fStringList ->
+        let* strList =
+          map1
+            (function
+              | Str c -> pack_to_string c
+              | Var id -> pack_to_string (get_var id env).value)
+            fStringList
+        in
+        i_expr exp_or_stmt env (Const (String (String.concat "" strList)))
+      | Lambda _ -> return Nil
+      | Field (classId, fieldId) -> return (get_var fieldId (get_class classId env)).value
     in
     let rec i_stmt (i_exp_or_stmt : dispatch) (env : environment) = function
       | Expression exp ->
-        let* some_val = i_expr i_exp_or_stmt env exp in
+        let* _ = i_expr i_exp_or_stmt env exp in
         return env
       | Return exp ->
         let* value = i_exp_or_stmt.i_expr i_exp_or_stmt env exp in
         return { env with flag = Return_f; return_v = value }
+      | While (e, s) ->
+        let rec guard_res ctx =
+          i_exp_or_stmt.i_expr i_exp_or_stmt env e
+          >>= function
+          | Bool false -> return ctx
+          | _ -> helper ctx s
+        and helper envH s =
+          match envH.flag with
+          | Return_f -> return envH
+          | _ ->
+            (match s with
+             | [] -> guard_res envH
+             | h :: tl ->
+               let* newEnv = i_stmt i_exp_or_stmt envH h in
+               helper newEnv tl)
+        in
+        guard_res env
       | IfElse (guard, ifBranch, elseBranch) ->
         let* res = i_expr i_exp_or_stmt env guard in
         let get_env env = fold_left (i_exp_or_stmt.i_stmt i_exp_or_stmt) env in
@@ -308,26 +382,39 @@ module Eval (M : MONADERROR) = struct
          | _ -> error "failed to interpred the guard")
       | Assign (l, r) ->
         (match l with
-         | Variable identifier ->
-           let* value = i_exp_or_stmt.i_expr i_exp_or_stmt env r in
-           return (change_or_add_var env { identifier; value })
+         | Variable (_, identifier) ->
+           (match r with
+            | Lambda (params, exp) ->
+              i_stmt i_exp_or_stmt env (Function (identifier, params, [ Return exp ]))
+            | _ ->
+              let* value = i_exp_or_stmt.i_expr i_exp_or_stmt env r in
+              return (change_or_add_var env { identifier; value }))
          | _ -> error "Left-hand side operator is not a variable")
+      | Class (id, statements) ->
+        let global_env =
+          fold_left (fun x -> i_stmt i_exp_or_stmt x) local_env statements
+        in
+        let class_env =
+          let* global_env = global_env in
+          return
+            { temp_class_env with
+              vars = global_env.vars
+            ; functions = global_env.functions
+            }
+        in
+        (match class_in_env id env with
+         | true -> return env
+         | false ->
+           let* class_env = class_env in
+           return { env with classes = { class_env with id } :: env.classes })
       | Function (i, some_params, some_body) ->
         let new_func_env = { identifier = i; params = some_params; body = some_body } in
         return (change_or_add_func new_func_env env)
-      | _ -> error "wip"
+      | Else _ -> error "loose else statement"
     in
     { i_expr; i_stmt }
   ;;
 
-  let interpret_exp (e : expression) global_env =
-    i_exp_or_stmt.i_expr i_exp_or_stmt global_env e
-  ;;
-
-  let get_env global_env = fold_left (i_exp_or_stmt.i_stmt i_exp_or_stmt) global_env
-
-  let interpret =
-    let env = global_env in
-    get_env env
-  ;;
+  let get_env env = fold_left (i_exp_or_stmt.i_stmt i_exp_or_stmt) env
+  let interpret = get_env global_env
 end
