@@ -32,6 +32,7 @@ type expression =
   | BinOp of bin_op * expression * expression
   | Const of typename
   | Var of string
+  | Array_list of expression list
   | FunctionCall of expression * expression list
   | AnonFunction of string list * statement
   | ObjectDef of (expression * expression) list
@@ -49,12 +50,21 @@ and fun_init =
   ; body : statement
   }
 
+and for_loop = 
+  { variable : statement
+  ; condition : statement
+  ; var_state : statement
+  ; loop_body : statement
+  }
+
 and statement =
   | Block of statement list
   | Expression of expression
   | VarDeck of var_init
   | FunDeck of fun_init
   | If of expression * statement * statement
+  | While of expression * statement
+  | ForDeck of for_loop 
   | Return of expression
   | Programm of statement list
 [@@deriving show { with_path = false }]
