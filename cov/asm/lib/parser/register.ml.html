@@ -58,33 +58,15 @@
 <a id="L34"></a><span > </span>
 <a id="L35"></a><span > </span>
 <a id="L36"></a><span > </span>
-<a id="L37"></a><span > </span>
-<a id="L38"></a><span class="visited"> </span>
+<a id="L37"></a><span class="visited"> </span>
+<a id="L38"></a><span > </span>
 <a id="L39"></a><span > </span>
 <a id="L40"></a><span class="visited"> </span>
-<a id="L41"></a><span class="visited"> </span>
-<a id="L42"></a><span class="visited"> </span>
-<a id="L43"></a><span class="visited"> </span>
+<a id="L41"></a><span > </span>
+<a id="L42"></a><span > </span>
+<a id="L43"></a><span > </span>
 <a id="L44"></a><span class="visited"> </span>
-<a id="L45"></a><span class="visited"> </span>
-<a id="L46"></a><span class="visited"> </span>
-<a id="L47"></a><span class="visited"> </span>
-<a id="L48"></a><span > </span>
-<a id="L49"></a><span > </span>
-<a id="L50"></a><span > </span>
-<a id="L51"></a><span class="visited"> </span>
-<a id="L52"></a><span > </span>
-<a id="L53"></a><span > </span>
-<a id="L54"></a><span class="visited"> </span>
-<a id="L55"></a><span > </span>
-<a id="L56"></a><span > </span>
-<a id="L57"></a><span > </span>
-<a id="L58"></a><span class="visited"> </span>
-<a id="L59"></a><span > </span>
-<a id="L60"></a><span > </span>
-<a id="L61"></a><span > </span>
-<a id="L62"></a><span class="visited"> </span>
-<a id="L63"></a><span > </span>
+<a id="L45"></a><span > </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -134,24 +116,6 @@
 <a href="#L43">43</a>
 <a href="#L44">44</a>
 <a href="#L45">45</a>
-<a href="#L46">46</a>
-<a href="#L47">47</a>
-<a href="#L48">48</a>
-<a href="#L49">49</a>
-<a href="#L50">50</a>
-<a href="#L51">51</a>
-<a href="#L52">52</a>
-<a href="#L53">53</a>
-<a href="#L54">54</a>
-<a href="#L55">55</a>
-<a href="#L56">56</a>
-<a href="#L57">57</a>
-<a href="#L58">58</a>
-<a href="#L59">59</a>
-<a href="#L60">60</a>
-<a href="#L61">61</a>
-<a href="#L62">62</a>
-<a href="#L63">63</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2023-2024, Vadim Yakshigulov *)
 
@@ -160,20 +124,6 @@
 open Common
 open Angstrom
 open Ast
-
-let parse_32_register =
-  choic<span data-count="6">e</span>
-    ~failure_msg:"parse_32_register"
-    [ string_c<span data-count="6">i</span> "eax" *<span data-count="6">&gt;</span> retur<span data-count="6">n</span> eax
-    ; string_c<span data-count="6">i</span> "ebx" *<span data-count="6">&gt;</span> retur<span data-count="6">n</span> ebx
-    ; string_c<span data-count="6">i</span> "ecx" *<span data-count="6">&gt;</span> retur<span data-count="6">n</span> ecx
-    ; string_c<span data-count="6">i</span> "edx" *<span data-count="6">&gt;</span> retur<span data-count="6">n</span> edx
-    ; string_c<span data-count="6">i</span> "esp" *<span data-count="6">&gt;</span> retur<span data-count="6">n</span> esp
-    ; string_c<span data-count="6">i</span> "ebp" *<span data-count="6">&gt;</span> retur<span data-count="6">n</span> ebp
-    ; string_c<span data-count="6">i</span> "esi" *<span data-count="6">&gt;</span> retur<span data-count="6">n</span> esi
-    ; string_c<span data-count="6">i</span> "edi" *<span data-count="6">&gt;</span> retur<span data-count="6">n</span> edi
-    ]
-;;
 
 let parse_64_register =
   choic<span data-count="6">e</span>
@@ -203,11 +153,7 @@ let parse_128_register =
     ]
 ;;
 
-let between_brackets parser = <span data-count="18">b</span>etwee<span data-count="18">n</span> (cha<span data-count="18">r</span> '[') (cha<span data-count="18">r</span> ']') parser &lt;?&gt; "between_brackets"
-
-let parse_32_register_ref =
-  between_bracket<span data-count="6">s</span> parse_32_register &gt;&gt;<span data-count="6">|</span> register_ref &lt;?<span data-count="6">&gt;</span> "parse_32_register_ref"
-;;
+let between_brackets parser = <span data-count="12">b</span>etwee<span data-count="12">n</span> (cha<span data-count="12">r</span> '[') (cha<span data-count="12">r</span> ']') parser &lt;?&gt; "between_brackets"
 
 let parse_64_register_ref =
   between_bracket<span data-count="6">s</span> parse_64_register &gt;&gt;<span data-count="6">|</span> register_ref &lt;?<span data-count="6">&gt;</span> "parse_64_register_ref"

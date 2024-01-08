@@ -447,19 +447,19 @@ module GlobalState = struct
     }
 
   let initialize_registers_with filter_fn value =
-    <span data-count="8">l</span>et add_to_map map (key, value) = <span data-count="96">S</span>tringMap.add key value map in
+    <span data-count="8">l</span>et add_to_map map (key, value) = <span data-count="64">S</span>tringMap.add key value map in
     Variants_of_register.descriptions
-    |&gt; List.filter (fun (name, _) -&gt; <span data-count="192">f</span>ilter_fn name)
-    |&gt; <span data-count="8">L</span>ist.map (fun (name, _) -&gt; <span data-count="96">n</span>ame, value)
+    |&gt; List.filter (fun (name, _) -&gt; <span data-count="128">f</span>ilter_fn name)
+    |&gt; <span data-count="8">L</span>ist.map (fun (name, _) -&gt; <span data-count="64">n</span>ame, value)
     |&gt; <span data-count="8">L</span>ist.fold_left add_to_map StringMap.empty
   ;;
 
   let initialize_registers =
-    initialize_registers_wit<span data-count="4">h</span> (fun name -&gt; <span data-count="96">n</span>ot (String.starts_wit<span data-count="96">h</span> ~prefix:"Xmm" name)) 0
+    initialize_registers_wit<span data-count="4">h</span> (fun name -&gt; <span data-count="64">n</span>ot (String.starts_wit<span data-count="64">h</span> ~prefix:"Xmm" name)) 0
   ;;
 
   let initialize_xmm_registers =
-    initialize_registers_wit<span data-count="4">h</span> (fun name -&gt; <span data-count="96">S</span>tring.starts_with ~prefix:"Xmm" name) (0, 0)
+    initialize_registers_wit<span data-count="4">h</span> (fun name -&gt; <span data-count="64">S</span>tring.starts_with ~prefix:"Xmm" name) (0, 0)
   ;;
 
   let initial_state =
@@ -481,7 +481,7 @@ module GlobalState = struct
 
   let show state =
     <span data-count="3">l</span>et show_map title show_value map =
-      <span data-count="6">l</span>et show_item (key, value) = <span data-count="72">P</span>rintf.sprintf "%s: %s" key (show_valu<span data-count="72">e</span> value) in
+      <span data-count="6">l</span>et show_item (key, value) = <span data-count="48">P</span>rintf.sprintf "%s: %s" key (show_valu<span data-count="48">e</span> value) in
       Printf.sprintf
         "%s:\n%s"
         title
