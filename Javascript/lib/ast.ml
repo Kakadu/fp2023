@@ -7,13 +7,13 @@ type un_op =
   | Minus
 [@@deriving show { with_path = false }]
 
+(* TODO: implement Remainder operator *)
 type bin_op =
   | PropAccs
   | Add
   | Sub
   | Mul
   | Div
-  (* | Rem --> implement Remainder operator *)
   | Equal
   | NotEqual
   | Assign
