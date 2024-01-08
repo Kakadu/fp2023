@@ -19,8 +19,8 @@ let strip_dot str =
   | _ -> str
 ;;
 
-(*JS use diffrent conversion to string in .toString and in print.
-  It's the reason why vvalues_to_str and to_vstring is diffrent functions*)
+(*JS uses diffrent conversion to string in .toString and in print.
+  It's the reason why vvalues_to_str and to_vstring are diffrent functions*)
 let vvalues_to_str = function
   | VNumber x -> strip_dot @@ Float.to_string x
   | VBool true -> "true"
@@ -130,7 +130,7 @@ let add a b =
   if is_to_string a || is_to_string b
   then op_with_string ( ^ ) a b
   else op_with_num ( +. ) a b
-;;
+;;  
 
 let eval_bin_op ctx op a b =
   let add_ctx op = op >>| fun op -> ctx, op in
