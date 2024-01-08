@@ -781,3 +781,89 @@ let%expect_test "factorial" =
               })
          ])|}]
 ;;
+
+let%expect_test "array_list" =
+  pp "var myArray = [1, 2, 3, 4, 5];";
+  [%expect
+    {|
+(Programm
+   [(VarDeck
+       { var_identifier = "myArray"; is_const = false;
+         value =
+         (Array_list
+            [(Const (Number 1.)); (Const (Number 2.)); (Const (Number 3.));
+              (Const (Number 4.)); (Const (Number 5.))])
+         })
+     ])
+    |}]
+;;
+
+let%expect_test "while" =
+  pp
+    "while (a != 0 ) {\n\
+    \    var b = a - 1;\n\
+    \    if (a == 1) {\n\
+    \        return b;\n\
+    \    }\n\
+    \    else {\n\
+    \        return 0;\n\
+    \    }\n\
+    \    let a = a - 1;\n\
+     }";
+  [%expect
+    {|
+
+(Programm
+   [(While ((BinOp (NotEqual, (Var "a"), (Const (Number 0.)))),
+       (Block
+          [(VarDeck
+              { var_identifier = "b"; is_const = false;
+                value = (BinOp (Sub, (Var "a"), (Const (Number 1.)))) });
+            (If ((BinOp (Equal, (Var "a"), (Const (Number 1.)))),
+               (Block [(Return (Var "b"))]),
+               (Block [(Return (Const (Number 0.)))])));
+            (VarDeck
+               { var_identifier = "a"; is_const = false;
+                 value = (BinOp (Sub, (Var "a"), (Const (Number 1.)))) })
+            ])
+       ))
+     ])
+             |}]
+;;
+
+let%expect_test "for" =
+  pp 
+    "for (let i = 0; i != 10; i = i + 1) {
+      var a = i;
+      if (a == 5) {
+          return a;
+      }
+    }";
+  
+  [%expect
+    {|
+      (Programm
+         [(ForDeck
+             { variable =
+               (VarDeck
+                  { var_identifier = "i"; is_const = false; 
+                    value = (Const (Number 0.)) });
+               condition = 
+               (Expression (BinOp (NotEqual, (Var "i"), (Const (Number 10.)))));
+               var_state =
+               (Expression
+                  (BinOp (Assign, (Var "i"), 
+                     (BinOp (Add, (Var "i"), (Const (Number 1.)))))));
+               loop_body =
+               (Block
+                  [(VarDeck 
+                      { var_identifier = "a"; is_const = false; value = (Var "i") });
+                    (If ((BinOp (Equal, (Var "a"), (Const (Number 5.)))),
+                       (Block [(Return (Var "a"))]), (Block [])))
+                    ])
+               })
+           ])
+    |}
+  ]
+;;
+       

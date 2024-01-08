@@ -52,6 +52,8 @@ let keywords =
   ; "return"
   ; "else"
   ; "this"
+  ; "while"
+  ; "for"
   ; "true"
   ; "false"
   ; "undefined"
@@ -119,6 +121,7 @@ let const c = Const c
 let var v = Var v
 let expression e = Expression e
 let bop f acc x = BinOp (f, acc, x)
+let array a = Array_list a
 
 let parse_number =
   lift3 (fun a b c -> a ^ b ^ c) (take_while is_digit) (string ".") (take_while is_digit)
@@ -231,6 +234,9 @@ let rec parse_arrow_func () =
         <|> (start_parse_expression () >>| fun exp -> Block [ Return exp ]))
   >>| fun body -> AnonFunction (args, body)
 
+and parse_array () = 
+  token (sq_parens (parse_comma (start_parse_expression())))
+
 and parse_anon_func () =
   token_str "function" *> token parse_args_names
   >>= fun args -> parse_block_or_stm () >>| fun body -> AnonFunction (args, body)
@@ -267,6 +273,7 @@ and parse_mini_expression () =
        ; parse_number >>| const
        ; parse_bool >>| const
        ; parse_str >>| const
+       ; parse_array () >>| array
        ; valid_identifier >>| var
        ])
   <?> "invalid part of expression"
@@ -331,6 +338,21 @@ and parse_block () =
 
 and parse_block_or_stm () = parse_block () <|> (parse_stm () >>| fun stm -> Block [ stm ])
 
+and parse_while () =
+  parens (start_parse_expression ()) 
+  >>= fun condition -> 
+  parse_block_or_stm () 
+  <?> "invalid while loop condition" 
+  >>| fun body -> While (condition, body)
+
+and parse_for () =
+  lp *> (parse_stm ()) <?> "invalid for loop variable"
+  >>= fun variable -> (parse_stm ()) <?> "invalid for loop variable condition"
+  >>= fun condition -> (parse_stm () <* rp) <?> "invalid variable change statement"
+  >>= fun state -> parse_stm () <?> "invalid for loop body"
+  >>| fun body -> 
+  ForDeck { variable = variable; condition = condition; var_state = state; loop_body = body }
+
 and parse_if () =
   parens (start_parse_expression ())
   >>= fun condition ->
@@ -354,6 +376,8 @@ and parse_stm () =
                token1 @@ parse_var word <?> "wrong var statement"
              | "function" -> token1 @@ parse_func () <?> "wrong function statement"
              | "if" -> token1 @@ parse_if () <?> "wrong if statement"
+             | "while" -> token1 @@ parse_while () <?> "wrong while statement"
+             | "for" -> token1 @@ parse_for () <?> "wrong for statement"
              | "return" -> token1 @@ parse_return () <?> "wrong return statement"
              | "" ->
                peek_char_fail
