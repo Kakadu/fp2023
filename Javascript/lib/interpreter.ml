@@ -90,6 +90,63 @@ let get_parent ctx =
   | _ -> error @@ InternalError "cannot get parent"
 ;;
 
+let create_func name args body =
+  let length = Float.of_int @@ List.length args in
+  let fun_ctx = { args; body } in
+  VObject
+    { proto = None
+    ; fields =
+        [ { var_id = "name"; is_const = true; value = VString name }
+        ; { var_id = "length"; is_const = true; value = VNumber length }
+        ]
+    ; obj_type = TFunction fun_ctx
+    }
+;;
+
+let context_init =
+  { parent = None; vars = []; vreturn = None; stdout = ""; scope = Block }
+;;
+
+let create_local_ctx ctx scope =
+  { parent = Some ctx; vars = []; vreturn = None; stdout = ctx.stdout; scope }
+;;
+
+let rec find_in_vars id = function
+  | a :: b -> if a.var_id = id then Some a else find_in_vars id b
+  | _ -> None
+;;
+
+let ctx_add ctx var =
+  match find_in_vars var.var_id ctx.vars with
+  | Some _ ->
+    error
+    @@ SyntaxError (asprintf "Identifier \'%s\' has already been declared" var.var_id)
+  | _ -> return { ctx with vars = var :: ctx.vars }
+;;
+
+let rec in_func ctx =
+  match ctx.scope with
+  | Function | ArrowFunction -> true
+  | Block ->
+    (match ctx.parent with
+     | Some x -> in_func x
+     | None -> false)
+;;
+
+let prefind_funcs ctx ast =
+  let ctx_add_if_func ctx = function
+    | FunInit x ->
+      ctx_add
+        ctx
+        { var_id = x.fun_identifier
+        ; is_const = false
+        ; value = create_func x.fun_identifier x.arguments x.body
+        }
+    | _ -> return ctx
+  in
+  fold_left ctx_add_if_func ctx ast
+;;
+
 (**---------------Expression interpreter---------------*)
 
 let to_vstring =
@@ -203,43 +260,54 @@ let rec ctx_get_var ctx id =
        error (ReferenceError (asprintf "Cannot access '%s' before initialization" id)))
 ;;
 
+let rec eval_fun ctx id args =
+  let get_fun =
+    match id with
+    | VObject obj when is_func obj -> return (ctx, obj.obj_type)
+    | _ -> etyp @@ vvalues_to_str id ^ " is not a function"
+  in
+  let rec val_to_args ctx = function
+    | a1 :: atl, v1 :: vtl ->
+      ctx_add ctx { var_id = a1; is_const = false; value = v1 }
+      >>= fun ctx -> val_to_args ctx (atl, vtl)
+    | a1 :: atl, _ ->
+      ctx_add ctx { var_id = a1; is_const = false; value = VUndefined }
+      >>= fun ctx -> val_to_args ctx (atl, [])
+    | _, _ -> return ctx
+  in
+  let valid_and_run ctx scope f =
+    match f.body with
+    | Block x ->
+      val_to_args (create_local_ctx ctx scope) (f.args, args)
+      >>= fun ctx -> parse_stms ctx x >>| fun ctx -> ctx, get_vreturn ctx
+    | _ ->
+      error (AstError "in top of fun body expected ast, but something else was given")
+  in
+  get_fun
+  >>= fun (ctx, obj_t) ->
+  match obj_t with
+  | TFunPreset f -> f ctx args >>| fun ctx -> ctx, get_vreturn ctx
+  | TFunction f -> valid_and_run ctx Function f
+  | TArrowFunction f -> valid_and_run ctx ArrowFunction f
+  | _ ->
+    error @@ InternalError "get unexpected object type, expect function, but get TObject"
+
+and eval_exp ctx = function
   | Const x -> return (ctx, const_to_val x)
   | BinOp (op, a, b) ->
     eval_exp ctx a
     >>= fun (ctx, x) -> eval_exp ctx b >>= fun (ctx, y) -> eval_bin_op ctx op x y
   | UnOp (op, a) -> eval_exp ctx a >>= fun (ctx, a) -> eval_un_op ctx op a
   | Var id -> ctx_get_var ctx id >>| fun a -> ctx, a.value
+  | FunctionCall (var, args) ->
+    eval_exp ctx var
+    >>= fun (ctx, id) ->
+    fold_left_map eval_exp ctx args >>= fun (ctx, args) -> eval_fun ctx id args
   | _ -> ensup ""
-;;
 
 (**---------------Statment interpreter---------------*)
 
-let context_init =
-  { parent = None; vars = []; vreturn = None; stdout = ""; scope = Block }
-;;
-
-let create_local_ctx ctx scope =
-  { parent = Some ctx; vars = []; vreturn = None; stdout = ctx.stdout; scope }
-;;
-
-let ctx_add ctx var =
-  match find_in_vars var.var_id ctx.vars with
-  | Some _ ->
-    error
-    @@ SyntaxError ("Identifier \'" ^ var.var_id ^ "\' has already been declared\n  ")
-  | _ -> return { ctx with vars = var :: ctx.vars }
-;;
-
-let rec in_func ctx =
-  match ctx.scope with
-  | Function | ArrowFunction -> true
-  | Block ->
-    (match ctx.parent with
-     | Some x -> in_func x
-     | None -> false)
-;;
-
-let rec parse_stm ctx = function
+and parse_stm ctx = function
   | Return x ->
     eval_exp ctx x
     <?> "error in return expression"
@@ -258,9 +326,13 @@ let rec parse_stm ctx = function
     (match ctx.vreturn with
      | Some a -> { parent with vreturn = Some a }
      | _ -> parent)
+  | FunInit _ -> return ctx
   | _ -> ensup ""
 
-and parse_stms ctx ast = fold_left_s parse_stm (fun ctx -> is_some ctx.vreturn) ctx ast
+and parse_stms ctx ast =
+  prefind_funcs ctx ast
+  >>= fun ctx -> fold_left_s parse_stm (fun ctx -> is_some ctx.vreturn) ctx ast
+
 and parse_block ctx scope ast = parse_stms (create_local_ctx ctx scope) ast
 
 let interpret_ast ast : (value, string) Result.t =

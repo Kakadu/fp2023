@@ -24,15 +24,17 @@ type scope =
   | ArrowFunction
   | Block
 
+type field
+
 type obj_type =
   | TFunPreset of (ctx -> value list -> ctx t)
   | TFunction of fun_ctx
-  | TArrowFun of fun_ctx
+  | TArrowFunction of fun_ctx
   | TObject
 
 and obj_ctx =
-  { proto : obj_ctx
-  ; fields : (string * value) list
+  { proto : obj_ctx option
+  ; fields : let_ctx list
   ; obj_type : obj_type
   }
 

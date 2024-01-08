@@ -161,3 +161,45 @@ let%expect_test _ =
   pi "let a = 4; { return a} ";
   [%expect {| Programm return: 4 |}]
 ;;
+
+(*function test*)
+
+let%expect_test _ =
+  pi "function a() {return 5;}; return a()";
+  [%expect {| Programm return: 5 |}]
+;;
+
+let%expect_test _ =
+  pi "function a(b) {return b;}; return a(7)";
+  [%expect {| Programm return: 7 |}]
+;;
+
+let%expect_test _ =
+  pi "function a(b, c) {return b+c;}; return a(7, 8)";
+  [%expect {| Programm return: 15 |}]
+;;
+
+let%expect_test _ =
+  pi "function a() {return 4;}; return a(7, 8)";
+  [%expect {| Programm return: 4 |}]
+;;
+
+let%expect_test _ =
+  pi "function a(j) {return j;}; return a()";
+  [%expect {| Programm return: undefined |}]
+;;
+
+let%expect_test _ =
+  pi "return a(); function a() {return 4;}";
+  [%expect {| Programm return: 4 |}]
+;;
+
+let%expect_test _ =
+  pi "return a; function a() {}";
+  [%expect {| Programm return: [Function: a] |}]
+;;
+
+let%expect_test _ =
+  pi "let a = 6; function b() {return a;}; return b()";
+  [%expect {| Programm return: 6 |}]
+;;
