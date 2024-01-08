@@ -52,7 +52,7 @@ module Unify = struct
     | Ty.Ty_var tv, ty | ty, Ty.Ty_var tv ->
         if occurs_check tv ty then fail @@ TyError.OccursIn (tv, ty)
         else return @@ Sub.singleton tv ty
-    | Ty_arr (l1, r1), Ty_arr (l2, r2) ->
+    | Ty_arr (l1, _, r1), Ty_arr (l2, _, r2) ->
         unify_many [l1; r1] [l2; r2]
     | Ty_tuple tys1, Ty_tuple tys2 ->
         unify_many tys1 tys2

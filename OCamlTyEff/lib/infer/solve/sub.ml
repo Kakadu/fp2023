@@ -15,8 +15,8 @@ let apply sub =
   let rec helper = function
     | Ty.Ty_var tv as ty ->
         Map.find sub tv |> Option.value ~default:ty
-    | Ty_arr (t1, t2) ->
-        Ty_arr (helper t1, helper t2)
+    | Ty_arr (t1, _, t2) ->
+        Ty_arr (helper t1, Eff_total, helper t2)
     | Ty_con (id, tys) ->
         Ty_con (id, List.map tys ~f:helper)
     | Ty_tuple tys ->

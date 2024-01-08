@@ -9,7 +9,7 @@ let id name = Ident.Ident name
 
 let var x = Ty.Ty_var (Var x)
 
-let ( @> ) ty_arg ty_res = Ty.Ty_arr (ty_arg, ty_res)
+let ( @> ) ty_arg ty_res = Ty.Ty_arr (ty_arg, Eff_total, ty_res)
 
 let tuple tys = Ty.Ty_tuple tys
 

@@ -7,7 +7,7 @@ open Ast
 
 type t =
   | Ty_var of Var.t
-  | Ty_arr of t * t
+  | Ty_arr of t * Eff.t * t
   | Ty_tuple of t list
   | Ty_con of Ident.t * t list
 [@@deriving eq, ord, sexp_of]
@@ -26,8 +26,8 @@ let rec pp ppf =
   function
   | Ty_var var ->
       Var.pp ppf var
-  | Ty_arr (l, r) ->
-      fprintf ppf "%a -> %a" pp l pp_raw r
+  | Ty_arr (l, eff, r) ->
+      fprintf ppf "%a %a-> %a" pp l Eff.pp eff pp_raw r
   | Ty_tuple tys ->
       let pp_tys = pp_print_list pp ~pp_sep:(fun out () -> fprintf out " * ") in
       fprintf ppf "%a" pp_tys tys
@@ -50,8 +50,8 @@ let string = Ty_con (Ident "string", [])
 let rec vars = function
   | Ty_var x ->
       VarSet.singleton x
-  | Ty_arr (ty1, ty2) ->
-      VarSet.union (vars ty1) (vars ty2)
+  | Ty_arr (ty1, eff, ty2) ->
+      VarSet.union_list [vars ty1; Eff.vars eff; vars ty2]
   | Ty_tuple tys ->
       List.map ~f:vars tys |> VarSet.union_list
   | Ty_con (_, tys) ->
