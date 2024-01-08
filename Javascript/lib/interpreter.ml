@@ -8,10 +8,11 @@ open Parser
 open VTypes
 
 let is_some = Option.is_some
+let asprintf = Format.asprintf
 
 let is_func x =
   match x.obj_type with
-  | TFunPreset _ | TFunction _ | TArrowFun _ -> true
+  | TFunPreset _ | TFunction _ -> true
   | _ -> false
 ;;
 
@@ -25,18 +26,6 @@ let num_to_string n =
   else Float.to_string n
 ;;
 
-(*JS use diffrent conversion to string in .toString and in print.
-  It's the reason why vvalues_to_str and to_vstring is diffrent functions*)
-let vvalues_to_str = function
-  | VNumber x -> num_to_string x
-  | VBool true -> "true"
-  | VBool false -> "false"
-  | VNull -> "null"
-  | VUndefined -> "undefined"
-  | VString x -> x
-  | _ -> "Cannot convert to string"
-;;
-
 let print_val = function
   | VNumber _ -> "number"
   | VString _ -> "string"
@@ -45,6 +34,25 @@ let print_val = function
   | VNull -> "null"
   | VObject x when is_func x -> "function"
   | VObject _ -> "object"
+;;
+
+let rec obj_get_field id = function
+  | field :: tl -> if field.var_id = id then field.value else obj_get_field id tl
+  | _ -> VUndefined
+;;
+
+(*JS use diffrent conversion to string in .toString and in print.
+  It's the reason why vvalues_to_str and to_vstring is diffrent functions*)
+let rec vvalues_to_str = function
+  | VNumber x -> num_to_string x
+  | VBool true -> "true"
+  | VBool false -> "false"
+  | VNull -> "null"
+  | VUndefined -> "undefined"
+  | VString x -> x
+  | VObject x when is_func x ->
+    asprintf "[Function: %s]" (vvalues_to_str @@ obj_get_field "name" x.fields)
+  | _ as t -> asprintf "Cannot convert %s to string" @@ print_val t
 ;;
 
 let error err =
@@ -136,12 +144,12 @@ let const_to_val = function
 
 let get_vnum = function
   | VNumber x -> return x
-  | _ as t -> etyp @@ "expect number, but " ^ print_val t ^ " was given"
+  | _ as t -> etyp @@ asprintf "expect number, but %s was given" @@ print_val t
 ;;
 
 let get_vstring = function
   | VString x -> return x
-  | _ as t -> etyp @@ "expect string, but " ^ print_val t ^ " was given"
+  | _ as t -> etyp @@ asprintf "expect string, but %s was given" @@ print_val t
 ;;
 
 let bop_with_num op a b =
@@ -172,7 +180,7 @@ let eval_bin_op ctx op a b =
   let add_ctx = add_ctx ctx in
   match op with
   | Add -> add_ctx @@ add a b <?> "error in add operator"
-  | _ -> ensup "operator not supported yet"
+  | _ as a -> ensup @@ asprintf "operator %a not supported yet" pp_bin_op a
 ;;
 
 let eval_un_op ctx op a =
@@ -182,12 +190,7 @@ let eval_un_op ctx op a =
   | Minus ->
     add_ctx @@ (to_vnumber a >>= get_vnum >>| fun n -> VNumber ~-.n)
     <?> "error in plus operator"
-  | _ -> ensup "operator not supported yet"
-;;
-
-let rec find_in_vars id = function
-  | a :: b -> if a.var_id = id then Some a else find_in_vars id b
-  | _ -> None
+  | _ as a -> ensup @@ asprintf "operator %a not supported yet" pp_un_op a
 ;;
 
 let rec ctx_get_var ctx id =
@@ -196,10 +199,10 @@ let rec ctx_get_var ctx id =
   | None ->
     (match ctx.parent with
      | Some parent -> ctx_get_var parent id
-     | None -> error (ReferenceError ("Cannot access '" ^ id ^ "' before initialization")))
+     | None ->
+       error (ReferenceError (asprintf "Cannot access '%s' before initialization" id)))
 ;;
 
-let rec eval_exp ctx = function
   | Const x -> return (ctx, const_to_val x)
   | BinOp (op, a, b) ->
     eval_exp ctx a
