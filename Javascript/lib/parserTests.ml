@@ -527,7 +527,7 @@ let%expect_test _ =
        [(VarDeck
            { var_identifier = "a"; is_const = false;
              value =
-             (AnonFunction (["b1"],
+             (ArrowFunction (["b1"],
                 (Block [(Return (BinOp (Add, (Var "b1"), (Const (Number 6.)))))])
                 ))
              })
@@ -542,7 +542,7 @@ let%expect_test _ =
        [(VarDeck
            { var_identifier = "a"; is_const = false;
              value =
-             (AnonFunction (["b1"],
+             (ArrowFunction (["b1"],
                 (Block [(Return (BinOp (Add, (Var "b1"), (Const (Number 6.)))))])
                 ))
              })
@@ -576,7 +576,7 @@ let%expect_test _ =
            { var_identifier = "a"; is_const = false;
              value =
              (FunctionCall (
-                (AnonFunction (["b1"],
+                (ArrowFunction (["b1"],
                    (Block
                       [(Return (BinOp (Add, (Var "b1"), (Const (Number 6.)))))])
                    )),
@@ -594,7 +594,7 @@ let%expect_test _ =
            { var_identifier = "a"; is_const = false;
              value =
              (FunctionCall (
-                (AnonFunction (["b1"],
+                (ArrowFunction (["b1"],
                    (Block
                       [(Return (BinOp (Add, (Var "b1"), (Const (Number 6.)))))])
                    )),
@@ -613,7 +613,7 @@ let%expect_test _ =
              value =
              (BinOp (Add,
                 (FunctionCall (
-                   (AnonFunction (["b1"],
+                   (ArrowFunction (["b1"],
                       (Block
                          [(Return (BinOp (Add, (Var "b1"), (Const (Number 6.)))))
                            ])
@@ -728,13 +728,13 @@ let%expect_test "if2" =
          ])|}]
 ;;
 
-let%expect_test "if1" =
+let%expect_test _ =
   pp "\n  {\n    let let;\n  }";
   [%expect {|
     Error: incorrect statement: there is unexpected symbol: '{'|}]
 ;;
 
-let%expect_test "if1" =
+let%expect_test _ =
   pp "\n  {\n    let x;\n  }";
   [%expect
     {|
@@ -832,14 +832,13 @@ let%expect_test "while" =
 ;;
 
 let%expect_test "for" =
-  pp 
-    "for (let i = 0; i != 10; i = i + 1) {
-      var a = i;
-      if (a == 5) {
-          return a;
-      }
-    }";
-  
+  pp
+    "for (let i = 0; i != 10; i = i + 1) {\n\
+    \      var a = i;\n\
+    \      if (a == 5) {\n\
+    \          return a;\n\
+    \      }\n\
+    \    }";
   [%expect
     {|
       (Programm
@@ -863,7 +862,5 @@ let%expect_test "for" =
                     ])
                })
            ])
-    |}
-  ]
+    |}]
 ;;
-       

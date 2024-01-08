@@ -232,10 +232,9 @@ let rec parse_arrow_func () =
        (cur_parens (many @@ parse_stm ())
         >>| (fun stms -> Block stms)
         <|> (start_parse_expression () >>| fun exp -> Block [ Return exp ]))
-  >>| fun body -> AnonFunction (args, body)
+  >>| fun body -> ArrowFunction (args, body)
 
-and parse_array () = 
-  token (sq_parens (parse_comma (start_parse_expression())))
+and parse_array () = token (sq_parens (parse_comma (start_parse_expression ())))
 
 and parse_anon_func () =
   token_str "function" *> token parse_args_names
@@ -339,19 +338,28 @@ and parse_block () =
 and parse_block_or_stm () = parse_block () <|> (parse_stm () >>| fun stm -> Block [ stm ])
 
 and parse_while () =
-  parens (start_parse_expression ()) 
-  >>= fun condition -> 
-  parse_block_or_stm () 
-  <?> "invalid while loop condition" 
+  parens (start_parse_expression ())
+  >>= fun condition ->
+  parse_block_or_stm ()
+  <?> "invalid while loop condition"
   >>| fun body -> While (condition, body)
 
 and parse_for () =
-  parens ((parse_stm ()) <?> "invalid for loop variable"
-  >>= fun init -> (parse_stm ()) <?> "invalid for loop variable condition"
-  >>= fun condition -> (parse_stm ()) >>= fun change -> return (init, condition, change)) <?> "invalid variable change statement" 
-  >>= fun (init, condition, change) -> parse_block_or_stm () <?> "invalid for loop body"
-  >>| fun body -> 
-  ForDeck { for_init = init; for_condition = condition; for_change = change; for_body = body }
+  parens
+    (parse_stm ()
+     <?> "invalid for loop variable"
+     >>= fun init ->
+     parse_stm ()
+     <?> "invalid for loop variable condition"
+     >>= fun condition -> parse_stm () >>= fun change -> return (init, condition, change)
+    )
+  <?> "invalid variable change statement"
+  >>= fun (init, condition, change) ->
+  parse_block_or_stm ()
+  <?> "invalid for loop body"
+  >>| fun body ->
+  ForDeck
+    { for_init = init; for_condition = condition; for_change = change; for_body = body }
 
 and parse_if () =
   parens (start_parse_expression ())

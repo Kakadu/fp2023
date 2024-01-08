@@ -35,6 +35,7 @@ type expression =
   | Array_list of expression list
   | FunctionCall of expression * expression list
   | AnonFunction of string list * statement
+  | ArrowFunction of string list * statement
   | ObjectDef of (expression * expression) list
 [@@deriving show { with_path = false }]
 
@@ -50,7 +51,7 @@ and fun_init =
   ; body : statement
   }
 
-and for_loop = 
+and for_loop =
   { for_init : statement
   ; for_condition : statement
   ; for_change : statement
@@ -64,7 +65,7 @@ and statement =
   | FunDeck of fun_init
   | If of expression * statement * statement
   | While of expression * statement
-  | ForDeck of for_loop 
+  | ForDeck of for_loop
   | Return of expression
   | Programm of statement list
 [@@deriving show { with_path = false }]
