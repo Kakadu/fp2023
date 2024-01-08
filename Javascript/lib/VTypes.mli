@@ -16,7 +16,7 @@ type vt_error =
 
 (* ctx == context *)
 
-type fun_ctx = 
+type fun_ctx =
   { args : string list
   ; body : statement
   }
@@ -35,7 +35,8 @@ type obj_type =
   | TObject
 
 and obj_ctx =
-  { fields : let_ctx list
+  { proto : obj_ctx option
+  ; fields : let_ctx list
   ; obj_type : obj_type
   }
 
