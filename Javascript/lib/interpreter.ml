@@ -337,12 +337,7 @@ let eval_un_op ctx op a =
   | Minus ->
     add_ctx @@ (to_vnumber a >>= get_vnum >>| fun n -> VNumber ~-.n)
     <?> "error in plus operator"
-  | _ -> ensup "operator not supported yet"
-;;
-
-let rec find_in_vars id = function
-  | a :: b -> if a.var_id = id then Some a else find_in_vars id b
-  | _ -> None
+  | _ as a -> ensup @@ asprintf "operator %a not supported yet" pp_un_op a
 ;;
 
 let rec ctx_get_var ctx id =
@@ -351,7 +346,8 @@ let rec ctx_get_var ctx id =
   | None ->
     (match ctx.parent with
      | Some parent -> ctx_get_var parent id
-     | None -> error (ReferenceError ("Cannot access '" ^ id ^ "' before initialization")))
+     | None ->
+       error (ReferenceError (asprintf "Cannot access '%s' before initialization" id)))
 ;;
 
 let eval_un_op ctx op a =
