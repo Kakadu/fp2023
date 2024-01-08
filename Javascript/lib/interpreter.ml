@@ -13,16 +13,20 @@ let is_func x =
   | _ -> false
 ;;
 
-let strip_dot str =
-  match String.split_on_char '.' str with
-  | n :: [ "" ] -> n
-  | _ -> str
+let num_to_string n =
+  if Float.is_integer n
+  then Int.to_string (Float.to_int n)
+  else if Float.is_nan n
+  then "NaN"
+  else if Float.is_infinite n
+  then if n > 0. then "Infinity" else "-Infinity"
+  else Float.to_string n
 ;;
 
 (*JS use diffrent conversion to string in .toString and in print.
   It's the reason why vvalues_to_str and to_vstring is diffrent functions*)
 let vvalues_to_str = function
-  | VNumber x -> strip_dot @@ Float.to_string x
+  | VNumber x -> num_to_string x
   | VBool true -> "true"
   | VBool false -> "false"
   | VNull -> "null"
@@ -52,25 +56,25 @@ let error err =
      | ReferenceError str -> "ReferenceError: " ^ str
      | RangeError str -> "RangeError: " ^ str
      | InternalError str -> "InternalError: " ^ str
-     | TypeError (str1, str2) ->
-       "TypeError: expect " ^ str1 ^ ", but " ^ str2 ^ " was given"
+     | TypeError str -> "TypeError: " ^ str
      | SyntaxError str -> "SyntaxError: " ^ str)
 ;;
 
-let nsup str = error (NotSupported str)
+let ensup str = error (NotSupported str)
+let etyp str = error (TypeError str)
 
 let to_vstring =
   let ret_vstr x = return (VString x) in
   function
   | VString x -> ret_vstr x
-  | VNumber x -> ret_vstr (strip_dot @@ Float.to_string x)
+  | VNumber x -> ret_vstr (num_to_string x)
   | VBool true -> ret_vstr "true"
   | VBool false -> ret_vstr "false"
   | VNull -> ret_vstr "null"
   | VUndefined -> ret_vstr "undefined"
-  | VObject x when is_func x -> nsup "conversion func to str"
+  | VObject x when is_func x -> ensup "conversion func to str"
   | VObject _ -> ret_vstr "[object Object]"
-  | _ -> nsup "" <?> "error in string conversion"
+  | _ as t -> etyp ("cannot cast " ^ print_val t ^ " to string")
 ;;
 
 let to_vbool ast =
@@ -103,7 +107,7 @@ let to_vnumber ast =
 
 let print ctx = function
   | [ VNumber x ] -> return { ctx with stdout = ctx.stdout ^ Float.to_string x }
-  | _ -> nsup ""
+  | _ -> ensup ""
 ;;
 
 let const_to_val = function
@@ -114,12 +118,26 @@ let const_to_val = function
   | Null -> VNull
 ;;
 
-let op_with_num op a b =
-  to_vnumber a >>= fun (VNumber x) -> to_vnumber b >>| fun (VNumber y) -> VNumber (op x y)
+let get_vnum = function
+  | VNumber x -> return x
+  | _ as t -> etyp @@ "expect number, but " ^ print_val t ^ " was given"
 ;;
 
-let op_with_string op a b =
-  to_vstring a >>= fun (VString x) -> to_vstring b >>| fun (VString y) -> VString (op x y)
+let get_vstring = function
+  | VString x -> return x
+  | _ as t -> etyp @@ "expect string, but " ^ print_val t ^ " was given"
+;;
+
+let bop_with_num op a b =
+  to_vnumber a
+  >>= get_vnum
+  >>= fun x -> to_vnumber b >>= get_vnum >>| fun y -> VNumber (op x y)
+;;
+
+let bop_with_string op a b =
+  to_vstring a
+  >>= get_vstring
+  >>= fun x -> to_vstring b >>= get_vstring >>| fun y -> VString (op x y)
 ;;
 
 let add a b =
@@ -128,15 +146,27 @@ let add a b =
     | _ -> false
   in
   if is_to_string a || is_to_string b
-  then op_with_string ( ^ ) a b
-  else op_with_num ( +. ) a b
+  then bop_with_string ( ^ ) a b
+  else bop_with_num ( +. ) a b
 ;;
 
+let add_ctx ctx op = op >>| fun op -> ctx, op
+
 let eval_bin_op ctx op a b =
-  let add_ctx op = op >>| fun op -> ctx, op in
+  let add_ctx = add_ctx ctx in
   match op with
   | Add -> add_ctx @@ add a b <?> "error in add operator"
-  | _ -> nsup ""
+  | _ -> ensup "operator not supported yet"
+;;
+
+let eval_un_op ctx op a =
+  let add_ctx = add_ctx ctx in
+  match op with
+  | Plus -> add_ctx @@ to_vnumber a <?> "error in plus operator"
+  | Minus ->
+    add_ctx @@ (to_vnumber a >>= get_vnum >>| fun n -> VNumber ~-.n)
+    <?> "error in plus operator"
+  | _ -> ensup "operator not supported yet"
 ;;
 
 let rec eval_exp ctx = function
@@ -144,7 +174,8 @@ let rec eval_exp ctx = function
   | BinOp (op, a, b) ->
     eval_exp ctx a
     >>= fun (ctx, x) -> eval_exp ctx b >>= fun (ctx, y) -> eval_bin_op ctx op x y
-  | _ -> nsup ""
+  | UnOp (op, a) -> eval_exp ctx a >>= fun (ctx, a) -> eval_un_op ctx op a
+  | _ -> ensup ""
 ;;
 
 let context_init =
@@ -160,7 +191,7 @@ let parse_stm ctx = function
     eval_exp ctx x
     <?> "error in return expression"
     >>= fun (ctx, ret) -> return { ctx with v_return = ret }
-  | _ -> nsup ""
+  | _ -> ensup ""
 ;;
 
 let parse_stms ctx ast =

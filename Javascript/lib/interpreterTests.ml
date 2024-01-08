@@ -5,10 +5,14 @@
 open Javascript_lib
 open Print
 
+(**---------------Expressions tests---------------*)
+
 let%expect_test _ =
   pi "return 4";
   [%expect {| Programm return: 4 |}]
 ;;
+
+(*number plus*)
 
 let%expect_test _ =
   pi "return 4+5";
@@ -27,7 +31,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   pi "return 4+undefined";
-  [%expect {| Programm return: nan |}]
+  [%expect {| Programm return: NaN |}]
 ;;
 
 let%expect_test _ =
@@ -39,6 +43,8 @@ let%expect_test _ =
   pi "return false+4.5";
   [%expect {| Programm return: 4.5 |}]
 ;;
+
+(*string plus*)
 
 let%expect_test _ =
   pi "return 4+\"5\"";
@@ -63,4 +69,43 @@ let%expect_test _ =
 let%expect_test _ =
   pi "return \"\"+\"str\"";
   [%expect {| Programm return: str |}]
+;;
+
+(*unary operators*)
+
+let%expect_test _ =
+  pi "return +4";
+  [%expect {| Programm return: 4 |}]
+;;
+
+let%expect_test _ =
+  pi "return -4";
+  [%expect {| Programm return: -4 |}]
+;;
+
+let%expect_test _ =
+  pi "return -(-4)";
+  [%expect {| Programm return: 4 |}]
+;;
+
+let%expect_test _ =
+  pi "return -\"j\"";
+  [%expect {| Programm return: NaN |}]
+;;
+
+let%expect_test _ =
+  pi "return +\"j\"";
+  [%expect {| Programm return: NaN |}]
+;;
+
+(*infinity*)
+
+let%expect_test _ =
+  pi "return Infinity";
+  [%expect {| Programm return: Infinity |}]
+;;
+
+let%expect_test _ =
+  pi "return -Infinity";
+  [%expect {| Programm return: -Infinity |}]
 ;;

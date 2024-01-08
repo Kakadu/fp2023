@@ -11,7 +11,7 @@ type vt_error =
   | ReferenceError of string
   | RangeError of string
   | InternalError of string
-  | TypeError of string * string
+  | TypeError of string
   | SyntaxError of string
 
 type fun_ctx =
