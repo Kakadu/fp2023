@@ -320,7 +320,7 @@ and parse_func () =
   >>= fun name ->
   token parse_args_names
   >>= fun arguments ->
-  parse_block_or_stm () >>| fun body -> FunDeck { fun_identifier = name; arguments; body }
+  parse_block_or_stm () >>| fun body -> FunInit { fun_identifier = name; arguments; body }
 
 and parse_var (init_word : string) =
   valid_identifier
@@ -330,7 +330,7 @@ and parse_var (init_word : string) =
          | true -> start_parse_expression ()
          | _ -> return (Const Undefined))
   >>| fun expr ->
-  VarDeck { var_identifier = identifier; is_const = init_word = "const"; value = expr }
+  VarInit { var_identifier = identifier; is_const = init_word = "const"; value = expr }
 
 and parse_block () =
   fix (fun _ -> cur_parens (many @@ parse_stm ()) >>| fun stms -> Block stms)
@@ -358,8 +358,7 @@ and parse_for () =
   parse_block_or_stm ()
   <?> "invalid for loop body"
   >>| fun body ->
-  ForDeck
-    { for_init = init; for_condition = condition; for_change = change; for_body = body }
+  For { for_init = init; for_condition = condition; for_change = change; for_body = body }
 
 and parse_if () =
   parens (start_parse_expression ())

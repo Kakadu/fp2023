@@ -435,7 +435,7 @@ let%expect_test _ =
   [%expect
     {|
     (Programm
-       [(VarDeck
+       [(VarInit
            { var_identifier = "a"; is_const = false; value = (Const (Number 6.))
              })
          ]) |}]
@@ -446,7 +446,7 @@ let%expect_test _ =
   [%expect
     {|
     (Programm
-       [(VarDeck
+       [(VarInit
            { var_identifier = "a"; is_const = false; value = (Const Undefined) })
          ]) |}]
 ;;
@@ -456,7 +456,7 @@ let%expect_test _ =
   [%expect
     {|
     (Programm
-       [(VarDeck
+       [(VarInit
            { var_identifier = "a"; is_const = false; value = (Const Undefined) })
          ]) |}]
 ;;
@@ -466,7 +466,7 @@ let%expect_test _ =
   [%expect
     {|
     (Programm
-       [(VarDeck
+       [(VarInit
            { var_identifier = "let1"; is_const = false;
              value = (Const (Number 6.)) })
          ]) |}]
@@ -477,7 +477,7 @@ let%expect_test _ =
   [%expect
     {|
     (Programm
-       [(VarDeck
+       [(VarInit
            { var_identifier = "let1"; is_const = false;
              value = (Const (Number 6.)) })
          ]) |}]
@@ -488,7 +488,7 @@ let%expect_test _ =
   [%expect
     {|
     (Programm
-       [(VarDeck
+       [(VarInit
            { var_identifier = "a"; is_const = false; value = (Const (Number 6.))
              })
          ]) |}]
@@ -499,7 +499,7 @@ let%expect_test _ =
   [%expect
     {|
     (Programm
-       [(VarDeck
+       [(VarInit
            { var_identifier = "a"; is_const = true; value = (Const (Number 6.)) })
          ]) |}]
 ;;
@@ -509,7 +509,7 @@ let%expect_test _ =
   [%expect
     {|
     (Programm
-       [(VarDeck
+       [(VarInit
            { var_identifier = "a"; is_const = false;
              value =
              (AnonFunction (["b1"],
@@ -524,7 +524,7 @@ let%expect_test _ =
   [%expect
     {|
     (Programm
-       [(VarDeck
+       [(VarInit
            { var_identifier = "a"; is_const = false;
              value =
              (ArrowFunction (["b1"],
@@ -539,7 +539,7 @@ let%expect_test _ =
   [%expect
     {|
     (Programm
-       [(VarDeck
+       [(VarInit
            { var_identifier = "a"; is_const = false;
              value =
              (ArrowFunction (["b1"],
@@ -554,7 +554,7 @@ let%expect_test _ =
   [%expect
     {|
     (Programm
-       [(VarDeck
+       [(VarInit
            { var_identifier = "a"; is_const = false;
              value =
              (FunctionCall (
@@ -572,7 +572,7 @@ let%expect_test _ =
   [%expect
     {|
     (Programm
-       [(VarDeck
+       [(VarInit
            { var_identifier = "a"; is_const = false;
              value =
              (FunctionCall (
@@ -590,7 +590,7 @@ let%expect_test _ =
   [%expect
     {|
     (Programm
-       [(VarDeck
+       [(VarInit
            { var_identifier = "a"; is_const = false;
              value =
              (FunctionCall (
@@ -608,7 +608,7 @@ let%expect_test _ =
   [%expect
     {|
     (Programm
-       [(VarDeck
+       [(VarInit
            { var_identifier = "a"; is_const = false;
              value =
              (BinOp (Add,
@@ -629,7 +629,7 @@ let%expect_test _ =
   [%expect
     {|
     (Programm
-       [(FunDeck
+       [(FunInit
            { fun_identifier = "a"; arguments = [];
              body =
              (Block
@@ -645,7 +645,7 @@ let%expect_test _ =
   [%expect
     {|
     (Programm
-       [(FunDeck
+       [(FunInit
            { fun_identifier = "a"; arguments = [];
              body = (Block [(Return (Var "this1"))]) })
          ])|}]
@@ -656,11 +656,11 @@ let%expect_test _ =
   [%expect
     {|
     (Programm
-       [(VarDeck
+       [(VarInit
            { var_identifier = "a"; is_const = false;
              value = (ObjectDef [((Const (String "isA")), (Const (Bool true)))])
              });
-         (VarDeck
+         (VarInit
             { var_identifier = "b"; is_const = false;
               value = (ObjectDef [((Const (String "isB")), (Const (Bool true)))])
               });
@@ -676,11 +676,11 @@ let%expect_test _ =
   [%expect
     {|
     (Programm
-       [(VarDeck
+       [(VarInit
            { var_identifier = "a"; is_const = false;
              value = (ObjectDef [((Const (String "isA")), (Const (Bool true)))])
              });
-         (VarDeck
+         (VarInit
             { var_identifier = "b"; is_const = false;
               value = (ObjectDef [((Const (String "__proto__")), (Var "a"))]) })
          ])|}]
@@ -693,12 +693,12 @@ let%expect_test "if1" =
     (Programm
        [(If ((BinOp (Equal, (Var "a"), (Const (Number 4.)))),
            (Block
-              [(VarDeck
+              [(VarInit
                   { var_identifier = "a"; is_const = false;
                     value = (BinOp (Add, (Var "b"), (Const (Number 6.)))) })
                 ]),
            (Block
-              [(VarDeck
+              [(VarInit
                   { var_identifier = "b"; is_const = false;
                     value =
                     (BinOp (Add, (Const (Number 6.)), (Const (Number 7.)))) })
@@ -714,12 +714,12 @@ let%expect_test "if2" =
     (Programm
        [(If ((BinOp (Equal, (Var "a"), (Const (Number 4.)))),
            (Block
-              [(VarDeck
+              [(VarInit
                   { var_identifier = "a"; is_const = false;
                     value = (BinOp (Add, (Var "b"), (Const (Number 6.)))) })
                 ]),
            (Block
-              [(VarDeck
+              [(VarInit
                   { var_identifier = "b"; is_const = false;
                     value =
                     (BinOp (Add, (Const (Number 6.)), (Const (Number 7.)))) })
@@ -740,7 +740,7 @@ let%expect_test _ =
     {|
     (Programm
        [(Block
-           [(VarDeck
+           [(VarInit
                { var_identifier = "x"; is_const = false;
                  value = (Const Undefined) })
              ])
@@ -758,10 +758,10 @@ let%expect_test "factorial" =
   [%expect
     {|
     (Programm
-       [(VarDeck
+       [(VarInit
            { var_identifier = "fact"; is_const = false;
              value = (Const (Number 4.)) });
-         (FunDeck
+         (FunInit
             { fun_identifier = "calculateFact"; arguments = ["fact"];
               body =
               (Block
@@ -787,7 +787,7 @@ let%expect_test "array_list" =
   [%expect
     {|
 (Programm
-   [(VarDeck
+   [(VarInit
        { var_identifier = "myArray"; is_const = false;
          value =
          (Array_list
@@ -816,13 +816,13 @@ let%expect_test "while" =
 (Programm
    [(While ((BinOp (NotEqual, (Var "a"), (Const (Number 0.)))),
        (Block
-          [(VarDeck
+          [(VarInit
               { var_identifier = "b"; is_const = false;
                 value = (BinOp (Sub, (Var "a"), (Const (Number 1.)))) });
             (If ((BinOp (Equal, (Var "a"), (Const (Number 1.)))),
                (Block [(Return (Var "b"))]),
                (Block [(Return (Const (Number 0.)))])));
-            (VarDeck
+            (VarInit
                { var_identifier = "a"; is_const = false;
                  value = (BinOp (Sub, (Var "a"), (Const (Number 1.)))) })
             ])
@@ -842,9 +842,9 @@ let%expect_test "for" =
   [%expect
     {|
       (Programm
-         [(ForDeck
+         [(For
              { for_init =
-               (VarDeck
+               (VarInit
                   { var_identifier = "i"; is_const = false; 
                     value = (Const (Number 0.)) });
                for_condition = 
@@ -855,7 +855,7 @@ let%expect_test "for" =
                      (BinOp (Add, (Var "i"), (Const (Number 1.)))))));
                for_body =
                (Block
-                  [(VarDeck 
+                  [(VarInit
                       { var_identifier = "a"; is_const = false; value = (Var "i") });
                     (If ((BinOp (Equal, (Var "a"), (Const (Number 5.)))),
                        (Block [(Return (Var "a"))]), (Block [])))

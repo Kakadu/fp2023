@@ -241,7 +241,7 @@ let rec parse_stm ctx = function
     eval_exp ctx x
     <?> "error in return expression"
     >>= fun (ctx, ret) -> return { ctx with vreturn = Some ret }
-  | VarDeck x ->
+  | VarInit x ->
     eval_exp ctx x.value
     <?> "error in var declaration expression"
     >>= fun (ctx, v) ->
