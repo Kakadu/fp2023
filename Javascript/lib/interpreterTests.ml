@@ -109,3 +109,20 @@ let%expect_test _ =
   pi "return -Infinity";
   [%expect {| Programm return: -Infinity |}]
 ;;
+
+(**---------------Var tests---------------*)
+
+let%expect_test _ =
+  pi "let a = 4; return a";
+  [%expect {| Programm return: 4 |}]
+;;
+
+let%expect_test _ =
+  pi "let a = 4+5; return a";
+  [%expect {| Programm return: 9 |}]
+;;
+
+let%expect_test _ =
+  pi "let a = 4; let a = 5; return a";
+  [%expect {| Error: SyntaxError: Identifier 'a' has already been declared |}]
+;;

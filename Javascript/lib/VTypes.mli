@@ -23,7 +23,6 @@ type scope =
   | Global
   | Function
   | ArrowFunction
-  | Object
   | Block
 
 type obj_type =

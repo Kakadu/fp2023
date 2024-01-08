@@ -63,6 +63,13 @@ let error err =
 let ensup str = error (NotSupported str)
 let etyp str = error (TypeError str)
 
+let print ctx = function
+  | [ VNumber x ] -> return { ctx with stdout = ctx.stdout ^ Float.to_string x }
+  | _ -> ensup ""
+;;
+
+(**---------------Expression interpreter---------------*)
+
 let to_vstring =
   let ret_vstr x = return (VString x) in
   function
@@ -103,11 +110,6 @@ let to_vnumber ast =
         | VBool x -> Bool.to_float x
         | VNull -> 0.
         | _ -> nan)
-;;
-
-let print ctx = function
-  | [ VNumber x ] -> return { ctx with stdout = ctx.stdout ^ Float.to_string x }
-  | _ -> ensup ""
 ;;
 
 let const_to_val = function
@@ -169,14 +171,25 @@ let eval_un_op ctx op a =
   | _ -> ensup "operator not supported yet"
 ;;
 
+let rec ctx_find id = function
+  | a :: b -> if a.var_id = id then Some a else ctx_find id b
+  | _ -> None
+;;
+
 let rec eval_exp ctx = function
   | Const x -> return (ctx, const_to_val x)
   | BinOp (op, a, b) ->
     eval_exp ctx a
     >>= fun (ctx, x) -> eval_exp ctx b >>= fun (ctx, y) -> eval_bin_op ctx op x y
   | UnOp (op, a) -> eval_exp ctx a >>= fun (ctx, a) -> eval_un_op ctx op a
+  | Var id ->
+    (match ctx_find id ctx.vars with
+     | Some a -> return (ctx, a.value)
+     | _ -> error (ReferenceError ("Cannot access '" ^ id ^ "' before initialization")))
   | _ -> ensup ""
 ;;
+
+(**---------------Statment interpreter---------------*)
 
 let context_init =
   { parent = None; vars = []; v_return = VUndefined; stdout = ""; scope = Global }
@@ -186,11 +199,24 @@ let create_local_ctx ctx scope =
   { parent = Some ctx; vars = []; v_return = VUndefined; stdout = ctx.stdout; scope }
 ;;
 
+let ctx_add ctx var =
+  match ctx_find var.var_id ctx.vars with
+  | Some _ ->
+    error
+    @@ SyntaxError ("Identifier \'" ^ var.var_id ^ "\' has already been declared\n  ")
+  | _ -> return { ctx with vars = var :: ctx.vars }
+;;
+
 let parse_stm ctx = function
   | Return x ->
     eval_exp ctx x
     <?> "error in return expression"
     >>= fun (ctx, ret) -> return { ctx with v_return = ret }
+  | VarDeck x ->
+    eval_exp ctx x.value
+    <?> "error in var declaration expression"
+    >>= fun (ctx, v) ->
+    ctx_add ctx { var_id = x.var_identifier; is_const = x.is_const; value = v }
   | _ -> ensup ""
 ;;
 
