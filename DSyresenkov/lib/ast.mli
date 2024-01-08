@@ -35,7 +35,7 @@ type pattern =
 [@@deriving show { with_path = false }]
 
 type is_rec =
-  | Rec (** Recursive functions tag, can call themselves in their body *)
+  | Rec (** Recursive functions can call themselves in their body *)
   | NonRec (** Non-recursive functions tag *)
 [@@deriving show { with_path = false }]
 
