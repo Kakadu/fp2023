@@ -7,7 +7,7 @@ type binop =
   | Sub (**  -   *)
   | Mul (**  * *)
   | Div (**  / *)
-  | Eq (** == *) (* change it to `=` *)
+  | Eq (** == *)
   | Neq (** <> *)
   | Les (**  < *)
   | Leq (**  <= *)
