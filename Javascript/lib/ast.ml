@@ -7,6 +7,7 @@ type un_op =
   | Minus
 [@@deriving show { with_path = false }]
 
+(* TODO: implement Remainder operator *)
 type bin_op =
   | PropAccs
   | SqPropAccs
@@ -14,7 +15,6 @@ type bin_op =
   | Sub
   | Mul
   | Div
-  (* | Rem --> implement Remainder operator *)
   | Equal
   | NotEqual
   | Assign
