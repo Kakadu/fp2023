@@ -13,7 +13,6 @@ let%expect_test _ =
 ;;
 
 (*number plus*)
-
 let%expect_test _ =
   pi "return 4+5";
   [%expect {| Programm return: 9 |}]
@@ -45,7 +44,6 @@ let%expect_test _ =
 ;;
 
 (*string plus*)
-
 let%expect_test _ =
   pi "return 4+\"5\"";
   [%expect {| Programm return: 45 |}]
@@ -72,7 +70,6 @@ let%expect_test _ =
 ;;
 
 (*unary operators*)
-
 let%expect_test _ =
   pi "return +4";
   [%expect {| Programm return: 4 |}]
@@ -99,7 +96,6 @@ let%expect_test _ =
 ;;
 
 (*infinity*)
-
 let%expect_test _ =
   pi "return Infinity";
   [%expect {| Programm return: Infinity |}]
@@ -124,5 +120,44 @@ let%expect_test _ =
 
 let%expect_test _ =
   pi "let a = 4; let a = 5; return a";
-  [%expect {| Error: SyntaxError: Identifier 'a' has already been declared |}]
+  [%expect
+    {| Error: Interpreter error > SyntaxError: Identifier 'a' has already been declared |}]
+;;
+
+let%expect_test _ =
+  pi "return a";
+  [%expect
+    {| Error: Interpreter error > error in return expression > ReferenceError: Cannot access 'a' before initialization |}]
+;;
+
+let%expect_test _ =
+  pi "let a; return a";
+  [%expect {| Programm return: undefined |}]
+;;
+
+(*Block tests*)
+let%expect_test _ =
+  pi "{ let a; }";
+  [%expect {| Programm return: undefined |}]
+;;
+
+let%expect_test _ =
+  pi "{ let a = 4; } return a";
+  [%expect
+    {| Error: Interpreter error > error in return expression > ReferenceError: Cannot access 'a' before initialization |}]
+;;
+
+let%expect_test _ =
+  pi "{ let a = 4; return a} ";
+  [%expect {| Programm return: 4 |}]
+;;
+
+let%expect_test _ =
+  pi "let a = 4; { let a = 5; return a} ";
+  [%expect {| Programm return: 5 |}]
+;;
+
+let%expect_test _ =
+  pi "let a = 4; { return a} ";
+  [%expect {| Programm return: 4 |}]
 ;;

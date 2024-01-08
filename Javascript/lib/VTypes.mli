@@ -20,7 +20,6 @@ type fun_ctx =
   }
 
 type scope =
-  | Global
   | Function
   | ArrowFunction
   | Block
@@ -54,7 +53,7 @@ and let_ctx =
 and ctx =
   { parent : ctx option
   ; vars : let_ctx list
-  ; v_return : value
+  ; vreturn : value option
   ; stdout : string
   ; scope : scope
   }

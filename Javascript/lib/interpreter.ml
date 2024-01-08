@@ -7,6 +7,8 @@ open Ast
 open Parser
 open VTypes
 
+let is_some = Option.is_some
+
 let is_func x =
   match x.obj_type with
   | TFunPreset _ | TFunction _ | TArrowFun _ -> true
@@ -66,6 +68,18 @@ let etyp str = error (TypeError str)
 let print ctx = function
   | [ VNumber x ] -> return { ctx with stdout = ctx.stdout ^ Float.to_string x }
   | _ -> ensup ""
+;;
+
+let get_vreturn ctx =
+  match ctx.vreturn with
+  | Some x -> x
+  | None -> VUndefined
+;;
+
+let get_parent ctx =
+  match ctx.parent with
+  | Some x -> return x
+  | _ -> error @@ InternalError "cannot get parent"
 ;;
 
 (**---------------Expression interpreter---------------*)
@@ -171,9 +185,18 @@ let eval_un_op ctx op a =
   | _ -> ensup "operator not supported yet"
 ;;
 
-let rec ctx_find id = function
-  | a :: b -> if a.var_id = id then Some a else ctx_find id b
+let rec find_in_vars id = function
+  | a :: b -> if a.var_id = id then Some a else find_in_vars id b
   | _ -> None
+;;
+
+let rec ctx_get_var ctx id =
+  match find_in_vars id ctx.vars with
+  | Some a -> return a
+  | None ->
+    (match ctx.parent with
+     | Some parent -> ctx_get_var parent id
+     | None -> error (ReferenceError ("Cannot access '" ^ id ^ "' before initialization")))
 ;;
 
 let rec eval_exp ctx = function
@@ -182,59 +205,70 @@ let rec eval_exp ctx = function
     eval_exp ctx a
     >>= fun (ctx, x) -> eval_exp ctx b >>= fun (ctx, y) -> eval_bin_op ctx op x y
   | UnOp (op, a) -> eval_exp ctx a >>= fun (ctx, a) -> eval_un_op ctx op a
-  | Var id ->
-    (match ctx_find id ctx.vars with
-     | Some a -> return (ctx, a.value)
-     | _ -> error (ReferenceError ("Cannot access '" ^ id ^ "' before initialization")))
+  | Var id -> ctx_get_var ctx id >>| fun a -> ctx, a.value
   | _ -> ensup ""
 ;;
 
 (**---------------Statment interpreter---------------*)
 
 let context_init =
-  { parent = None; vars = []; v_return = VUndefined; stdout = ""; scope = Global }
+  { parent = None; vars = []; vreturn = None; stdout = ""; scope = Block }
 ;;
 
 let create_local_ctx ctx scope =
-  { parent = Some ctx; vars = []; v_return = VUndefined; stdout = ctx.stdout; scope }
+  { parent = Some ctx; vars = []; vreturn = None; stdout = ctx.stdout; scope }
 ;;
 
 let ctx_add ctx var =
-  match ctx_find var.var_id ctx.vars with
+  match find_in_vars var.var_id ctx.vars with
   | Some _ ->
     error
     @@ SyntaxError ("Identifier \'" ^ var.var_id ^ "\' has already been declared\n  ")
   | _ -> return { ctx with vars = var :: ctx.vars }
 ;;
 
-let parse_stm ctx = function
+let rec in_func ctx =
+  match ctx.scope with
+  | Function | ArrowFunction -> true
+  | Block ->
+    (match ctx.parent with
+     | Some x -> in_func x
+     | None -> false)
+;;
+
+let rec parse_stm ctx = function
   | Return x ->
     eval_exp ctx x
     <?> "error in return expression"
-    >>= fun (ctx, ret) -> return { ctx with v_return = ret }
+    >>= fun (ctx, ret) -> return { ctx with vreturn = Some ret }
   | VarDeck x ->
     eval_exp ctx x.value
     <?> "error in var declaration expression"
     >>= fun (ctx, v) ->
     ctx_add ctx { var_id = x.var_identifier; is_const = x.is_const; value = v }
+  | Block x ->
+    parse_block ctx Block x
+    <?> "error while interpret block"
+    >>= fun ctx ->
+    get_parent ctx
+    >>| fun parent ->
+    (match ctx.vreturn with
+     | Some a -> { parent with vreturn = Some a }
+     | _ -> parent)
   | _ -> ensup ""
-;;
 
-let parse_stms ctx ast =
-  fold_left_s parse_stm (fun ctx -> ctx.v_return != VUndefined) ctx ast
-;;
-
-(* let parse_block ctx scope ast = create_local_ctx ctx scope >>= parse_stms ast *)
+and parse_stms ctx ast = fold_left_s parse_stm (fun ctx -> is_some ctx.vreturn) ctx ast
+and parse_block ctx scope ast = parse_stms (create_local_ctx ctx scope) ast
 
 let interpret_ast ast : (value, string) Result.t =
   match ast with
-  | Programm x -> parse_stms context_init x >>| fun ctx -> ctx.v_return
+  | Programm x -> parse_stms context_init x >>| get_vreturn
   | _ ->
     error @@ AstError "expect Programm in start of programm, but something else was given"
 ;;
 
 let interpret input : (value, string) Result.t =
   match parse input with
-  | Result.Ok ast -> interpret_ast ast
-  | Result.Error (`ParsingError str) -> error (SyntaxError str)
+  | Result.Ok ast -> interpret_ast ast <?> "Interpreter error"
+  | Result.Error (`ParsingError str) -> error (SyntaxError str) <?> "Parser error"
 ;;
