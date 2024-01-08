@@ -69,6 +69,161 @@ let%expect_test _ =
   [%expect {| Programm return: str |}]
 ;;
 
+(*subtract mixed*)
+let%expect_test _ =
+  pi "return 2-1";
+  [%expect {| Programm return: 1 |}]
+;;
+
+let%expect_test _ =
+  pi "return 1-2";
+  [%expect {| Programm return: -1 |}]
+;;
+
+let%expect_test _ =
+  pi "return 2-'1'";
+  [%expect {| Programm return: 1 |}]
+;;
+
+let%expect_test _ =
+  pi "return '2'-1";
+  [%expect {| Programm return: 1 |}]
+;;
+
+let%expect_test _ =
+  pi "return 10 -true";
+  [%expect {| Programm return: 9 |}]
+;;
+
+let%expect_test _ =
+  pi "return 10 - 'true'";
+  [%expect {| Programm return: NaN |}]
+;;
+
+let%expect_test _ =
+  pi "return 10- false";
+  [%expect {| Programm return: 10 |}]
+;;
+
+let%expect_test _ =
+  pi "return true -  11";
+  [%expect {| Programm return: -10 |}]
+;;
+
+(*multiplication*)
+let%expect_test _ =
+  pi "return 3*4";
+  [%expect {| Programm return: 12 |}]
+;;
+
+let%expect_test _ =
+  pi "return -3*4";
+  [%expect {| Programm return: -12 |}]
+;;
+
+let%expect_test _ =
+  pi "return '3' *'2'";
+  [%expect {| Programm return: 6 |}]
+;;
+
+let%expect_test _ =
+  pi "return '3' * 2";
+  [%expect {| Programm return: 6 |}]
+;;
+
+let%expect_test _ =
+  pi "return 3 * '2'";
+  [%expect {| Programm return: 6 |}]
+;;
+
+let%expect_test _ =
+  pi "return 'string' * 'string'";
+  [%expect {| Programm return: NaN |}]
+;;
+
+let%expect_test _ =
+  pi "return 2 * 'string'";
+  [%expect {| Programm return: NaN |}]
+;;
+
+let%expect_test _ =
+  pi "return true * 5";
+  [%expect {| Programm return: 5 |}]
+;;
+
+let%expect_test _ =
+  pi "return false * 5";
+  [%expect {| Programm return: 0 |}]
+;;
+
+(*division*)
+let%expect_test _ =
+  pi "return 12 / 2";
+  [%expect {| Programm return: 6 |}]
+;;
+
+let%expect_test _ =
+  pi "return 3 / 2";
+  [%expect {| Programm return: 1.5 |}]
+;;
+
+let%expect_test _ =
+  pi "return 6 / '3'";
+  [%expect {| Programm return: 2 |}]
+;;
+
+let%expect_test _ =
+  pi "return 2 / 0";
+  [%expect {| Programm return: Infinity |}]
+;;
+
+let%expect_test _ =
+  pi "return 2 / 'foo'";
+  [%expect {| Programm return: NaN |}]
+;;
+
+(*equal*)
+let%expect_test _ =
+  pi "return 4 == 4";
+  [%expect {| Programm return: true |}]
+;;
+
+let%expect_test _ =
+  pi "return 'foo' == 'foo'";
+  [%expect {| Programm return: true |}]
+;;
+
+let%expect_test _ =
+  pi "return true == 'true'";
+  [%expect {| Programm return: false |}]
+;;
+
+let%expect_test _ =
+  pi "return true == 'true'";
+  [%expect {| Programm return: false |}]
+;;
+
+(*not_equal*)
+let%expect_test _ =
+  pi "return 4 != 3";
+  [%expect {| Programm return: true |}]
+;;
+
+let%expect_test _ =
+  pi "return 'foo' != 'foo'";
+  [%expect {| Programm return: false |}]
+;;
+
+let%expect_test _ =
+  pi "return true != false";
+  [%expect {| Programm return: true |}]
+;;
+
+let%expect_test _ =
+  pi "return true != 'true'";
+  [%expect {| Programm return: true |}]
+;;
+
 (*unary operators*)
 let%expect_test _ =
   pi "return +4";

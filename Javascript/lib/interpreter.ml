@@ -270,7 +270,7 @@ let add_ctx ctx op = op >>| fun op -> ctx, op
 
 let sub a b =
   match a, b with
-  | a, b when is_num a && is_num b -> bop_with_num ( -. ) a b
+  | a, b when is_num a || is_num b || is_to_string a || is_to_string b -> bop_with_num ( -. ) a b
   | a, b when is_num a && is_bool b && b = VBool true ->
     bop_with_num ( -. ) a (VNumber 1.)
   | a, b when is_num a && is_bool b && b = VBool false ->
