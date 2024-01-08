@@ -11,5 +11,5 @@ val return : 'a -> 'a t
 val uerror : string -> 'a t
 val map : ('a -> 'b t) -> 'a list -> 'b list t
 val fold_left : ('a -> 'b -> 'a t) -> 'a -> 'b list -> 'a t
-val fold_left_map : ('a -> 'b -> ('a * 'b) t) -> 'a -> 'b list -> ('a * 'b list) t
+val fold_left_map : ('a -> 'b -> ('a * 'c) t) -> 'a -> 'b list -> ('a * 'c list) t
 val fold_left_s : ('a -> 'b -> 'a t) -> ('a -> bool) -> 'a -> 'b list -> 'a t
