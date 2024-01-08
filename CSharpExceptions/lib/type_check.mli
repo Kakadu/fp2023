@@ -62,16 +62,21 @@ and new without a constructor are not checked. )
   Example: 
     for(int a = 10;;){}
     int a = 4;
+
+   TODO: Calling a method.
+( Below is the incorrect behavior )
+  Example: 
+    <TReturn _> method_a();
 *)
 
 val check_expr
   :  Ast.expr
-  -> Env_types.type_check_ctx
-  -> Env_types.type_check_ctx * (Env_types.t_env_value option, Errors.error) result
+  -> Env_types.Type_check_env.type_check_ctx
+  -> Env_types.Type_check_env.type_check_ctx * (Env_types.Type_check_env.t_env_value option, Errors.error) result
 
 val check_statement
   :  Ast.statement
-  -> Env_types.type_check_ctx
-  -> Env_types.type_check_ctx * (Env_types.tp_checked, Errors.error) result
+  -> Env_types.Type_check_env.type_check_ctx
+  -> Env_types.Type_check_env.type_check_ctx * (Env_types.Type_check_env.tp_checked, Errors.error) result
 
-val type_check : Ast.tast -> Env_types.type_check_ctx * (unit, Errors.error) result
+val type_check : Ast.tast -> Env_types.Type_check_env.type_check_ctx * (unit, Errors.error) result

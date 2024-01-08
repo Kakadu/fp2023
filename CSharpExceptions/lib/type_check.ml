@@ -4,7 +4,8 @@
 
 open Ast
 open Errors
-open Env_types
+open Env_types.Common_env
+open Env_types.Type_check_env
 open Monads.Type_check_Monad
 
 let to_atype = function
