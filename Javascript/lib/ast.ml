@@ -7,7 +7,6 @@ type un_op =
   | Minus
 [@@deriving show { with_path = false }]
 
-(* TODO: implement Remainder operator *)
 type bin_op =
   | PropAccs
   | Add
@@ -17,6 +16,17 @@ type bin_op =
   | Equal
   | NotEqual
   | Assign
+  | Rem (* remainder *)
+  | Exp 
+  | Greater_than
+  | Greater_equal
+  | Less_than
+  | Less_equal
+  | Logical_and
+  | Logical_or
+  | Bitwise_and
+  | Bitwise_or
+  | Xor
 [@@deriving show { with_path = false }]
 
 type typename =

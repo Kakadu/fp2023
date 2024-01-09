@@ -142,7 +142,7 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  pi "return 2 * 'string'";
+  pi "return 2 * \"string\"";
   [%expect {| Programm return: NaN |}]
 ;;
 
@@ -199,9 +199,16 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  pi "return true == 'true'";
-  [%expect {| Programm return: false |}]
-;;
+  pi "return '1' == 1";
+  [%expect {| Programm return: true |}]
+
+let%expect_test _ =
+  pi "return '0' == false";
+  [%expect {| Programm return: true |}]
+
+let%expect_test _ =
+  pi "return '1' == false";
+  [%expect {| Programm return: true |}]
 
 (*not_equal*)
 let%expect_test _ =

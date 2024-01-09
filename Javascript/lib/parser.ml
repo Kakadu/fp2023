@@ -191,13 +191,20 @@ type associativity =
   | Right
 
 (*[(JS name, Ast bin_op)], associativity*)
-let mul_div_rem_op = [ "*", Mul; "/", Div ], Left (*precedence 12*)
+let exp_op = [ "**", Exp ], Right (*precendence 13*)
+let mul_div_rem_op = [ "*", Mul; "/", Div; "%", Rem ], Left (*precedence 12*)
 let add_sub_op = [ "+", Add; "-", Sub ], Left (*precedence 11*)
+let relational_op = [ ">", Greater_than; ">=", Greater_equal; "<", Less_than; "<=", Less_equal ], Left (*precedence 9*)
 let equality_op = [ "==", Equal; "!=", NotEqual ], Left (*precedence 8*)
+let bit_and = [ "&", Bitwise_and ], Left (*precendence 7*)
+let xor = [ "^", Xor ], Left (*precendence 6*)
+let bit_or = [ "|", Bitwise_or ], Left (*precendence 5*)
+let log_and = [ "&&", Logical_and ], Left (*precendence 4*)
+let log_or = [ "||", Logical_or ], Left (*precendence 3*)
 let assign_op = [ "=", Assign ], Right (*precedence 2*)
 
 (*from lower to greater precedence*)
-let list_of_bops = [ assign_op; equality_op; add_sub_op; mul_div_rem_op ]
+let list_of_bops = [ assign_op; log_or; log_and; bit_or; xor; bit_and; equality_op; relational_op; add_sub_op; mul_div_rem_op; exp_op ]
 
 let chainl1 parser op =
   let rec go acc =

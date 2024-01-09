@@ -237,8 +237,9 @@ let bop_with_num op a b =
 ;;
 
 let bop_with_string op a b =
-  both to_vstring a b
-  >>= fun (a, b) -> both get_vstring a b >>| fun (x, y) -> VString (op x y)
+  to_vstring a
+  >>= get_vstring
+  >>= fun x -> to_vstring b >>= get_vstring >>| fun y -> VString (op x y)
 ;;
 
 let is_to_string = function
@@ -258,6 +259,10 @@ let is_num = function
 
 (* TODO: add support for BigInts ( like 2n ) *)
 let add a b =
+  let is_to_string = function
+    | VString _ | VObject _ -> true
+    | _ -> false
+  in
   if is_to_string a || is_to_string b
   then bop_with_string ( ^ ) a b
   else bop_with_num ( +. ) a b
@@ -279,37 +284,26 @@ let sub a b =
 ;;
 
 let mul a b =
-  match a, b with
-  | a, b when is_num a || is_num b || is_to_string a || is_to_string b ->
-    bop_with_num ( *. ) a b
-  | _, _ -> return (VNumber nan)
+  bop_with_num ( *. ) a b
 ;;
 
 let div a b =
-  match a, b with
-  | a, b
-    when is_num a
-         || (is_num b && b <> VNumber 0.)
-         || is_to_string a
-         || (is_to_string b && b <> VString "0") -> bop_with_num ( /. ) a b
-  | a, b when (is_num a || is_to_string a) && (b = VNumber 0. || b = VString "0") ->
-    return (VNumber infinity)
-  | _, _ -> return (VNumber nan)
+  bop_with_num ( /. ) a b
 ;;
 
+(* TODO: fix *)
 let equal (a : value) (b : value) =
   if a = b then return (VBool true) else return (VBool false)
 ;;
 
+(* TODO: fix *)
 let not_equal (a : value) (b : value) =
   if a <> b then return (VBool true) else return (VBool false)
+;;
 
-(* Not yet implemented *)
-(* let rem a b =
-   match a, b with
-   | a, b when is_num a || (is_num b && b != VNumber(0.)) || is_to_string a || (is_to_string b && b != VString("0")) -> bop_with_num ( %. ) a b
-   | _, _ -> return (VNumber nan)
-   ;; *)
+let rem a b = 
+  bop_with_num ( mod_float ) a b
+;;
 
 let add_ctx ctx op = op >>| fun op -> ctx, op
 
@@ -327,6 +321,7 @@ let eval_bin_op ctx op a b =
   | Div -> add_ctx @@ div a b <?> "error in div operator"
   | Equal -> add_ctx @@ equal a b <?> "error in equal operator"
   | NotEqual -> add_ctx @@ not_equal a b <?> "error in not_equal operator"
+  | Rem -> add_ctx @@ rem a b <?> "error in rem operator" 
   | _ as a -> ensup @@ asprintf "operator %a not supported yet" pp_bin_op a
 ;;
 
