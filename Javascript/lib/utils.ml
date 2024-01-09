@@ -36,3 +36,5 @@ let rec fold_left_s f stop acc = function
   | h :: tl ->
     f acc h >>= fun acc -> if stop acc then return acc else fold_left_s f stop acc tl
 ;;
+
+let both f a b = f a >>= fun x -> f b >>= fun y -> return (x, y)
