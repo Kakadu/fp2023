@@ -1,10 +1,18 @@
 (executable
- (name demoFact)
- (modules demoFact)
- (public_name demoFact)
- (libraries ocamladt_lib)
+ (name demoParse)
+ (modules demoParse)
+ (public_name demoParse)
+ (libraries ocamladt_lib stdio)
+ (instrumentation
+  (backend bisect_ppx)))
+
+(executable
+ (name demoInterpret)
+ (modules demoInterpret)
+ (public_name demoInterpret)
+ (libraries ocamladt_lib stdio)
  (instrumentation
   (backend bisect_ppx)))
 
 (cram
- (deps %{bin:demoFact}))
+ (deps %{bin:demoParse} %{bin:demoInterpret}))
