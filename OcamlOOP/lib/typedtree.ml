@@ -15,9 +15,9 @@ end
 type binder = int [@@deriving eq, show { with_path = false }]
 type binder_set = VarSet.t [@@deriving show { with_path = false }]
 
-(** For each object, an alias is created during initialization, which is disabled by default (with flag = [false]).
-    This is then used for represent rercursive types.
-    *Of course this is bad way to implement recursive types in real world, but it's quite suitable for this project *)
+(** Represents type sharing for objects, which displayed using the [as] constract.
+    A shared sub-term is represented by a type variable, when object's type is recursive (flag = [true])
+    This makes sense since this language doesn't support subtyping *)
 type constr = C of binder * bool [@@deriving eq, show { with_path = false }]
 
 type ty =
@@ -27,8 +27,14 @@ type ty =
   | TArrow of ty * ty (** [TArrow (t1, t2)] ==> [e1 -> e2] *)
   | TList of ty (** [['a; 'b; ...]] *)
   | TObject of ty * (string * ty) list * constr
-  (** Constr represents a constraint, when types of object are recursive.
-      [only self calls and overriding are supported!  ] *)
+  (** Represents:
+      - [< .. > as 'a] when [constr] is [true]
+      - [< .. >] when [constr] is [false]
+
+      [TObject(`f1:t1;..;fn:tn',_,_)] ==> [< f1:t1; ...; fn:tn>]
+      f1, fn are represented a linked list of types using TField and TNil constructors.
+
+      The second parameter represents the instance variables. *)
   | TField of string * ty * ty (** [TField ("foo", t, ts)] ==> [<..; foo : t; ts>] *)
   | TNil (** [TNil] ==> [<...;>] *)
   | TPoly of binder (** Represents anonymous row variable [<;..>] *)

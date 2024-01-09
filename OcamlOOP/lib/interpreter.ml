@@ -6,13 +6,6 @@ open Ast
 open Base
 open Errors
 
-let division_by_zero = Interpreter Division_by_zero
-let match_failure = Interpreter Match_failure
-let invalid_compare_arg s = Interpreter (Invalid_compare_arg s)
-let ill_right_side_rec s = Interpreter (Ill_right_side_rec s)
-let ill_typed = Interpreter Ill_typed
-let unbound_var s = Interpreter (Unbound_var s)
-
 type name = string
 
 module type MONAD_ERROR = sig

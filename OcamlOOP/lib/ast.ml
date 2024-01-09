@@ -45,7 +45,8 @@ type pattern =
   | Pat_var of ident (** A variable pattern such as [x] *)
   | Pat_cons of pattern * pattern (** The pattern such as [P1::P2] *)
   | Pat_any (** The pattern [_] *)
-  | Pat_tuple of pattern list (** Patterns [(P1, ..., P2)]*)
+  | Pat_tuple of pattern list (** Patterns [(P1, ..., P2)]
+                                  Invariant : [n >= 2]*)
 [@@deriving show { with_path = false }]
 
 type expression =
@@ -53,7 +54,8 @@ type expression =
   | Exp_unary_op of unary_op * expression
   | Exp_bin_op of bin_op * expression * expression
   | Exp_ident of ident (** Identifiers such as [x] *)
-  | Exp_tuple of expression list (** Expressions [(E1, ..., En)]*)
+  | Exp_tuple of expression list (** Expressions [(E1, ..., En)]
+                                     Invariant: [n >= 2] *)
   | Exp_function of pattern * expression (** [fun P1 -> E] *)
   | Exp_let of decl * expression
   (** [Exp_let({d_rec=flag; P; E}, E')] represents:

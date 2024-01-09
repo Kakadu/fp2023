@@ -12,37 +12,41 @@ type object_field =
 
 type infer_error =
   | Occurs_check of int * ty
-  (** This error can lead to non-determinism of the type inference
-      Example: [fun x -> x x]*)
   | Unbound_variable of string
-  (** Variable is not defined in local context
-      Example: [let increase = x + 1]*)
-  | Unification_failed of ty * ty (** Unification error between two types *)
-  | Several_bounds of string (** Example: let (x, x) = 1, 3 *)
-  | Unreachable
-  (** For unreachable cases like missing cases in pattern-matching, because parser doesn't recognize this construction *)
+  | Unification_failed of ty * ty
+  | Several_bounds of string
   | No_variable_rec
-  (** Only variables are allowed as left-side of 'let rec'
-      Example: [let rec (a, b) = 5] *)
   | Multiple_definition of object_field * string
-  (** An instance variable / method must have a single definition
-      Example: [object val n = 0 val n = 5 end]*)
   | Undefined_method of ty * string
-  (** Occurs when sending a message to undefined method in object *)
-  | Not_object of ty (** Occurs when trying to send a message to a non-object *)
-  | Cannot_match_self (** A self-reference can only be a `self' variable *)
+  | Not_object of ty
+  | Cannot_match_self
 
 type interpreter_error =
-  | Division_by_zero (** Example: [5 / 0] *)
+  | Division_by_zero
   | Match_failure
-  (** May occurs with non-exhaustive pattern-matching, if value doesn't match any case *)
   | Invalid_compare_arg of string
-  (** Occurs when trying to compare two anonymous functions *)
-  | Ill_right_side_rec of string (** Represents limitations of `let rec` *)
-  | Ill_typed (* Unreachable with using infer *)
-  | Unbound_var of string (* Unreachable with using infer *)
+  | Ill_right_side_rec of string
+  | Ill_typed
+  | Unbound_var of string
 
 type error =
   | Parser of parse_error
   | Infer of infer_error
   | Interpreter of interpreter_error
+
+let occurs_check (b, t) = Infer (Occurs_check (b, t))
+let unbound_variable v = Infer (Unbound_variable v)
+let unification_failed (t1, t2) = Infer (Unification_failed (t1, t2))
+let several_bounds v = Infer (Several_bounds v)
+let no_variable_rec = Infer No_variable_rec
+let multiple_variable name = Infer (Multiple_definition (Variable, name))
+let multiple_method name = Infer (Multiple_definition (Method, name))
+let undefined_method ty_obj name = Infer (Undefined_method (ty_obj, name))
+let not_object t = Infer (Not_object t)
+let cannot_match_self = Infer Cannot_match_self
+let division_by_zero = Interpreter Division_by_zero
+let match_failure = Interpreter Match_failure
+let invalid_compare_arg s = Interpreter (Invalid_compare_arg s)
+let ill_right_side_rec s = Interpreter (Ill_right_side_rec s)
+let ill_typed = Interpreter Ill_typed
+let unbound_var s = Interpreter (Unbound_var s)

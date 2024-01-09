@@ -6,18 +6,6 @@ open Ast
 open Typedtree
 open Errors
 
-let occurs_check (b, t) = Infer (Occurs_check (b, t))
-let unbound_variable v = Infer (Unbound_variable v)
-let unification_failed (t1, t2) = Infer (Unification_failed (t1, t2))
-let several_bounds v = Infer (Several_bounds v)
-let unreachable = Infer Unreachable
-let no_variable_rec = Infer No_variable_rec
-let multiple_variable name = Infer (Multiple_definition (Variable, name))
-let multiple_method name = Infer (Multiple_definition (Method, name))
-let undefined_method ty_obj name = Infer (Undefined_method (ty_obj, name))
-let not_object t = Infer (Not_object t)
-let cannot_match_self = Infer Cannot_match_self
-
 (* A self-referncing object can only be represent using a keyword `self` (in contrast to OCaml) *)
 let self_reference_alias = "self"
 
@@ -202,10 +190,8 @@ end = struct
       | TPoly t as ty ->
         (match find t s with
          | None -> ty
-         | Some x ->
-           (match x with
-            | TVar i -> TPoly i
-            | _ -> x))
+         | Some (TVar i) -> TPoly i
+         | Some x -> x)
       | other -> other
     in
     helper
@@ -217,9 +203,8 @@ end = struct
       | TField (k, t, ts) ->
         let fields = Map.update fields k ~f:(fun _ -> t) in
         helper fields ts
-      | TNil -> return (fields, None)
       | TPoly t -> return (fields, Some t)
-      | _ -> fail unreachable
+      | _ -> return (fields, None)
     in
     helper empty
   ;;
@@ -336,24 +321,18 @@ module TypeEnv = struct
   let empty = Map.empty (module String)
   let extend env (v, scheme) = Map.update env v ~f:(fun _ -> scheme)
 
-  let rec extend_by_pattern (S (bs, ty) as scheme) acc = function
-    | Pat_var v -> extend acc (v, scheme)
-    | Pat_cons (h, tl) ->
-      (match ty with
-       | TList t ->
-         let env = extend_by_pattern (S (bs, t)) acc h in
-         extend_by_pattern (S (bs, ty)) env tl
-       | _ -> acc)
-    | Pat_tuple es ->
-      (match ty with
-       | TTuple ts ->
-         let new_env =
-           List.fold2 es ts ~init:acc ~f:(fun acc e t ->
-             extend_by_pattern (S (bs, t)) acc e)
-         in
-         (match new_env with
-          | Ok env -> env
-          | _ -> acc)
+  let rec extend_by_pattern (S (bs, ty) as scheme) acc pat =
+    match pat, ty with
+    | Pat_var v, _ -> extend acc (v, scheme)
+    | Pat_cons (h, tl), TList t ->
+      let env = extend_by_pattern (S (bs, t)) acc h in
+      extend_by_pattern (S (bs, ty)) env tl
+    | Pat_tuple es, TTuple ts ->
+      let new_env =
+        List.fold2 es ts ~init:acc ~f:(fun acc e t -> extend_by_pattern (S (bs, t)) acc e)
+      in
+      (match new_env with
+       | Ok env -> env
        | _ -> acc)
     | _ -> acc
   ;;
@@ -464,7 +443,7 @@ let pattern_infer =
   helper
 ;;
 
-(* On the first path, introduce new type variable for each method in object *)
+(* Introduce new type variable for each method in object *)
 type first_pass_acc =
   { meths : string list (* for further construction of the object type *)
   ; meth_env : (string, ty, Base.String.comparator_witness) Base.Map.t
@@ -481,13 +460,12 @@ let extract_method name = function
     let rec find_meth = function
       | TField (s, t, ts) ->
         if String.equal name s then return (Subst.empty, t) else find_meth ts
-      | TNil -> fail (undefined_method obj name)
       | TPoly _ as x ->
         let* tv = fresh_var in
         let* tv1 = fresh_poly in
         let* sub = unify x (TField (name, tv, tv1)) in
         return (sub, tv)
-      | _ -> fail unreachable
+      | _ -> fail (undefined_method obj name)
     in
     find_meth fs
   | TVar _ as x ->
@@ -510,7 +488,7 @@ let object_infer env ~infer_expr { o_self; o_fields } =
   let add_val k v = function
     | TObject (t, vals, c) ->
       return (tobject t (List.Assoc.add vals ~equal:String.equal k v) c)
-    | _ -> fail unreachable
+    | t -> fail (not_object t)
   in
   let first_field_pass acc =
     let { meths; meth_env } = acc in
@@ -531,11 +509,11 @@ let object_infer env ~infer_expr { o_self; o_fields } =
       ~init:(return { meth_env = Base.Map.empty (module String); meths = [] })
       ~f:first_field_pass
   in
-  let* self =
-    RList.fold_left meths ~init:(return TNil) ~f:(fun ts t ->
-      match Map.find meth_env t with
-      | None -> fail unreachable
-      | Some ty -> return (TField (t, ty, ts)))
+  let self =
+    List.fold_left meths ~init:TNil ~f:(fun ts t ->
+      match TypeEnv.find meth_env t with
+      | None -> ts
+      | Some ty -> tfield t ty ts)
   in
   let option_eq_ty k t subs =
     let cmp = Option.equal equal_ty in
@@ -550,7 +528,7 @@ let object_infer env ~infer_expr { o_self; o_fields } =
       let+ final_subs = Subst.compose sub s in
       Subst.apply final_subs self
     | TObject (_, _, C (b, true)), TVar i, TVar i1 when i = b ->
-      let+ sub = Subst.singleton i1 (TVar b) in
+      let+ sub = Subst.singleton i1 (tvar b) in
       Subst.apply sub self
     | _ ->
       let* sub = unify m_fp m_sp in
@@ -630,14 +608,14 @@ let infer =
       let* tv = fresh_var in
       let* s1, t1 = helper env e in
       let* s2, t2 = helper (TypeEnv.apply s1 env) e' in
-      let* sub = unify (TArrow (t2, tv)) (Subst.apply s2 t1) in
+      let* sub = unify (tarrow t2 tv) (Subst.apply s2 t1) in
       let* final_subs = Subst.compose_all [ s1; s2; sub ] in
       let trez = Subst.apply final_subs tv in
       return (final_subs, trez)
     | Exp_function (v, e) ->
       let* env', t = pattern_infer env v in
       let* s, t' = helper env' e in
-      let ty = TArrow (Subst.apply s t, t') in
+      let ty = tarrow (Subst.apply s t) t' in
       return (s, ty)
     | Exp_ifthenelse (i, th, e) ->
       let* si, ti = helper env i in
@@ -826,21 +804,19 @@ module PP = struct
     construct ty
   ;;
 
-  (* [WARNING] Works correctly for strings of length <= 2 *)
   let convert_to_string binder =
     let rec helper binder acc =
-      if 26 > binder && binder >= 0
+      if binder < 26
       then (
         let s = Char.chr (97 + binder) in
         Base.Char.to_string s ^ acc)
       else (
-        let hd = Char.chr @@ (97 + (binder mod 26)) in
-        helper ((binder / 26) - 1) (Format.sprintf "%c%s" hd acc))
+        let tl = Char.chr (97 + (binder mod 26)) in
+        helper ((binder / 26) - 1) (Format.sprintf "%c%s" tl acc))
     in
     helper binder ""
   ;;
 
-  (* pos --> attribute *)
   let pp_type ppf ty =
     let new_ty = reconstruct_binders ty in
     let open Format in
@@ -915,7 +891,6 @@ module PP = struct
         pp_type
         r
     | Several_bounds s -> Format.fprintf ppf "Variable %s is bound several times" s
-    | Unreachable -> Format.fprintf ppf "Unreachable error"
     | No_variable_rec ->
       Format.fprintf ppf "Only variables are allowed as left-side of 'let rec'"
     | Multiple_definition (kind, name) ->
