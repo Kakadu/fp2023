@@ -122,7 +122,7 @@ end = struct
   let pp ppf subst =
     let open Format in
     Map.Poly.iteri subst ~f:(fun ~key ~data ->
-      fprintf ppf "'_%d -> %a@\n" key Pprinttypedtree.pp_typ_binder data)
+      fprintf ppf "'_%d -> %a@\n" key Typedtree.pp_typ_binder data)
   ;;
 
   let empty = Map.Poly.empty
@@ -289,7 +289,7 @@ let infer =
        | CBool _ -> return (env, Prim "bool")
        | CInt _ -> return (env, Prim "int")
        | CString _ -> return (env, Prim "string")
-       | CNil -> fail NotImplemented)
+       | CNil -> return (env, Prim "nil"))
     | Var id ->
       let* tv = fresh_var in
       let env = TypeEnv.extend env (id, S (VarSet.empty, tv)) in
@@ -307,10 +307,7 @@ let infer =
       let* subst = unify ty1 ty2 in
       let finenv = TypeEnv.apply subst env in
       return (finenv, Subst.apply subst ty1)
-    | Case (name, args) ->
-      let* finenv, fintys = eval_list_helper @@ return (env, args) in
-      let* tv = fresh in
-      return (finenv, cases_typ tv [ name, fintys ])
+    | Case (_, _) -> fail NotImplemented
   in
   let rec (helper : TypeEnv.t -> Ast.expr -> (Subst.t * typ) R.t) =
     fun env -> function
@@ -320,7 +317,7 @@ let infer =
        | CBool _ -> return (Subst.empty, Prim "bool")
        | CInt _ -> return (Subst.empty, Prim "int")
        | CString _ -> return (Subst.empty, Prim "string")
-       | CNil -> fail NotImplemented)
+       | CNil -> return (Subst.empty, Prim "nil"))
     | BinExpr (op, left, right) ->
       let* subst_left, typ_left = helper env left in
       let* subst_right, typ_right = helper env right in
@@ -353,29 +350,18 @@ let infer =
       let* final_subst = Subst.compose_all [ s5; s4; s3; s2; s1 ] in
       return (final_subst, Subst.apply final_subst t2)
     | LetExpr (bool, name, expr) ->
-      (match name with
-       | Name let_name | ActivePaterns (SingleChoice (let_name, _)) ->
-         if bool
-         then
-           let* s, t = helper env expr in
-           return (s, t)
-         else
-           let* tv = fresh_var in
-           let env = TypeEnv.extend env (let_name, S (VarSet.empty, tv)) in
-           let* s, t = helper env expr in
-           return (s, t)
-           (* Пока не рабочая имплепентация множественного выбора, не очень пока что понимаю
-              как именно это реализовать, надеюсь, сделаю это немного позже *)
-       | ActivePaterns (MultipleChoice let_name) ->
-         if bool
-         then
-           let* s, t = helper env expr in
-           return (s, t)
-         else
-           let* tv = fresh_var in
-           let env = TypeEnv.extend env (List.hd_exn let_name, S (VarSet.empty, tv)) in
-           let* s, t = helper env expr in
-           return (s, t))
+      if List.length name == 1 || String.equal (List.hd_exn (List.tl_exn name)) "_"
+      then
+        if bool
+        then
+          let* s, t = helper env expr in
+          return (s, t)
+        else
+          let* tv = fresh_var in
+          let env = TypeEnv.extend env (List.hd_exn name, S (VarSet.empty, tv)) in
+          let* s, t = helper env expr in
+          return (s, t)
+      else fail NotImplemented
     | FunExpr (arg, e) ->
       let* env, t1 = pattern_helper env arg in
       let* s, t2 = helper env e in
@@ -414,19 +400,7 @@ let infer =
       let t1 = list_typ t1 in
       let* subst = Subst.compose_all [ s1 ] in
       return (subst, Subst.apply subst t1)
-    | CaseExpr (constructor, args) ->
-      let* s, t =
-        List.fold
-          args
-          ~init:(return (Subst.empty, []))
-          ~f:(fun acc expr ->
-            let* pv_s, pv = acc in
-            let* s, t = helper env expr in
-            let* subst = Subst.compose s pv_s in
-            return (subst, t :: pv))
-      in
-      let* fv = fresh in
-      return (s, cases_typ fv [ constructor, t ])
+    | CaseExpr (_, _) -> fail NotImplemented
     | TupleExpr tuple ->
       let* s, t =
         List.fold
@@ -448,15 +422,15 @@ let empty : environment = TypeEnv.empty
 let check_type env expr =
   let* _, typ = infer env expr in
   match expr with
-  | LetExpr (_, Name name, _) ->
-    let env = TypeEnv.extend env (name, S (VarSet.empty, typ)) in
+  | LetExpr (_, name, _) ->
+    let env = TypeEnv.extend env (List.hd_exn name, S (VarSet.empty, typ)) in
     return (env, typ)
   | _ -> return (env, typ)
 ;;
 
 let check_types env program =
   let rec helper env = function
-    | [] -> fail Empty_input
+    | [] -> fail EmptyProgram
     | hd :: [] ->
       let* env, typ = check_type env hd in
       return (env, typ)
@@ -525,7 +499,7 @@ let%expect_test _ =
 
 let run_infer = function
   | Result.Error e -> Format.printf "Error: %a%!" pp_error e
-  | Result.Ok (_, typed) -> Format.printf "%a%!" Pprinttypedtree.pp_typ_binder typed
+  | Result.Ok (_, typed) -> Format.printf "%a%!" Typedtree.pp_typ_binder typed
 ;;
 
 let%expect_test _ =
@@ -609,11 +583,62 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
+  let open Ast in
+  let _ =
+    let e = [ ConstExpr CNil ] in
+    check_types e |> run_infer
+  in
+  [%expect {| nil |}]
+;;
+
+let%expect_test _ =
+  let open Ast in
+  let _ =
+    let e =
+      [ LetExpr
+          ( false
+          , [ "good" ]
+          , FunExpr
+              ( Var "input"
+              , MatchExpr
+                  ( VarExpr "input"
+                  , [ Const (CInt 15), ConstExpr (CInt 5); Wild, ConstExpr (CInt 7) ] )
+              ) )
+      ]
+    in
+    check_types e |> run_infer
+  in
+  [%expect {| (int -> int) |}]
+;;
+
+let%expect_test _ =
+  let open Ast in
+  let _ =
+    let e = [ (LetExpr (false, ["x"], (ConstExpr (CInt 5))))  ] in
+    check_types e |> run_infer
+  in
+  [%expect {| int |}]
+;;
+
+let%expect_test _ =
+  let open Ast in
+  let _ =
+    let e =
+      [ AppExpr
+          (FunExpr (Var "x", BinExpr (Mul, VarExpr "x", VarExpr "x")), ConstExpr (CInt 5))
+      ]
+    in
+    check_types e |> run_infer
+  in
+  [%expect {| int |}]
+;;
+
+let%expect_test _ =
   let _ =
     let e = [] in
     check_types e |> run_infer
   in
-  [%expect {| Error: Typechecker error: empty pattern |}]
+  [%expect {| Error: Error: the program was not provided or was empty |}]
 ;;
 
 let%expect_test _ =

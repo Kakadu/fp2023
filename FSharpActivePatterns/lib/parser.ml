@@ -183,7 +183,7 @@ let pdisj = p_op "||" Or
 let constr_case pat expr = pat, expr
 let constr_efun pl e = List.fold_right ~init:e ~f:(fun p e -> FunExpr (p, e)) pl
 let parse_econst = (fun v -> ConstExpr v) <$> parse_const
-let parse_evar = (fun v -> VarExpr v) <$> p_var
+let parse_evar = (fun v -> VarExpr v) <$> (p_var)
 
 let parse_fun_args =
   fix @@ fun p -> many1 (pack.list pack <|> pack.value pack) <|> parens p
@@ -205,6 +205,11 @@ let parse_cases_expr ps =
     (fun id args -> CaseExpr (id, args))
     (parse_token p_var_case)
     (sep_by (pstrtoken "|") ps)
+;;
+
+let parse_let_name =
+    (pstrtoken "(|" *> sep_by (pstrtoken "|") (p_var_case <|> p_var) <* pstrtoken "|)") <|>
+    sep_by (pstrtoken " ") ( p_var)
 ;;
 
 let plet_body pargs pexpr =
@@ -241,7 +246,7 @@ let pack =
       ; pack.app_e pack
       ; value_e
       ; pack.case_e pack
-      ; parens @@ choice [ pack.tuple_e pack; pack.bin_e pack ]
+      ; parens @@ choice [pack.tuple_e pack; pack.bin_e pack ]
       ]
   in
   let app_args_parsers pack =
@@ -293,8 +298,8 @@ let pack =
       (pstrtoken "else" *> expr_parsers pack)
   in
   let list_e pack = fix @@ fun _ -> parse_list_expr (expr_parsers pack) in
-  let tuple_e pack = fix @@ fun _ -> parse_tuple_expr (expr_parsers pack) in
-  let let_with =
+  let tuple_e pack = fix @@ fun _ -> parse_tuple_expr (expr_parsers pack)  in
+  (* let let_with =
     pstrtoken "(|"
     *> lift2
          (fun a b -> SingleChoice (a, b))
@@ -314,8 +319,20 @@ let pack =
        *> option false (parse_token (string "rec") <* parse_white_space1 >>| fun _ -> true)
       )
       (p_var >>| (fun a -> Name a) <|> (let_with >>| fun a -> ActivePaterns a))
-      (plet_body parse_fun_args (expr_parsers pack))
-  in
+      (plet_body parse_fun_args (expr_parsers pack) <|> pstrtoken "=" *> value_e )
+  in *)
+
+  let let_e pack = 
+    fix
+    @@ fun _ ->
+    lift3
+      (fun a b c -> LetExpr (a, b, c))
+      (pstrtoken "let"
+       *> option false (parse_token (string "rec") <* parse_white_space1 >>| fun _ -> true)
+      )
+      (parse_let_name)
+      (plet_body parse_fun_args (expr_parsers pack) <|> pstrtoken "=" *> value_e )
+    in
   let fun_e pack =
     fix
     @@ fun _ ->
@@ -332,7 +349,7 @@ let pack =
       (value_e <|> parens @@ choice [ fun_e pack; pack.app_e pack ])
       (many1 (parse_token1 @@ app_args_parsers pack))
   in
-  { list_e; tuple_e; fun_e; let_e; app_e; if_e; expr_parsers; matching_e; bin_e; case_e }
+  { list_e; tuple_e; fun_e; let_e; app_e; if_e; expr_parsers; matching_e; bin_e; case_e}
 ;;
 
 let parse = pack.expr_parsers pack
@@ -423,6 +440,14 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
+  let test = "fun x -> x * x " in
+  start_test parse show_expr test;
+  [%expect
+    {| (FunExpr ((Var "x"), (BinExpr (Mul, (VarExpr "x"), (VarExpr "x"))))) |}]
+;;
+
+
+let%expect_test _ =
   let test = "(1, [2;((3));4], 5)" in
   start_test parse show_expr test;
   [%expect
@@ -454,8 +479,34 @@ let%expect_test _ =
   start_test parse show_expr test;
   [%expect
     {|
-    (LetExpr (false, (Name "f"),
+    (LetExpr (false, ["f"],
        (FunExpr ((Var "x"), (BinExpr (Add, (VarExpr "x"), (VarExpr "x"))))))) |}]
+;;
+
+let%expect_test _ =
+  let test = "()" in
+  start_test parse show_expr test;
+  [%expect
+    {| (ConstExpr CNil) |}]
+;;
+
+
+
+let%expect_test _ =
+  let test = "let x = 5" in
+  start_test parse show_expr test;
+  [%expect
+    {| (LetExpr (false, ["x"], (ConstExpr (CInt 5)))) |}]
+;;
+
+let%expect_test _ =
+  let test = "(fun x -> x*x) 5" in
+  start_test parse show_expr test;
+  [%expect
+    {|
+      (AppExpr (
+         (FunExpr ((Var "x"), (BinExpr (Mul, (VarExpr "x"), (VarExpr "x"))))),
+         (ConstExpr (CInt 5)))) |}]
 ;;
 
 let%expect_test _ =
@@ -463,7 +514,7 @@ let%expect_test _ =
   start_test parse show_expr test;
   [%expect
     {|
-    (LetExpr (true, (Name "fact"),
+    (LetExpr (true, ["fact"],
        (FunExpr ((Var "n"),
           (IfExpr ((BinExpr (Eq, (VarExpr "n"), (ConstExpr (CInt 1)))),
              (ConstExpr (CInt 1)),
@@ -481,7 +532,7 @@ let%expect_test _ =
   start_test parse show_expr test;
   [%expect
     {|
-      (LetExpr (false, (Name "check"),
+      (LetExpr (false, ["check"],
          (FunExpr ((Var "input"),
             (MatchExpr ((VarExpr "input"),
                [((Const (CInt 2)), (ConstExpr (CInt 5)));
@@ -522,7 +573,7 @@ let%expect_test _ =
   start_test parse show_expr test;
   [%expect
     {|
-      (LetExpr (false, (ActivePaterns (MultipleChoice ["Even"; "Odd"])),
+      (LetExpr (false, ["Even"; "Odd"],
          (FunExpr ((Var "input"),
             (IfExpr (
                (BinExpr (Eq,
@@ -538,7 +589,7 @@ let%expect_test _ =
   start_test parse show_expr test;
   [%expect
     {|
-    (LetExpr (false, (ActivePaterns (SingleChoice ("Even", true))),
+    (LetExpr (false, ["Even"; "_"],
        (FunExpr ((Var "v"),
           (IfExpr (
              (BinExpr (Eq, (BinExpr (Mod, (VarExpr "v"), (ConstExpr (CInt 2)))),
@@ -554,7 +605,7 @@ let%expect_test _ =
   start_test parse show_expr test;
   [%expect
     {|
-      (LetExpr (false, (ActivePaterns (SingleChoice ("Even", false))),
+      (LetExpr (false, ["Even"],
          (FunExpr ((Var "v"),
             (IfExpr (
                (BinExpr (Eq, (BinExpr (Mod, (VarExpr "v"), (ConstExpr (CInt 2)))),
@@ -574,7 +625,7 @@ let%expect_test _ =
   start_test parse show_expr test;
   [%expect
     {|
-      (LetExpr (false, (Name "good"),
+      (LetExpr (false, ["good"],
          (FunExpr ((Var "input"),
             (MatchExpr ((VarExpr "input"),
                [((Case ("Even", [])), (ConstExpr (CInt 5)));
@@ -589,3 +640,4 @@ let%expect_test _ =
   start_test parse show_expr test;
   [%expect {| (AppExpr ((VarExpr "good"), (ConstExpr (CInt 6)))) |}]
 ;;
+

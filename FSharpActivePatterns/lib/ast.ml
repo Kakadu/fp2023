@@ -11,7 +11,7 @@ type const =
   | CNil
 [@@deriving show { with_path = false }]
 
-type bin_op =
+type binary_op =
   | Add (** + *)
   | Sub (** - *)
   | Mul (** * *)
@@ -31,29 +31,19 @@ type pattern =
   | Wild (** _ *)
   | Const of const
   | Var of name
-  | Tuple of pattern list (** a, b *)
+  | Tuple of pattern list (** (a, b) *)
   | List of pattern list (** [1;2;3] *)
   | Case of name * pattern list
 [@@deriving show { with_path = false }]
 
-type pattern_type =
-  | SingleChoice of name * bool
-  | MultipleChoice of name list
-[@@deriving show { with_path = false }]
-
-type active_pattern =
-  | Name of name
-  | ActivePaterns of pattern_type
-[@@deriving show { with_path = false }]
-
 type expr =
   | ConstExpr of const
-  | VarExpr of name
+  | VarExpr of name (** x = 5 or let x = 5 *)
   | ListExpr of expr list
   | TupleExpr of expr list
-  | BinExpr of bin_op * expr * expr (** 1 + 5 - 3*)
+  | BinExpr of binary_op * expr * expr (** 1 + 5 - 3*)
   | IfExpr of expr * expr * expr (** if a then b else c *)
-  | LetExpr of bool * active_pattern * expr (** let sq x = x * x *)
+  | LetExpr of bool * name list * expr (** let sq x = x * x *)
   | AppExpr of expr * expr (** sq 5 *)
   | FunExpr of pattern * expr (** fun x -> x * x *)
   | MatchExpr of expr * (pattern * expr) list
@@ -71,10 +61,7 @@ type value =
   | VTuple of value list
   | VFun of pattern * expr * (name * value) list
   | VLetWAPat of name * value (* without active patterns *)
-  | VLetAPat of pattern_type * value (* with active patterns *)
+  | VLetAPat of name list * value (* with active patterns *) 
   | VCases of name * value option
-  | VSome of value
   | VNone
-  | VUnit
-  | VNil
 [@@deriving show { with_path = false }]

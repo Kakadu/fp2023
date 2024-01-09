@@ -5,16 +5,16 @@ This is a homework for functional programming course.
 License: LGPL for implementation code + WTFPL for test examles in miniLanguage
 
 Author: Vitaliy Dyachkov, vitaliy.dyach@gmail.com
-
+ 
 Functions performed:
-- Parser of Binary operations, functions, lists, tuples and active patterns
-- Interpreter
-- Partially made type checker
+- Parser 
+- Interpreter 
+- Partially made type checker 
 
-Features under development:
+Features under development: 
 - Type checker: 
-  1) Let MultipleChoice
-- Cram test
+    Active Pattern 
+- Cram test 
 
 (TODO: Поменять readme, может даже не забуду)
 ##### Замечания по стилю кодирования
