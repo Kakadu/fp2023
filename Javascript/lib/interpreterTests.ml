@@ -203,3 +203,88 @@ let%expect_test _ =
   pi "let a = 6; function b() {return a;}; return b()";
   [%expect {| Programm return: 6 |}]
 ;;
+
+let%expect_test _ =
+  pi "let a = b; function b() {return 10;}; return a()";
+  [%expect {| Programm return: 10 |}]
+;;
+
+let%expect_test _ =
+  pi "let a = 4; function b() {let a = 8; return a;}; return b()";
+  [%expect {| Programm return: 8 |}]
+;;
+
+(*anon function*)
+
+let%expect_test _ =
+  pi "let a = function (b){\n    return b;\n  }; return a(4)";
+  [%expect {| Programm return: 4 |}]
+;;
+
+let%expect_test _ =
+  pi "let a = function (b){\n    return b;\n  }; return a";
+  [%expect {| Programm return: [Function: a] |}]
+;;
+
+let%expect_test _ =
+  pi "return function (b){\n    return b;\n  }(4)";
+  [%expect {| Programm return: 4 |}]
+;;
+
+(*arrow function*)
+let%expect_test _ =
+  pi "return ((b) => b)(4)";
+  [%expect {| Programm return: 4 |}]
+;;
+
+let%expect_test _ =
+  pi "return ((b) => {return b})(4)";
+  [%expect {| Programm return: 4 |}]
+;;
+
+let%expect_test _ =
+  pi "let a = (b) => {return b}; return a(4)";
+  [%expect {| Programm return: 4 |}]
+;;
+
+let%expect_test _ =
+  pi "let a = (b) => {return b}; return a";
+  [%expect {| Programm return: [Function: a] |}]
+;;
+
+(*objects*)
+
+let%expect_test _ =
+  pi "let a = { lang : \"Ocaml\", num : 5}; return a";
+  [%expect {| Programm return: { lang: 'Ocaml', num: 5 } |}]
+;;
+
+let%expect_test _ =
+  pi "let a = { lang : \"Ocaml\", num : 5}; return a.lang";
+  [%expect {| Programm return: Ocaml |}]
+;;
+
+let%expect_test _ =
+  pi "let a = { lang : \"Ocaml\", num : 5}; return a[\"nu\"+\"m\"]";
+  [%expect {| Programm return: 5 |}]
+;;
+
+let%expect_test _ =
+  pi "let a = { lang : \"Ocaml\", [\"nu\"+\"m\"] : 5+5}; return a.num";
+  [%expect {| Programm return: 10 |}]
+;;
+
+let%expect_test _ =
+  pi "let a = { lang : \"Ocaml\", num : 5}; return a.ab";
+  [%expect {| Programm return: undefined |}]
+;;
+
+let%expect_test _ =
+  pi "let a = { get_num : (b) => b}; return a.get_num(5)";
+  [%expect {| Programm return: 5 |}]
+;;
+
+let%expect_test _ =
+  pi "let a = { sayHi() {\n    return \"Hi!\"\n  }}; return a.sayHi()";
+  [%expect {| Programm return: Hi! |}]
+;;
