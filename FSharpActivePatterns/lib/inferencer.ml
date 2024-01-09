@@ -523,15 +523,6 @@ let%expect_test _ =
 let%expect_test _ =
   let open Ast in
   let _ =
-    let e = [ IfExpr (ConstExpr (CBool true), ConstExpr (CInt 4), ConstExpr (CInt 5)) ] in
-    check_types e |> run_infer
-  in
-  [%expect {| int |}]
-;;
-
-let%expect_test _ =
-  let open Ast in
-  let _ =
     let e = [ ConstExpr (CString "1") ] in
     check_types e |> run_infer
   in
@@ -541,14 +532,10 @@ let%expect_test _ =
 let%expect_test _ =
   let open Ast in
   let _ =
-    let e =
-      [ ListExpr
-          [ ConstExpr (CString "1"); ConstExpr (CString "2"); ConstExpr (CString " 3") ]
-      ]
-    in
+    let e = [ IfExpr (ConstExpr (CBool true), ConstExpr (CInt 4), ConstExpr (CInt 5)) ] in
     check_types e |> run_infer
   in
-  [%expect {| string list |}]
+  [%expect {| int |}]
 ;;
 
 let%expect_test _ =
@@ -562,6 +549,15 @@ let%expect_test _ =
     check_types e |> run_infer
   in
   [%expect {| string list |}]
+;;
+
+let%expect_test _ =
+  let open Ast in
+  let _ =
+    let e = [ ListExpr [ ConstExpr (CInt 1); ConstExpr (CInt 2); ConstExpr (CInt 3) ] ] in
+    check_types e |> run_infer
+  in
+  [%expect {| int list |}]
 ;;
 
 let%expect_test _ =
@@ -602,8 +598,8 @@ let%expect_test _ =
               ( Var "input"
               , MatchExpr
                   ( VarExpr "input"
-                  , [ Const (CInt 15), ConstExpr (CInt 5); Wild, ConstExpr (CInt 7) ] )
-              ) )
+                  , [ Const (CInt 15), ConstExpr (CInt 5); Wild, ConstExpr (CInt 7) ] ) )
+          )
       ]
     in
     check_types e |> run_infer
@@ -614,7 +610,7 @@ let%expect_test _ =
 let%expect_test _ =
   let open Ast in
   let _ =
-    let e = [ (LetExpr (false, ["x"], (ConstExpr (CInt 5))))  ] in
+    let e = [ LetExpr (false, [ "x" ], ConstExpr (CInt 5)) ] in
     check_types e |> run_infer
   in
   [%expect {| int |}]
@@ -645,6 +641,15 @@ let%expect_test _ =
   let open Ast in
   let _ =
     let e = [ BinExpr (Less, ConstExpr (CInt 1), ConstExpr (CInt 3)) ] in
+    check_types e |> run_infer
+  in
+  [%expect {| bool |}]
+;;
+
+let%expect_test _ =
+  let open Ast in
+  let _ =
+    let e = [ BinExpr (Or, ConstExpr (CInt 1), ConstExpr (CInt 3)) ] in
     check_types e |> run_infer
   in
   [%expect {| bool |}]

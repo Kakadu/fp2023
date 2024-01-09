@@ -70,9 +70,8 @@ end = struct
        | CBool b1, VBool b2 when Bool.equal b1 b2 -> return []
        | CInt i1, VInt i2 when i1 = i2 -> return []
        | CString s1, VString s2 when String.equal s1 s2 -> return []
-       | CNil, VNone -> return []       
+       | CNil, VNone -> return []
        | _ -> fail MatchFailure)
-
     | Var var, app_arg -> return [ var, app_arg ]
     | Tuple pt, VTuple vt -> bind_pat_list pt vt
     | List pl, VList vl -> bind_pat_list pl vl
@@ -258,7 +257,7 @@ let run input =
 
 (* cram тесты добавлю немного позже *)
 
-(*  1 + 2 + 3 + 4 * 5 + 6 / 3 + (10 - 5) / 5 *)
+(*  7 + 10 + 4 * 50 + 19 / 3 + (10 - 5) *)
 let test =
   [ BinExpr
       ( Add
@@ -266,21 +265,16 @@ let test =
           ( Add
           , BinExpr
               ( Add
-              , BinExpr
-                  ( Add
-                  , BinExpr (Add, ConstExpr (CInt 1), ConstExpr (CInt 2))
-                  , ConstExpr (CInt 3) )
-              , BinExpr (Mul, ConstExpr (CInt 4), ConstExpr (CInt 5)) )
-          , BinExpr (Div, ConstExpr (CInt 6), ConstExpr (CInt 3)) )
-      , BinExpr
-          (Div, BinExpr (Sub, ConstExpr (CInt 10), ConstExpr (CInt 5)), ConstExpr (CInt 5))
-      )
+              , BinExpr (Add, ConstExpr (CInt 7), ConstExpr (CInt 10))
+              , BinExpr (Mul, ConstExpr (CInt 4), ConstExpr (CInt 50)) )
+          , BinExpr (Div, ConstExpr (CInt 19), ConstExpr (CInt 3)) )
+      , BinExpr (Sub, ConstExpr (CInt 10), ConstExpr (CInt 5)) )
   ]
 ;;
 
 let%test _ =
   match eval_program test with
-  | Ok (VInt 29) -> true
+  | Ok (VInt 228) -> true
   | Error t ->
     Format.printf "%a" pp_error t;
     false
@@ -371,6 +365,19 @@ let test = [ CaseExpr ("Varis", []) ]
 let%test _ =
   match eval_program test with
   | Ok (VCases ("Varis", None)) -> true
+  | Error t ->
+    Format.printf "%a\n" pp_error t;
+    false
+  | Ok t ->
+    Format.printf "%s" (show_value t);
+    false
+;;
+
+let test = [ ConstExpr (CBool true) ]
+
+let%test _ =
+  match eval_program test with
+  | Ok (VBool true) -> true
   | Error t ->
     Format.printf "%a\n" pp_error t;
     false
