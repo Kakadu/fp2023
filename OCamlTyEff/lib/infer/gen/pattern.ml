@@ -50,17 +50,21 @@ let rec gen = function
       let ty_con = !var_con in
 
       let* ty_res = fresh_var >>| ( ! ) in
-      let* as_arg, bounds_arg, constr =
+      let* as_arg, bounds_arg =
         match con_arg with
         | None ->
             let* () = add_con_assumpt con_id NoArgs in
-            return (As.empty, BoundVars.empty, ty_con == ty_res)
+
+            let* () = add_constrs [ty_con == ty_res] in
+            return (As.empty, BoundVars.empty)
         | Some con_arg ->
             let* () = add_con_assumpt con_id SomeArgs in
+
             let* as_arg, bounds_arg, ty_arg = gen con_arg in
-            return (as_arg, bounds_arg, ty_con == ty_arg @> ty_res)
+            let* eff = fresh_eff in
+            let* () = add_constrs [ty_con == Ty_arr (ty_arg, eff, ty_res)] in
+            return (as_arg, bounds_arg)
       in
-      let* () = add_constrs [constr] in
 
       return (as_con ++ as_arg, bounds_arg, ty_res)
   | Pat_or (_, _) ->

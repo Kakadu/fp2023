@@ -59,14 +59,15 @@ module GenMonad : sig
     val add_con_assumpt : Ident.t -> ConArityAssumpt.arity -> unit t
 
     val fresh_var : Var.t t
+    val fresh_eff : Eff.t t
 
     val fail : TyError.t -> 'a t
   end
 end
 
 val ( ! ) : Var.t -> Ty.t
-val ( @> ) : Ty.t -> Ty.t -> Ty.t
 val ( == ) : Ty.t -> Ty.t -> Constr.t
+val ( === ) : Eff.t -> Eff.t -> Constr.t
 val ( ++ ) : Assumptions.t -> Assumptions.t -> Assumptions.t
 val ( -- ) : Assumptions.t -> Ident.t list -> Assumptions.t
 

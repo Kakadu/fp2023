@@ -15,6 +15,11 @@ module ConArityAssumpt : module type of ConArityAssumpt
 
 val gen :
      structure_item
-  -> ( Assumptions.t * BoundVars.t * Ty.t * ConstrSet.t * ConArityAssumpt.t
+  -> ( Assumptions.t
+       * BoundVars.t
+       * Ty.t
+       * Eff.t
+       * ConstrSet.t
+       * ConArityAssumpt.t
      , TyError.t )
      result

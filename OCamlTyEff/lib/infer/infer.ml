@@ -69,7 +69,7 @@ let infer_structure_item env str_item =
   let fail = Result.fail in
   let return = Result.return in
 
-  let* asm, bound_vars, ty_res, gen_cs, con_assumpt = gen str_item in
+  let* asm, bound_vars, ty_res, _, gen_cs, con_assumpt = gen str_item in
 
   (* create new constrainsts based on type environment *)
   let* env_cs =
