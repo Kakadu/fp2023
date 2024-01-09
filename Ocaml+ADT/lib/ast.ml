@@ -74,9 +74,7 @@ type pattern =
   | PVar of decl_name
   | PCons of pattern * pattern
   | PTuple of pattern list
-  | PAdt of
-      decl_name
-      * pattern (* pattern for ADT types: match x with | Tree(_, _) -> true | _ -> false *)
+  | PAdt of decl_name * pattern (* pattern for ADT types: Tree(_, _) *)
 [@@deriving eq, show { with_path = false }]
 
 let pnill = PNill
