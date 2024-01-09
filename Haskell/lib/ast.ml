@@ -63,6 +63,7 @@ and pat =
   | PatAs of id * pat (** As-pattern [list@(x:xs)] *)
   | PatRec of id * pat list (** Record pattern [Point {x = 3, y}] *)
   | PatNil (** Empty list pattern [[]] *)
+(* | PatList ??*)
 [@@deriving show { with_path = false }]
 
 (** Type representing literals *)
@@ -71,7 +72,7 @@ and lit =
   | LitBool of bool (** Boolean literal [True] *)
   | LitChar of char  (** Character literal ['a'] *)
   | LitString of string  (** String literal ["abc"] *)
-  | LitFloat of float  (** Float literal [3.14] *)
+  (* | LitFloat of float  * Float literal [3.14] *)
 [@@deriving show { with_path = false }]
 
 (** Type representing a single declaration. *)

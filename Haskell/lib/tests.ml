@@ -225,3 +225,24 @@ let%expect_test _ =
 ;;
 
 
+let%expect_test _ =
+  ptest pdecl pp_decl {|f (x:y:xs) = xs|};
+  [%expect
+    {|
+    (DeclLet
+       ((PatVar "f"),
+        (ExprFunc
+           ((PatCons ((PatVar "x"), (PatCons ((PatVar "y"), (PatVar "xs"))))),
+            (ExprVar "xs"))))) |}]
+;;
+
+let%expect_test _ =
+  ptest pdecl pp_decl {|f (x:y:xs) = xs|};
+  [%expect
+    {|
+    (DeclLet
+       ((PatVar "f"),
+        (ExprFunc
+           ((PatCons ((PatVar "x"), (PatCons ((PatVar "y"), (PatVar "xs"))))),
+            (ExprVar "xs"))))) |}]
+;;

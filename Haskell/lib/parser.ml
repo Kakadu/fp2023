@@ -121,11 +121,11 @@ let ppat =
   let pplit = pat_lit <$> plit in
   let pwild = pat_wild <$> pstoken "_" in
   let ppvar = pat_var <$> pname in
+  let ppnil = pat_nil <$> pstoken "[]" in
   let pplist =
     let contents = sep_by (char ',') @@ ptoken pattern in
     pbrackets contents >>| pat_list
   in
-  let ppnil = pat_nil <$> pstoken "[]" in
   let pcons = pparens @@ chainr1 pattern (pstoken ":" *> return pat_cons)
   in
   let pptuple =
@@ -199,15 +199,11 @@ let pexpr =
     pandor
   in
   let pif =
-    pstoken "if" *> pexpr
-    <* pstoken1 "then"
-    <* pspaces1
-    >>= fun cond ->
-    pexpr
-    <* pstoken1 "else"
-    <* pspaces1
-    >>= fun then_branch ->
-    pexpr >>| fun else_branch -> ExprIf (cond, then_branch, else_branch)
+    lift3
+      (fun e1 e2 e3 -> ExprIf (e1, e2, e3))
+      (pstoken "if" *> pexpr)
+      (pstoken "then" *> pexpr)
+      (pstoken "else" *> pexpr)
   in
   let plambda =
     pstoken "\\" *> lift2 expr_fun (many ppat) (pstoken "->" *> ptoken pexpr)
@@ -226,7 +222,7 @@ let pexpr =
     in
     lift2 expr_let pbinds pexpr
   in
-  choice
+    choice
     ~failure_msg:"Parsing error: can't parse expression"
     [ plocbind; pif; pebinop; plambda ]
 ;;
