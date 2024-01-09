@@ -39,14 +39,14 @@ type pattern =
 type expr =
   | ConstExpr of const
   | VarExpr of name (** x = 5 or let x = 5 *)
-  | ListExpr of expr list
-  | TupleExpr of expr list
+  | ListExpr of expr list (** [1;2;3]*)
+  | TupleExpr of expr list (** (1,2,3)*)
   | BinExpr of binary_op * expr * expr (** 1 + 5 - 3*)
   | IfExpr of expr * expr * expr (** if a then b else c *)
   | LetExpr of bool * name list * expr (** let sq x = x * x *)
   | AppExpr of expr * expr (** sq 5 *)
   | FunExpr of pattern * expr (** fun x -> x * x *)
-  | MatchExpr of expr * (pattern * expr) list
+  | MatchExpr of expr * (pattern * expr) list (** match input with | 2 -> 5 | 5 -> 10 *)
   | CaseExpr of name * expr list
 [@@deriving show { with_path = false }]
 
@@ -61,7 +61,7 @@ type value =
   | VTuple of value list
   | VFun of pattern * expr * (name * value) list
   | VLetWAPat of name * value (* without active patterns *)
-  | VLetAPat of name list * value (* with active patterns *) 
+  | VLetAPat of name list * value (* with active patterns *)
   | VCases of name * value option
   | VNone
 [@@deriving show { with_path = false }]

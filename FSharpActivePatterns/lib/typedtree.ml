@@ -49,4 +49,3 @@ let rec pp_typ_binder ppf =
   | Tuple ts -> fprintf ppf "(%a)" (fun ppf -> pp_list pp_typ_binder ppf " * ") ts
   | _ -> fprintf ppf "Not implemented"
 ;;
-
