@@ -9,24 +9,25 @@ type un_op =
 
 type bin_op =
   | PropAccs
-  | SqPropAccs
   | Add
   | Sub
   | Mul
   | Div
   | Equal
   | NotEqual
+  | StrictEqual
+  | StrictNotEqual
   | Assign
-  | Rem (* remainder *)
+  | Rem 
   | Exp 
-  | Greater_than
-  | Greater_equal
-  | Less_than
-  | Less_equal
-  | Logical_and
-  | Logical_or
-  | Bitwise_and
-  | Bitwise_or
+  | GreaterThan
+  | GreaterEqual
+  | LessThan
+  | LessEqual
+  | LogicalAnd
+  | LogicalOr
+  | BitwiseAnd
+  | BitwiseOr
   | Xor
 [@@deriving show { with_path = false }]
 
@@ -46,6 +47,7 @@ type expression =
   | Array_list of expression list
   | FunctionCall of expression * expression list
   | AnonFunction of string list * statement
+  | ArrowFunction of string list * statement
   | ObjectDef of (expression * expression) list
 [@@deriving show { with_path = false }]
 
@@ -61,7 +63,7 @@ and fun_init =
   ; body : statement
   }
 
-and for_loop = 
+and for_loop =
   { for_init : statement
   ; for_condition : statement
   ; for_change : statement
@@ -71,11 +73,11 @@ and for_loop =
 and statement =
   | Block of statement list
   | Expression of expression
-  | VarDeck of var_init
-  | FunDeck of fun_init
+  | VarInit of var_init
+  | FunInit of fun_init
   | If of expression * statement * statement
   | While of expression * statement
-  | ForDeck of for_loop 
+  | For of for_loop
   | Return of expression
   | Programm of statement list
 [@@deriving show { with_path = false }]

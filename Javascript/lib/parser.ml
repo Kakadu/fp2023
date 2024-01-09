@@ -194,13 +194,13 @@ type associativity =
 let exp_op = [ "**", Exp ], Right (*precendence 13*)
 let mul_div_rem_op = [ "*", Mul; "/", Div; "%", Rem ], Left (*precedence 12*)
 let add_sub_op = [ "+", Add; "-", Sub ], Left (*precedence 11*)
-let relational_op = [ ">", Greater_than; ">=", Greater_equal; "<", Less_than; "<=", Less_equal ], Left (*precedence 9*)
-let equality_op = [ "==", Equal; "!=", NotEqual ], Left (*precedence 8*)
-let bit_and = [ "&", Bitwise_and ], Left (*precendence 7*)
+let relational_op = [ ">", GreaterThan; ">=", GreaterEqual; "<", LessThan; "<=", LessEqual ], Left (*precedence 9*)
+let equality_op = [ "==", Equal; "!=", NotEqual; "===", StrictEqual; "!==", StrictNotEqual ], Left (*precedence 8*)
+let bit_and = [ "&", BitwiseAnd ], Left (*precendence 7*)
 let xor = [ "^", Xor ], Left (*precendence 6*)
-let bit_or = [ "|", Bitwise_or ], Left (*precendence 5*)
-let log_and = [ "&&", Logical_and ], Left (*precendence 4*)
-let log_or = [ "||", Logical_or ], Left (*precendence 3*)
+let bit_or = [ "|", BitwiseOr ], Left (*precendence 5*)
+let log_and = [ "&&", LogicalAnd ], Left (*precendence 4*)
+let log_or = [ "||", LogicalOr ], Left (*precendence 3*)
 let assign_op = [ "=", Assign ], Right (*precedence 2*)
 
 (*from lower to greater precedence*)
@@ -239,10 +239,9 @@ let rec parse_arrow_func () =
        (cur_parens (many @@ parse_stm ())
         >>| (fun stms -> Block stms)
         <|> (start_parse_expression () >>| fun exp -> Block [ Return exp ]))
-  >>| fun body -> AnonFunction (args, body)
+  >>| fun body -> ArrowFunction (args, body)
 
-and parse_array () = 
-  token (sq_parens (parse_comma (start_parse_expression())))
+and parse_array () = token (sq_parens (parse_comma (start_parse_expression ())))
 
 and parse_anon_func () =
   token_str "function" *> token parse_args_names
@@ -291,7 +290,7 @@ and parse_spec_bop () =
       [ (*Property call parser*)
         (token_ch '.' *> read_word >>| fun prop -> bop PropAccs acc (Const (String prop)))
       ; (*Bracket property call parser*)
-        (sq_parens @@ start_parse_expression () >>| fun x -> bop SqPropAccs acc x)
+        (sq_parens @@ start_parse_expression () >>| fun x -> bop PropAccs acc x)
       ; (*Fun call parser*)
         (parens @@ parse_comma @@ start_parse_expression ()
          >>| fun arg -> FunctionCall (acc, arg))
@@ -328,7 +327,7 @@ and parse_func () =
   >>= fun name ->
   token parse_args_names
   >>= fun arguments ->
-  parse_block_or_stm () >>| fun body -> FunDeck { fun_identifier = name; arguments; body }
+  parse_block_or_stm () >>| fun body -> FunInit { fun_identifier = name; arguments; body }
 
 and parse_var (init_word : string) =
   valid_identifier
@@ -338,7 +337,7 @@ and parse_var (init_word : string) =
          | true -> start_parse_expression ()
          | _ -> return (Const Undefined))
   >>| fun expr ->
-  VarDeck { var_identifier = identifier; is_const = init_word = "const"; value = expr }
+  VarInit { var_identifier = identifier; is_const = init_word = "const"; value = expr }
 
 and parse_block () =
   fix (fun _ -> cur_parens (many @@ parse_stm ()) >>| fun stms -> Block stms)
@@ -346,19 +345,27 @@ and parse_block () =
 and parse_block_or_stm () = parse_block () <|> (parse_stm () >>| fun stm -> Block [ stm ])
 
 and parse_while () =
-  parens (start_parse_expression ()) 
-  >>= fun condition -> 
-  parse_block_or_stm () 
-  <?> "invalid while loop condition" 
+  parens (start_parse_expression ())
+  >>= fun condition ->
+  parse_block_or_stm ()
+  <?> "invalid while loop condition"
   >>| fun body -> While (condition, body)
 
 and parse_for () =
-  parens ((parse_stm ()) <?> "invalid for loop variable"
-  >>= fun init -> (parse_stm ()) <?> "invalid for loop variable condition"
-  >>= fun condition -> (parse_stm ()) >>= fun change -> return (init, condition, change)) <?> "invalid variable change statement" 
-  >>= fun (init, condition, change) -> parse_block_or_stm () <?> "invalid for loop body"
-  >>| fun body -> 
-  ForDeck { for_init = init; for_condition = condition; for_change = change; for_body = body }
+  parens
+    (parse_stm ()
+     <?> "invalid for loop variable"
+     >>= fun init ->
+     parse_stm ()
+     <?> "invalid for loop variable condition"
+     >>= fun condition -> parse_stm () >>= fun change -> return (init, condition, change)
+    )
+  <?> "invalid variable change statement"
+  >>= fun (init, condition, change) ->
+  parse_block_or_stm ()
+  <?> "invalid for loop body"
+  >>| fun body ->
+  For { for_init = init; for_condition = condition; for_change = change; for_body = body }
 
 and parse_if () =
   parens (start_parse_expression ())
