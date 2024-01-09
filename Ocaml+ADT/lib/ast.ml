@@ -87,10 +87,10 @@ let pcons pattern1 pattern2 = PCons (pattern1, pattern2)
 let ptuple pattern_lst = PTuple pattern_lst
 let pcase decl_name pattern = PCase (decl_name, pattern)
 
-type let_decl = decl_rec * decl_name * decl_type * decl_exp
+type type_decl = decl_name * (decl_name * decl_type) list
 [@@deriving eq, show { with_path = false }]
 
-and type_decl = decl_name * (decl_name * decl_type) list
+type let_decl = decl_rec * decl_name * decl_type * decl_exp
 [@@deriving eq, show { with_path = false }]
 
 and decl_exp =
