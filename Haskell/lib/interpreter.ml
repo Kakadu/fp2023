@@ -3,11 +3,12 @@ open Ast
 open Format
 
 module type MONAD = sig
-  type ('a, 'e) t
+  type ('a, 'e) t =
+    | Result of ('a, 'e) result
+    | Thunk of (unit -> ('a, 'e) t)
 
   val return : 'a -> ('a, 'e) t
   val ( >>= ) : ('a, 'e) t -> ('a -> ('b, 'e) t) -> ('b, 'e) t
-  val pp_value_t : 'a -> ('b, 'c) t -> unit
 
   module Syntax : sig
     val ( let* ) : ('a, 'e) t -> ('a -> ('b, 'e) t) -> ('b, 'e) t
@@ -37,12 +38,6 @@ module LAZY_RESULT : MONAD_ERROR = struct
     | Result (Ok x) -> f x
     | Result (Error e) -> Result (Error e)
     | Thunk thunk -> thunk () >>= f
-  ;;
-
-  let pp_value_t fmt = function
-    | Result (Ok x) -> print_endline "good"
-    | Result (Error err) -> print_endline "bad"
-    | Thunk t -> print_endline "at"
   ;;
 
   module Syntax = struct
@@ -101,6 +96,12 @@ module Eval (M : MONAD_ERROR) : sig end = struct
     | DivisionByZeroError -> fprintf fmt "DivisionByZeroError"
     | EvalError (val1, val2) ->
       fprintf fmt "EvalError: %a # %a" pp_value val1 pp_value val2
+  ;;
+
+  let rec pp_value_t fmt = function
+    | Result (Ok x) -> pp_value fmt x
+    | Result (Error err) -> pp_err fmt err
+    | Thunk t -> t () |> pp_value_t fmt
   ;;
 
   let pp_environment fmt env =
