@@ -16,4 +16,5 @@ type error =
   | Access_error of string
   | Other_error of string
   | Non_existent_address
+  | Type_check_error of string
 [@@deriving show { with_path = false }]

@@ -187,45 +187,102 @@ module Eval_Monad = struct
   include Base_monad
 
   type ctx_env = interpret_ctx
-  type 'a t = ctx_env -> ctx_env * ('a, error) Result.t
+  type ('a, 'b) t = ctx_env -> ctx_env * ('a, 'b, error) signal
+
+  let return_n : 'a -> ('a, 'b) t = fun x st -> st, nsig x
+  let return_r : 'b option -> ('a, 'b) t = fun x st -> st, rsig x
+  let return_b : 'c -> ('a, 'b) t = fun _ st -> st, bsig
+  let return_e : code_ident -> address -> ('a, 'b) t = fun id ad st -> st, esig id ad
+  let fail : error -> ('a, 'b) t = fun er st -> st, error er
+
+  let ( >>= ) : ('a, 'c) t -> ('a -> ('b, 'c) t) -> ('b, 'c) t =
+    fun x f st ->
+    let st1, x1 = x st in
+    match x1 with
+    | Next x -> f x st1
+    | Return x -> return_r x st1
+    | Exn (id, ad) -> return_e id ad st1
+    | Break -> return_b () st1
+    | Error err -> fail err st1
+  ;;
+
+  let ( |>>= ) : ('a, 'c) t -> ('c option -> ('b, 'd) t) -> ('b, 'd) t =
+    (* TODO: как-то сделать обертку, чтоб в конце каждого вызова метода запускался [return_r None], если не было вызвано другого return *)
+    fun x f st ->
+    let st1, x1 = x st in
+    match x1 with
+    | Return x -> f x st1
+    | Exn (id, ad) -> return_e id ad st1
+    | Error err -> fail err st1
+    | _ ->
+      fail
+        (Type_check_error
+           "If the method is not of 'void' type, then it must have 'return'")
+        st1
+  ;;
+
+  let ( !>>= ) : ('a, 'c) t -> (code_ident * address -> ('b, 'd) t) -> ('b, 'd) t =
+    (* TODO:
+       чтоб обрабатывать 'finally' нужна фигня типа:
+       (try !>>= catch |>>= fun x -> finally *> return_r x)
+       * помни, что |>>= срабатывает после получения Return или продолжает падать с ошибкой
+    *)
+    fun x f st ->
+    let st1, x1 = x st in
+    match x1 with
+    | Exn (id, ad) -> f (id, ad) st1
+    | Return x -> return_r x st1
+    | Next x -> return_n x st1
+    | Break -> return_b () st1
+    | Error err -> fail err st1
+  ;;
+
+  let ( @>>= ) : (unit, 'b) t -> (unit -> ('c, 'd) t) -> ('c, 'd) t =
+    fun x f st ->
+    let st1, x1 = x st in
+    match x1 with
+    | Exn (id, ad) -> return_e id ad st1
+    | Return x -> return_r x st1
+    | Next _ | Break -> f () st1
+    | Error err -> fail err st1
+  ;;
+
+  let ( <|> ) : ('b, 'a) t -> ('b, 'a) t -> ('b, 'a) t =
+    fun a1 a2 st ->
+    let st1, x1 = a1 st in
+    match x1 with
+    | Next x -> return_n x st1
+    | Return x -> return_r x st1
+    | Exn (id, ad) -> return_e id ad st1
+    | Break -> return_b () st1
+    | Error _ -> a2 st
+  ;;
+
+  let save : ctx_env -> (unit, 'b) t = fun new_ctx _ -> new_ctx, nsig ()
+  let read : (ctx_env, 'c) t = fun st -> (return_n st) st
+
+  let run : ('a, 'b) t -> ctx_env * ('a, 'b, error) signal =
+    (* TODO: переписать, чтоб получало на вход class с main, и на его основе запускался *)
+    fun f -> f (CodeMap.empty, (ln 0, IdentMap.empty), (ln 0, MemMap.empty), [])
+  ;;
+
+  let ( >>| ) : ('a, 'c) t -> ('a -> 'b) -> ('b, 'c) t =
+    fun x f -> x >>= fun x_res -> return_n (f x_res)
+  ;;
+
+  let ( *> ) : ('a, 'd) t -> ('b, 'c) t -> ('b, 'c) t =
+    fun a b -> a >>= fun _ -> b >>= fun b1 -> return_n b1
+  ;;
+
+  let map_left : ('a -> ('b, 'c) t) -> 'a list -> ('b list, 'c) t =
+    fun custom_f mlst ->
+    let f acc cur = acc >>= fun tl -> custom_f cur >>= fun x -> return_n (x :: tl) in
+    List.fold_left f (return_n []) mlst >>| List.rev
+  ;;
+
+  let iter_left : ('a -> (unit, 'c) t) -> 'a list -> (unit, 'c) t =
+    fun custom_f mlst ->
+    let f acc cur = acc >>= fun _ -> custom_f cur >>= fun _ -> return_n () in
+    List.fold_left f (return_n ()) mlst
+  ;;
 end
-(* module Eval_Monad = struct
-   open Env_types.Eval_env
-
-   type ctx_env = interpret_ctx
-
-   let old_return = return
-   let return : 'a -> 'a t = fun elem st -> old_return (to_info elem) st
-   let return_res : 'a option -> 'a t = fun elem st -> old_return (to_return elem) st
-   let return_break : 'a t = fun st -> old_return Break st
-
-   let get_class : code_ident -> code_ctx t =
-   fun id st ->
-   let code, _, _, _ = st in
-   let (Code_ident id_) = id in
-   match CodeMap.find_opt id code with
-   | Some x -> return x st
-   | None -> fail (Not_find_ident_of id_) st
-   ;;
-
-   let get_memory_el : address -> mem_el t =
-   fun ad st ->
-   let _, _, (_, memory_map), _ = st in
-   match MemMap.find_opt ad memory_map with
-   | Some x -> return x st
-   | None -> fail Non_existent_address st
-   ;;
-
-   (* let get_local_elem: ident -> code_ctx t =
-   fun id st ->
-   let _, (ad, l_env), _, _ = st in
-   let get_from_env = match IdentMap.find_opt id l_env with
-   | Some x -> return x st
-   | None -> fail(Not_find_ident) st
-   in
-   let get_from_mem = get_memory_el ad in
-
-   ;; *)
-
-   (* let *)
-   end *)

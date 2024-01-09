@@ -25,6 +25,8 @@ module Common_env = struct
 
   type address = Link of int [@@deriving show { with_path = false }]
 
+  let ln x = Link x
+
   module MemAddress = struct
     type t = address
 
@@ -76,11 +78,16 @@ module Eval_env = struct
   type memory = address * mem_el MemMap.t
   type interpret_ctx = t_global_env * t_loc_env * memory * stack_trace
 
-  type 'a tp_return =
-    | Info of 'a
-    | Return of 'a option
+  type ('a, 'b, 'sys_err) signal =
+    | Next of 'a
+    | Return of 'b option
+    | Exn of code_ident * address
     | Break
+    | Error of 'sys_err
 
-  let to_info x = Info x
-  let to_return x = Return x
+  let nsig x = Next x
+  let rsig x = Return x
+  let bsig = Break
+  let esig id add = Exn(id, add)
+  let error err = Error err
 end
