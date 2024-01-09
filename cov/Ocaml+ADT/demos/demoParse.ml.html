@@ -60,8 +60,8 @@ open Ocamladt_lib
 
 let () =
   let s = Stdio.In_channel.input_all Stdlib.stdin in
-  <span data-count="1">m</span>atch Parser.parse s with
-  | <span data-count="1">R</span>esult.Ok ast -&gt; Format.print<span data-count="1">f</span> "%a\n" Ast.pp_program ast
+  <span data-count="2">m</span>atch Parser.parse s with
+  | <span data-count="2">R</span>esult.Ok ast -&gt; Format.print<span data-count="2">f</span> "%a\n" Ast.pp_program ast
   | <span data-count="0">E</span>rror _ -&gt; Format.print<span data-count="0">f</span> "Some error"
 ;;
 </code></pre>

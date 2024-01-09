@@ -67,10 +67,10 @@ open Ocamladt_lib
 
 let () =
   let s = Stdio.In_channel.input_all Stdlib.stdin in
-  <span data-count="10">m</span>atch Parser.parse s with
-  | <span data-count="10">O</span>k parse_result -&gt;
+  <span data-count="11">m</span>atch Parser.parse s with
+  | <span data-count="11">O</span>k parse_result -&gt;
     (match Interpreter.InterpreterResult.exec_program parse_result with
-     | <span data-count="10">O</span>k actual -&gt; Format.print<span data-count="10">f</span> "%a" InterpreterTypes.pp_env actual
+     | <span data-count="11">O</span>k actual -&gt; Format.print<span data-count="11">f</span> "%a" InterpreterTypes.pp_env actual
      | <span data-count="0">E</span>rror err -&gt; Format.print<span data-count="0">f</span> "%a" InterpreterTypes.pp_failure err)
   | <span data-count="0">E</span>rror err -&gt; Format.print<span data-count="0">f</span> "Parsing error: %s\n" err
 ;;
