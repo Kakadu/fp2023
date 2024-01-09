@@ -12,7 +12,7 @@ let asprintf = Format.asprintf
 
 let is_func x =
   match x.obj_type with
-  | TFunPreset _ | TFunction _ -> true
+  | TFunPreset _ | TFunction _ | TArrowFunction _ -> true
   | _ -> false
 ;;
 
@@ -36,23 +36,31 @@ let print_val = function
   | VObject _ -> "object"
 ;;
 
-let rec obj_get_field id = function
-  | field :: tl -> if field.var_id = id then field.value else obj_get_field id tl
+let rec get_field id = function
+  | field :: tl -> if field.var_id = id then field.value else get_field id tl
   | _ -> VUndefined
 ;;
 
 (*JS use diffrent conversion to string in .toString and in print.
   It's the reason why vvalues_to_str and to_vstring is diffrent functions*)
-let rec vvalues_to_str = function
+let rec vvalues_to_str ?(str_quote = false) = function
   | VNumber x -> num_to_string x
   | VBool true -> "true"
   | VBool false -> "false"
   | VNull -> "null"
   | VUndefined -> "undefined"
-  | VString x -> x
+  | VString x -> if str_quote then "'" ^ x ^ "'" else x
   | VObject x when is_func x ->
-    asprintf "[Function: %s]" (vvalues_to_str @@ obj_get_field "name" x.fields)
-  | _ as t -> asprintf "Cannot convert %s to string" @@ print_val t
+    asprintf "[Function: %s]" (vvalues_to_str @@ get_field "name" x.fields)
+  | VObject x ->
+    asprintf
+      "{ %s }"
+      (String.concat
+         ", "
+         (List.map
+            (fun x -> x.var_id ^ ": " ^ vvalues_to_str x.value ~str_quote:true)
+            x.fields))
+  | _ as t -> asprintf "Cannot convert '%s' to string" @@ print_val t
 ;;
 
 let error err =
@@ -90,19 +98,6 @@ let get_parent ctx =
   | _ -> error @@ InternalError "cannot get parent"
 ;;
 
-let create_func name args body =
-  let length = Float.of_int @@ List.length args in
-  let fun_ctx = { args; body } in
-  VObject
-    { proto = None
-    ; fields =
-        [ { var_id = "name"; is_const = true; value = VString name }
-        ; { var_id = "length"; is_const = true; value = VNumber length }
-        ]
-    ; obj_type = TFunction fun_ctx
-    }
-;;
-
 let context_init =
   { parent = None; vars = []; vreturn = None; stdout = ""; scope = Block }
 ;;
@@ -133,6 +128,21 @@ let rec in_func ctx =
      | None -> false)
 ;;
 
+let tfunction x = TFunction x
+let tarrowfun x = TArrowFunction x
+
+let create_func name args body obj_type =
+  let length = Float.of_int @@ List.length args in
+  let fun_ctx = { args; body } in
+  VObject
+    { fields =
+        [ { var_id = "name"; is_const = true; value = VString name }
+        ; { var_id = "length"; is_const = true; value = VNumber length }
+        ]
+    ; obj_type = obj_type fun_ctx
+    }
+;;
+
 let prefind_funcs ctx ast =
   let ctx_add_if_func ctx = function
     | FunInit x ->
@@ -140,7 +150,7 @@ let prefind_funcs ctx ast =
         ctx
         { var_id = x.fun_identifier
         ; is_const = false
-        ; value = create_func x.fun_identifier x.arguments x.body
+        ; value = create_func x.fun_identifier x.arguments x.body tfunction
         }
     | _ -> return ctx
   in
@@ -210,15 +220,13 @@ let get_vstring = function
 ;;
 
 let bop_with_num op a b =
-  to_vnumber a
-  >>= get_vnum
-  >>= fun x -> to_vnumber b >>= get_vnum >>| fun y -> VNumber (op x y)
+  both to_vnumber a b
+  >>= fun (a, b) -> both get_vnum a b >>| fun (x, y) -> VNumber (op x y)
 ;;
 
 let bop_with_string op a b =
-  to_vstring a
-  >>= get_vstring
-  >>= fun x -> to_vstring b >>= get_vstring >>| fun y -> VString (op x y)
+  both to_vstring a b
+  >>= fun (a, b) -> both get_vstring a b >>| fun (x, y) -> VString (op x y)
 ;;
 
 let add a b =
@@ -237,6 +245,11 @@ let eval_bin_op ctx op a b =
   let add_ctx = add_ctx ctx in
   match op with
   | Add -> add_ctx @@ add a b <?> "error in add operator"
+  | PropAccs ->
+    add_ctx
+      (match a with
+       | VObject x -> to_vstring b >>= get_vstring >>| fun str -> get_field str x.fields
+       | _ -> return VUndefined)
   | _ as a -> ensup @@ asprintf "operator %a not supported yet" pp_bin_op a
 ;;
 
@@ -260,11 +273,11 @@ let rec ctx_get_var ctx id =
        error (ReferenceError (asprintf "Cannot access '%s' before initialization" id)))
 ;;
 
-let rec eval_fun ctx id args =
+let rec eval_fun ctx f args =
   let get_fun =
-    match id with
+    match f with
     | VObject obj when is_func obj -> return (ctx, obj.obj_type)
-    | _ -> etyp @@ vvalues_to_str id ^ " is not a function"
+    | _ -> etyp @@ asprintf "'%s' is not a function" (vvalues_to_str f)
   in
   let rec val_to_args ctx = function
     | a1 :: atl, v1 :: vtl ->
@@ -292,20 +305,36 @@ let rec eval_fun ctx id args =
   | _ ->
     error @@ InternalError "get unexpected object type, expect function, but get TObject"
 
+(*main expression interpreter*)
 and eval_exp ctx = function
   | Const x -> return (ctx, const_to_val x)
   | BinOp (op, a, b) ->
-    eval_exp ctx a
-    >>= fun (ctx, x) -> eval_exp ctx b >>= fun (ctx, y) -> eval_bin_op ctx op x y
+    both_ext eval_exp ctx a b >>= fun (ctx, (x, y)) -> eval_bin_op ctx op x y
   | UnOp (op, a) -> eval_exp ctx a >>= fun (ctx, a) -> eval_un_op ctx op a
   | Var id -> ctx_get_var ctx id >>| fun a -> ctx, a.value
   | FunctionCall (var, args) ->
     eval_exp ctx var
-    >>= fun (ctx, id) ->
-    fold_left_map eval_exp ctx args >>= fun (ctx, args) -> eval_fun ctx id args
+    <?> "error while try get function"
+    >>= fun (ctx, f) ->
+    fold_left_map eval_exp ctx args
+    <?> "error in function arguments"
+    >>= fun (ctx, args) -> eval_fun ctx f args
+  | AnonFunction (args, vals) -> return (ctx, create_func "" args vals tfunction)
+  | ArrowFunction (args, vals) -> return (ctx, create_func "" args vals tarrowfun)
+  | ObjectDef x ->
+    fold_left_map
+      (fun ctx (key, value) ->
+        both_ext eval_exp ctx key value
+        >>= fun (ctx, (key, value)) ->
+        to_vstring key
+        >>= get_vstring
+        >>| fun id -> ctx, { var_id = id; is_const = false; value })
+      ctx
+      x
+    >>= fun (ctx, fields) -> return (ctx, VObject { fields; obj_type = TObject })
   | _ -> ensup ""
 
-(**---------------Statment interpreter---------------*)
+(**---------------Statement interpreter---------------*)
 
 and parse_stm ctx = function
   | Return x ->
@@ -313,7 +342,14 @@ and parse_stm ctx = function
     <?> "error in return expression"
     >>= fun (ctx, ret) -> return { ctx with vreturn = Some ret }
   | VarInit x ->
-    eval_exp ctx x.value
+    let eval_for_top_val =
+      let create = create_func x.var_identifier in
+      function
+      | AnonFunction (args, vals) -> return (ctx, create args vals tfunction)
+      | ArrowFunction (args, vals) -> return (ctx, create args vals tarrowfun)
+      | _ as ast -> eval_exp ctx ast
+    in
+    eval_for_top_val x.value
     <?> "error in var declaration expression"
     >>= fun (ctx, v) ->
     ctx_add ctx { var_id = x.var_identifier; is_const = x.is_const; value = v }
