@@ -179,14 +179,14 @@
 
 <span data-count="0">t</span>ype name = <span data-count="55">s</span>tring [@@deriving show { with_path = false }]
 
-<span data-count="152">t</span>ype const =
-  | CBool of boo<span data-count="1">l</span> (** true *)
-  | CInt of in<span data-count="47">t</span> (** 42 *)
+<span data-count="179">t</span>ype const =
+  | CBool of boo<span data-count="2">l</span> (** true *)
+  | CInt of in<span data-count="55">t</span> (** 42 *)
   | CString of strin<span data-count="1">g</span> (** "string" *)
   | CNil
 [@@deriving show { with_path = false }]
 
-<span data-count="17">t</span>ype binary_op =
+<span data-count="24">t</span>ype binary_op =
   | Add (** + *)
   | Sub (** - *)
   | Mul (** * *)
@@ -211,19 +211,19 @@
   | Case of name * <span data-count="12">p</span>attern lis<span data-count="6">t</span>
 [@@deriving show { with_path = false }<span data-count="84">]</span>
 
-<span data-count="648">t</span>ype expr =
+<span data-count="742">t</span>ype expr =
   | ConstExpr of const
   | VarExpr of name (** x = 5 or let x = 5 *)
-  | ListExpr of <span data-count="35">e</span>xpr lis<span data-count="8">t</span>
-  | TupleExpr of <span data-count="13">e</span>xpr lis<span data-count="3">t</span>
+  | ListExpr of <span data-count="35">e</span>xpr lis<span data-count="8">t</span> (** [1;2;3]*)
+  | TupleExpr of <span data-count="13">e</span>xpr lis<span data-count="3">t</span> (** (1,2,3)*)
   | BinExpr of binary_op * expr * expr (** 1 + 5 - 3*)
   | IfExpr of expr * expr * expr (** if a then b else c *)
   | LetExpr of boo<span data-count="8">l</span> * <span data-count="56">n</span>ame lis<span data-count="18">t</span> * expr (** let sq x = x * x *)
   | AppExpr of expr * expr (** sq 5 *)
   | FunExpr of pattern * expr (** fun x -&gt; x * x *)
-  | MatchExpr of expr * <span data-count="30">(</span><span data-count="12">p</span>attern * expr) lis<span data-count="9">t</span>
+  | MatchExpr of expr * <span data-count="30">(</span><span data-count="12">p</span>attern * expr) lis<span data-count="9">t</span> (** match input with | 2 -&gt; 5 | 5 -&gt; 10 *)
   | CaseExpr of name * <span data-count="15">e</span>xpr lis<span data-count="10">t</span>
-[@@deriving show { with_path = false }<span data-count="481">]</span>
+[@@deriving show { with_path = false }<span data-count="555">]</span>
 
 <span data-count="0">t</span>ype program = <span data-count="0">e</span>xpr lis<span data-count="0">t</span> [@@deriving show { with_path = false }<span data-count="0">]</span>
 
@@ -236,7 +236,7 @@
   | VTuple of <span data-count="0">v</span>alue lis<span data-count="0">t</span>
   | VFun of pattern * expr * <span data-count="0">(</span><span data-count="0">n</span>ame * value) lis<span data-count="0">t</span>
   | VLetWAPat of name * value (* without active patterns *)
-  | VLetAPat of <span data-count="0">n</span>ame lis<span data-count="0">t</span> * value (* with active patterns *) 
+  | VLetAPat of <span data-count="0">n</span>ame lis<span data-count="0">t</span> * value (* with active patterns *)
   | VCases of name * <span data-count="0">v</span>alue optio<span data-count="0">n</span>
   | VNone
 [@@deriving show { with_path = false }<span data-count="0">]</span>

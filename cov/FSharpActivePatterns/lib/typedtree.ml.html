@@ -18,22 +18,22 @@
       <h2>23.53%</h2>
     </div>
     <div id="navbar">
-      <span class="unvisited" style="top:9.62%"></span>
-      <span class="unvisited" style="top:11.54%"></span>
-      <span class="unvisited" style="top:23.08%"></span>
-      <span class="unvisited" style="top:25.00%"></span>
-      <span class="unvisited" style="top:26.92%"></span>
-      <span class="unvisited" style="top:34.62%"></span>
-      <span class="unvisited" style="top:38.46%"></span>
-      <span class="unvisited" style="top:40.38%"></span>
-      <span class="unvisited" style="top:48.08%"></span>
-      <span class="unvisited" style="top:50.00%"></span>
-      <span class="unvisited" style="bottom:48.08%"></span>
-      <span class="unvisited" style="bottom:34.62%"></span>
-      <span class="unvisited" style="bottom:26.92%"></span>
-      <span class="unvisited" style="bottom:25.00%"></span>
-      <span class="unvisited" style="bottom:5.77%"></span>
-      <span class="unvisited" style="bottom:3.85%"></span>
+      <span class="unvisited" style="top:9.80%"></span>
+      <span class="unvisited" style="top:11.76%"></span>
+      <span class="unvisited" style="top:23.53%"></span>
+      <span class="unvisited" style="top:25.49%"></span>
+      <span class="unvisited" style="top:27.45%"></span>
+      <span class="unvisited" style="top:35.29%"></span>
+      <span class="unvisited" style="top:39.22%"></span>
+      <span class="unvisited" style="top:41.18%"></span>
+      <span class="unvisited" style="top:49.02%"></span>
+      <span class="unvisited" style="bottom:49.02%"></span>
+      <span class="unvisited" style="bottom:47.06%"></span>
+      <span class="unvisited" style="bottom:33.33%"></span>
+      <span class="unvisited" style="bottom:25.49%"></span>
+      <span class="unvisited" style="bottom:23.53%"></span>
+      <span class="unvisited" style="bottom:3.92%"></span>
+      <span class="unvisited" style="bottom:1.96%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -89,7 +89,6 @@
 <a id="L49"></a><span class="unvisited"> </span>
 <a id="L50"></a><span class="unvisited"> </span>
 <a id="L51"></a><span > </span>
-<a id="L52"></a><span > </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -145,7 +144,6 @@
 <a href="#L49">49</a>
 <a href="#L50">50</a>
 <a href="#L51">51</a>
-<a href="#L52">52</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2023-2024, Vitaliy Dyachkov *)
 
@@ -189,16 +187,15 @@ let pp_list helper l sep =
 ;;
 
 let rec pp_typ_binder ppf =
-  <span data-count="29">l</span>et open Format in
+  <span data-count="30">l</span>et open Format in
   function
   | <span data-count="2">T</span>y_var n -&gt; fprintf ppf "'_%d" n
-  | <span data-count="23">P</span>rim s -&gt; pp_print_string ppf s
+  | <span data-count="24">P</span>rim s -&gt; pp_print_string ppf s
   | <span data-count="2">A</span>rrow (l, r) -&gt; fprintf ppf "(%a -&gt; %a)" pp_typ_binder l pp_typ_binder r
   | <span data-count="2">L</span>ist t -&gt; fprintf ppf "%a list" pp_typ_binder t
   | <span data-count="0">T</span>uple ts -&gt; fprintf ppf "(%a)" (fun ppf -&gt; <span data-count="0">p</span>p_list pp_typ_binder ppf " * ") ts
   | <span data-count="0">_</span> -&gt; fprintf ppf "Not implemented"
 ;;
-
 </code></pre>
       </div>
     </div>
