@@ -74,7 +74,9 @@ type pattern =
   | PVar of decl_name
   | PCons of pattern * pattern
   | PTuple of pattern list
-  | PCase of decl_name * pattern (* Tepa 46 *)
+  | PAdt of
+      decl_name
+      * pattern (* pattern for ADT types: match x with | Tree(_, _) -> true | _ -> false *)
 [@@deriving eq, show { with_path = false }]
 
 let pnill = PNill
@@ -85,7 +87,7 @@ let pint int = PInt int
 let pvar decl_name = PVar decl_name
 let pcons pattern1 pattern2 = PCons (pattern1, pattern2)
 let ptuple pattern_lst = PTuple pattern_lst
-let pcase decl_name pattern = PCase (decl_name, pattern)
+let padt decl_name pattern = PAdt (decl_name, pattern)
 
 type type_decl = decl_name * (decl_name * decl_type) list
 [@@deriving eq, show { with_path = false }]

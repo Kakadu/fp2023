@@ -362,7 +362,7 @@ let%test _ =
             ( PVar (LName "x")
             , EMatch
                 ( EVar (LName "x")
-                , [ PCase (UName "Tepa", PCase (UName "Kuka", PInt 46)), EBool true ] ) )
+                , [ PAdt (UName "Tepa", PAdt (UName "Kuka", PInt 46)), EBool true ] ) )
         )
     ]
 ;;

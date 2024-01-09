@@ -46,10 +46,7 @@ end = struct
 
   let rec match_var pattern value =
     match pattern, value with
-    | PVar var1, val1 ->
-      (match var1 with
-       | LName var1 -> return [ var1, val1 ]
-       | UName _ -> fail PatternMatchingError)
+    | PVar (LName var1), val1 -> return [ var1, val1 ]
     | _ -> fail PatternMatchingError
 
   and match_list pattern value =
@@ -74,10 +71,8 @@ end = struct
 
   and match_case pattern value =
     match pattern, value with
-    | PCase (p_name, p_pattern), VAdt (v_name, v_pattern) ->
-      (match p_name with
-       | UName p_name when p_name = v_name -> match_pattern p_pattern v_pattern
-       | _ -> fail PatternMatchingError)
+    | PAdt (UName p_name, p_pattern), VAdt (v_name, v_pattern) when p_name = v_name ->
+      match_pattern p_pattern v_pattern
     | _ -> fail PatternMatchingError
 
   and match_pattern pattern value =
@@ -89,7 +84,7 @@ end = struct
     | PVar _, _ -> match_var pattern value
     | PCons _, VList _ -> match_list pattern value
     | PTuple _, VTuple _ -> match_tuple pattern value
-    | PCase _, VAdt _ -> match_case pattern value
+    | PAdt _, VAdt _ -> match_case pattern value
     | _ -> fail PatternMatchingError
   ;;
 
@@ -99,10 +94,7 @@ end = struct
     | PString str1, VString str2 when str1 = str2 -> true
     | PBool bool1, VBool bool2 when bool1 = bool2 -> true
     | PInt num1, VInt num2 when num1 = num2 -> true
-    | PVar var1, _ ->
-      (match var1 with
-       | LName _ -> true
-       | UName _ -> false)
+    | PVar (LName _), _ -> true
     | PCons (pattern1, pattern2), VList (h :: tl) ->
       check_pattern_matching pattern1 h && check_pattern_matching pattern2 (VList tl)
     | PTuple pattern_lst, VTuple tuple_lst ->
@@ -111,10 +103,8 @@ end = struct
        | ph :: ptl, th :: ttl ->
          check_pattern_matching ph th && check_pattern_matching (PTuple ptl) (VTuple ttl)
        | _ -> false)
-    | PCase (p_name, p_pattern), VAdt (v_name, v_pattern) ->
-      (match p_name with
-       | UName p_name -> p_name = v_name && check_pattern_matching p_pattern v_pattern
-       | _ -> false)
+    | PAdt (UName p_name, p_pattern), VAdt (v_name, v_pattern) when p_name = v_name ->
+      check_pattern_matching p_pattern v_pattern
     | _ -> false
   ;;
 

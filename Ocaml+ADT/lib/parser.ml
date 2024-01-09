@@ -192,7 +192,7 @@ let ppcase pp =
   @@ fun ppcase ->
   uname
   <$> prconstrname
-  >>= fun name -> ppcase <|> pp >>= fun exp -> return (pcase name exp)
+  >>= fun name -> ppcase <|> pp >>= fun exp -> return (padt name exp)
 ;;
 
 let pptuple pp =
