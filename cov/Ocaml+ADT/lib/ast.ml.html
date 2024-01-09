@@ -387,7 +387,7 @@ let drec bool = <span data-count="135">D</span>Rec bool
   <span data-count="87">|</span> PVar of decl_nam<span data-count="29">e</span>
   <span data-count="18">|</span> PCons of pattern * patter<span data-count="9">n</span>
   <span data-count="24">|</span> PTuple of <span data-count="0">p</span>attern lis<span data-count="8">t</span>
-  <span data-count="12">|</span> PCase of decl_name * patter<span data-count="6">n</span> (* Tepa 46 *)
+  <span data-count="12">|</span> PAdt of decl_name * patter<span data-count="6">n</span> (* pattern for ADT types: Tree(_, _) *)
 [@@deriving eq, show { with_path = false }<span data-count="10">]</span>
 
 let pnill = PNill
@@ -398,7 +398,7 @@ let pint int = <span data-count="6">P</span>Int int
 let pvar decl_name = <span data-count="97">P</span>Var decl_name
 let pcons pattern1 pattern2 = <span data-count="13">P</span>Cons (pattern1, pattern2)
 let ptuple pattern_lst = <span data-count="12">P</span>Tuple pattern_lst
-let pcase decl_name pattern = <span data-count="10">P</span>Case (decl_name, pattern)
+let padt decl_name pattern = <span data-count="10">P</span>Adt (decl_name, pattern)
 
 <span data-count="66">t</span>ype type_decl = <span data-count="0">d</span>ecl_name * <span data-count="0">(</span><span data-count="0">d</span>ecl_name * decl_type) lis<span data-count="0">t</span>
 [@@deriving eq, show { with_path = false }<span data-count="26">]</span>
