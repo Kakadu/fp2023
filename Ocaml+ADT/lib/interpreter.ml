@@ -118,8 +118,7 @@ end = struct
     | _ -> false
   ;;
 
-  let rec find_match match_exp_value pattern_lst =
-    match pattern_lst with
+  let rec find_match match_exp_value = function
     | [] -> fail PatternMatchingError
     | (pattern, expr) :: tl ->
       (match check_pattern_matching pattern match_exp_value with
@@ -155,25 +154,21 @@ end = struct
       let* val2 = exec exp2 env in
       (match binop, val1, val2 with
        | And, VBool true, VBool bool | Or, VBool false, VBool bool -> return @@ vbool bool
-       | Eq, VBool bool1, VBool bool2 -> return @@ vbool (bool1 == bool2)
+       | Eq, VBool bool1, VBool bool2 -> return @@ vbool (bool1 = bool2)
        | Neq, VBool bool1, VBool bool2 -> return @@ vbool (bool1 <> bool2)
        | Add, VInt num1, VInt num2 -> return @@ vint (num1 + num2)
        | Sub, VInt num1, VInt num2 -> return @@ vint (num1 - num2)
        | Mul, VInt num1, VInt num2 -> return @@ vint (num1 * num2)
        | Div, VInt _, VInt num2 when num2 = 0 -> fail DivisionByZeroError
        | Div, VInt num1, VInt num2 -> return @@ vint (num1 / num2)
-       | Eq, VInt num1, VInt num2 -> return @@ vbool (num1 == num2)
+       | Eq, VInt num1, VInt num2 -> return @@ vbool (num1 = num2)
        | Neq, VInt num1, VInt num2 -> return @@ vbool (num1 <> num2)
        | Les, VInt num1, VInt num2 -> return @@ vbool (num1 < num2)
        | Leq, VInt num1, VInt num2 -> return @@ vbool (num1 <= num2)
        | Gre, VInt num1, VInt num2 -> return @@ vbool (num1 > num2)
        | Geq, VInt num1, VInt num2 -> return @@ vbool (num1 > num2)
-       | Eq, VString str1, VString str2 -> return @@ vbool (str1 == str2)
+       | Eq, VString str1, VString str2 -> return @@ vbool (str1 = str2)
        | Neq, VString str1, VString str2 -> return @@ vbool (str1 <> str2)
-       | Les, VString str1, VString str2 -> return @@ vbool (str1 < str2)
-       | Leq, VString str1, VString str2 -> return @@ vbool (str1 <= str2)
-       | Gre, VString str1, VString str2 -> return @@ vbool (str1 > str2)
-       | Geq, VString str1, VString str2 -> return @@ vbool (str1 > str2)
        | Cons, VBool h, VBool tl -> return @@ vlist (VBool h :: [ VBool tl ])
        | Cons, VInt h, VInt tl -> return @@ vlist (VInt h :: [ VInt tl ])
        | Cons, VString h, VString tl -> return @@ vlist (VString h :: [ VString tl ])
