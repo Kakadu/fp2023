@@ -1517,7 +1517,7 @@ end = struct
     <span data-count="2">m</span>atch constr_id, args with
     | <span data-count="0">"</span>Some", arg :: [] -&gt;
       let* opt_val = eva<span data-count="0">l</span> arg env in
-      <span data-count="0">r</span>eturn @@ opt_val
+      <span data-count="0">r</span>eturn opt_val
     | <span data-count="0">"</span>None", [] -&gt; return VNone
     | <span data-count="2">_</span>, [] -&gt; return @@ VCases (constr_id, None)
     | <span data-count="0">_</span>, arg :: [] -&gt;
