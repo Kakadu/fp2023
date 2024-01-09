@@ -283,7 +283,7 @@ and parse_spec_bop () =
       [ (*Property call parser*)
         (token_ch '.' *> read_word >>| fun prop -> bop PropAccs acc (Const (String prop)))
       ; (*Bracket property call parser*)
-        (sq_parens @@ start_parse_expression () >>| fun x -> bop SqPropAccs acc x)
+        (sq_parens @@ start_parse_expression () >>| fun x -> bop PropAccs acc x)
       ; (*Fun call parser*)
         (parens @@ parse_comma @@ start_parse_expression ()
          >>| fun arg -> FunctionCall (acc, arg))

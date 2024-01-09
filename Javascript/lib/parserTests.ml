@@ -368,7 +368,7 @@ let%expect_test _ =
   pp ~parse:parse_expression "hello[\"word\"]";
   [%expect
     {|
-    (Expression (BinOp (SqPropAccs, (Var "hello"), (Const (String "word")))))|}]
+    (Expression (BinOp (PropAccs, (Var "hello"), (Const (String "word")))))|}]
 ;;
 
 let%expect_test _ =
@@ -376,7 +376,7 @@ let%expect_test _ =
   [%expect
     {|
     (Expression
-       (BinOp (SqPropAccs, (Var "hello"), (BinOp (Add, (Var "a"), (Var "b"))))))|}]
+       (BinOp (PropAccs, (Var "hello"), (BinOp (Add, (Var "a"), (Var "b"))))))|}]
 ;;
 
 let%expect_test _ =
