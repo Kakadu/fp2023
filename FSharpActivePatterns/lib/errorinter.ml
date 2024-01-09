@@ -8,7 +8,6 @@ type error =
   | Division_by_zero
   | UnboundValue of string
   | UnboundConstructor of string
-  | FunctionCompare
   | MatchFailure
   | EmptyProgram
   | TypeError
@@ -18,15 +17,11 @@ type error =
   | No_variable of string
   | Unification_failed of typ * typ
   | Empty_pattern
-  | Empty_input
-  | NotReachable
 
 let pp_error fmt : error -> _ = function
   | Division_by_zero -> Format.fprintf fmt "Exception: Division_by_zero."
   | UnboundValue s -> Format.fprintf fmt "Error: Unbound value %s" s
   | UnboundConstructor s -> Format.fprintf fmt "Error: Unbound constructor %s" s
-  | FunctionCompare ->
-    Format.fprintf fmt "Exception: Invalid_argument \"compare: functional value\""
   | MatchFailure ->
     Format.fprintf fmt "Exception: this pattern-matching is not exhaustive."
   | EmptyProgram -> Format.fprintf fmt "Error: the program was not provided or was empty"
@@ -40,11 +35,9 @@ let pp_error fmt : error -> _ = function
     Format.fprintf
       fmt
       "Typechecker error: unification failed on %a and %a"
-      Pprinttypedtree.pp_typ_binder
+      Typedtree.pp_typ_binder
       l
-      Pprinttypedtree.pp_typ_binder
+      Typedtree.pp_typ_binder
       r
   | Empty_pattern -> Format.fprintf fmt "Typechecker error: empty pattern"
-  | Empty_input -> Format.fprintf fmt "Typechecker error: empty pattern"
-  | NotReachable -> Format.fprintf fmt "This not reacheable"
 ;;
