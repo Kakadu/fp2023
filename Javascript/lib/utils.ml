@@ -38,3 +38,7 @@ let rec fold_left_s f stop acc = function
 ;;
 
 let both f a b = f a >>= fun x -> f b >>= fun y -> return (x, y)
+
+let both_ext f acc a b =
+  f acc a >>= fun (acc, x) -> f acc b >>= fun (acc, y) -> return (acc, (x, y))
+;;
