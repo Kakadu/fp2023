@@ -11,5 +11,5 @@ open Common
 
 let gen str_item =
   GenMonad.run @@ Structure.gen str_item
-  |> Result.map ~f:(fun ((asm, bound, ty), constrs, con_assumpt) ->
-         (asm, bound, ty, constrs, con_assumpt) )
+  |> Result.map ~f:(fun ((asm, bound, ty, eff), constrs, con_assumpt) ->
+         (asm, bound, ty, eff, constrs, con_assumpt) )

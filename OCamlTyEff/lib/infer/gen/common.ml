@@ -94,12 +94,16 @@ module GenMonad = struct
       (* "gen" prefix is important to avoid collision
          with vars created in solve monad *)
       return @@ Var.Var ("gen" ^ Int.to_string fresh_count)
+
+    let fresh_eff =
+      let* var = fresh_var in
+      return @@ Eff.Eff_var var
   end
 end
 
 let ( ! ) tv = Ty.Ty_var tv
-let ( @> ) ty_arg ty_res = Ty.Ty_arr (ty_arg, Eff_total, ty_res)
-let ( == ) t1 t2 = Constr.EqConstr (t1, t2)
+let ( == ) t1 t2 = Constr.TyEqConstr (t1, t2)
+let ( === ) eff1 eff2 = Constr.EffEqConstr (eff1, eff2)
 let ( ++ ) = Assumptions.merge
 let ( -- ) asm = List.fold ~init:asm ~f:Assumptions.remove
 
