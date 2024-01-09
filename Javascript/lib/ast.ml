@@ -28,6 +28,9 @@ type bin_op =
   | LogicalOr
   | BitwiseAnd
   | BitwiseOr
+  | LogicalShiftLeft
+  | LogicalShiftRight
+  | UnsignedShiftRight
   | Xor
 [@@deriving show { with_path = false }]
 

@@ -224,6 +224,10 @@ let bop_with_num op a b =
   >>= fun (a, b) -> both get_vnum a b >>| fun (x, y) -> VNumber (op x y)
 ;;
 
+let bop_logical_with_num op a b =
+  both to_vnumber a b >>= fun (a, b) -> both get_vnum a b >>| fun (x, y) -> VBool (op x y)
+;;
+
 let bop_with_string op a b =
   both to_vstring a b
   >>= fun (a, b) -> both get_vstring a b >>| fun (x, y) -> VString (op x y)
@@ -259,39 +263,57 @@ let is_num = function
   | _ -> false
 ;;
 
+let is_to_string = function
+  | VString _ | VObject _ -> true
+  | _ -> false
+;;
+
+let is_bool = function
+  | VBool _ -> true
+  | _ -> false
+;;
+
+let is_num = function
+  | VNumber _ -> true
+  | _ -> false
+;;
+
+let is_to_string = function
+  | VString _ | VObject _ -> true
+  | _ -> false
+;;
+
+let is_bool = function
+  | VBool _ -> true
+  | _ -> false
+;;
+
+let is_num = function
+  | VNumber _ -> true
+  | _ -> false
+;;
+
+let bop_logical_with_string op a b =
+  both to_vstring a b
+  >>= fun (a, b) -> both get_vstring a b >>| fun (x, y) -> VBool (op x y)
+;;
+
+let is_to_string = function
+  | VString _ | VObject _ -> true
+  | _ -> false
+;;
+
+(* Binary operators *)
 (* TODO: add support for BigInts ( like 2n ) *)
 let add a b =
-  let is_to_string = function
-    | VString _ | VObject _ -> true
-    | _ -> false
-  in
   if is_to_string a || is_to_string b
   then bop_with_string ( ^ ) a b
   else bop_with_num ( +. ) a b
-;;
 
-let add_ctx ctx op = op >>| fun op -> ctx, op
-  then bop_with_string ( ^ ) a b
-  else bop_with_num ( +. ) a b
-;;
+and sub a b = bop_with_num ( -. ) a b
 
-let sub a b =
-  match a, b with
-  | a, b when is_num a || is_num b || is_to_string a || is_to_string b -> bop_with_num ( -. ) a b
-  | a, b when is_num a && is_bool b && b = VBool true ->
-    bop_with_num ( -. ) a (VNumber 1.)
-  | a, b when is_num a && is_bool b && b = VBool false ->
-    bop_with_num ( -. ) a (VNumber 0.)
-  | _, _ -> return (VNumber nan)
-;;
-
-let mul a b =
-  bop_with_num ( *. ) a b
-;;
-
-let div a b =
-  bop_with_num ( /. ) a b
-;;
+let mul a b = bop_with_num ( *. ) a b
+let div a b = bop_with_num ( /. ) a b
 
 (* TODO: fix *)
 let strict_equal (a : value) (b : value) =
@@ -303,8 +325,103 @@ let strict_not_equal (a : value) (b : value) =
   if a <> b then return (VBool true) else return (VBool false)
 ;;
 
-let rem a b = 
-  bop_with_num ( mod_float ) a b
+let equal a b =
+  if is_to_string a || is_to_string b
+  then bop_logical_with_string ( = ) a b
+  else bop_logical_with_num ( = ) a b
+;;
+
+let not_equal a b =
+  if equal a b = return (VBool true) then return (VBool false) else return (VBool true)
+;;
+
+let rem a b = bop_with_num mod_float a b
+
+let left_log_shift (x : float) (y : float) =
+  let int_representation = Int64.bits_of_float x in
+  let shifted_int =
+    Int64.shift_left int_representation (Int64.to_int (Int64.bits_of_float y))
+  in
+  Int64.float_of_bits shifted_int
+;;
+
+let logical_shift_left a b = bop_with_num left_log_shift a b
+
+let right_log_shift (x : float) (y : float) =
+  let int_representation = Int64.bits_of_float x in
+  let shifted_int =
+    Int64.shift_left int_representation (Int64.to_int (Int64.bits_of_float y))
+  in
+  Int64.float_of_bits shifted_int
+;;
+
+let logical_shift_right a b = bop_with_num left_log_shift a b
+
+let usr (a : float) (b : float) =
+  let int_representation_a = Int64.bits_of_float a in
+  let shifted_result =
+    let shift_amount = Int64.to_int (Int64.bits_of_float b) in
+    let mask = Int64.lognot (Int64.shift_left Int64.minus_one shift_amount) in
+    Int64.logand (Int64.shift_right_logical int_representation_a shift_amount) mask
+  in
+  Int64.float_of_bits shifted_result
+;;
+
+let unsigned_shift_right a b = bop_with_num usr a b
+let exp a b = bop_with_num ( ** ) a b
+
+let greater_than a b =
+  if (a = VNull && to_vnumber b = return (VNumber 0.))
+     || (to_vnumber a = return (VNumber 0.) && b = VNull)
+  then return (VBool false)
+  else if is_to_string a || is_to_string b
+  then bop_logical_with_string ( > ) a b
+  else bop_logical_with_num ( > ) a b
+;;
+
+let greater_eq a b =
+  if (a = VNull && to_vnumber b = return (VNumber 0.))
+     || (to_vnumber a = return (VNumber 0.) && b = VNull)
+  then return (VBool true)
+  else
+    return
+      (VBool (greater_than a b = return (VBool true) || equal a b = return (VBool true)))
+;;
+
+let less_than (a : value) (b : value) =
+  let a_check =
+    match a with
+    | VString x ->
+      (match x with
+       | "" -> false
+       | _ -> true)
+    | _ -> false
+  in
+  let b_check =
+    match b with
+    | VString x ->
+      (match x with
+       | "" -> false
+       | _ -> true)
+    | _ -> false
+  in
+  if (a_check = false && b_check) || (b_check && a_check = false)
+  then return (VBool false)
+  else (
+    let a_checked = if a = VNull then VNumber 0. else a in
+    let b_checked = if b = VNull then VNumber 0. else b in
+    if is_to_string a_checked || is_to_string b_checked
+    then bop_logical_with_string ( < ) a_checked b_checked
+    else bop_logical_with_num ( < ) a_checked b_checked)
+;;
+
+let less_eq a b =
+  if (a = VNull && to_vnumber b = return (VNumber 0.))
+     || (to_vnumber a = return (VNumber 0.) && b = VNull)
+  then return (VBool true)
+  else
+    return
+      (VBool (less_than a b = return (VBool true) || equal a b = return (VBool true)))
 ;;
 
 let add_ctx ctx op = op >>| fun op -> ctx, op
@@ -321,9 +438,28 @@ let eval_bin_op ctx op a b =
   | Sub -> add_ctx @@ sub a b <?> "error in sub operator"
   | Mul -> add_ctx @@ mul a b <?> "error in mul operator"
   | Div -> add_ctx @@ div a b <?> "error in div operator"
+  | Equal -> add_ctx @@ equal a b <?> "error in equal operator"
+  | NotEqual -> add_ctx @@ not_equal a b <?> "error in not_equal operator"
   | StrictEqual -> add_ctx @@ strict_equal a b <?> "error in strict equal operator"
-  | StrictNotEqual -> add_ctx @@ strict_not_equal a b <?> "error in strict not_equal operator"
-  | Rem -> add_ctx @@ rem a b <?> "error in rem operator" 
+  | StrictNotEqual ->
+    add_ctx @@ strict_not_equal a b <?> "error in strict not_equal operator"
+  | Rem -> add_ctx @@ rem a b <?> "error in rem operator"
+  | LogicalShiftLeft ->
+    add_ctx @@ logical_shift_left a b <?> "error in logical_shift_left operator"
+  | LogicalShiftRight ->
+    add_ctx @@ logical_shift_right a b <?> "error in logical_shift_right operator"
+  | UnsignedShiftRight ->
+    add_ctx @@ unsigned_shift_right a b <?> "error in unsigned_shift_right operator"
+  | GreaterEqual -> add_ctx @@ greater_eq a b <?> "error in greater_equal operator"
+  | LessEqual -> add_ctx @@ less_eq a b <?> "error in less_equal operator"
+  | GreaterThan -> add_ctx @@ greater_than a b <?> "error in greater_than operator"
+  | LessThan -> add_ctx @@ less_than a b <?> "error in less_than operator"
+  | Exp -> add_ctx @@ exp a b <?> "error in exp operator"
+  | PropAccs ->
+    add_ctx
+      (match a with
+       | VObject x -> to_vstring b >>= get_vstring >>| fun str -> get_field str x.fields
+       | _ -> return VUndefined)
   | _ as a -> ensup @@ asprintf "operator %a not supported yet" pp_bin_op a
 ;;
 

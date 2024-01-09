@@ -194,8 +194,9 @@ type associativity =
 let exp_op = [ "**", Exp ], Right (*precendence 13*)
 let mul_div_rem_op = [ "*", Mul; "/", Div; "%", Rem ], Left (*precedence 12*)
 let add_sub_op = [ "+", Add; "-", Sub ], Left (*precedence 11*)
-let relational_op = [ ">", GreaterThan; ">=", GreaterEqual; "<", LessThan; "<=", LessEqual ], Left (*precedence 9*)
-let equality_op = [ "==", Equal; "!=", NotEqual; "===", StrictEqual; "!==", StrictNotEqual ], Left (*precedence 8*)
+let logical_shift_op = [ ">>>", UnsignedShiftRight; "<<", LogicalShiftLeft; ">>", LogicalShiftRight ], Left (*precedence 10*)
+let relational_op = [ ">=", GreaterEqual; "<=", LessEqual; ">", GreaterThan;  "<", LessThan ], Left (*precedence 9*)
+let equality_op = [ "===", StrictEqual; "!==", StrictNotEqual; "==", Equal; "!=", NotEqual ], Left (*precedence 8*)
 let bit_and = [ "&", BitwiseAnd ], Left (*precendence 7*)
 let xor = [ "^", Xor ], Left (*precendence 6*)
 let bit_or = [ "|", BitwiseOr ], Left (*precendence 5*)
@@ -204,7 +205,7 @@ let log_or = [ "||", LogicalOr ], Left (*precendence 3*)
 let assign_op = [ "=", Assign ], Right (*precedence 2*)
 
 (*from lower to greater precedence*)
-let list_of_bops = [ assign_op; log_or; log_and; bit_or; xor; bit_and; equality_op; relational_op; add_sub_op; mul_div_rem_op; exp_op ]
+let list_of_bops = [ assign_op; log_or; log_and; bit_or; xor; bit_and; equality_op; relational_op; logical_shift_op; add_sub_op; mul_div_rem_op; exp_op ]
 
 let chainl1 parser op =
   let rec go acc =
