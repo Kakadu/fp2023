@@ -7,6 +7,7 @@ module type MONAD = sig
 
   val return : 'a -> ('a, 'e) t
   val ( >>= ) : ('a, 'e) t -> ('a -> ('b, 'e) t) -> ('b, 'e) t
+  val pp_value_t : 'a -> ('b, 'c) t -> unit
 
   module Syntax : sig
     val ( let* ) : ('a, 'e) t -> ('a -> ('b, 'e) t) -> ('b, 'e) t
@@ -38,19 +39,22 @@ module LAZY_RESULT : MONAD_ERROR = struct
     | Thunk thunk -> thunk () >>= f
   ;;
 
+  let pp_value_t fmt = function
+    | Result (Ok x) -> print_endline "good"
+    | Result (Error err) -> print_endline "bad"
+    | Thunk t -> print_endline "at"
+  ;;
+
   module Syntax = struct
     let ( let* ) = ( >>= )
   end
 end
 
-module type Env = sig
-  type environment
-  type value
-  type err
-end
+module Eval (M : MONAD_ERROR) : sig end = struct
+  open M
+  open M.Syntax
 
-module Environment (M : MONAD_ERROR) : Env = struct
-  include LAZY_RESULT
+  (*TODO: too coupled, very cringe*)
 
   type environment = (string, (value, err) t) Hashtbl.t
 
@@ -76,19 +80,6 @@ module Environment (M : MONAD_ERROR) : Env = struct
       Format.fprintf fmt "Function(%s)" param
   ;;
 
-  let pp_environment fmt env =
-    let bindings = ref [] in
-    Hashtbl.iter (fun key value -> bindings := (key, value) :: !bindings) env;
-    let pp_binding fmt (key, value) = Format.fprintf fmt "%s -> %a" key pp_value value in
-    Format.fprintf fmt "{ ";
-    Format.pp_print_list
-      ~pp_sep:(fun fmt () -> Format.fprintf fmt "; ")
-      pp_binding
-      fmt
-      !bindings;
-    Format.fprintf fmt " }"
-  ;;
-
   type success_result_item = string * value
   type success_result = success_result_item list
 
@@ -111,14 +102,21 @@ module Environment (M : MONAD_ERROR) : Env = struct
     | EvalError (val1, val2) ->
       fprintf fmt "EvalError: %a # %a" pp_value val1 pp_value val2
   ;;
-end
 
-module Eval (E : Env) : sig
-  val eval_decl : decl -> Environment.environment
-end = struct
-  open LAZY_RESULT
-  open LAZY_RESULT.Syntax
-  open E
+  let pp_environment fmt env =
+    let bindings = ref [] in
+    Hashtbl.iter (fun key value -> bindings := (key, value) :: !bindings) env;
+    let pp_binding fmt (key, value) =
+      Format.fprintf fmt "%s -> %a" key pp_value_t value
+    in
+    Format.fprintf fmt "{ ";
+    Format.pp_print_list
+      ~pp_sep:(fun fmt () -> Format.fprintf fmt "; ")
+      pp_binding
+      fmt
+      !bindings;
+    Format.fprintf fmt " }"
+  ;;
 
   let rec eval env expr =
     match expr with
@@ -177,33 +175,12 @@ end = struct
         | ValBool false -> force env else_expr
         | _ -> fail @@ TypeError "Condition in if-expression is not a boolean") *)
 
-  and eval_decl env d =
-    match d with
-    | DeclLet (pat, e) ->
-      let val_e = eval env e in
-      return @@ match_pattern env pat val_e
-
-  and match_pattern env pat value =
-    match pat with
-    | PatVar x ->
-      Hashtbl.replace env x value;
-      return env
-  (* | PInt n ->
-     (match value with
-     | ValInt m when m = n -> return ()
-     | _ -> fail "Pattern match failure")
-     | PBool b ->
-     (match value with
-     | ValBool m when m = b -> return ()
-     | _ -> fail "Pattern match failure") *)
-
   (* todo: move thunk to functino call *)
   and force_binop l r op =
     match l, r, op with
     | ValInt x, ValInt y, Add -> thunk (fun () -> return (ValInt (x + y)))
     | ValInt x, ValInt y, Sub -> thunk (fun () -> return (ValInt (x - y)))
     | ValInt x, ValInt y, Mul -> thunk (fun () -> return (ValInt (x * y)))
-  ;;
   (* | ValInt x, ValInt y, Div ->
         if y = 0 then fail Division_by_zero else return (ValInt (x / y))
       | ValInt x, ValInt y, Eq -> return (ValBool (x = y))
@@ -220,32 +197,60 @@ end = struct
       | ValString x, ValString y, Neq -> return (ValBool (x <> y))
       | Undefined, _, _ | _, Undefined, _ -> fail @@ Unbound "name" *)
   (* | _ -> fail (Incorrect_force (EBinOp (op, l, r))) *)
+
+  and eval_decl env d =
+    match d with
+    | DeclLet (pat, e) ->
+      let val_e = eval env e in
+      match_pattern env pat val_e
+
+  and match_pattern env pat value =
+    match pat with
+    | PatVar x ->
+      Hashtbl.replace env x value;
+      env
+  ;;
+
+  (* | PInt n ->
+     (match value with
+     | ValInt m when m = n -> return ()
+     | _ -> fail "Pattern match failure")
+     | PBool b ->
+     (match value with
+     | ValBool m when m = b -> return ()
+     | _ -> fail "Pattern match failure") *)
+
+  let test_expr =
+    DeclLet
+      ( PatVar "yx"
+      , ExprIf
+          ( ExprLit (LitBool false)
+          , ExprLit (LitInt 45)
+          , ExprBinOp (Add, ExprLit (LitInt 70), ExprLit (LitInt 60)) ) )
+  ;;
+
+  let pp_infer e =
+    match e with
+    | Ok value -> Format.printf "%a" pp_value value
+  ;;
+
+  (*
+     let run () =
+     let env = Hashtbl.create 10 in
+     match eval_decl env test_expr with
+     | Ok e -> pp_infer e
+     | Error err -> print_endline "error"
+     ;; *)
+
+  let run () =
+    let env = Hashtbl.create 10 in
+    Format.printf "%a" pp_environment (eval_decl env test_expr)
+  ;;
+
+  let () = run ()
 end
 
 module Interpret = Eval (LAZY_RESULT)
-
-let test_expr =
-  DeclLet
-    ( PatVar "yx"
-    , ExprIf
-        ( ExprLit (LitBool false)
-        , ExprLit (LitInt 45)
-        , ExprBinOp (Add, ExprLit (LitInt 70), ExprLit (LitInt 60)) ) )
-;;
-
-let pp_infer e =
-  match e with
-  | Ok value -> Format.printf "%a" pp_environment value
-;;
-
-let run () =
-  let env = Hashtbl.create 10 in
-  match Interpret.force_decl env test_expr () with
-  | Ok e -> pp_infer (e ())
-  | Error err -> print_endline "error"
-;;
-
-let () = run ()
 
 (* type runtime_env = (string * value) list
 
