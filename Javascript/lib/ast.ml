@@ -15,17 +15,19 @@ type bin_op =
   | Div
   | Equal
   | NotEqual
+  | StrictEqual
+  | StrictNotEqual
   | Assign
-  | Rem (* remainder *)
+  | Rem 
   | Exp 
-  | Greater_than
-  | Greater_equal
-  | Less_than
-  | Less_equal
-  | Logical_and
-  | Logical_or
-  | Bitwise_and
-  | Bitwise_or
+  | GreaterThan
+  | GreaterEqual
+  | LessThan
+  | LessEqual
+  | LogicalAnd
+  | LogicalOr
+  | BitwiseAnd
+  | BitwiseOr
   | Xor
 [@@deriving show { with_path = false }]
 

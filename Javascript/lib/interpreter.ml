@@ -26,18 +26,6 @@ let num_to_string n =
   else Float.to_string n
 ;;
 
-(*JS uses diffrent conversion to string in .toString and in print.
-  It's the reason why vvalues_to_str and to_vstring are diffrent functions*)
-let vvalues_to_str = function
-  | VNumber x -> num_to_string x
-  | VBool true -> "true"
-  | VBool false -> "false"
-  | VNull -> "null"
-  | VUndefined -> "undefined"
-  | VString x -> x
-  | _ -> "Cannot convert to string"
-;;
-
 let print_val = function
   | VNumber _ -> "number"
   | VString _ -> "string"
@@ -237,9 +225,23 @@ let bop_with_num op a b =
 ;;
 
 let bop_with_string op a b =
-  to_vstring a
-  >>= get_vstring
-  >>= fun x -> to_vstring b >>= get_vstring >>| fun y -> VString (op x y)
+  both to_vstring a b
+  >>= fun (a, b) -> both get_vstring a b >>| fun (x, y) -> VString (op x y)
+;;
+
+let is_to_string = function
+  | VString _ | VObject _ -> true
+  | _ -> false
+;;
+
+let is_bool = function
+  | VBool _ -> true
+  | _ -> false
+;;
+
+let is_num = function
+  | VNumber _ -> true
+  | _ -> false
 ;;
 
 let is_to_string = function
@@ -292,12 +294,12 @@ let div a b =
 ;;
 
 (* TODO: fix *)
-let equal (a : value) (b : value) =
+let strict_equal (a : value) (b : value) =
   if a = b then return (VBool true) else return (VBool false)
 ;;
 
 (* TODO: fix *)
-let not_equal (a : value) (b : value) =
+let strict_not_equal (a : value) (b : value) =
   if a <> b then return (VBool true) else return (VBool false)
 ;;
 
@@ -319,30 +321,10 @@ let eval_bin_op ctx op a b =
   | Sub -> add_ctx @@ sub a b <?> "error in sub operator"
   | Mul -> add_ctx @@ mul a b <?> "error in mul operator"
   | Div -> add_ctx @@ div a b <?> "error in div operator"
-  | Equal -> add_ctx @@ equal a b <?> "error in equal operator"
-  | NotEqual -> add_ctx @@ not_equal a b <?> "error in not_equal operator"
+  | StrictEqual -> add_ctx @@ strict_equal a b <?> "error in strict equal operator"
+  | StrictNotEqual -> add_ctx @@ strict_not_equal a b <?> "error in strict not_equal operator"
   | Rem -> add_ctx @@ rem a b <?> "error in rem operator" 
   | _ as a -> ensup @@ asprintf "operator %a not supported yet" pp_bin_op a
-;;
-
-let eval_un_op ctx op a =
-  let add_ctx = add_ctx ctx in
-  match op with
-  | Plus -> add_ctx @@ to_vnumber a <?> "error in plus operator"
-  | Minus ->
-    add_ctx @@ (to_vnumber a >>= get_vnum >>| fun n -> VNumber ~-.n)
-    <?> "error in plus operator"
-  | _ as a -> ensup @@ asprintf "operator %a not supported yet" pp_un_op a
-;;
-
-let rec ctx_get_var ctx id =
-  match find_in_vars id ctx.vars with
-  | Some a -> return a
-  | None ->
-    (match ctx.parent with
-     | Some parent -> ctx_get_var parent id
-     | None ->
-       error (ReferenceError (asprintf "Cannot access '%s' before initialization" id)))
 ;;
 
 let eval_un_op ctx op a =

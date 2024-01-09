@@ -184,22 +184,22 @@ let%expect_test _ =
 
 (*equal*)
 let%expect_test _ =
-  pi "return 4 == 4";
+  pi "return 4 === 4";
   [%expect {| Programm return: true |}]
 ;;
 
 let%expect_test _ =
-  pi "return 'foo' == 'foo'";
+  pi "return 'foo' === 'foo'";
   [%expect {| Programm return: true |}]
 ;;
 
 let%expect_test _ =
-  pi "return true == 'true'";
+  pi "return true === 'true'";
   [%expect {| Programm return: false |}]
 ;;
 
 let%expect_test _ =
-  pi "return '1' == 1";
+  pi "return '1' === 1";
   [%expect {| Programm return: true |}]
 
 let%expect_test _ =
@@ -212,22 +212,22 @@ let%expect_test _ =
 
 (*not_equal*)
 let%expect_test _ =
-  pi "return 4 != 3";
+  pi "return 4 !== 3";
   [%expect {| Programm return: true |}]
 ;;
 
 let%expect_test _ =
-  pi "return 'foo' != 'foo'";
+  pi "return 'foo' !== 'foo'";
   [%expect {| Programm return: false |}]
 ;;
 
 let%expect_test _ =
-  pi "return true != false";
+  pi "return true !== false";
   [%expect {| Programm return: true |}]
 ;;
 
 let%expect_test _ =
-  pi "return true != 'true'";
+  pi "return true !== 'true'";
   [%expect {| Programm return: true |}]
 ;;
 
