@@ -33,8 +33,7 @@ type obj_type =
   | TObject
 
 and obj_ctx =
-  { proto : obj_ctx option
-  ; fields : let_ctx list
+  { fields : let_ctx list
   ; obj_type : obj_type
   }
 
