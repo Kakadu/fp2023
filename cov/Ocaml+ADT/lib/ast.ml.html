@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8"/>
     <title>ast.ml &mdash; Coverage report</title>
-    <meta name="description" content="81.34% coverage in lib/ast.ml">
+    <meta name="description" content="82.22% coverage in lib/ast.ml">
     <link rel="stylesheet" href="../coverage.css"/>
     <script src="../highlight.pack.js"></script>
     <script>hljs.initHighlightingOnLoad();</script>
@@ -15,7 +15,7 @@
           <span class="dirname">lib/</span>ast.ml
         </a>
       </h1>
-      <h2>81.34%</h2>
+      <h2>82.22%</h2>
     </div>
     <div id="navbar">
       <span class="unvisited" style="top:6.77%"></span>
@@ -31,7 +31,7 @@
       <span class="unvisited" style="bottom:45.86%"></span>
       <span class="some-visited" style="bottom:45.11%"></span>
       <span class="some-visited" style="bottom:42.86%"></span>
-      <span class="unvisited" style="bottom:30.08%"></span>
+      <span class="some-visited" style="bottom:32.33%"></span>
       <span class="some-visited" style="bottom:25.56%"></span>
       <span class="some-visited" style="bottom:24.81%"></span>
       <span class="some-visited" style="bottom:23.31%"></span>
@@ -129,10 +129,10 @@
 <a id="L87"></a><span class="visited"> </span>
 <a id="L88"></a><span class="visited"> </span>
 <a id="L89"></a><span > </span>
-<a id="L90"></a><span class="visited"> </span>
-<a id="L91"></a><span > </span>
+<a id="L90"></a><span class="some-visited"> </span>
+<a id="L91"></a><span class="visited"> </span>
 <a id="L92"></a><span > </span>
-<a id="L93"></a><span class="unvisited"> </span>
+<a id="L93"></a><span class="visited"> </span>
 <a id="L94"></a><span > </span>
 <a id="L95"></a><span > </span>
 <a id="L96"></a><span class="visited"> </span>
@@ -400,10 +400,10 @@ let pcons pattern1 pattern2 = <span data-count="13">P</span>Cons (pattern1, patt
 let ptuple pattern_lst = <span data-count="12">P</span>Tuple pattern_lst
 let pcase decl_name pattern = <span data-count="10">P</span>Case (decl_name, pattern)
 
-<span data-count="914">t</span>ype let_decl = <span data-count="6">d</span>ecl_rec * decl_name * decl_type * decl_exp
-[@@deriving eq, show { with_path = false }]
+<span data-count="66">t</span>ype type_decl = <span data-count="0">d</span>ecl_name * <span data-count="0">(</span><span data-count="0">d</span>ecl_name * decl_type) lis<span data-count="0">t</span>
+[@@deriving eq, show { with_path = false }<span data-count="26">]</span>
 
-<span data-count="0">a</span>nd type_decl = <span data-count="0">d</span>ecl_name * <span data-count="0">(</span><span data-count="0">d</span>ecl_name * decl_type) lis<span data-count="0">t</span>
+<span data-count="848">t</span>ype let_decl = <span data-count="6">d</span>ecl_rec * decl_name * decl_type * decl_exp
 [@@deriving eq, show { with_path = false }]
 
 <span data-count="57">a</span>nd decl_exp =
@@ -420,7 +420,7 @@ let pcase decl_name pattern = <span data-count="10">P</span>Case (decl_name, pat
   <span data-count="84">|</span> EApp of decl_exp * decl_ex<span data-count="42">p</span>
   <span data-count="100">|</span> EMatch of decl_exp * <span data-count="0">(</span><span data-count="0">p</span>attern * decl_exp) lis<span data-count="40">t</span>
   <span data-count="72">|</span> EIf of decl_exp * decl_exp * decl_ex<span data-count="40">p</span>
-[@@deriving eq, show { with_path = false }<span data-count="498">]</span>
+[@@deriving eq, show { with_path = false }<span data-count="472">]</span>
 
 <span data-count="52">t</span>ype decl =
   <span data-count="111">|</span> DLet of let_dec<span data-count="37">l</span>
