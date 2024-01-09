@@ -458,6 +458,18 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
+  let test = "(1, (2,((3)),4), 5)" in
+  start_test parse show_expr test;
+  [%expect
+    {|
+      (TupleExpr
+         [(ConstExpr (CInt 1));
+           (TupleExpr
+              [(ConstExpr (CInt 2)); (ConstExpr (CInt 3)); (ConstExpr (CInt 4))]);
+           (ConstExpr (CInt 5))]) |}]
+;;
+
+let%expect_test _ =
   let test = " (1  +  2)+ (1 *  3 /  3) <= v  " in
   start_test parse show_expr test;
   [%expect
@@ -654,6 +666,5 @@ let%expect_test _ =
   start_test parse show_expr test;
   [%expect {| (AppExpr ((VarExpr "good"), (ConstExpr (CInt 6)))) |}]
 ;;
-
 
 

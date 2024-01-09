@@ -532,6 +532,38 @@ let%expect_test _ =
 let%expect_test _ =
   let open Ast in
   let _ =
+    let e =
+      [ TupleExpr
+          [ ConstExpr (CInt 1)
+          ; ListExpr [ ConstExpr (CInt 2); ConstExpr (CInt 3); ConstExpr (CInt 4) ]
+          ; ConstExpr (CInt 5)
+          ]
+      ]
+    in
+    check_types e |> run_infer
+  in
+  [%expect {| (int * int list * int) |}]
+;;
+
+let%expect_test _ =
+  let open Ast in
+  let _ =
+    let e =
+      [ TupleExpr
+          [ ConstExpr (CInt 1)
+          ; TupleExpr [ ConstExpr (CInt 2); ConstExpr (CInt 3); ConstExpr (CInt 4) ]
+          ; ConstExpr (CInt 5)
+          ]
+      ]
+    in
+    check_types e |> run_infer
+  in
+  [%expect {| (int * (int * int * int) * int) |}]
+;;
+
+let%expect_test _ =
+  let open Ast in
+  let _ =
     let e = [ IfExpr (ConstExpr (CBool true), ConstExpr (CInt 4), ConstExpr (CInt 5)) ] in
     check_types e |> run_infer
   in

@@ -198,7 +198,7 @@ end = struct
     match constr_id, args with
     | "Some", arg :: [] ->
       let* opt_val = eval arg env in
-      return @@ opt_val
+      return opt_val
     | "None", [] -> return VNone
     | _, [] -> return @@ VCases (constr_id, None)
     | _, arg :: [] ->
