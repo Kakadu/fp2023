@@ -4,6 +4,7 @@
 
 open Ocamladt_lib
 open Format
+
 let parse_and_interpret_result str =
   match Parser.parse str with
   | Ok parse_result ->
@@ -25,10 +26,43 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  let _ = parse_and_interpret_result "let n = fun x -> x+ 5\n    let a = n 4" in
+  let _ = parse_and_interpret_result "let x : bool = false && true" in
+  [%expect {| "x": false|}]
+;;
+
+let%expect_test _ =
+  let _ = parse_and_interpret_result "let x : bool = true || true" in
+  [%expect {| "x": true|}]
+;;
+
+let%expect_test _ =
+  let _ = parse_and_interpret_result "let x : bool = true == true" in
+  [%expect {| "x": true|}]
+;;
+
+let%expect_test _ =
+  let _ = parse_and_interpret_result "let x : bool = true <> false" in
+  [%expect {| "x": true|}]
+;;
+
+let%expect_test _ =
+  let _ =
+    parse_and_interpret_result "let n = fun x -> 8 == x + 6 * 2 / 3\n    let a = n 4"
+  in
   [%expect {|
-    "a": 9
+    "a": true
     "n": <fun> |}]
+;;
+
+let%expect_test _ =
+  let _ =
+    parse_and_interpret_result
+      "let n = \"a\"\n    let a =  \"a\" == n \n let b = \"b\" <> n"
+  in
+  [%expect {|
+    "a": true
+    "b": true
+    "n": "a" |}]
 ;;
 
 let%expect_test _ =
@@ -80,8 +114,7 @@ let%expect_test _ =
 let%expect_test _ =
   let _ =
     parse_and_interpret_result
-      "let a = fun x -> match x with | Tepa 4 -> true | _ -> false\n\
-      \ let n = a (Tepa 4)"
+      "let a = fun x -> match x with | Tepa 4 -> true | _ -> false\n let n = a (Tepa 4)"
   in
   [%expect {|
     "a": <fun>
@@ -91,8 +124,7 @@ let%expect_test _ =
 let%expect_test _ =
   let _ =
     parse_and_interpret_result
-      "let a = fun x -> match x with | Tepa 4 -> true | _ -> false\n\
-      \ let n = a (Tepa 5)"
+      "let a = fun x -> match x with | Tepa 4 -> true | _ -> false\n let n = a (Tepa 5)"
   in
   [%expect {|
     "a": <fun>
@@ -102,8 +134,7 @@ let%expect_test _ =
 let%expect_test _ =
   let _ =
     parse_and_interpret_result
-      "let a = fun x -> match x with | Tepa 4 -> true | _ -> false\n\
-      \ let n = a (NeTepa 5)"
+      "let a = fun x -> match x with | Tepa 4 -> true | _ -> false\n let n = a (NeTepa 5)"
   in
   [%expect {|
     "a": <fun>
@@ -162,26 +193,6 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  let _ = parse_and_interpret_result "let n = 5 / 0" in
-  [%expect {| DivisionByZeroError |}]
-;;
-
-let%expect_test _ =
-  let _ =
-    parse_and_interpret_result
-      "let sum = fun (a, b) -> a + b\n
-      \ let k = sum 8"
-  in
-  [%expect
-    {| PatternMatchingError |}]
-;;
-
-let%expect_test _ =
-  let _ = parse_and_interpret_result {|let n = 5 + "S"|} in
-  [%expect {| ExecError: 5 # "S" |}]
-;;
-
-let%expect_test _ =
   let _ =
     parse_and_interpret_result
       "let a = fun x -> match x with | Tree (_, _) -> true | _ -> false\n\
@@ -206,10 +217,53 @@ let%expect_test _ =
 let%expect_test _ =
   let _ =
     parse_and_interpret_result
-      "let a = fun x -> match x with | [] -> false | h :: tl -> true\n\
-      \ let n = a []"
+      "let a = fun x -> match x with | [] -> false | h :: tl -> true\n let n = a []"
   in
   [%expect {|
     "a": <fun>
     "n": false |}]
+;;
+
+let%expect_test _ =
+  let _ =
+    parse_and_interpret_result
+      "let a = fun x -> match x with | true -> false | false -> true\n let n = a true"
+  in
+  [%expect {|
+    "a": <fun>
+    "n": false |}]
+;;
+
+let%expect_test _ =
+  let _ =
+    parse_and_interpret_result
+      "let a = fun x -> match x with | \"A\" -> true | \"B\" -> true | _ -> false\n\
+      \ let n = a \"C\""
+  in
+  [%expect {|
+    "a": <fun>
+    "n": false |}]
+;;
+
+let%expect_test _ =
+  let _ = parse_and_interpret_result "let n = 5 / 0" in
+  [%expect {| DivisionByZeroError |}]
+;;
+
+let%expect_test _ =
+  let _ =
+    parse_and_interpret_result "let sum = fun (a, b) -> a + b\n\n       let k = sum 8"
+  in
+  [%expect {| PatternMatchingError |}]
+;;
+
+let%expect_test _ =
+  let _ = parse_and_interpret_result {|let n = 5 + "S"|} in
+  [%expect {| ExecError: 5 # "S" |}]
+;;
+
+let%expect_test _ =
+  let _ = parse_and_interpret_result "let a = fun x -> x\n let n = b 5" in
+  [%expect {|
+    UnboundVariable: "b" |}]
 ;;

@@ -37,7 +37,7 @@ type decl_name =
   | UName of string (* Number *)
 [@@deriving eq, show { with_path = false }]
 
-and decl_type =
+type decl_type =
   | DType of decl_type
   | TEmptyType
   | TInt
@@ -109,7 +109,7 @@ and decl_exp =
   | EIf of decl_exp * decl_exp * decl_exp
 [@@deriving eq, show { with_path = false }]
 
-and decl =
+type decl =
   | DLet of let_decl
   | DType of type_decl
 [@@deriving eq, show { with_path = false }]
