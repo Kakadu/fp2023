@@ -5,6 +5,14 @@
   "a": 120
   "factorial_recursive": <let rec>
   $ dune exec demoInterpret << EOF
+  > let rec fix = fun f -> (fun x -> f (fix f) x)
+  > let fac = fix (fun self -> (fun n -> if n <= 1 then 1 else n * self (n - 1)))
+  > let a = fac 6
+  > EOF
+  "a": 720
+  "fac": <fun>
+  "fix": <let rec>
+  $ dune exec demoInterpret << EOF
   > let a = fun x -> match x with | Tepa 46 -> true | _ -> false
   > let n = a (Tepa 46)
   > EOF

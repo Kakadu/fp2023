@@ -80,6 +80,19 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
+  let _ =
+    parse_and_interpret_result
+      "let rec fix = fun f -> (fun x -> f (fix f) x)\n\n\
+      \    let fac = fix (fun self -> (fun n -> if n <= 1 then 1 else n * self (n - 1)))\n\n\
+      \      let a = fac 5"
+  in
+  [%expect {|
+    "a": 120
+    "fac": <fun>
+    "fix": <let rec> |}]
+;;
+
+let%expect_test _ =
   let _ = parse_and_interpret_result "let rec n = 5" in
   [%expect {| "n": 5 |}]
 ;;
