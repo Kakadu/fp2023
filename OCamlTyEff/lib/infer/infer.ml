@@ -12,8 +12,39 @@ open Constraints
 open Gen
 open Solve
 
-(** Rename (to a, b ..) and quantify all type variables in a type *)
+(**
+  Close effects in a type, i.e. remove effect variables that appear only once
+  E.g. 1) [int -'e-> int] ---> [int -> int]
+       2) [(int -'e1-> int) -'e2-> int -'e1-> int]
+            ---> [(int -'e1-> int) -> int -'e1-> int]
+*)
+let close_effs ty =
+  let rec eff_vars = function
+    | Ty.Ty_arr (l, eff, r) ->
+        List.concat [eff_vars l; VarSet.to_list (Eff.vars eff); eff_vars r]
+    | Ty_tuple tys ->
+        List.map ~f:eff_vars tys |> List.concat
+    | Ty_con (_, tys) ->
+        List.map ~f:eff_vars tys |> List.concat
+    | Ty_var _ ->
+        []
+  in
+  let ty_eff_vars = eff_vars ty in
+  let subst =
+    List.fold ty_eff_vars ~init:Sub.empty ~f:(fun sub elt ->
+        match elt with
+        | Var_eff var when List.count ty_eff_vars ~f:(VarSet.Elt.equal elt) = 1
+          ->
+            Sub.compose (Sub.singleton_eff var Eff_total) sub
+        | _ ->
+            sub )
+  in
+  Sub.apply_to_ty subst ty
+
+(** Close effects, rename (to a, b ..) and quantify all variables in a type *)
 let close_over ty =
+  let ty = close_effs ty in
+
   let open Monad.State in
   let fresh_ty_var =
     let* cnt_ty, cnt_eff = get () in
@@ -57,12 +88,62 @@ let close_over ty =
               return
                 (VarSet.Elt.Var_eff fresh, Sub.singleton_eff var (Eff_var fresh))
         in
+
         let* set, sub = acc in
         return (VarSet.add set fresh, Sub.compose single sub) )
   in
   let new_vars, subst = fst @@ Monad.State.run m (1, 0) in
   (* quantify all type variables *)
   Scheme.Forall (new_vars, Sub.apply_to_ty subst ty)
+
+(**
+  Open effects in a type, i.e. add polymorphic tail to all effects
+  E.g. 1) [int -> int] ---> ['e. int -'e-> int]
+       2) [string -[console]-> unit] ---> ['e. string -[console | 'e]-> unit]
+*)
+let open_effs (Scheme.Forall (quantified, ty)) =
+  let open Monad.State in
+  let fresh_var =
+    let* cnt = get () in
+    let* () = put (cnt + 1) in
+    return @@ Var.Var ("open" ^ Int.to_string cnt)
+  in
+
+  let rec open_eff = function
+    | Eff.Eff_total ->
+        let* fresh = fresh_var in
+        return (VarSet.singleton_eff fresh, Eff.Eff_var fresh)
+    | Eff_var _ as eff ->
+        return (VarSet.empty, eff)
+    | Eff_row (lbl, eff_rest) ->
+        let* new_vars, eff_rest_opened = open_eff eff_rest in
+        return (new_vars, Eff.Eff_row (lbl, eff_rest_opened))
+  in
+
+  let rec helper = function
+    | Ty.Ty_arr (l, eff, r) ->
+        let* new_vars_l, l_opened = helper l in
+        let* new_vars_eff, eff_opened = open_eff eff in
+        let* new_vars_r, r_opened = helper r in
+        return
+          ( VarSet.union_list [new_vars_l; new_vars_eff; new_vars_r]
+          , Ty.Ty_arr (l_opened, eff_opened, r_opened) )
+    | Ty_tuple tys ->
+        let* new_vars, tys_opened = open_many tys in
+        return (new_vars, Ty.Ty_tuple tys_opened)
+    | Ty_con (id, tys) ->
+        let* new_vars, tys_opened = open_many tys in
+        return (new_vars, Ty.Ty_con (id, tys_opened))
+    | Ty_var _ as ty ->
+        return (VarSet.empty, ty)
+  and open_many =
+    List.fold_right ~init:(VarSet.empty, []) ~f:(fun ty (vars_acc, tys_acc) ->
+        let* new_vars, ty_opened = helper ty in
+        return (VarSet.union vars_acc new_vars, ty_opened :: tys_acc) )
+  in
+
+  let new_vars, ty_opened = fst @@ Monad.State.run (helper ty) 1 in
+  Scheme.Forall (VarSet.union quantified new_vars, ty_opened)
 
 let infer_structure_item env str_item =
   let ( let* ) x f = Result.bind x ~f in
@@ -106,11 +187,12 @@ let infer_structure_item env str_item =
                 mismatch )
         in
 
-        (* add new constraints based on scheme from Env *)
+        (* add new constraints based on opened scheme from Env *)
+        let sc_opened = open_effs sc in
         let new_cs =
           ConstrSet.of_list
           @@ List.map vars ~f:(fun var ->
-                 Constr.ExplInstConstr (Ty_var var, sc) )
+                 Constr.ExplInstConstr (Ty_var var, sc_opened) )
         in
         return @@ ConstrSet.union acc new_cs )
   in
