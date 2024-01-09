@@ -22,9 +22,7 @@ let close_effs ty =
   let rec eff_vars = function
     | Ty.Ty_arr (l, eff, r) ->
         List.concat [eff_vars l; VarSet.to_list (Eff.vars eff); eff_vars r]
-    | Ty_tuple tys ->
-        List.map ~f:eff_vars tys |> List.concat
-    | Ty_con (_, tys) ->
+    | Ty_tuple tys | Ty_con (_, tys) ->
         List.map ~f:eff_vars tys |> List.concat
     | Ty_var _ ->
         []
@@ -40,61 +38,6 @@ let close_effs ty =
             sub )
   in
   Sub.apply_to_ty subst ty
-
-(** Close effects, rename (to a, b ..) and quantify all variables in a type *)
-let close_over ty =
-  let ty = close_effs ty in
-
-  let open Monad.State in
-  let fresh_ty_var =
-    let* cnt_ty, cnt_eff = get () in
-    let* () = put (cnt_ty + 1, cnt_eff) in
-
-    (* try to use english letter. if out of bounds then "t{cnt}" *)
-    let var =
-      let default () = Var.Var ("t" ^ Int.to_string cnt_ty) in
-      (* 'a' = 97 *)
-      match Char.of_int (cnt_ty + 96) with
-      | None ->
-          default ()
-      | Some ch when Char.( > ) ch 'z' ->
-          default ()
-      | Some ch ->
-          Var.Var (Char.to_string ch)
-    in
-    return var
-  in
-  let fresh_eff_var =
-    let* cnt_ty, cnt_eff = get () in
-    let* () = put (cnt_ty, cnt_eff + 1) in
-    let name = if cnt_eff = 0 then "e" else "e" ^ Int.to_string cnt_eff in
-    return @@ Var.Var name
-  in
-
-  (* construct set of new variables
-     and substitution that maps vars to new ones *)
-  let m =
-    VarSet.fold_right (Ty.vars ty)
-      ~init:(return (VarSet.empty, Sub.empty))
-      ~f:(fun elt acc ->
-        let* fresh, single =
-          match elt with
-          | Var_ty var ->
-              let* fresh = fresh_ty_var in
-              return
-                (VarSet.Elt.Var_ty fresh, Sub.singleton_ty var (Ty_var fresh))
-          | Var_eff var ->
-              let* fresh = fresh_eff_var in
-              return
-                (VarSet.Elt.Var_eff fresh, Sub.singleton_eff var (Eff_var fresh))
-        in
-
-        let* set, sub = acc in
-        return (VarSet.add set fresh, Sub.compose single sub) )
-  in
-  let new_vars, subst = fst @@ Monad.State.run m (1, 0) in
-  (* quantify all type variables *)
-  Scheme.Forall (new_vars, Sub.apply_to_ty subst ty)
 
 (**
   Open effects in a type, i.e. add polymorphic tail to all effects
@@ -142,8 +85,79 @@ let open_effs (Scheme.Forall (quantified, ty)) =
         return (VarSet.union vars_acc new_vars, ty_opened :: tys_acc) )
   in
 
-  let new_vars, ty_opened = fst @@ Monad.State.run (helper ty) 1 in
+  let new_vars, ty_opened = fst @@ run (helper ty) 1 in
   Scheme.Forall (VarSet.union quantified new_vars, ty_opened)
+
+(** Rename (to a, b .., e) all variables in a type *)
+let rename_vars ty =
+  let open Monad.State in
+  let rename_ty_var var =
+    let next_var cnt_ty =
+      (* try to use english letter. if out of bounds then "t{cnt}" *)
+      let default () = Var.Var ("t" ^ Int.to_string cnt_ty) in
+      (* 'a' = 97 *)
+      match Char.of_int (cnt_ty + 96) with
+      | None ->
+          default ()
+      | Some ch when Char.( > ) ch 'z' ->
+          default ()
+      | Some ch ->
+          Var.Var (Char.to_string ch)
+    in
+
+    let* cnt_ty, cnt_eff, sub = get () in
+    if Sub.mem sub var then return ()
+    else
+      let fresh = next_var cnt_ty in
+      put
+        ( cnt_ty + 1
+        , cnt_eff
+        , Sub.compose (Sub.singleton_ty var (Ty_var fresh)) sub )
+  in
+
+  let rename_eff_var var =
+    let next_var cnt_eff =
+      let name = if cnt_eff = 0 then "e" else "e" ^ Int.to_string cnt_eff in
+      Var.Var name
+    in
+
+    let* cnt_ty, cnt_eff, sub = get () in
+    if Sub.mem sub var then return ()
+    else
+      let fresh = next_var cnt_eff in
+      put
+        ( cnt_ty
+        , cnt_eff + 1
+        , Sub.compose (Sub.singleton_eff var (Eff_var fresh)) sub )
+  in
+
+  let rec rename_eff = function
+    | Eff.Eff_var var ->
+        rename_eff_var var
+    | Eff_total ->
+        return ()
+    | Eff_row (_, eff_rest) ->
+        rename_eff eff_rest
+  in
+  let rec rename_type = function
+    | Ty.Ty_var var ->
+        rename_ty_var var
+    | Ty_arr (l, eff, r) ->
+        let* () = rename_type l in
+        let* () = rename_eff eff in
+        rename_type r
+    | Ty_tuple tys | Ty_con (_, tys) ->
+        List.iter tys ~f:rename_type
+  in
+
+  let _, _, subst = snd @@ run (rename_type ty) (1, 0, Sub.empty) in
+  Sub.apply_to_ty subst ty
+
+(** Close effects, rename and quantify all variables in a type *)
+let close_over ty =
+  let ty_closed = close_effs ty in
+  let ty_renamed = rename_vars ty_closed in
+  Scheme.Forall (Ty.vars ty_renamed, ty_renamed)
 
 let infer_structure_item env str_item =
   let ( let* ) x f = Result.bind x ~f in
