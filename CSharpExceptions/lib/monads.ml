@@ -141,7 +141,7 @@ module Type_check_Monad = struct
 
   let read : ctx_env t = fun st -> (return st) st
 
-  let read_local : ident -> t_env_value t =
+  let read_local_el : ident -> t_env_value t =
     fun id c_env ->
     let _, local_env, _, _ = c_env in
     match IdentMap.find_opt id local_env with
@@ -149,11 +149,11 @@ module Type_check_Monad = struct
     | None -> fail (Not_find_ident_of id) c_env
   ;;
 
-  let read_local_opt : ident -> t_env_value option t =
-    fun id c_env -> (read_local id >>| (fun x -> Some x) <|> return None) c_env
+  let read_local_el_opt : ident -> t_env_value option t =
+    fun id c_env -> (read_local_el id >>| (fun x -> Some x) <|> return None) c_env
   ;;
 
-  let read_global : code_ident -> code_ctx t =
+  let read_global_el : code_ident -> code_ctx t =
     fun id c_env ->
     let id_ =
       match id with
@@ -165,8 +165,8 @@ module Type_check_Monad = struct
     | None -> fail (Not_find_ident_of id_) c_env
   ;;
 
-  let read_global_opt : code_ident -> code_ctx option t =
-    fun id c_env -> (read_global id >>| (fun x -> Some x) <|> return None) c_env
+  let read_global_el_opt : code_ident -> code_ctx option t =
+    fun id c_env -> (read_global_el id >>| (fun x -> Some x) <|> return None) c_env
   ;;
 
   let read_scope_tp : meth_type option t =
@@ -189,6 +189,7 @@ module Eval_Monad = struct
   type ctx_env = interpret_ctx
   type ('a, 'b) t = ctx_env -> ctx_env * ('a, 'b, error) signal
 
+  let return : ('a, 'b, error) signal -> ('a, 'b) t = fun x st -> st, x
   let return_n : 'a -> ('a, 'b) t = fun x st -> st, nsig x
   let return_r : 'b option -> ('a, 'b) t = fun x st -> st, rsig x
   let return_b : 'c -> ('a, 'b) t = fun _ st -> st, bsig
@@ -247,6 +248,12 @@ module Eval_Monad = struct
     | Error err -> fail err st1
   ;;
 
+  let ( @!|>>= ) : ('a, 'b) t -> (('a, 'b, error) signal -> ('d, 'c) t) -> ('d, 'c) t =
+    fun x f st ->
+    let st1, x1 = x st in
+    f x1 st1
+  ;;
+
   let ( <|> ) : ('b, 'a) t -> ('b, 'a) t -> ('b, 'a) t =
     fun a1 a2 st ->
     let st1, x1 = a1 st in
@@ -257,9 +264,6 @@ module Eval_Monad = struct
     | Break -> return_b () st1
     | Error _ -> a2 st
   ;;
-
-  let save : ctx_env -> (unit, 'b) t = fun new_ctx _ -> new_ctx, nsig ()
-  let read : (ctx_env, 'c) t = fun st -> (return_n st) st
 
   let run : ('a, 'b) t -> ctx_env * ('a, 'b, error) signal =
     (* TODO: переписать, чтоб получало на вход class с main, и на его основе запускался *)
@@ -285,4 +289,32 @@ module Eval_Monad = struct
     let f acc cur = acc >>= fun _ -> custom_f cur >>= fun _ -> return_n () in
     List.fold_left f (return_n ()) mlst
   ;;
+
+  let save : ctx_env -> (unit, 'b) t = fun new_ctx _ -> new_ctx, nsig ()
+
+  let save_local : t_loc_env -> (unit, 'c) t =
+    fun l_env st ->
+    let code, _, mem, trace = st in
+    (code, l_env, mem, trace), nsig ()
+  ;;
+
+  let read : (ctx_env, 'c) t = fun st -> (return_n st) st
+  let read_local = read >>| fun (_, l_env, _, _) -> l_env
+
+  let local_with loc_ f =
+    loc_
+    >>= fun old_env ->
+    let return_env = save_local old_env in
+    f
+    @!|>>= function
+    | Next x -> return_env *> return_n x
+    | Exn (code_ident, address) -> return_env *> return_e code_ident address
+    | Return x -> return_env *> return_r x
+    | Break -> return_env *> return_b ()
+    | Error x -> fail x
+  ;;
+
+  let local f = local_with read_local f
+
+  (* TODO: return from method *)
 end

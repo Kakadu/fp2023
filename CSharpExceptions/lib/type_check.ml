@@ -38,7 +38,7 @@ let to_type_m_opt = function
 
 let to_assign_t = function
   | Value_sig (TVar a_tp) -> Result.ok a_tp
-  | Metod_sig { m_modif = _; m_type; _ } ->
+  | Method_sig { m_modif = _; m_type; _ } ->
     (match m_type with
      | Void -> Result.error "Non-assignable type\n"
      | TReturn a_tp -> Result.ok a_tp)
@@ -140,7 +140,7 @@ let check_method_ tp args params =
 
 let check_invoke sign env_prms =
   match sign with
-  | Some (Metod_sig { m_modif = _; m_type; m_id = _; m_args = Args args }) ->
+  | Some (Method_sig { m_modif = _; m_type; m_id = _; m_args = Args args }) ->
     let tp = to_type_m m_type in
     (match tp with
      | Result.Error _ -> fail Type_mismatch
@@ -166,7 +166,7 @@ let get_sign id el =
   in
   let is_method s id =
     match s with
-    | { m_modif = _; m_type = _; m_id; _ } when equal_ident m_id id -> Some (Metod_sig s)
+    | { m_modif = _; m_type = _; m_id; _ } when equal_ident m_id id -> Some (Method_sig s)
     | _ -> None
   in
   let is_constructor s id =
@@ -190,12 +190,12 @@ let get_class_member_sign cl_d el_id =
   List.fold_left (f el_id) None cl_d.cl_mems
 ;;
 
-let find_global id = read_global (Code_ident id) >>| fun x -> get_class_decl x
+let find_global id = read_global_el (Code_ident id) >>| fun x -> get_class_decl x
 
 let is_public sign =
   match sign with
   | Fild_sig { f_modif = Some (FAccess MPublic); _ }
-  | Metod_sig { m_modif = Some (MAccess MPublic); _ }
+  | Method_sig { m_modif = Some (MAccess MPublic); _ }
   | Constructor_sig { con_modif = Some MPublic; _ } -> return sign
   | _ -> fail (Access_error "Attempt to get a private class member\n")
 ;;
@@ -211,7 +211,7 @@ let rec find_class_member expr cl_decl =
     >>= is_public
     >>= function
     | Fild_sig { f_modif = _; f_type = TVar (TNullable (TClass id)); _ } -> return id
-    | Metod_sig { m_modif = _; m_type = TReturn (TNullable (TClass id)); _ } -> return id
+    | Method_sig { m_modif = _; m_type = TReturn (TNullable (TClass id)); _ } -> return id
     | Constructor_sig { con_modif = _; con_id; _ } -> return con_id
     | _ -> fail (Access_error "Magic case\n")
   in
@@ -226,8 +226,8 @@ let check_point_acc e1 e2 =
   let helper =
     match e1 with
     | EIdentifier id ->
-      let local_find = read_local id in
-      let global_find id_ = read_global (Code_ident id_) >>| get_class_decl in
+      let local_find = read_local_el id in
+      let global_find id_ = read_global_el (Code_ident id_) >>| get_class_decl in
       let get_class = function
         | Fild_sig { f_modif = _; f_type = TVar (TNullable (TClass id_)); _ } ->
           return id_
@@ -285,13 +285,13 @@ let check_un_op op env1 =
      | Some (Constructor_sig { con_modif = _; con_id; _ }) ->
        return (Some (Value_sig (TVar (TNullable (TClass con_id)))))
      | Some (Value_sig (TVar (TNullable (TClass id)))) ->
-       read_global (Code_ident id)
+       read_global_el (Code_ident id)
        *> return (Some (Value_sig (TVar (TNullable (TClass id)))))
      | _ -> fail Type_mismatch)
 ;;
 
 let check_expr exp =
-  let get_local_ident id = read_local id >>| fun id -> Some id in
+  let get_local_ident id = read_local_el id >>| fun id -> Some id in
   let rec helper = function
     | EConst x ->
       (* None means "there is null" *)
@@ -347,7 +347,7 @@ let return_check e_opt =
 ;;
 
 let is_exception_ con_id =
-  read_global (Code_ident con_id)
+  read_global_el (Code_ident con_id)
   >>= function
   | Exception_ctx _ -> return TP_Ok
   | _ -> fail (Other_error "throw can be used only with exceptions\n")
@@ -365,7 +365,7 @@ let throw_check env_obj =
 ;;
 
 let add_local id tp =
-  let is_exist = read_local_opt id in
+  let is_exist = read_local_el_opt id in
   is_exist
   >>= function
   | None -> save_local_el id tp
@@ -373,7 +373,7 @@ let add_local id tp =
 ;;
 
 let add_global id tp =
-  let is_exist = read_global_opt id in
+  let is_exist = read_global_el_opt id in
   is_exist
   >>= function
   | None -> save_global_el id tp
@@ -541,7 +541,7 @@ let class_check cl_decl =
       add_local f_id (Fild_sig sign)
     | Method (sign, _) ->
       let { m_modif = _; m_type = _; m_id; _ } = sign in
-      add_local m_id (Metod_sig sign)
+      add_local m_id (Method_sig sign)
   in
   let add_members = iter_left g cl_mems in
   let helper el = memb_check el *> return () in

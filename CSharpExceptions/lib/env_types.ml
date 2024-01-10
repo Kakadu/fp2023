@@ -46,7 +46,7 @@ module Type_check_env = struct
   open Common_env
 
   type t_env_value =
-    | Metod_sig of method_sign
+    | Method_sig of method_sign
     | Constructor_sig of constructor_sign
     | Value_sig of var_type
     | Fild_sig of fild_sign
