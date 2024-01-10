@@ -28,4 +28,4 @@ let parse_structure : structure t =
     *)
     parse_expression >>| (fun e -> Str_eval e) <|> parse_str_let
   in
-  sep_by ws parse_structure_item <* ws
+  sep_by (ws *> option () (string ";;" *> return ())) parse_structure_item <* ws
