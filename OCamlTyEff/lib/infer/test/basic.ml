@@ -162,7 +162,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   run {| let rec fact n = if n < 2 then 1 else n * fact true  |} ;
-  [%expect {| (UnificationFailTy (int, bool)) |}]
+  [%expect {| (UnificationFailTy (bool, int)) |}]
 
 let%expect_test _ =
   run {| let rec f x = f 5 in f |} ;

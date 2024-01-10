@@ -46,7 +46,7 @@ let%expect_test _ =
        map print_string |} ;
   [%expect
     {|
-    map: 'a 'b 'e. ('a -'e-> 'b) -'e-> 'a list -'e-> 'b list
+    map: 'a 'b 'e. ('a -'e-> 'b) -> 'a list -'e-> 'b list
     'a. 'a list -> 'a list
     string list -[console]-> unit list |}]
 
@@ -56,7 +56,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   run {| let rec foo f x = f x; foo f x in foo |} ;
-  [%expect {| 'a 'b 'c 'e. ('a -'e-> 'b) -'e-> 'a -'e-> 'c |}]
+  [%expect {| 'a 'b 'c 'e. ('a -'e-> 'b) -> 'a -'e-> 'c |}]
 
 let%expect_test _ =
   run {| fun x -> print_string "hi"; fun y -> x + y |} ;

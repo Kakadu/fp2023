@@ -7,8 +7,11 @@ open Types
 
 module Constr = struct
   module T = struct
+    type unify_eff = Unify_eff | Dont_unify_eff
+    [@@deriving ord, sexp_of, show {with_path= false}]
+
     type t =
-      | TyEqConstr of Ty.t * Ty.t
+      | TyEqConstr of Ty.t * Ty.t * unify_eff
       | EffEqConstr of Eff.t * Eff.t
       | ExplInstConstr of Ty.t * Scheme.t
       | ImplInstConstr of Ty.t * VarSet.t * Ty.t

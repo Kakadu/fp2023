@@ -102,7 +102,7 @@ module GenMonad = struct
 end
 
 let ( ! ) tv = Ty.Ty_var tv
-let ( == ) t1 t2 = Constr.TyEqConstr (t1, t2)
+let ( == ) t1 t2 = Constr.TyEqConstr (t1, t2, Unify_eff)
 let ( === ) eff1 eff2 = Constr.EffEqConstr (eff1, eff2)
 let ( ++ ) = Assumptions.merge
 let ( -- ) asm = List.fold ~init:asm ~f:Assumptions.remove

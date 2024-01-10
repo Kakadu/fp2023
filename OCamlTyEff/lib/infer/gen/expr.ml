@@ -115,7 +115,11 @@ let rec gen : expression -> (As.t * Ty.t * Eff.t) GenMonad.t = function
       let* () = add_constrs [eff1 === eff2] in
       let* () =
         add_constrs
-          (As.lookup as1 id |> List.map ~f:(fun var_expr -> !var_expr == ty1))
+          ( As.lookup as1 id
+          |> List.map ~f:(fun var_expr ->
+                 (* must not unify effects in `!var_expr` & `ty1`
+                    to ensure proper type of `id` *)
+                 Constr.TyEqConstr (!var_expr, ty1, Dont_unify_eff) ) )
       in
 
       let* mset = varset in

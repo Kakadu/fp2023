@@ -74,8 +74,8 @@ let apply_to_scheme sub (Scheme.Forall (quantified, ty)) =
 
 let apply_to_constrs sub =
   let apply_single : Constr.t -> Constr.t = function
-    | TyEqConstr (t1, t2) ->
-        TyEqConstr (apply_to_ty sub t1, apply_to_ty sub t2)
+    | TyEqConstr (t1, t2, unify_eff) ->
+        TyEqConstr (apply_to_ty sub t1, apply_to_ty sub t2, unify_eff)
     | EffEqConstr (eff1, eff2) ->
         EffEqConstr (apply_to_eff sub eff1, apply_to_eff sub eff2)
     | ImplInstConstr (t1, mset, t2) ->

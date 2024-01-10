@@ -4,6 +4,7 @@
 
 open! Base
 open Ast
+open Constraints
 
 open Common
 module As = Assumptions
@@ -50,7 +51,11 @@ let gen = function
 
       let* () =
         add_constrs
-          (As.lookup as_e id |> List.map ~f:(fun var_expr -> !var_expr == ty_e))
+          ( As.lookup as_e id
+          |> List.map ~f:(fun var_expr ->
+                 (* must not unify effects in `!var_expr` & `ty_e`
+                    to ensure proper type of `id` *)
+                 Constr.TyEqConstr (!var_expr, ty_e, Dont_unify_eff) ) )
       in
 
       let* var_id = fresh_var in
