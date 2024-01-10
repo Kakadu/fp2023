@@ -24,6 +24,8 @@ let alpha_option = Ty.Ty_con (id "option", [alpha])
 
 let alpha_list = Ty.Ty_con (id "list", [alpha])
 
+let single_label lbl = Eff.Eff_row (lbl, Eff_total)
+
 let env =
   [ (id "id", single_var (alpha @> alpha))
   ; (id "+", no_vars arith)
@@ -40,5 +42,9 @@ let env =
   ; (id "Some", single_var (alpha @> alpha_option))
   ; (id "None", single_var alpha_option)
   ; (id "[]", single_var alpha_list)
-  ; (id "::", single_var (tuple [alpha; alpha_list] @> alpha_list)) ]
+  ; (id "::", single_var (tuple [alpha; alpha_list] @> alpha_list))
+  ; ( id "print_string"
+    , no_vars (Ty_arr (Ty.string, single_label Eff.Label.console, Ty.unit)) )
+  ; ( id "raise"
+    , single_var (Ty_arr (Ty.unit, single_label Eff.Label.exn, alpha)) ) ]
   |> Env.of_alist_exn
