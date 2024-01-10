@@ -3,6 +3,7 @@
 (** SPDX-License-Identifier: MIT *)
 
 open! Base
+open Tys
 open Ast
 
 type t = (Ident.t, Scheme.t, Ident.comparator_witness) Map.t

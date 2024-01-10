@@ -3,6 +3,8 @@
 (** SPDX-License-Identifier: MIT *)
 
 open! Base
+open Tys
+open Vars
 open Ast
 
 let id name = Ident.Ident name
