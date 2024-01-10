@@ -17,5 +17,6 @@ type t =
   | PatVarBoundSeveralTimes of Ident.t
   | ConstructorArityMismatch of Ident.t
   | NotVarLHSRec
+  | NotAllowedRHSRec of expression
   | NotImplemented of string
 [@@deriving show {with_path= false}]

@@ -178,14 +178,12 @@ let%expect_test _ =
   run {| let rec Some x = Some 1 in x |} ;
   [%expect {| NotVarLHSRec |}]
 
-let%expect_test _ =
-  run {| let f x = x |} ; [%expect {|
+let%expect_test _ = run {| let f x = x |} ; [%expect {|
     f: 'a. 'a -> 'a |}]
 
 let%expect_test _ =
   run {| let id1, id2 = id, id |} ;
-  [%expect
-    {|
+  [%expect {|
     id1: 'a. 'a -> 'a
     id2: 'a. 'a -> 'a |}]
 
@@ -214,3 +212,25 @@ let%expect_test _ =
   [%expect {|
     a: int
     b: int |}]
+
+let%expect_test _ =
+  run {| let rec x = x + 1 |} ;
+  [%expect
+    {|
+    (NotAllowedRHSRec
+       (Exp_apply (
+          (Exp_apply ((Exp_ident (Ident "+")), (Exp_ident (Ident "x")))),
+          (Exp_constant (Const_integer 1))))) |}]
+
+let%expect_test _ =
+  run {| let rec x = x + 1 in x |} ;
+  [%expect
+    {|
+    (NotAllowedRHSRec
+       (Exp_apply (
+          (Exp_apply ((Exp_ident (Ident "+")), (Exp_ident (Ident "x")))),
+          (Exp_constant (Const_integer 1))))) |}]
+
+let%expect_test _ =
+  run {| let rec y = 1 in let rec x = y in x |} ;
+  [%expect {| int |}]

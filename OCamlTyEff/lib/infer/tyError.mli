@@ -24,6 +24,11 @@ type t =
         The left hand side of the recursive binding is not a var.
         E.g. `let rec _ = ..`
       *)
+  | NotAllowedRHSRec of expression
+      (**
+        The expression is not allowed as right-hand side of `let rec'.
+        E.g. `let rec x = x + 1`
+      *)
   | NotImplemented of string
       (**
         Feature is not yet implemented in the type checker.
