@@ -114,3 +114,14 @@ let type_of_constant = function
       Ty.char
   | Const_string _ ->
       Ty.string
+
+open GenMonad.Gen
+open GenMonad.Let_syntax
+
+let check_rec_rhs bound_id = function
+  | Exp_fun _ | Exp_function _ | Exp_constant _ ->
+      return ()
+  | Exp_ident id when not (Ident.equal id bound_id) ->
+      return ()
+  | exp ->
+      fail @@ NotAllowedRHSRec exp

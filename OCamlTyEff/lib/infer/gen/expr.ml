@@ -106,9 +106,8 @@ let rec gen : expression -> (As.t * Ty.t * Eff.t) GenMonad.t = function
         | _ ->
             fail @@ NotImplemented "mutually recursive bindings"
       in
+      let* () = check_rec_rhs id e1 in
 
-      (* XXX: check rhs of let rec.
-         e.g. `let rec x = x + 1 in ..` must be rejected *)
       let* as1, ty1, eff1 = gen e1 in
       let* as2, ty2, eff2 = gen e2 in
 

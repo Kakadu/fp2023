@@ -72,3 +72,5 @@ val ( ++ ) : Assumptions.t -> Assumptions.t -> Assumptions.t
 val ( -- ) : Assumptions.t -> Ident.t list -> Assumptions.t
 
 val type_of_constant : constant -> Ty.t
+
+val check_rec_rhs : Ident.t -> expression -> unit GenMonad.t

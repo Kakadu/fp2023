@@ -44,9 +44,8 @@ let gen = function
         | _ ->
             fail @@ NotImplemented "mutually recursive bindings"
       in
+      let* () = check_rec_rhs id e in
 
-      (* XXX: check rhs of let rec.
-         e.g. `let rec x = x + 1` must be rejected *)
       let* as_e, ty_e, eff_e = Expr.gen e in
 
       let* () =
