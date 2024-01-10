@@ -13,14 +13,14 @@ let%expect_test _ =
 let%expect_test _ =
   run
     {|
-    let foo f = print_string "hi"; f ();;
+    let foo f = print_string "hi"; f Exc1;;
     fun _ -> foo raise;;
     fun _ -> foo id |} ;
   [%expect
     {|
-    foo: 'a 'e. (unit -[console | 'e]-> 'a) -[console | 'e]-> 'a
-    'a 'b. 'a -[console, exn]-> 'b
-    'a. 'a -[console]-> unit |}]
+    foo: 'a 'e. (_Exc1 exception -[console | 'e]-> 'a) -[console | 'e]-> 'a
+    'a 'b. 'a -[console, exn _Exc1]-> 'b
+    'a. 'a -[console]-> _Exc1 exception |}]
 
 let%expect_test _ =
   run {|
@@ -29,11 +29,12 @@ let%expect_test _ =
   [%expect {| 'a. 'a -> 'a |}]
 
 let%expect_test _ =
-  run {|
-      let foo f g _ = f ""; g () in
+  run
+    {|
+      let foo f g _ = f ""; g Exc1 in
       foo print_string raise
     |} ;
-  [%expect {| 'a 'b. 'a -[console, exn]-> 'b |}]
+  [%expect {| 'a 'b. 'a -[console, exn _Exc1]-> 'b |}]
 
 let%expect_test _ =
   run
@@ -63,9 +64,13 @@ let%expect_test _ =
   [%expect {| int -[console]-> int -> int |}]
 
 let%expect_test _ =
-  run {| fun x -> raise (); fun y -> raise (); x + y |} ;
-  [%expect {| int -[exn]-> int -[exn]-> int |}]
+  run {| fun x -> raise Exc1; fun y -> raise Exc1; x + y |} ;
+  [%expect {| int -[exn _Exc1]-> int -[exn _Exc1]-> int |}]
 
 let%expect_test _ =
-  run {| fun x -> print_string "hi"; fun y -> raise (); x + y |} ;
-  [%expect {| int -[console]-> int -[exn]-> int |}]
+  run {| fun x -> print_string "hi"; fun y -> raise Exc2; x + y |} ;
+  [%expect {| int -[console]-> int -[exn _Exc2]-> int |}]
+
+let%expect_test _ =
+  run {| function 1 -> raise Exc1 | 2 -> raise Exc2 | _ -> 0 |} ;
+  [%expect {| int -[exn _Exc2, exn _Exc1]-> int |}]

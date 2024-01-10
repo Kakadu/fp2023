@@ -6,20 +6,52 @@ open! Base
 open Vars
 open Ast
 
-module Eff = struct
+module rec Eff : sig
+  module Label : sig
+    type t =
+      | Label of Ident.t * Ty.t option
+          (** Effect label. E.g. [console], [exn Division_by_zero] *)
+
+    val pp : Format.formatter -> t -> unit
+
+    val equal : t -> t -> bool
+    val compare : t -> t -> int
+    val sexp_of_t : t -> Sexp.t
+
+    val console : unit -> t
+    val exn : Ty.t -> t
+  end
+
+  type t =
+    | Eff_var of Var.t  (** Effect variable such as ['e] *)
+    | Eff_total
+        (** Total effect. Signifies the absence of any effect.
+            Assigned to pure mathematical functions *)
+    | Eff_row of Label.t * t
+        (** Effect row. [Eff_row(lbl, eff)] represents [lbl | eff] *)
+
+  val pp : Format.formatter -> t -> unit
+
+  val equal : t -> t -> bool
+  val compare : t -> t -> int
+  val sexp_of_t : t -> Sexp.t
+
+  val vars : t -> VarSet.t
+  (** Effect variables occuring in an effect *)
+end = struct
   module Label = struct
-    type t = Label of Ident.t * Ident.t option [@@deriving eq, ord, sexp_of]
+    type t = Label of Ident.t * Ty.t option [@@deriving eq, ord, sexp_of]
 
     let pp ppf (Label (Ident name, arg)) =
       let open Stdlib.Format in
       match arg with
       | None ->
           fprintf ppf "%s" name
-      | Some (Ident arg) ->
-          fprintf ppf "%s %s" name arg
+      | Some arg ->
+          fprintf ppf "%s %a" name Ty.pp arg
 
-    let console = Label (Ident "console", None)
-    let exn = Label (Ident "exn", None)
+    let console () = Label (Ident "console", None)
+    let exn ty = Label (Ident "exn", Some ty)
   end
 
   type t = Eff_var of Var.t | Eff_total | Eff_row of Label.t * t
@@ -52,7 +84,37 @@ module Eff = struct
         VarSet.empty
 end
 
-module Ty = struct
+and Ty : sig
+  type t =
+    | Ty_var of Var.t  (** A type variable such as ['a] *)
+    | Ty_arr of t * Eff.t * t
+        (** [Ty_arr(T1, Eff, T2)] represents [T1 -Eff-> T2] *)
+    | Ty_tuple of t list
+        (** [Ty_tuple([T1 ; ... ; Tn])] represents [T1 * ... * Tn].
+            Invariant: [n >= 2].
+        *)
+    | Ty_con of Ast.Ident.t * t list
+        (** [Ty_con(ident, l)] represents:
+              - [tconstr]               when [l=[]],
+              - [T tconstr]             when [l=[T]],
+              - [(T1, ..., Tn) tconstr] when [l=[T1 ; ... ; Tn]].
+        *)
+
+  val pp : Format.formatter -> t -> unit
+
+  val equal : t -> t -> bool
+  val compare : t -> t -> int
+  val sexp_of_t : t -> Sexp.t
+
+  val unit : t
+  val int : t
+  val bool : t
+  val char : t
+  val string : t
+
+  val vars : t -> VarSet.t
+  (** Type variables occuring in a type *)
+end = struct
   type t =
     | Ty_var of Var.t
     | Ty_arr of t * Eff.t * t
@@ -110,7 +172,18 @@ module Ty = struct
         List.map ~f:vars tys |> VarSet.union_list
 end
 
-module Scheme = struct
+module Scheme : sig
+  (** Type with universally quantified type variables *)
+  type t = Forall of VarSet.t * Ty.t
+
+  val pp : Format.formatter -> t -> unit
+
+  val compare : t -> t -> int
+  val sexp_of_t : t -> Sexp.t
+
+  val free_vars : t -> VarSet.t
+  (** Free type variables in scheme *)
+end = struct
   type t = Forall of VarSet.t * Ty.t [@@deriving ord, sexp_of]
 
   let pp ppf (Forall (quantified, ty)) =
