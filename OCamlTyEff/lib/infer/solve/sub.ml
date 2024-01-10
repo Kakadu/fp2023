@@ -16,22 +16,21 @@ let singleton_eff var eff = Map.singleton (module Var) var (Eff eff)
 
 let mem = Map.mem
 
-let apply_to_eff sub =
-  let rec helper = function
-    | Eff.Eff_var var as eff -> (
-      match Map.find sub var with
-      | Some (Eff new_eff) ->
-          new_eff
-      | Some (Ty _) | None ->
-          eff )
-    | Eff_row (lbl, eff_rest) ->
-        Eff_row (lbl, helper eff_rest)
-    | Eff_total as eff ->
-        eff
-  in
-  helper
+let rec apply_to_eff sub = function
+  | Eff.Eff_var var as eff -> (
+    match Map.find sub var with
+    | Some (Eff new_eff) ->
+        new_eff
+    | Some (Ty _) | None ->
+        eff )
+  | Eff_row (Label (name, arg), eff_rest) ->
+      Eff_row
+        ( Label (name, Option.map arg ~f:(apply_to_ty sub))
+        , apply_to_eff sub eff_rest )
+  | Eff_total as eff ->
+      eff
 
-let apply_to_ty sub =
+and apply_to_ty sub =
   let rec helper = function
     | Ty.Ty_var var as ty -> (
       match Map.find sub var with
