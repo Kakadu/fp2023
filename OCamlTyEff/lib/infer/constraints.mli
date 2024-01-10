@@ -6,9 +6,16 @@ open! Base
 open Types
 
 module Constr : sig
+  type unify_eff =
+    | Unify_eff  (** Unify effects in types *)
+    | Dont_unify_eff  (** Do not unify effects in types *)
+
   type t =
-    | TyEqConstr of Ty.t * Ty.t
-        (** [TyEqConstr(t1, t2)] reflects that t1 and t2 should be unified *)
+    | TyEqConstr of Ty.t * Ty.t * unify_eff
+        (**
+          [TyEqConstr(t1, t2, unify_eff)] reflects that t1 and t2 should be unified.
+          [unify_eff] specifies if effects in t1 and t2 should be unified
+        *)
     | EffEqConstr of Eff.t * Eff.t
         (** [EffEqConstr(eff1, eff2)] reflects that eff1 and eff2 should be unified *)
     | ExplInstConstr of Ty.t * Scheme.t

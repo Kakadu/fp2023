@@ -90,23 +90,29 @@ module Unify = struct
         fail @@ UnificationFailEff (eff1, eff2)
 
   let occurs_check_ty var ty = VarSet.mem (Ty.vars ty) (Var_ty var)
-  let rec unify ty1 ty2 =
+  let rec unify ty1 ty2 unify_eff_flag =
     match (ty1, ty2) with
     | ty1, ty2 when Ty.equal ty1 ty2 ->
         return Sub.empty
     | Ty.Ty_var var, ty | ty, Ty.Ty_var var ->
         if occurs_check_ty var ty then fail @@ OccursInTy (var, ty)
         else return @@ Sub.singleton_ty var ty
-    | Ty_arr (l1, eff1, r1), Ty_arr (l2, eff2, r2) ->
-        let* sub1 = unify_many [l1; r1] [l2; r2] in
-        let* sub2 =
-          unify_eff (Sub.apply_to_eff sub1 eff1) (Sub.apply_to_eff sub1 eff2)
-        in
-        return @@ Sub.compose sub1 sub2
+    | Ty_arr (l1, eff1, r1), Ty_arr (l2, eff2, r2) -> (
+        let* sub1 = unify_many [l1; r1] [l2; r2] unify_eff_flag in
+        match unify_eff_flag with
+        | Constr.Unify_eff ->
+            let* sub2 =
+              unify_eff
+                (Sub.apply_to_eff sub1 eff1)
+                (Sub.apply_to_eff sub1 eff2)
+            in
+            return @@ Sub.compose sub2 sub1
+        | Dont_unify_eff ->
+            return sub1 )
     | Ty_tuple tys1, Ty_tuple tys2 ->
-        unify_many tys1 tys2
+        unify_many tys1 tys2 unify_eff_flag
     | Ty_con (id1, tys1), Ty_con (id2, tys2) when Ident.equal id1 id2 ->
-        unify_many tys1 tys2
+        unify_many tys1 tys2 unify_eff_flag
     | _ ->
         fail @@ UnificationFailTy (ty1, ty2)
 
@@ -114,16 +120,17 @@ module Unify = struct
     Unifies types from tys1 with types
     on respective positions in tys2
   *)
-  and unify_many tys1 tys2 =
+  and unify_many tys1 tys2 unify_eff_flag =
     match (tys1, tys2) with
     | [], [] ->
         return Sub.empty
     | ty1 :: tys1, ty2 :: tys2 ->
-        let* s1 = unify ty1 ty2 in
+        let* s1 = unify ty1 ty2 unify_eff_flag in
         let* s2 =
           unify_many
             (List.map tys1 ~f:(Sub.apply_to_ty s1))
             (List.map tys2 ~f:(Sub.apply_to_ty s1))
+            unify_eff_flag
         in
         return @@ Sub.compose s2 s1
     | _ ->
@@ -151,7 +158,7 @@ let instantiate (Scheme.Forall (quantified, ty)) =
 
 let activevars =
   let activevars_single = function
-    | Constr.TyEqConstr (ty1, ty2) ->
+    | Constr.TyEqConstr (ty1, ty2, _) ->
         VarSet.union (Ty.vars ty1) (Ty.vars ty2)
     | EffEqConstr (eff1, eff2) ->
         VarSet.union (Eff.vars eff1) (Eff.vars eff2)
@@ -168,15 +175,27 @@ let solve cs =
     let next_solvable =
       ConstrSet.find_map cs ~f:(fun constr ->
           let rest = ConstrSet.remove cs constr in
+          let ok = Some (constr, rest) in
+
+          (* enforce order in which constraints must be solved *)
           match constr with
-          | TyEqConstr (_, _) | EffEqConstr (_, _) | ExplInstConstr (_, _) ->
-              Some (constr, rest)
+          | TyEqConstr (_, _, Unify_eff)
+          | EffEqConstr (_, _)
+          | ExplInstConstr (_, _) ->
+              ok
+          | TyEqConstr (t1, t2, Dont_unify_eff)
+          (* solve after all other eq constraints on `t1` & `t2` are solved *)
+            when VarSet.is_empty
+                 @@ VarSet.inter (activevars rest)
+                      (VarSet.union (Ty.vars t1) (Ty.vars t2)) ->
+              ok
           | ImplInstConstr (_, mset, t2)
+          (* solve after all eq constraints on `t2` are solved *)
             when VarSet.is_empty
                  @@ VarSet.inter (activevars rest)
                       (VarSet.diff (Ty.vars t2) mset) ->
-              Some (constr, rest)
-          | ImplInstConstr (_, _, _) ->
+              ok
+          | TyEqConstr (_, _, _) | ImplInstConstr (_, _, _) ->
               None )
     in
     match next_solvable with
@@ -185,8 +204,8 @@ let solve cs =
         return Sub.empty
     | Some constr -> (
       match constr with
-      | TyEqConstr (t1, t2), cs ->
-          let* s1 = Unify.unify t1 t2 in
+      | TyEqConstr (t1, t2, unify_eff_flag), cs ->
+          let* s1 = Unify.unify t1 t2 unify_eff_flag in
           let* s2 = solve' (Sub.apply_to_constrs s1 cs) in
           return @@ Sub.compose s2 s1
       | EffEqConstr (eff1, eff2), cs ->
@@ -197,6 +216,6 @@ let solve cs =
           solve' @@ ConstrSet.add cs (ExplInstConstr (t1, generalize mset t2))
       | ExplInstConstr (ty, sc), cs ->
           let* ty' = instantiate sc in
-          solve' @@ ConstrSet.add cs (TyEqConstr (ty, ty')) )
+          solve' @@ ConstrSet.add cs (TyEqConstr (ty, ty', Unify_eff)) )
   in
   SolveMonad.run @@ solve' cs
