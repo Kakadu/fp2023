@@ -18,7 +18,6 @@ let%expect_test _ =
     fun _ -> foo id |} ;
   [%expect
     {|
-    'a 'e. (unit -[console | 'e]-> 'a) -[console | 'e]-> 'a
     foo: 'a 'e. (unit -[console | 'e]-> 'a) -[console | 'e]-> 'a
     'a 'b. 'a -[console, exn]-> 'b
     'a. 'a -[console]-> unit |}]
@@ -47,7 +46,6 @@ let%expect_test _ =
        map print_string |} ;
   [%expect
     {|
-    'a 'b 'e. ('a -'e-> 'b) -'e-> 'a list -'e-> 'b list
     map: 'a 'b 'e. ('a -'e-> 'b) -'e-> 'a list -'e-> 'b list
     'a. 'a list -> 'a list
     string list -[console]-> unit list |}]

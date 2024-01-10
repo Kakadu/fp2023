@@ -12,7 +12,7 @@ let run code =
       List.fold program ~init:StdEnv.env ~f:(fun env_acc str_item ->
           match Infer.infer_structure_item env_acc str_item with
           | Ok (new_env, bounds, sc) ->
-              printf "%a\n" Scheme.pp sc ;
+              Option.iter sc ~f:(printf "%a\n" Scheme.pp) ;
 
               List.iter bounds ~f:(fun bound_var ->
                   let sc = Env.find_exn new_env bound_var in

@@ -213,7 +213,10 @@ let infer_structure_item env str_item =
 
   (* solve constrainsts *)
   let* sub = solve @@ ConstrSet.union gen_cs env_cs in
-  let ty_res = Sub.apply_to_ty sub ty_res in
+  let ty_res_final =
+    Option.map ty_res ~f:(fun ty_res ->
+        close_over @@ Sub.apply_to_ty sub ty_res )
+  in
 
   (* add new bounds to type environment *)
   let new_env =
@@ -222,4 +225,4 @@ let infer_structure_item env str_item =
         Env.set acc ~key:id ~data:(close_over ty) )
   in
 
-  return (new_env, BoundVars.idents bound_vars, close_over ty_res)
+  return (new_env, BoundVars.idents bound_vars, ty_res_final)

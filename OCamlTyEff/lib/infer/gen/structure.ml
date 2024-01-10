@@ -15,7 +15,7 @@ open GenMonad.Let
 let gen = function
   | Str_eval e ->
       let* as_e, ty_e, eff_e = Expr.gen e in
-      return (as_e, Pattern.BoundVars.empty, ty_e, eff_e)
+      return (as_e, Pattern.BoundVars.empty, Some ty_e, eff_e)
   | Str_value (Nonrecursive, bindings) ->
       let* pat, e =
         match bindings with
@@ -30,7 +30,7 @@ let gen = function
 
       let* () = add_constrs [ty_pat == ty_e] in
 
-      return (as_pat ++ as_e, bounds_pat, ty_e, eff_e)
+      return (as_pat ++ as_e, bounds_pat, None, eff_e)
   | Str_value (Recursive, bindings) ->
       let* id, e =
         match bindings with
@@ -56,4 +56,4 @@ let gen = function
       let* var_id = fresh_var in
       let* () = add_constrs [!var_id == ty_e] in
 
-      return (as_e -- [id], Pattern.BoundVars.singleton id var_id, ty_e, eff_e)
+      return (as_e -- [id], Pattern.BoundVars.singleton id var_id, None, eff_e)
