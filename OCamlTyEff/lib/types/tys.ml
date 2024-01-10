@@ -111,6 +111,7 @@ and Ty : sig
   val bool : t
   val char : t
   val string : t
+  val exn : t -> t
 
   val vars : t -> VarSet.t
   (** Type variables occuring in a type *)
@@ -160,6 +161,7 @@ end = struct
   let bool = Ty_con (Ident "bool", [])
   let char = Ty_con (Ident "char", [])
   let string = Ty_con (Ident "string", [])
+  let exn ty = Ty_con (Ident "exception", [ty])
 
   let rec vars = function
     | Ty_var x ->
