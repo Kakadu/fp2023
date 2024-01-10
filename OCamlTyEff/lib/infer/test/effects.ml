@@ -113,3 +113,15 @@ let%expect_test _ =
       'a. 'a -[console, exn _Exc1]-> unit
       'a. 'a -[console, exn _Exc1]-> unit
       unit -[console, exn _Exc1]-> unit |}]
+
+let%expect_test _ =
+  run
+    {|
+    exception My_exc1;;
+    exception My_exc2;;
+    let catch f x = try print_string "hi"; f x with My_exc1 -> 1 | My_exc2 -> 2 | Exc1 -> 0 |} ;
+  [%expect
+    {|
+    My_exc1: _My_exc1 exception
+    My_exc2: _My_exc2 exception
+    catch: 'a 'e. ('a -[exn _My_exc1, exn _My_exc2, exn _Exc1, console | 'e]-> int) -> 'a -[console | 'e]-> int |}]
