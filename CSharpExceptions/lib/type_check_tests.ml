@@ -363,8 +363,7 @@ let%expect_test "Access check" =
 |}
   in
   check_stand s;
-  [%expect
-    {| Type_check error: (Access_error "Attempt to get a private class member\n") |}]
+  [%expect {| Type_check error: (Access_error "Attempt to get a private class member") |}]
 ;;
 
 let%expect_test "Throw some class" =
@@ -386,8 +385,7 @@ let%expect_test "Throw some class" =
 |}
   in
   check_stand s;
-  [%expect
-    {| Type_check error: (Other_error "throw can be used only with exceptions\n") |}]
+  [%expect {| Type_check error: (Other_error "throw can be used only with exceptions") |}]
 ;;
 
 let%expect_test "FileInfo_decl" =
