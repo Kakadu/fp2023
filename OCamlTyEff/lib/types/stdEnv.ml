@@ -44,7 +44,7 @@ let env_constructors =
   ; (id "::", single_var (tuple [alpha; alpha_list] @> alpha_list)) ]
 
 (* ======= Built-in exceptions ======= *)
-let exn_ty name = Ty.Ty_con (id "exception", [Ty.Ty_con (id @@ "_" ^ name, [])])
+let exn_ty name = Ty.exn (Ty.Ty_con (id @@ "_" ^ name, []))
 let env_exceptions =
   [(id "Exc1", no_vars @@ exn_ty "Exc1"); (id "Exc2", no_vars @@ exn_ty "Exc2")]
 
@@ -57,10 +57,8 @@ let env_functions =
   ; ( id "raise"
     , Scheme.Forall
         ( VarSet.of_list [Var_ty (Var "a"); Var_ty (Var "b")]
-        , Ty_arr
-            ( Ty_con (id "exception", [alpha])
-            , single_eff @@ Eff.Label.exn @@ var "a"
-            , var "b" ) ) ) ]
+        , Ty_arr (Ty.exn alpha, single_eff @@ Eff.Label.exn @@ var "a", var "b")
+        ) ) ]
 
 let env =
   List.concat [env_arith; env_constructors; env_exceptions; env_functions]

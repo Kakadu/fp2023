@@ -219,6 +219,29 @@ let rec gen : expression -> (As.t * Ty.t * Eff.t) GenMonad.t = function
       in
 
       return (as_e ++ as_cases, ty_res, eff_e)
+  | Exp_try (e, cases) ->
+      let* as_e, ty_e, eff_e = gen e in
+      let* eff_res = fresh_eff in
+
+      let* as_cases, eff =
+        GenMonad.List.fold_right cases ~init:(As.empty, eff_res)
+          ~f:(fun {left= pat; right= e_rhs} (as_acc, eff_acc) ->
+            let* as_pat, _, ty_pat = Pattern.gen pat in
+            let* as_rhs, ty_rhs, eff_rhs = gen e_rhs in
+
+            let* exn_type = fresh_var >>| ( ! ) in
+            let* () =
+              add_constrs
+                [ty_rhs == ty_e; ty_pat == Ty.exn exn_type; eff_rhs === eff_res]
+            in
+
+            return
+              ( as_acc ++ as_pat ++ as_rhs
+              , Eff.Eff_row (Eff.Label.exn exn_type, eff_acc) ) )
+      in
+      let* () = add_constrs [eff_e === eff] in
+
+      return (as_e ++ as_cases, ty_e, eff_res)
   | Exp_function cases ->
       let* ty_arg = fresh_var >>| ( ! ) in
 

@@ -74,3 +74,42 @@ let%expect_test _ =
 let%expect_test _ =
   run {| function 1 -> raise Exc1 | 2 -> raise Exc2 | _ -> 0 |} ;
   [%expect {| int -[exn _Exc2, exn _Exc1]-> int |}]
+
+let%expect_test _ =
+  run
+    {|
+    let catch_exc1 f x = try f x with Exc1 -> ();;
+
+    let f1 _ = raise Exc1;;
+    catch_exc1 f1;;
+
+    let f2 = function 1 -> raise Exc1 | 2 -> raise Exc2 | _ -> ();;
+    catch_exc1 f2;;
+
+    catch_exc1 print_string;;
+    fun _ -> catch_exc1 raise Exc1
+    |} ;
+  [%expect
+    {|
+    catch_exc1: 'a 'e. ('a -[exn _Exc1 | 'e]-> unit) -> 'a -'e-> unit
+    f1: 'a 'b. 'a -[exn _Exc1]-> 'b
+    'a. 'a -> unit
+    f2: int -[exn _Exc2, exn _Exc1]-> unit
+    int -[exn _Exc2]-> unit
+    string -[console]-> unit
+    'a. 'a -[exn _Exc1]-> unit |}]
+
+let%expect_test _ =
+  run
+    {|
+    let catch f x = try f x with Exc1 -> raise Exc1 | Exc2 -> print_string "exc2";;
+
+    catch (fun _ -> raise Exc1; raise Exc2);;
+    catch (fun _ -> raise Exc1);;
+    catch id |} ;
+  [%expect
+    {|
+      catch: 'a 'e. ('a -[exn _Exc1, exn _Exc2, console, exn _Exc1 | 'e]-> unit) -> 'a -[console, exn _Exc1 | 'e]-> unit
+      'a. 'a -[console, exn _Exc1]-> unit
+      'a. 'a -[console, exn _Exc1]-> unit
+      unit -[console, exn _Exc1]-> unit |}]
