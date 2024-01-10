@@ -76,3 +76,12 @@
   > EOF
   "f": 12
   "n": <fun>
+  $ dune exec demoInterpret << EOF
+  > type node = | Red of int | Black of int
+  > let is_black = fun x -> match x with | Black _ -> true | Red _ -> false
+  > let a = is_black (Black 52)
+  > let b = is_black (Red 52)
+  > EOF
+  "a": true
+  "b": false
+  "is_black": <fun>

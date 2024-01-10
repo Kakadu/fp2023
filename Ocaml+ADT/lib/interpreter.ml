@@ -71,8 +71,9 @@ end = struct
 
   and match_case pattern value =
     match pattern, value with
-    | PAdt (UName p_name, p_pattern), VAdt (v_name, v_pattern) when p_name = v_name ->
-      match_pattern p_pattern v_pattern
+    | PAdt (UName p_name, Some p_pattern), VAdt (v_name, Some v_pattern)
+      when p_name = v_name -> match_pattern p_pattern v_pattern
+    | PAdt (UName p_name, None), VAdt (v_name, None) when p_name = v_name -> return []
     | _ -> fail PatternMatchingError
 
   and match_pattern pattern value =
@@ -88,7 +89,14 @@ end = struct
     | _ -> fail PatternMatchingError
   ;;
 
-  let rec check_pattern_matching pattern value =
+  let rec check_case pattern value =
+    match pattern, value with
+    | PAdt (UName p_name, Some p_pattern), VAdt (v_name, Some v_pattern)
+      when p_name = v_name -> check_pattern_matching p_pattern v_pattern
+    | PAdt (UName p_name, None), VAdt (v_name, None) when p_name = v_name -> true
+    | _ -> false
+
+  and check_pattern_matching pattern value =
     match pattern, value with
     | PNill, VList [] | PWild, _ -> true
     | PString str1, VString str2 when str1 = str2 -> true
@@ -103,8 +111,7 @@ end = struct
        | ph :: ptl, th :: ttl ->
          check_pattern_matching ph th && check_pattern_matching (PTuple ptl) (VTuple ttl)
        | _ -> false)
-    | PAdt (UName p_name, p_pattern), VAdt (v_name, v_pattern) when p_name = v_name ->
-      check_pattern_matching p_pattern v_pattern
+    | PAdt _, VAdt _ -> check_case pattern value
     | _ -> false
   ;;
 
@@ -177,11 +184,12 @@ end = struct
   and exec_fun pattern decl_exp env = return @@ vfun pattern decl_exp env
 
   and exec_constr constr exp1 env =
-    match constr with
-    | UName constr ->
+    match constr, exp1 with
+    | UName constr, Some exp1 ->
       let* val1 = exec exp1 env in
-      return @@ vadt constr val1
-    | LName _ -> fail @@ ExprTypeError "unexpected LName"
+      return @@ vadt constr (Some val1)
+    | UName constr, None -> return @@ vadt constr None
+    | LName _, _ -> fail @@ ExprTypeError "unexpected LName"
 
   and exec_let let_decl exp1 env =
     let _, decl_name, _, decl_exp = let_decl in

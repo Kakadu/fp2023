@@ -121,19 +121,14 @@ let prbool = check_chunk "true" *> return true <|> check_chunk "false" *> return
 let premptylist = check_chunk "[]" *> return true
 
 let prvarname =
-  pos
-  >>= fun col ->
   pchunk
     (take_while (fun ch -> is_uchar ch || is_digit ch)
      >>= function
      | "" ->
        take_while1 (fun ch ->
          is_wildcard ch || is_apostrophe ch || is_char ch || is_digit ch)
-       >>= fun str ->
-       if is_keyword str
-       then fail @@ "invalid var name" ^ Int.to_string col
-       else return str
-     | _ -> fail @@ "invalid var name" ^ Int.to_string col)
+       >>= fun str -> if is_keyword str then fail @@ "invalid var name" else return str
+     | _ -> fail @@ "invalid var name")
 ;;
 
 let prconstrname =
@@ -192,7 +187,8 @@ let ppcase pp =
   @@ fun ppcase ->
   uname
   <$> prconstrname
-  >>= fun name -> ppcase <|> pp >>= fun exp -> return (padt name exp)
+  >>= fun name ->
+  ppcase <|> pp >>= fun exp -> return (padt name (Some exp)) <|> return (padt name None)
 ;;
 
 let pptuple pp =
@@ -280,10 +276,12 @@ let pfematch pfe =
 let pfeapp pfe = chainl1 pfe (return (fun exp1 exp2 -> eapp exp1 exp2))
 
 let pfeconstr pfe =
+  fix
+  @@ fun pfeconstr ->
   lift2
     (fun decl_name decl_exp -> econstr decl_name decl_exp)
     (uname <$> prconstrname)
-    pfe
+    (pfeconstr <|> pfe >>= (fun exp -> return (Some exp)) <|> return None)
 ;;
 
 (* parse operators *)
@@ -365,8 +363,8 @@ let pdecl =
            (check_chunk "="
             *> (many1
                 @@ totuple
-                     (check_chunk "|" *> (uname <$> prconstrname) <* check_chunk "of")
-                     (dtype <$> (pftype <|> return temptytype))))
+                     (check_chunk "|" *> (uname <$> prconstrname))
+                     (dtype <$> (check_chunk "of" *> pftype <|> return temptytype))))
 ;;
 
 let parse_semicolon = many @@ check_chunk ";;"

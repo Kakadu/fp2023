@@ -74,7 +74,7 @@ type pattern =
   | PVar of decl_name
   | PCons of pattern * pattern
   | PTuple of pattern list
-  | PAdt of decl_name * pattern (* pattern for ADT types: Tree(_, _) *)
+  | PAdt of decl_name * pattern option (* pattern for ADT types: Tree(_, _) *)
 [@@deriving eq, show { with_path = false }]
 
 let pnill = PNill
@@ -102,7 +102,7 @@ and decl_exp =
   | ETuple of decl_exp list
   | EBinop of binop * decl_exp * decl_exp
   | EFun of pattern * decl_exp (* fun n -> n + 1 *)
-  | EConstr of decl_name * decl_exp
+  | EConstr of decl_name * decl_exp option
   | ELet of let_decl * decl_exp
   | EApp of decl_exp * decl_exp
   | EMatch of decl_exp * (pattern * decl_exp) list

@@ -12,7 +12,7 @@ type value =
   | VBool of bool
   | VList of value list
   | VTuple of value list
-  | VAdt of string * value
+  | VAdt of string * value option
   | VFun of pattern * decl_exp * env
   | VLetRec of string * value
 
@@ -43,7 +43,8 @@ and pp_value fmt = function
   | VBool bool -> fprintf fmt "%b" bool
   | VList lst -> fprintf fmt "[%a]" pp_value_list lst
   | VTuple tuple -> fprintf fmt "(%a)" pp_value_tuple tuple
-  | VAdt (type_name, type_value) -> fprintf fmt "%S %a" type_name pp_value type_value
+  | VAdt (type_name, Some type_value) -> fprintf fmt "%S %a" type_name pp_value type_value
+  | VAdt (type_name, None) -> fprintf fmt "%S" type_name
   | VFun (_, _, _) -> fprintf fmt "<fun>"
   | VLetRec (_, _) -> fprintf fmt "<let rec>"
 ;;

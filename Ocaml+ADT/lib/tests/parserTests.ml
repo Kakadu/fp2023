@@ -23,7 +23,7 @@ let ptest str expected =
 (* tests for declaration type parsing *)
 let%test _ =
   ptest
-    "let a : int -> (int -> string) -> int = \"a\""
+    {| let a : int -> (int -> string) -> int = "a" |}
     [ DLet
         ( DRec false
         , LName "a"
@@ -34,19 +34,19 @@ let%test _ =
 
 let%test _ =
   ptest
-    "let a : int list  = \"a\""
+    {| let a : int list  = "a" |}
     [ DLet (DRec false, LName "a", DType (TList TInt), EString "a") ]
 ;;
 
 let%test _ =
   ptest
-    "let rec abc : ((int list) list) list = \"a\""
+    {| let rec abc : ((int list) list) list = "a" |}
     [ DLet (DRec true, LName "abc", DType (TList (TList (TList TInt))), EString "a") ]
 ;;
 
 let%test _ =
   ptest
-    "let rec abc : int -> (int -> (int -> int)) -> int = \"a\""
+    {| let rec abc : int -> (int -> (int -> int)) -> int = "a" |}
     [ DLet
         ( DRec true
         , LName "abc"
@@ -57,14 +57,14 @@ let%test _ =
 
 let%test _ =
   ptest
-    "let aBC:  (string * int) list = \"a\""
+    {| let aBC:  (string * int) list = "a" |}
     [ DLet (DRec false, LName "aBC", DType (TList (TTuple [ TString; TInt ])), EString "a")
     ]
 ;;
 
 let%test _ =
   ptest
-    "let aBC: (int list * (string -> int)) list = \"a\""
+    {| let aBC: (int list * (string -> int)) list = "a" |}
     [ DLet
         ( DRec false
         , LName "aBC"
@@ -75,7 +75,7 @@ let%test _ =
 
 let%test _ =
   ptest
-    "let aBC: (int list * string * a) -> string list = \"a\""
+    {| let aBC: (int list * string * a) -> string list = "a" |}
     [ DLet
         ( DRec false
         , LName "aBC"
@@ -86,7 +86,7 @@ let%test _ =
 
 let%test _ =
   ptest
-    "let aBC: (int list * string * a) -> string list = \"a\""
+    {| let aBC: (int list * string * a) -> string list = "a" |}
     [ DLet
         ( DRec false
         , LName "aBC"
@@ -97,7 +97,7 @@ let%test _ =
 
 let%test _ =
   ptest
-    "let aBC: ((int list -> int) * string * (int * int)) -> string list = \"a\""
+    {| let aBC: ((int list -> int) * string * (int * int)) -> string list = "a" |}
     [ DLet
         ( DRec false
         , LName "aBC"
@@ -112,7 +112,7 @@ let%test _ =
 (* tests for expression type parsing *)
 let%test _ =
   ptest
-    "let aBC: (int list) list = fun a b -> 5"
+    {| let aBC: (int list) list = fun a b -> 5 |}
     [ DLet
         ( DRec false
         , LName "aBC"
@@ -123,7 +123,7 @@ let%test _ =
 
 let%test _ =
   ptest
-    "let aBC: (int list) list = let b: string = 5 in 5"
+    {| let aBC: (int list) list = let b: string = 5 in 5 |}
     [ DLet
         ( DRec false
         , LName "aBC"
@@ -134,7 +134,7 @@ let%test _ =
 
 let%test _ =
   ptest
-    "let aBC: int -> int = let b: int -> int = fun x -> x in b"
+    {| let aBC: int -> int = let b: int -> int = fun x -> x in b |}
     [ DLet
         ( DRec false
         , LName "aBC"
@@ -150,7 +150,7 @@ let%test _ =
 
 let%test _ =
   ptest
-    "let aBC: int -> int = let b: int -> int = fun x -> (let summ: int = 5 in b) in c"
+    {| let aBC: int -> int = let b: int -> int = fun x -> (let summ: int = 5 in b) in c |}
     [ DLet
         ( DRec false
         , LName "aBC"
@@ -169,7 +169,7 @@ let%test _ =
 
 let%test _ =
   ptest
-    "let aBC: int = fun n -> if n then 5 else 0"
+    {| let aBC: int = fun n -> if n then 5 else 0 |}
     [ DLet
         ( DRec false
         , LName "aBC"
@@ -180,7 +180,7 @@ let%test _ =
 
 let%test _ =
   ptest
-    "let aBC: int = fun n -> if 2 - n * (1 - 1 * 3 + 1)  then 5 else 0"
+    {| let aBC: int = fun n -> if 2 - n * (1 - 1 * 3 + 1)  then 5 else 0 |}
     [ DLet
         ( DRec false
         , LName "aBC"
@@ -205,7 +205,7 @@ let%test _ =
 
 let%test _ =
   ptest
-    "let aBC: int -> int = f n e"
+    {| let aBC: int -> int = f n e |}
     [ DLet
         ( DRec false
         , LName "aBC"
@@ -216,7 +216,7 @@ let%test _ =
 
 let%test _ =
   ptest
-    "let x = fun x -> if true then if true then 1 else 2 else 3"
+    {| let x = fun x -> if true then if true then 1 else 2 else 3 |}
     [ DLet
         ( DRec false
         , LName "x"
@@ -230,8 +230,7 @@ let%test _ =
 (* test for factorial *)
 let%test _ =
   ptest
-    "let rec factorial_recursive = fun n -> if n <= 1 then 1 else n * \
-     factorial_recursive (n - 1)"
+    {| let rec factorial_recursive = fun n -> if n <= 1 then 1 else n * factorial_recursive (n - 1) |}
     [ DLet
         ( DRec true
         , LName "factorial_recursive"
@@ -252,8 +251,8 @@ let%test _ =
 
 let%test _ =
   ptest
-    "let rec fix = fun f -> (fun x -> f (fix f) x)\n\n\
-    \    let fac = fix (fun self -> (fun n -> if n <= 1 then 1 else n * self (n - 1)))"
+    {| let rec fix = fun f -> (fun x -> f (fix f) x)
+       let fac = fix (fun self -> (fun n -> if n <= 1 then 1 else n * self (n - 1))) |}
     [ DLet
         ( DRec true
         , LName "fix"
@@ -289,8 +288,7 @@ let%test _ =
 
 let%test _ =
   ptest
-    "let a: int -> bool = fun x -> match x with | [] :: [] -> (f n) | a ->  false | _ -> \
-     true"
+    {| let a: int -> bool = fun x -> match x with | [] :: [] -> (f n) | a ->  false | _ -> true |}
     [ DLet
         ( DRec false
         , LName "a"
@@ -308,8 +306,7 @@ let%test _ =
 
 let%test _ =
   ptest
-    "let a: int -> bool = fun x -> match x with | _ :: [] -> (f n) | a ->  false | _ -> \
-     true"
+    {| let a: int -> bool = fun x -> match x with | _ :: [] -> (f n) | a ->  false | _ -> true |}
     [ DLet
         ( DRec false
         , LName "a"
@@ -327,13 +324,13 @@ let%test _ =
 
 let%test _ =
   ptest
-    "type a = | AZAZA of string"
+    {| type a = | AZAZA of string |}
     [ DType (LName "a", [ UName "AZAZA", DType TString ]) ]
 ;;
 
 let%test _ =
   ptest
-    "type a = | AZAZA of string | ABABA of int | ACACA of int"
+    {| type a = | AZAZA of string | ABABA of int | ACACA of int |}
     [ DType
         ( LName "a"
         , [ UName "AZAZA", DType TString
@@ -345,15 +342,41 @@ let%test _ =
 
 let%test _ =
   ptest
-    "type a = | Azaza of string -> string\n  ;;\n  let a: int = 5"
+    {| type a = | Azaza of string -> string
+       let b: int = 5 |}
     [ DType (LName "a", [ UName "Azaza", DType (TFun (TString, TString)) ])
-    ; DLet (DRec false, LName "a", DType TInt, EInt 5)
+    ; DLet (DRec false, LName "b", DType TInt, EInt 5)
     ]
 ;;
 
 let%test _ =
   ptest
-    "let a: int -> bool = fun x -> match x with | Tepa Kuka 46 -> true"
+    {| type node = | Red of int | Black of int
+       let is_black = fun x -> match x with | Black _ -> true | Red _ -> false
+       let a = is_black (Black 5) |}
+    [ DType (LName "node", [ UName "Red", DType TInt; UName "Black", DType TInt ])
+    ; DLet
+        ( DRec false
+        , LName "is_black"
+        , DType TEmptyType
+        , EFun
+            ( PVar (LName "x")
+            , EMatch
+                ( EVar (LName "x")
+                , [ PAdt (UName "Black", Some PWild), EBool true
+                  ; PAdt (UName "Red", Some PWild), EBool false
+                  ] ) ) )
+    ; DLet
+        ( DRec false
+        , LName "a"
+        , DType TEmptyType
+        , EApp (EVar (LName "is_black"), EConstr (UName "Black", Some (EInt 5))) )
+    ]
+;;
+
+let%test _ =
+  ptest
+    {| let a: int -> bool = fun x -> match x with | Tepa Kuka 46 -> true |}
     [ DLet
         ( DRec false
         , LName "a"
@@ -362,13 +385,15 @@ let%test _ =
             ( PVar (LName "x")
             , EMatch
                 ( EVar (LName "x")
-                , [ PAdt (UName "Tepa", PAdt (UName "Kuka", PInt 46)), EBool true ] ) ) )
+                , [ ( PAdt (UName "Tepa", Some (PAdt (UName "Kuka", Some (PInt 46))))
+                    , EBool true )
+                  ] ) ) )
     ]
 ;;
 
 let%test _ =
   ptest
-    "let a: int -> bool = fun x -> match x with | (a, b, c, d) -> true"
+    {| let a: int -> bool = fun x -> match x with | (a, b, c, d) -> true |}
     [ DLet
         ( DRec false
         , LName "a"
@@ -390,7 +415,7 @@ let%test _ =
 
 let%test _ =
   ptest
-    "let aBC: int = fun n -> if n then 5 else (0, 1, 2, 3)"
+    {| let aBC: int = fun n -> if n then 5 else (0, 1, 2, 3) |}
     [ DLet
         ( DRec false
         , LName "aBC"
@@ -404,32 +429,36 @@ let%test _ =
 
 let%test _ =
   ptest
-    "let aBC: int -> int = F 5"
-    [ DLet
-        (DRec false, LName "aBC", DType (TFun (TInt, TInt)), EConstr (UName "F", EInt 5))
-    ]
-;;
-
-let%test _ =
-  ptest
-    "let aBC: int -> int = F (5, 4, 3, 2)"
+    {| let aBC: int -> int = F 5 |}
     [ DLet
         ( DRec false
         , LName "aBC"
         , DType (TFun (TInt, TInt))
-        , EConstr (UName "F", ETuple [ EInt 5; EInt 4; EInt 3; EInt 2 ]) )
+        , EConstr (UName "F", Some (EInt 5)) )
     ]
 ;;
 
 let%test _ =
   ptest
-    "let n = fun x -> 5"
+    {| let aBC: int -> int = F (5, 4, 3, 2) |}
+    [ DLet
+        ( DRec false
+        , LName "aBC"
+        , DType (TFun (TInt, TInt))
+        , EConstr (UName "F", Some (ETuple [ EInt 5; EInt 4; EInt 3; EInt 2 ])) )
+    ]
+;;
+
+let%test _ =
+  ptest
+    {| let n = fun x -> 5 |}
     [ DLet (DRec false, LName "n", DType TEmptyType, EFun (PVar (LName "x"), EInt 5)) ]
 ;;
 
 let%test _ =
   ptest
-    "let n = fun x -> x+ 5\n    let a = n 5"
+    {| let n = fun x -> x+ 5
+       let a = n 5 |}
     [ DLet
         ( DRec false
         , LName "n"
@@ -441,7 +470,8 @@ let%test _ =
 
 let%test _ =
   ptest
-    "let n = fun y -> (let x = 5 in x + y)\n let f = n 7"
+    {| let n = fun y -> (let x = 5 in x + y)
+       let f = n 7 |}
     [ DLet
         ( DRec false
         , LName "n"
@@ -457,7 +487,8 @@ let%test _ =
 
 let%test _ =
   ptest
-    "let n = fun y -> if y > 7 then 5 else 3\n let f = n 7"
+    {| let n = fun y -> if y > 7 then 5 else 3
+       let f = n 7 |}
     [ DLet
         ( DRec false
         , LName "n"
@@ -471,7 +502,8 @@ let%test _ =
 
 let%test _ =
   ptest
-    "let a = fun h :: tl -> h\n let n = a (4 :: 5 :: 6 :: [])"
+    {| let a = fun h :: tl -> h
+       let n = a (4 :: 5 :: 6 :: []) |}
     [ DLet
         ( DRec false
         , LName "a"
@@ -485,6 +517,46 @@ let%test _ =
             ( EVar (LName "a")
             , EBinop
                 (Cons, EInt 4, EBinop (Cons, EInt 5, EBinop (Cons, EInt 6, EEmptyList)))
+            ) )
+    ]
+;;
+
+let%test _ =
+  ptest {| type a = | Apple |} [ DType (LName "a", [ UName "Apple", DType TEmptyType ]) ]
+;;
+
+let%test _ =
+  ptest
+    {| type color = | White | Green | Yellow | Blue | Red | Black
+       type eatable = | Yes | No 
+       type thing = | Apple of color * eatable | Chair of color * eatable | Potato of color * eatable
+       let a = Apple (Yellow, Yes) |}
+    [ DType
+        ( LName "color"
+        , [ UName "White", DType TEmptyType
+          ; UName "Green", DType TEmptyType
+          ; UName "Yellow", DType TEmptyType
+          ; UName "Blue", DType TEmptyType
+          ; UName "Red", DType TEmptyType
+          ; UName "Black", DType TEmptyType
+          ] )
+    ; DType
+        (LName "eatable", [ UName "Yes", DType TEmptyType; UName "No", DType TEmptyType ])
+    ; DType
+        ( LName "thing"
+        , [ UName "Apple", DType (TTuple [ TVar (LName "color"); TVar (LName "eatable") ])
+          ; UName "Chair", DType (TTuple [ TVar (LName "color"); TVar (LName "eatable") ])
+          ; ( UName "Potato"
+            , DType (TTuple [ TVar (LName "color"); TVar (LName "eatable") ]) )
+          ] )
+    ; DLet
+        ( DRec false
+        , LName "a"
+        , DType TEmptyType
+        , EConstr
+            ( UName "Apple"
+            , Some
+                (ETuple [ EConstr (UName "Yellow", None); EConstr (UName "Yes", None) ])
             ) )
     ]
 ;;
