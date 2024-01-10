@@ -88,6 +88,7 @@ let is_keyword = function
   | "in"
   | "let"
   | "match"
+  | "try"
   | "rec"
   | "then"
   | "true"

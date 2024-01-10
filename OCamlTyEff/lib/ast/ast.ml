@@ -63,6 +63,8 @@ and expression =
       (** [Exp_apply(E0, E1)] represents [E0 E1] *)
   | Exp_match of expression * case list
       (** [match E0 with P1 -> E1 | ... | Pn -> En]. Invariant: [n >= 1] *)
+  | Exp_try of expression * case list
+      (** [try E0 with P1 -> E1 | ... | Pn -> En]. Invariant: [n >= 1] *)
   | Exp_tuple of expression list
       (** Expressions [(E1, ..., En)]. Invariant: [n >= 2] *)
   | Exp_construct of Ident.t * expression option
