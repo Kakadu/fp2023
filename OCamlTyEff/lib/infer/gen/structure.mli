@@ -10,4 +10,4 @@ open Common
 
 val gen :
      structure_item
-  -> (Assumptions.t * Pattern.BoundVars.t * Ty.t * Eff.t) GenMonad.t
+  -> (Assumptions.t * Pattern.BoundVars.t * Ty.t option * Eff.t) GenMonad.t

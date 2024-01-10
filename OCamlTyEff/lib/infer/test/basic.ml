@@ -158,7 +158,6 @@ let%expect_test _ =
 let%expect_test _ =
   run {| let rec fact n = if n < 2 then 1 else n * fact (n - 1)  |} ;
   [%expect {|
-    int -> int
     fact: int -> int |}]
 
 let%expect_test _ =
@@ -181,14 +180,12 @@ let%expect_test _ =
 
 let%expect_test _ =
   run {| let f x = x |} ; [%expect {|
-    'a. 'a -> 'a
     f: 'a. 'a -> 'a |}]
 
 let%expect_test _ =
   run {| let id1, id2 = id, id |} ;
   [%expect
     {|
-    'a 'b. ('a -> 'a) * ('b -> 'b)
     id1: 'a. 'a -> 'a
     id2: 'a. 'a -> 'a |}]
 
@@ -200,7 +197,6 @@ let%expect_test _ =
 let%expect_test _ =
   run {| let Some x = Some id |} ;
   [%expect {|
-    'a. ('a -> 'a) option
     x: 'a. 'a -> 'a |}]
 
 let%expect_test _ =
@@ -210,13 +206,11 @@ let%expect_test _ =
 let%expect_test _ =
   run {| let [a; b] = [(1,2); (3,4)] |} ;
   [%expect {|
-    (int * int) list
     a: int * int
     b: int * int |}]
 
 let%expect_test _ =
   run {| let [Some(a, b)] = [Some(1,2)] |} ;
   [%expect {|
-    (int * int) option list
     a: int
     b: int |}]

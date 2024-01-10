@@ -17,7 +17,7 @@ val gen :
      structure_item
   -> ( Assumptions.t
        * BoundVars.t
-       * Ty.t
+       * Ty.t option
        * Eff.t
        * ConstrSet.t
        * ConArityAssumpt.t
