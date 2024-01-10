@@ -3,6 +3,7 @@
 (** SPDX-License-Identifier: MIT *)
 
 open! Base
+open Tys
 open Ast
 
 (** Type environment. Maps identifiers to types *)
