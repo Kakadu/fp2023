@@ -111,7 +111,9 @@ and Ty : sig
   val bool : t
   val char : t
   val string : t
+
   val exn : t -> t
+  (** Construct exception type. E.g. [_Exc1 exception] *)
 
   val vars : t -> VarSet.t
   (** Type variables occuring in a type *)

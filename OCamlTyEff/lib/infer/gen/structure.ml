@@ -4,6 +4,7 @@
 
 open! Base
 open Ast
+open Types
 open Constraints
 
 open Common
@@ -17,6 +18,14 @@ let gen = function
   | Str_eval e ->
       let* as_e, ty_e, eff_e = Expr.gen e in
       return (as_e, Pattern.BoundVars.empty, Some ty_e, eff_e)
+  | Str_exception (Ident name as id) ->
+      let* var_exn = fresh_var in
+      let* () =
+        add_constrs [!var_exn == Ty.exn (Ty_con (Ident ("_" ^ name), []))]
+      in
+
+      let* eff = fresh_eff in
+      return (As.empty, Pattern.BoundVars.singleton id var_exn, None, eff)
   | Str_value (Nonrecursive, bindings) ->
       let* pat, e =
         match bindings with
