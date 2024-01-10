@@ -84,6 +84,7 @@ type structure = structure_item list [@@deriving show {with_path= false}]
 
 and structure_item =
   | Str_eval of expression  (** [E] *)
+  | Str_exception of Ident.t  (** [exception Some_exc] *)
   | Str_value of rec_flag * value_binding list
       (** [Str_value(flag, [(P1, E1) ; ... ; (Pn, En)])] represents:
           - [let P1 = E1 and ... and Pn = EN]      when [flag] is [Nonrecursive]

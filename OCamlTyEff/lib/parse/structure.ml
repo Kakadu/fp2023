@@ -17,6 +17,11 @@ let parse_str_let =
   parse_let_binding parse_expression parse_pattern
   >>| fun (rec_flag, bindings) -> Str_value (rec_flag, bindings)
 
+(** [exception Some_exc] *)
+let parse_str_exception =
+  ws *> string "exception" *> ws *> parse_capitalized_ident
+  >>| fun name -> Str_exception (Ident name)
+
 let parse_structure : structure t =
   let parse_structure_item =
     (*
@@ -26,6 +31,9 @@ let parse_structure : structure t =
 
        we probably should use lookahead to check for `in`
     *)
-    parse_expression >>| (fun e -> Str_eval e) <|> parse_str_let
+    choice
+      [ (parse_expression >>| fun e -> Str_eval e)
+      ; parse_str_let
+      ; parse_str_exception ]
   in
   sep_by (ws *> option () (string ";;" *> return ())) parse_structure_item <* ws
