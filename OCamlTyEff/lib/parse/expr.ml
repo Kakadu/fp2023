@@ -70,6 +70,13 @@ let parse_exp_match pexp_match pexp_with =
     (string "match" *> pexp_match)
     (ws *> string "with" *> ws *> parse_match_cases pexp_with)
 
+(** [try E0 with P1 -> E1 | ... | Pn -> En] *)
+let parse_exp_try pexp_try pexp_with =
+  lift2
+    (fun exp cases -> Exp_try (exp, cases))
+    (string "try" *> pexp_try)
+    (ws *> string "with" *> ws *> parse_match_cases pexp_with)
+
 (** [fun P1 ... Pn -> E] *)
 let parse_exp_fun pexp =
   lift2
@@ -192,6 +199,7 @@ let parse_single_exp pexp =
        ; parse_exp_ite (pexp None) (pexp (Some IOpSeq))
          (* disable ; in [then] and [else] blocks to maintain correct precedence *)
        ; parse_exp_match (pexp None) (pexp (Some (IOpCustom (Ident "|"))))
+       ; parse_exp_try (pexp None) (pexp (Some (IOpCustom (Ident "|"))))
          (* disable | in [with] block as it's used as cases separator *) ]
 
 let parse_expression =

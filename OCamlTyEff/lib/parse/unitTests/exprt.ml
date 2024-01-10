@@ -250,3 +250,16 @@ let%expect_test "parse_custom_prefix_op" =
              ))
           ))
        )) |}]
+
+let%expect_test "parse_try" =
+  pp pp_expression parse_expression "try x / y with Division_by_zero -> 0" ;
+  [%expect
+    {|
+    (Exp_try (
+       (Exp_apply (
+          (Exp_apply ((Exp_ident (Ident "/")), (Exp_ident (Ident "x")))),
+          (Exp_ident (Ident "y")))),
+       [{ left = (Pat_construct ((Ident "Division_by_zero"), None));
+          right = (Exp_constant (Const_integer 0)) }
+         ]
+       )) |}]
