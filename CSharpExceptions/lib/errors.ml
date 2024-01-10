@@ -11,10 +11,13 @@ type error =
   | Method_not_find
   | Type_mismatch
   | Double_definition
+  (*  *)
+  | Stack_trace_is_empty
+  | Non_existent_address
+  (*  *)
   | Double_definition_of of ident
   | User_exception of address
   | Access_error of string
   | Other_error of string
-  | Non_existent_address
   | Type_check_error of string
 [@@deriving show { with_path = false }]

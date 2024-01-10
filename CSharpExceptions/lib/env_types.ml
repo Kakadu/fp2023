@@ -25,6 +25,7 @@ module Common_env = struct
 
   type address = Link of int [@@deriving show { with_path = false }]
 
+  let incr_ (Link ad) = Link (ad + 1)
   let ln x = Link x
 
   module MemAddress = struct
@@ -60,21 +61,30 @@ end
 module Eval_env = struct
   open Common_env
 
-  type t_env_value =
-    | ILink_access of address
+  type const =
+    | IClass of address
     | IBase_value of value_
-    | IMethod of method_sign * statement
-    | IConstructor of method_sign * statement
 
-  type t_env_value_opt = t_env_value option
-  type t_loc_env = address * t_env_value_opt IdentMap.t
+  type instructions =
+    | IMethod of method_sign * statement
+    | IConstructor of constructor_sign * statement
+
+  type t_env_value_ =
+    | IConst of const
+    | ICode of instructions
+
+  type t_env_value =
+    | Init of t_env_value_
+    | Not_init
+
+  type t_loc_env = address * t_env_value IdentMap.t
 
   (*  *)
   type t_global_env = text
-  type stack_trace = method_sign list
+  type stack_trace = ST of method_sign list
 
   (*  *)
-  type mem_el = code_ident * (t_env_value_opt * fild_sign) list
+  type mem_el = code_ident * (t_env_value * fild_sign) IdentMap.t
   type memory = address * mem_el MemMap.t
   type interpret_ctx = t_global_env * t_loc_env * memory * stack_trace
 
@@ -88,6 +98,6 @@ module Eval_env = struct
   let nsig x = Next x
   let rsig x = Return x
   let bsig = Break
-  let esig id add = Exn(id, add)
+  let esig id add = Exn (id, add)
   let error err = Error err
 end

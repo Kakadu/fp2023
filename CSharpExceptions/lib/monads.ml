@@ -184,10 +184,11 @@ end
 
 module Eval_Monad = struct
   open Env_types.Eval_env
-  include Base_monad
 
   type ctx_env = interpret_ctx
   type ('a, 'b) t = ctx_env -> ctx_env * ('a, 'b, error) signal
+
+  (* ****************** State-error monad functionality ****************** *)
 
   let return : ('a, 'b, error) signal -> ('a, 'b) t = fun x st -> st, x
   let return_n : 'a -> ('a, 'b) t = fun x st -> st, nsig x
@@ -267,39 +268,153 @@ module Eval_Monad = struct
 
   let run : ('a, 'b) t -> ctx_env * ('a, 'b, error) signal =
     (* TODO: переписать, чтоб получало на вход class с main, и на его основе запускался *)
-    fun f -> f (CodeMap.empty, (ln 0, IdentMap.empty), (ln 0, MemMap.empty), [])
+    fun f -> f (CodeMap.empty, (ln 0, IdentMap.empty), (ln 0, MemMap.empty), ST [])
   ;;
 
-  let ( >>| ) : ('a, 'c) t -> ('a -> 'b) -> ('b, 'c) t =
-    fun x f -> x >>= fun x_res -> return_n (f x_res)
-  ;;
+  let save : ctx_env -> (unit, 'b) t = fun new_ctx _ -> new_ctx, nsig ()
+  let read : (ctx_env, 'c) t = fun st -> (return_n st) st
 
-  let ( *> ) : ('a, 'd) t -> ('b, 'c) t -> ('b, 'c) t =
-    fun a b -> a >>= fun _ -> b >>= fun b1 -> return_n b1
-  ;;
+  (* ****************** Monad extention ****************** *)
 
-  let map_left : ('a -> ('b, 'c) t) -> 'a list -> ('b list, 'c) t =
-    fun custom_f mlst ->
+  let ( >>| ) x f = x >>= fun x_res -> return_n (f x_res)
+  let ( *> ) a b = a >>= fun _ -> b >>= fun b1 -> return_n b1
+
+  let map_left custom_f mlst =
     let f acc cur = acc >>= fun tl -> custom_f cur >>= fun x -> return_n (x :: tl) in
     List.fold_left f (return_n []) mlst >>| List.rev
   ;;
 
-  let iter_left : ('a -> (unit, 'c) t) -> 'a list -> (unit, 'c) t =
-    fun custom_f mlst ->
+  let iter_left custom_f mlst =
     let f acc cur = acc >>= fun _ -> custom_f cur >>= fun _ -> return_n () in
     List.fold_left f (return_n ()) mlst
   ;;
 
-  let save : ctx_env -> (unit, 'b) t = fun new_ctx _ -> new_ctx, nsig ()
+  (* ****************** Memory handling ****************** *)
 
-  let save_local : t_loc_env -> (unit, 'c) t =
-    fun l_env st ->
-    let code, _, mem, trace = st in
-    (code, l_env, mem, trace), nsig ()
+  let save_mem : memory -> (unit, 'c) t =
+    fun mem (code, l_env, _, trace) -> (code, l_env, mem, trace), nsig ()
   ;;
 
-  let read : (ctx_env, 'c) t = fun st -> (return_n st) st
+  let read_mem = read >>| fun (_, _, mem, _) -> mem
+
+  let alloc_instance custom_f decl =
+    let { cl_modif = _; cl_id; parent = _; cl_mems } = decl in
+    let g acc cur =
+      let eval = function
+        | Some e -> custom_f e
+        | None -> return_n Not_init
+      in
+      acc
+      >>= fun tl ->
+      match cur with
+      | Fild (sign, e_opt) ->
+        let { f_modif = _; f_type = _; f_id } = sign in
+        eval e_opt >>| fun v -> IdentMap.add f_id (v, sign) tl
+      | _ -> return_n tl
+    in
+    List.fold_left g (return_n IdentMap.empty) cl_mems
+    >>= fun filds ->
+    read_mem
+    >>= fun (ad, mem) ->
+    let new_mem = MemMap.add ad (Code_ident cl_id, filds) mem in
+    let new_ad = incr_ ad in
+    save_mem (new_ad, new_mem) *> return_n ad
+  ;;
+
+  let read_instance ad =
+    read_mem
+    >>= fun (_, mem) ->
+    match MemMap.find_opt ad mem with
+    | Some el -> return_n el
+    | None -> fail Non_existent_address
+  ;;
+
+  let save_instance ad mem_el =
+    read_mem >>= fun (_, mem) -> save_mem (ad, MemMap.add ad mem_el mem)
+  ;;
+
+  let read_inst_el id ad =
+    read_instance ad
+    >>= fun (_, el) ->
+    match IdentMap.find_opt id el with
+    | Some x -> return_n x
+    | None -> fail (Not_find_ident_of id)
+  ;;
+
+  let save_instance_el id ad v =
+    read_instance ad
+    >>= fun (cl_id, el) ->
+    match IdentMap.find_opt id el with
+    | Some (_, sign) ->
+      let new_ = IdentMap.add id (v, sign) el in
+      save_instance ad (cl_id, new_)
+    | None -> fail (Not_find_ident_of id)
+  ;;
+
+  (* ****************** Global handling ****************** *)
+
+  let read_global : code_ident -> (code_ctx, 'c) t =
+    fun id st ->
+    let (Code_ident id_) = id in
+    let code, _, _, _ = st in
+    match CodeMap.find_opt id code with
+    | Some x -> return_n x st
+    | None -> fail (Not_find_ident_of id_) st
+  ;;
+
+  (* ****************** Local_env handling ****************** *)
+
+  let save_local : t_loc_env -> (unit, 'c) t =
+    fun l_env (code, _, mem, trace) -> (code, l_env, mem, trace), nsig ()
+  ;;
+
   let read_local = read >>| fun (_, l_env, _, _) -> l_env
+
+  let find_local_ id l_env =
+    match IdentMap.find_opt id l_env with
+    | Some x -> return_n x
+    | None -> fail (Other_error "Just for skip")
+  ;;
+
+  let find_self_ id ad = read_inst_el id ad >>| fun (v, _) -> v
+
+  let read_local_el id =
+    read_local >>= fun (ad, l_env) -> find_local_ id l_env <|> find_self_ id ad
+  ;;
+
+  let save_local_el id v =
+    read_local
+    >>= fun (ad, l_env) ->
+    let s_local =
+      let new_l_env = IdentMap.add id v l_env in
+      find_local_ id l_env *> save_local (ad, new_l_env)
+    in
+    let s_self = save_instance_el id ad v in
+    s_local <|> s_self
+  ;;
+
+  (* ****************** Stack trace handling ****************** *)
+
+  let read_stack_trace : (stack_trace, 'c) t = read >>| fun (_, _, _, trace) -> trace
+
+  let save_stack_trace : stack_trace -> (unit, 'c) t =
+    fun trace (code, l_env, mem, _) -> (code, l_env, mem, trace), nsig ()
+  ;;
+
+  let add_stack_trace_el : method_sign -> (unit, 'c) t =
+    fun msign ->
+    read_stack_trace >>| (fun (ST tl) -> ST (msign :: tl)) >>= save_stack_trace
+  ;;
+
+  let remove_stack_trace_el : (unit, 'c) t =
+    read_stack_trace
+    >>= (function
+           | ST [] -> fail Stack_trace_is_empty
+           | ST (_ :: tl) -> return_n (ST tl))
+    >>= save_stack_trace
+  ;;
+
+  (* ****************** -_- ****************** *)
 
   let local_with loc_ f =
     loc_
@@ -316,5 +431,7 @@ module Eval_Monad = struct
 
   let local f = local_with read_local f
 
-  (* TODO: return from method *)
+  (* TODO: Сделать функцию, которая запускает метод, делая под капото изменение локального контекста + ловит return !правильно! *)
+
+  (* TODO: для try local должен и память ловить если что *)
 end
