@@ -13,6 +13,7 @@ module Label : sig
   val sexp_of_t : t -> Sexp.t
 
   val console : t
+  val exn : t
 end
 
 type t =

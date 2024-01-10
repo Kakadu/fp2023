@@ -13,6 +13,7 @@ module Label = struct
         fprintf ppf "%s %s" name arg
 
   let console = Label (Ident "console", None)
+  let exn = Label (Ident "exn", None)
 end
 
 type t = Eff_var of Var.t | Eff_total | Eff_row of Label.t * t
