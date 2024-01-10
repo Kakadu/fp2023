@@ -186,8 +186,10 @@ let p_kvar_type = p_keyword_type >>= fun x -> return (TVar x)
 
 let p_method_type =
   choice
-    ?failure_msg:(Some "Not a method_type")
-    [ (p_keyword_type >>= fun x -> return (TReturn x)); "void" #~> Void ]
+    [ (p_keyword_type >>= fun x -> return (TReturn x))
+    ; "void" #~> Void
+    ; (p_ident >>| fun x -> TReturn (TNullable (TClass x)))
+    ]
 ;;
 
 let ep_spaces prs = skip_spaces *> prs

@@ -341,6 +341,16 @@ let%expect_test "Body with conditions" =
 ;;
 
 let%expect_test "Method parsing" =
+  test_pp_class_member ep_method_member {|i hm() {}|};
+  [%expect
+    {|
+    (Method (
+       { m_modif = None; m_type = (TReturn (TNullable (TClass (Id "i"))));
+         m_id = (Id "hm"); m_args = (Args []) },
+       (Steps []))) |}]
+;;
+
+let%expect_test "Method parsing" =
   test_pp_class_member
     ep_method_member
     {|static int Fac(int num)
