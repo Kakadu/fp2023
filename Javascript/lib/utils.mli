@@ -15,3 +15,5 @@ val fold_left_map : ('a -> 'b -> ('a * 'c) t) -> 'a -> 'b list -> ('a * 'c list)
 val fold_left_s : ('a -> 'b -> 'a t) -> ('a -> bool) -> 'a -> 'b list -> 'a t
 val both : ('a -> 'b t) -> 'a -> 'a -> ('b * 'b) t
 val both_ext : ('a -> 'b -> ('a * 'c) t) -> 'a -> 'b -> 'b -> ('a * ('c * 'c)) t
+
+module IntMap : Map.S with type key = int
