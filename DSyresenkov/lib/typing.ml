@@ -30,7 +30,7 @@ let rec pp_ty fmt = function
   | TVar x -> fprintf fmt "'%d" x
   | TArrow (l, r) ->
     (match l, r with
-     | TArrow (_, _), _ -> fprintf fmt "(%a) -> %a" pp_ty l pp_ty r
+     | TArrow _, _ -> fprintf fmt "(%a) -> %a" pp_ty l pp_ty r
      | _, _ -> fprintf fmt "%a -> %a" pp_ty l pp_ty r)
   | TTuple (ty1, ty2, tys) ->
     fprintf
@@ -40,12 +40,12 @@ let rec pp_ty fmt = function
          ~pp_sep:(fun fmt _ -> fprintf fmt " * ")
          (fun fmt ty ->
            match ty with
-           | TArrow (_, _) -> fprintf fmt "(%a)" pp_ty ty
+           | TArrow _ -> fprintf fmt "(%a)" pp_ty ty
            | _ -> fprintf fmt "%a" pp_ty ty))
       (ty1 :: ty2 :: tys)
   | TList ty ->
     (match ty with
-     | TArrow (_, _) -> fprintf fmt "(%a) list" pp_ty ty
+     | TArrow _ | TTuple _ -> fprintf fmt "(%a) list" pp_ty ty
      | _ -> fprintf fmt "%a list" pp_ty ty)
 ;;
 

@@ -7,7 +7,7 @@ let input =
       let rec helper x k = if x = 1 then k 1 else helper (x - 1) (fun n -> n * k x) 
     in helper x (fun x -> x)
 
-    let result = fact 5
+    let result = fact 10
   |}
 ;;
 

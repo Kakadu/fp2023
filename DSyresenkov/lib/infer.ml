@@ -271,6 +271,19 @@ let infer_pattern : TypeEnv.t -> pattern -> (TypeEnv.t * ty, error) R.t =
          let env = TypeEnv.extend env (x, S (VarSet.empty, tv)) in
          return (env, tv)
        | Some (Scheme.S (_, ty)) -> return (env, ty))
+    | PTuple (p1, p2, ps) ->
+      let* env, ty1 = helper env p1 in
+      let* env, ty2 = helper env p2 in
+      let* env, tys =
+        Base.List.fold_right
+          ps
+          ~init:(return (env, []))
+          ~f:(fun p acc ->
+            let* env, tys = acc in
+            let* env, ty = helper env p in
+            return (env, ty :: tys))
+      in
+      return (env, TTuple (ty1, ty2, tys))
     | PCons (p1, p2, ps) ->
       let p1, ps, plast =
         match List.rev ps with

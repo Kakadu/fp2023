@@ -151,6 +151,14 @@ let ppattern =
   in
   let ppt =
     lift2
+      (fun p -> function
+        | h :: tl -> PTuple (p, h, tl)
+        | _ -> p)
+      ppt
+      (many (pstoken "," *> ppt))
+  in
+  let ppt =
+    lift2
       (fun p1 -> function
         | h :: tl -> POr (p1, h, tl)
         | _ -> p1)
@@ -205,9 +213,9 @@ let pexpr =
   let pe = plbinop pe (choice [ peq; pneq; pgeq; pleq; ples; pgre ]) in
   let pe =
     lift2
-      (fun e1 -> function
-        | h :: tl -> ETuple (e1, h, tl)
-        | _ -> e1)
+      (fun e -> function
+        | h :: tl -> ETuple (e, h, tl)
+        | _ -> e)
       pe
       (many (pstoken "," *> pe))
   in
