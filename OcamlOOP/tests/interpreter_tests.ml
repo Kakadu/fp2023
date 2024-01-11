@@ -252,3 +252,86 @@ let%expect_test _ =
       val tail_rev_l : < get : int list; add : int -> 'a; rev : 'a; tail : 'a; remove : int -> 'a > as 'a = <obj>
       val tail_v : int list = [4; 6] |}]
 ;;
+
+let%expect_test _ =
+  let () = run_interpreter "let a = -(-(-1))" in
+  [%expect {| val a : int = -1 |}]
+;;
+
+let%expect_test _ =
+  let () = run_interpreter "let f a b c d = a b (c 5 (d + 1)) d" in
+  [%expect
+    {| val f : ('a -> 'b -> int -> 'c) -> 'a -> (int -> int -> 'b) -> int -> 'c = <fun> |}]
+;;
+
+let%expect_test _ =
+  let () = run_interpreter "let f a b c = a(b+1)(not c)" in
+  [%expect {| val f : (int -> bool -> 'a) -> int -> bool -> 'a = <fun> |}]
+;;
+
+let input =
+  {|
+let cmp_with_five o = o#get = 5
+
+let num = object (self) val t = 0 method add x = {<t = t + x>} method get = t end
+
+let l = object (self) val t = [] method add x = {<t = x::t>} method get = match t with [] -> 0 | (h::_) -> h method foo = 5 + 1 end
+
+let eval = cmp_with_five num || (cmp_with_five l)
+|}
+;;
+
+let%expect_test _ =
+  let () = run_interpreter input in
+  [%expect
+    {|
+    val cmp_with_five : < get : int; .. > -> bool = <fun>
+    val eval : bool = false
+    val l : < add : int -> 'a; get : int; foo : int > as 'a = <obj>
+    val num : < add : int -> 'a; get : int > as 'a = <obj> |}]
+;;
+
+let input =
+  {|
+let a = object method id x = x end
+let b = object (self) val t = 0 method increase = {<t = t + 1>} end
+let c = a#id b;
+|}
+;;
+
+let%expect_test _ =
+  let () = run_interpreter input in
+  [%expect
+    {|
+    val a : < id : 'a -> 'a > = <obj>
+    val b : < increase : 'a > as 'a = <obj>
+    val c : < increase : 'a > as 'a = <obj> |}]
+;;
+
+let%expect_test _ =
+  let () =
+    run_interpreter
+      "let f a b c = c (let id x = x in let a = [1; 2; 3] in id a) (a (b (1, 2) + 7)) + 4"
+  in
+  [%expect
+    {| val f : (int -> 'a) -> (int * int -> int) -> (int list -> 'a -> int) -> int = <fun> |}]
+;;
+
+let input =
+  {|
+let a x =
+  match x with
+  | (1, 1) -> true
+  | (x, 0) ->
+    (match x with
+     | 0 -> true
+     | _ -> false)
+  | _ -> false
+;;
+|}
+;;
+
+let%expect_test _ =
+  let () = run_interpreter input in
+  [%expect {| val a : int * int -> bool = <fun> |}]
+;;

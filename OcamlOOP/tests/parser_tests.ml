@@ -408,3 +408,47 @@ let%expect_test _ =
            })
       ] |}]
 ;;
+
+let%expect_test _ =
+  let () = parse_test "-1::[2];;" in
+  [%expect
+    {|
+      [(Str_eval
+          (Exp_list ((Exp_unary_op (Minus, (Exp_constant (Const_int 1)))),
+             (Exp_list ((Exp_constant (Const_int 2)), (Exp_constant Const_nil))))))
+        ] |}]
+;;
+
+let%expect_test _ =
+  let () =
+    parse_test "let rec fact n k = if n <= 1 then k 1 else fact (n-1) (fun z -> k(z*n))"
+  in
+  [%expect
+    {|
+    [(Str_value
+        { d_rec = Recursive; d_pat = (Pat_var "fact");
+          d_expr =
+          (Exp_function ((Pat_var "n"),
+             (Exp_function ((Pat_var "k"),
+                (Exp_ifthenelse (
+                   (Exp_bin_op (Ltq, (Exp_ident "n"),
+                      (Exp_constant (Const_int 1)))),
+                   (Exp_apply ((Exp_ident "k"), (Exp_constant (Const_int 1)))),
+                   (Exp_apply (
+                      (Exp_apply ((Exp_ident "fact"),
+                         (Exp_bin_op (Sub, (Exp_ident "n"),
+                            (Exp_constant (Const_int 1))))
+                         )),
+                      (Exp_function ((Pat_var "z"),
+                         (Exp_apply ((Exp_ident "k"),
+                            (Exp_bin_op (Asterisk, (Exp_ident "z"),
+                               (Exp_ident "n")))
+                            ))
+                         ))
+                      ))
+                   ))
+                ))
+             ))
+          })
+      ] |}]
+;;

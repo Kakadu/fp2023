@@ -26,3 +26,6 @@ In contrast to OCaml, it is forbidden to use an override expression without init
   > let is_eight x = match x with 8 -> true
   > let eval = is_eight 7
   Match failure
+  $ cat << EOF | dune exec demo - 
+  > let not_obj = let a = 4 in a#meth
+  Expression is not an object; it has type int

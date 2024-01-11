@@ -38,3 +38,17 @@
   val f : ('a -> 'b -> 'c) -> 'a -> 'b -> 'c = <fun>
   val fun_tuple : 'a -> 'b -> (('b -> 'c) -> 'c) * (('a -> 'd) -> 'd) = <fun>
   val is_eight : int -> bool = <fun>
+  $ cat << EOF | dune exec demo - 
+  > let compose f g = fun x -> f (g x)
+  > 
+  > let pair x = (x, x)
+  > 
+  > let eval = compose pair (compose pair pair)
+  > EOF
+  val compose : ('a -> 'b) -> ('c -> 'a) -> 'c -> 'b = <fun>
+  val eval : 'a -> (('a * 'a) * ('a * 'a)) * (('a * 'a) * ('a * 'a)) = <fun>
+  val pair : 'a -> 'a * 'a = <fun>
+  $ cat << EOF | dune exec demo - 
+  > let cmp = (object val a = 4 method b = 8 end) = (object val a = 4 method b = 8 end)
+  > EOF
+  val cmp : bool = false

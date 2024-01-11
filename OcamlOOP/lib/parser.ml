@@ -82,21 +82,11 @@ let skip_whitespace = take_while is_whitespace
 let skip_whitespace1 = take_while1 is_whitespace
 let ptoken p = skip_whitespace *> p
 let token p = skip_whitespace *> string p
-let token1 p = skip_whitespace1 *> string p
 let lp = token "("
 let rp = token ")"
 let parens p = lp *> p <* rp
 let sbrcts p = token "[" *> p <* token "]"
 let dsmcln = token ";;"
-
-let sign =
-  peek_char
-  >>= function
-  | Some '-' -> advance 1 >>| fun () -> "-"
-  | Some '+' -> advance 1 >>| fun () -> "+"
-  | Some c when is_digit c -> return "+"
-  | _ -> fail "Sign or digit expected"
-;;
 
 (*=====================Fold infix operators=====================*)
 let chainl1 e op =
@@ -111,11 +101,9 @@ let rec chainr1 e op =
 (*=====================Constants=====================*)
 
 let c_int =
-  ptoken sign
-  >>= fun sign ->
-  take_while1 is_digit
+  ptoken @@ take_while1 is_digit
   >>= fun whole ->
-  let num = Stdlib.int_of_string_opt (sign ^ whole) in
+  let num = Stdlib.int_of_string_opt whole in
   match num with
   | Some n -> return @@ cint n
   | None -> fail "Integer literal exceeds the range of representable integers of type int"
@@ -189,7 +177,7 @@ let e_list expr =
 ;;
 
 let e_tuple expr = tuple expr etuple
-let e_app expr = chainl1 expr (skip_whitespace1 *> return eapp)
+let e_app expr = chainl1 expr (return eapp)
 let e_ite b t e = lift3 eite (token "if" *> b) (token "then" *> t) (token "else" *> e)
 
 let e_fun pexpr =
@@ -297,11 +285,10 @@ let expr =
   fix (fun pexpr ->
     let sube = choice [ parens pexpr; e_const; e_val ] in
     let send = e_sinvk sube in
-    let eapp = e_app (send <|> sube) in
-    let term = eapp <|> send <|> sube in
-    let term = e_list term <|> term in
+    let term = e_app (send <|> sube) in
     let term = lbo (term <|> lift2 eunop neg term) mul_div in
     let term = lbo term add_sub in
+    let term = e_list term <|> term in
     let term = lbo term cmp in
     let term = rbo term andop in
     let term = rbo term orop in

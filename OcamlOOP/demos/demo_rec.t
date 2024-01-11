@@ -46,4 +46,4 @@
   $ cat << EOF | dune exec demo -
   > let rec fact n k = if n<=1 then k 1 else fact (n-1) (fun z -> k(z*n))
   > EOF
-  
+  val fact : int -> (int -> 'a) -> 'a = <fun>
