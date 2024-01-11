@@ -104,6 +104,8 @@ let%expect_test "Type checks" =
           s = "kek";
           b = !(1 == 2 != false && 1 + 2 % 3 == 1 / -2 * 100 || true);
           b_n = c_n == null;
+          i_n = i_n + i;
+          b = i_n == i;
           return Fac(i, s, null);
         }
 
@@ -386,6 +388,39 @@ let%expect_test "Throw some class" =
   in
   check_stand s;
   [%expect {| Type_check error: (Other_error "throw can be used only with exceptions") |}]
+;;
+
+let%expect_test "Throw some class" =
+  let s =
+    {| 
+    class Program
+    {
+      bool a = true;
+    
+      static int Main()
+      {
+        try
+        {
+        }
+        catch
+        {
+          return 1;
+        }
+        finally
+        {
+          for (;;){
+            return 1;
+          }
+        }
+      }
+    }
+|}
+  in
+  check_stand s;
+  [%expect
+    {|
+    Type_check error: (Other_error
+                         "Control cannot leave the body of a finally clause") |}]
 ;;
 
 let%expect_test "FileInfo_decl" =

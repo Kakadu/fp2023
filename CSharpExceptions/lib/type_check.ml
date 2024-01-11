@@ -397,7 +397,7 @@ let if_else_check e st st_opt st_check =
   lift3 f exp_res st_res st_opt_res
 ;;
 
-let un_opt_ mnd x =
+let remove_opt_ mnd x =
   match x with
   | Some x -> mnd x *> return TP_Ok
   | None -> return TP_Ok
@@ -405,9 +405,9 @@ let un_opt_ mnd x =
 
 let for_check init_opt e1_opt e2_opt s h =
   let f _ _ _ _ = TP_Ok in
-  let init_opt_res = un_opt_ h init_opt in
-  let e1_opt_res = un_opt_ cond_check_ e1_opt in
-  let e2_opt_res = un_opt_ check_expr e2_opt in
+  let init_opt_res = remove_opt_ h init_opt in
+  let e1_opt_res = remove_opt_ cond_check_ e1_opt in
+  let e2_opt_res = remove_opt_ check_expr e2_opt in
   let s_res = h s in
   lift4 f init_opt_res e1_opt_res e2_opt_res s_res
 ;;
@@ -432,20 +432,32 @@ let catch_s_check_ h = function
 ;;
 
 let try_catch_fin_check try_s catch_s finally_s h =
+  let new_h = h (fun x v -> x v) in
   let f _ _ _ = TP_Ok in
-  let try_s_res = local_scope (h try_s) in
-  let catch_s_res = local_scope (catch_s_check_ h catch_s) in
-  let fin_s_res = local_scope (un_opt_ h finally_s) in
+  let try_s_res = local_scope (new_h try_s) in
+  let catch_s_res = local_scope (catch_s_check_ new_h catch_s) in
+  let fin_s_res =
+    let steps_wrap h x =
+      match x with
+      | SReturn _ ->
+        fail (Other_error "Control cannot leave the body of a finally clause")
+      | _ -> h x
+    in
+    let new_h = h steps_wrap in
+    local_scope (remove_opt_ new_h finally_s)
+  in
   match catch_s, finally_s with
   | None, None -> fail (Other_error "After try shold be catch or finally")
   | _ -> lift3 f try_s_res catch_s_res fin_s_res
 ;;
 
 let check_statement stat =
-  let rec helper = function
+  let rec helper_ steps_wrap st = 
+    let helper = helper_ steps_wrap in
+    match st with 
     | SExpr e -> check_expr e *> return TP_Ok
     | Steps stp ->
-      let f acc = helper acc *> return () in
+      let f acc = steps_wrap helper acc *> return () in
       let check_steps = iter_left f stp *> return TP_Ok in
       local_scope check_steps
     | SReturn e_opt -> return_check e_opt
@@ -462,9 +474,9 @@ let check_statement stat =
     | SFor { f_init_p; f_cond_p; f_iter_p; f_body } ->
       local_scope @@ for_check f_init_p f_cond_p f_iter_p f_body helper
     | STry_catch_fin { try_s; catch_s; finally_s } ->
-      try_catch_fin_check try_s catch_s finally_s helper
+      try_catch_fin_check try_s catch_s finally_s helper_
   in
-  helper stat
+  helper_ (fun x v -> x v) stat
 ;;
 
 let add_params params =
