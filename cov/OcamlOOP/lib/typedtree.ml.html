@@ -18,21 +18,21 @@
       <h2>10.00%</h2>
     </div>
     <div id="navbar">
-      <span class="unvisited" style="top:24.32%"></span>
-      <span class="unvisited" style="top:27.03%"></span>
-      <span class="unvisited" style="top:29.73%"></span>
-      <span class="some-visited" style="top:40.54%"></span>
-      <span class="unvisited" style="top:43.24%"></span>
-      <span class="unvisited" style="bottom:43.24%"></span>
-      <span class="unvisited" style="bottom:35.14%"></span>
-      <span class="unvisited" style="bottom:29.73%"></span>
-      <span class="unvisited" style="bottom:27.03%"></span>
-      <span class="unvisited" style="bottom:24.32%"></span>
-      <span class="unvisited" style="bottom:21.62%"></span>
-      <span class="unvisited" style="bottom:13.51%"></span>
-      <span class="unvisited" style="bottom:10.81%"></span>
-      <span class="unvisited" style="bottom:8.11%"></span>
-      <span class="unvisited" style="bottom:5.41%"></span>
+      <span class="unvisited" style="top:20.93%"></span>
+      <span class="unvisited" style="top:23.26%"></span>
+      <span class="unvisited" style="top:25.58%"></span>
+      <span class="some-visited" style="top:34.88%"></span>
+      <span class="unvisited" style="top:37.21%"></span>
+      <span class="unvisited" style="top:48.84%"></span>
+      <span class="unvisited" style="bottom:44.19%"></span>
+      <span class="unvisited" style="bottom:39.53%"></span>
+      <span class="unvisited" style="bottom:37.21%"></span>
+      <span class="unvisited" style="bottom:34.88%"></span>
+      <span class="unvisited" style="bottom:32.56%"></span>
+      <span class="unvisited" style="bottom:11.63%"></span>
+      <span class="unvisited" style="bottom:9.30%"></span>
+      <span class="unvisited" style="bottom:6.98%"></span>
+      <span class="unvisited" style="bottom:4.65%"></span>
       <span class="unvisited" style="bottom:0.00%"></span>
     </div>
     <div id="report">
@@ -69,12 +69,18 @@
 <a id="L29"></a><span class="unvisited"> </span>
 <a id="L30"></a><span > </span>
 <a id="L31"></a><span > </span>
-<a id="L32"></a><span class="unvisited"> </span>
-<a id="L33"></a><span class="unvisited"> </span>
-<a id="L34"></a><span class="unvisited"> </span>
-<a id="L35"></a><span class="unvisited"> </span>
+<a id="L32"></a><span > </span>
+<a id="L33"></a><span > </span>
+<a id="L34"></a><span > </span>
+<a id="L35"></a><span > </span>
 <a id="L36"></a><span > </span>
-<a id="L37"></a><span class="unvisited"> </span>
+<a id="L37"></a><span > </span>
+<a id="L38"></a><span class="unvisited"> </span>
+<a id="L39"></a><span class="unvisited"> </span>
+<a id="L40"></a><span class="unvisited"> </span>
+<a id="L41"></a><span class="unvisited"> </span>
+<a id="L42"></a><span > </span>
+<a id="L43"></a><span class="unvisited"> </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -116,6 +122,12 @@
 <a href="#L35">35</a>
 <a href="#L36">36</a>
 <a href="#L37">37</a>
+<a href="#L38">38</a>
+<a href="#L39">39</a>
+<a href="#L40">40</a>
+<a href="#L41">41</a>
+<a href="#L42">42</a>
+<a href="#L43">43</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2023, Artem-Rzhankoff *)
 
@@ -131,23 +143,29 @@ module VarSet = struct
   ;;
 end
 
-<span data-count="10">t</span>ype binder = <span data-count="0">i</span>nt [@@deriving eq, show { with_path = false }]
+<span data-count="13">t</span>ype binder = <span data-count="0">i</span>nt [@@deriving eq, show { with_path = false }]
 <span data-count="0">t</span>ype binder_set = VarSet.t [@@deriving show { with_path = false }<span data-count="0">]</span>
 
-(** For each object, an alias is created during initialization, which is disabled by default (with flag = [false]).
-    This is then used for represent rercursive types.
-    *Of course this is bad way to implement recursive types in real world, but it's quite suitable for this project *)
+(** Represents type sharing for objects, which displayed using the [as] constract.
+    A shared sub-term is represented by a type variable, when object's type is recursive (flag = [true])
+    This makes sense since this language doesn't support subtyping *)
 <span data-count="0">t</span>ype constr = <span data-count="0">C</span> of binder * <span data-count="0">b</span>oo<span data-count="0">l</span> [@@deriving eq, show { with_path = false }<span data-count="0">]</span>
 
-<span data-count="10">t</span>ype ty =
+<span data-count="13">t</span>ype ty =
   <span data-count="0">|</span> TPrim of strin<span data-count="0">g</span> (** Ground types: [int], [bool] *)
-  <span data-count="30">|</span> TVar of binde<span data-count="10">r</span> (** Variables: ['a], ['b] *)
+  <span data-count="39">|</span> TVar of binde<span data-count="13">r</span> (** Variables: ['a], ['b] *)
   <span data-count="0">|</span> TTuple of <span data-count="0">t</span>y lis<span data-count="0">t</span> (** [TTuple [t1;..;tn]] ==&gt; [(t1 * ... * tn)]*)
   <span data-count="0">|</span> TArrow of ty * t<span data-count="0">y</span> (** [TArrow (t1, t2)] ==&gt; [e1 -&gt; e2] *)
   <span data-count="0">|</span> TList of t<span data-count="0">y</span> (** [['a; 'b; ...]] *)
   <span data-count="0">|</span> TObject of ty * <span data-count="0">(</span><span data-count="0">s</span>trin<span data-count="0">g</span> * ty) lis<span data-count="0">t</span> * const<span data-count="0">r</span>
-  (** Constr represents a constraint, when types of object are recursive.
-      [only self calls and overriding are supported!  ] *)
+  (** Represents:
+      - [&lt; .. &gt; as 'a] when [constr] is [true]
+      - [&lt; .. &gt;] when [constr] is [false]
+
+      [TObject(`f1:t1;..;fn:tn',_,_)] ==&gt; [&lt; f1:t1; ...; fn:tn&gt;]
+      f1, fn are represented a linked list of types using TField and TNil constructors.
+
+      The second parameter represents the instance variables. *)
   <span data-count="0">|</span> TField of strin<span data-count="0">g</span> * ty * t<span data-count="0">y</span> (** [TField ("foo", t, ts)] ==&gt; [&lt;..; foo : t; ts&gt;] *)
   <span data-count="0">|</span> TNil (** [TNil] ==&gt; [&lt;...;&gt;] *)
   <span data-count="0">|</span> TPoly of binde<span data-count="0">r</span> (** Represents anonymous row variable [&lt;;..&gt;] *)

@@ -18,10 +18,10 @@
       <h2>84.21%</h2>
     </div>
     <div id="navbar">
-      <span class="some-visited" style="top:4.76%"></span>
-      <span class="unvisited" style="top:12.38%"></span>
-      <span class="unvisited" style="top:13.33%"></span>
-      <span class="unvisited" style="bottom:40.95%"></span>
+      <span class="some-visited" style="top:4.67%"></span>
+      <span class="unvisited" style="top:12.15%"></span>
+      <span class="unvisited" style="top:13.08%"></span>
+      <span class="unvisited" style="bottom:40.19%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -74,63 +74,65 @@
 <a id="L46"></a><span > </span>
 <a id="L47"></a><span > </span>
 <a id="L48"></a><span class="visited"> </span>
-<a id="L49"></a><span class="visited"> </span>
-<a id="L50"></a><span > </span>
-<a id="L51"></a><span class="visited"> </span>
-<a id="L52"></a><span > </span>
+<a id="L49"></a><span > </span>
+<a id="L50"></a><span class="visited"> </span>
+<a id="L51"></a><span > </span>
+<a id="L52"></a><span class="visited"> </span>
 <a id="L53"></a><span > </span>
 <a id="L54"></a><span > </span>
 <a id="L55"></a><span > </span>
-<a id="L56"></a><span class="visited"> </span>
-<a id="L57"></a><span > </span>
+<a id="L56"></a><span > </span>
+<a id="L57"></a><span class="visited"> </span>
 <a id="L58"></a><span > </span>
 <a id="L59"></a><span > </span>
 <a id="L60"></a><span > </span>
 <a id="L61"></a><span > </span>
-<a id="L62"></a><span class="unvisited"> </span>
+<a id="L62"></a><span > </span>
 <a id="L63"></a><span > </span>
-<a id="L64"></a><span > </span>
+<a id="L64"></a><span class="unvisited"> </span>
 <a id="L65"></a><span > </span>
 <a id="L66"></a><span > </span>
 <a id="L67"></a><span > </span>
 <a id="L68"></a><span > </span>
-<a id="L69"></a><span class="visited"> </span>
+<a id="L69"></a><span > </span>
 <a id="L70"></a><span > </span>
-<a id="L71"></a><span > </span>
+<a id="L71"></a><span class="visited"> </span>
 <a id="L72"></a><span > </span>
 <a id="L73"></a><span > </span>
 <a id="L74"></a><span > </span>
 <a id="L75"></a><span > </span>
 <a id="L76"></a><span > </span>
 <a id="L77"></a><span > </span>
-<a id="L78"></a><span class="visited"> </span>
+<a id="L78"></a><span > </span>
 <a id="L79"></a><span > </span>
-<a id="L80"></a><span > </span>
+<a id="L80"></a><span class="visited"> </span>
 <a id="L81"></a><span > </span>
-<a id="L82"></a><span class="visited"> </span>
+<a id="L82"></a><span > </span>
 <a id="L83"></a><span > </span>
-<a id="L84"></a><span > </span>
+<a id="L84"></a><span class="visited"> </span>
 <a id="L85"></a><span > </span>
 <a id="L86"></a><span > </span>
-<a id="L87"></a><span class="visited"> </span>
+<a id="L87"></a><span > </span>
 <a id="L88"></a><span > </span>
 <a id="L89"></a><span class="visited"> </span>
-<a id="L90"></a><span class="visited"> </span>
-<a id="L91"></a><span > </span>
+<a id="L90"></a><span > </span>
+<a id="L91"></a><span class="visited"> </span>
 <a id="L92"></a><span class="visited"> </span>
 <a id="L93"></a><span > </span>
 <a id="L94"></a><span class="visited"> </span>
 <a id="L95"></a><span > </span>
 <a id="L96"></a><span class="visited"> </span>
 <a id="L97"></a><span > </span>
-<a id="L98"></a><span > </span>
+<a id="L98"></a><span class="visited"> </span>
 <a id="L99"></a><span > </span>
 <a id="L100"></a><span > </span>
 <a id="L101"></a><span > </span>
-<a id="L102"></a><span class="visited"> </span>
+<a id="L102"></a><span > </span>
 <a id="L103"></a><span > </span>
-<a id="L104"></a><span > </span>
-<a id="L105"></a><span class="visited"> </span>
+<a id="L104"></a><span class="visited"> </span>
+<a id="L105"></a><span > </span>
+<a id="L106"></a><span > </span>
+<a id="L107"></a><span class="visited"> </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -240,24 +242,26 @@
 <a href="#L103">103</a>
 <a href="#L104">104</a>
 <a href="#L105">105</a>
+<a href="#L106">106</a>
+<a href="#L107">107</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2023, Artem-Rzhankoff *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-<span data-count="0">t</span>ype ident = <span data-count="86">s</span>tring [@@deriving show { with_path = false }]
+<span data-count="0">t</span>ype ident = <span data-count="97">s</span>tring [@@deriving show { with_path = false }]
 
 <span data-count="11">t</span>ype private_flag =
   | Private
   | Public
 [@@deriving show { with_path = false }]
 
-<span data-count="16">t</span>ype rec_flag =
+<span data-count="17">t</span>ype rec_flag =
   <span data-count="0">|</span> Nonrecursive
   <span data-count="0">|</span> Recursive
 [@@deriving eq, show { with_path = false }]
 
-<span data-count="13">t</span>ype bin_op =
+<span data-count="16">t</span>ype bin_op =
   | Asterisk (** [*] *)
   | Divider (** [\ ]*)
   | Plus (** [+] *)
@@ -272,31 +276,33 @@
   | Or (** [||]*)
 [@@deriving show { with_path = false }]
 
-<span data-count="1">t</span>ype unary_op =
+<span data-count="2">t</span>ype unary_op =
   | Minus (** [-]*)
   | Not (** [not]*)
 [@@deriving show { with_path = false }]
 
-<span data-count="119">t</span>ype const =
-  | Const_int of in<span data-count="36">t</span> (** Integers constants such as [52] *)
+<span data-count="135">t</span>ype const =
+  | Const_int of in<span data-count="41">t</span> (** Integers constants such as [52] *)
   | Const_bool of boo<span data-count="3">l</span> (** Boolean constant: [true], [false]*)
   | Const_nil (** Represents empty list [[]] *)
 [@@deriving show { with_path = false }]
 
-<span data-count="185">t</span>ype pattern =
+<span data-count="201">t</span>ype pattern =
   | Pat_const of const (** Patterns such as [1], [true] *)
   | Pat_var of ident (** A variable pattern such as [x] *)
   | Pat_cons of pattern * pattern (** The pattern such as [P1::P2] *)
   | Pat_any (** The pattern [_] *)
-  | Pat_tuple of <span data-count="18">p</span>attern lis<span data-count="4">t</span> (** Patterns [(P1, ..., P2)]*)
-[@@deriving show { with_path = false }<span data-count="99">]</span>
+  | Pat_tuple of <span data-count="18">p</span>attern lis<span data-count="4">t</span> (** Patterns [(P1, ..., P2)]
+                                  Invariant : [n &gt;= 2]*)
+[@@deriving show { with_path = false }<span data-count="107">]</span>
 
-<span data-count="824">t</span>ype expression =
+<span data-count="971">t</span>ype expression =
   | Exp_constant of const (** Expressions constant such as [1], [true] *)
   | Exp_unary_op of unary_op * expression
   | Exp_bin_op of bin_op * expression * expression
   | Exp_ident of ident (** Identifiers such as [x] *)
-  | Exp_tuple of <span data-count="40">e</span>xpression lis<span data-count="9">t</span> (** Expressions [(E1, ..., En)]*)
+  | Exp_tuple of <span data-count="40">e</span>xpression lis<span data-count="9">t</span> (** Expressions [(E1, ..., En)]
+                                     Invariant: [n &gt;= 2] *)
   | Exp_function of pattern * expression (** [fun P1 -&gt; E] *)
   | Exp_let of decl * expression
   (** [Exp_let({d_rec=flag; P; E}, E')] represents:
@@ -318,11 +324,11 @@
 (** Represents:
     - [let P = E] when [d_rec] is {{!rec_flag.Nonrecursive} [Nonrecursive]}
     - [let rec P = E] when [d_rec] is {{!rec_flag.Recursive} [Recursive]} *)
-<span data-count="160">a</span>nd decl =
+<span data-count="170">a</span>nd decl =
   { d_rec : rec_flag
   ; d_pat : pattern
   ; d_expr : expression
-  <span data-count="48">}</span>
+  <span data-count="51">}</span>
 
 (** Values of type {!obj} represents:
     - [object(selfpat) ... end]
@@ -334,18 +340,18 @@
 
 <span data-count="15">a</span>nd obj_field =
   | Obj_val of ident * expression (** [val x = E] *)
-  | Obj_method of private_flag * ident * expressio<span data-count="716">n</span> (** [method x = E]*)
+  | Obj_method of private_flag * ident * expressio<span data-count="830">n</span> (** [method x = E]*)
 
-<span data-count="96">t</span>ype structure_item =
+<span data-count="104">t</span>ype structure_item =
   | Str_eval of expression (** [E] *)
   | Str_value of decl
   (** [Str_value({is_rec; P; E})] represents:
       - [let P = E] when {{!rec_flag.Nonrecursive}[Nonrecursive]
       - [let rec P = E] when [d_rec] is {{!rec_flag.Recursive}[Recursive]} *)
-[@@deriving show { with_path = false }<span data-count="48">]</span>
+[@@deriving show { with_path = false }<span data-count="52">]</span>
 
 (** Represents whole program with all statements *)
-<span data-count="47">t</span>ype program = <span data-count="119">s</span>tructure_item lis<span data-count="24">t</span> [@@deriving show { with_path = false }<span data-count="48">]</span>
+<span data-count="51">t</span>ype program = <span data-count="129">s</span>tructure_item lis<span data-count="26">t</span> [@@deriving show { with_path = false }<span data-count="52">]</span>
 </code></pre>
       </div>
     </div>

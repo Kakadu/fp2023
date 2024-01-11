@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8"/>
     <title>errors.ml &mdash; Coverage report</title>
-    <meta name="description" content="100.00% coverage in lib/errors.ml">
+    <meta name="description" content="90.91% coverage in lib/errors.ml">
     <link rel="stylesheet" href="../coverage.css"/>
     <script src="../highlight.pack.js"></script>
     <script>hljs.initHighlightingOnLoad();</script>
@@ -15,9 +15,10 @@
           <span class="dirname">lib/</span>errors.ml
         </a>
       </h1>
-      <h2>100.00%</h2>
+      <h2>90.91%</h2>
     </div>
     <div id="navbar">
+      <span class="unvisited" style="bottom:17.31%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -58,18 +59,22 @@
 <a id="L34"></a><span > </span>
 <a id="L35"></a><span > </span>
 <a id="L36"></a><span > </span>
-<a id="L37"></a><span > </span>
-<a id="L38"></a><span > </span>
-<a id="L39"></a><span > </span>
-<a id="L40"></a><span > </span>
+<a id="L37"></a><span class="visited"> </span>
+<a id="L38"></a><span class="visited"> </span>
+<a id="L39"></a><span class="visited"> </span>
+<a id="L40"></a><span class="visited"> </span>
 <a id="L41"></a><span > </span>
-<a id="L42"></a><span > </span>
-<a id="L43"></a><span > </span>
-<a id="L44"></a><span > </span>
-<a id="L45"></a><span > </span>
+<a id="L42"></a><span class="visited"> </span>
+<a id="L43"></a><span class="unvisited"> </span>
+<a id="L44"></a><span class="visited"> </span>
+<a id="L45"></a><span class="visited"> </span>
 <a id="L46"></a><span > </span>
 <a id="L47"></a><span > </span>
 <a id="L48"></a><span > </span>
+<a id="L49"></a><span class="visited"> </span>
+<a id="L50"></a><span class="visited"> </span>
+<a id="L51"></a><span > </span>
+<a id="L52"></a><span class="visited"> </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -122,6 +127,10 @@
 <a href="#L46">46</a>
 <a href="#L47">47</a>
 <a href="#L48">48</a>
+<a href="#L49">49</a>
+<a href="#L50">50</a>
+<a href="#L51">51</a>
+<a href="#L52">52</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2023, Artem-Rzhankoff *)
 
@@ -137,40 +146,44 @@ type object_field =
 
 type infer_error =
   | Occurs_check of int * ty
-  (** This error can lead to non-determinism of the type inference
-      Example: [fun x -&gt; x x]*)
   | Unbound_variable of string
-  (** Variable is not defined in local context
-      Example: [let increase = x + 1]*)
-  | Unification_failed of ty * ty (** Unification error between two types *)
-  | Several_bounds of string (** Example: let (x, x) = 1, 3 *)
-  | Unreachable
-  (** For unreachable cases like missing cases in pattern-matching, because parser doesn't recognize this construction *)
+  | Unification_failed of ty * ty
+  | Several_bounds of string
   | No_variable_rec
-  (** Only variables are allowed as left-side of 'let rec'
-      Example: [let rec (a, b) = 5] *)
   | Multiple_definition of object_field * string
-  (** An instance variable / method must have a single definition
-      Example: [object val n = 0 val n = 5 end]*)
   | Undefined_method of ty * string
-  (** Occurs when sending a message to undefined method in object *)
-  | Not_object of ty (** Occurs when trying to send a message to a non-object *)
-  | Cannot_match_self (** A self-reference can only be a `self' variable *)
+  | Not_object of ty
+  | Cannot_match_self
 
 type interpreter_error =
-  | Division_by_zero (** Example: [5 / 0] *)
+  | Division_by_zero
   | Match_failure
-  (** May occurs with non-exhaustive pattern-matching, if value doesn't match any case *)
   | Invalid_compare_arg of string
-  (** Occurs when trying to compare two anonymous functions *)
-  | Ill_right_side_rec of string (** Represents limitations of `let rec` *)
-  | Ill_typed (* Unreachable with using infer *)
-  | Unbound_var of string (* Unreachable with using infer *)
+  | Ill_right_side_rec of string
+  | Ill_typed
+  | Unbound_var of string
 
 type error =
   | Parser of parse_error
   | Infer of infer_error
   | Interpreter of interpreter_error
+
+let occurs_check (b, t) = <span data-count="3">I</span>nfer (Occurs_check (b, t))
+let unbound_variable v = <span data-count="2">I</span>nfer (Unbound_variable v)
+let unification_failed (t1, t2) = <span data-count="3">I</span>nfer (Unification_failed (t1, t2))
+let several_bounds v = <span data-count="4">I</span>nfer (Several_bounds v)
+let no_variable_rec = Infer No_variable_rec
+let multiple_variable name = <span data-count="1">I</span>nfer (Multiple_definition (Variable, name))
+let multiple_method name = <span data-count="0">I</span>nfer (Multiple_definition (Method, name))
+let undefined_method ty_obj name = <span data-count="1">I</span>nfer (Undefined_method (ty_obj, name))
+let not_object t = <span data-count="1">I</span>nfer (Not_object t)
+let cannot_match_self = Infer Cannot_match_self
+let division_by_zero = Interpreter Division_by_zero
+let match_failure = Interpreter Match_failure
+let invalid_compare_arg s = <span data-count="1">I</span>nterpreter (Invalid_compare_arg s)
+let ill_right_side_rec s = <span data-count="2">I</span>nterpreter (Ill_right_side_rec s)
+let ill_typed = Interpreter Ill_typed
+let unbound_var s = <span data-count="2">I</span>nterpreter (Unbound_var s)
 </code></pre>
       </div>
     </div>
