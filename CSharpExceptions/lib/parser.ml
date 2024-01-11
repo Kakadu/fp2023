@@ -389,7 +389,7 @@ let ep_catch_block_ ep_body =
       (ep_parens @@ (ep_var_decl >>= cdecl <|> (ep_ident >>= cident)))
       p_filter
   in
-  let p_catch = p_cond <|> ep_parens (return None) in
+  let p_catch = p_cond <|> ep_parens (return None) <|> return None in
   lift2 (fun cond body -> cond, body) (ep_is_ "catch" ~then_:p_catch) ep_body
 ;;
 
