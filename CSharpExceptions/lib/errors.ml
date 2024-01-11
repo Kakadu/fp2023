@@ -14,6 +14,8 @@ type error =
   (*  *)
   | Stack_trace_is_empty
   | Non_existent_address
+  | Break_error of string
+  | Return_error of string
   (*  *)
   | Double_definition_of of ident
   | User_exception of address

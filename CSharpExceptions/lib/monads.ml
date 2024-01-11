@@ -78,7 +78,7 @@ module Base_monad = struct
 
   let iter_left : ('a -> ('st, unit, 'err) t) -> 'a list -> ('st, unit, 'err) t =
     fun custom_f mlst ->
-    let f acc cur = acc >>= fun _ -> custom_f cur >>= fun _ -> return () in
+    let f acc cur = acc *> custom_f cur *> return () in
     List.fold_left f (return ()) mlst
   ;;
 end
@@ -208,21 +208,22 @@ module Eval_Monad = struct
     | Error err -> fail err st1
   ;;
 
-  let ( |>>= ) : ('a, 'c) t -> ('c option -> ('b, 'd) t) -> ('b, 'd) t =
-    (* TODO: как-то сделать обертку, чтоб в конце каждого вызова метода запускался [return_r None], если не было вызвано другого return *)
-    fun x f st ->
+  let ( |>>= ) :
+        'a 'c 'b 'd.
+        ('a, 'c) t -> ('c option -> ('b, 'd) t) * ('a -> ('b, 'd) t) -> ('b, 'd) t
+    =
+    fun x f_tpl st ->
+    let ret_f, err_g = f_tpl in
     let st1, x1 = x st in
     match x1 with
-    | Return x -> f x st1
+    | Return x -> ret_f x st1
     | Exn (id, ad) -> return_e id ad st1
     | Error err -> fail err st1
-    | _ ->
-      fail
-        (Type_check_error
-           "If the method is not of 'void' type, then it must have 'return'")
-        st1
+    | Next x -> err_g x st1
+    | Break -> fail (Break_error "Impossible using of break statement without loop") st1
   ;;
 
+  (* TODO: ПЕРЕДЕЛАТЬ, НЕ РАБОТАЕТ, СКОРЕЕ ВСЕГО *)
   let ( !>>= ) : ('a, 'c) t -> (code_ident * address -> ('b, 'd) t) -> ('b, 'd) t =
     (* TODO:
        чтоб обрабатывать 'finally' нужна фигня типа:
@@ -284,9 +285,19 @@ module Eval_Monad = struct
     List.fold_left f (return_n []) mlst >>| List.rev
   ;;
 
+  let map2_left custom_f alst blst =
+    let f acc a b = acc >>= fun tl -> custom_f a b >>= fun x -> return_n (x :: tl) in
+    List.fold_left2 f (return_n []) alst blst >>| List.rev
+  ;;
+
   let iter_left custom_f mlst =
-    let f acc cur = acc >>= fun _ -> custom_f cur >>= fun _ -> return_n () in
+    let f acc cur = acc *> custom_f cur *> return_n () in
     List.fold_left f (return_n ()) mlst
+  ;;
+
+  let iter2_left custom_f alst blst =
+    let f acc a b = acc *> custom_f a b *> return_n () in
+    List.fold_left2 f (return_n ()) alst blst
   ;;
 
   (* ****************** Memory handling ****************** *)
@@ -341,7 +352,7 @@ module Eval_Monad = struct
     | None -> fail (Not_find_ident_of id)
   ;;
 
-  let save_instance_el id ad v =
+  let update_instance_el id ad v =
     read_instance ad
     >>= fun (cl_id, el) ->
     match IdentMap.find_opt id el with
@@ -382,15 +393,29 @@ module Eval_Monad = struct
     read_local >>= fun (ad, l_env) -> find_local_ id l_env <|> find_self_ id ad
   ;;
 
-  let save_local_el id v =
+  let update_local_el id v =
     read_local
     >>= fun (ad, l_env) ->
     let s_local =
       let new_l_env = IdentMap.add id v l_env in
       find_local_ id l_env *> save_local (ad, new_l_env)
     in
-    let s_self = save_instance_el id ad v in
+    let s_self = update_instance_el id ad v in
     s_local <|> s_self
+  ;;
+
+  let add_local_el id v =
+    read_local
+    >>= fun (ad, l_env) ->
+    let s_local =
+      let new_l_env = IdentMap.add id v l_env in
+      save_local (ad, new_l_env)
+    in
+    let cond = read_local_el id *> return_n false <|> return_n true in
+    cond
+    >>= function
+    | true -> s_local
+    | false -> fail (Not_find_ident_of id)
   ;;
 
   (* ****************** Stack trace handling ****************** *)
@@ -409,8 +434,8 @@ module Eval_Monad = struct
   let remove_stack_trace_el : (unit, 'c) t =
     read_stack_trace
     >>= (function
-           | ST [] -> fail Stack_trace_is_empty
-           | ST (_ :: tl) -> return_n (ST tl))
+          | ST [] -> fail Stack_trace_is_empty
+          | ST (_ :: tl) -> return_n (ST tl))
     >>= save_stack_trace
   ;;
 
@@ -431,7 +456,32 @@ module Eval_Monad = struct
 
   let local f = local_with read_local f
 
-  (* TODO: Сделать функцию, которая запускает метод, делая под капото изменение локального контекста + ловит return !правильно! *)
+  let run_method
+    :  meth_type -> ident list -> t_env_value list -> address -> t_env_value IdentMap.t
+    -> statement -> (statement -> ('a, 'c) t) -> ('c option, 'd) t
+    =
+    fun return_tp params args ad base_lenv steps handle ->
+    let run_f =
+      let narrow_down_lenv = save_local (ad, base_lenv) in
+      let add_args_in_lenv =
+        let f id env_val = add_local_el id env_val in
+        iter2_left f params args
+      in
+      let if_no_ret _ =
+        match return_tp with
+        | Void -> return_n None
+        | _ ->
+          fail (Return_error "Without return can be used only methods of 'Void' type")
+      in
+      let if_ret x = return_n x in
+      narrow_down_lenv *> add_args_in_lenv *> handle steps |>>= (if_ret, if_no_ret)
+    in
+    local run_f
+  ;;
+   (* Огранизационная функция *)
+   (* TODO: для try local должен и память ловить если что *)
 
-  (* TODO: для try local должен и память ловить если что *)
+   (* По анологии с run_method *)
+   (* TODO: Написать функцию обработки для for + while *)
+   (* TODO: Написать функцию обработки для try_catch_finally *)
 end
