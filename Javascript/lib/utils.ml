@@ -42,3 +42,5 @@ let both f a b = f a >>= fun x -> f b >>= fun y -> return (x, y)
 let both_ext f acc a b =
   f acc a >>= fun (acc, x) -> f acc b >>= fun (acc, y) -> return (acc, (x, y))
 ;;
+
+module IntMap = Map.Make (Int)
