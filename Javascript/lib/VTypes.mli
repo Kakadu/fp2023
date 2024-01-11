@@ -14,8 +14,17 @@ type vt_error =
   | TypeError of string
   | SyntaxError of string
 
+type value =
+  | VNumber of float
+  | VString of string
+  | VBool of bool
+  | VUndefined
+  | VNull
+  | VObject of int
+
 type fun_ctx =
-  { args : string list
+  { parent_lex_env : int
+  ; args : string list
   ; body : statement
   }
 
@@ -24,10 +33,21 @@ type scope =
   | ArrowFunction
   | Block
 
-type field
+type let_ctx =
+  { var_id : string
+  ; is_const : bool
+  ; value : value
+  }
 
-type obj_type =
-  | TFunPreset of (ctx -> value list -> ctx t)
+type lexical_env =
+  { parent : int option (*lex env where fun init*)
+  ; creater : int option (*lex env where fun call, in block creater = parent*)
+  ; vars : let_ctx list
+  ; scope : scope
+  }
+
+and obj_type =
+  | TFunPreset of (ctx -> value list -> (ctx * value option) t)
   | TFunction of fun_ctx
   | TArrowFunction of fun_ctx
   | TObject
@@ -37,24 +57,12 @@ and obj_ctx =
   ; obj_type : obj_type
   }
 
-and value =
-  | VNumber of float
-  | VString of string
-  | VBool of bool
-  | VUndefined
-  | VNull
-  | VObject of obj_ctx
-
-and let_ctx =
-  { var_id : string
-  ; is_const : bool
-  ; value : value
-  }
-
 and ctx =
-  { parent : ctx option
-  ; vars : let_ctx list
+  { lex_env_count : int
+  ; cur_lex_env : int
+  ; lex_envs : lexical_env IntMap.t
+  ; obj_count : int
+  ; objs : obj_ctx IntMap.t
   ; vreturn : value option
   ; stdout : string
-  ; scope : scope
   }
