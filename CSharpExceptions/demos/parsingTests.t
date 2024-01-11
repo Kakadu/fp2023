@@ -30,8 +30,8 @@ SPDX-License-Identifier: CC0-1.0
         [(Method (
             { m_modif = None; m_type = (TReturn (TNot_Nullable TInt));
               m_id = (Id "Fac");
-              m_args =
-              (Args [(Var_decl ((TVar (TNot_Nullable TInt)), (Id "num")))]) },
+              m_params =
+              (Params [(Var_decl ((TVar (TNot_Nullable TInt)), (Id "num")))]) },
             (Steps
                [(SIf_else (
                    (EBin_op (Equal, (EIdentifier (Id "num")), (EConst (VInt 1))
@@ -43,7 +43,7 @@ SPDX-License-Identifier: CC0-1.0
                                          (EIdentifier (Id "num")),
                                          (EMethod_invoke (
                                             (EIdentifier (Id "Fac")),
-                                            (Params
+                                            (Args
                                                [(EBin_op (Minus,
                                                    (EIdentifier (Id "num")),
                                                    (EConst (VInt 1))))
@@ -64,7 +64,7 @@ SPDX-License-Identifier: CC0-1.0
                         (EConst (VInt 20)))));
                   (SReturn
                      (Some (EMethod_invoke ((EIdentifier (Id "Fac")),
-                              (Params [(EIdentifier (Id "number"))])))))
+                              (Args [(EIdentifier (Id "number"))])))))
                   ])
              ))
           ]

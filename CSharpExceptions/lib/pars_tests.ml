@@ -59,7 +59,7 @@ let%expect_test "Operations - arithmetic" =
                 ))
              )),
           (EMethod_invoke ((EIdentifier (Id "some")),
-             (Params [(EUn_op (New, (EIdentifier (Id "myClass"))))])))
+             (Args [(EUn_op (New, (EIdentifier (Id "myClass"))))])))
           )),
        (EUn_op (UMinus, (EConst (VInt 3)))))) |}]
 ;;
@@ -98,7 +98,7 @@ let%expect_test "Method invocation" =
     (EMethod_invoke (
        (EPoint_access ((EIdentifier (Id "a")),
           (EPoint_access ((EIdentifier (Id "b")), (EIdentifier (Id "c")))))),
-       (Params
+       (Args
           [(EConst (VInt 1)); (EIdentifier (Id "qwert_cl"));
             (EConst (VString "qwert_s")); (EConst (VBool true));
             (EConst (VBool false))])
@@ -114,7 +114,7 @@ let%expect_test "Declaration + assign" =
     (SDecl ((Var_decl ((TVar (TNullable (TClass (Id "a")))), (Id "egor"))),
        (Some (EBin_op (Plus,
                 (EMethod_invoke ((EIdentifier (Id "a")),
-                   (Params
+                   (Args
                       [(EBin_op (Plus, (EConst (VInt 1)), (EConst (VInt 2))));
                         (EIdentifier (Id "d")); (EConst (VString "qwe"))])
                    )),
@@ -298,7 +298,7 @@ let%expect_test "Body with conditions" =
       (Steps
          [(SIf_else ((EConst (VBool true)),
              (Steps
-                [(SExpr (EMethod_invoke ((EIdentifier (Id "a")), (Params []))));
+                [(SExpr (EMethod_invoke ((EIdentifier (Id "a")), (Args []))));
                   (SIf_else ((EConst (VBool false)),
                      (Steps
                         [(SExpr
@@ -318,23 +318,22 @@ let%expect_test "Body with conditions" =
              None));
            (SExpr
               (EMethod_invoke ((EIdentifier (Id "a")),
-                 (Params
+                 (Args
                     [(EBin_op (Plus, (EConst (VInt 1)), (EConst (VInt 2))));
                       (EIdentifier (Id "cl"))])
                  )));
            (SIf_else (
               (EBin_op (Plus, (EConst (VInt 1)),
-                 (EMethod_invoke ((EIdentifier (Id "run")), (Params []))))),
+                 (EMethod_invoke ((EIdentifier (Id "run")), (Args []))))),
               (Steps
                  [(SExpr
                      (EMethod_invoke ((EIdentifier (Id "first")),
-                        (Params [(EConst (VInt 1))]))))
+                        (Args [(EConst (VInt 1))]))))
                    ]),
               (Some (SIf_else ((EConst (VBool true)), (Steps []), None)))));
            (SIf_else ((EBin_op (Equal, (EIdentifier (Id "a")), (EConst (VInt 2)))),
-              (SExpr (EMethod_invoke ((EIdentifier (Id "a")), (Params [])))),
-              (Some (SExpr (EMethod_invoke ((EIdentifier (Id "b")), (Params [])))))
-              ));
+              (SExpr (EMethod_invoke ((EIdentifier (Id "a")), (Args [])))),
+              (Some (SExpr (EMethod_invoke ((EIdentifier (Id "b")), (Args [])))))));
            (SReturn (Some (EBin_op (Plus, (EConst (VInt 1)), (EConst (VInt 1))))))])
 
      |}]
@@ -346,7 +345,7 @@ let%expect_test "Method parsing" =
     {|
     (Method (
        { m_modif = None; m_type = (TReturn (TNullable (TClass (Id "i"))));
-         m_id = (Id "hm"); m_args = (Args []) },
+         m_id = (Id "hm"); m_params = (Params []) },
        (Steps []))) |}]
 ;;
 
@@ -369,7 +368,8 @@ let%expect_test "Method parsing" =
     (Method (
        { m_modif = (Some MStatic); m_type = (TReturn (TNot_Nullable TInt));
          m_id = (Id "Fac");
-         m_args = (Args [(Var_decl ((TVar (TNot_Nullable TInt)), (Id "num")))]) },
+         m_params =
+         (Params [(Var_decl ((TVar (TNot_Nullable TInt)), (Id "num")))]) },
        (Steps
           [(SIf_else (
               (EBin_op (Equal, (EIdentifier (Id "num")), (EConst (VInt 1)))),
@@ -378,7 +378,7 @@ let%expect_test "Method parsing" =
                        [(SReturn
                            (Some (EBin_op (Asterisk, (EIdentifier (Id "num")),
                                     (EMethod_invoke ((EIdentifier (Id "Fac")),
-                                       (Params
+                                       (Args
                                           [(EBin_op (Minus,
                                               (EIdentifier (Id "num")),
                                               (EConst (VInt 1))))
@@ -436,10 +436,10 @@ let%expect_test _ =
           None));
        (Constructor (
           { con_modif = (Some MPublic); con_id = (Id "Program");
-            con_args =
-            (Args [(Var_decl ((TVar (TNot_Nullable TInt)), (Id "num")))]);
-            base_params =
-            (Some (Params
+            con_params =
+            (Params [(Var_decl ((TVar (TNot_Nullable TInt)), (Id "num")))]);
+            base_args =
+            (Some (Args
                      [(EConst (VInt 1)); (EConst (VInt 2)); (EConst (VInt 3))]))
             },
           (Steps
@@ -452,7 +452,7 @@ let%expect_test _ =
                                        (EIdentifier (Id "num")),
                                        (EMethod_invoke (
                                           (EIdentifier (Id "Fac")),
-                                          (Params
+                                          (Args
                                              [(EBin_op (Minus,
                                                  (EIdentifier (Id "num")),
                                                  (EConst (VInt 1))))
@@ -466,8 +466,8 @@ let%expect_test _ =
        (Method (
           { m_modif = (Some (MAccess MPublic));
             m_type = (TReturn (TNot_Nullable TInt)); m_id = (Id "Fuc");
-            m_args =
-            (Args
+            m_params =
+            (Params
                [(Var_decl ((TVar (TNot_Nullable TInt)), (Id "num")));
                  (Var_decl ((TVar (TNullable TString)), (Id "dr")));
                  (Var_decl ((TVar (TNullable (TClass (Id "Program")))),
@@ -489,7 +489,7 @@ let%expect_test _ =
                                           (EBin_op (Plus, (EConst (VInt 1)),
                                              (EMethod_invoke (
                                                 (EIdentifier (Id "Fuc")),
-                                                (Params
+                                                (Args
                                                    [(EConst (VInt 2));
                                                      (EIdentifier (Id "str"));
                                                      (EIdentifier (Id "myclass"))
@@ -502,7 +502,7 @@ let%expect_test _ =
                                              (EPoint_access (
                                                 (EIdentifier (Id "myclass")),
                                                 (EIdentifier (Id "Fuc")))),
-                                             (Params
+                                             (Args
                                                 [(EConst (VInt 1));
                                                   (EConst (VString "d"));
                                                   (EIdentifier (Id "myclass"))])
@@ -551,8 +551,8 @@ let%expect_test _ =
        (Method (
           { m_modif = (Some MStatic); m_type = (TReturn (TNot_Nullable TInt));
             m_id = (Id "Fac");
-            m_args =
-            (Args [(Var_decl ((TVar (TNot_Nullable TInt)), (Id "num")))]) },
+            m_params =
+            (Params [(Var_decl ((TVar (TNot_Nullable TInt)), (Id "num")))]) },
           (Steps
              [(SIf_else (
                  (EBin_op (Equal, (EIdentifier (Id "num")), (EConst (VInt 1)))),
@@ -563,7 +563,7 @@ let%expect_test _ =
                                        (EIdentifier (Id "num")),
                                        (EMethod_invoke (
                                           (EIdentifier (Id "Fac")),
-                                          (Params
+                                          (Args
                                              [(EBin_op (Minus,
                                                  (EIdentifier (Id "num")),
                                                  (EConst (VInt 1))))
@@ -615,8 +615,9 @@ let%expect_test _ =
           (Method (
              { m_modif = (Some MStatic);
                m_type = (TReturn (TNot_Nullable TInt)); m_id = (Id "Fac");
-               m_args =
-               (Args [(Var_decl ((TVar (TNot_Nullable TInt)), (Id "num")))]) },
+               m_params =
+               (Params [(Var_decl ((TVar (TNot_Nullable TInt)), (Id "num")))])
+               },
              (Steps
                 [(SIf_else (
                     (EBin_op (Equal, (EIdentifier (Id "num")),
@@ -628,7 +629,7 @@ let%expect_test _ =
                                           (EIdentifier (Id "num")),
                                           (EMethod_invoke (
                                              (EIdentifier (Id "Fac")),
-                                             (Params
+                                             (Args
                                                 [(EBin_op (Minus,
                                                     (EIdentifier (Id "num")),
                                                     (EConst (VInt 1))))
@@ -685,8 +686,9 @@ let%expect_test _ =
             (Method (
                { m_modif = (Some MStatic);
                  m_type = (TReturn (TNot_Nullable TInt)); m_id = (Id "Fac");
-                 m_args =
-                 (Args [(Var_decl ((TVar (TNot_Nullable TInt)), (Id "num")))]) },
+                 m_params =
+                 (Params [(Var_decl ((TVar (TNot_Nullable TInt)), (Id "num")))])
+                 },
                (Steps
                   [(SIf_else (
                       (EBin_op (Equal, (EIdentifier (Id "num")),
@@ -698,7 +700,7 @@ let%expect_test _ =
                                             (EIdentifier (Id "num")),
                                             (EMethod_invoke (
                                                (EIdentifier (Id "Fac")),
-                                               (Params
+                                               (Args
                                                   [(EBin_op (Minus,
                                                       (EIdentifier (Id "num")),
                                                       (EConst (VInt 1))))
@@ -766,9 +768,9 @@ let%expect_test _ =
                (Some (EConst (VBool false)))));
             (Constructor (
                { con_modif = None; con_id = (Id "FileInfo");
-                 con_args =
-                 (Args [(Var_decl ((TVar (TNullable TString)), (Id "path_")))]);
-                 base_params = None },
+                 con_params =
+                 (Params [(Var_decl ((TVar (TNullable TString)), (Id "path_")))]);
+                 base_args = None },
                (Steps
                   [(SExpr
                       (EBin_op (Assign, (EIdentifier (Id "path")),
@@ -777,12 +779,13 @@ let%expect_test _ =
                ));
             (Method (
                { m_modif = None; m_type = (TReturn (TNullable TString));
-                 m_id = (Id "ReadAllText"); m_args = (Args []) },
+                 m_id = (Id "ReadAllText"); m_params = (Params []) },
                (Steps [])));
             (Method (
                { m_modif = None; m_type = Void; m_id = (Id "AppendAllText");
-                 m_args =
-                 (Args [(Var_decl ((TVar (TNullable TString)), (Id "info")))]) },
+                 m_params =
+                 (Params [(Var_decl ((TVar (TNullable TString)), (Id "info")))])
+                 },
                (Steps [])))
             ]
           }

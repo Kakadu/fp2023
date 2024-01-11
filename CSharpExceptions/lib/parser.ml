@@ -163,8 +163,8 @@ let p_keyword_type =
   | base_type ->
     s_is_nullable
     >>= (function
-     | true -> base_type_converter base_type >>| fun x -> TNullable (TBase x)
-     | false -> base_type_converter base_type >>| fun x -> TNot_Nullable x)
+    | true -> base_type_converter base_type >>| fun x -> TNullable (TBase x)
+    | false -> base_type_converter base_type >>| fun x -> TNot_Nullable x)
 ;;
 
 let ( #~> ) str tp = read_as_token str *> return tp
@@ -223,7 +223,7 @@ let ep_list_from_ ep_arg =
 
 let ep_invoke_ meth_ident ep_arg =
   ep_list_from_ ep_arg
-  >>= (fun exp -> return (Params exp))
+  >>= (fun exp -> return (Args exp))
   >>| fun args -> EMethod_invoke (meth_ident, args)
 ;;
 
@@ -428,12 +428,12 @@ let ep_try_catch_fin = ep_try_catch_fin_ ep_steps
 
 (* Class members parsing *)
 
-let ep_args_ = ep_list_from_ ep_var_decl >>= fun exp -> return (Args exp)
+let ep_args_ = ep_list_from_ ep_var_decl >>= fun exp -> return (Params exp)
 let ep_modifier_ p_mod = option None (ep_spaces @@ get_opt p_mod)
 
 let ep_method_sign =
   lift4
-    (fun m_modif m_type m_id m_args -> { m_modif; m_type; m_id; m_args })
+    (fun m_modif m_type m_id m_params -> { m_modif; m_type; m_id; m_params })
     (ep_modifier_ p_method_modifier)
     (ep_spaces p_method_type)
     (ep_spaces p_ident)
@@ -443,11 +443,11 @@ let ep_method_sign =
 let ep_constructor_sign =
   let ep_base_cons =
     ep_spaces @@ (char ':' *> ep_is_ "base" ~then_:(ep_list_from_ ep_operation))
-    >>| fun x -> Some (Params x)
+    >>| fun x -> Some (Args x)
   in
   lift4
-    (fun con_modif con_id con_args base_params ->
-      { con_modif; con_id; con_args; base_params })
+    (fun con_modif con_id con_params base_args ->
+      { con_modif; con_id; con_params; base_args })
     (ep_modifier_ p_access_modifier)
     (ep_spaces p_ident)
     ep_args_
@@ -482,12 +482,12 @@ let is_main_mod_ = function
 ;;
 
 let is_main_args_ = function
-  | Args x -> List.is_empty x
+  | Params x -> List.is_empty x
 ;;
 
 let is_main_ = function
-  | { m_modif; m_type; m_args; _ }
-    when is_main_mod_ m_modif && is_main_type_ m_type && is_main_args_ m_args -> true
+  | { m_modif; m_type; m_params; _ }
+    when is_main_mod_ m_modif && is_main_type_ m_type && is_main_args_ m_params -> true
   | _ -> false
 ;;
 

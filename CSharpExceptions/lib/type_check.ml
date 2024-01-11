@@ -121,12 +121,12 @@ let map2_opt f l1 l2 =
   | false -> Result.error "len(list1) != len(list2)"
 ;;
 
-let check_method_ tp args params =
+let check_method_ tp params args =
   let compare_prms = map2_opt ( =!> ) in
   let to_env elem = Some (v_decl_to_type_v elem) in
-  let args_env = List.map to_env args in
+  let args_env = List.map to_env params in
   let result =
-    params
+    args
     >>| fun prms_env ->
     match compare_prms args_env prms_env with
     | Result.Ok ans -> is_success_list ans
@@ -138,17 +138,17 @@ let check_method_ tp args params =
   | false -> fail Type_mismatch
 ;;
 
-let check_invoke sign env_prms =
+let check_invoke sign env_args =
   match sign with
-  | Some (Method_sig { m_modif = _; m_type; m_id = _; m_args = Args args }) ->
+  | Some (Method_sig { m_modif = _; m_type; m_id = _; m_params = Params params }) ->
     let tp = to_type_m m_type in
     (match tp with
      | Result.Error _ -> fail Type_mismatch
-     | Result.Ok tp -> check_method_ tp args env_prms)
-  | Some (Constructor_sig { con_modif = _; con_id; con_args; base_params }) ->
+     | Result.Ok tp -> check_method_ tp params env_args)
+  | Some (Constructor_sig { con_modif = _; con_id; con_params; base_args }) ->
     let tp = Value_sig (TVar (TNullable (TClass con_id))) in
-    (match con_args, base_params with
-     | Args args, None -> check_method_ tp args env_prms
+    (match con_params, base_args with
+     | Params params, None -> check_method_ tp params env_args
      | _ -> fail (Other_error "Inheritance with constructors is not supported"))
   | _ -> fail Type_mismatch
 ;;
@@ -282,12 +282,12 @@ let check_un_op op env1 =
   | New ->
     env1
     >>= (function
-     | Some (Constructor_sig { con_modif = _; con_id; _ }) ->
-       return (Some (Value_sig (TVar (TNullable (TClass con_id)))))
-     | Some (Value_sig (TVar (TNullable (TClass id)))) ->
-       read_global_el (Code_ident id)
-       *> return (Some (Value_sig (TVar (TNullable (TClass id)))))
-     | _ -> fail Type_mismatch)
+    | Some (Constructor_sig { con_modif = _; con_id; _ }) ->
+      return (Some (Value_sig (TVar (TNullable (TClass con_id)))))
+    | Some (Value_sig (TVar (TNullable (TClass id)))) ->
+      read_global_el (Code_ident id)
+      *> return (Some (Value_sig (TVar (TNullable (TClass id)))))
+    | _ -> fail Type_mismatch)
 ;;
 
 let check_expr exp =
@@ -297,7 +297,7 @@ let check_expr exp =
       (* None means "there is null" *)
       return (to_type_v @@ to_var_type @@ to_atype x)
     | EIdentifier x -> get_local_ident x
-    | EMethod_invoke (e2, Params prms) ->
+    | EMethod_invoke (e2, Args args) ->
       let is_Eident = function
         | EIdentifier x -> get_local_ident x
         | _ -> fail (Other_error "Just for skip")
@@ -309,7 +309,7 @@ let check_expr exp =
       is_Eident e2
       <|> is_EPoint_acc e2
       >>= fun x ->
-      let env_val_prms = params_check helper prms in
+      let env_val_prms = params_check helper args in
       check_invoke x env_val_prms
     | EPoint_access (e1, e2) ->
       let is_EPoint_acc = function
@@ -468,7 +468,7 @@ let check_statement stat =
 ;;
 
 let add_params params =
-  let (Args params) = params in
+  let (Params params) = params in
   let f = function
     | Var_decl (tp, id) -> add_local id (Value_sig tp)
   in
@@ -481,19 +481,20 @@ let memb_check = function
      | Some e -> var_exp_check e (Fild_sig sign)
      | None -> return TP_Ok)
   | Main (m_type, s) -> local_scope @@ (save_scope_tp (Some m_type) *> check_statement s)
-  | Method ({ m_modif = _; m_type; m_id = _; m_args }, s) ->
-    local_scope @@ (save_scope_tp (Some m_type) *> add_params m_args *> check_statement s)
-  | Constructor ({ con_modif = _; con_id; con_args; _ }, s) ->
+  | Method ({ m_modif = _; m_type; m_id = _; m_params }, s) ->
+    local_scope
+    @@ (save_scope_tp (Some m_type) *> add_params m_params *> check_statement s)
+  | Constructor ({ con_modif = _; con_id; con_params; _ }, s) ->
     let cons_tp = TReturn (TNullable (TClass con_id)) in
     local_scope
-    @@ (save_scope_tp (Some cons_tp) *> add_params con_args *> check_statement s)
+    @@ (save_scope_tp (Some cons_tp) *> add_params con_params *> check_statement s)
 ;;
 
-let create_cons_sign con_modif con_id con_args base_params =
-  { con_modif; con_id; con_args; base_params }
+let create_cons_sign con_modif con_id con_params base_args =
+  { con_modif; con_id; con_params; base_args }
 ;;
 
-let default_cons id = create_cons_sign (Some MPublic) id (Args []) None
+let default_cons id = create_cons_sign (Some MPublic) id (Params []) None
 
 let class_check cl_decl =
   let { cl_modif; cl_id; parent; cl_mems } = cl_decl in
@@ -516,8 +517,8 @@ let class_check cl_decl =
     | Main _ ->
       read_main_ctx
       >>= (function
-       | Some _ -> fail (Double_definition_of (Id "Main"))
-       | None -> save_main_ctx (Some (Code_ident cl_id)))
+      | Some _ -> fail (Double_definition_of (Id "Main"))
+      | None -> save_main_ctx (Some (Code_ident cl_id)))
     | Constructor (sign, _) ->
       let { con_modif = _; con_id; _ } = sign in
       (match equal_ident con_id cl_id with

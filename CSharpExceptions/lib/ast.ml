@@ -84,19 +84,17 @@ type expr =
   | EConst of value_ (* assignable values *)
   (*  *)
   | EIdentifier of ident (* id of something e.g. class name; var name; method name *)
-  | EMethod_invoke of expr * params (* method(a, b, c) | Class.method(a, b, c) *)
+  | EMethod_invoke of expr * args (* method(a, b, c) | Class.method(a, b, c) *)
   (*  *)
   | EBin_op of bin_op * expr * expr
   | EPoint_access of expr * expr (* access by point e.g. A.run() *)
   | EUn_op of un_op * expr
 (*  *)
 
-and params = Params of expr list [@@deriving show { with_path = false }]
+and args = Args of expr list [@@deriving show { with_path = false }]
 
 type var_decl = Var_decl of var_type * ident [@@deriving show { with_path = false }]
-
-(* TODO: Переименовать на параметры *)
-type args = Args of var_decl list [@@deriving show { with_path = false }]
+type params = Params of var_decl list [@@deriving show { with_path = false }]
 
 type catch_decl =
   | CDecl of var_decl
@@ -137,15 +135,15 @@ type method_sign =
   { m_modif : method_modifier option
   ; m_type : meth_type
   ; m_id : ident
-  ; m_args : args
+  ; m_params : params
   }
 [@@deriving show { with_path = false }]
 
 type constructor_sign =
   { con_modif : access_modifier option
   ; con_id : ident
-  ; con_args : args
-  ; base_params : params option
+  ; con_params : params
+  ; base_args : args option
   }
 [@@deriving show { with_path = false }]
 
