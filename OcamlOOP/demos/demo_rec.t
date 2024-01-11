@@ -42,3 +42,8 @@
   > let fact = fix (fun self n -> if n <= 1 then 1 else n * self (n-1))
   val fact : int -> int = <fun>
   val fix : (('a -> 'b) -> 'a -> 'b) -> 'a -> 'b = <fun>
+
+  $ cat << EOF | dune exec demo -
+  > let rec fact n k = if n<=1 then k 1 else fact (n-1) (fun z -> k(z*n))
+  > EOF
+  
