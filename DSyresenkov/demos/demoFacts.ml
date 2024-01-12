@@ -3,11 +3,17 @@ open Format
 
 let input =
   {|
-    let fact x =  
+    let rec fact x = if x = 1 then x else x * fact (x - 1)
+
+    let factCPS x =  
       let rec helper x k = if x = 1 then k 1 else helper (x - 1) (fun n -> n * k x) 
     in helper x (fun x -> x)
 
-    let result = fact 10
+    let rec fix f x = f (fix f) x
+
+    let factFix = fix (fun f x -> if x < 2 then x else x * f (x - 1))
+
+    let results = [fact 5; factCPS 5; factFix 5]
   |}
 ;;
 
