@@ -18,8 +18,8 @@ type bin_op =
   | StrictEqual
   | StrictNotEqual
   | Assign
-  | Rem 
-  | Exp 
+  | Rem
+  | Exp
   | GreaterThan
   | GreaterEqual
   | LessThan
