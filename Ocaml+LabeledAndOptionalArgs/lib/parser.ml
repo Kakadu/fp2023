@@ -6,12 +6,7 @@ open Angstrom
 open Ast
 open Base
 
-let rec chainr1 e op = e >>= fun a -> op >>= (fun f -> chainr1 e op >>| f a) <|> return a
-
-let chainl1 e op =
-  let rec go acc = lift2 (fun f x -> f acc x) op e >>= go <|> return acc in
-  e >>= fun init -> go init
-;;
+(*Checks*)
 
 let is_keyword = function
   | "and"
@@ -78,16 +73,6 @@ let is_digit = function
   | _ -> false
 ;;
 
-let is_equal = function
-  | '=' -> true
-  | _ -> false
-;;
-
-let is_colon = function
-  | ':' -> true
-  | _ -> false
-;;
-
 let is_underscore = function
   | '_' -> true
   | _ -> false
@@ -118,8 +103,7 @@ let is_quote = function
   | _ -> false
 ;;
 
-let is_func_type d =
-  match d with
+let is_func_type = function
   | FuncType (_, _, true) -> true
   | _ -> false
 ;;
@@ -127,20 +111,41 @@ let is_func_type d =
 let is_char c = is_char_up c || is_char_lr c
 let is_correct_first_letter c = is_char_lr c || is_underscore c
 let is_correct_var_name c = is_char c || is_digit c || is_underscore c || is_apostrophe c
+
+(*Auxiliary functions*)
+
+let rec chainr1 e op = e >>= fun a -> op >>= (fun f -> chainr1 e op >>| f a) <|> return a
+
+let chainl1 e op =
+  let rec go acc = lift2 (fun f x -> f acc x) op e >>= go <|> return acc in
+  e >>= fun init -> go init
+;;
+
 let remove_spaces = take_while is_space
 let remove_between p = remove_spaces *> p <* remove_spaces
 let check_word s = remove_spaces *> string s
 let check_char c = remove_spaces *> char c
 let remove_brackets p = check_char '(' *> p <* check_char ')'
-let remove_lots_of_brackets p = many (check_char '(') *> p <* many (check_char ')')
+
+let check_name =
+  remove_spaces *> satisfy is_correct_first_letter
+  >>= fun c ->
+  take_while is_correct_var_name
+  >>= fun s ->
+  let name = Char.escaped c ^ s in
+  if is_keyword name then fail "Invalid var" else return name
+;;
+
+let var_check =
+  check_name >>= fun s -> if is_keyword s then fail "Invalid var" else return s
+;;
 
 let digits_parse =
   remove_between (take_while1 is_digit >>= fun s -> return (Int (Int.of_string s)))
 ;;
 
 let bool_parse =
-  check_word "true"
-  >>= fun _ -> return (Bool true) <|> (check_word "false" >>= fun _ -> return (Bool false))
+  check_word "true" *> return (Bool true) <|> check_word "false" *> return (Bool false)
 ;;
 
 let char_parse =
@@ -151,27 +156,7 @@ let string_parse =
   check_char '\"' *> take_till is_quote >>= fun s -> return (String s) <* check_char '\"'
 ;;
 
-let const_parse p =
-  choice
-    [ remove_brackets p
-    ; (digits_parse >>= fun c -> return (Const c))
-    ; (bool_parse >>= fun c -> return (Const c))
-    ; (char_parse >>= fun c -> return (Const c))
-    ; (string_parse >>= fun c -> return (Const c))
-    ]
-;;
-
-let arg_const_parse = choice [ digits_parse; bool_parse; char_parse; string_parse ]
-
-let check_name =
-  remove_between
-    (satisfy is_correct_first_letter
-     >>= fun c -> take_while is_correct_var_name >>| fun s -> Char.escaped c ^ s)
-;;
-
-let var_check =
-  check_name >>= fun s -> if is_keyword s then fail "Invalid var" else return s
-;;
+(*Type parser*)
 
 let base_types t =
   choice
@@ -222,6 +207,10 @@ let fun_type t =
   <|> chainr1 t (check_word "->" *> return (fun t1 t2 -> FuncType (t1, t2, false)))
 ;;
 
+(*Since all functions are considered as functions of a single argument,
+  only the first function will have the option flag in ast.
+  Internal functions will not have such a label*)
+
 let type_parse =
   fix
   @@ fun p ->
@@ -231,15 +220,33 @@ let type_parse =
   fun_type t
 ;;
 
-let arg_parse =
+(*pattern parse*)
+
+let pconst_parse p =
+  choice
+    [ remove_brackets p
+    ; (digits_parse >>| fun c -> PConst c)
+    ; (bool_parse >>| fun c -> PConst c)
+    ; (char_parse >>| fun c -> PConst c)
+    ; (string_parse >>| fun c -> PConst c)
+    ]
+;;
+
+let pvar_parse p = remove_brackets p <|> (var_check >>| fun s -> PVar s)
+let base_patterns p = pconst_parse p <|> pvar_parse p
+let fun_pnil_parse p = remove_brackets p <|> check_word "[]" *> return PNil
+let pnil_parse = check_word "[]" *> return PNil
+let pempty_parse = check_word "_" *> return PEmpty
+let arg_const_parse = choice [ digits_parse; bool_parse; char_parse; string_parse ]
+
+let no_label_arg_parse =
   fix
   @@ fun p ->
   remove_brackets p
   <|> (check_name
        >>= fun n ->
-       check_char ':' *> type_parse
-       >>= (fun t -> return (n, t))
-       <|> return (n, UndefinedType))
+       check_char ':' *> type_parse >>= (fun t -> return (n, t)) <|> return (n, EmptyType)
+      )
 ;;
 
 let labeled_arg_parse =
@@ -253,19 +260,18 @@ let labeled_arg_parse =
        >>= fun sn ->
        check_char ':' *> type_parse
        >>= (fun t -> return (n, sn, t))
-       <|> return (n, sn, UndefinedType))
+       <|> return (n, sn, EmptyType))
     <|> remove_brackets f
   in
   choice
     [ (check_name
-       >>= fun n ->
-       check_char ':' *> check_name >>= fun sn -> return (n, sn, UndefinedType))
+       >>= fun n -> check_char ':' *> check_name >>= fun sn -> return (n, sn, EmptyType))
     ; (check_name >>= fun n -> check_char ':' *> helper n)
     ; remove_brackets
         (check_name >>= fun n -> check_char ':' *> type_parse >>= fun t -> return (n, n, t)
         )
     ; remove_brackets p
-    ; (check_name >>= fun n -> return (n, n, UndefinedType))
+    ; (check_name >>= fun n -> return (n, n, EmptyType))
     ]
 ;;
 
@@ -280,7 +286,7 @@ let optional_arg_parse =
          >>= fun c ->
          check_char ':' *> type_parse
          >>= (fun t -> return (n, Some c, t))
-         <|> return (n, Some c, UndefinedType))
+         <|> return (n, Some c, EmptyType))
   in
   choice
     [ remove_brackets (check_name >>= fun n -> check_char '=' *> helper n)
@@ -288,20 +294,63 @@ let optional_arg_parse =
         (check_name
          >>= fun n -> check_char ':' *> type_parse >>= fun t -> return (n, None, t))
     ; remove_brackets p
-    ; (check_name >>= fun n -> return (n, None, UndefinedType))
+    ; (check_name >>= fun n -> return (n, None, EmptyType))
     ]
 ;;
 
-let check_label =
-  remove_spaces
-  *> choice
-       [ (check_char '~' *> labeled_arg_parse >>| fun (n, sn, t) -> Label (n, sn, t))
-       ; (check_char '?' *> optional_arg_parse >>| fun (n, c, t) -> Optional (n, c, t))
-       ; (arg_parse >>| fun (n, t) -> NoLabel (n, t))
-       ]
+let parg_parse =
+  choice
+    [ (check_char '~' *> labeled_arg_parse >>| fun (n, sn, t) -> PArg (n, Label sn, t))
+    ; (check_char '?' *> optional_arg_parse >>| fun (n, c, t) -> PArg (n, Optional c, t))
+    ; (no_label_arg_parse >>| fun (n, t) -> PArg (n, NoLabel, t))
+    ]
 ;;
 
-let args_parse = many check_label
+let cons_parse1 = check_word "::" *> return (fun ptr1 ptr2 -> PCons (ptr1, ptr2))
+let pcons_parse p = chainr1 p cons_parse1
+
+let ptuple_parse p =
+  sep_by (check_char ',') p
+  >>= function
+  | [] -> p
+  | [ h ] -> return h
+  | h :: tl -> return (PTuple (h :: tl))
+;;
+
+let pattern_parse =
+  fix
+  @@ fun p ->
+  let pattern = base_patterns p in
+  let pattern = pnil_parse <|> pattern in
+  let pattern = pempty_parse <|> pattern in
+  let pattern = pcons_parse pattern <|> pattern in
+  let pattern = ptuple_parse pattern <|> pattern in
+  pattern
+;;
+
+let fun_pattern_parse =
+  fix
+  @@ fun p ->
+  let pattern = fun_pnil_parse p in
+  let pattern = pempty_parse <|> pattern in
+  let pattern = parg_parse <|> pattern in
+  let pattern = pcons_parse pattern <|> pattern in
+  let pattern = ptuple_parse pattern <|> pattern in
+  pattern
+;;
+
+(*expressions parse*)
+
+let const_parse p =
+  choice
+    [ remove_brackets p
+    ; (digits_parse >>= fun c -> return (Const c))
+    ; (bool_parse >>= fun c -> return (Const c))
+    ; (char_parse >>= fun c -> return (Const c))
+    ; (string_parse >>= fun c -> return (Const c))
+    ]
+;;
+
 let var_parse p = remove_brackets p <|> (var_check >>| fun s -> Var s)
 let base_expr p = const_parse p <|> var_parse p
 
@@ -395,24 +444,53 @@ let bin_op_parse expr =
 ;;
 
 let apply_parse e = chainl1 e (return (fun e1 e2 -> Apply (e1, e2)))
-let fun_decl = check_char ':' *> type_parse <|> return UndefinedType
+
+let match_parse expr =
+  let first_elem_parse expr =
+    lift2 (fun a b -> a, b) (pattern_parse <* check_word "->") expr
+  in
+  let elem_parse expr =
+    lift2 (fun a b -> a, b) (check_char '|' *> pattern_parse <* check_word "->") expr
+  in
+  lift2
+    ematch
+    (check_word "match" *> expr <* check_word "with")
+    (many1 (elem_parse expr)
+     <|> (first_elem_parse expr >>= fun h -> many (elem_parse expr) >>| fun tl -> h :: tl)
+    )
+;;
 
 let fun_parse e =
-  check_word "fun" *> args_parse
-  >>= fun l ->
-  fun_decl >>= fun t -> check_word "->" *> e >>= fun e1 -> return (Fun (l, t, e1))
+  let helper e =
+    fix
+    @@ fun p ->
+    lift2
+      efun
+      fun_pattern_parse
+      (p <|> check_char ':' *> type_parse *> check_word "->" *> e <|> check_word "->" *> e)
+  in
+  check_word "fun" *> helper e
 ;;
 
-let let_parse e f =
-  check_word "let"
-  *> lift4
-       f
-       (check_word "rec" *> return true <|> return false)
-       check_name
-       args_parse
-       (fun_decl <* check_word "=")
-  <*> e
+let let_parse expr =
+  let is_rec = check_word "rec" *> return true <|> return false in
+  let helper expr =
+    let rec helper l e =
+      match l with
+      | h :: tl -> efun h (helper tl e)
+      | [] -> e
+    in
+    many fun_pattern_parse
+    >>= fun l ->
+    check_char ':' *> type_parse
+    >>= (fun t -> check_char '=' *> expr >>| fun e -> helper l e, t)
+    <|> (check_char '=' *> expr >>| fun e -> helper l e, EmptyType)
+  in
+  check_word "let" *> is_rec
+  >>= fun b -> check_name >>= fun n -> helper expr >>| fun (e, t) -> let_decl b n e t
 ;;
+
+let let_in_parse expr = lift2 edecl (let_parse expr) (check_word "in" *> expr)
 
 let expr_parse =
   fix
@@ -421,10 +499,11 @@ let expr_parse =
   let expr = apply_parse expr <|> expr in
   let expr = bin_op_parse expr <|> expr in
   let expr = if_then_else_parse expr <|> expr in
+  let expr = match_parse expr <|> expr in
   let expr = fun_parse expr <|> expr in
-  let expr = let_parse expr let_edecl <*> check_word "in" *> expr <|> expr in
+  let expr = let_in_parse expr <|> expr in
   expr
 ;;
 
-let parse_program = many (let_parse expr_parse let_decl) <* remove_spaces
+let parse_program = many (let_parse expr_parse) <* remove_spaces
 let parse str = Angstrom.parse_string parse_program ~consume:Angstrom.Consume.All str

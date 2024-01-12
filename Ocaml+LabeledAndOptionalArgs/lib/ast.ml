@@ -32,7 +32,7 @@ type bin_op =
 type decl_type =
   | IntType of is_option
   | StringType of is_option
-  | UndefinedType (*If the type is not explicitly specified*)
+  | EmptyType (*If the type is not explicitly specified*)
   | BoolType of is_option
   | CharType of is_option
   | UnitType of is_option
@@ -41,26 +41,39 @@ type decl_type =
   | FuncType of decl_type * decl_type * is_option
 [@@deriving eq, show { with_path = false }]
 
-type arg =
-  | NoLabel of name * decl_type
-  | Label of name * name * decl_type
-  | Optional of name * const option * decl_type
+type label =
+  | NoLabel
+  | Label of name
+  | Optional of const option
 [@@deriving eq, show { with_path = false }]
 
-type expr =
+type pattern =
+  | PNil (* [] *)
+  | PEmpty (* _ *)
+  | PArg of name * label * decl_type
+  | PConst of const
+  | PVar of name
+  | PCons of pattern * pattern
+  | PTuple of pattern list
+[@@deriving eq, show { with_path = false }]
+
+type decl = LetDecl of is_rec * name * expr * decl_type
+[@@deriving eq, show { with_path = false }]
+
+and expr =
   | Const of const
   | BinOp of bin_op * expr * expr
   | Var of name
   | Apply of expr * expr
-  | Fun of arg list * decl_type * expr
+  | Fun of pattern * expr
   | IfThenElse of expr * expr * expr
-  | EDecl of bool * name * arg list * decl_type * expr * expr
-[@@deriving eq, show { with_path = false }]
-
-type decl = LetDecl of is_rec * name * arg list * decl_type * expr
+  | EDecl of decl * expr
+  | Match of expr * (pattern * expr) list
 [@@deriving eq, show { with_path = false }]
 
 type program = decl list [@@deriving eq, show { with_path = false }]
 
-let let_decl a b c d e = LetDecl (a, b, c, d, e)
-let let_edecl a b c d e f = EDecl (a, b, c, d, e, f)
+let ematch e pl = Match (e, pl)
+let efun p e = Fun (p, e)
+let let_decl b s e t = LetDecl (b, s, e, t)
+let edecl d e = EDecl (d, e)
