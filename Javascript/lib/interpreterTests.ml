@@ -183,6 +183,10 @@ let%expect_test _ =
 ;;
 
 (*equal*)
+let%expect_test _ =
+  pi "return null == undefined";
+  [%expect {| Programm return: true |}]
+;;
 
 let%expect_test _ =
   pi "return 2 == 2";
@@ -205,12 +209,32 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  pi "return null < 'test'";
+  pi "return 1 == '1'";
+  [%expect {| Programm return: true |}]
+;;
+
+let%expect_test _ =
+  pi "return +0 == -0";
+  [%expect {| Programm return: true |}]
+;;
+
+let%expect_test _ =
+  pi "return 'f' == 'f'";
+  [%expect {| Programm return: true |}]
+;;
+
+let%expect_test _ =
+  pi "return 'f' == 'F'";
   [%expect {| Programm return: false |}]
 ;;
 
 let%expect_test _ =
-  pi "return 0 < 'test'";
+  pi "const a = 4;\n      return a == 4";
+  [%expect {| Programm return: true |}]
+;;
+
+let%expect_test _ =
+  pi "return null == 0";
   [%expect {| Programm return: false |}]
 ;;
 
@@ -238,7 +262,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   pi "return null != 0";
-  [%expect {| Programm return: false |}]
+  [%expect {| Programm return: true |}]
 ;;
 
 let%expect_test _ =
@@ -263,13 +287,18 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  pi "return true === 'true'";
+  pi "return true === 1";
   [%expect {| Programm return: false |}]
 ;;
 
 (*strict not_equal*)
 let%expect_test _ =
   pi "return 4 !== 3";
+  [%expect {| Programm return: true |}]
+;;
+
+let%expect_test _ =
+  pi "return 1 !== '1'";
   [%expect {| Programm return: true |}]
 ;;
 
@@ -288,7 +317,42 @@ let%expect_test _ =
   [%expect {| Programm return: true |}]
 ;;
 
-(**)
+let%expect_test _ =
+  pi "return false !== 0";
+  [%expect {| Programm return: true |}]
+;;
+
+(*remainder*)
+let%expect_test _ =
+  pi "return 10 % 5";
+  [%expect {| Programm return: 0 |}]
+;;
+
+let%expect_test _ =
+  pi "return 1 % 5";
+  [%expect {| Programm return: 1 |}]
+;;
+
+let%expect_test _ =
+  pi "return 11 % 5";
+  [%expect {| Programm return: 1 |}]
+;;
+
+(*exponentiation*)
+let%expect_test _ =
+  pi "return 2 ** 2";
+  [%expect {| Programm return: 4 |}]
+;;
+
+let%expect_test _ =
+  pi "return 12 ** 2";
+  [%expect {| Programm return: 144 |}]
+;;
+
+let%expect_test _ =
+  pi "return 25 ** 0.5";
+  [%expect {| Programm return: 5 |}]
+;;
 
 (*greater*)
 let%expect_test _ =
@@ -388,7 +452,27 @@ let%expect_test _ =
   [%expect {| Programm return: false |}]
 ;;
 
-(*greater_equal*)
+let%expect_test _ =
+  pi "return NaN < NaN";
+  [%expect {| Programm return: false |}]
+;;
+
+let%expect_test _ =
+  pi "return NaN < NaN";
+  [%expect {| Programm return: false |}]
+;;
+
+let%expect_test _ =
+  pi "return NaN < 1";
+  [%expect {| Programm return: false |}]
+;;
+
+let%expect_test _ =
+  pi "return 'test' < NaN";
+  [%expect {| Programm return: false |}]
+;;
+
+(*less_equal*)
 let%expect_test _ =
   pi "return 4 <= 3";
   [%expect {| Programm return: false |}]
@@ -411,6 +495,231 @@ let%expect_test _ =
 
 let%expect_test _ =
   pi "return null <= 'test'";
+  [%expect {| Programm return: false |}]
+;;
+
+let%expect_test _ =
+  pi "return null <= undefined";
+  [%expect {| Programm return: false |}]
+;;
+
+(*left shift*)
+let%expect_test _ =
+  pi "return 5 << 2";
+  [%expect {| Programm return: 20 |}]
+;;
+
+let%expect_test _ =
+  pi "return 5 << 3";
+  [%expect {| Programm return: 40 |}]
+;;
+
+let%expect_test _ =
+  pi "return 3 << 3";
+  [%expect {| Programm return: 24 |}]
+;;
+
+let%expect_test _ =
+  pi "return 3 << -3";
+  [%expect {| Programm return: 1610612736 |}]
+;;
+
+(*right shift*)
+
+let%expect_test _ =
+  pi "return 5 >> 2";
+  [%expect {| Programm return: 1 |}]
+;;
+
+let%expect_test _ =
+  pi "return 5 >> 3";
+  [%expect {| Programm return: 0 |}]
+;;
+
+let%expect_test _ =
+  pi "return 3 >> 3";
+  [%expect {| Programm return: 0 |}]
+;;
+
+let%expect_test _ =
+  pi "return -9 >> 2";
+  [%expect {| Programm return: -3 |}]
+;;
+
+(*unsigned right shift*)
+let%expect_test _ =
+  pi "return 5 >>> 2";
+  [%expect {| Programm return: 1 |}]
+;;
+
+let%expect_test _ =
+  pi "return 5 >>> 3";
+  [%expect {| Programm return: 0 |}]
+;;
+
+let%expect_test _ =
+  pi "return -3 >>> 3";
+  [%expect {| Programm return: 536870911 |}]
+;;
+
+let%expect_test _ =
+  pi "return -5 >>> 2";
+  [%expect {| Programm return: 1073741822 |}]
+;;
+
+let%expect_test _ =
+  pi "return -10 >>> 1";
+  [%expect {| Programm return: 2147483643 |}]
+;;
+
+let%expect_test _ =
+  pi "return -10 >>> -1";
+  [%expect {| Programm return: 1 |}]
+;;
+
+(* excluded temporarily *)
+(*bitwise AND*)
+(* let%expect_test _ =
+   pi "return 5 & 3";
+   [%expect {| Programm return: 1 |}]
+   ;;
+
+   let%expect_test _ =
+   pi "return -5 & 3";
+   [%expect {| Programm return: 3 |}]
+   ;;
+
+   let%expect_test _ =
+   pi "return 5 & -3";
+   [%expect {| Programm return: 5 |}]
+   ;;
+
+   let%expect_test _ =
+   pi "return -5 & -3";
+   [%expect {| Programm return: -7 |}]
+   ;;
+
+   let%expect_test _ =
+   pi "return 5 & 0";
+   [%expect {| Programm return: 0 |}]
+   ;;
+
+   (*bitwise OR*)
+   let%expect_test _ =
+   pi "return 5 | 3";
+   [%expect {| Programm return: 7 |}]
+   ;;
+
+   let%expect_test _ =
+   pi "return -5 | 3";
+   [%expect {| Programm return: -5 |}]
+   ;;
+
+   let%expect_test _ =
+   pi "return 5 | -3";
+   [%expect {| Programm return: -3 |}]
+   ;;
+
+   let%expect_test _ =
+   pi "return -5 | -3";
+   [%expect {| Programm return: -1 |}]
+   ;;
+
+   let%expect_test _ =
+   pi "return 5 | 0";
+   [%expect {| Programm return: 5 |}]
+   ;; *)
+
+(*bitwise XOR*)
+let%expect_test _ =
+  pi "return 5 ^ 3";
+  [%expect {| Programm return: 6 |}]
+;;
+
+let%expect_test _ =
+  pi "return -5 ^ 3";
+  [%expect {| Programm return: -8 |}]
+;;
+
+let%expect_test _ =
+  pi "return 5 ^ -3";
+  [%expect {| Programm return: -8 |}]
+;;
+
+let%expect_test _ =
+  pi "return -5 ^ -3";
+  [%expect {| Programm return: 6 |}]
+;;
+
+let%expect_test _ =
+  pi "return 5 ^ 0";
+  [%expect {| Programm return: 5 |}]
+;;
+
+(*logical AND*)
+let%expect_test _ =
+  pi "return false && true";
+  [%expect {| Programm return: false |}]
+;;
+
+let%expect_test _ =
+  pi "return null && true";
+  [%expect {| Programm return: null |}]
+;;
+
+let%expect_test _ =
+  pi "return NaN && true";
+  [%expect {| Programm return: NaN |}]
+;;
+
+let%expect_test _ =
+  pi "return 0 && true ";
+  [%expect {| Programm return: 0 |}]
+;;
+
+let%expect_test _ =
+  pi "return \"\" && true ";
+  [%expect {| Programm return: |}]
+;;
+
+let%expect_test _ =
+  pi "return '' && true ";
+  [%expect {| Programm return: |}]
+;;
+
+let%expect_test _ =
+  pi "return undefined && true ";
+  [%expect {| Programm return: undefined |}]
+;;
+
+let%expect_test _ =
+  pi "return 2 && 0 ";
+  [%expect {| Programm return: 0 |}]
+;;
+
+let%expect_test _ =
+  pi "return \"foo\" && 4 ";
+  [%expect {| Programm return: 4 |}]
+;;
+
+(*logical OR*)
+let%expect_test _ =
+  pi "return false || true";
+  [%expect {| Programm return: true |}]
+;;
+
+let%expect_test _ =
+  pi "return null || 0";
+  [%expect {| Programm return: 0 |}]
+;;
+
+let%expect_test _ =
+  pi "return 1 || true";
+  [%expect {| Programm return: 1 |}]
+;;
+
+let%expect_test _ =
+  pi "return undefined || false ";
   [%expect {| Programm return: false |}]
 ;;
 
