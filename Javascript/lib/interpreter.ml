@@ -15,6 +15,59 @@ type program_return =
   ; return : string
   }
 
+let is_func x =
+  match x.obj_type with
+  | TFunPreset _ | TFunction _ | TArrowFunction _ -> true
+  | _ -> false
+;;
+
+let num_to_string n =
+  if Float.is_integer n
+  then Int.to_string (Float.to_int n)
+  else if Float.is_nan n
+  then "NaN"
+  else if Float.is_infinite n
+  then if n > 0. then "Infinity" else "-Infinity"
+  else Float.to_string n
+;;
+
+let print_val = function
+  | VNumber _ -> "number"
+  | VString _ -> "string"
+  | VBool _ -> "boolean"
+  | VUndefined -> "undefined"
+  | VNull -> "null"
+  | VObject x when is_func x -> "function"
+  | VObject _ -> "object"
+;;
+
+let rec get_field id = function
+  | field :: tl -> if field.var_id = id then field.value else get_field id tl
+  | _ -> VUndefined
+;;
+
+(*JS use diffrent conversion to string in .toString and in print.
+  It's the reason why vvalues_to_str and to_vstring are diffrent functions*)
+let rec vvalues_to_str ?(str_quote = false) = function
+  | VNumber x -> num_to_string x
+  | VBool true -> "true"
+  | VBool false -> "false"
+  | VNull -> "null"
+  | VUndefined -> "undefined"
+  | VString x -> if str_quote then "'" ^ x ^ "'" else x
+  | VObject x when is_func x ->
+    asprintf "[Function: %s]" (vvalues_to_str @@ get_field "name" x.fields)
+  | VObject x ->
+    asprintf
+      "{ %s }"
+      (String.concat
+         ", "
+         (List.map
+            (fun x -> x.var_id ^ ": " ^ vvalues_to_str x.value ~str_quote:true)
+            x.fields))
+  | _ as t -> asprintf "Cannot convert '%s' to string" @@ print_val t
+;;
+
 let error err =
   uerror
     (match err with
@@ -313,34 +366,27 @@ let bop_with_string ctx op a b =
   >>= fun (a, b) -> both (get_vstring ctx) a b >>| fun (x, y) -> VString (op x y)
 ;;
 
+let bop_logical_with_string op a b =
+  both to_vstring a b
+  >>= fun (a, b) -> both get_vstring a b >>| fun (x, y) -> VBool (op x y)
+;;
+
+let get_int bit = function
+  | VNumber x -> return (bit x)
+  | _ as t -> etyp @@ asprintf "expect number, but %s was given" @@ print_val t
+;;
+
 let bop_bitwise_shift op a b =
   both to_vnumber a b
   >>= fun (a, b) ->
-  both get_int1 a b >>| fun (x, y) -> VNumber (Int32.to_float (op x (Int32.to_int y)))
+  both (get_int Int32.of_float) a b
+  >>| fun (x, y) -> VNumber (Int32.to_float (op x (Int32.to_int y)))
 ;;
 
 let bop_with_int op a b =
   both to_vnumber a b
-  >>= fun (a, b) -> both get_int3 a b >>| fun (x, y) -> VNumber (float_of_int (op x y))
-;;
-
-let bop_bitwise_shift op a b =
-  let get_int = function
-    | VNumber x -> return (Int32.of_float x)
-    | _ as t -> etyp @@ asprintf "expect number, but %s was given" @@ print_val t
-  in
-  both to_vnumber a b
   >>= fun (a, b) ->
-  both get_int a b >>| fun (x, y) -> VNumber (Int32.to_float (op x (Int32.to_int y)))
-;;
-
-let bop_with_int op a b =
-  let get_int = function
-    | VNumber x -> return (int_of_float x)
-    | _ as t -> etyp @@ asprintf "expect number, but %s was given" @@ print_val t
-  in
-  both to_vnumber a b
-  >>= fun (a, b) -> both get_int a b >>| fun (x, y) -> VNumber (float_of_int (op x y))
+  both (get_int int_of_float) a b >>| fun (x, y) -> VNumber (float_of_int (op x y))
 ;;
 
 let is_to_string = function
@@ -370,21 +416,10 @@ let add a b =
   else bop_with_num ( +. ) a b
 ;;
 
-let negotiate op a b =
-  op a b
-  >>= fun x ->
-  return
-    (VBool
-       (match x with
-        | VBool true -> false
-        | _ -> true))
-;;
-
 let strict_equal a b = return (VBool (a = b))
 
 let equal a b =
-  let is_undefined_nan = function
-    | VNumber a when Float.is_nan a -> true
+  let is_undefined = function
     | VUndefined -> true
     | _ -> false
   in
@@ -401,44 +436,23 @@ let equal a b =
     | _ -> false
   in
   if is_null a || is_null b
-  then
-    return
-      (VBool ((is_null a || is_null b) && (is_undefined_nan a || is_undefined_nan b)))
-  else if is_obj a || is_obj b
-  then bop_logical_with_string ( = ) a b
+  then return (VBool ((is_null a || is_null b) && (is_undefined a || is_undefined b)))
   else if is_num_bool a || is_num_bool b
   then bop_logical_with_num ( = ) a b
-  else strict_equal a b
+  else
+    strict_equal a b
+    >>= function
+    | VBool true -> return (VBool true)
+    | _ ->
+      if is_obj a || is_obj b
+      then bop_logical_with_string ( = ) a b
+      else return (VBool false)
 ;;
-
-let rem a b = bop_with_num mod_float a b
-let exp a b = bop_with_num ( ** ) a b
 
 let less_than a b =
   if is_to_string a && is_to_string b
   then bop_logical_with_string ( < ) a b
   else bop_logical_with_num ( < ) a b
-;;
-
-let less_eq a b =
-  let is_undefined = function
-    | VUndefined -> true
-    | _ -> false
-  in
-  let is_null = function
-    | VNull -> true
-    | _ -> false
-  in
-  if (a = VNull && to_vnumber b = return (VNumber 0.))
-     || (to_vnumber a = return (VNumber 0.) && b = VNull)
-  then return (VBool true)
-  else if (is_undefined a || is_undefined b) && (is_null a || is_null b)
-  then return (VBool false)
-  else if to_vnumber a = return (VNumber nan) && to_vnumber b = return (VNumber nan)
-  then return (VBool false)
-  else
-    return
-      (VBool (less_than a b = return (VBool true) || equal a b = return (VBool true)))
 ;;
 
 let shift op a b =
@@ -457,8 +471,9 @@ let logical_and a b =
   both to_vbool a b
   >>= fun (a, b) ->
   both get_vbool a b
-  >>= fun (x, y) ->
-  if x then if y then return b_preserved else return b_preserved else return a_preserved
+  >>| function
+  | true, _ -> b_preserved
+  | _ -> a_preserved
 ;;
 
 let logical_or a b =
@@ -467,7 +482,22 @@ let logical_or a b =
   both to_vbool a b
   >>= fun (a, b) ->
   both get_vbool a b
-  >>= fun (x, _) -> if x then return a_preserved else return b_preserved
+  >>| function
+  | true, _ -> a_preserved
+  | _ -> b_preserved
+;;
+
+let less_eq a b =
+  let bop cast a b =
+    both cast a b
+    >>= fun (x, y) ->
+    less_than x y
+    >>= fun res1 ->
+    equal x y
+    >>= fun res2 ->
+    logical_or res1 res2 >>= fun res -> get_vbool res >>| fun res3 -> VBool res3
+  in
+  if is_to_string a && is_to_string b then bop to_vstring a b else bop to_vnumber a b
 ;;
 
 let add_ctx ctx x = x >>| fun x -> ctx, x
@@ -484,7 +514,7 @@ let eval_bin_op ctx op a b =
   | StrictEqual -> add_ctx @@ strict_equal a b <?> "error in strict equal operator"
   | StrictNotEqual ->
     add_ctx @@ negotiate strict_equal a b <?> "error in strict not_equal operator"
-  | Rem -> add_ctx @@ rem a b <?> "error in rem operator"
+  | Rem -> add_ctx @@ bop_with_num mod_float a b <?> "error in rem operator"
   | LogicalShiftLeft ->
     add_ctx @@ shift Int32.shift_left a b <?> "error in logical_shift_left operator"
   | LogicalShiftRight ->
@@ -501,7 +531,7 @@ let eval_bin_op ctx op a b =
   | LogicalAnd -> add_ctx @@ logical_and a b <?> "error in logical_and operator"
   | LogicalOr -> add_ctx @@ logical_or a b <?> "error in logical_and operator"
   | Xor -> add_ctx @@ bop_with_int ( lxor ) a b
-  | Exp -> add_ctx @@ exp a b <?> "error in exp operator"
+  | Exp -> add_ctx @@ bop_with_num ( ** ) a b <?> "error in exp operator"
   | PropAccs ->
     add_ctx
       (match a with

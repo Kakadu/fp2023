@@ -238,6 +238,11 @@ let%expect_test _ =
   [%expect {| Programm return: false |}]
 ;;
 
+let%expect_test _ =
+  pi "return null == NaN";
+  [%expect {| Programm return: false |}]
+;;
+
 (*not_equal*)
 
 let%expect_test _ =
@@ -459,6 +464,11 @@ let%expect_test _ =
 
 let%expect_test _ =
   pi "return NaN < NaN";
+  [%expect {| Programm return: false |}]
+;;
+
+let%expect_test _ =
+  pi "return null < NaN";
   [%expect {| Programm return: false |}]
 ;;
 
