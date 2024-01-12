@@ -8,5 +8,5 @@ open Ast
 
 let () =
   let input = Stdio.In_channel.input_all stdin in
-  Parser.parse parse_ast show_ast input
+  parse_show parse_ast show_ast input
 ;;

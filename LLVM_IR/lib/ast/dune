@@ -1,0 +1,7 @@
+(library
+ (name ast)
+ (public_name LLVM_IR.Ast)
+ (modules Ast)
+ (libraries ppx_show.runtime)
+ (preprocess
+  (pps ppx_deriving.show ppx_deriving.eq)))

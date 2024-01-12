@@ -16,7 +16,7 @@
 
 (package
  (name Ocaml+printf)
- (synopsis "An interpreter for Ocaml with printf")
+ (synopsis "An interpreter for OCaml with printf")
  (description
   "FIXME. A longer description, for example, which are the most interesing features being supported, etc. - TODO")
  (version 0.1)

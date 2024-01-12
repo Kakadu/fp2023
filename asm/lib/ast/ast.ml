@@ -2,18 +2,10 @@
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-type i32
 type i64
+type i128
 
 type _ register =
-  | Eax : i32 register
-  | Ebx : i32 register
-  | Ecx : i32 register
-  | Edx : i32 register
-  | Esi : i32 register
-  | Edi : i32 register
-  | Esp : i32 register
-  | Ebp : i32 register
   | Rax : i64 register
   | Rbx : i64 register
   | Rcx : i64 register
@@ -22,35 +14,43 @@ type _ register =
   | Rbp : i64 register
   | Rsi : i64 register
   | Rdi : i64 register
+  | Xmm0 : i128 register
+  | Xmm1 : i128 register
+  | Xmm2 : i128 register
+  | Xmm3 : i128 register
+  | Xmm4 : i128 register
+  | Xmm5 : i128 register
+  | Xmm6 : i128 register
+  | Xmm7 : i128 register
 [@@deriving variants]
 
 type _ immediate = Imm_int of int [@@deriving variants]
 type 'a register_ref = Register_ref of 'a register [@@deriving variants]
-type label_ref = Label_ref of string [@@deriving variants]
 
 type _ operand =
-  | Reg_32_reg_32 : i32 register * i32 register -> [> `Reg_32_reg_32 ] operand
   | Reg_64_reg_64 : i64 register * i64 register -> [> `Reg_64_reg_64 ] operand
   (** Double register operands *)
-  | Mem_32_mem_32 : i32 register_ref * i32 register_ref -> [> `Mem_32_mem_32 ] operand
   | Mem_64_mem_64 : i64 register_ref * i64 register_ref -> [> `Mem_64_mem_64 ] operand
   (** Double memory operands *)
-  | Reg_32_imm_a : i32 register * _ immediate -> [> `Reg_32_imm_a ] operand
   | Reg_64_imm_a : i64 register * _ immediate -> [> `Reg_64_imm_a ] operand
   (** Mixed double operands *)
   | Imm_a : _ immediate -> [> `Imm_a ] operand (** Single immidiate operand *)
-  | Reg_32 : i32 register -> [> `Reg_32 ] operand
   | Reg_64 : i64 register -> [> `Reg_64 ] operand (** Single register operand*)
-  | Mem_32 : i32 register_ref -> [> `Mem_32 ] operand
   | Mem_64 : i64 register_ref -> [> `Mem_64 ] operand (** Single memory operand*)
   | Nothing : [> `Nothing ] operand (** Mnemonic without operand (e.g Ret)*)
-  | Label : label_ref -> [> `Label ] operand (** Label operand (e.g Jmp lbl) *)
+  | Label : string -> [> `Label ] operand (** Label operand (e.g Jmp lbl) *)
+  | Reg_128 : i128 register -> [> `Reg_128 ] operand
+  | Reg_64_reg_128 : i64 register * i128 register -> [> `Reg_64_reg_128 ] operand
+  | Reg_128_reg_64 : i128 register * i64 register -> [> `Reg_128_reg_64 ] operand
+  | Reg_128_reg_128 : i128 register * i128 register -> [> `Reg_128_reg_128 ] operand
+  | Reg_128_reg_64_imm_a :
+      i128 register * i64 register * 'a immediate
+      -> [> `Reg_128_reg_64_imm_a ] operand
 [@@deriving variants]
 
-(** Some mnemonic variants are not supported, but it's easy to add them later *)
+(** Some (actually most of them) mnemonic variants are not supported, but it's easy to add them later *)
 type _ mnemonic =
   | Mov : [< `Reg_64_imm_a ] mnemonic
-  | Ret : [< `Nothing ] mnemonic
   | Push : [< `Reg_64 ] mnemonic
   | Add : [< `Reg_64_reg_64 ] mnemonic
   | Xor : [< `Reg_64_reg_64 ] mnemonic
@@ -60,6 +60,17 @@ type _ mnemonic =
   | Sub : [< `Reg_64_imm_a ] mnemonic
   | Cmp : [< `Reg_64_imm_a ] mnemonic
   | Je : [< `Label ] mnemonic
+  | Jne : [< `Label ] mnemonic
+  | Jle : [< `Label ] mnemonic
+  | Movq : [< `Reg_64_reg_128 | `Reg_128_reg_64 ] mnemonic
+  | Punpckhqdq : [< `Reg_128_reg_128 ] mnemonic
+  | Movapd : [< `Reg_128_reg_128 ] mnemonic
+  (** Real instruction name, not the cat jumped on the keyboard *)
+  | Pinsrq : [< `Reg_128_reg_64_imm_a ] mnemonic
+  | Addpd : [< `Reg_128_reg_128 ] mnemonic
+  | Mulpd : [< `Reg_128_reg_128 ] mnemonic
+  | Haddpd : [< `Reg_128_reg_128 ] mnemonic
+  (** Not sure that these instructions can really be used with integer values in xmm registers. The specification of the instructions is a complete mess*)
 [@@deriving variants]
 
 type directive =
@@ -86,44 +97,45 @@ let show_register_ref = function
   | Register_ref x -> Printf.sprintf {|(Register_ref %s)|} (show_register x)
 ;;
 
-let show_label_ref = function
-  | Label_ref x -> Printf.sprintf {|(Label_ref %s)|} x
-;;
-
 let show_directive = function
   | Section x -> Printf.sprintf {|(Section %s)|} x
   | Global x -> Printf.sprintf {|(Global %s)|} x
 ;;
 
-type show_operand_wrapper = W : 'kind_of operand -> show_operand_wrapper
+type args_wrapper = Wargs : 'kind_of operand -> args_wrapper [@@deriving variants]
 
-let show_operand (W op) =
+type register_wrapper = Wregister : 'a register -> register_wrapper
+[@@deriving variants]
+
+let show_operand (Wargs op) =
   match op with
-  | Reg_32 x -> Printf.sprintf {|(Reg_32 %s)|} (show_register x)
   | Reg_64 x -> Printf.sprintf {|(Reg_64 %s)|} (show_register x)
-  | Mem_32 x -> Printf.sprintf {|(Mem_32 %s)|} (show_register_ref x)
   | Mem_64 x -> Printf.sprintf {|(Mem_64 %s)|} (show_register_ref x)
-  | Mem_32_mem_32 (x, y) ->
-    Printf.sprintf
-      {|(Mem_32_mem_32 (%s, %s))|}
-      (show_register_ref x)
-      (show_register_ref y)
   | Mem_64_mem_64 (x, y) ->
     Printf.sprintf
       {|(Mem_64_mem_64 (%s, %s))|}
       (show_register_ref x)
       (show_register_ref y)
-  | Reg_32_reg_32 (x, y) ->
-    Printf.sprintf {|(Reg_32_reg_32 (%s, %s))|} (show_register x) (show_register y)
   | Reg_64_reg_64 (x, y) ->
     Printf.sprintf {|(Reg_64_reg_64 (%s, %s))|} (show_register x) (show_register y)
   | Imm_a x -> Printf.sprintf {|(Imm_a %s)|} (show_immediate x)
-  | Label x -> Printf.sprintf {|(Label %s)|} (show_label_ref x)
+  | Label x -> Printf.sprintf {|(Label %s)|} x
   | Nothing -> "(Nothing)"
-  | Reg_32_imm_a (x, y) ->
-    Printf.sprintf {|(Reg_32_imm_a (%s, %s))|} (show_register x) (show_immediate y)
   | Reg_64_imm_a (x, y) ->
     Printf.sprintf {|(Reg_64_imm_a (%s, %s))|} (show_register x) (show_immediate y)
+  | Reg_128_reg_64 (x, y) ->
+    Printf.sprintf {|(Reg_128_reg_64 (%s, %s))|} (show_register x) (show_register y)
+  | Reg_128_reg_128 (x, y) ->
+    Printf.sprintf {|(Reg_128_reg_128 (%s, %s))|} (show_register x) (show_register y)
+  | Reg_64_reg_128 (x, y) ->
+    Printf.sprintf {|(Reg_64_reg_128 (%s, %s))|} (show_register x) (show_register y)
+  | Reg_128 x -> Printf.sprintf {|(Reg_128 %s)|} (show_register x)
+  | Reg_128_reg_64_imm_a (x, y, z) ->
+    Printf.sprintf
+      {|(Reg_128_reg_64_imm_a (%s, %s, %s))|}
+      (show_register x)
+      (show_register y)
+      (show_immediate z)
 ;;
 
 let show_statement = function
@@ -133,7 +145,7 @@ let show_statement = function
     Printf.sprintf
       {|(Instruction (%s %s))|}
       (show_mnemonic mnemonic)
-      (show_operand (W args))
+      (show_operand (Wargs args))
 ;;
 
 let show_ast ast = String.concat "\n" (List.map show_statement ast)
