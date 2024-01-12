@@ -318,30 +318,23 @@ let bop_with_int op a b =
   >>= fun (a, b) -> both get_int3 a b >>| fun (x, y) -> VNumber (float_of_int (op x y))
 ;;
 
-let get_int1 = function
-  | VNumber x -> return (Int32.of_float x)
-  | _ as t -> etyp @@ asprintf "expect number, but %s was given" @@ print_val t
-;;
-
-let get_int2 = function
-  | VNumber x -> Some (int_of_float x)
-  | _ -> None
-;;
-
-let get_int3 = function
-  | VNumber x -> return (int_of_float x)
-  | _ as t -> etyp @@ asprintf "expect number, but %s was given" @@ print_val t
-;;
-
 let bop_bitwise_shift op a b =
+  let get_int = function
+    | VNumber x -> return (Int32.of_float x)
+    | _ as t -> etyp @@ asprintf "expect number, but %s was given" @@ print_val t
+  in
   both to_vnumber a b
   >>= fun (a, b) ->
-  both get_int1 a b >>| fun (x, y) -> VNumber (Int32.to_float (op x (Int32.to_int y)))
+  both get_int a b >>| fun (x, y) -> VNumber (Int32.to_float (op x (Int32.to_int y)))
 ;;
 
 let bop_with_int op a b =
+  let get_int = function
+    | VNumber x -> return (int_of_float x)
+    | _ as t -> etyp @@ asprintf "expect number, but %s was given" @@ print_val t
+  in
   both to_vnumber a b
-  >>= fun (a, b) -> both get_int3 a b >>| fun (x, y) -> VNumber (float_of_int (op x y))
+  >>= fun (a, b) -> both get_int a b >>| fun (x, y) -> VNumber (float_of_int (op x y))
 ;;
 
 let is_to_string = function
@@ -445,9 +438,13 @@ let less_eq a b =
 ;;
 
 let shift op a b =
+  let get_int = function
+    | VNumber x -> Some (int_of_float x)
+    | _ -> None
+  in
   match b with
   | VNumber x when x >= 0. -> bop_bitwise_shift op a b
-  | _ -> bop_bitwise_shift op a (VNumber (float_of_int (32 + Option.get (get_int2 b))))
+  | _ -> bop_bitwise_shift op a (VNumber (float_of_int (32 + Option.get (get_int b))))
 ;;
 
 let logical_and a b =
