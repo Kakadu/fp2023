@@ -153,11 +153,6 @@ let check_invoke sign env_args =
   | _ -> fail Type_mismatch
 ;;
 
-let get_class_decl = function
-  | Exception_ctx exc -> exc
-  | Class_ctx cl -> cl
-;;
-
 let get_sign id el =
   let is_fild s id =
     match s with
@@ -499,8 +494,8 @@ let memb_check = function
   | Method ({ m_modif = _; m_type; m_id = _; m_params }, s) ->
     local_scope
     @@ (save_scope_tp (Some m_type) *> add_params m_params *> check_statement s)
-  | Constructor ({ con_modif = _; con_id; con_params; _ }, s) ->
-    let cons_tp = TReturn (TNullable (TClass con_id)) in
+  | Constructor ({ con_modif = _; con_id=_; con_params; _ }, s) ->
+    let cons_tp = Void in
     local_scope
     @@ (save_scope_tp (Some cons_tp) *> add_params con_params *> check_statement s)
 ;;

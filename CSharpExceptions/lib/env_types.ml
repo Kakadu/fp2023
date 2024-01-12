@@ -40,6 +40,11 @@ module Common_env = struct
     | Exception_ctx of class_decl
     | Class_ctx of class_decl
 
+  let get_class_decl = function
+    | Exception_ctx exc -> exc
+    | Class_ctx cl -> cl
+  ;;
+
   type text = code_ctx CodeMap.t
 end
 
@@ -62,20 +67,35 @@ module Eval_env = struct
   open Common_env
 
   type const =
-    | IClass of address
+    | IInstance of address
     | IBase_value of value_
+
+  let to_inst x = IInstance x
+  let to_val x = IBase_value x
 
   type instructions =
     | IMethod of method_sign * statement
     | IConstructor of constructor_sign * statement
 
-  type t_env_value_ =
-    | IConst of const
-    | ICode of instructions
+  let to_meth sign body = IMethod (sign, body)
+  let to_cons sign body = IConstructor (sign, body)
+
+  type t_env_eval_const =
+    | Init of const
+    | Not_init
+
+  let to_init x = Init x
+  let to_not_init _ = Not_init
 
   type t_env_value =
-    | Init of t_env_value_
-    | Not_init
+    | IConst of t_env_eval_const
+    | ICode of instructions
+
+  let to_const x = IConst x
+  let to_code x = ICode x
+
+  let create_base_val x = to_const@@to_init@@to_val x
+  let create_inst x = to_const@@to_init@@to_inst x
 
   type t_loc_env = address * t_env_value IdentMap.t
 
@@ -87,8 +107,16 @@ module Eval_env = struct
   type memory = address * mem_el MemMap.t
   type interpret_ctx = t_global_env * t_loc_env * memory
 
-  type ('a, 'b, 'sys_err) signal =
+  (* TODO: мб переписать эту штуку, встроить в signals *)
+  type ('b, 'sys_err) sig_ = 
+    | Return of 'b option
+    | Exn of code_ident * address
+    | Break
+    | Error of 'sys_err
+
+  type ('a, 'b, 'sys_err) eval_t =
     | Next of 'a
+    (* | Signal of ('b, 'sys_err) sig_ *)
     | Return of 'b option
     | Exn of code_ident * address
     | Break

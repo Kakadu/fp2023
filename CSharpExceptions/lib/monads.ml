@@ -186,11 +186,11 @@ module Eval_Monad = struct
   open Env_types.Eval_env
 
   type ctx_env = interpret_ctx
-  type ('a, 'b) t = ctx_env -> ctx_env * ('a, 'b, error) signal
+  type ('a, 'b) t = ctx_env -> ctx_env * ('a, 'b, error) eval_t
 
   (* ****************** State-error monad functionality ****************** *)
 
-  let return : ('a, 'b, error) signal -> ('a, 'b) t = fun x st -> st, x
+  let return : ('a, 'b, error) eval_t -> ('a, 'b) t = fun x st -> st, x
   let return_n : 'a -> ('a, 'b) t = fun x st -> st, nsig x
   let return_r : 'b option -> ('a, 'b) t = fun x st -> st, rsig x
   let return_b : 'c -> ('a, 'b) t = fun _ st -> st, bsig
@@ -250,7 +250,7 @@ module Eval_Monad = struct
     | Error err -> fail err st1
   ;;
 
-  let ( @!|>>= ) : ('a, 'b) t -> (('a, 'b, error) signal -> ('d, 'c) t) -> ('d, 'c) t =
+  let ( @!|>>= ) : ('a, 'b) t -> (('a, 'b, error) eval_t -> ('d, 'c) t) -> ('d, 'c) t =
     fun x f st ->
     let st1, x1 = x st in
     f x1 st1
@@ -267,7 +267,7 @@ module Eval_Monad = struct
     | Error _ -> a2 st
   ;;
 
-  let run : ('a, 'b) t -> ctx_env * ('a, 'b, error) signal =
+  let run : ('a, 'b) t -> ctx_env * ('a, 'b, error) eval_t =
     (* TODO: переписать, чтоб получало на вход class с main, и на его основе запускался *)
     fun f -> f (CodeMap.empty, (ln 0, IdentMap.empty), (ln 0, MemMap.empty))
   ;;
@@ -279,6 +279,7 @@ module Eval_Monad = struct
 
   let ( >>| ) x f = x >>= fun x_res -> return_n (f x_res)
   let ( *> ) a b = a >>= fun _ -> b >>= fun b1 -> return_n b1
+  let lift2 f a b = a >>= fun a1 -> b >>= fun b1 -> return_n (f a1 b1)
 
   let map_left custom_f mlst =
     let f acc cur = acc >>= fun tl -> custom_f cur >>= fun x -> return_n (x :: tl) in
@@ -300,6 +301,45 @@ module Eval_Monad = struct
     List.fold_left2 f (return_n ()) alst blst
   ;;
 
+  (* ****************** Global handling ****************** *)
+
+  let read_global : code_ident -> (code_ctx, 'c) t =
+    fun id st ->
+    let (Code_ident id_) = id in
+    let code, _, _ = st in
+    match CodeMap.find_opt id code with
+    | Some x -> return_n x st
+    | None -> fail (Not_find_ident_of id_) st
+  ;;
+
+  let find_cl_meth id cl =
+    let decl = get_class_decl cl in
+    let f acc el =
+      let is_method (sign, body) =
+        match sign with
+        | { m_modif = _; m_type = _; m_id; _ } when equal_ident m_id id ->
+          Some (to_meth sign body)
+        | _ -> None
+      in
+      let is_cons (sign, body) =
+        match sign with
+        | { con_modif = _; con_id; _ } when equal_ident con_id id ->
+          Some (to_cons sign body)
+        | _ -> None
+      in
+      match acc, el with
+      | Some x, _ -> Some x
+      | None, Method (sign, b) -> is_method (sign, b)
+      | None, Constructor (sign, b) -> is_cons (sign, b)
+      | _ -> None
+    in
+    List.fold_left f None decl.cl_mems |> return_n
+  ;;
+
+  let read_global_method cl_id el_id =
+    read_global cl_id >>= fun cl -> find_cl_meth el_id cl
+  ;;
+
   (* ****************** Memory handling ****************** *)
 
   let save_mem : memory -> (unit, 'c) t =
@@ -313,7 +353,7 @@ module Eval_Monad = struct
     let g acc cur =
       let eval = function
         | Some e -> custom_f e
-        | None -> return_n Not_init
+        | None -> return_n (to_const Not_init)
       in
       acc
       >>= fun tl ->
@@ -344,11 +384,24 @@ module Eval_Monad = struct
     read_mem >>= fun (_, mem) -> save_mem (ad, MemMap.add ad mem_el mem)
   ;;
 
+  let read_inst_cl ad = read_instance ad >>= fun (cl_id, _) -> return_n cl_id
+
   let read_inst_el id ad =
     read_instance ad
     >>= fun (_, el) ->
     match IdentMap.find_opt id el with
     | Some x -> return_n x
+    | None -> fail (Not_find_ident_of id)
+  ;;
+
+  let read_inst_el id ad = read_inst_el id ad >>| fun (v, _) -> v
+
+  let read_inst_meth id ad =
+    read_instance ad
+    >>= fun (cl_id, _) ->
+    read_global_method cl_id id
+    >>= function
+    | Some x -> return_n (to_code x)
     | None -> fail (Not_find_ident_of id)
   ;;
 
@@ -360,17 +413,6 @@ module Eval_Monad = struct
       let new_ = IdentMap.add id (v, sign) el in
       save_instance ad (cl_id, new_)
     | None -> fail (Not_find_ident_of id)
-  ;;
-
-  (* ****************** Global handling ****************** *)
-
-  let read_global : code_ident -> (code_ctx, 'c) t =
-    fun id st ->
-    let (Code_ident id_) = id in
-    let code, _, _ = st in
-    match CodeMap.find_opt id code with
-    | Some x -> return_n x st
-    | None -> fail (Not_find_ident_of id_) st
   ;;
 
   (* ****************** Local_env handling ****************** *)
@@ -387,10 +429,10 @@ module Eval_Monad = struct
     | None -> fail (Other_error "Just for skip")
   ;;
 
-  let find_self_ id ad = read_inst_el id ad >>| fun (v, _) -> v
-
   let read_local_el id =
-    read_local >>= fun (ad, l_env) -> find_local_ id l_env <|> find_self_ id ad
+    read_local
+    >>= fun (ad, l_env) ->
+    find_local_ id l_env <|> read_inst_el id ad <|> read_inst_meth id ad
   ;;
 
   let update_local_el id v =
@@ -415,8 +457,12 @@ module Eval_Monad = struct
     cond
     >>= function
     | true -> s_local
-    | false -> fail (Not_find_ident_of id)
+    | false ->
+      let (Id s) = id in
+      fail (Runtime_error ("The id:" ^ s ^ " already exists"))
   ;;
+
+  let read_self_ad = read_local >>= fun (self_ad, _) -> return_n self_ad
 
   (* ****************** Stack trace handling ****************** *)
 
@@ -436,6 +482,11 @@ module Eval_Monad = struct
   ;;
 
   let local f = local_with read_local f
+
+  let run_in_another_self ad new_lenv f =
+    let new_f = save_local (ad, new_lenv) *> f in
+    local new_f
+  ;;
 
   let run_method
     :  meth_type -> ident list -> t_env_value list -> address -> t_env_value IdentMap.t
@@ -459,10 +510,10 @@ module Eval_Monad = struct
     in
     local run_f
   ;;
-   (* Огранизационная функция *)
-   (* TODO: для try local должен и память ловить если что *)
+  (* Огранизационная функция *)
+  (* TODO: для try local должен и память ловить если что *)
 
-   (* По анологии с run_method *)
-   (* TODO: Написать функцию обработки для for + while *)
-   (* TODO: Написать функцию обработки для try_catch_finally *)
+  (* По анологии с run_method *)
+  (* TODO: Написать функцию обработки для for + while *)
+  (* TODO: Написать функцию обработки для try_catch_finally *)
 end

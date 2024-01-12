@@ -12,10 +12,14 @@ type error =
   | Type_mismatch
   | Double_definition
   (*  *)
-  | Stack_trace_is_empty
   | Non_existent_address
   | Break_error of string
   | Return_error of string
+  | Runtime_error of string
+  | Using_an_uninitialized_variable
+  | Trying_to_change_Null
+  | Constructor_error of string
+  | Division_by_zero
   (*  *)
   | Double_definition_of of ident
   | User_exception of address
