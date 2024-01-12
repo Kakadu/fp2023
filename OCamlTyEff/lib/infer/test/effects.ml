@@ -52,6 +52,18 @@ let%expect_test _ =
     string list -[console]-> unit list |}]
 
 let%expect_test _ =
+  run
+    {|
+    let rec filter f = function
+      | [] -> []
+      | hd::tl -> if f hd then hd::(filter f tl) else filter f tl;;
+    filter (fun x -> print_string x; true)|} ;
+  [%expect
+    {|
+    filter: 'a 'e. ('a -'e-> bool) -> 'a list -'e-> 'a list
+    string list -[console]-> string list |}]
+
+let%expect_test _ =
   run {| fun f -> f 1 2 |} ;
   [%expect {| 'a 'e. (int -'e-> int -'e-> 'a) -'e-> 'a |}]
 
@@ -125,3 +137,44 @@ let%expect_test _ =
     My_exc1: _My_exc1 exception
     My_exc2: _My_exc2 exception
     catch: 'a 'e. ('a -[exn _My_exc1, exn _My_exc2, exn _Exc1, console | 'e]-> int) -> 'a -[console | 'e]-> int |}]
+
+let%expect_test _ =
+  run {| print_string |} ; [%expect {| string -[console]-> unit |}]
+
+let%expect_test _ =
+  run
+    {|
+    let foo f x = match f x with
+    | Some a -> raise Exc1
+    | None -> print_string "42" |} ;
+  [%expect
+    {| foo: 'a 'b 'e. ('a -[exn _Exc1, console | 'e]-> 'b option) -> 'a -[exn _Exc1, console | 'e]-> unit |}]
+
+let%expect_test _ =
+  run
+    {|
+    let raise_Exc1 () = raise Exc1;;
+    let catch_Exc1 f x = try f x with Exc1 -> print_string;;
+    catch_Exc1 raise_Exc1 () |} ;
+  [%expect
+    {|
+    raise_Exc1: 'a. unit -[exn _Exc1]-> 'a
+    catch_Exc1: 'a 'e 'e1. ('a -[exn _Exc1 | 'e]-> string -[console | 'e1]-> unit) -> 'a -'e-> string -[console | 'e1]-> unit
+    string -[console]-> unit |}]
+
+let%expect_test _ =
+  run
+    {|
+    let raise_Exc1 _ = raise Exc1 in
+    let baz x = if x then (id raise_Exc1) else (id print_string) in
+    baz true |} ;
+  [%expect {| string -[console, exn _Exc1]-> unit |}]
+
+let%expect_test _ =
+  run
+    {|
+    fun _ -> (print_string "42", raise Exc1, raise Exc2);;
+    fun _ -> [print_string "42"; raise Exc1; raise Exc2] |};
+  [%expect {|
+    'a 'b 'c. 'a -[exn _Exc2, console, exn _Exc1]-> unit * 'b * 'c
+    'a. 'a -[exn _Exc2, console, exn _Exc1]-> unit list |}]
