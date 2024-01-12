@@ -247,15 +247,18 @@ let env_int_null = Value_sig (TVar (TNullable (TBase TInt)))
 let env_char = Value_sig (TVar (TNot_Nullable TChar))
 let env_char_null = Value_sig (TVar (TNullable (TBase TChar)))
 let env_string = Value_sig (TVar (TNullable TString))
+let base_type_eq2 tp0 tp1 tp2 = tp0 >>= eq_t_env_opt tp1 <|> (tp0 >>= eq_t_env_opt tp2)
+
+let check_operands oper1 oper2 =
+  greater_t_env_opt oper1 oper2 <|> greater_t_env_opt oper1 oper2
+;;
 
 let operands_eq oper1 oper2 =
   match oper1, oper2 with
   | None, None | None, _ | _, None ->
     fail (Other_error "Using keyword Null with math operations")
-  | _ -> eq_t_env_opt oper1 oper2
+  | _ -> check_operands oper1 oper2
 ;;
-
-let base_type_eq2 tp0 tp1 tp2 = tp0 >>= eq_t_env_opt tp1 <|> (tp0 >>= eq_t_env_opt tp2)
 
 let check_bin_op op (env1, env2) =
   let is_operands_eq = operands_eq env1 env2 in
@@ -265,7 +268,7 @@ let check_bin_op op (env1, env2) =
   let int_bool_op = int_op *> return (Some env_bool) in
   let bool_op = base_type_eq2 (Some env_bool) (Some env_bool_null) in
   (*  *)
-  let compare_op = eq_t_env_opt env1 env2 in
+  let compare_op = check_operands env1 env2 in
   (* TODO: Тут разрешил проверку на равенство классов, придумать, как обрабатывать в интерпритаторе *)
   match op with
   | Asterisk | Plus | Minus | Division | Mod -> int_op
@@ -452,9 +455,9 @@ let try_catch_fin_check try_s catch_s finally_s h =
 ;;
 
 let check_statement stat =
-  let rec helper_ steps_wrap st = 
+  let rec helper_ steps_wrap st =
     let helper = helper_ steps_wrap in
-    match st with 
+    match st with
     | SExpr e -> check_expr e *> return TP_Ok
     | Steps stp ->
       let f acc = steps_wrap helper acc *> return () in
