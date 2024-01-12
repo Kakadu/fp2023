@@ -81,12 +81,11 @@ module Eval_env = struct
 
   (*  *)
   type t_global_env = text
-  type stack_trace = ST of method_sign list
 
   (*  *)
   type mem_el = code_ident * (t_env_value * fild_sign) IdentMap.t
   type memory = address * mem_el MemMap.t
-  type interpret_ctx = t_global_env * t_loc_env * memory * stack_trace
+  type interpret_ctx = t_global_env * t_loc_env * memory
 
   type ('a, 'b, 'sys_err) signal =
     | Next of 'a

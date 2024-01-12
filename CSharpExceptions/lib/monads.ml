@@ -269,7 +269,7 @@ module Eval_Monad = struct
 
   let run : ('a, 'b) t -> ctx_env * ('a, 'b, error) signal =
     (* TODO: переписать, чтоб получало на вход class с main, и на его основе запускался *)
-    fun f -> f (CodeMap.empty, (ln 0, IdentMap.empty), (ln 0, MemMap.empty), ST [])
+    fun f -> f (CodeMap.empty, (ln 0, IdentMap.empty), (ln 0, MemMap.empty))
   ;;
 
   let save : ctx_env -> (unit, 'b) t = fun new_ctx _ -> new_ctx, nsig ()
@@ -303,10 +303,10 @@ module Eval_Monad = struct
   (* ****************** Memory handling ****************** *)
 
   let save_mem : memory -> (unit, 'c) t =
-    fun mem (code, l_env, _, trace) -> (code, l_env, mem, trace), nsig ()
+    fun mem (code, l_env, _) -> (code, l_env, mem), nsig ()
   ;;
 
-  let read_mem = read >>| fun (_, _, mem, _) -> mem
+  let read_mem = read >>| fun (_, _, mem) -> mem
 
   let alloc_instance custom_f decl =
     let { cl_modif = _; cl_id; parent = _; cl_mems } = decl in
@@ -367,7 +367,7 @@ module Eval_Monad = struct
   let read_global : code_ident -> (code_ctx, 'c) t =
     fun id st ->
     let (Code_ident id_) = id in
-    let code, _, _, _ = st in
+    let code, _, _ = st in
     match CodeMap.find_opt id code with
     | Some x -> return_n x st
     | None -> fail (Not_find_ident_of id_) st
@@ -376,10 +376,10 @@ module Eval_Monad = struct
   (* ****************** Local_env handling ****************** *)
 
   let save_local : t_loc_env -> (unit, 'c) t =
-    fun l_env (code, _, mem, trace) -> (code, l_env, mem, trace), nsig ()
+    fun l_env (code, _, mem) -> (code, l_env, mem), nsig ()
   ;;
 
-  let read_local = read >>| fun (_, l_env, _, _) -> l_env
+  let read_local = read >>| fun (_, l_env, _) -> l_env
 
   let find_local_ id l_env =
     match IdentMap.find_opt id l_env with
@@ -419,25 +419,6 @@ module Eval_Monad = struct
   ;;
 
   (* ****************** Stack trace handling ****************** *)
-
-  let read_stack_trace : (stack_trace, 'c) t = read >>| fun (_, _, _, trace) -> trace
-
-  let save_stack_trace : stack_trace -> (unit, 'c) t =
-    fun trace (code, l_env, mem, _) -> (code, l_env, mem, trace), nsig ()
-  ;;
-
-  let add_stack_trace_el : method_sign -> (unit, 'c) t =
-    fun msign ->
-    read_stack_trace >>| (fun (ST tl) -> ST (msign :: tl)) >>= save_stack_trace
-  ;;
-
-  let remove_stack_trace_el : (unit, 'c) t =
-    read_stack_trace
-    >>= (function
-          | ST [] -> fail Stack_trace_is_empty
-          | ST (_ :: tl) -> return_n (ST tl))
-    >>= save_stack_trace
-  ;;
 
   (* ****************** -_- ****************** *)
 
