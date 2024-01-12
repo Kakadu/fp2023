@@ -212,9 +212,9 @@ module InferTests = struct
     pp_parse_and_infer
       {|
     let rec even_length xs = match xs with 
-    | h :: h :: tl -> even_length tl
-    | h :: [] -> false
-    | _ -> true
+      | h :: h :: tl -> even_length tl
+      | h :: [] -> false
+      | _ -> true
     |};
     [%expect {| '7 list -> bool |}]
   ;;

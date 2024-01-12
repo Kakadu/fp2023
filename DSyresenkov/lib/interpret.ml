@@ -62,6 +62,7 @@ type error =
   | IncorrectType
   | LetWithoutIn (** Inner let expressions without in are forbidden *)
   | TypeInferFailed of Typing.error
+  | NoMatchCase of value
   | NotImplemented
 
 let pp_error fmt =
@@ -72,6 +73,8 @@ let pp_error fmt =
   | IncorrectType -> fprintf fmt "Type mismatch"
   | LetWithoutIn -> fprintf fmt "Let without in is not allowed in this part of expression"
   | TypeInferFailed err -> fprintf fmt "%a" Typing.pp_error err
+  | NoMatchCase v ->
+    fprintf fmt "Value %a can not be match with any case in this expression" pp_value v
   | NotImplemented -> Stdlib.print_endline "Expression contains not implemented features"
 ;;
 
@@ -89,9 +92,105 @@ module Env = struct
     fun env subenv ->
     Base.Map.fold env ~init:subenv ~f:(fun ~key ~data env -> extend env (key, data))
   ;;
+
+  let singleton (id, value) = extend empty (id, value)
 end
 
 module Interpret (M : MONAD_FAIL) = struct
+  module PatternMatching : sig
+    type ('a, 'err) t =
+      | Matched of 'a
+      | NotMatched
+      | Failed of 'err
+
+    val match_pattern : pattern -> value -> (bindings, error) t
+  end = struct
+    type ('a, 'err) t =
+      | Matched of 'a
+      | NotMatched
+      | Failed of 'err
+
+    let matched a = Matched a
+    let not_matched = NotMatched
+    let fail_match err = Failed err
+
+    let ( >>= ) a f =
+      match a with
+      | Matched v -> f v
+      | NotMatched -> not_matched
+      | Failed err -> fail_match err
+    ;;
+
+    let ( let* ) = ( >>= )
+
+    let match_pattern : pattern -> value -> (bindings, error) t =
+      let rec helper pat value =
+        match pat, value with
+        | PWild, _ -> matched Env.empty
+        | PEmpty, VList [] -> matched Env.empty
+        | PEmpty, VList _ -> not_matched
+        | PEmpty, _ -> fail_match IncorrectType
+        | PConst (CInt x), VInt v when x = v -> matched Env.empty
+        | PConst (CInt _), VInt _ -> not_matched
+        | PConst (CBool x), VBool v when x = v -> matched Env.empty
+        | PConst (CBool _), VBool _ -> not_matched
+        | PConst CUnit, VUnit -> matched Env.empty
+        | PConst _, _ -> fail_match IncorrectType
+        | PVar id, v ->
+          let env = Env.singleton (id, v) in
+          matched env
+        | PTuple (p1, p2, ps), VTuple (v1, v2, vs) when List.compare_lengths ps vs = 0 ->
+          let* env1 = helper p1 v1 in
+          let* env2 = helper p2 v2 in
+          let pvs = Base.List.zip_exn ps vs in
+          let* env3 =
+            Base.List.fold_left pvs ~init:(matched Env.empty) ~f:(fun acc (p, v) ->
+              let* acc = acc in
+              let* env = helper p v in
+              let env = Env.add env acc in
+              matched env)
+          in
+          let env = Env.add env3 (Env.add env2 env1) in
+          matched env
+        | PTuple _, _ -> fail_match IncorrectType
+        | PCons (p1, p2, ps), VList vs ->
+          let ps, pl =
+            match List.rev ps with
+            | h :: tl -> p1 :: p2 :: List.rev tl, h
+            | [] -> [ p1 ], p2
+          in
+          let* env, vs =
+            Base.List.fold_left
+              ps
+              ~init:(matched (Env.empty, vs))
+              ~f:(fun acc p ->
+                let* acc, vs = acc in
+                let* env, vs =
+                  match vs with
+                  | h :: tl ->
+                    let* env = helper p h in
+                    matched (env, tl)
+                  | [] -> not_matched
+                in
+                matched (Env.add env acc, vs))
+          in
+          let* env1 = helper pl (VList vs) in
+          let env = Env.add env1 env in
+          matched env
+        | POr (p1, p2, ps), v ->
+          let* env =
+            Base.List.fold_left (p1 :: p2 :: ps) ~init:(matched Env.empty) ~f:(fun _ p ->
+              let* env = helper p v in
+              matched env)
+          in
+          matched env
+        | _ -> fail_match IncorrectType
+      in
+      helper
+    ;;
+  end
+
+  open PatternMatching
   open M
   open M.Syntax
 
@@ -157,7 +256,25 @@ module Interpret (M : MONAD_FAIL) = struct
            let* fv = helper env f in
            return fv
          | _ -> fail IncorrectType)
-      | EMatch _ -> fail NotImplemented
+      | EMatch (e, cases) ->
+        let* v = helper env e in
+        let* rv =
+          Base.List.fold_left cases ~init:(return NotMatched) ~f:(fun acc (p, e) ->
+            let* acc = acc in
+            match acc, match_pattern p v with
+            | Failed err, _ -> fail err
+            | _, Failed err -> fail err
+            | Matched _, _ -> return acc
+            | NotMatched, Matched case_env ->
+              let env = Env.add case_env env in
+              let* v = helper env e in
+              return (Matched v)
+            | _ -> return NotMatched)
+        in
+        (match rv with
+         | Matched v -> return v
+         | NotMatched -> fail (NoMatchCase v)
+         | Failed err -> fail err)
       | ELet (_, _, _, None) -> fail LetWithoutIn
       | ELet (_, id, e1, Some e2) ->
         let* v1 = helper env e1 in
@@ -191,7 +308,7 @@ module Interpret (M : MONAD_FAIL) = struct
     | ELet (_, id, e, None) ->
       let* v = eval env e in
       let env = Env.extend env (id, v) in
-      return (env, { id = Some id; value = v; ty })
+      return (env, { id = (if id = "_" then None else Some id); value = v; ty })
     | e ->
       let* v = eval env e in
       return (env, { id = None; value = v; ty })

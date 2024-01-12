@@ -14,9 +14,20 @@
  (instrumentation
   (backend bisect_ppx)))
 
+(executable
+ (name demoLists)
+ (modules demoLists)
+ (public_name demoLists)
+ (libraries miniml_lib)
+ (instrumentation
+  (backend bisect_ppx)))
+
 
 (cram
  (deps %{bin:demoFactParse}))
 
 (cram
  (deps %{bin:demoFacts}))
+
+(cram
+ (deps %{bin:demoLists}))

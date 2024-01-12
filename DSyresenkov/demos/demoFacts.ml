@@ -13,7 +13,7 @@ let input =
 
     let factFix = fix (fun f x -> if x < 2 then x else x * f (x - 1))
 
-    let results = [fact 5; factCPS 5; factFix 5]
+    let _ = fact 5, factCPS 5, factFix 5 
   |}
 ;;
 
