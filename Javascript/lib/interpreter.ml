@@ -495,7 +495,7 @@ let less_eq a b =
     >>= fun res1 ->
     equal x y
     >>= fun res2 ->
-    logical_or res1 res2 >>= fun res -> get_vbool res >>| fun res3 -> VBool res3
+    logical_or res1 res2 >>= fun res3 -> get_vbool res3 >>| fun res -> VBool res
   in
   if is_to_string a && is_to_string b then bop to_vstring a b else bop to_vnumber a b
 ;;
