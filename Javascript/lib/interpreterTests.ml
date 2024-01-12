@@ -942,3 +942,45 @@ let%expect_test _ =
   print_return "let a = { sayHi() {\n    return \"Hi!\"\n  }}; return a.sayHi()";
   [%expect {| Programm return: Hi! |}]
 ;;
+
+(*assign*)
+
+let%expect_test _ =
+  print_return "let a = 10; a = 15; return a";
+  [%expect {| Programm return: 15 |}]
+;;
+
+let%expect_test _ =
+  print_return "const a = 10; a = 15; return a";
+  [%expect {| Error: Interpreter error > error in expression statement > TypeError: Assignment to constant variable. |}]
+;;
+
+let%expect_test _ =
+  print_return "let a = 10; return (a=15)";
+  [%expect {| Programm return: 15 |}]
+;;
+
+let%expect_test _ =
+  print_return "let a = 10; return (a=(10 + 5))";
+  [%expect {| Programm return: 15 |}]
+;;
+
+let%expect_test _ =
+  print_return "let a = 10; return (a=\"jk\")";
+  [%expect {| Programm return: jk |}]
+;;
+
+let%expect_test _ =
+  print_return "let a = 10; let b = 15; return (a=b)";
+  [%expect {| Programm return: 15 |}]
+;;
+
+let%expect_test _ =
+  print_return "let a = 10; let b = a; a = 7; return b";
+  [%expect {| Programm return: 10 |}]
+;;
+
+let%expect_test _ =
+  print_return "let a = 10; let b = 15; let c = 17; return a = b = c";
+  [%expect {| Programm return: 17 |}]
+;;

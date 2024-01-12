@@ -153,20 +153,26 @@ let get_lex_env ctx id =
   | _ -> error @@ ReferenceError (asprintf "cannot find lexical env with id = %i" id)
 ;;
 
-let ctx_add ctx var =
-  get_lex_env ctx ctx.cur_lex_env
+let lex_add ctx ?(replace = false) lex_env_id var =
+  let rec add_or_replace var = function
+    | a :: b -> if a.var_id = var.var_id then var :: b else a :: add_or_replace var b
+    | _ -> [ var ]
+  in
+  get_lex_env ctx lex_env_id
   >>= fun lex_env ->
   match find_in_vars var.var_id lex_env.vars with
-  | Some _ ->
+  | Some _ when not replace ->
     error
     @@ SyntaxError (asprintf "Identifier \'%s\' has already been declared" var.var_id)
+  | Some var when var.is_const -> etyp "Assignment to constant variable."
+  | None when replace -> error @@ ReferenceError (asprintf "%s is not defined" var.var_id)
   | _ ->
     return
       { ctx with
         lex_envs =
           IntMap.add
             ctx.cur_lex_env
-            { lex_env with vars = var :: lex_env.vars }
+            { lex_env with vars = add_or_replace var lex_env.vars }
             ctx.lex_envs
       }
 ;;
@@ -220,7 +226,7 @@ let prefind_funcs ctx ast =
   let ctx_add_if_func ctx = function
     | FunInit x ->
       let ctx, value = create_func ctx x.fun_identifier x.arguments x.body tfunction in
-      ctx_add ctx { var_id = x.fun_identifier; is_const = false; value }
+      lex_add ctx ctx.cur_lex_env { var_id = x.fun_identifier; is_const = false; value }
     | _ -> return ctx
   in
   fold_left ctx_add_if_func ctx ast
@@ -464,7 +470,7 @@ let logical_or a b =
   >>= fun (x, _) -> if x then return a_preserved else return b_preserved
 ;;
 
-let add_ctx ctx op = op >>| fun op -> ctx, op
+let add_ctx ctx x = x >>| fun x -> ctx, x
 
 let eval_bin_op ctx op a b =
   let add_ctx = add_ctx ctx in
@@ -522,7 +528,7 @@ let ctx_get_var ctx id =
     get_lex_env ctx lex_id
     >>= fun lex_env ->
     match find_in_vars id lex_env.vars with
-    | Some a -> return a
+    | Some a -> return (a, lex_id)
     | None ->
       (match lex_env.parent with
        | Some parent -> go parent
@@ -543,10 +549,10 @@ let rec eval_fun ctx f args =
   in
   let rec val_to_args ctx = function
     | a1 :: atl, v1 :: vtl ->
-      ctx_add ctx { var_id = a1; is_const = false; value = v1 }
+      lex_add ctx ctx.cur_lex_env { var_id = a1; is_const = false; value = v1 }
       >>= fun ctx -> val_to_args ctx (atl, vtl)
     | a1 :: atl, _ ->
-      ctx_add ctx { var_id = a1; is_const = false; value = VUndefined }
+      lex_add ctx ctx.cur_lex_env { var_id = a1; is_const = false; value = VUndefined }
       >>= fun ctx -> val_to_args ctx (atl, [])
     | _, _ -> return ctx
   in
@@ -567,13 +573,25 @@ let rec eval_fun ctx f args =
   | _ ->
     error @@ InternalError "get unexpected object type, expect function, but get TObject"
 
+and assign ctx a b =
+  eval_exp ctx b
+  >>= fun (ctx, res) ->
+  match a with
+  | Var id ->
+    ctx_get_var ctx id
+    >>= fun (_, lex_id) ->
+    lex_add ctx ~replace:true lex_id { var_id = id; is_const = false; value = res }
+    >>| fun ctx -> ctx, res
+  | _ -> ensup ""
+
 (*main expression interpreter*)
 and eval_exp ctx = function
   | Const x -> return (ctx, const_to_val x)
+  | BinOp (Assign, a, b) -> assign ctx a b
   | BinOp (op, a, b) ->
     both_ext eval_exp ctx a b >>= fun (ctx, (x, y)) -> eval_bin_op ctx op x y
   | UnOp (op, a) -> eval_exp ctx a >>= fun (ctx, a) -> eval_un_op ctx op a
-  | Var id -> ctx_get_var ctx id >>| fun a -> ctx, a.value
+  | Var id -> ctx_get_var ctx id >>| fun (var, lex_id) -> ctx, var.value
   | FunctionCall (var, args) ->
     eval_exp ctx var
     <?> "error while try get function"
@@ -614,7 +632,10 @@ and parse_stm ctx = function
     eval_for_top_val x.value
     <?> "error in var declaration expression"
     >>= fun (ctx, v) ->
-    ctx_add ctx { var_id = x.var_identifier; is_const = x.is_const; value = v }
+    lex_add
+      ctx
+      ctx.cur_lex_env
+      { var_id = x.var_identifier; is_const = x.is_const; value = v }
   | Block ast ->
     parse_stms (create_local_ctx ctx ctx.cur_lex_env Block) ast
     <?> "error while interpret block"
@@ -623,6 +644,7 @@ and parse_stm ctx = function
      | Some _ as x -> { ctx with vreturn = x }
      | _ -> ctx)
   | FunInit _ -> return ctx
+  | Expression e -> eval_exp ctx e >>| fst <?> "error in expression statement"
   | _ -> ensup ""
 
 and parse_stms ctx ast =
