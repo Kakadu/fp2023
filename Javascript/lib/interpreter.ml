@@ -375,7 +375,6 @@ let negotiate op a b =
 ;;
 
 let strict_equal a b = return (VBool (a = b))
-let strict_not_equal a b = negotiate strict_equal a b
 
 let equal a b =
   let is_undefined_nan = function
@@ -406,7 +405,6 @@ let equal a b =
   else strict_equal a b
 ;;
 
-let not_equal a b = negotiate equal a b
 let rem a b = bop_with_num mod_float a b
 let exp a b = bop_with_num ( ** ) a b
 
@@ -463,7 +461,7 @@ let logical_or a b =
   both to_vbool a b
   >>= fun (a, b) ->
   both get_vbool a b
-  >>= fun (x, y) -> if x then return a_preserved else return b_preserved
+  >>= fun (x, _) -> if x then return a_preserved else return b_preserved
 ;;
 
 let add_ctx ctx op = op >>| fun op -> ctx, op
@@ -476,10 +474,10 @@ let eval_bin_op ctx op a b =
   | Mul -> add_ctx @@ mul a b <?> "error in mul operator"
   | Div -> add_ctx @@ div a b <?> "error in div operator"
   | Equal -> add_ctx @@ equal a b <?> "error in equal operator"
-  | NotEqual -> add_ctx @@ not_equal a b <?> "error in not_equal operator"
+  | NotEqual -> add_ctx @@ negotiate equal a b <?> "error in not_equal operator"
   | StrictEqual -> add_ctx @@ strict_equal a b <?> "error in strict equal operator"
   | StrictNotEqual ->
-    add_ctx @@ strict_not_equal a b <?> "error in strict not_equal operator"
+    add_ctx @@ negotiate strict_equal a b <?> "error in strict not_equal operator"
   | Rem -> add_ctx @@ rem a b <?> "error in rem operator"
   | LogicalShiftLeft ->
     add_ctx @@ shift Int32.shift_left a b <?> "error in logical_shift_left operator"
