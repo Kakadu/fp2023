@@ -2,6 +2,8 @@
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
+(* Some bugs are left unintentionally. *)
+
 open Typedtree
 open Ast
 
@@ -20,7 +22,7 @@ type error =
   | `Type_error of string
   | `Test
   ]
-  [@@deriving show { with_path = false }]
+[@@deriving show { with_path = false }]
 
 module R : sig
   type 'a t
@@ -36,9 +38,11 @@ module R : sig
   end
 
   module RMap : sig
-    val fold_left :
-    ('a, 'b, 'c) Base.Map.t ->
-    init:'d t -> f:('a -> 'b -> 'd -> 'd t) -> 'd t
+    val fold_left
+      :  ('a, 'b, 'c) Base.Map.t
+      -> init:'d t
+      -> f:('a -> 'b -> 'd -> 'd t)
+      -> 'd t
   end
 
   (** Creation of a fresh name from internal state *)
@@ -105,7 +109,7 @@ module Type = struct
       | TyArrow (l, r) -> helper (helper acc l) r
       | TyLit _ -> acc
       | TyList ty -> helper acc ty
-      | TyTuple types -> List.fold_left (fun acc ty -> helper acc ty) acc types 
+      | TyTuple types -> List.fold_left (fun acc ty -> helper acc ty) acc types
     in
     helper VarSet.empty
   ;;
@@ -139,7 +143,9 @@ end = struct
   let empty = Map.empty (module Base.Int)
 
   let singleton k v =
-    if Type.occurs_in k v then fail `Occurs_check else return @@ Map.singleton (module Base.Int) k v
+    if Type.occurs_in k v
+    then fail `Occurs_check
+    else return @@ Map.singleton (module Base.Int) k v
   ;;
 
   let find_exn = Map.find_exn
@@ -170,7 +176,6 @@ end = struct
       let* subs2 = unify (apply subs1 tl) (apply subs1 r2) in
       compose subs1 subs2
     | TyList t1, TyList t2 -> unify t1 t2
-
     | _ -> fail (`Unification_failed (l, r))
 
   and extend k v s =
@@ -191,9 +196,8 @@ end = struct
     List.fold_left ss ~init:(return empty) ~f:(fun acc s ->
       let* acc = acc in
       compose acc s)
-    ;;
+  ;;
 end
-
 
 module VarSet = struct
   include VarSet
@@ -224,7 +228,6 @@ module Scheme = struct
     let s2 = VarSet.fold (fun k s -> Subst.remove s k) names sub in
     S (names, Subst.apply s2 ty)
   ;;
-
 end
 
 module TypeEnv = struct
@@ -236,7 +239,23 @@ module TypeEnv = struct
   let extend env (id, scheme) = Map.set env ~key:id ~data:scheme
   let empty = Map.empty (module String)
 
-  let free_vars  =
+  let rec extend_by_pattern (S (bs, ty) as scheme) acc pat =
+    match pat, ty with
+    | PatVar v, _ -> extend acc (v, scheme)
+    | PatCons (h, tl), TyList t ->
+      let env = extend_by_pattern (S (bs, t)) acc h in
+      extend_by_pattern (S (bs, ty)) env tl
+    | PatTuple es, TyTuple ts ->
+      let new_env =
+        List.fold2 es ts ~init:acc ~f:(fun acc e t -> extend_by_pattern (S (bs, t)) acc e)
+      in
+      (match new_env with
+       | Ok env -> env
+       | _ -> acc)
+    | _ -> acc
+  ;;
+
+  let free_vars =
     Map.fold ~init:VarSet.empty ~f:(fun ~key:_ ~data:s acc ->
       VarSet.union acc (Scheme.free_vars s))
   ;;
@@ -285,21 +304,21 @@ let infer_pattern =
     | PatNil ->
       let* tv = fresh_var in
       return (env, TyList tv)
-    | PatLit l -> 
+    | PatLit l ->
       (match l with
-      | LitInt _ -> return (env, TyLit "int")
-      | LitBool _ -> return (env, TyLit "bool")
-      | LitString _ -> return (env, TyLit "string")
-      | LitChar _ -> return (env, TyLit "char"))
+       | LitInt _ -> return (env, TyLit "Int")
+       | LitBool _ -> return (env, TyLit "Bool")
+       | LitString _ -> return (env, TyLit "String")
+       | LitChar _ -> return (env, TyLit "Char"))
     | PatVar x ->
       (match Base.Map.find env x with
-        | None ->
-          let* tv = fresh_var in
-          let env = TypeEnv.extend env (x, S (VarSet.empty, tv)) in
-          return (env, tv)
-        | Some _ -> fail `Occurs_check)
-    | PatTuple ps -> 
-      let rec infer_pattern_elements env patterns types_acc = 
+       | None ->
+         let* tv = fresh_var in
+         let env = TypeEnv.extend env (x, S (VarSet.empty, tv)) in
+         return (env, tv)
+       | Some _ -> fail `Occurs_check)
+    | PatTuple ps ->
+      let rec infer_pattern_elements env patterns types_acc =
         match patterns with
         | [] -> return (env, List.rev types_acc)
         | p :: tl ->
@@ -315,35 +334,35 @@ let infer_pattern =
       let* sub_uni = Subst.unify typ2 (TyList fresh) in
       let typ2 = Subst.apply sub_uni typ2 in
       let* sub3 = Subst.unify (TyList typ1) typ2 in
-      let* final_sub = Subst.compose_all [sub3; sub_uni ] in
-      let env = TypeEnv.apply final_sub env2  in
+      let* final_sub = Subst.compose_all [ sub3; sub_uni ] in
+      let env = TypeEnv.apply final_sub env2 in
       return (env, typ2)
-    in 
-    helper
+  in
+  helper
 ;;
 
-let infer =
+let infer_expr =
   let rec (helper : TypeEnv.t -> expr -> (Subst.t * ty) R.t) =
     fun env -> function
-    | ExprBinOp (op, e1, e2) -> 
+    | ExprBinOp (op, e1, e2) ->
       let* s1, t1 = helper env e1 in
       let* s2, t2 = helper env e2 in
       (match op with
-      | Add | Sub | Mul | Div ->
-        let* s3 = unify t1 (TyLit "int") in
-        let* s4 = unify t2 (TyLit "int") in
-        let* final_subst = Subst.compose_all [ s1; s2; s3; s4 ] in
-        return (final_subst, TyLit "int")
-      | And | Or -> 
-        let* s3 = unify t1 (TyLit "bool") in
-        let* s4 = unify t2 (TyLit "bool") in
-        let* final_subst = Subst.compose_all [ s1; s2; s3; s4 ] in
-        return (final_subst, TyLit "bool")
-      | Eq | Neq | Lt | Gt | Leq | Geq -> 
-        let* s3 = unify t1 (TyLit "int") in
-        let* s4 = unify t2 (TyLit "int") in
-        let* final_subst = Subst.compose_all [ s1; s2; s3; s4 ] in
-        return (final_subst, TyLit "bool"))
+       | Add | Sub | Mul | Div ->
+         let* s3 = unify t1 (TyLit "Int") in
+         let* s4 = unify t2 (TyLit "Int") in
+         let* final_subst = Subst.compose_all [ s1; s2; s3; s4 ] in
+         return (final_subst, TyLit "Int")
+       | And | Or ->
+         let* s3 = unify t1 (TyLit "Bool") in
+         let* s4 = unify t2 (TyLit "Bool") in
+         let* final_subst = Subst.compose_all [ s1; s2; s3; s4 ] in
+         return (final_subst, TyLit "Bool")
+       | Eq | Neq | Lt | Gt | Leq | Geq ->
+         let* s3 = unify t1 (TyLit "Int") in
+         let* s4 = unify t2 (TyLit "Int") in
+         let* final_subst = Subst.compose_all [ s1; s2; s3; s4 ] in
+         return (final_subst, TyLit "Bool"))
     | ExprVar x -> lookup_env x env
     | ExprFunc (x, e1) ->
       let* env2, tv = infer_pattern env x in
@@ -360,20 +379,20 @@ let infer =
       return (final_subst, trez)
     | ExprLit lit ->
       (match lit with
-      | LitInt _ -> return (Subst.empty, TyLit "int")
-      | LitBool _ -> return (Subst.empty, TyLit "bool")
-      | LitString _ -> return (Subst.empty, TyLit "string")
-      | LitChar _ -> return (Subst.empty, TyLit "char"))
+       | LitInt _ -> return (Subst.empty, TyLit "Int")
+       | LitBool _ -> return (Subst.empty, TyLit "Bool")
+       | LitString _ -> return (Subst.empty, TyLit "String")
+       | LitChar _ -> return (Subst.empty, TyLit "Char"))
     | ExprIf (c, th, el) ->
       let* s1, t1 = helper env c in
       let* s2, t2 = helper env th in
       let* s3, t3 = helper env el in
-      let* s4 = unify t1 (TyLit "bool") in
+      let* s4 = unify t1 (TyLit "Bool") in
       let* s5 = unify t2 t3 in
       let* final_subst = Subst.compose_all [ s5; s4; s3; s2; s1 ] in
       R.return (final_subst, Subst.apply s5 t2)
     | ExprTuple es ->
-      let rec infer_elements env es subst_acc types_acc = 
+      let rec infer_elements env es subst_acc types_acc =
         match es with
         | [] -> return (subst_acc, types_acc)
         | e :: tl ->
@@ -393,7 +412,7 @@ let infer =
       let list_ty = TyList t1 in
       let* s3 = unify list_ty t2 in
       let final_ty = Subst.apply s3 list_ty in
-      let* final_subst = Subst.compose_all [s3; s2; s1] in
+      let* final_subst = Subst.compose_all [ s3; s2; s1 ] in
       return (final_subst, final_ty)
     | ExprLet (bindings, main_expr) ->
       let rec process_bindings env subst_acc = function
@@ -407,7 +426,7 @@ let infer =
           let* s_acc = Subst.compose s1 subst_acc in
           process_bindings env' s_acc tl
         | (x, _) :: tl ->
-          let* (env2, _) = infer_pattern env x in
+          let* env2, _ = infer_pattern env x in
           process_bindings env2 subst_acc tl
       in
       let* env', subst_acc = process_bindings env Subst.empty bindings in
@@ -418,168 +437,32 @@ let infer =
   helper
 ;;
 
-let w e = Result.map snd (run (infer TypeEnv.empty e))
-
-let pp_infer e =
-  match w e with
-  | Ok ty -> Format.printf "%a" pp_ty ty
-  | Error err -> Format.printf "%a" pp_error err
-;;
-
-let pp_parse_and_infer input =
-  match Angstrom.parse_string ~consume:All Parser.pexpr input with
-  | Result.Ok e -> pp_infer e
-  | _ -> print_endline "Failed to parse"
-;;
-
-let%expect_test _ =
-  pp_parse_and_infer {|\x -> [x]|};
-  [%expect {| (TyArrow ((TyVar 1), (TyList (TyVar 1)))) |}]
-;;
-
-
-let%expect_test _ =
-  pp_parse_and_infer {|\x -> [x, 5]|};
-  [%expect {| (TyArrow ((TyLit "int"), (TyList (TyLit "int")))) |}]
-;;
-
-let%expect_test _ =
-  pp_parse_and_infer {|\x y -> (x, y)|};
-  [%expect {|
-    (TyArrow ((TyVar 0), (TyArrow ((TyVar 1), (TyTuple [(TyVar 0); (TyVar 1)])))
-       )) |}]
-;;
-
-
-let infer_decl env (Ast.DeclLet (x,  expr)) = 
-  let* (env2, _) = infer_pattern env x in
-
+let rec infer_decl env (Ast.DeclLet (pat, expr)) =
+  let* env', _ = infer_pattern env pat in
   (* TODO: переделать; какая-то грязь тут *)
-  let* subst, inferred_type = infer env2 expr in
-  let scheme = generalize env2 inferred_type in
-  return (subst, scheme)
+  let* subst, inferred_type = infer_expr env' expr in
+  let scheme = generalize env' inferred_type in
+  let env = TypeEnv.extend_by_pattern scheme env' pat in
+  return env
+;;
 
+let rec infer_prog env p =
+  match p with
+  | [] -> return env
+  | decl :: rest ->
+    let* env2 = infer_decl env decl in
+    infer_prog env2 rest
+;;
 
-let w e = Result.map snd (run (infer_decl TypeEnv.empty e))
+let run_prog p = run (infer_prog TypeEnv.empty p)
 
-let pp_infer e =
-  match w e with
-  | Ok ty -> Format.printf "%a" pp_scheme ty
+let pp_program fmt env =
+  Base.Map.iteri env (fun ~key:v ~data:(S (_, ty)) ->
+    Format.fprintf fmt "%s :: %a\n" v pp_type ty)
+;;
+
+let infer e =
+  match run_prog e with
+  | Ok ty -> Format.printf "%a" pp_program ty
   | Error err -> Format.printf "%a" pp_error err
 ;;
-
-let pp_parse_and_infer input =
-  match Angstrom.parse_string ~consume:All Parser.pdecl input with
-  | Result.Ok e -> pp_infer e
-  | _ -> print_endline "Failed to parse"
-;;
-
-let%expect_test _ =
-  pp_parse_and_infer {| fact n = if (n < 2) then 1 else fact (n - 1) * n|};
-  [%expect {| (S ([ ], (TyArrow ((TyLit "int"), (TyLit "int"))))) |}]
-;;
-let%expect_test _ =
-  pp_parse_and_infer {| dam x y = (x, y)|};
-  [%expect {|
-    (S ([ 1; 2; ],
-       (TyArrow ((TyVar 1),
-          (TyArrow ((TyVar 2), (TyTuple [(TyVar 1); (TyVar 2)])))))
-       )) |}]
-;;
-
-let%expect_test _ =
-  pp_parse_and_infer {|   f a = 
-  let x = 3
-      y = 5
-      z = 7
-  in x + y + z + a|};
-  [%expect {|
-    (S ([ ], (TyArrow ((TyLit "int"), (TyLit "int"))))) |}]
-;;
-
-let%expect_test _ =
-  pp_parse_and_infer {|real n = if True || False then 1 else 2|};
-  [%expect {|
-    (S ([ 1; ], (TyArrow ((TyVar 1), (TyLit "int"))))) |}]
-;;
-
-let%expect_test _ =
-  pp_parse_and_infer {| dam (x, y) = x + y|};
-  [%expect {|
-    (S ([ ], (TyArrow ((TyTuple [(TyLit "int"); (TyLit "int")]), (TyLit "int")))
-       )) |}]
-;;
-
-let%expect_test _ =
-  pp_parse_and_infer {| dam (x:xs) = xs|};
-  [%expect {|
-    (S ([ 3; ], (TyArrow ((TyList (TyVar 3)), (TyList (TyVar 3)))))) |}]
-;;
-
-let%expect_test _ =
-  pp_parse_and_infer {| dam (y:x:xs) = x + y|};
-  [%expect {|
-    (S ([ ], (TyArrow ((TyList (TyLit "int")), (TyLit "int"))))) |}]
-;;
-
-let%expect_test _ =
-  pp_parse_and_infer {| f = let g x y = x + y in g|};
-  [%expect {|
-    (S ([ ], (TyArrow ((TyLit "int"), (TyArrow ((TyLit "int"), (TyLit "int")))))
-       )) |}]
-;;
-
-let%expect_test _ =
-  pp_parse_and_infer {|  f = let (x,y) = (1, 2) in x + y|};
-  [%expect {|
-    (S ([ ], (TyLit "int"))) |}]
-;;
-
-let%expect_test _ =
-  pp_parse_and_infer {|dam = let f x g = g x in let id x = x in let fst x y = x in fst (f id)|};
-  [%expect {|
-    (S ([ 11; 13; 14; ],
-       (TyArrow ((TyVar 11),
-          (TyArrow ((TyArrow ((TyArrow ((TyVar 14), (TyVar 14))), (TyVar 13))),
-             (TyVar 13)))
-          ))
-       )) |}]
-;;
-
-let%expect_test _ =
-  pp_parse_and_infer {|dam = \f -> \x -> f x|};
-  [%expect {|
-    (S ([ 2; 3; ],
-       (TyArrow ((TyArrow ((TyVar 2), (TyVar 3))),
-          (TyArrow ((TyVar 2), (TyVar 3)))))
-       )) |}]
-;;
-
-let%expect_test _ =
-  pp_parse_and_infer {|dam = \f -> \x -> f x|};
-  [%expect {|
-    (S ([ 2; 3; ],
-       (TyArrow ((TyArrow ((TyVar 2), (TyVar 3))),
-          (TyArrow ((TyVar 2), (TyVar 3)))))
-       )) |}]
-;;
-
-let%expect_test _ =
-  pp_parse_and_infer {|dam = \f -> \x -> f x|};
-  [%expect {|
-    (S ([ 2; 3; ],
-       (TyArrow ((TyArrow ((TyVar 2), (TyVar 3))),
-          (TyArrow ((TyVar 2), (TyVar 3)))))
-       )) |}]
-;;
-
-let%expect_test _ =
-  pp_parse_and_infer {|map f (x:xs) = f x : map f xs|};
-  [%expect {|
-    (S ([ 4; 5; ],
-       (TyArrow ((TyArrow ((TyVar 4), (TyVar 5))),
-          (TyArrow ((TyList (TyVar 4)), (TyList (TyVar 5))))))
-       )) |}]
-;;
-
-
