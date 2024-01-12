@@ -59,15 +59,13 @@ let ptoken p = pspaces *> p
 let ptoken1 p = pspaces1 *> p
 let pstoken s = ptoken (string s)
 let pstoken1 s = ptoken1 (string s)
-let between l r p = pstoken l *> p <* pstoken r
+let between l r p = pwspaces *> string l *> p <* pwspaces *> string r
 let pparens p = between "(" ")" p
 let pbrackets p = between "[" "]" p
-
 let lit_int s = LitInt (int_of_string s)
 let lit_bool s = LitBool (bool_of_string @@ String.lowercase_ascii s)
 let lit_str s = LitString s
 let lit_char s = LitChar s
-
 let expr_var id = ExprVar id
 let expr_lit lit = ExprLit lit
 let expr_fun args expr = List.fold_right (fun p e -> ExprFunc (p, e)) args expr
@@ -78,7 +76,6 @@ let expr_cons e1 e2 = ExprCons (e1, e2)
 let expr_list l = List.fold_right (fun e1 e2 -> ExprCons (e1, e2)) l ExprNil
 let expr_nil _ = ExprNil
 let expr_let dl e = ExprLet (dl, e)
-
 let pat_var pat = PatVar pat
 let pat_lit lit = PatLit lit
 let pat_wild _ = PatWild
@@ -86,7 +83,6 @@ let pat_nil _ = PatNil
 let pat_cons e1 e2 = PatCons (e1, e2)
 let pat_list l = List.fold_right (fun e1 e2 -> PatCons (e1, e2)) l PatNil
 let pat_tuple l = PatTuple l
-
 let dec_let pat expr = DeclLet (pat, expr)
 let bind p e = p, e
 
@@ -126,8 +122,7 @@ let ppat =
     let contents = sep_by (char ',') @@ ptoken pattern in
     pbrackets contents >>| pat_list
   in
-  let pcons = pparens @@ chainr1 pattern (pstoken ":" *> return pat_cons)
-  in
+  let pcons = pparens @@ chainr1 pattern (pstoken ":" *> return pat_cons) in
   let pptuple =
     let contents = sep_by (char ',') @@ ptoken pattern in
     pparens contents
@@ -222,7 +217,7 @@ let pexpr =
     in
     lift2 expr_let pbinds pexpr
   in
-    choice
+  choice
     ~failure_msg:"Parsing error: can't parse expression"
     [ plocbind; pif; pebinop; plambda ]
 ;;
