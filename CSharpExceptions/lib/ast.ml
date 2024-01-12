@@ -85,9 +85,9 @@ type expr =
   (*  *)
   | EIdentifier of ident (* id of something e.g. class name; var name; method name *)
   | EMethod_invoke of expr * args (* method(a, b, c) | Class.method(a, b, c) *)
+  | EPoint_access of expr * expr (* access by point e.g. A.run() *)
   (*  *)
   | EBin_op of bin_op * expr * expr
-  | EPoint_access of expr * expr (* access by point e.g. A.run() *)
   | EUn_op of un_op * expr
 (*  *)
 
