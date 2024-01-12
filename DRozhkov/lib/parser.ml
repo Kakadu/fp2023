@@ -52,7 +52,7 @@ let letter = function
 let spaces = skip_while is_space
 let skip_whitespace = take_while is_whitespace
 let skip_whitespace1 = take_while1 is_whitespace
-let token s = skip_whitespace *> string s
+let token s = spaces *> string s
 let ptoken p = spaces *> p
 let lp = token "("
 let rp = token ")"
@@ -60,6 +60,12 @@ let add = token "+" *> return Add
 let sub = token "-" *> return Sub
 let mul = token "*" *> return Mul
 let div = token "/" *> return Div
+let les = token "<" *> return Les
+let leq = token "<=" *> return Leq
+let gre = token ">" *> return Gre
+let geq = token ">=" *> return Geq
+let comparison = skip_whitespace *> les <|> leq <|> gre <|> geq <* skip_whitespace
+
 let high_pr_op = skip_whitespace *> mul <|> div <* skip_whitespace
 let low_pr_op = skip_whitespace *> add <|> sub <* skip_whitespace
 let peq = token "=" *> return Eq
@@ -75,6 +81,7 @@ let is_syntax = function
   | "function"
   | "then"
   | "rec"
+  | "in"
   | "true"
   | "false"
   | "match"
@@ -90,7 +97,7 @@ let if_then_else elem =
        (fun iff thenn elsee -> IfThenElse (iff, thenn, elsee))
        (token "if" *> elem)
        (token "then" *> elem)
-       (token "else" *> elem <|> return Empty)
+       (token "else" *> elem <|> return (Const Empty))
 ;;
 
 let sign =
@@ -109,18 +116,16 @@ let dot =
   | _ -> return false
 ;;
 
-let number =
-  skip_whitespace *> sign
-  >>= fun sign ->
-  take_while1 is_digit
-  >>= fun whole ->
-  dot
-  >>= function
-  | false -> return (Const (Intenger (int_of_string (sign ^ whole))))
-  | true ->
+  let number =
+    skip_whitespace *> sign
+    >>= fun sign ->
     take_while1 is_digit
-    >>= fun part -> return (Const (Float (float_of_string (sign ^ whole ^ "." ^ part))))
-;;
+    >>= fun whole ->
+    dot
+    >>= function
+    | false -> return (Const (Int (int_of_string (sign ^ whole))))
+    | true -> fail "Not int"
+  ;;
 
 let bool_pars =
   ptoken
@@ -153,13 +158,55 @@ let let_pars pexpr =
        (token "rec" *> return Rec <|> return NoRec)
        (token "()" <|> ident)
        (token "=" *> pexpr <|> fun_pars pexpr)
-       (token "in" *> pexpr <|> return Empty)
+       (token "in" *> pexpr >>| (fun x -> Some x) <|> return None)
 ;;
 
 let pebinop chain1 e pbinop = chain1 e (pbinop >>| fun op l r -> Binop (op, l, r))
 let plbinop = pebinop chainl1
 let var_pars = ident >>= fun x -> return (Ast.Var x)
 let const_pars = choice [ bool_pars; number ]
+
+let pnumber = ptoken @@ take_while1 is_digit >>| fun x -> (PConst ( Int (int_of_string x)))
+let pbool_pars =
+  ptoken
+  @@ choice
+       [ token "true" *> return true; token "false" *> return false; fail "Not boolean" ]
+  >>| fun x -> PConst (Bool x)
+;;
+let ppconst = choice [ pnumber; pbool_pars ]
+let ppvar = ident >>| fun x -> PVar x
+
+let ppattern =
+  fix
+  @@ fun ppattern ->
+  let pat =
+    choice
+      [ parens ppattern
+      ; ppconst
+      ; (token "_" >>| fun _ -> PAny)
+      ; ppvar
+      ]
+  in
+  let pat =
+    lift2
+      (fun p1 -> function
+        | h :: tl -> PCons (p1, h, tl)
+        | _ -> p1)
+      pat
+      (many (token "::" *> pat))
+  in
+  pat
+;;
+
+let ematch pexpr =
+  let pcase ppattern pexpr =
+    lift2 (fun p e -> p, e) (token "|" *> ppattern) (token "->" *> pexpr)
+  in
+  lift2
+    (fun expr cases -> Match (expr, cases))
+    (token "match" *> pexpr <* token "with")
+    (many1 (pcase ppattern pexpr))
+;;
 
 let pexpr =
   fix (fun parseExpression ->
@@ -172,10 +219,13 @@ let pexpr =
     in
     let multiplyDivide = plbinop apply high_pr_op in
     let addSubtract = plbinop multiplyDivide low_pr_op in
-    let equalNotEqual = plbinop addSubtract (peq <|> pneq) in
+    let compar = plbinop addSubtract comparison in
+    let equalNotEqual = plbinop compar (peq <|> pneq) in
     let letParser = let_pars parseExpression in
     let ifParser = if_then_else parseExpression in
-    choice [ letParser; ifParser; equalNotEqual ])
+    let matchParser = ematch parseExpression in
+    choice [ letParser; ifParser; equalNotEqual; matchParser ])
 ;;
 
-let parser = parse_string ~consume:Consume.All (pexpr <* spaces)
+let parse_expr = parse_string ~consume:Consume.All (pexpr <* spaces)
+let parser = parse_string ~consume:Consume.All (many1 (let_pars pexpr) <* spaces)
