@@ -71,13 +71,16 @@ let%expect_test "Base program 2" =
       Program1(int a){}
     }
 
-      class Program
-      {
-          static void Main(){
-              Program1 p = new Program1(1);
-              return ;
-          }
-      }
+    class Program2 {}
+
+    class Program
+    {
+        static void Main(){
+            Program1 p1 = new Program1(1);
+            Program2 p2 = new Program2();
+            return ;
+        }
+    }
 |}
   in
   check_stand s;
