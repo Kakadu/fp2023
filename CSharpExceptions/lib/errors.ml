@@ -20,6 +20,7 @@ type error =
   | Trying_to_change_Null
   | Constructor_error of string
   | Division_by_zero
+  | Methods_cannot_be_assignable
   (*  *)
   | Double_definition_of of ident
   | User_exception of address
