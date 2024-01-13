@@ -53,8 +53,8 @@ and obj_type =
   | TObject
 
 and obj_ctx =
-  { fields : let_ctx list
-  ; service_fields : let_ctx list
+  { proto : value
+  ; fields : let_ctx list
   ; obj_type : obj_type
   }
 
