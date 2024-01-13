@@ -962,7 +962,8 @@ let%expect_test _ =
 
 let%expect_test _ =
   print_return "const a = 10; a = 15; return a";
-  [%expect {| Error: Interpreter error > error in expression statement > TypeError: Assignment to constant variable. |}]
+  [%expect
+    {| Error: Interpreter error > error in expression statement > TypeError: Assignment to constant variable. |}]
 ;;
 
 let%expect_test _ =

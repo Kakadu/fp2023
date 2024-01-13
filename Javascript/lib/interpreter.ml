@@ -383,6 +383,11 @@ let bop_bitwise_shift op a b =
   >>| fun (x, y) -> VNumber (Int32.to_float (op x (Int32.to_int y)))
 ;;
 
+let get_vbool = function
+  | VBool x -> return x
+  | _ as t -> etyp @@ asprintf "expect boolean, but %s was given" @@ print_val t
+;;
+
 let bop_with_int op a b =
   both to_vnumber a b
   >>= fun (a, b) ->
@@ -402,6 +407,10 @@ let is_bool = function
 let is_num = function
   | VNumber _ -> true
   | _ -> false
+;;
+
+let bop_logical_with_num op a b =
+  both to_vnumber a b >>= fun (a, b) -> both get_vnum a b >>| fun (x, y) -> VBool (op x y)
 ;;
 
 let bop_logical_with_string op a b =
@@ -506,9 +515,9 @@ let eval_bin_op ctx op a b =
   let add_ctx = add_ctx ctx in
   match op with
   | Add -> add_ctx @@ add a b <?> "error in add operator"
-  | Sub -> add_ctx @@ sub a b <?> "error in sub operator"
-  | Mul -> add_ctx @@ mul a b <?> "error in mul operator"
-  | Div -> add_ctx @@ div a b <?> "error in div operator"
+  | Sub -> add_ctx @@ bop_with_num ( -. ) a b <?> "error in sub operator"
+  | Mul -> add_ctx @@ bop_with_num ( *. ) a b <?> "error in mul operator"
+  | Div -> add_ctx @@ bop_with_num ( /. ) a b <?> "error in div operator"
   | Equal -> add_ctx @@ equal a b <?> "error in equal operator"
   | NotEqual -> add_ctx @@ negotiate equal a b <?> "error in not_equal operator"
   | StrictEqual -> add_ctx @@ strict_equal a b <?> "error in strict equal operator"
