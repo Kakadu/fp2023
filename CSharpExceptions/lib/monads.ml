@@ -440,7 +440,13 @@ module Eval_Monad = struct
     >>= fun (ad, l_env) ->
     let s_local =
       let new_l_env = IdentMap.add id v l_env in
-      find_local_ id l_env *> save_local (ad, new_l_env)
+      let is_mutable =
+        find_local_ id l_env
+        >>= function
+        | ICode _ -> fail Methods_cannot_be_assignable
+        | x -> return_n x
+      in
+      is_mutable *> save_local (ad, new_l_env)
     in
     let s_self = update_instance_el id ad v in
     s_local <|> s_self

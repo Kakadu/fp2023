@@ -23,7 +23,7 @@ module Common_env = struct
 
   module IdentMap = Stdlib.Map.Make (Ident)
 
-  type address = Link of int [@@deriving show { with_path = false }]
+  type address = Link of int [@@deriving show { with_path = false }, eq]
 
   let incr_ (Link ad) = Link (ad + 1)
   let ln x = Link x
@@ -66,12 +66,24 @@ end
 module Eval_env = struct
   open Common_env
 
-  type const =
-    | IInstance of address
-    | IBase_value of value_
+  type iconst =
+    | Null_v
+    | String_v of string (* Операции над типом не поддерживаются *)
+    | Int_v of int (* Арифметические операции *)
+    | Char_v of char (* Операции над типом не поддерживаются *)
+    | Bool_v of bool (* Только логические операции *)
+    | Instance_v of address (* Обращение по точке + '==' и '!=' (равенство по ссылке) *)
+  [@@deriving show { with_path = false }, eq]
 
-  let to_inst x = IInstance x
-  let to_val x = IBase_value x
+  let val_to_iconst = function
+    | Null -> Null_v
+    | VString x -> String_v x
+    | VInt x -> Int_v x
+    | VChar x -> Char_v x
+    | VBool x -> Bool_v x
+  ;;
+
+  let to_inst x = Instance_v x
 
   type instructions =
     | IMethod of method_sign * statement
@@ -81,7 +93,7 @@ module Eval_env = struct
   let to_cons sign body = IConstructor (sign, body)
 
   type t_env_eval_const =
-    | Init of const
+    | Init of iconst
     | Not_init
 
   let to_init x = Init x
@@ -93,9 +105,8 @@ module Eval_env = struct
 
   let to_const x = IConst x
   let to_code x = ICode x
-
-  let create_base_val x = to_const@@to_init@@to_val x
-  let create_inst x = to_const@@to_init@@to_inst x
+  let create_val x = to_const @@ to_init x
+  let create_inst x = to_const @@ to_init @@ to_inst x
 
   type t_loc_env = address * t_env_value IdentMap.t
 
@@ -108,7 +119,7 @@ module Eval_env = struct
   type interpret_ctx = t_global_env * t_loc_env * memory
 
   (* TODO: мб переписать эту штуку, встроить в signals *)
-  type ('b, 'sys_err) sig_ = 
+  type ('b, 'sys_err) sig_ =
     | Return of 'b option
     | Exn of code_ident * address
     | Break

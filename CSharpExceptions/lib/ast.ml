@@ -66,7 +66,7 @@ type bin_op =
   | Equal (* [==] *)
   | NotEqual (* [!=] *)
   | Less (* [<] *)
-  | LessOrEqual (* [+] *)
+  | LessOrEqual (* [<=] *)
   | More (* [>] *)
   | MoreOrEqual (* [>=] *)
   | And (* [&&] *)
