@@ -55,10 +55,14 @@ let pwspaces = take_while is_ws
 let pwspaces1 = take_while1 is_ws
 let pspaces = take_while (fun c -> is_ws c || is_eol c)
 let pspaces1 = take_while1 (fun c -> is_ws c || is_eol c)
-let ptoken p = pspaces *> p
-let ptoken1 p = pspaces1 *> p
+let ptoken p = pwspaces *> p
+let ptoken1 p = pwspaces1 *> p
 let pstoken s = ptoken (string s)
 let pstoken1 s = ptoken1 (string s)
+let ptoken_eol p = pspaces *> p
+let ptoken_eol1 p = pspaces1 *> p
+let pstoken_eol s = ptoken_eol (string s)
+let pstoken_eol1 s = ptoken_eol1 (string s)
 let between l r p = pwspaces *> string l *> p <* pwspaces *> string r
 let pparens p = between "(" ")" p
 let pbrackets p = between "[" "]" p
@@ -76,6 +80,8 @@ let expr_cons e1 e2 = ExprCons (e1, e2)
 let expr_list l = List.fold_right (fun e1 e2 -> ExprCons (e1, e2)) l ExprNil
 let expr_nil _ = ExprNil
 let expr_let dl e = ExprLet (dl, e)
+let expr_if e1 e2 e3 = ExprIf (e1, e2, e3)
+let expr_case e l = ExprCase (e, l)
 let pat_var pat = PatVar pat
 let pat_lit lit = PatLit lit
 let pat_wild _ = PatWild
@@ -137,7 +143,7 @@ let ppat =
 
 (* Expressions *)
 
-let pbinop op op_constr = pstoken op *> return (expr_binop op_constr)
+let pbinop op op_constr = pwspaces *> string op *> return (expr_binop op_constr)
 let padd = pbinop "+" Add
 let psub = pbinop "-" Sub
 let pmul = pbinop "*" Mul
@@ -195,7 +201,7 @@ let pexpr =
   in
   let pif =
     lift3
-      (fun e1 e2 e3 -> ExprIf (e1, e2, e3))
+      expr_if
       (pstoken "if" *> pexpr)
       (pstoken "then" *> pexpr)
       (pstoken "else" *> pexpr)
@@ -208,22 +214,39 @@ let pexpr =
       let pbind =
         lift2
           bind
-          (ptoken ppat)
-          (lift2 expr_fun (many ppat) (pstoken "=" *> ptoken pexpr))
+          (ptoken_eol ppat)
+          (lift2 expr_fun (many ppat) (pstoken_eol "=" *> ptoken_eol pexpr))
         <* pwspaces
       in
-      pstoken "let" *> many1 (ptoken pbind <* ptoken @@ many @@ take_while1 is_eol)
-      <* pstoken "in"
+      pstoken_eol "let"
+      *> many1 (ptoken_eol pbind <* ptoken_eol @@ many @@ take_while1 is_eol)
+      <* pstoken_eol "in"
     in
     lift2 expr_let pbinds pexpr
   in
+  let pcase =
+    let pbranch =
+      lift2 (fun pattern expr -> pattern, expr) (pspaces1 *> ppat) (pstoken "->" *> pexpr)
+    in
+    lift2
+      (fun case_expr branches -> ExprCase (case_expr, branches))
+      (pstoken "case" *> pexpr <* pstoken "of")
+      (many pbranch)
+  in
+  (* let pcase =
+     let branch = ppat >>= fun pat -> pstoken "->" *> pexpr >>| fun e -> pat, e in
+     pstoken "case" *> pexpr >>= fun e -> pstoken "of" *> many1 branch >>| expr_case e
+     in *)
   choice
     ~failure_msg:"Parsing error: can't parse expression"
-    [ plocbind; pif; pebinop; plambda ]
+    [ pcase; plocbind; pif; pebinop; plambda ]
 ;;
 
 let pdecl =
-  lift2 dec_let (ptoken ppat) (lift2 expr_fun (many ppat) (pstoken "=" *> ptoken pexpr))
+  lift2
+    dec_let
+    (ptoken_eol ppat)
+    (lift2 expr_fun (many ppat) (pstoken "=" *> ptoken pexpr))
   <* pwspaces
 ;;
 
