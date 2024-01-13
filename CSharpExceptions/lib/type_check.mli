@@ -69,14 +69,21 @@ and new without a constructor are not checked. )
     <TReturn _> method_a();
 *)
 
+open Ast
+open Errors
+open Env_types.Common_env
+open Env_types.Type_check_env
+open Monads.Type_check_Monad
+
 val check_expr
-  :  Ast.expr
-  -> Env_types.Type_check_env.type_check_ctx
-  -> Env_types.Type_check_env.type_check_ctx * (Env_types.Type_check_env.t_env_value option, Errors.error) result
+  :  expr
+  -> type_check_ctx
+  -> type_check_ctx * (t_env_value option, error) result
 
 val check_statement
-  :  Ast.statement
-  -> Env_types.Type_check_env.type_check_ctx
-  -> Env_types.Type_check_env.type_check_ctx * (Env_types.Type_check_env.tp_checked, Errors.error) result
+  :  statement
+  -> type_check_ctx
+  -> type_check_ctx * (tp_checked, error) result
 
-val type_check : Ast.tast -> Env_types.Type_check_env.type_check_ctx * (unit, Errors.error) result
+val type_check : tast -> type_check_ctx * (unit, error) result
+val type_check_with_main : tast -> (text * code_ident, error) result

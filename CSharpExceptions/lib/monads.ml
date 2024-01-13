@@ -267,9 +267,8 @@ module Eval_Monad = struct
     | Error _ -> a2 st
   ;;
 
-  let run : ('a, 'b) t -> ctx_env * ('a, 'b, error) eval_t =
-    (* TODO: переписать, чтоб получало на вход class с main, и на его основе запускался *)
-    fun f -> f (CodeMap.empty, (ln 0, IdentMap.empty), (ln 0, MemMap.empty))
+  let run : 'c CodeMap.t -> ('a, 'b) t -> ctx_env * ('a, 'b, error) eval_t =
+    fun glenv f -> f (glenv, (ln (-1), IdentMap.empty), (ln 0, MemMap.empty))
   ;;
 
   let save : ctx_env -> (unit, 'b) t = fun new_ctx _ -> new_ctx, nsig ()
@@ -312,8 +311,7 @@ module Eval_Monad = struct
     | None -> fail (Not_find_ident_of id_) st
   ;;
 
-  let find_cl_meth id cl =
-    let decl = get_class_decl cl in
+  let find_cl_decl_meth id decl =
     let f acc el =
       let is_method (sign, body) =
         match sign with
@@ -333,11 +331,16 @@ module Eval_Monad = struct
       | None, Constructor (sign, b) -> is_cons (sign, b)
       | _ -> None
     in
-    List.fold_left f None decl.cl_mems |> return_n
+    List.fold_left f None decl.cl_mems
+  ;;
+
+  let find_cl_meth id cl =
+    let decl = get_class_decl cl in
+    find_cl_decl_meth id decl
   ;;
 
   let read_global_method cl_id el_id =
-    read_global cl_id >>= fun cl -> find_cl_meth el_id cl
+    read_global cl_id >>= fun cl -> find_cl_meth el_id cl |> return_n
   ;;
 
   (* ****************** Memory handling ****************** *)
@@ -469,6 +472,7 @@ module Eval_Monad = struct
   ;;
 
   let read_self_ad = read_local >>= fun (self_ad, _) -> return_n self_ad
+  let save_self_ad ad = read_local >>= fun (_, lenv) -> save_local (ad, lenv)
 
   (* ****************** Stack trace handling ****************** *)
 

@@ -234,7 +234,7 @@ let eval_bin_op op e1 e2 e_expr lenv =
     *> res
 ;;
 
-let eval_expr expr eval_stm lenv_kernel =
+let eval_expr eval_stm lenv_kernel expr =
   let rec helper = function
     | EConst x -> to_const @@ to_init @@ val_to_iconst x |> return_n
     | EIdentifier id -> read_local_el id
@@ -264,9 +264,9 @@ let eval_stm_expr e_expr e_stm lenv_kernel = function
   | _ -> fail (System_error "Trying to use an expression as a statement")
 ;;
 
-let eval_statement stm lenv_kernel =
+let eval_statement lenv_kernel stm =
   let rec helper stm_ =
-    let eval_expr expr = eval_expr expr helper lenv_kernel in
+    let eval_expr expr = eval_expr helper lenv_kernel expr in
     match stm_ with
     | SExpr e -> eval_stm_expr eval_expr helper lenv_kernel e
     | SDecl (Var_decl (_, id), e_opt) ->
@@ -295,4 +295,66 @@ let eval_statement stm lenv_kernel =
     | _ -> fail (Return_error "TODO: REMOVE")
   in
   helper stm
+;;
+
+let eval_expr lenv = eval_expr (eval_statement lenv) lenv
+
+let interpret_ genv cl_id =
+  let (Code_ident main_cl_id) = cl_id in
+  let local_env = IdentMap.empty in
+  let lenv_with_constructors =
+    let f id cl_decl acc_opt =
+      match acc_opt with
+      | None -> None
+      | Some acc ->
+        (match id with
+         | Code_ident id when equal_ident id main_cl_id -> Some acc
+         | Code_ident id ->
+           find_cl_meth id cl_decl
+           |> (function
+           | None -> None
+           | Some constr -> Some (IdentMap.add id (ICode constr) acc)))
+    in
+    CodeMap.fold f genv (Some local_env)
+  in
+  let run_main lenv =
+    let cl_decl_t = read_global cl_id >>= fun x -> return_n @@ get_class_decl x in
+    let get_main cl_decl =
+      let f res_opt el =
+        match res_opt, el with
+        | Some x, _ -> Some x
+        | None, Main (tp, body) -> Some (tp, body)
+        | _ -> None
+      in
+      List.fold_left f None cl_decl.cl_mems
+      |> function
+      | Some (tp, body) -> return_n (tp, body)
+      | _ -> fail (Type_check_error "The program must contain 'Main'")
+    in
+    cl_decl_t
+    >>= fun cl_decl ->
+    alloc_instance (eval_expr lenv) cl_decl
+    >>= fun main_ad ->
+    save_self_ad main_ad *> get_main cl_decl
+    >>= fun (tp, body) -> run_method tp [] [] main_ad lenv body (eval_statement lenv)
+  in
+  let eval =
+    match lenv_with_constructors with
+    | Some lenv -> run_main lenv
+    | None -> fail (Type_check_error "Some class has no constructor")
+  in
+  run genv eval
+;;
+
+let interpret str =
+  match Parser.parse_ast str with
+  | Result.Error x -> Result.error (Interpreter_error ("Parsing error: " ^ x ^ "\n"))
+  | Result.Ok x ->
+    (match Type_check.type_check_with_main x with
+     | Result.Error x -> Result.error x
+     | Result.Ok (genv, main_id) ->
+       (match interpret_ genv main_id with
+        | _, Next x -> Result.ok x
+        | _, Error x -> Result.error x
+        | _, _ -> Result.error (System_error "Unrecognized signal")))
 ;;

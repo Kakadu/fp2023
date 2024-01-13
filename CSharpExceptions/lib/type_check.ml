@@ -494,7 +494,7 @@ let memb_check = function
   | Method ({ m_modif = _; m_type; m_id = _; m_params }, s) ->
     local_scope
     @@ (save_scope_tp (Some m_type) *> add_params m_params *> check_statement s)
-  | Constructor ({ con_modif = _; con_id=_; con_params; _ }, s) ->
+  | Constructor ({ con_modif = _; con_id = _; con_params; _ }, s) ->
     let cons_tp = Void in
     local_scope
     @@ (save_scope_tp (Some cons_tp) *> add_params con_params *> check_statement s)
@@ -593,5 +593,6 @@ let type_check ast =
 let type_check_with_main ast =
   match type_check ast with
   | (ctx, _, _, Some cl_decl), Result.Ok _ -> Result.ok (ctx, cl_decl)
-  | _ -> Result.error "The program must have Main"
+  | _, Result.Error x -> Result.error x
+  | _, _ -> Result.error (Type_check_error "The program must contain 'Main'")
 ;;
