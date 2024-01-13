@@ -59,7 +59,8 @@ let pp_interpret_result fmt res =
 type error =
   | DivisionByZero
   | UnboundValue of id
-  | IncorrectType
+  | IncorrectType of value
+  | NotAFunction of value
   | LetWithoutIn (** Inner let expressions without in are forbidden *)
   | TypeInferFailed of Typing.error
   | NoMatchCase of value
@@ -70,7 +71,9 @@ let pp_error fmt =
   function
   | DivisionByZero -> fprintf fmt "Division by zero error"
   | UnboundValue id -> fprintf fmt "Unbound value %s" id
-  | IncorrectType -> fprintf fmt "Type mismatch"
+  | IncorrectType v -> fprintf fmt "Value %a has incorrect type in expression" pp_value v
+  | NotAFunction v ->
+    fprintf fmt "Value %a is not a function; it can not be applied" pp_value v
   | LetWithoutIn -> fprintf fmt "Let without in is not allowed in this part of expression"
   | TypeInferFailed err -> fprintf fmt "%a" Typing.pp_error err
   | NoMatchCase v ->
@@ -129,13 +132,11 @@ module Interpret (M : MONAD_FAIL) = struct
         | PWild, _ -> matched Env.empty
         | PEmpty, VList [] -> matched Env.empty
         | PEmpty, VList _ -> not_matched
-        | PEmpty, _ -> fail IncorrectType
         | PConst (CInt x), VInt v when x = v -> matched Env.empty
         | PConst (CInt _), VInt _ -> not_matched
         | PConst (CBool x), VBool v when x = v -> matched Env.empty
         | PConst (CBool _), VBool _ -> not_matched
         | PConst CUnit, VUnit -> matched Env.empty
-        | PConst _, _ -> fail IncorrectType
         | PVar id, v ->
           let env = Env.singleton (id, v) in
           matched env
@@ -152,7 +153,6 @@ module Interpret (M : MONAD_FAIL) = struct
           in
           let env = Env.add env3 (Env.add env2 env1) in
           matched env
-        | PTuple _, _ -> fail IncorrectType
         | PCons (p1, p2, ps), VList vs ->
           let ps, pl =
             match List.rev ps with
@@ -184,7 +184,7 @@ module Interpret (M : MONAD_FAIL) = struct
               matched env)
           in
           matched env
-        | _ -> fail IncorrectType
+        | _ -> fail (IncorrectType value)
       in
       helper
     ;;
@@ -227,7 +227,7 @@ module Interpret (M : MONAD_FAIL) = struct
          | Leq, VInt l, VInt r -> return (VBool (l <= r))
          | Gre, VInt l, VInt r -> return (VBool (l > r))
          | Geq, VInt l, VInt r -> return (VBool (l >= r))
-         | _ -> fail IncorrectType)
+         | _ -> fail (IncorrectType rv))
       | ETuple (e1, e2, es) ->
         let* v1 = helper env e1 in
         let* v2 = helper env e2 in
@@ -255,7 +255,7 @@ module Interpret (M : MONAD_FAIL) = struct
          | VBool false ->
            let* fv = helper env f in
            return fv
-         | _ -> fail IncorrectType)
+         | _ -> fail (IncorrectType cv))
       | EMatch (e, cases) ->
         let* v = helper env e in
         let* rv =
@@ -291,7 +291,7 @@ module Interpret (M : MONAD_FAIL) = struct
            let fenv = Env.add fenv env in
            let* v = helper fenv e in
            return v
-         | _ -> fail IncorrectType)
+         | _ -> fail (NotAFunction fv))
     in
     helper
   ;;

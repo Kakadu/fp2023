@@ -27,7 +27,8 @@ val pp_interpret_result : Format.formatter -> interpret_result -> unit
 type error =
   | DivisionByZero
   | UnboundValue of id
-  | IncorrectType
+  | IncorrectType of value
+  | NotAFunction of value
   | LetWithoutIn (** Inner let expressions without in are forbidden *)
   | TypeInferFailed of Typing.error
   | NoMatchCase of value
