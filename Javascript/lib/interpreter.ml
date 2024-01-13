@@ -15,6 +15,8 @@ type program_return =
   ; return : string
   }
 
+let print_string (ctx : ctx) str = { ctx with stdout = ctx.stdout ^ str ^ "\n" }
+
 let error err =
   uerror
     (match err with
@@ -51,12 +53,6 @@ let get_obj_ctx ctx id =
   | _ -> error @@ ReferenceError (asprintf "cannot find object with id = %i" id)
 ;;
 
-let add_obj ctx fields obj_type =
-  let obj = { fields; service_fields = []; obj_type } in
-  let id = ctx.obj_count in
-  { ctx with obj_count = id + 1; objs = IntMap.add id obj ctx.objs }, VObject id
-;;
-
 let is_func x =
   match x.obj_type with
   | TFunPreset _ | TFunction _ | TArrowFunction _ -> true
@@ -79,9 +75,35 @@ let print_type ctx = function
   | VObject _ -> "object"
 ;;
 
-let rec get_field id = function
-  | field :: tl -> if field.var_id = id then field.value else get_field id tl
-  | _ -> VUndefined
+let proto_obj_fields = []
+
+let find_proto fields =
+  List.partition (fun field -> field.var_id = "__proto__") fields
+  |> fun (protos, others) ->
+  match protos with
+  | a :: [] -> return (a.value, others)
+  | _ :: _ ->
+    error @@ SyntaxError "Duplicate __proto__ fields are not allowed in object literals"
+  | _ -> return (VUndefined, others)
+;;
+
+let add_obj ctx fields obj_type =
+  find_proto fields
+  >>| fun (proto, fields) ->
+  let obj = { proto; fields; obj_type } in
+  let id = ctx.obj_count in
+  { ctx with obj_count = id + 1; objs = IntMap.add id obj ctx.objs }, VObject id
+;;
+
+let rec get_field_opt id = function
+  | field :: tl -> if field.var_id = id then Some field.value else get_field_opt id tl
+  | _ -> None
+;;
+
+let get_field id fields =
+  match get_field_opt id fields with
+  | Some x -> x
+  | None -> VUndefined
 ;;
 
 (*JS uses diffrent conversion to string in .toString and in print.
@@ -104,17 +126,6 @@ let rec print_vvalues ctx ?(str_quote = false) = function
         obj.fields
       >>| fun fields -> asprintf "{ %s }" (String.concat ", " fields)
   | _ as t -> return @@ asprintf "Cannot convert '%s' to string" @@ print_type ctx t
-;;
-
-let print_string (ctx : ctx) str = { ctx with stdout = ctx.stdout ^ str ^ "\n" }
-
-let print ctx values =
-  fold_left
-    (fun ctx value ->
-      print_vvalues ctx value >>| fun str -> { ctx with stdout = ctx.stdout ^ str ^ " " })
-    ctx
-    values
-  >>| fun ctx -> { ctx with stdout = ctx.stdout ^ "\n" }, None
 ;;
 
 let get_vreturn = function
@@ -167,6 +178,15 @@ let get_parent ctx =
   | _ -> error @@ InternalError "cannot get parent"
 ;;
 
+let print ctx values =
+  fold_left
+    (fun ctx value ->
+      print_vvalues ctx value >>| fun str -> { ctx with stdout = ctx.stdout ^ str ^ " " })
+    ctx
+    values
+  >>| fun ctx -> { ctx with stdout = ctx.stdout ^ "\n" }, None
+;;
+
 let first_lex_env = 0
 
 let context_init =
@@ -192,14 +212,14 @@ let context_init =
   in
   let console =
     fun_print ctx "log"
-    |> fun (ctx, f) ->
+    >>= fun (ctx, f) ->
     add_obj ctx [ { var_id = "log"; is_const = false; value = f } ] TObject
-    |> fun (ctx, value) ->
+    >>= fun (ctx, value) ->
     lex_add ctx first_lex_env { var_id = "console"; is_const = false; value }
   in
   let alert ctx =
     fun_print ctx "alert"
-    |> fun (ctx, f) ->
+    >>= fun (ctx, f) ->
     lex_add ctx first_lex_env { var_id = "alert"; is_const = false; value = f }
   in
   console >>= alert
@@ -260,7 +280,9 @@ let create_func ctx name args body obj_type =
 let prefind_funcs ctx ast =
   let ctx_add_if_func ctx = function
     | FunInit x ->
-      let ctx, value = create_func ctx x.fun_identifier x.arguments x.body tfunction in
+      create_func ctx x.fun_identifier x.arguments x.body tfunction
+      >>= fun f ->
+      let ctx, value = f in
       lex_add ctx ctx.cur_lex_env { var_id = x.fun_identifier; is_const = false; value }
     | _ -> return ctx
   in
@@ -460,6 +482,23 @@ let eval_bin_op ctx op a b =
     then bop (to_vstring ctx) a b
     else bop to_vnumber a b
   in
+  let rec prop_accs a b =
+    to_vstring ctx b
+    >>= get_vstring ctx
+    >>= fun str ->
+    let rec proto_find = function
+      | VObject x ->
+        get_obj_ctx ctx x
+        >>= fun obj ->
+        (match get_field_opt str obj.fields with
+         | None -> proto_find obj.proto
+         | Some x -> return x)
+      | _ -> return @@ get_field str proto_obj_fields
+    in
+    match a with
+    | VObject _ as x -> proto_find x
+    | _ -> ensup "reading from not object is not supporting"
+  in
   let add_ctx = add_ctx ctx in
   match op with
   | Add -> add_ctx @@ add a b <?> "error in add operator"
@@ -489,14 +528,7 @@ let eval_bin_op ctx op a b =
   | LogicalOr -> add_ctx @@ logical_or a b <?> "error in logical_and operator"
   | Xor -> add_ctx @@ bop_with_int ( lxor ) a b
   | Exp -> add_ctx @@ bop_with_num ( ** ) a b <?> "error in exp operator"
-  | PropAccs ->
-    add_ctx
-      (match a with
-       | VObject x ->
-         get_obj_ctx ctx x
-         >>= fun obj ->
-         to_vstring ctx b >>= get_vstring ctx >>| fun str -> get_field str obj.fields
-       | _ -> return VUndefined)
+  | PropAccs -> add_ctx @@ prop_accs a b <?> "error in property accession"
   | _ as a -> ensup @@ asprintf "operator %a not supported yet" pp_bin_op a
 ;;
 
@@ -588,8 +620,8 @@ and eval_exp ctx = function
     fold_left_map eval_exp ctx args
     <?> "error in function arguments"
     >>= fun (ctx, args) -> eval_fun ctx f args
-  | AnonFunction (args, vals) -> return (create_func ctx "" args vals tfunction)
-  | ArrowFunction (args, vals) -> return (create_func ctx "" args vals tarrowfun)
+  | AnonFunction (args, vals) -> create_func ctx "" args vals tfunction
+  | ArrowFunction (args, vals) -> create_func ctx "" args vals tarrowfun
   | ObjectDef x ->
     fold_left_map
       (fun ctx (key, value) ->
@@ -600,7 +632,7 @@ and eval_exp ctx = function
         >>| fun id -> ctx, { var_id = id; is_const = false; value })
       ctx
       x
-    >>= fun (ctx, fields) -> return @@ add_obj ctx fields TObject
+    >>= fun (ctx, fields) -> add_obj ctx fields TObject
   | _ -> ensup ""
 
 (**---------------Statement interpreter---------------*)
@@ -614,8 +646,8 @@ and parse_stm ctx = function
     let eval_for_top_val =
       let create = create_func ctx x.var_identifier in
       function
-      | AnonFunction (args, vals) -> return @@ create args vals tfunction
-      | ArrowFunction (args, vals) -> return @@ create args vals tarrowfun
+      | AnonFunction (args, vals) -> create args vals tfunction
+      | ArrowFunction (args, vals) -> create args vals tarrowfun
       | _ as ast -> eval_exp ctx ast
     in
     eval_for_top_val x.value

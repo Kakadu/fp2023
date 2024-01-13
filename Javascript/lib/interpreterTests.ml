@@ -1134,3 +1134,34 @@ let%expect_test _ =
 
     Programm return: undefined |}]
 ;;
+
+(**---------------Prototypical inheritance---------------*)
+
+let%expect_test _ =
+  print_return "let a2 = {field2 : 4}; return a2.field1";
+  [%expect {| Programm return: undefined |}]
+;;
+
+let%expect_test _ =
+  print_output
+    "let a1 = {field1 : 10}; \n\
+    \    let a2 = {__proto__ : a1, field2 : 4}; \n\
+    \    alert(a2.field1, a2.field2)";
+  [%expect {|
+    Programm output:
+    10 4
+
+    Programm return: undefined |}]
+;;
+
+let%expect_test _ =
+  print_output
+    "let a1 = {field1 : 10}; \n\
+    \    let a2 = {__proto__ : a1, field1 : 6, field2 : 4}; \n\
+    \    alert(a2.field1, a2.field2)";
+  [%expect {|
+    Programm output:
+    6 4
+
+    Programm return: undefined |}]
+;;
