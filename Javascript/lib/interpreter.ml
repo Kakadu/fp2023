@@ -396,13 +396,13 @@ let rec eval_bin_op ctx op a b =
     | _ -> false
   in
   let negotiate res = res >>= fun x -> get_vbool ctx x >>| fun res -> VBool (not res) in
-  let add =
+  let add () =
     if is_to_string a || is_to_string b
     then bop_with_string ( ^ )
     else bop_with_num ( +. )
   in
-  let strict_equal = return (VBool (a = b)) in
-  let equal =
+  let strict_equal () = return (VBool (a = b)) in
+  let equal () =
     let is_undefined = function
       | VUndefined -> true
       | _ -> false
@@ -432,7 +432,7 @@ let rec eval_bin_op ctx op a b =
         then bop_logical_with_string ( = )
         else return (VBool false)
   in
-  let less_than =
+  let less_than () =
     if is_to_string a && is_to_string b
     then bop_logical_with_string ( < )
     else bop_logical_with_num ( < )
@@ -446,7 +446,7 @@ let rec eval_bin_op ctx op a b =
     | VNumber x when x >= 0. -> bop_bitwise_shift op b
     | _ -> bop_bitwise_shift op (VNumber (float_of_int (32 + Option.get (get_int b))))
   in
-  let logical_and =
+  let logical_and () =
     let a_preserved = a in
     let b_preserved = b in
     both to_vbool a b
@@ -456,7 +456,7 @@ let rec eval_bin_op ctx op a b =
     | true, _ -> b_preserved
     | _ -> a_preserved
   in
-  let logical_or =
+  let logical_or () =
     let a_preserved = a in
     let b_preserved = b in
     both to_vbool a b
@@ -466,7 +466,7 @@ let rec eval_bin_op ctx op a b =
     | true, _ -> a_preserved
     | _ -> b_preserved
   in
-  let less_eq =
+  let less_eq () =
     let bop cast a b =
       both cast a b
       >>= fun (x, y) ->
@@ -481,7 +481,7 @@ let rec eval_bin_op ctx op a b =
     then bop (to_vstring ctx) a b
     else bop to_vnumber a b
   in
-  let rec prop_accs =
+  let rec prop_accs () =
     to_vstring ctx b
     >>= get_vstring ctx
     >>= fun str ->
@@ -499,14 +499,15 @@ let rec eval_bin_op ctx op a b =
     | _ -> ensup "reading from not object is not supporting"
   in
   match op with
-  | Add -> add <?> "error in add operator"
+  | Add -> add () <?> "error in add operator"
   | Sub -> bop_with_num ( -. ) <?> "error in sub operator"
   | Mul -> bop_with_num ( *. ) <?> "error in mul operator"
   | Div -> bop_with_num ( /. ) <?> "error in div operator"
-  | Equal -> equal <?> "error in equal operator"
-  | NotEqual -> negotiate equal <?> "error in not_equal operator"
-  | StrictEqual -> strict_equal <?> "error in strict equal operator"
-  | StrictNotEqual -> negotiate strict_equal <?> "error in strict not_equal operator"
+  | Equal -> equal () <?> "error in equal operator"
+  | NotEqual -> negotiate @@ equal () <?> "error in not_equal operator"
+  | StrictEqual -> strict_equal () <?> "error in strict equal operator"
+  | StrictNotEqual ->
+    negotiate @@ strict_equal () <?> "error in strict not_equal operator"
   | Rem -> bop_with_num mod_float <?> "error in rem operator"
   | LogicalShiftLeft -> shift Int32.shift_left <?> "error in logical_shift_left operator"
   | LogicalShiftRight ->
@@ -514,16 +515,16 @@ let rec eval_bin_op ctx op a b =
   | UnsignedShiftRight ->
     shift Int32.shift_right_logical <?> "error in unsigned_shift_right operator"
   | GreaterEqual -> eval_bin_op ctx LessEqual b a <?> "error in greater_equal operator"
-  | LessEqual -> less_eq <?> "error in less_equal operator"
+  | LessEqual -> less_eq () <?> "error in less_equal operator"
   | GreaterThan -> eval_bin_op ctx LessThan b a <?> "error in greater_than operator"
-  | LessThan -> less_than <?> "error in less_than operator"
+  | LessThan -> less_than () <?> "error in less_than operator"
   | BitwiseAnd -> bop_with_int ( land )
   | BitwiseOr -> bop_with_int ( lor )
-  | LogicalAnd -> logical_and <?> "error in logical_and operator"
-  | LogicalOr -> logical_or <?> "error in logical_and operator"
+  | LogicalAnd -> logical_and () <?> "error in logical_and operator"
+  | LogicalOr -> logical_or () <?> "error in logical_and operator"
   | Xor -> bop_with_int ( lxor )
   | Exp -> bop_with_num ( ** ) <?> "error in exp operator"
-  | PropAccs -> prop_accs <?> "error in property accession"
+  | PropAccs -> prop_accs () <?> "error in property accession"
   | _ as a -> ensup @@ asprintf "operator %a not supported yet" pp_bin_op a
 ;;
 
