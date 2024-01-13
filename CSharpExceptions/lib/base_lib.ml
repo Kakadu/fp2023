@@ -12,7 +12,9 @@ let exception_name = Ast.Id "Exception"
 
 let exception_decl =
   let info = {|
-        class Exception{} 
+        class Exception{
+          Exception(){}
+        } 
     |} in
   pars_class info
 ;;

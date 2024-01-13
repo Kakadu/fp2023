@@ -5,7 +5,7 @@
 open Ast
 
 module Common_env = struct
-  type code_ident = Code_ident of ident
+  type code_ident = Code_ident of ident[@@deriving show { with_path = false }]
 
   module Code_id = struct
     type t = code_ident
@@ -88,6 +88,7 @@ module Eval_env = struct
   type instructions =
     | IMethod of method_sign * statement
     | IConstructor of constructor_sign * statement
+    [@@deriving show { with_path = false }]
 
   let to_meth sign body = IMethod (sign, body)
   let to_cons sign body = IConstructor (sign, body)
@@ -95,6 +96,7 @@ module Eval_env = struct
   type t_env_eval_const =
     | Init of iconst
     | Not_init
+  [@@deriving show { with_path = false }]
 
   let to_init x = Init x
   let to_not_init _ = Not_init
@@ -102,6 +104,7 @@ module Eval_env = struct
   type t_env_value =
     | IConst of t_env_eval_const
     | ICode of instructions
+  [@@deriving show { with_path = false }]
 
   let to_const x = IConst x
   let to_code x = ICode x

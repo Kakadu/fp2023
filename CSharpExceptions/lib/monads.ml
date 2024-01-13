@@ -331,7 +331,8 @@ module Eval_Monad = struct
       | None, Constructor (sign, b) -> is_cons (sign, b)
       | _ -> None
     in
-    List.fold_left f None decl.cl_mems
+    
+    List.fold_left f None decl.cl_mems 
   ;;
 
   let find_cl_meth id cl =

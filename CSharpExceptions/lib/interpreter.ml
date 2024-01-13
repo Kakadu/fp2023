@@ -303,17 +303,19 @@ let interpret_ genv cl_id =
   let (Code_ident main_cl_id) = cl_id in
   let local_env = IdentMap.empty in
   let lenv_with_constructors =
-    let f id cl_decl acc_opt =
+    let f cl_id cl_decl acc_opt =
+      (* let this_class = get_class_decl cl_decl in *)
       match acc_opt with
       | None -> None
       | Some acc ->
-        (match id with
+        (match cl_id with
          | Code_ident id when equal_ident id main_cl_id -> Some acc
          | Code_ident id ->
            find_cl_meth id cl_decl
-           |> (function
-           | None -> None
-           | Some constr -> Some (IdentMap.add id (ICode constr) acc)))
+           |> fun x ->
+           (match x with
+            | None -> None
+            | Some constr -> Some (IdentMap.add id (ICode constr) acc)))
     in
     CodeMap.fold f genv (Some local_env)
   in
@@ -357,4 +359,43 @@ let interpret str =
         | _, Next x -> Result.ok x
         | _, Error x -> Result.error x
         | _, _ -> Result.error (System_error "Unrecognized signal")))
+;;
+
+let interpret_wrap str =
+  match interpret str with
+  | Result.Error x -> Format.printf "Type_check error-: %a@\n" pp_error x
+  | Result.Ok x ->
+    (match x with
+     | None -> Format.print_string "Interpreter success\n"
+     | Some x ->
+       (match x with
+        | IConst x -> Format.printf "Result: %a@\n" pp_t_env_eval_const x
+        | _ -> Format.print_string "Interpreter error\n"))
+;;
+
+let%expect_test "Base factorial type check" =
+  let s =
+    {| 
+      class Program
+      {
+          int Fac(int num)
+          { 
+              if (num == 1)
+              {
+                  return 1;
+              }
+              else 
+              {
+                  return num * Fac(num - 1);
+              }
+          }
+
+          static int Main(){
+              return Fac(10);
+          }
+      }
+|}
+  in
+  interpret_wrap s;
+  [%expect {| Result: (Init (Int_v 3628800)) |}]
 ;;
