@@ -67,7 +67,7 @@ module EnvTypes (M : MONAD_ERROR) = struct
     | ValChar of char
     | ValNil
     | ValList of res * res
-    | ValFun of string * expr * environment
+    | ValFun of pat * expr * environment
 
   and err =
     | NotInScopeError of string
@@ -171,11 +171,11 @@ end = struct
     | ExprApp (f, arg) ->
       thunk (fun () ->
         let* f_val = eval env f in
-        let arg = thunk (fun () -> eval env arg) in
+        let arg = eval env arg in
         match f_val with
-        | ValFun (param, body, f_env) ->
+        | ValFun (pat, body, f_env) ->
           let local_env = Hashtbl.copy f_env in
-          Hashtbl.add local_env param arg;
+          let local_env = match_pattern local_env pat arg in
           eval local_env body
         | _ -> fail @@ TypeError "Application to a non-function")
     | ExprNil -> thunk (fun () -> return ValNil)
@@ -184,9 +184,21 @@ end = struct
       let tl_t = eval env tl in
       thunk (fun () -> return (ValList (hd_t, tl_t)))
       (* todo: match pattern*)
-    | ExprFunc (PatVar id, expr) ->
-      thunk (fun () -> return (ValFun (id, expr, Hashtbl.copy env)))
+    | ExprFunc (pat, expr) ->
+      thunk (fun () -> return (ValFun (pat, expr, Hashtbl.copy env)))
+    | ExprCase (expr, branches) ->
+      thunk (fun () ->
+        let e_val = eval env expr in
+        eval_case env e_val branches)
     | _ -> fail @@ TypeError "DSdasda"
+
+  and eval_case env res branches =
+    match branches with
+    | (pat, expr) :: rest ->
+      (match match_pattern env pat res with
+       | env -> eval env expr
+       | _ -> eval_case env res rest)
+    | [] -> fail @@ TypeError "No matching pattern"
 
   and force_binop l r op =
     match l, r, op with
@@ -247,8 +259,10 @@ end = struct
       (match force value with
        | Result (Ok (ValList (hd2, tl2))) ->
          let env = match_pattern env hd1 hd2 in
-         match_pattern env tl1 tl2
-       | _ -> failwith "errOr")
+         match_pattern env tl1 tl2)
+    | PatNil ->
+      (match force value with
+       | Result (Ok ValNil) -> env)
   ;;
 
   let eval_prog env p = List.fold_left eval_decl env p
