@@ -15,59 +15,6 @@ type program_return =
   ; return : string
   }
 
-let is_func x =
-  match x.obj_type with
-  | TFunPreset _ | TFunction _ | TArrowFunction _ -> true
-  | _ -> false
-;;
-
-let num_to_string n =
-  if Float.is_integer n
-  then Int.to_string (Float.to_int n)
-  else if Float.is_nan n
-  then "NaN"
-  else if Float.is_infinite n
-  then if n > 0. then "Infinity" else "-Infinity"
-  else Float.to_string n
-;;
-
-let print_val = function
-  | VNumber _ -> "number"
-  | VString _ -> "string"
-  | VBool _ -> "boolean"
-  | VUndefined -> "undefined"
-  | VNull -> "null"
-  | VObject x when is_func x -> "function"
-  | VObject _ -> "object"
-;;
-
-let rec get_field id = function
-  | field :: tl -> if field.var_id = id then field.value else get_field id tl
-  | _ -> VUndefined
-;;
-
-(*JS use diffrent conversion to string in .toString and in print.
-  It's the reason why vvalues_to_str and to_vstring are diffrent functions*)
-let rec vvalues_to_str ?(str_quote = false) = function
-  | VNumber x -> num_to_string x
-  | VBool true -> "true"
-  | VBool false -> "false"
-  | VNull -> "null"
-  | VUndefined -> "undefined"
-  | VString x -> if str_quote then "'" ^ x ^ "'" else x
-  | VObject x when is_func x ->
-    asprintf "[Function: %s]" (vvalues_to_str @@ get_field "name" x.fields)
-  | VObject x ->
-    asprintf
-      "{ %s }"
-      (String.concat
-         ", "
-         (List.map
-            (fun x -> x.var_id ^ ": " ^ vvalues_to_str x.value ~str_quote:true)
-            x.fields))
-  | _ as t -> asprintf "Cannot convert '%s' to string" @@ print_val t
-;;
-
 let error err =
   uerror
     (match err with
