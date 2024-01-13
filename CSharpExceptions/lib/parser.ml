@@ -289,7 +289,7 @@ let ep_operation =
     lvl8 -<< [ ( =^ ) ])
 ;;
 
-let ep_assign = lift3 (fun ident eq ex -> eq ident ex) ep_identifier ( =^ ) ep_operation
+let ep_assign = lift3 (fun ident eq ex -> eq ident ex) (ep_member_ident <|> ep_identifier) ( =^ ) ep_operation
 let ep_method_invoke = ep_method_invoke_ ep_operation
 let ep_st_operation = expr_to_st @@ choice [ ep_assign; ep_method_invoke ]
 

@@ -279,6 +279,7 @@ let%expect_test "Body with conditions" =
                         return;
                       } else {
                           int  ?   exmp = 243 + 1;
+                          a.v = 2;
                         }
                       }; ; ;     ; 
 
@@ -311,7 +312,12 @@ let%expect_test "Body with conditions" =
                                      (Id "exmp"))),
                                   (Some (EBin_op (Plus, (EConst (VInt 243)),
                                            (EConst (VInt 1)))))
-                                  ))
+                                  ));
+                                (SExpr
+                                   (EBin_op (Assign,
+                                      (EPoint_access ((EIdentifier (Id "a")),
+                                         (EIdentifier (Id "v")))),
+                                      (EConst (VInt 2)))))
                                 ]))
                      ))
                   ]),
