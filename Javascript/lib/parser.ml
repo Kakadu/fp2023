@@ -112,7 +112,7 @@ let rs = token_ch ']'
 let parens p = between p lp rp
 let cur_parens p = between p lc rc
 let sq_parens p = between p ls rs
-let empty_stm = empty *> end_of_input <|> skip is_end
+let empty_stm = spaces *> (end_of_input <|> skip is_end <|> skip is_line_break)
 let to_end_of_stm = empty_stm <|> empty
 let some n = Some n
 let number n = Number n
@@ -412,7 +412,10 @@ and parse_stm () =
              | "if" -> token1 @@ parse_if () <?> "wrong if statement"
              | "while" -> token1 @@ parse_while () <?> "wrong while statement"
              | "for" -> token1 @@ parse_for () <?> "wrong for statement"
-             | "return" -> token1 @@ parse_return () <?> "wrong return statement"
+             | "return" ->
+               empty_stm *> return (Return (const Undefined))
+               <|> token1 @@ parse_return ()
+               <?> "wrong return statement"
              | "" ->
                peek_char_fail
                >>= fun ch ->
