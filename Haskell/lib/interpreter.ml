@@ -5,30 +5,22 @@
 open Ast
 open Format
 
-module type MONAD = sig
+module LAZY_RESULT : sig
   type ('a, 'e) t =
     | Result of ('a, 'e) result
     | Thunk of (unit -> ('a, 'e) t)
 
   val return : 'a -> ('a, 'e) t
-  val force : ('a, 'e) t -> ('a, 'e) t
   val ( >>= ) : ('a, 'e) t -> ('a -> ('b, 'e) t) -> ('b, 'e) t
 
   module Syntax : sig
     val ( let* ) : ('a, 'e) t -> ('a -> ('b, 'e) t) -> ('b, 'e) t
   end
-end
-
-module type MONAD_ERROR = sig
-  include MONAD
 
   val fail : 'e -> ('a, 'e) t
+  val force : ('a, 'e) t -> ('a, 'e) t
   val thunk : (unit -> ('a, 'b) t) -> ('a, 'b) t
-end
-
-(* TODO: change names*)
-
-module LAZY_RESULT : MONAD_ERROR = struct
+end = struct
   type ('a, 'e) t =
     | Result of ('a, 'e) result
     | Thunk of (unit -> ('a, 'e) t)
@@ -56,8 +48,8 @@ module LAZY_RESULT : MONAD_ERROR = struct
   end
 end
 
-module EnvTypes (M : MONAD_ERROR) = struct
-  type res = (value, err) M.t
+module EnvTypes = struct
+  type res = (value, err) LAZY_RESULT.t
   and environment = (string, res) Hashtbl.t
 
   and value =
@@ -79,15 +71,15 @@ module EnvTypes (M : MONAD_ERROR) = struct
     | NonExhaustivePatterns
 end
 
-module Env (M : MONAD_ERROR) : sig
-  include module type of EnvTypes (M)
+module Env : sig
+  include module type of EnvTypes
 
   val pp_value : formatter -> value -> unit
   val pp_environment : formatter -> environment -> unit
-  val pp_value_t : formatter -> (value, err) M.t -> unit
+  val pp_value_t : formatter -> (value, err) LAZY_RESULT.t -> unit
 end = struct
-  open M
-  include EnvTypes (M)
+  open LAZY_RESULT
+  include EnvTypes
 
   let rec pp_value fmt = function
     | ValInt n -> fprintf fmt "int %d" n
@@ -134,12 +126,12 @@ end = struct
   ;;
 end
 
-module Eval (M : MONAD_ERROR) : sig
+module Eval : sig
   val interpret : prog -> unit
 end = struct
-  open M
-  open M.Syntax
-  open Env (M)
+  open LAZY_RESULT
+  open LAZY_RESULT.Syntax
+  open Env
 
   (*TODO: too coupled, very cringe*)
   let rec eval env expr =
@@ -297,4 +289,4 @@ end = struct
      ;; *)
 end
 
-module Interpret = Eval (LAZY_RESULT)
+module Interpret = Eval
