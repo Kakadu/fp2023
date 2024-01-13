@@ -761,6 +761,20 @@ let%expect_test _ =
          ])|}]
 ;;
 
+let%expect_test _ =
+  pp "return;";
+  [%expect
+    {|
+    (Programm [(Return (Const Undefined))])|}]
+;;
+
+let%expect_test _ =
+  pp "return\n  4";
+  [%expect
+    {|
+    (Programm [(Return (Const Undefined)); (Expression (Const (Number 4.)))])|}]
+;;
+
 let%expect_test "factorial" =
   pp
     "let fact = 4\n\n\
