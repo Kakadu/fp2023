@@ -25,22 +25,46 @@ let is_init = function
 ;;
 
 let is_base = function
-  | IBase_value x -> return_n x
+  | Null_v -> return_n Null_v
+  | String_v x -> return_n (String_v x)
+  | Int_v x -> return_n (Int_v x)
+  | Bool_v x -> return_n (Bool_v x)
+  | Char_v x -> return_n (Char_v x)
   | _ -> fail (Runtime_error "Not a base value")
 ;;
 
+let is_class = function
+  | Instance_v x -> return_n (Instance_v x)
+  | _ -> fail (Runtime_error "Not a class instance value")
+;;
+
+let is_inst = function
+  | Instance_v x -> return_n x
+  | _ -> fail (Runtime_error "Not a instance value")
+;;
+
 let is_not_null = function
-  | Null -> fail Trying_to_change_Null
+  | Null_v -> fail Trying_to_change_Null
   | x -> return_n x
 ;;
 
 let is_int = function
-  | VInt x -> return_n x
+  | Int_v x -> return_n x
   | _ -> fail (Runtime_error "Type mismatch")
 ;;
 
 let is_bool = function
-  | VBool x -> return_n x
+  | Bool_v x -> return_n x
+  | _ -> fail (Runtime_error "Type mismatch")
+;;
+
+let is_sting = function
+  | String_v x -> return_n x
+  | _ -> fail (Runtime_error "Type mismatch")
+;;
+
+let is_char = function
+  | Char_v x -> return_n x
   | _ -> fail (Runtime_error "Type mismatch")
 ;;
 
@@ -57,24 +81,40 @@ let rec get_point_access_value e_id e1 lenv =
   in
   let helper =
     match e1 with
-    | EIdentifier id -> lift2 (fun ad v -> ad, v) read_self_ad (read_local_el id)
+    | EIdentifier id -> lift2 (fun ad v -> id, ad, v) read_self_ad (read_local_el id)
     | EPoint_access (e1, e2) -> get_point_access_value e1 e2 lenv
     | _ -> fail (Runtime_error "Impossible after point argument in point_access")
   in
   get_id
   >>= read_local_el
   >>= function
-  | IConst (Init (IInstance ad)) -> run_in_another_self ad lenv helper
+  | IConst (Init (Instance_v ad)) -> run_in_another_self ad lenv helper
   | _ -> fail (Runtime_error "Point_access is only available with instances of a class")
 ;;
 
+let eval_point_access e_id e1 lenv_kernel =
+  get_point_access_value e_id e1 lenv_kernel
+  >>= fun (_, _, v) ->
+  match v with
+  | IConst (Init x) -> return_n (to_const @@ to_init x)
+  | _ -> fail (Return_error "Eval of the expression hsven't implemented yet")
+;;
+
 let get_params_id (Params x) = List.map (fun (Var_decl (_, id)) -> id) x
-let get_int x = is_env_const x >>= is_init >>= is_base >>= is_not_null >>= is_int
-let get_bool x = is_env_const x >>= is_init >>= is_base >>= is_not_null >>= is_bool
-let ret_int x = return_n (create_base_val (VInt x))
-let ret_bool x = return_n (create_base_val (VBool x))
+let is_const_v x = is_env_const x >>= is_init >>= is_base
+let is_not_null_const_v x = is_const_v x >>= is_not_null
+let get_int x = is_not_null_const_v x >>= is_int
+let ret_int x = return_n (create_val (Int_v x))
 let update_int op x = get_int x >>= fun x -> ret_int (op x)
+let get_bool x = is_not_null_const_v x >>= is_bool
+let ret_bool x = return_n (create_val (Bool_v x))
 let update_bool op x = get_bool x >>= fun x -> ret_bool (op x)
+let get_string x = is_not_null_const_v x >>= is_sting
+let ret_string x = return_n (create_val (String_v x))
+let get_char x = is_not_null_const_v x >>= is_char
+let ret_char x = return_n (create_val (Char_v x))
+let get_inst x = is_not_null_const_v x >>= is_inst
+let ret_inst x = return_n (create_val (Instance_v x))
 
 let m_eval_ eval_st _ lenv ad args = function
   | IMethod (sign, body) ->
@@ -92,7 +132,7 @@ let eval_instrs_ f e args lenv eval_st e_expr =
     cur_ad >>= fun ad -> mc_decl >>= is_env_code >>= f_new ad args
   | EPoint_access (e_id, e1) ->
     let info = get_point_access_value e_id e1 lenv in
-    info >>= fun (ad, decl) -> return_n decl >>= is_env_code >>= f_new ad args
+    info >>= fun (_, ad, decl) -> return_n decl >>= is_env_code >>= f_new ad args
   | _ -> fail (Runtime_error "Impossible method name")
 ;;
 
@@ -129,46 +169,74 @@ let eval_un_op un_op res lenv_kernel e_st e_expr =
      | _ -> fail (Constructor_error "'New' can be used only with constructor"))
 ;;
 
-let eval_bin_op op e1 e2 e_expr =
-  let int_op op_t =
-    let res =
-      lift2 (fun r1 r2 -> r1, r2) (e_expr e1 >>= get_int) (e_expr e2 >>= get_int)
-    in
+let eval_bin_op op e1 e2 e_expr lenv =
+  let _op get_ op_t =
+    let res = lift2 (fun r1 r2 -> r1, r2) (e_expr e1 >>= get_) (e_expr e2 >>= get_) in
     res >>= fun (r1, r2) -> op_t r1 r2
   in
+  (* int *)
+  let int_op op_t = _op get_int op_t in
+  let int_f op r1 r2 = return_n (op r1 r2) >>= ret_int in
+  (* bool *)
+  let bool_op op_t = _op get_bool op_t in
+  let bool_f op r1 r2 = return_n (op r1 r2) >>= ret_bool in
+  (* inst *)
+  let inst_op op_t = _op get_inst op_t in
+  let inst_bool_f op (Link r1) (Link r2) = return_n (op r1 r2) >>= ret_bool in
+  (* --- *)
   let div_f op r1 = function
     | 0 -> fail Division_by_zero
     | r2 -> return_n (op r1 r2) >>= ret_int
   in
+  let eq_op op_t = _op (fun x -> is_const_v x) op_t in
+  let eq_f op r1 r2 = return_n (op r1 r2) >>= ret_bool in
+  (* --- *)
   match op with
-  | Asterisk -> int_op (fun r1 r2 -> return_n (r1 * r2)) >>= ret_int
-  | Plus -> int_op (fun r1 r2 -> return_n (r1 + r2)) >>= ret_int
-  | Minus -> int_op (fun r1 r2 -> return_n (r1 - r2)) >>= ret_int
+  | Asterisk -> int_op @@ int_f ( * )
+  | Plus -> int_op @@ int_f ( + )
+  | Minus -> int_op @@ int_f ( - )
   | Mod -> int_op (div_f ( mod ))
   | Division -> int_op (div_f ( / ))
-  (* | Equal -> *)
-  (* | NotEqual -> *)
-  (* | Less -> *)
-  (* | LessOrEqual -> *)
-  (* | More -> *)
-  (* | MoreOrEqual -> *)
-  (* | And -> *)
-  (* | Or -> *)
-  (* | Assign -> *)
-  | _ -> fail (Constructor_error "TODO: remove")
+  | And ->
+    let lazy_and r1 r2 =
+      (match r1 with
+       | false -> return_n false
+       | true -> return_n r2)
+      >>= ret_bool
+    in
+    bool_op lazy_and
+  | Or ->
+    let lazy_or r1 r2 =
+      (match r1 with
+       | true -> return_n true
+       | false -> return_n r2)
+      >>= ret_bool
+    in
+    bool_op lazy_or
+  | Less -> int_op @@ bool_f ( < )
+  | LessOrEqual -> int_op @@ bool_f ( <= )
+  | More -> int_op @@ bool_f ( > )
+  | MoreOrEqual -> int_op @@ bool_f ( >= )
+  | NotEqual -> eq_op @@ eq_f (fun r1 r2 -> not (equal_iconst r1 r2)) (* != *)
+  | Equal -> eq_op @@ eq_f equal_iconst (* == *)
+  | Assign ->
+    let res = e_expr e2 >>= is_env_const >>= fun x -> return_n @@ to_const x in
+    res
+    >>= fun x ->
+    (match e1 with
+     | EIdentifier id -> update_local_el id x
+     | EPoint_access (e_id, e1) ->
+       get_point_access_value e_id e1 lenv
+       >>= fun (id, ad, _) -> update_instance_el id ad x
+     | _ -> fail Methods_cannot_be_assignable)
+    *> res
 ;;
 
 let eval_expr expr eval_st lenv_kernel =
-  (* ?применять is_env_const на полученном после рекурсивного применения eval_expr результате? *)
   let rec helper = function
-    | EConst x -> to_const @@ to_init @@ to_val x |> return_n
+    | EConst x -> to_const @@ to_init @@ val_to_iconst x |> return_n
     | EIdentifier id -> read_local_el id
-    | EPoint_access (e_id, e1) ->
-      get_point_access_value e_id e1 lenv_kernel
-      >>= fun (_, v) ->
-      (match v with
-       | IConst (Init x) -> return_n (to_const @@ to_init x)
-       | _ -> fail (Return_error "Eval of the expression hsven't implemented yet"))
+    | EPoint_access (e_id, e1) -> eval_point_access e_id e1 lenv_kernel
     | EMethod_invoke (e, Args args) ->
       let args = map_left helper args in
       args
@@ -177,7 +245,7 @@ let eval_expr expr eval_st lenv_kernel =
       | Some x -> return_n x
       | None -> fail (Return_error "Void methods can't be used with assignable types"))
     | EUn_op (un, e) -> eval_un_op un e lenv_kernel eval_st helper
-    | EBin_op (bin, e1, e2) -> eval_bin_op bin e1 e2 helper
+    | EBin_op (bin, e1, e2) -> eval_bin_op bin e1 e2 helper lenv_kernel
   in
   helper expr
 ;;
