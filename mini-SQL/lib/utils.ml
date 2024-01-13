@@ -19,7 +19,6 @@ let error_to_string = function
   | NotImplementedYet -> "This feature cannot be used because it is not yet implemented"
 ;;
 
-
 module type MONAD_FAIL = sig
   include Base.Monad.S2
 

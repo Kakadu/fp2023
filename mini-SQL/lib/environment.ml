@@ -26,13 +26,8 @@ let close_channel channel csv_channel =
   Base.close_in channel
 ;;
 
-let next_row channel =
-  let header =
-    try Csv.next channel with
-    | _ -> []
-  in
-  header
-;;
+  let row (rows : Csv.t) i = List.nth rows i
+  let rows_after (rows : Csv.t) i = List.filteri (fun id _ -> id > i) rows
 
 let column_type_of = function
   | "string" -> String_Column
@@ -56,15 +51,11 @@ let to_table ~filename ~columns = { table_name = filename; table_header = column
 let load_table file =
   let file_channel = ref (open_file file) in
   let csv_channel = ref (get_csv_channel file_channel.contents) in
-  let next = next_row csv_channel.contents in
-  let column_types = ref (to_column_types_list next) in
-  let column_names = ref next in
+  let csv_rows = ref (Csv.input_all csv_channel.contents) in
+  let column_types = ref (to_column_types_list (row csv_rows.contents 0)) in
+  let column_names = ref (row csv_rows.contents 1) in
   let columns = ref (to_columns_list column_names.contents column_types.contents) in
-  let csv_rows =
-    ref (List.filteri (fun i _ -> i > 0) (Csv.input_all csv_channel.contents))
-  in
-  (* !!! Csv.input_all reads second row, may cause lags *)
-  let sheet = Sheet.init column_types.contents csv_rows.contents in
+  let sheet = Sheet.init column_types.contents (rows_after csv_rows.contents 1) in
   let table =
     to_table
       ~filename:(Filename.basename (Filename.remove_extension file))

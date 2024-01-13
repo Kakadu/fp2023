@@ -1,11 +1,11 @@
+(* --- Types with meta-information --- *)
+
 type column_type =
   | String_Column (* STRING *)
   | Numeric_Column (* INT *)
   | Real_Column (* FLOAT *)
   | Boolean_Column (* BOOL *)
 [@@deriving show { with_path = false }]
-
-(* --- Types with meta-information --- *)
 
 type column =
   { column_name : string
@@ -71,7 +71,7 @@ module Sheet = struct
   type t = Row.t array
 
   let init ts es = Array.init (List.length es) (fun i -> Row.init ts (List.nth es i))
-  let get_column rs i = Array.get rs i
+  let get_row (rs : t) i = Array.get rs i
 
   let show_sheet sheet =
     let s_arr = Array.map Row.show_row sheet in
@@ -88,17 +88,28 @@ module Table = struct
   let name table = table.meta.table_name
   let columns table = table.meta.table_header.column_list
 
-  let find_index =
+  let find_column_i (table : t) name =
     let rec helper acc name cs =
       match cs with
-      | [] -> raise (Failure ("Can't find column '" ^ name ^ "'"))
-      | hd :: tl -> if hd.column_name = name then acc else helper (acc + 1) name tl
+      | [] -> None
+      | hd :: tl -> if hd.column_name = name then Some acc else helper (acc + 1) name tl
     in
-    helper 0
+    helper 0 name (columns table)
   ;;
 
   (* faster than with search *)
-  let get_column table ~index = Sheet.get_column table.data index
+  let get_column (table : t) ~index = List.nth (columns table) index
+
+  let show_table (table : t) =
+    let sep = ref ("+" ^ String.make (String.length (name table)) '-' ^ "+") in
+    Format.sprintf
+      "%s\n%s\n%s\ncolumns: %s\n\n%s"
+      sep.contents
+      (" " ^ name table ^ " ")
+      sep.contents
+      (String.concat ", " (List.map show_column (columns table)))
+      (Sheet.show_sheet table.data)
+  ;;
 end
 
 module Database = struct
@@ -109,4 +120,25 @@ module Database = struct
 
   let name database = database.name
   let tables database = database.tables
+
+  let find_table_i (base : t) name =
+    let rec helper acc name (ts : Table.t list) =
+      match ts with
+      | [] -> None
+      | hd :: tl ->
+        if hd.meta.table_name = name then Some acc else helper (acc + 1) name tl
+    in
+    helper 0 name (tables base)
+  ;;
+
+  let get_table database ~index = List.nth database.tables index
+
+  let show_database (base : t) =
+    Format.sprintf
+      "~ %s ~\n%s"
+      base.name
+      (String.concat "\n" (List.map Table.show_table base.tables))
+  ;;
+
+  (* нужен поиск таблицы по имени и поиск всех колонок *)
 end

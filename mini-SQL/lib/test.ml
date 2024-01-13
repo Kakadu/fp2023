@@ -313,24 +313,65 @@ module Types_test = struct
       Sheet.show_sheet
   ;;
 
-  let%test _ =
-    Format.printf
-      "%s\n"
-      (Sheet.show_sheet
-         (Environment.load_table "/home/dmitriy/Desktop/test_data/database1/table1.csv")
-           .data);
-    true
+  let base1 =
+    Environment.load_database "/home/dmitriy/Desktop/fp2023/mini-SQL/test_data/database1"
   ;;
 
+  let base2 =
+    Environment.load_database
+      "/home/dmitriy/Desktop/fp2023/mini-SQL/test_data/two_files_database"
+  ;;
+
+  (* let%test _ =
+     Format.printf
+     "%s\n\n"
+     (Sheet.show_sheet
+     (Environment.load_table "/home/dmitriy/Desktop/test_data/database1/table1.csv")
+     .data);
+     true
+     ;; *)
+
+  (* let%test _ =
+     Format.printf
+     "%s\n\n"
+     (Database.show_database base2);
+     true
+     ;; *)
+
+  (* let%test _ =
+     Format.printf
+     "%s\n\n"
+     (Database.show_database base2);
+     true
+     ;; *)
+
+  open Interpreter.Eval (Utils.Result)
+
+  let assert_equal res exp show =
+    match res with
+    | Ok x ->
+      (match exp = x with
+       | true -> true
+       | false ->
+         Format.printf "%s\n" (show x);
+         false)
+    | Error e ->
+      Format.printf "Interpret error: %s\n" e;
+      false
+  ;;
+
+  (* find tables test *)
+  let%test _ = assert_equal (find_table_id base2 "email2") 1 string_of_int
+  let%test _ = assert_equal (find_table_id base2 "second_email") 0 string_of_int
+
+  (* transform *)
   let%test _ =
-    Format.printf
-      "%s\n"
-      (Sheet.show_sheet
-         (List.nth
-            (Environment.load_database "/home/dmitriy/Desktop/test_data/database1/")
-              .tables
-            0)
-           .data);
-    true
+    assert_equal
+      (transform_column base2 "email2")
+      { table_index = 1
+      ; column_index = 4
+      ; meta = { column_name = "email2"; column_type = String_Column }
+      }
+      Interpreter.show_int_column
   ;;
 end

@@ -1,0 +1,12 @@
+string,numeric,bool
+name,age,is_gay
+Rachel Klein,65,false
+Frank James,24,false
+Barbara Fletcher,38,true
+Polly Drake,33,false
+Howard Glover,42,false
+Alice Houston,50,true
+Gregory Cunningham,62,true
+Jim Gregory,27,false
+Eleanor Johnston,37,true
+Eliza Norton,43,false
