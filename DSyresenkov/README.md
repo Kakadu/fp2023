@@ -10,6 +10,7 @@ Features done (append only):
 
 - Factorial Parser
 - Simple typechecker
+- Simple interpreter
 
 Features in progress (and TODOs):
 
@@ -17,4 +18,4 @@ Features in progress (and TODOs):
 - Type annotations
 - List a :: b syntax
 - Comments parser
-- Interpreter
+- Standard IO functions
