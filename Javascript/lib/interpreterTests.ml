@@ -1031,12 +1031,6 @@ let%expect_test _ =
 
 let%expect_test _ =
   print_return
-    "let counter = 0; function a() {counter = counter + 1;}; a(); let b = 10; return b";
-  [%expect {| Programm return: 10 |}]
-;;
-
-let%expect_test _ =
-  print_return
     "function a() {return counter = counter+1}; let counter = 0; a(); a(); return a()";
   [%expect {| Programm return: 3 |}]
 ;;
@@ -1046,6 +1040,15 @@ let%expect_test _ =
     "let counter = 0; function a() {return counter = counter+1}; a(); a(); return \
      counter;";
   [%expect {| Programm return: 2 |}]
+;;
+
+let%expect_test _ =
+  print_return
+    "let counter = 0;\n\
+    \ function a() {counter = 10}; \n\
+    \ function b() {return counter};\n\
+    \ a(); return b();";
+  [%expect {| Programm return: 10 |}]
 ;;
 
 let%expect_test _ =
@@ -1064,15 +1067,6 @@ let%expect_test _ =
     \ function b() {return counter = counter + 4};\n\
     \ a(); b(); return counter;";
   [%expect {| Programm return: 4 |}]
-;;
-
-let%expect_test _ =
-  print_return
-    "let counter = 0;\n\
-    \ function a() {counter = 10}; \n\
-    \ function b() {return counter};\n\
-    \ a(); return b();";
-  [%expect {| Programm return: 10 |}]
 ;;
 
 let%expect_test _ =
@@ -1097,4 +1091,46 @@ let%expect_test _ =
     \    b(); b();\n\
     \    return b()";
   [%expect {| Programm return: 3 |}]
+;;
+
+(**---------------Print tests---------------*)
+
+let%expect_test _ =
+  print_output "alert(1); alert(2);";
+  [%expect {|
+    Programm output:
+    1
+    2
+
+    Programm return: undefined |}]
+;;
+
+let%expect_test _ =
+  print_output "console.log(1); console.log(2)";
+  [%expect {|
+    Programm output:
+    1
+    2
+
+    Programm return: undefined |}]
+;;
+
+let%expect_test _ =
+  print_output "console.log(1+2, \"43\", console.log, alert)";
+  [%expect
+    {|
+    Programm output:
+    3 43 [Function: log] [Function: alert]
+
+    Programm return: undefined |}]
+;;
+
+let%expect_test _ =
+  print_output "console.log(1+2, \"43\")\n  console.log(1+2, \"43\")";
+  [%expect {|
+    Programm output:
+    3 43
+    3 43
+
+    Programm return: undefined |}]
 ;;

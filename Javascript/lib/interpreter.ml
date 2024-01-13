@@ -51,7 +51,8 @@ let get_obj_ctx ctx id =
   | _ -> error @@ ReferenceError (asprintf "cannot find object with id = %i" id)
 ;;
 
-let add_obj ctx obj =
+let add_obj ctx fields obj_type =
+  let obj = { fields; service_fields = []; obj_type } in
   let id = ctx.obj_count in
   { ctx with obj_count = id + 1; objs = IntMap.add id obj ctx.objs }, VObject id
 ;;
@@ -107,45 +108,18 @@ let rec print_vvalues ctx ?(str_quote = false) = function
 
 let print_string (ctx : ctx) str = { ctx with stdout = ctx.stdout ^ str ^ "\n" }
 
-let print ctx = function
-  | [ VNumber x ] -> return { ctx with stdout = ctx.stdout ^ Float.to_string x }
-  | _ -> ensup ""
+let print ctx values =
+  fold_left
+    (fun ctx value ->
+      print_vvalues ctx value >>| fun str -> { ctx with stdout = ctx.stdout ^ str ^ " " })
+    ctx
+    values
+  >>| fun ctx -> { ctx with stdout = ctx.stdout ^ "\n" }, None
 ;;
 
 let get_vreturn = function
   | Some x -> x
   | None -> VUndefined
-;;
-
-let first_lex_env = 0
-
-let context_init =
-  let lex_env = { parent = None; creater = None; vars = []; scope = Block } in
-  let id = first_lex_env in
-  { lex_env_count = id + 1
-  ; cur_lex_env = id
-  ; lex_envs = IntMap.singleton id lex_env
-  ; obj_count = 0
-  ; objs = IntMap.empty
-  ; vreturn = None
-  ; stdout = ""
-  }
-;;
-
-let create_local_ctx ctx parent scope =
-  let new_lex_env =
-    { parent = Some parent; creater = Some ctx.cur_lex_env; vars = []; scope }
-  in
-  let id = ctx.lex_env_count in
-  if id = Int.max_int
-  then error @@ InternalError "Max amount of lexical envs was created"
-  else
-    return
-      { ctx with
-        lex_env_count = id + 1
-      ; cur_lex_env = id
-      ; lex_envs = IntMap.add id new_lex_env ctx.lex_envs
-      }
 ;;
 
 let rec find_in_vars id = function
@@ -193,6 +167,60 @@ let get_parent ctx =
   | _ -> error @@ InternalError "cannot get parent"
 ;;
 
+let first_lex_env = 0
+
+let context_init =
+  let lex_env = { parent = None; creater = None; vars = []; scope = Block } in
+  let id = first_lex_env in
+  let ctx =
+    { lex_env_count = id + 1
+    ; cur_lex_env = id
+    ; lex_envs = IntMap.singleton id lex_env
+    ; obj_count = 0
+    ; objs = IntMap.empty
+    ; vreturn = None
+    ; stdout = ""
+    }
+  in
+  let fun_print ctx name =
+    add_obj
+      ctx
+      [ { var_id = "name"; is_const = true; value = VString name }
+      ; { var_id = "length"; is_const = true; value = VNumber 0. }
+      ]
+      (TFunPreset print)
+  in
+  let console =
+    fun_print ctx "log"
+    |> fun (ctx, f) ->
+    add_obj ctx [ { var_id = "log"; is_const = false; value = f } ] TObject
+    |> fun (ctx, value) ->
+    lex_add ctx first_lex_env { var_id = "console"; is_const = false; value }
+  in
+  let alert ctx =
+    fun_print ctx "alert"
+    |> fun (ctx, f) ->
+    lex_add ctx first_lex_env { var_id = "alert"; is_const = false; value = f }
+  in
+  console >>= alert
+;;
+
+let create_local_ctx ctx parent scope =
+  let new_lex_env =
+    { parent = Some parent; creater = Some ctx.cur_lex_env; vars = []; scope }
+  in
+  let id = ctx.lex_env_count in
+  if id = Int.max_int
+  then error @@ InternalError "Max amount of lexical envs was created"
+  else
+    return
+      { ctx with
+        lex_env_count = id + 1
+      ; cur_lex_env = id
+      ; lex_envs = IntMap.add id new_lex_env ctx.lex_envs
+      }
+;;
+
 let end_of_block ctx =
   let ret = ctx.vreturn in
   get_lex_env ctx ctx.cur_lex_env
@@ -223,12 +251,10 @@ let create_func ctx name args body obj_type =
   let fun_ctx = { parent_lex_env = ctx.cur_lex_env; args; body } in
   add_obj
     ctx
-    { fields =
-        [ { var_id = "name"; is_const = true; value = VString name }
-        ; { var_id = "length"; is_const = true; value = VNumber length }
-        ]
-    ; obj_type = obj_type fun_ctx
-    }
+    [ { var_id = "name"; is_const = true; value = VString name }
+    ; { var_id = "length"; is_const = true; value = VNumber length }
+    ]
+    (obj_type fun_ctx)
 ;;
 
 let prefind_funcs ctx ast =
@@ -574,7 +600,7 @@ and eval_exp ctx = function
         >>| fun id -> ctx, { var_id = id; is_const = false; value })
       ctx
       x
-    >>= fun (ctx, fields) -> return @@ add_obj ctx { fields; obj_type = TObject }
+    >>= fun (ctx, fields) -> return @@ add_obj ctx fields TObject
   | _ -> ensup ""
 
 (**---------------Statement interpreter---------------*)
@@ -621,7 +647,9 @@ and parse_stms ctx ast =
 let interpret_ast ast : (program_return, string) Result.t =
   match ast with
   | Programm x ->
-    parse_stms context_init x
+    context_init
+    >>= fun ctx ->
+    parse_stms ctx x
     >>= fun (ctx, ret) ->
     print_vvalues ctx @@ get_vreturn ret
     >>| fun ret -> { stdout = ctx.stdout; return = ret }

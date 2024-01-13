@@ -54,6 +54,7 @@ and obj_type =
 
 and obj_ctx =
   { fields : let_ctx list
+  ; service_fields : let_ctx list
   ; obj_type : obj_type
   }
 
