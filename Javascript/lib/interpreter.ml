@@ -364,7 +364,7 @@ let get_int ctx bit = function
   | _ as t -> etyp @@ asprintf "expect number, but %s was given" @@ print_type ctx t
 ;;
 
-let rec eval_bin_op ctx op a b =
+let rec ctx_not_change_bop ctx op a b =
   let bop_with_num op =
     both to_vnumber a b
     >>= fun (a, b) -> both (get_vnum ctx) a b >>| fun (x, y) -> VNumber (op x y)
@@ -425,7 +425,7 @@ let rec eval_bin_op ctx op a b =
     else if is_num_bool a || is_num_bool b
     then bop_logical_with_num ( = )
     else
-      eval_bin_op ctx StrictEqual a b
+      ctx_not_change_bop ctx StrictEqual a b
       >>= function
       | VBool true -> return (VBool true)
       | _ ->
@@ -471,11 +471,11 @@ let rec eval_bin_op ctx op a b =
     let bop cast a b =
       both cast a b
       >>= fun (x, y) ->
-      eval_bin_op ctx LessThan x y
+      ctx_not_change_bop ctx LessThan x y
       >>= fun res1 ->
-      eval_bin_op ctx Equal x y
+      ctx_not_change_bop ctx Equal x y
       >>= fun res2 ->
-      eval_bin_op ctx LogicalOr res1 res2
+      ctx_not_change_bop ctx LogicalOr res1 res2
       >>= fun res3 -> get_vbool ctx res3 >>| fun res -> VBool res
     in
     if is_to_string a && is_to_string b
@@ -515,9 +515,11 @@ let rec eval_bin_op ctx op a b =
     shift Int32.shift_right <?> "error in logical_shift_right operator"
   | UnsignedShiftRight ->
     shift Int32.shift_right_logical <?> "error in unsigned_shift_right operator"
-  | GreaterEqual -> eval_bin_op ctx LessEqual b a <?> "error in greater_equal operator"
+  | GreaterEqual ->
+    ctx_not_change_bop ctx LessEqual b a <?> "error in greater_equal operator"
   | LessEqual -> less_eq () <?> "error in less_equal operator"
-  | GreaterThan -> eval_bin_op ctx LessThan b a <?> "error in greater_than operator"
+  | GreaterThan ->
+    ctx_not_change_bop ctx LessThan b a <?> "error in greater_than operator"
   | LessThan -> less_than () <?> "error in less_than operator"
   | BitwiseAnd -> bop_with_int ( land ) <?> "error in bitwise and"
   | BitwiseOr -> bop_with_int ( lor ) <?> "error in bitwise or"
@@ -589,61 +591,67 @@ let rec eval_fun ctx f args =
   | _ ->
     error @@ InternalError "get unexpected object type, expect function, but get TObject"
 
-and assign ctx a b =
-  let obj_assign obj prop =
-    let get_obj = function
-      | VObject x -> get_obj_ctx ctx x >>| fun obj -> x, obj
-      | _ -> error @@ SyntaxError "Invalid or unexpected token"
-    in
-    fold_left_map eval_exp ctx [ obj; prop; b ]
-    >>= function
-    | ctx, [ obj_val; prop; b ] ->
-      get_obj obj_val
-      >>= fun (id, obj) ->
-      to_vstring ctx prop
-      >>= get_vstring ctx
-      >>= fun prop ->
-      let get_new_obj =
-        match prop with
-        | "__proto__" ->
-          if obj_val = b
-          then etyp "Cyclic __proto__ value"
-          else return { obj with proto = b }
-        | _ ->
-          (match find_in_vars prop obj.fields with
-           | Some x when x.is_const ->
-             print_vvalues ctx obj_val
-             >>= fun str ->
-             etyp
-             @@ asprintf "Cannot assign to read only property '%s' of %s" x.var_id str
-           | _ ->
-             let fields =
-               add_or_replace { var_id = prop; is_const = false; value = b } obj.fields
-             in
-             return { obj with fields })
+and ctx_change_bop ctx op a b =
+  let assign =
+    let obj_assign obj prop =
+      let get_obj = function
+        | VObject x -> get_obj_ctx ctx x >>| fun obj -> x, obj
+        | _ -> error @@ SyntaxError "Invalid or unexpected token"
       in
-      get_new_obj >>| fun obj -> { ctx with objs = IntMap.add id obj ctx.objs }, b
-    | _ -> error @@ InternalError "Error in assignment to object field"
+      fold_left_map eval_exp ctx [ obj; prop; b ]
+      >>= function
+      | ctx, [ obj_val; prop; b ] ->
+        get_obj obj_val
+        >>= fun (id, obj) ->
+        to_vstring ctx prop
+        >>= get_vstring ctx
+        >>= fun prop ->
+        let get_new_obj =
+          match prop with
+          | "__proto__" ->
+            if obj_val = b
+            then etyp "Cyclic __proto__ value"
+            else return { obj with proto = b }
+          | _ ->
+            (match find_in_vars prop obj.fields with
+             | Some x when x.is_const ->
+               print_vvalues ctx obj_val
+               >>= fun str ->
+               etyp
+               @@ asprintf "Cannot assign to read only property '%s' of %s" x.var_id str
+             | _ ->
+               let fields =
+                 add_or_replace { var_id = prop; is_const = false; value = b } obj.fields
+               in
+               return { obj with fields })
+        in
+        get_new_obj >>| fun obj -> { ctx with objs = IntMap.add id obj ctx.objs }, b
+      | _ -> error @@ InternalError "Error in assignment to object field"
+    in
+    match a with
+    | Var id ->
+      eval_exp ctx b
+      >>= fun (ctx, res) ->
+      ctx_get_var ctx id
+      >>= fun (_, lex_id) ->
+      lex_add ctx ~replace:true lex_id { var_id = id; is_const = false; value = res }
+      >>| fun ctx -> ctx, res
+    | BinOp (PropAccs, obj, prop) -> obj_assign obj prop
+    | _ -> error @@ SyntaxError "Invalid left-hand side in assignment"
   in
-  match a with
-  | Var id ->
-    eval_exp ctx b
-    >>= fun (ctx, res) ->
-    ctx_get_var ctx id
-    >>= fun (_, lex_id) ->
-    lex_add ctx ~replace:true lex_id { var_id = id; is_const = false; value = res }
-    >>| fun ctx -> ctx, res
-  | BinOp (PropAccs, obj, prop) -> obj_assign obj prop
-  | _ -> error @@ SyntaxError "Invalid left-hand side in assignment"
+  let add_ctx = add_ctx ctx in
+  match op with
+  | Assign -> assign
+  | _ ->
+    both_ext eval_exp ctx a b
+    >>= fun (ctx, (x, y)) -> add_ctx @@ ctx_not_change_bop ctx op x y
 
 (**main expression interpreter*)
 and eval_exp ctx =
   let add_ctx = add_ctx ctx in
   function
   | Const x -> return (ctx, const_to_val x)
-  | BinOp (Assign, a, b) -> assign ctx a b
-  | BinOp (op, a, b) ->
-    both_ext eval_exp ctx a b >>= fun (ctx, (x, y)) -> add_ctx @@ eval_bin_op ctx op x y
+  | BinOp (op, a, b) -> ctx_change_bop ctx op a b
   | UnOp (op, a) -> eval_exp ctx a >>= fun (ctx, a) -> add_ctx @@ eval_un_op ctx op a
   | Var id -> ctx_get_var ctx id >>| fun (var, _) -> ctx, var.value
   | FunctionCall (var, args) ->
