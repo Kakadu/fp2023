@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8"/>
     <title>typing.ml &mdash; Coverage report</title>
-    <meta name="description" content="95.65% coverage in lib/typing.ml">
+    <meta name="description" content="95.83% coverage in lib/typing.ml">
     <link rel="stylesheet" href="../coverage.css"/>
     <script src="../highlight.pack.js"></script>
     <script>hljs.initHighlightingOnLoad();</script>
@@ -15,7 +15,7 @@
           <span class="dirname">lib/</span>typing.ml
         </a>
       </h1>
-      <h2>95.65%</h2>
+      <h2>95.83%</h2>
     </div>
     <div id="navbar">
       <span class="unvisited" style="bottom:1.28%"></span>
@@ -208,31 +208,31 @@ type ty =
   | TList of ty (** Type of list *)
 
 let rec pp_ty fmt = function
-  | <span data-count="25">T</span>Base ty -&gt;
+  | <span data-count="50">T</span>Base ty -&gt;
     (match ty with
-     | <span data-count="13">B</span>Int -&gt; fprintf fmt "int"
-     | <span data-count="11">B</span>Bool -&gt; fprintf fmt "bool"
+     | <span data-count="32">B</span>Int -&gt; fprintf fmt "int"
+     | <span data-count="17">B</span>Bool -&gt; fprintf fmt "bool"
      | <span data-count="1">B</span>Unit -&gt; fprintf fmt "unit")
-  | <span data-count="32">T</span>Var x -&gt; fprintf fmt "'%d" x
-  | <span data-count="24">T</span>Arrow (l, r) -&gt;
+  | <span data-count="49">T</span>Var x -&gt; fprintf fmt "'%d" x
+  | <span data-count="46">T</span>Arrow (l, r) -&gt;
     (match l, r with
-     | <span data-count="1">T</span>Arrow (_, _), _ -&gt; fprintf fmt "(%a) -&gt; %a" pp_ty l pp_ty r
-     | <span data-count="23">_</span>, _ -&gt; fprintf fmt "%a -&gt; %a" pp_ty l pp_ty r)
-  | <span data-count="7">T</span>Tuple (ty1, ty2, tys) -&gt;
+     | <span data-count="4">T</span>Arrow _, _ -&gt; fprintf fmt "(%a) -&gt; %a" pp_ty l pp_ty r
+     | <span data-count="42">_</span>, _ -&gt; fprintf fmt "%a -&gt; %a" pp_ty l pp_ty r)
+  | <span data-count="11">T</span>Tuple (ty1, ty2, tys) -&gt;
     fprintf
       fmt
       "%a"
-      (pp_print_lis<span data-count="7">t</span>
-         ~pp_sep:(fun fmt _ -&gt; <span data-count="9">f</span>printf fmt " * ")
+      (pp_print_lis<span data-count="11">t</span>
+         ~pp_sep:(fun fmt _ -&gt; <span data-count="14">f</span>printf fmt " * ")
          (fun fmt ty -&gt;
-           <span data-count="16">m</span>atch ty with
-           | <span data-count="4">T</span>Arrow (_, _) -&gt; fprintf fmt "(%a)" pp_ty ty
-           | <span data-count="12">_</span> -&gt; fprintf fmt "%a" pp_ty ty))
+           <span data-count="25">m</span>atch ty with
+           | <span data-count="4">T</span>Arrow _ -&gt; fprintf fmt "(%a)" pp_ty ty
+           | <span data-count="21">_</span> -&gt; fprintf fmt "%a" pp_ty ty))
       (ty1 :: ty2 :: tys)
-  | <span data-count="11">T</span>List ty -&gt;
+  | <span data-count="20">T</span>List ty -&gt;
     (match ty with
-     | <span data-count="1">T</span>Arrow (_, _) -&gt; fprintf fmt "(%a) list" pp_ty ty
-     | <span data-count="10">_</span> -&gt; fprintf fmt "%a list" pp_ty ty)
+     | <span data-count="1">T</span>Arrow _ | <span data-count="2">T</span>Tuple _ -&gt; fprintf fmt "(%a) list" pp_ty ty
+     | <span data-count="17">_</span> -&gt; fprintf fmt "%a list" pp_ty ty)
 ;;
 
 type error =
