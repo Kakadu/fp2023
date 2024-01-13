@@ -9,6 +9,6 @@
    ppx_deriving.show
    ppx_deriving.ord
    ppx_variants_conv))
- (libraries angstrom)
+ (libraries angstrom csv)
  (instrumentation
   (backend bisect_ppx)))

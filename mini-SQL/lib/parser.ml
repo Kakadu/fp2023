@@ -44,6 +44,7 @@ let string_of_value = function
   | String x | Name x -> x
   | _ -> raise (Parse_error "Incorrect table name")
 ;;
+
 let value_of_expr = function
   | Const x -> x
   | _ -> raise (Parse_error "Incorrect value")
@@ -181,21 +182,11 @@ let l_not = op "NOT" *> return (fun x -> Unary_operation (Not, x))
 (* --- Compare --- *)
 
 let eq = op "=" *> return (fun x y -> Binary_operation (Equal, x, y))
-
-let neq =
-  (op "!=" <|> op "<>") *> return (fun x y -> Binary_operation (Not_Equal, x, y))
-;;
-
+let neq = (op "!=" <|> op "<>") *> return (fun x y -> Binary_operation (Not_Equal, x, y))
 let gr = op ">" *> return (fun x y -> Binary_operation (Greater_Than, x, y))
 let ls = op "<" *> return (fun x y -> Binary_operation (Less_Than, x, y))
-
-let greq =
-  op ">=" *> return (fun x y -> Binary_operation (Greater_Than_Or_Equal, x, y))
-;;
-
-let lseq =
-  op "<=" *> return (fun x y -> Binary_operation (Less_Than_Or_Equal, x, y))
-;;
+let greq = op ">=" *> return (fun x y -> Binary_operation (Greater_Than_Or_Equal, x, y))
+let lseq = op "<=" *> return (fun x y -> Binary_operation (Less_Than_Or_Equal, x, y))
 
 (* --- joins --- *)
 
@@ -237,12 +228,14 @@ let cmp_p =
 
 (* ### Logic ### *)
 let chainun e op =
-  let rec go acc = lift (fun f -> f acc) op >>= go <|> return acc 
-in (op <*> e) <|> e >>= fun init -> go init
+  let rec go acc = lift (fun f -> f acc) op >>= go <|> return acc in
+  op <*> e <|> e >>= fun init -> go init
+;;
+
 let logic_p =
   fix (fun logic ->
     let pars = parens logic <|> bspace cmp_p in
-    let term1 = chainun pars l_not in  
+    let term1 = chainun pars l_not in
     let term2 = chainl1 term1 l_and in
     chainl1 term2 l_or)
 ;;
@@ -268,25 +261,30 @@ let select_p =
 (* ### JOIN ### *)
 
 (* pars "ON table1 <cmp> table2" *)
-let on_p = op "ON" *> chainl1 ((bspace value_p) >>| expr_of_value) cmp_op
+let on_p = op "ON" *> chainl1 (bspace value_p >>| expr_of_value) cmp_op
 
 let join_p =
-  fix (fun join -> 
+  fix (fun join ->
     lift4
-  (fun l op r ex -> Join { jtype = op; left = l; table = r; on = ex })
-  (bspace (parens join) <|> ((lspace table_name) >>| string_of_value >>| fun x -> Table x))
-  (bspace joins)
-  ((rspace table_name) >>| string_of_value)
-  (rspace on_p))
+      (fun l op r ex -> Join { jtype = op; left = l; table = r; on = ex })
+      (bspace (parens join)
+       <|> (lspace table_name >>| string_of_value >>| fun x -> Table x))
+      (bspace joins)
+      (rspace table_name >>| string_of_value)
+      (rspace on_p))
 ;;
 
-let from_p = (parens join_p) <|> join_p <|> (expr_p >>| fun r -> Table (string_of_value (value_of_expr r)))
+let from_p =
+  parens join_p
+  <|> join_p
+  <|> (expr_p >>| fun r -> Table (string_of_value (value_of_expr r)))
+;;
 
 (* ### Request parser ### *)
 
 (* Optional words parser *)
 let opt_word (w : string) (p : 'a t) =
- take_while (fun c -> not (is_space c))
+  take_while (fun c -> not (is_space c))
   >>= function
   | r when r = w -> p >>| fun r -> Some r
   | _ -> return None

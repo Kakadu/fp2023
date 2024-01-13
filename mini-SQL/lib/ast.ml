@@ -49,12 +49,12 @@ type join_type =
 
 type from_statement =
   | Table of name
-  | Join of 
-  {   jtype : join_type;
-      left  : from_statement;
-      table : name;
-      on    : expr 
-  }
+  | Join of
+      { jtype : join_type
+      ; left : from_statement
+      ; table : name
+      ; on : expr
+      }
 [@@deriving show { with_path = false }]
 
 type request =
