@@ -50,7 +50,6 @@ and expr =
   | ExprBinOp of bin_op * expr * expr (** Binary operation [a + b] *)
   | ExprUnOp of un_op * expr (** Unary operation [not a] *)
   | ExprLet of binding list * expr (** Local binding [let x = 1 in x + 2] *)
-  | ExprWhere of binding list * expr (** Local binding [where y = 2] *)
 [@@deriving show { with_path = false }]
 
 (** Type representing possible patterns in pattern-matching. *)
@@ -60,10 +59,7 @@ and pat =
   | PatLit of lit (** Literal pattern [1], ['a'], ["abc"] *)
   | PatTuple of pat list (** Tuple pattern [(x, y)] *)
   | PatCons of pat * pat (** List constructor pattern [x:xs] *)
-  | PatAs of id * pat (** As-pattern [list@(x:xs)] *)
-  | PatRec of id * pat list (** Record pattern [Point {x = 3, y}] *)
   | PatNil (** Empty list pattern [[]] *)
-(* | PatList ??*)
 [@@deriving show { with_path = false }]
 
 (** Type representing literals *)
