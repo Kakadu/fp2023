@@ -83,8 +83,8 @@ let rec get_field id = function
   | _ -> VUndefined
 ;;
 
-(*JS use diffrent conversion to string in .toString and in print.
-  It's the reason why vvalues_to_str and to_vstring is diffrent functions*)
+(*JS uses diffrent conversion to string in .toString and in print.
+  It's the reason why vvalues_to_str and to_vstring are diffrent functions*)
 let rec print_vvalues ctx ?(str_quote = false) = function
   | VNumber x -> return @@ num_to_string x
   | VBool true -> return "true"
@@ -117,9 +117,11 @@ let get_vreturn = function
   | None -> VUndefined
 ;;
 
+let first_lex_env = 0
+
 let context_init =
   let lex_env = { parent = None; creater = None; vars = []; scope = Block } in
-  let id = 0 in
+  let id = first_lex_env in
   { lex_env_count = id + 1
   ; cur_lex_env = id
   ; lex_envs = IntMap.singleton id lex_env
@@ -135,11 +137,15 @@ let create_local_ctx ctx parent scope =
     { parent = Some parent; creater = Some ctx.cur_lex_env; vars = []; scope }
   in
   let id = ctx.lex_env_count in
-  { ctx with
-    lex_env_count = id + 1
-  ; cur_lex_env = id
-  ; lex_envs = IntMap.add id new_lex_env ctx.lex_envs
-  }
+  if id = Int.max_int
+  then error @@ InternalError "Max amount of lexical envs was created"
+  else
+    return
+      { ctx with
+        lex_env_count = id + 1
+      ; cur_lex_env = id
+      ; lex_envs = IntMap.add id new_lex_env ctx.lex_envs
+      }
 ;;
 
 let rec find_in_vars id = function
@@ -193,7 +199,7 @@ let end_of_block ctx =
   >>= fun lex_env ->
   match lex_env.creater with
   | Some x -> return ({ ctx with cur_lex_env = x; vreturn = None }, ret)
-  | _ when ctx.cur_lex_env = 0 -> return (ctx, ret)
+  | _ when ctx.cur_lex_env = first_lex_env -> return (ctx, ret)
   | _ -> error @@ InternalError "Cannot find the lexical environment creater"
 ;;
 
@@ -512,9 +518,11 @@ let rec eval_fun ctx f args =
         >>= fun ctx -> val_to_args ctx (atl, [])
       | _, _ -> return ctx
     in
+    create_local_ctx ctx f.parent_lex_env scope
+    >>= fun ctx ->
     match f.body with
     | Block x ->
-      val_to_args (create_local_ctx ctx f.parent_lex_env scope) (f.args, args)
+      val_to_args ctx (f.args, args)
       >>= fun ctx -> parse_stms ctx x >>| fun (ctx, ret) -> ctx, get_vreturn ret
     | _ ->
       error (AstError "in top of fun body expected Block, but something else was given")
@@ -546,7 +554,7 @@ and eval_exp ctx = function
   | BinOp (op, a, b) ->
     both_ext eval_exp ctx a b >>= fun (ctx, (x, y)) -> eval_bin_op ctx op x y
   | UnOp (op, a) -> eval_exp ctx a >>= fun (ctx, a) -> eval_un_op ctx op a
-  | Var id -> ctx_get_var ctx id >>| fun (var, lex_id) -> ctx, var.value
+  | Var id -> ctx_get_var ctx id >>| fun (var, _) -> ctx, var.value
   | FunctionCall (var, args) ->
     eval_exp ctx var
     <?> "error while try get function"
@@ -592,7 +600,9 @@ and parse_stm ctx = function
       ctx.cur_lex_env
       { var_id = x.var_identifier; is_const = x.is_const; value = v }
   | Block ast ->
-    parse_stms (create_local_ctx ctx ctx.cur_lex_env Block) ast
+    create_local_ctx ctx ctx.cur_lex_env Block
+    >>= fun ctx ->
+    parse_stms ctx ast
     <?> "error while interpret block"
     >>| fun (ctx, ret) ->
     (match ret with
