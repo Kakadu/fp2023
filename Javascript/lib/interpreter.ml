@@ -499,46 +499,41 @@ let eval_bin_op ctx op a b =
     | VObject _ as x -> proto_find x
     | _ -> ensup "reading from not object is not supporting"
   in
-  let add_ctx = add_ctx ctx in
   match op with
-  | Add -> add_ctx @@ add a b <?> "error in add operator"
-  | Sub -> add_ctx @@ bop_with_num ( -. ) a b <?> "error in sub operator"
-  | Mul -> add_ctx @@ bop_with_num ( *. ) a b <?> "error in mul operator"
-  | Div -> add_ctx @@ bop_with_num ( /. ) a b <?> "error in div operator"
-  | Equal -> add_ctx @@ equal a b <?> "error in equal operator"
-  | NotEqual -> add_ctx @@ negotiate equal a b <?> "error in not_equal operator"
-  | StrictEqual -> add_ctx @@ strict_equal a b <?> "error in strict equal operator"
-  | StrictNotEqual ->
-    add_ctx @@ negotiate strict_equal a b <?> "error in strict not_equal operator"
-  | Rem -> add_ctx @@ bop_with_num mod_float a b <?> "error in rem operator"
+  | Add -> add a b <?> "error in add operator"
+  | Sub -> bop_with_num ( -. ) a b <?> "error in sub operator"
+  | Mul -> bop_with_num ( *. ) a b <?> "error in mul operator"
+  | Div -> bop_with_num ( /. ) a b <?> "error in div operator"
+  | Equal -> equal a b <?> "error in equal operator"
+  | NotEqual -> negotiate equal a b <?> "error in not_equal operator"
+  | StrictEqual -> strict_equal a b <?> "error in strict equal operator"
+  | StrictNotEqual -> negotiate strict_equal a b <?> "error in strict not_equal operator"
+  | Rem -> bop_with_num mod_float a b <?> "error in rem operator"
   | LogicalShiftLeft ->
-    add_ctx @@ shift Int32.shift_left a b <?> "error in logical_shift_left operator"
+    shift Int32.shift_left a b <?> "error in logical_shift_left operator"
   | LogicalShiftRight ->
-    add_ctx @@ shift Int32.shift_right a b <?> "error in logical_shift_right operator"
+    shift Int32.shift_right a b <?> "error in logical_shift_right operator"
   | UnsignedShiftRight ->
-    add_ctx @@ shift Int32.shift_right_logical a b
-    <?> "error in unsigned_shift_right operator"
-  | GreaterEqual -> add_ctx @@ less_eq b a <?> "error in greater_equal operator"
-  | LessEqual -> add_ctx @@ less_eq a b <?> "error in less_equal operator"
-  | GreaterThan -> add_ctx @@ less_than b a <?> "error in greater_than operator"
-  | LessThan -> add_ctx @@ less_than a b <?> "error in less_than operator"
-  | BitwiseAnd -> add_ctx @@ bop_with_int ( land ) a b
-  | BitwiseOr -> add_ctx @@ bop_with_int ( lor ) a b
-  | LogicalAnd -> add_ctx @@ logical_and a b <?> "error in logical_and operator"
-  | LogicalOr -> add_ctx @@ logical_or a b <?> "error in logical_and operator"
-  | Xor -> add_ctx @@ bop_with_int ( lxor ) a b
-  | Exp -> add_ctx @@ bop_with_num ( ** ) a b <?> "error in exp operator"
-  | PropAccs -> add_ctx @@ prop_accs a b <?> "error in property accession"
+    shift Int32.shift_right_logical a b <?> "error in unsigned_shift_right operator"
+  | GreaterEqual -> less_eq b a <?> "error in greater_equal operator"
+  | LessEqual -> less_eq a b <?> "error in less_equal operator"
+  | GreaterThan -> less_than b a <?> "error in greater_than operator"
+  | LessThan -> less_than a b <?> "error in less_than operator"
+  | BitwiseAnd -> bop_with_int ( land ) a b
+  | BitwiseOr -> bop_with_int ( lor ) a b
+  | LogicalAnd -> logical_and a b <?> "error in logical_and operator"
+  | LogicalOr -> logical_or a b <?> "error in logical_and operator"
+  | Xor -> bop_with_int ( lxor ) a b
+  | Exp -> bop_with_num ( ** ) a b <?> "error in exp operator"
+  | PropAccs -> prop_accs a b <?> "error in property accession"
   | _ as a -> ensup @@ asprintf "operator %a not supported yet" pp_bin_op a
 ;;
 
 let eval_un_op ctx op a =
-  let add_ctx = add_ctx ctx in
   match op with
-  | Plus -> add_ctx @@ to_vnumber a <?> "error in plus operator"
+  | Plus -> to_vnumber a <?> "error in plus operator"
   | Minus ->
-    add_ctx @@ (to_vnumber a >>= get_vnum ctx >>| fun n -> VNumber ~-.n)
-    <?> "error in plus operator"
+    to_vnumber a >>= get_vnum ctx >>| (fun n -> VNumber ~-.n) <?> "error in plus operator"
   | _ as a -> ensup @@ asprintf "operator %a not supported yet" pp_un_op a
 ;;
 
@@ -606,12 +601,14 @@ and assign ctx a b =
   | _ -> ensup ""
 
 (**main expression interpreter*)
-and eval_exp ctx = function
+and eval_exp ctx =
+  let add_ctx = add_ctx ctx in
+  function
   | Const x -> return (ctx, const_to_val x)
   | BinOp (Assign, a, b) -> assign ctx a b
   | BinOp (op, a, b) ->
-    both_ext eval_exp ctx a b >>= fun (ctx, (x, y)) -> eval_bin_op ctx op x y
-  | UnOp (op, a) -> eval_exp ctx a >>= fun (ctx, a) -> eval_un_op ctx op a
+    both_ext eval_exp ctx a b >>= fun (ctx, (x, y)) -> add_ctx @@ eval_bin_op ctx op x y
+  | UnOp (op, a) -> eval_exp ctx a >>= fun (ctx, a) -> add_ctx @@ eval_un_op ctx op a
   | Var id -> ctx_get_var ctx id >>| fun (var, _) -> ctx, var.value
   | FunctionCall (var, args) ->
     eval_exp ctx var
