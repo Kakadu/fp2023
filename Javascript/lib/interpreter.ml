@@ -158,6 +158,8 @@ let rec print_vvalues ctx ?(str_quote = false) = function
   | _ as t -> return @@ asprintf "Cannot convert '%s' to string" @@ print_type ctx t
 ;;
 
+let print_string (ctx : ctx) str = { ctx with stdout = ctx.stdout ^ str ^ "\n" }
+
 let print ctx = function
   | [ VNumber x ] -> return { ctx with stdout = ctx.stdout ^ Float.to_string x }
   | _ -> ensup ""
@@ -224,7 +226,7 @@ let lex_add ctx ?(replace = false) lex_env_id var =
       { ctx with
         lex_envs =
           IntMap.add
-            ctx.cur_lex_env
+            lex_env_id
             { lex_env with vars = add_or_replace var lex_env.vars }
             ctx.lex_envs
       }
@@ -241,10 +243,11 @@ let get_parent ctx =
 let end_of_block ctx =
   let ret = ctx.vreturn in
   get_lex_env ctx ctx.cur_lex_env
-  >>| fun lex_env ->
+  >>= fun lex_env ->
   match lex_env.creater with
-  | Some x -> { ctx with cur_lex_env = x; vreturn = None }, ret
-  | _ -> ctx, ret
+  | Some x -> return ({ ctx with cur_lex_env = x; vreturn = None }, ret)
+  | _ when ctx.cur_lex_env = 0 -> return (ctx, ret)
+  | _ -> error @@ InternalError "Cannot find the lexical environment creater"
 ;;
 
 let rec in_func ctx lex_env =
@@ -586,22 +589,22 @@ let rec eval_fun ctx f args =
       if is_func obj then return (ctx, obj.obj_type) else etyp "object is not a function"
     | _ -> etyp @@ asprintf "'%s' is not a function" (print_type ctx f)
   in
-  let rec val_to_args ctx = function
-    | a1 :: atl, v1 :: vtl ->
-      lex_add ctx ctx.cur_lex_env { var_id = a1; is_const = false; value = v1 }
-      >>= fun ctx -> val_to_args ctx (atl, vtl)
-    | a1 :: atl, _ ->
-      lex_add ctx ctx.cur_lex_env { var_id = a1; is_const = false; value = VUndefined }
-      >>= fun ctx -> val_to_args ctx (atl, [])
-    | _, _ -> return ctx
-  in
   let valid_and_run ctx scope f =
+    let rec val_to_args ctx = function
+      | a1 :: atl, v1 :: vtl ->
+        lex_add ctx ctx.cur_lex_env { var_id = a1; is_const = false; value = v1 }
+        >>= fun ctx -> val_to_args ctx (atl, vtl)
+      | a1 :: atl, _ ->
+        lex_add ctx ctx.cur_lex_env { var_id = a1; is_const = false; value = VUndefined }
+        >>= fun ctx -> val_to_args ctx (atl, [])
+      | _, _ -> return ctx
+    in
     match f.body with
     | Block x ->
       val_to_args (create_local_ctx ctx f.parent_lex_env scope) (f.args, args)
       >>= fun ctx -> parse_stms ctx x >>| fun (ctx, ret) -> ctx, get_vreturn ret
     | _ ->
-      error (AstError "in top of fun body expected ast, but something else was given")
+      error (AstError "in top of fun body expected Block, but something else was given")
   in
   get_fun
   >>= fun (ctx, obj_t) ->
@@ -623,7 +626,7 @@ and assign ctx a b =
     >>| fun ctx -> ctx, res
   | _ -> ensup ""
 
-(*main expression interpreter*)
+(**main expression interpreter*)
 and eval_exp ctx = function
   | Const x -> return (ctx, const_to_val x)
   | BinOp (Assign, a, b) -> assign ctx a b
@@ -659,7 +662,7 @@ and parse_stm ctx = function
   | Return x ->
     eval_exp ctx x
     <?> "error in return expression"
-    >>= fun (ctx, ret) -> return { ctx with vreturn = Some ret }
+    >>| fun (ctx, ret) -> { ctx with vreturn = Some ret }
   | VarInit x ->
     let eval_for_top_val =
       let create = create_func ctx x.var_identifier in

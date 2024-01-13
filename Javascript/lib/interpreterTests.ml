@@ -5,14 +5,22 @@
 open Javascript_lib
 open Print
 
-(**---------------Expressions tests---------------*)
+(**---------------Return test---------------*)
 
 let%expect_test _ =
   print_return "return 4";
   [%expect {| Programm return: 4 |}]
 ;;
 
+let%expect_test _ =
+  print_return "return 4; return 5;";
+  [%expect {| Programm return: 4 |}]
+;;
+
+(**---------------Expressions tests---------------*)
+
 (*number plus*)
+
 let%expect_test _ =
   print_return "return 4+5";
   [%expect {| Programm return: 9 |}]
@@ -734,6 +742,7 @@ let%expect_test _ =
 ;;
 
 (*unary operators*)
+
 let%expect_test _ =
   print_return "return +4";
   [%expect {| Programm return: 4 |}]
@@ -800,6 +809,7 @@ let%expect_test _ =
 ;;
 
 (*Block tests*)
+
 let%expect_test _ =
   print_return "{ let a; }";
   [%expect {| Programm return: undefined |}]
@@ -896,6 +906,7 @@ let%expect_test _ =
 ;;
 
 (*arrow function*)
+
 let%expect_test _ =
   print_return "return ((b) => b)(4)";
   [%expect {| Programm return: 4 |}]
@@ -994,4 +1005,96 @@ let%expect_test _ =
 let%expect_test _ =
   print_return "let a = 10; let b = 15; let c = 17; return a = b = c";
   [%expect {| Programm return: 17 |}]
+;;
+
+(*lexical env*)
+
+let%expect_test _ =
+  print_return "let a = 10; {a=7} ; return a";
+  [%expect {| Programm return: 7 |}]
+;;
+
+let%expect_test _ =
+  print_return "let a = 10; {a=7} ; {a=8}; return a";
+  [%expect {| Programm return: 8 |}]
+;;
+
+let%expect_test _ =
+  print_return "let a = 10; {a=a+1} ; {a=a+1}; return a";
+  [%expect {| Programm return: 12 |}]
+;;
+
+let%expect_test _ =
+  print_return "let a = 10; function b() {return a=7} ; b();return a;";
+  [%expect {| Programm return: 7 |}]
+;;
+
+let%expect_test _ =
+  print_return
+    "let counter = 0; function a() {counter = counter + 1;}; a(); let b = 10; return b";
+  [%expect {| Programm return: 10 |}]
+;;
+
+let%expect_test _ =
+  print_return
+    "function a() {return counter = counter+1}; let counter = 0; a(); a(); return a()";
+  [%expect {| Programm return: 3 |}]
+;;
+
+let%expect_test _ =
+  print_return
+    "let counter = 0; function a() {return counter = counter+1}; a(); a(); return \
+     counter;";
+  [%expect {| Programm return: 2 |}]
+;;
+
+let%expect_test _ =
+  print_return
+    "let counter = 0;\n\
+    \ function a() {return counter = counter + 1}; \n\
+    \ function b() {return counter = counter + 4};\n\
+    \ a(); b(); return counter;";
+  [%expect {| Programm return: 5 |}]
+;;
+
+let%expect_test _ =
+  print_return
+    "let counter = 0;\n\
+    \ function a() {let counter = 10}; \n\
+    \ function b() {return counter = counter + 4};\n\
+    \ a(); b(); return counter;";
+  [%expect {| Programm return: 4 |}]
+;;
+
+let%expect_test _ =
+  print_return
+    "let counter = 0;\n\
+    \ function a() {counter = 10}; \n\
+    \ function b() {return counter};\n\
+    \ a(); return b();";
+  [%expect {| Programm return: 10 |}]
+;;
+
+let%expect_test _ =
+  print_return
+    "let counter = 0;\n\
+    \ function a() {counter = 10; return (() => {return counter = counter + 1})()}; \n\
+    \ a(); return counter";
+  [%expect {| Programm return: 11 |}]
+;;
+
+let%expect_test _ =
+  print_return
+    "let counter = 0; function a() {counter = counter + 1; counter = counter + 1; }; \
+     a(); return counter";
+  [%expect {| Programm return: 2 |}]
+;;
+
+let%expect_test _ =
+  print_return
+    "function a() {let counter = 0; return ()=>counter = counter+1}; \n\
+    \    let b = a(); \n\
+    \    b(); b();\n\
+    \    return b()";
+  [%expect {| Programm return: 3 |}]
 ;;
