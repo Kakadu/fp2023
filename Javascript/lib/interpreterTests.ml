@@ -963,6 +963,16 @@ let%expect_test _ =
   [%expect {| Programm return: Hi! |}]
 ;;
 
+let%expect_test _ =
+  print_return "let a = { sayHi() {\n    return \"Hi!\"\n  }}; return a.sayHi";
+  [%expect {| Programm return: [Function: sayHi] |}]
+;;
+
+let%expect_test _ =
+  print_return "let a = { sayHi() {\n    return \"Hi!\"\n  }}; return a";
+  [%expect {| Programm return: { sayHi: [Function: sayHi] } |}]
+;;
+
 (*assign*)
 
 let%expect_test _ =
@@ -973,7 +983,7 @@ let%expect_test _ =
 let%expect_test _ =
   print_return "const a = 10; a = 15; return a";
   [%expect
-    {| Error: Interpreter error > error in expression statement > TypeError: Assignment to constant variable. |}]
+    {| Error: Interpreter error > error in expression statement > error in assignment > TypeError: Assignment to constant variable. |}]
 ;;
 
 let%expect_test _ =
@@ -1006,7 +1016,7 @@ let%expect_test _ =
   [%expect {| Programm return: 17 |}]
 ;;
 
-(*lexical env*)
+(**---------------Lexical env---------------*)
 
 let%expect_test _ =
   print_return "let a = 10; {a=7} ; return a";
@@ -1212,7 +1222,7 @@ let%expect_test _ =
     "let a2 = {field2 : 4}; \n    a2[\"__proto\"+\"__\"] = a2\n    return a2.field1";
   [%expect
     {|
-    Error: Interpreter error > error in expression statement > TypeError: Cyclic __proto__ value |}]
+    Error: Interpreter error > error in expression statement > error in assignment > TypeError: Cyclic __proto__ value |}]
 ;;
 
 let%expect_test _ =
@@ -1293,4 +1303,100 @@ let%expect_test "factorial" =
     Factorial of 4 = 24
 
     Programm return: undefined |}]
+;;
+
+(**---------------This---------------*)
+
+let%expect_test _ =
+  print_return "return this";
+  [%expect {|
+    Programm return: {} |}]
+;;
+
+let%expect_test _ =
+  print_return "let a = ()=>{return this}; return a()";
+  [%expect {|
+    Programm return: {} |}]
+;;
+
+let%expect_test _ =
+  print_return "{return this}";
+  [%expect {|
+    Programm return: {} |}]
+;;
+
+let%expect_test _ =
+  print_return "function a() {return this}; return a()";
+  [%expect {|
+    Programm return: undefined |}]
+;;
+
+let%expect_test _ =
+  print_return "let obj = {a : 1, ret_this () {return this}};\n    return obj.ret_this()";
+  [%expect {|
+    Programm return: { a: 1, ret_this: [Function: ret_this] } |}]
+;;
+
+let%expect_test _ =
+  print_return
+    "let obj = {a : 1, ret_this () {return (() => this)()}};\n    return obj.ret_this()";
+  [%expect {|
+    Programm return: { a: 1, ret_this: [Function: ret_this] } |}]
+;;
+
+let%expect_test _ =
+  print_return
+    "let obj = {a : 1, ret_this () {return (() => {{return this}})()}};\n\
+    \    return obj.ret_this()";
+  [%expect {|
+    Programm return: { a: 1, ret_this: [Function: ret_this] } |}]
+;;
+
+let%expect_test _ =
+  print_return
+    "let obj = {a : 1, ret_this () {function b() { return this }; return b()}}\n\
+    \    return obj.ret_this()";
+  [%expect {|
+    Programm return: undefined |}]
+;;
+
+let%expect_test _ =
+  print_return
+    "function b() {return this}\n\
+    \  let obj = {a : 1, ret_this : () => b()};\n\
+    \    return obj.ret_this()";
+  [%expect {|
+    Programm return: undefined |}]
+;;
+
+let%expect_test _ =
+  print_return
+    "function b() {return this}\n\
+    \  let obj = {a : 1, ret_this : b};\n\
+    \    return obj.ret_this()";
+  [%expect {|
+    Programm return: { a: 1, ret_this: [Function: b] } |}]
+;;
+
+let%expect_test _ =
+  print_output
+    "function b() {return this}\n\
+    \  let obj1 = {a : 1, ret_this : b};\n\
+    \  let obj2 = {am : 2, __proto__ : obj1};\n\
+    \  console.log(obj1.ret_this(), obj2.ret_this())";
+  [%expect {|
+    Programm output:
+    { a: 1, ret_this: [Function: b] } { am: 2 }
+
+    Programm return: undefined |}]
+;;
+
+let%expect_test _ =
+  print_return
+    "function b() {return this}\n\
+    \  let obj1 = {a : 1, ret_this : b};\n\
+    \  let obj2 = {am : 2, some_obj : obj1};\n\
+    \  return (obj2.some_obj.ret_this())";
+  [%expect {|
+    Programm return: { a: 1, ret_this: [Function: b] } |}]
 ;;

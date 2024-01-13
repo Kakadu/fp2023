@@ -17,6 +17,11 @@ type program_return =
 
 let print_string (ctx : ctx) str = { ctx with stdout = ctx.stdout ^ str ^ "\n" }
 
+let print_opt f = function
+  | Some x -> "Some: " ^ f x
+  | None -> "None"
+;;
+
 let error err =
   uerror
     (match err with
@@ -124,7 +129,10 @@ let rec print_vvalues ctx ?(str_quote = false) = function
       map
         (fun x -> print_vvalues ctx x.value ~str_quote:true >>| ( ^ ) (x.var_id ^ ": "))
         obj.fields
-      >>| fun fields -> asprintf "{ %s }" (String.concat ", " fields)
+      >>| fun fields ->
+      if List.length fields = 0
+      then "{}"
+      else asprintf "{ %s }" (String.concat ", " fields)
   | _ as t -> return @@ asprintf "Cannot convert '%s' to string" @@ print_type ctx t
 ;;
 
@@ -191,14 +199,18 @@ let print ctx values =
 let first_lex_env = 0
 
 let context_init =
-  let lex_env = { parent = None; creater = None; vars = []; scope = Block } in
+  let global_obj_id = 0 in
+  let global_obj = { proto = VUndefined; fields = []; obj_type = TObject } in
+  let vars = [ { var_id = "this"; is_const = true; value = VObject global_obj_id } ] in
+  let lex_env = { parent = None; creater = None; vars; scope = Block } in
   let id = first_lex_env in
   let ctx =
     { lex_env_count = id + 1
     ; cur_lex_env = id
     ; lex_envs = IntMap.singleton id lex_env
-    ; obj_count = 0
-    ; objs = IntMap.empty
+    ; obj_count = global_obj_id + 1
+    ; objs = IntMap.singleton global_obj_id global_obj
+    ; put_this = None
     ; vreturn = None
     ; stdout = ""
     }
@@ -227,8 +239,14 @@ let context_init =
 ;;
 
 let create_local_ctx ctx parent scope =
+  let vars =
+    match ctx.put_this with
+    | Some int -> [ { var_id = "this"; is_const = true; value = VObject int } ]
+    | None -> []
+  in
+  let ctx = { ctx with put_this = None } in
   let new_lex_env =
-    { parent = Some parent; creater = Some ctx.cur_lex_env; vars = []; scope }
+    { parent = Some parent; creater = Some ctx.cur_lex_env; vars; scope }
   in
   let id = ctx.lex_env_count in
   if id = Int.max_int
@@ -482,23 +500,6 @@ let rec ctx_not_change_bop ctx op a b =
     then bop (to_vstring ctx) a b
     else bop to_vnumber a b
   in
-  let prop_accs () =
-    to_vstring ctx b
-    >>= get_vstring ctx
-    >>= fun str ->
-    let rec proto_find = function
-      | VObject x ->
-        get_obj_ctx ctx x
-        >>= fun obj ->
-        (match get_field_opt str obj.fields with
-         | None -> proto_find obj.proto
-         | Some x -> return x)
-      | _ -> return @@ get_field str proto_obj_fields
-    in
-    match a with
-    | VObject _ as x -> proto_find x
-    | _ -> ensup "reading from not object is not supporting"
-  in
   match op with
   | Add -> add () <?> "error in add operator"
   | Sub -> bop_with_num ( -. ) <?> "error in sub operator"
@@ -527,7 +528,6 @@ let rec ctx_not_change_bop ctx op a b =
   | LogicalOr -> logical_or () <?> "error in logical_and operator"
   | Xor -> bop_with_int ( lxor )
   | Exp -> bop_with_num ( ** ) <?> "error in exp operator"
-  | PropAccs -> prop_accs () <?> "error in property accession"
   | _ as a -> ensup @@ asprintf "operator %a not supported yet" pp_bin_op a
 ;;
 
@@ -546,10 +546,14 @@ let ctx_get_var ctx id =
     match find_in_vars id lex_env.vars with
     | Some a -> return (a, lex_id)
     | None ->
-      (match lex_env.parent with
-       | Some parent -> go parent
-       | None ->
-         error (ReferenceError (asprintf "Cannot access '%s' before initialization" id)))
+      (*for correct work if function doesn't see this*)
+      if id = "this" && lex_env.scope = Function
+      then return ({ var_id = id; is_const = true; value = VUndefined }, lex_id)
+      else (
+        match lex_env.parent with
+        | Some parent -> go parent
+        | None ->
+          error (ReferenceError (asprintf "Cannot access '%s' before initialization" id)))
   in
   go ctx.cur_lex_env
 ;;
@@ -592,7 +596,7 @@ let rec eval_fun ctx f args =
     error @@ InternalError "get unexpected object type, expect function, but get TObject"
 
 and ctx_change_bop ctx op a b =
-  let assign =
+  let assign () =
     let obj_assign obj prop =
       let get_obj = function
         | VObject x -> get_obj_ctx ctx x >>| fun obj -> x, obj
@@ -639,12 +643,43 @@ and ctx_change_bop ctx op a b =
     | BinOp (PropAccs, obj, prop) -> obj_assign obj prop
     | _ -> error @@ SyntaxError "Invalid left-hand side in assignment"
   in
+  let prop_accs () =
+    eval_exp ctx a
+    >>= fun (ctx, a) ->
+    match a with
+    | VObject id ->
+      (*to pass this to methods*)
+      eval_exp { ctx with put_this = Some id } b
+      >>= fun (ctx, b) ->
+      to_vstring { ctx with put_this = None } b
+      >>= get_vstring ctx
+      >>= fun str ->
+      let rec proto_find = function
+        | VObject x ->
+          get_obj_ctx ctx x
+          >>= fun obj ->
+          (match get_field_opt str obj.fields with
+           | None -> proto_find obj.proto
+           | Some x -> return x)
+        | _ -> return @@ get_field str proto_obj_fields
+      in
+      add_ctx ctx @@ proto_find (VObject id)
+    | _ -> ensup "reading from not object is not supporting"
+  in
   let add_ctx = add_ctx ctx in
   match op with
-  | Assign -> assign
+  | Assign -> assign () <?> "error in assignment"
+  | PropAccs -> prop_accs () <?> "error in property accession"
   | _ ->
     both_ext eval_exp ctx a b
     >>= fun (ctx, (x, y)) -> add_ctx @@ ctx_not_change_bop ctx op x y
+
+and eval_for_top_val ctx name =
+  let create = create_func ctx name in
+  function
+  | AnonFunction (args, vals) -> create args vals tfunction
+  | ArrowFunction (args, vals) -> create args vals tarrowfun
+  | _ as ast -> eval_exp ctx ast
 
 (**main expression interpreter*)
 and eval_exp ctx =
@@ -666,11 +701,13 @@ and eval_exp ctx =
   | ObjectDef x ->
     fold_left_map
       (fun ctx (key, value) ->
-        both_ext eval_exp ctx key value
-        >>= fun (ctx, (key, value)) ->
+        eval_exp ctx key
+        >>= fun (ctx, key) ->
         to_vstring ctx key
         >>= get_vstring ctx
-        >>| fun id -> ctx, { var_id = id; is_const = false; value })
+        >>= fun id ->
+        eval_for_top_val ctx id value
+        >>| fun (ctx, value) -> ctx, { var_id = id; is_const = false; value })
       ctx
       x
     >>= fun (ctx, fields) -> add_obj ctx fields TObject
@@ -684,14 +721,7 @@ and parse_stm ctx = function
     <?> "error in return expression"
     >>| fun (ctx, ret) -> { ctx with vreturn = Some ret }
   | VarInit x ->
-    let eval_for_top_val =
-      let create = create_func ctx x.var_identifier in
-      function
-      | AnonFunction (args, vals) -> create args vals tfunction
-      | ArrowFunction (args, vals) -> create args vals tarrowfun
-      | _ as ast -> eval_exp ctx ast
-    in
-    eval_for_top_val x.value
+    eval_for_top_val ctx x.var_identifier x.value
     <?> "error in var declaration expression"
     >>= fun (ctx, v) ->
     lex_add
