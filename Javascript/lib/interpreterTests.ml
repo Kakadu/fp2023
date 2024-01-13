@@ -1164,3 +1164,65 @@ let%expect_test _ =
 
     Programm return: undefined |}]
 ;;
+
+let%expect_test _ =
+  print_return
+    "let a1 = {field1 : 10}; let b1 = {field1 : 10};\n\
+    \    let a2 = {__proto__ : a1, field2 : 6, __proto__ : b1}; \n\
+    \    return a2.field1";
+  [%expect {|
+    Error: Interpreter error > error in var declaration expression > SyntaxError: Duplicate __proto__ fields are not allowed in object literals |}]
+;;
+
+let%expect_test _ =
+  print_return
+    "let a1 = {field1 : 10}; \n\
+    \    let a2 = {field2 : 4}; \n\
+    \    a2.__proto__ = a1\n\
+    \    return a2.field1";
+  [%expect {|
+    Programm return: 10 |}]
+;;
+
+(**---------------Object field assign---------------*)
+
+let%expect_test _ =
+  print_return
+    "let a1 = {field1 : 10}; \n\
+    \    let a2 = {field2 : 4}; \n\
+    \    a2.__proto__ = a1\n\
+    \    return a2.field1";
+  [%expect {|
+    Programm return: 10 |}]
+;;
+
+let%expect_test _ =
+  print_return
+    "let a2 = {field2 : 4}; \n    a2[\"__proto\"+\"__\"] = a2\n    return a2.field1";
+  [%expect {|
+    Error: Interpreter error > error in expression statement > TypeError: Cyclic __proto__ value |}]
+;;
+
+let%expect_test _ =
+  print_return "let a2 = {field2 : 4}; \n    a2[\"field\"+2] = 10\n    return a2.field2";
+  [%expect {|
+    Programm return: 10 |}]
+;;
+
+let%expect_test _ =
+  print_return "let a2 = {field2 : 4}; \n    a2[4] = 10\n    return a2[4]";
+  [%expect {|
+    Programm return: 10 |}]
+;;
+
+let%expect_test _ =
+  print_output
+    "let a1 = {field1 : 5}\n\
+    \  let a2 = {field2 : 4, [\"__proto__\"+\"\"] : a1};\n\
+    \  console.log(a2.field1, a2.field1 = 10, a1.field1, a2.field1)";
+  [%expect {|
+    Programm output:
+    5 10 5 10
+
+    Programm return: undefined |}]
+;;

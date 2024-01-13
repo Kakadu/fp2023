@@ -146,11 +146,12 @@ let get_lex_env ctx id =
   | _ -> error @@ ReferenceError (asprintf "cannot find lexical env with id = %i" id)
 ;;
 
+let rec add_or_replace var = function
+  | a :: b -> if a.var_id = var.var_id then var :: b else a :: add_or_replace var b
+  | _ -> [ var ]
+;;
+
 let lex_add ctx ?(replace = false) lex_env_id var =
-  let rec add_or_replace var = function
-    | a :: b -> if a.var_id = var.var_id then var :: b else a :: add_or_replace var b
-    | _ -> [ var ]
-  in
   get_lex_env ctx lex_env_id
   >>= fun lex_env ->
   match find_in_vars var.var_id lex_env.vars with
@@ -481,7 +482,7 @@ let rec eval_bin_op ctx op a b =
     then bop (to_vstring ctx) a b
     else bop to_vnumber a b
   in
-  let rec prop_accs () =
+  let prop_accs () =
     to_vstring ctx b
     >>= get_vstring ctx
     >>= fun str ->
@@ -518,8 +519,8 @@ let rec eval_bin_op ctx op a b =
   | LessEqual -> less_eq () <?> "error in less_equal operator"
   | GreaterThan -> eval_bin_op ctx LessThan b a <?> "error in greater_than operator"
   | LessThan -> less_than () <?> "error in less_than operator"
-  | BitwiseAnd -> bop_with_int ( land )
-  | BitwiseOr -> bop_with_int ( lor )
+  | BitwiseAnd -> bop_with_int ( land ) <?> "error in bitwise and"
+  | BitwiseOr -> bop_with_int ( lor ) <?> "error in bitwise or"
   | LogicalAnd -> logical_and () <?> "error in logical_and operator"
   | LogicalOr -> logical_or () <?> "error in logical_and operator"
   | Xor -> bop_with_int ( lxor )
@@ -589,15 +590,51 @@ let rec eval_fun ctx f args =
     error @@ InternalError "get unexpected object type, expect function, but get TObject"
 
 and assign ctx a b =
-  eval_exp ctx b
-  >>= fun (ctx, res) ->
+  let obj_assign obj prop =
+    let get_obj = function
+      | VObject x -> get_obj_ctx ctx x >>| fun obj -> x, obj
+      | _ -> error @@ SyntaxError "Invalid or unexpected token"
+    in
+    fold_left_map eval_exp ctx [ obj; prop; b ]
+    >>= function
+    | ctx, [ obj_val; prop; b ] ->
+      get_obj obj_val
+      >>= fun (id, obj) ->
+      to_vstring ctx prop
+      >>= get_vstring ctx
+      >>= fun prop ->
+      let get_new_obj =
+        match prop with
+        | "__proto__" ->
+          if obj_val = b
+          then etyp "Cyclic __proto__ value"
+          else return { obj with proto = b }
+        | _ ->
+          (match find_in_vars prop obj.fields with
+           | Some x when x.is_const ->
+             print_vvalues ctx obj_val
+             >>= fun str ->
+             etyp
+             @@ asprintf "Cannot assign to read only property '%s' of %s" x.var_id str
+           | _ ->
+             let fields =
+               add_or_replace { var_id = prop; is_const = false; value = b } obj.fields
+             in
+             return { obj with fields })
+      in
+      get_new_obj >>| fun obj -> { ctx with objs = IntMap.add id obj ctx.objs }, b
+    | _ -> error @@ InternalError "Error in assignment to object field"
+  in
   match a with
   | Var id ->
+    eval_exp ctx b
+    >>= fun (ctx, res) ->
     ctx_get_var ctx id
     >>= fun (_, lex_id) ->
     lex_add ctx ~replace:true lex_id { var_id = id; is_const = false; value = res }
     >>| fun ctx -> ctx, res
-  | _ -> ensup ""
+  | BinOp (PropAccs, obj, prop) -> obj_assign obj prop
+  | _ -> error @@ SyntaxError "Invalid left-hand side in assignment"
 
 (**main expression interpreter*)
 and eval_exp ctx =
