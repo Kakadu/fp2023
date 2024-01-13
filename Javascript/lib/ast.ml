@@ -15,7 +15,23 @@ type bin_op =
   | Div
   | Equal
   | NotEqual
+  | StrictEqual
+  | StrictNotEqual
   | Assign
+  | Rem
+  | Exp
+  | GreaterThan
+  | GreaterEqual
+  | LessThan
+  | LessEqual
+  | LogicalAnd
+  | LogicalOr
+  | BitwiseAnd
+  | BitwiseOr
+  | LogicalShiftLeft
+  | LogicalShiftRight
+  | UnsignedShiftRight
+  | Xor
 [@@deriving show { with_path = false }]
 
 type typename =

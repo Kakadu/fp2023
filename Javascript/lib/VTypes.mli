@@ -14,7 +14,7 @@ type vt_error =
   | TypeError of string
   | SyntaxError of string
 
-type fun_ctx =
+type fun_ctx = 
   { args : string list
   ; body : statement
   }
