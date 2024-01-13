@@ -14,6 +14,11 @@ open Monads.Eval_Monad
 
 (* TODO: Провести тесты на факториале *)
 
+let is_assignable = function
+  | IConst x -> return_n (IConst x)
+  | _ -> fail (Runtime_error "There isn't a assignable value")
+;;
+
 let is_env_const = function
   | IConst x -> return_n x
   | _ -> fail (Runtime_error "There isn't a calculated value")
@@ -116,15 +121,8 @@ let ret_char x = return_n (create_val (Char_v x))
 let get_inst x = is_not_null_const_v x >>= is_inst
 let ret_inst x = return_n (create_val (Instance_v x))
 
-let m_eval_ eval_st _ lenv ad args = function
-  | IMethod (sign, body) ->
-    let prms = get_params_id sign.m_params in
-    run_method sign.m_type prms args ad lenv body eval_st
-  | IConstructor _ -> fail (Constructor_error "Trying to call a constructor without new")
-;;
-
-let eval_instrs_ f e args lenv eval_st e_expr =
-  let f_new = f eval_st e_expr lenv in
+let eval_instrs_ f e args lenv e_stm e_expr =
+  let f_new = f e_stm e_expr lenv in
   match e with
   | EIdentifier id ->
     let cur_ad = read_self_ad in
@@ -136,9 +134,16 @@ let eval_instrs_ f e args lenv eval_st e_expr =
   | _ -> fail (Runtime_error "Impossible method name")
 ;;
 
-let eval_method e lenv e_st e_expr args = eval_instrs_ m_eval_ e args lenv e_st e_expr
+let m_eval_ e_stm _ lenv ad args = function
+  | IMethod (sign, body) ->
+    let prms = get_params_id sign.m_params in
+    run_method sign.m_type prms args ad lenv body e_stm
+  | IConstructor _ -> fail (Constructor_error "Trying to call a constructor without new")
+;;
 
-let c_eval_ eval_st e_expr lenv ad args = function
+let eval_method e lenv e_stm e_expr args = eval_instrs_ m_eval_ e args lenv e_stm e_expr
+
+let c_eval_ e_stm e_expr lenv ad args = function
   | IMethod _ -> fail (Constructor_error "'New' can be used only with constructor")
   | IConstructor (sign, body) ->
     let prms = get_params_id sign.con_params in
@@ -147,14 +152,14 @@ let c_eval_ eval_st e_expr lenv ad args = function
     in
     cl_decl
     >>= alloc_instance e_expr
-    >>= fun new_ad -> run_method Void prms args ad lenv body eval_st *> return_n new_ad
+    >>= fun new_ad -> run_method Void prms args ad lenv body e_stm *> return_n new_ad
 ;;
 
-let eval_constructor e lenv e_st e_expr args =
-  eval_instrs_ c_eval_ e args lenv e_st e_expr
+let eval_constructor e lenv e_stm e_expr args =
+  eval_instrs_ c_eval_ e args lenv e_stm e_expr
 ;;
 
-let eval_un_op un_op res lenv_kernel e_st e_expr =
+let eval_un_op un_op res lenv_kernel e_stm e_expr =
   let get_res = e_expr res in
   match un_op with
   | UMinus -> get_res >>= update_int ( ~- )
@@ -164,7 +169,7 @@ let eval_un_op un_op res lenv_kernel e_st e_expr =
      | EMethod_invoke (e, Args args) ->
        let args = map_left e_expr args in
        args
-       >>= eval_constructor e lenv_kernel e_st e_expr
+       >>= eval_constructor e lenv_kernel e_stm e_expr
        >>= fun ad -> return_n @@ create_inst ad
      | _ -> fail (Constructor_error "'New' can be used only with constructor"))
 ;;
@@ -180,9 +185,6 @@ let eval_bin_op op e1 e2 e_expr lenv =
   (* bool *)
   let bool_op op_t = _op get_bool op_t in
   let bool_f op r1 r2 = return_n (op r1 r2) >>= ret_bool in
-  (* inst *)
-  let inst_op op_t = _op get_inst op_t in
-  let inst_bool_f op (Link r1) (Link r2) = return_n (op r1 r2) >>= ret_bool in
   (* --- *)
   let div_f op r1 = function
     | 0 -> fail Division_by_zero
@@ -220,7 +222,7 @@ let eval_bin_op op e1 e2 e_expr lenv =
   | NotEqual -> eq_op @@ eq_f (fun r1 r2 -> not (equal_iconst r1 r2)) (* != *)
   | Equal -> eq_op @@ eq_f equal_iconst (* == *)
   | Assign ->
-    let res = e_expr e2 >>= is_env_const >>= fun x -> return_n @@ to_const x in
+    let res = e_expr e2 >>= is_assignable in
     res
     >>= fun x ->
     (match e1 with
@@ -232,7 +234,7 @@ let eval_bin_op op e1 e2 e_expr lenv =
     *> res
 ;;
 
-let eval_expr expr eval_st lenv_kernel =
+let eval_expr expr eval_stm lenv_kernel =
   let rec helper = function
     | EConst x -> to_const @@ to_init @@ val_to_iconst x |> return_n
     | EIdentifier id -> read_local_el id
@@ -240,12 +242,57 @@ let eval_expr expr eval_st lenv_kernel =
     | EMethod_invoke (e, Args args) ->
       let args = map_left helper args in
       args
-      >>= eval_method e lenv_kernel eval_st None
+      >>= eval_method e lenv_kernel eval_stm None
       >>= (function
       | Some x -> return_n x
       | None -> fail (Return_error "Void methods can't be used with assignable types"))
-    | EUn_op (un, e) -> eval_un_op un e lenv_kernel eval_st helper
+    | EUn_op (un, e) -> eval_un_op un e lenv_kernel eval_stm helper
     | EBin_op (bin, e1, e2) -> eval_bin_op bin e1 e2 helper lenv_kernel
   in
   helper expr
+;;
+
+let eval_stm_expr e_expr e_stm lenv_kernel = function
+  | EMethod_invoke (e, Args args) ->
+    let args = map_left e_expr args in
+    args
+    >>= eval_method e lenv_kernel e_stm None
+    >>= (function
+    | Some _ -> fail (Return_error "As statement can be used only 'Void' method")
+    | None -> return_n ())
+  | EBin_op (op, e1, e2) -> e_expr (EBin_op (op, e1, e2)) *> return_n ()
+  | _ -> fail (System_error "Trying to use an expression as a statement")
+;;
+
+let eval_statement stm lenv_kernel =
+  let rec helper stm_ =
+    let eval_expr expr = eval_expr expr helper lenv_kernel in
+    match stm_ with
+    | SExpr e -> eval_stm_expr eval_expr helper lenv_kernel e
+    | SDecl (Var_decl (_, id), e_opt) ->
+      (match e_opt with
+       | None -> add_local_el id (IConst Not_init)
+       | Some e -> eval_expr e >>= is_assignable >>= add_local_el id)
+    | SReturn e_opt ->
+      (match e_opt with
+       | None -> return_r None
+       | Some e -> eval_expr e >>= is_assignable >>= fun x -> return_r (Some x))
+    | Steps stm_l -> local @@ iter_left helper stm_l
+    | SIf_else (e, stm, stm_opt) ->
+      eval_expr e
+      >>= get_bool
+      >>= (function
+      | true -> helper stm
+      | false ->
+        (match stm_opt with
+         | None -> return_n ()
+         | Some stm -> helper stm))
+    (* | SBreak -> *)
+    (* | SThrow e -> *)
+    (* | SWhile (e, stm) -> *)
+    (* | SFor for_sign -> *)
+    (* | STry_catch_fin tcf_sign -> *)
+    | _ -> fail (Return_error "TODO: REMOVE")
+  in
+  helper stm
 ;;

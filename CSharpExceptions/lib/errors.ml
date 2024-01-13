@@ -21,6 +21,7 @@ type error =
   | Constructor_error of string
   | Division_by_zero
   | Methods_cannot_be_assignable
+  | System_error of string
   (*  *)
   | Double_definition_of of ident
   | User_exception of address
