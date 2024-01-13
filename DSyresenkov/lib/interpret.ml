@@ -112,13 +112,13 @@ module Interpret (M : MONAD_FAIL) = struct
 
     let matched a = Matched a
     let not_matched = NotMatched
-    let fail_match err = Failed err
+    let fail err = Failed err
 
     let ( >>= ) a f =
       match a with
       | Matched v -> f v
       | NotMatched -> not_matched
-      | Failed err -> fail_match err
+      | Failed err -> fail err
     ;;
 
     let ( let* ) = ( >>= )
@@ -129,13 +129,13 @@ module Interpret (M : MONAD_FAIL) = struct
         | PWild, _ -> matched Env.empty
         | PEmpty, VList [] -> matched Env.empty
         | PEmpty, VList _ -> not_matched
-        | PEmpty, _ -> fail_match IncorrectType
+        | PEmpty, _ -> fail IncorrectType
         | PConst (CInt x), VInt v when x = v -> matched Env.empty
         | PConst (CInt _), VInt _ -> not_matched
         | PConst (CBool x), VBool v when x = v -> matched Env.empty
         | PConst (CBool _), VBool _ -> not_matched
         | PConst CUnit, VUnit -> matched Env.empty
-        | PConst _, _ -> fail_match IncorrectType
+        | PConst _, _ -> fail IncorrectType
         | PVar id, v ->
           let env = Env.singleton (id, v) in
           matched env
@@ -152,7 +152,7 @@ module Interpret (M : MONAD_FAIL) = struct
           in
           let env = Env.add env3 (Env.add env2 env1) in
           matched env
-        | PTuple _, _ -> fail_match IncorrectType
+        | PTuple _, _ -> fail IncorrectType
         | PCons (p1, p2, ps), VList vs ->
           let ps, pl =
             match List.rev ps with
@@ -184,7 +184,7 @@ module Interpret (M : MONAD_FAIL) = struct
               matched env)
           in
           matched env
-        | _ -> fail_match IncorrectType
+        | _ -> fail IncorrectType
       in
       helper
     ;;
