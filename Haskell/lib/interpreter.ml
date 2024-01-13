@@ -1,4 +1,7 @@
-open Parser
+(** Copyright 2023-2024, Danil P *)
+
+(** SPDX-License-Identifier: LGPL-3.0-or-later *)
+
 open Ast
 open Format
 
@@ -8,6 +11,7 @@ module type MONAD = sig
     | Thunk of (unit -> ('a, 'e) t)
 
   val return : 'a -> ('a, 'e) t
+  val force : ('a, 'e) t -> ('a, 'e) t
   val ( >>= ) : ('a, 'e) t -> ('a -> ('b, 'e) t) -> ('b, 'e) t
 
   module Syntax : sig
@@ -33,9 +37,16 @@ module LAZY_RESULT : MONAD_ERROR = struct
   let fail err = Result (Error err)
   let thunk t = Thunk t
 
+  let force mx =
+    match mx with
+    | Result _ -> mx
+    | Thunk thunk -> thunk ()
+  ;;
+
   let rec ( >>= ) mx f =
     match mx with
     | Result (Ok x) -> f x
+    (* todo: something seems wrong, look up OCaml's result.ml*)
     | Result (Error e) -> Result (Error e)
     | Thunk thunk -> thunk () >>= f
   ;;
@@ -45,18 +56,17 @@ module LAZY_RESULT : MONAD_ERROR = struct
   end
 end
 
-module Eval (M : MONAD_ERROR) : sig end = struct
-  open M
-  open M.Syntax
-
-  (*TODO: too coupled, very cringe*)
-
-  type environment = (string, (value, err) t) Hashtbl.t
+module EnvTypes (M : MONAD_ERROR) = struct
+  type res = (value, err) M.t
+  and environment = (string, res) Hashtbl.t
 
   and value =
     | ValInt of int
     | ValBool of bool
     | ValString of string
+    | ValChar of char
+    | ValNil
+    | ValList of res * res
     | ValFun of string * expr * environment
 
   and err =
@@ -66,29 +76,45 @@ module Eval (M : MONAD_ERROR) : sig end = struct
     | RuntimeError of string
     | DivisionByZeroError
     | EvalError of value * value
+    | NonExhaustivePatterns
+end
+
+module Env (M : MONAD_ERROR) : sig
+  include module type of EnvTypes (M)
+
+  val pp_value : formatter -> value -> unit
+  val pp_environment : formatter -> environment -> unit
+  val pp_value_t : formatter -> (value, err) M.t -> unit
+end = struct
+  open M
+  include EnvTypes (M)
 
   let rec pp_value fmt = function
-    | ValInt n -> Format.fprintf fmt "ValInt %d" n
-    | ValBool b -> Format.fprintf fmt "ValBool %b" b
-    | ValFun (param, _body, _env) ->
-      (* Just printing the parameter and indicating a function *)
-      Format.fprintf fmt "Function(%s)" param
-  ;;
+    | ValInt n -> fprintf fmt "int %d" n
+    | ValBool b -> fprintf fmt "bool %b" b
+    | ValString s -> fprintf fmt "string %s" s
+    | ValChar c -> fprintf fmt "char %c" c
+    | ValNil -> printf "[]"
+    | ValList (hd, tl) ->
+      fprintf fmt "[";
+      pp_print_list
+        ~pp_sep:(fun fmt () -> fprintf fmt ", ")
+        pp_value_t
+        fmt
+        (force hd :: transform tl);
+      fprintf fmt "]"
+    | ValFun (_param, _body, _env) -> fprintf fmt "<fun>"
 
-  type success_result_item = string * value
-  type success_result = success_result_item list
+  (* very inefficient *)
+  and transform = function
+    | Result (Ok (ValList (hd, nil))) when force nil = Result (Ok ValNil) ->
+      force hd :: []
+    | Result (Ok (ValList (hd, tl))) -> force hd :: transform tl
+    | Result (Ok ValNil) -> []
+    | Thunk t -> transform (t ())
+    | _ -> failwith "error"
 
-  let pp_success_result_item fmt item =
-    let item_name, item_value = item in
-    fprintf fmt "%S: %a" item_name pp_value item_value
-  ;;
-
-  let rec pp_success_result fmt = function
-    | [] -> ()
-    | h :: tl -> fprintf fmt "%a\n%a" pp_success_result_item h pp_success_result tl
-  ;;
-
-  let pp_err fmt = function
+  and pp_err fmt = function
     | NotInScopeError str -> fprintf fmt "Not in scope: %S" str
     | ValueTypeError err_val -> fprintf fmt "ValueTypeError: %a" pp_value err_val
     | TypeError err_expr -> fprintf fmt "TypeError: %S" err_expr
@@ -96,35 +122,33 @@ module Eval (M : MONAD_ERROR) : sig end = struct
     | DivisionByZeroError -> fprintf fmt "DivisionByZeroError"
     | EvalError (val1, val2) ->
       fprintf fmt "EvalError: %a # %a" pp_value val1 pp_value val2
-  ;;
+    | NonExhaustivePatterns -> printf "Non-exhausitve patterns"
 
-  let rec pp_value_t fmt = function
+  and pp_value_t fmt = function
     | Result (Ok x) -> pp_value fmt x
     | Result (Error err) -> pp_err fmt err
     | Thunk t -> t () |> pp_value_t fmt
-  ;;
 
-  let pp_environment fmt env =
-    let bindings = ref [] in
-    Hashtbl.iter (fun key value -> bindings := (key, value) :: !bindings) env;
-    let pp_binding fmt (key, value) =
-      Format.fprintf fmt "%s -> %a" key pp_value_t value
-    in
-    Format.fprintf fmt "{ ";
-    Format.pp_print_list
-      ~pp_sep:(fun fmt () -> Format.fprintf fmt "; ")
-      pp_binding
-      fmt
-      !bindings;
-    Format.fprintf fmt " }"
+  and pp_environment fmt env =
+    Hashtbl.iter (fun key value -> fprintf fmt "%s => %a \n" key pp_value_t value) env
   ;;
+end
 
+module Eval (M : MONAD_ERROR) : sig
+  val interpret : prog -> unit
+end = struct
+  open M
+  open M.Syntax
+  open Env (M)
+
+  (*TODO: too coupled, very cringe*)
   let rec eval env expr =
     match expr with
     | ExprBinOp (op, e1, e2) ->
-      let* e1' = eval env e1 in
-      let* e2' = eval env e2 in
-      force_binop e1' e2' op
+      thunk (fun () ->
+        let* e1' = eval env e1 in
+        let* e2' = eval env e2 in
+        force_binop e1' e2' op)
     | ExprVar x ->
       (match Hashtbl.find_opt env x with
        | Some v -> v
@@ -133,7 +157,8 @@ module Eval (M : MONAD_ERROR) : sig end = struct
       (match lit with
        | LitInt n -> thunk (fun () -> return (ValInt n))
        | LitBool b -> thunk (fun () -> return (ValBool b))
-       | LitString s -> thunk (fun () -> return (ValString s)))
+       | LitString s -> thunk (fun () -> return (ValString s))
+       | LitChar s -> thunk (fun () -> return (ValChar s)))
     | ExprIf (cond, then_expr, else_expr) ->
       thunk (fun () ->
         let* cond_val = eval env cond in
@@ -153,63 +178,84 @@ module Eval (M : MONAD_ERROR) : sig end = struct
           Hashtbl.add local_env param arg;
           eval local_env body
         | _ -> fail @@ TypeError "Application to a non-function")
-  (* | ExprVar x -> 
-      (match Hashtbl.find_opt env x with
-        | Some v -> return v
-        | None -> fail @@ NotInScopeError x)
-    | ExprLit LitInt _ as n -> return n
-    | ExprLit LitBool _ as b -> return b 
-    | ExprFunc (PatVar param, body) as f -> return f
-    | ExprApp (f, arg) ->
-      let* f_val = force_lazy env f in
-      let* arg_val = force_lazy env arg in
-      (match f_val with
-        | ValFun (param, body, f_env) ->
-          let local_env = Hashtbl.copy f_env in
-          Hashtbl.add local_env param arg_val;
-          force local_env body
-        | _ -> fail @@ TypeError "Application to a non-function")
-    | ExprIf (cond, then_expr, else_expr) ->
-      let* cond_val = force env cond in
-      (match cond_val with
-        | ValBool true -> force env then_expr
-        | ValBool false -> force env else_expr
-        | _ -> fail @@ TypeError "Condition in if-expression is not a boolean") *)
+    | ExprNil -> thunk (fun () -> return ValNil)
+    | ExprCons (hd, tl) ->
+      let hd_t = eval env hd in
+      let tl_t = eval env tl in
+      thunk (fun () -> return (ValList (hd_t, tl_t)))
+      (* todo: match pattern*)
+    | ExprFunc (PatVar id, expr) ->
+      thunk (fun () -> return (ValFun (id, expr, Hashtbl.copy env)))
+    | _ -> fail @@ TypeError "DSdasda"
 
-  (* todo: move thunk to functino call *)
   and force_binop l r op =
     match l, r, op with
-    | ValInt x, ValInt y, Add -> thunk (fun () -> return (ValInt (x + y)))
-    | ValInt x, ValInt y, Sub -> thunk (fun () -> return (ValInt (x - y)))
-    | ValInt x, ValInt y, Mul -> thunk (fun () -> return (ValInt (x * y)))
-  (* | ValInt x, ValInt y, Div ->
-        if y = 0 then fail Division_by_zero else return (ValInt (x / y))
-      | ValInt x, ValInt y, Eq -> return (ValBool (x = y))
-      | ValInt x, ValInt y, Neq -> return (ValBool (x != y))
-      | ValInt x, ValInt y, Leq -> return (ValBool (x <= y))
-      | ValInt x, ValInt y, Lt -> return (ValBool (x < y))
-      | ValInt x, ValInt y, Geq -> return (ValBool (x >= y))
-      | ValInt x, ValInt y, Gt -> return (ValBool (x > y))
-      | ValBool x, ValBool y, And -> return (ValBool (x && y))
-      | ValBool x, ValBool y, Or -> return (ValBool (x || y))
-      | ValBool x, ValBool y, Eq -> return (ValBool (x = y))
-      | ValBool x, ValBool y, Neq -> return (ValBool (x != y))
-      | ValString x, ValString y, Eq -> return (ValBool (x = y))
-      | ValString x, ValString y, Neq -> return (ValBool (x <> y))
-      | Undefined, _, _ | _, Undefined, _ -> fail @@ Unbound "name" *)
+    | ValInt x, ValInt y, Add -> return (ValInt (x + y))
+    | ValInt x, ValInt y, Sub -> return (ValInt (x - y))
+    | ValInt x, ValInt y, Mul -> return (ValInt (x * y))
+    | ValInt x, ValInt y, Div ->
+      if y = 0 then fail DivisionByZeroError else return (ValInt (x / y))
+    | ValBool x, ValBool y, And -> return (ValBool (x && y))
+    | ValBool x, ValBool y, Or -> return (ValBool (x || y))
+    | l, r, op ->
+      let rec compare l r =
+        match l, r with
+        | ValInt _, ValInt _
+        | ValBool _, ValBool _
+        | ValString _, ValString _
+        | ValChar _, ValChar _ -> return (Base.Poly.compare l r)
+        | ValList (hd1, tl1), ValList (hd2, tl2) ->
+          let* hd1 = hd1 in
+          let* hd2 = hd2 in
+          let* res = compare hd1 hd2 in
+          (match res, l with
+           | 0, ValList _ ->
+             let* tl1 = tl1 in
+             let* tl2 = tl2 in
+             compare tl1 tl2
+           | _ -> return res)
+      in
+      let* compare_args = compare l r in
+      (match op with
+       | Eq -> return (ValBool (compare_args = 0))
+       | Neq -> return (ValBool (compare_args != 0))
+       | Lt -> return (ValBool (compare_args = -1))
+       | Leq -> return (ValBool (compare_args < 1))
+       | Gt -> return (ValBool (compare_args = 1))
+       | _ -> return (ValBool (compare_args > -1)))
+  (* | Undefined, _, _ | _, Undefined, _ -> fail @@ Unbound "name" *)
   (* | _ -> fail (Incorrect_force (EBinOp (op, l, r))) *)
 
-  and eval_decl env d =
-    match d with
-    | DeclLet (pat, e) ->
-      let val_e = eval env e in
-      match_pattern env pat val_e
+  and eval_decl env (DeclLet (pat, e)) =
+    let val_e = eval env e in
+    match_pattern env pat val_e
 
   and match_pattern env pat value =
     match pat with
     | PatVar x ->
-      Hashtbl.replace env x value;
-      env
+      (match Hashtbl.find_opt env x with
+       | Some _ ->
+         (* todo: need to compare types *)
+         (* replace bad *)
+         Hashtbl.replace env x value;
+         env
+       | None ->
+         (* todo: прочиттать про add, мб полезно *)
+         Hashtbl.add env x value;
+         env)
+    | PatCons (hd1, tl1) ->
+      (match force value with
+       | Result (Ok (ValList (hd2, tl2))) ->
+         let env = match_pattern env hd1 hd2 in
+         match_pattern env tl1 tl2
+       | _ -> failwith "errOr")
+  ;;
+
+  let eval_prog env p = List.fold_left eval_decl env p
+
+  let interpret p =
+    let env = Hashtbl.create 69 in
+    Format.printf "%a" pp_environment (eval_prog env p)
   ;;
 
   (* | PInt n ->
@@ -221,110 +267,20 @@ module Eval (M : MONAD_ERROR) : sig end = struct
      | ValBool m when m = b -> return ()
      | _ -> fail "Pattern match failure") *)
 
-  let test_expr =
-    DeclLet
-      ( PatVar "yx"
-      , ExprIf
-          ( ExprLit (LitBool false)
-          , ExprLit (LitInt 45)
-          , ExprBinOp (Add, ExprLit (LitInt 70), ExprLit (LitInt 60)) ) )
-  ;;
-
   let pp_infer e =
     match e with
     | Ok value -> Format.printf "%a" pp_value value
   ;;
 
-  (*
-     let run () =
-     let env = Hashtbl.create 10 in
-     match eval_decl env test_expr with
-     | Ok e -> pp_infer e
-     | Error err -> print_endline "error"
+  (* let interpret p =
+     match eval_prog p with
+     | Ok res -> Format
+
+     let infer e =
+     match run_prog e with
+     | Ok ty -> Format.printf "%a" pp_program ty
+     | Error err -> Format.printf "%a" pp_error err
      ;; *)
-
-  let run () =
-    let env = Hashtbl.create 10 in
-    Format.printf "%a" pp_environment (eval_decl env test_expr)
-  ;;
-
-  let () = run ()
 end
 
 module Interpret = Eval (LAZY_RESULT)
-
-(* type runtime_env = (string * value) list
-
-   let rec lookup (env : runtime_env) (x : string) : value =
-   match env with
-   | [] -> failwith ("Unbound variable: " ^ x)
-   | (name, value) :: _ when name = x -> value
-   | _ :: tail -> lookup tail x
-
-   let extend (env : runtime_env) (x : string) (v : value) : runtime_env =
-   (x, v) :: env *)
-
-(* let rec force env = function
-   | ExprVar x ->
-   begin match Hashtbl.find_opt env x with
-   | Some thunk -> thunk ()
-   | None -> error ("Unbound variable: " ^ x)
-   end
-   | ExprLit LitInt n -> return (VInt n)
-   | ExprLit LitBool b -> return (VBool b)
-   | ExprFunc (x, e) -> return (VLambda (x, e, env))
-   | ExprApp (e1, e2) ->
-   let* v1 = force env e1 in
-   let thunk = fun () -> force env e2 in
-   begin match v1 with
-   | VLambda (x, body, env') ->
-   let env'' = Hashtbl.copy env' in
-   Hashtbl.add env'' x (fun () -> return (VThunk thunk));
-   force env'' body
-   | _ -> error "Application to a non-function"
-   end
-   | ExprLet (x, e1, e2) ->
-   let thunk = fun () -> force env e1 in
-   Hashtbl.add env x (fun () -> return (VThunk thunk));
-   force env e2
-   | ExprIf (cond, e_then, e_else) ->
-   let* v_cond = force env cond in
-   begin match v_cond with
-   | VBool b -> force env (if b then e_then else e_else)
-   | _ -> error "Non-boolean condition in if expression"
-   end
-   end *)
-
-(* and force : environment -> expr -> value  = fun env expr ->
-      let open Syntax in
-      match expr with
-      | ExprBinOp (op, e1, e2) ->
-        let* e1' = force env e1 in
-        let* e2' = force env e2 in
-        force_binop e1' e2' op
-      | ExprVar x -> 
-        (match Hashtbl.find_opt env x with
-          | Some v -> return v
-          | None -> fail @@ NotInScopeError x)
-      | ExprLit lit ->
-        (match lit with
-        | LitInt n -> return (ValInt n)
-        | LitBool b -> return (ValBool b)
-        | LitString s -> return (ValString s)
-        | LitChar c -> return (ValChar c))
-      | ExprFunc (PatVar param, body) -> return (ValFun (param, body, env))
-      | ExprApp (f, arg) ->
-        let* f_val = force env f in
-        let* arg_val = force env arg in
-        (match f_val with
-          | ValFun (param, body, f_env) ->
-            let local_env = Hashtbl.copy f_env in
-            Hashtbl.add local_env param arg_val;
-            force local_env body
-          | _ -> fail @@ TypeError "Application to a non-function")
-      | ExprIf (cond, then_expr, else_expr) ->
-        let* cond_val = force env cond in
-        (match cond_val with
-          | ValBool true -> force env then_expr
-          | ValBool false -> force env else_expr
-          | _ -> fail @@ TypeError "Condition in if-expression is not a boolean") *)
