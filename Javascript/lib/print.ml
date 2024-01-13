@@ -5,7 +5,6 @@
 open Parser
 open Interpreter
 open Ast
-open VTypes
 
 let pp_ok result = Format.printf "%a" pp_statement @@ Result.get_ok result
 
@@ -19,8 +18,15 @@ let pp ?(parse = parse) str =
   if Result.is_ok result then pp_ok result else pp_error result
 ;;
 
-let pi str =
+let print_return str =
   match interpret str with
-  | Result.Ok x -> Format.eprintf "Programm return: %s" @@ vvalues_to_str x
+  | Result.Ok x -> Format.eprintf "Programm return: %s" x.return
+  | Result.Error x -> Format.eprintf "Error: %s" x
+;;
+
+let print_output str =
+  match interpret str with
+  | Result.Ok x ->
+    Format.eprintf "Programm output: %s\nProgramm return: %s" x.stdout x.return
   | Result.Error x -> Format.eprintf "Error: %s" x
 ;;
