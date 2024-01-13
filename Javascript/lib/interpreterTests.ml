@@ -595,58 +595,57 @@ let%expect_test _ =
   [%expect {| Programm return: 1 |}]
 ;;
 
-(* excluded temporarily *)
 (*bitwise AND*)
-(* let%expect_test _ =
-   print_return "return 5 & 3";
-   [%expect {| Programm return: 1 |}]
-   ;;
+let%expect_test _ =
+  print_return "return 5 & 3";
+  [%expect {| Programm return: 1 |}]
+;;
 
-   let%expect_test _ =
-   print_return "return -5 & 3";
-   [%expect {| Programm return: 3 |}]
-   ;;
+let%expect_test _ =
+  print_return "return -5 & 3";
+  [%expect {| Programm return: 3 |}]
+;;
 
-   let%expect_test _ =
-   print_return "return 5 & -3";
-   [%expect {| Programm return: 5 |}]
-   ;;
+let%expect_test _ =
+  print_return "return 5 & -3";
+  [%expect {| Programm return: 5 |}]
+;;
 
-   let%expect_test _ =
-   print_return "return -5 & -3";
-   [%expect {| Programm return: -7 |}]
-   ;;
+let%expect_test _ =
+  print_return "return -5 & -3";
+  [%expect {| Programm return: -7 |}]
+;;
 
-   let%expect_test _ =
-   print_return "return 5 & 0";
-   [%expect {| Programm return: 0 |}]
-   ;;
+let%expect_test _ =
+  print_return "return 5 & 0";
+  [%expect {| Programm return: 0 |}]
+;;
 
-   (*bitwise OR*)
-   let%expect_test _ =
-   print_return "return 5 | 3";
-   [%expect {| Programm return: 7 |}]
-   ;;
+(*bitwise OR*)
+let%expect_test _ =
+  print_return "return 5 | 3";
+  [%expect {| Programm return: 7 |}]
+;;
 
-   let%expect_test _ =
-   print_return "return -5 | 3";
-   [%expect {| Programm return: -5 |}]
-   ;;
+let%expect_test _ =
+  print_return "return -5 | 3";
+  [%expect {| Programm return: -5 |}]
+;;
 
-   let%expect_test _ =
-   print_return "return 5 | -3";
-   [%expect {| Programm return: -3 |}]
-   ;;
+let%expect_test _ =
+  print_return "return 5 | -3";
+  [%expect {| Programm return: -3 |}]
+;;
 
-   let%expect_test _ =
-   print_return "return -5 | -3";
-   [%expect {| Programm return: -1 |}]
-   ;;
+let%expect_test _ =
+  print_return "return -5 | -3";
+  [%expect {| Programm return: -1 |}]
+;;
 
-   let%expect_test _ =
-   print_return "return 5 | 0";
-   [%expect {| Programm return: 5 |}]
-   ;; *)
+let%expect_test _ =
+  print_return "return 5 | 0";
+  [%expect {| Programm return: 5 |}]
+;;
 
 (*bitwise XOR*)
 let%expect_test _ =
