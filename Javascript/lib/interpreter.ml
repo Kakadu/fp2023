@@ -698,6 +698,14 @@ and parse_stm ctx = function
       ctx
       ctx.cur_lex_env
       { var_id = x.var_identifier; is_const = x.is_const; value = v }
+  | If (condition, then_stm, else_stm) ->
+    eval_exp ctx condition
+    >>= fun (ctx, res) ->
+    to_vbool res
+    >>= get_vbool ctx
+    >>= (function
+     | true -> parse_stm ctx then_stm
+     | false -> parse_stm ctx else_stm)
   | Block ast ->
     create_local_ctx ctx ctx.cur_lex_env Block
     >>= fun ctx ->
