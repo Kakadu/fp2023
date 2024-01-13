@@ -22,7 +22,6 @@
  (instrumentation
   (backend bisect_ppx)))
 
-
 (cram
  (deps %{bin:demoFactParse}))
 
