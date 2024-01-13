@@ -146,6 +146,20 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
+  pp ~parse:parse_expression "40 && 50";
+  [%expect
+    {|
+    (Expression (BinOp (LogicalAnd, (Const (Number 40.)), (Const (Number 50.)))))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression "40 & 50";
+  [%expect
+    {|
+    (Expression (BinOp (BitwiseAnd, (Const (Number 40.)), (Const (Number 50.)))))|}]
+;;
+
+let%expect_test _ =
   pp ~parse:parse_expression "1 + 2 + 3";
   [%expect
     {|
