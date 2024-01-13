@@ -595,58 +595,57 @@ let%expect_test _ =
   [%expect {| Programm return: 1 |}]
 ;;
 
-(* excluded temporarily *)
 (*bitwise AND*)
-(* let%expect_test _ =
-   print_return "return 5 & 3";
-   [%expect {| Programm return: 1 |}]
-   ;;
+let%expect_test _ =
+  print_return "return 5 & 3";
+  [%expect {| Programm return: 1 |}]
+;;
 
-   let%expect_test _ =
-   print_return "return -5 & 3";
-   [%expect {| Programm return: 3 |}]
-   ;;
+let%expect_test _ =
+  print_return "return -5 & 3";
+  [%expect {| Programm return: 3 |}]
+;;
 
-   let%expect_test _ =
-   print_return "return 5 & -3";
-   [%expect {| Programm return: 5 |}]
-   ;;
+let%expect_test _ =
+  print_return "return 5 & -3";
+  [%expect {| Programm return: 5 |}]
+;;
 
-   let%expect_test _ =
-   print_return "return -5 & -3";
-   [%expect {| Programm return: -7 |}]
-   ;;
+let%expect_test _ =
+  print_return "return -5 & -3";
+  [%expect {| Programm return: -7 |}]
+;;
 
-   let%expect_test _ =
-   print_return "return 5 & 0";
-   [%expect {| Programm return: 0 |}]
-   ;;
+let%expect_test _ =
+  print_return "return 5 & 0";
+  [%expect {| Programm return: 0 |}]
+;;
 
-   (*bitwise OR*)
-   let%expect_test _ =
-   print_return "return 5 | 3";
-   [%expect {| Programm return: 7 |}]
-   ;;
+(*bitwise OR*)
+let%expect_test _ =
+  print_return "return 5 | 3";
+  [%expect {| Programm return: 7 |}]
+;;
 
-   let%expect_test _ =
-   print_return "return -5 | 3";
-   [%expect {| Programm return: -5 |}]
-   ;;
+let%expect_test _ =
+  print_return "return -5 | 3";
+  [%expect {| Programm return: -5 |}]
+;;
 
-   let%expect_test _ =
-   print_return "return 5 | -3";
-   [%expect {| Programm return: -3 |}]
-   ;;
+let%expect_test _ =
+  print_return "return 5 | -3";
+  [%expect {| Programm return: -3 |}]
+;;
 
-   let%expect_test _ =
-   print_return "return -5 | -3";
-   [%expect {| Programm return: -1 |}]
-   ;;
+let%expect_test _ =
+  print_return "return -5 | -3";
+  [%expect {| Programm return: -1 |}]
+;;
 
-   let%expect_test _ =
-   print_return "return 5 | 0";
-   [%expect {| Programm return: 5 |}]
-   ;; *)
+let%expect_test _ =
+  print_return "return 5 | 0";
+  [%expect {| Programm return: 5 |}]
+;;
 
 (*bitwise XOR*)
 let%expect_test _ =
@@ -1031,12 +1030,6 @@ let%expect_test _ =
 
 let%expect_test _ =
   print_return
-    "let counter = 0; function a() {counter = counter + 1;}; a(); let b = 10; return b";
-  [%expect {| Programm return: 10 |}]
-;;
-
-let%expect_test _ =
-  print_return
     "function a() {return counter = counter+1}; let counter = 0; a(); a(); return a()";
   [%expect {| Programm return: 3 |}]
 ;;
@@ -1046,6 +1039,15 @@ let%expect_test _ =
     "let counter = 0; function a() {return counter = counter+1}; a(); a(); return \
      counter;";
   [%expect {| Programm return: 2 |}]
+;;
+
+let%expect_test _ =
+  print_return
+    "let counter = 0;\n\
+    \ function a() {counter = 10}; \n\
+    \ function b() {return counter};\n\
+    \ a(); return b();";
+  [%expect {| Programm return: 10 |}]
 ;;
 
 let%expect_test _ =
@@ -1064,15 +1066,6 @@ let%expect_test _ =
     \ function b() {return counter = counter + 4};\n\
     \ a(); b(); return counter;";
   [%expect {| Programm return: 4 |}]
-;;
-
-let%expect_test _ =
-  print_return
-    "let counter = 0;\n\
-    \ function a() {counter = 10}; \n\
-    \ function b() {return counter};\n\
-    \ a(); return b();";
-  [%expect {| Programm return: 10 |}]
 ;;
 
 let%expect_test _ =
@@ -1097,4 +1090,139 @@ let%expect_test _ =
     \    b(); b();\n\
     \    return b()";
   [%expect {| Programm return: 3 |}]
+;;
+
+(**---------------Print tests---------------*)
+
+let%expect_test _ =
+  print_output "alert(1); alert(2);";
+  [%expect {|
+    Programm output:
+    1
+    2
+
+    Programm return: undefined |}]
+;;
+
+let%expect_test _ =
+  print_output "console.log(1); console.log(2)";
+  [%expect {|
+    Programm output:
+    1
+    2
+
+    Programm return: undefined |}]
+;;
+
+let%expect_test _ =
+  print_output "console.log(1+2, \"43\", console.log, alert)";
+  [%expect
+    {|
+    Programm output:
+    3 43 [Function: log] [Function: alert]
+
+    Programm return: undefined |}]
+;;
+
+let%expect_test _ =
+  print_output "console.log(1+2, \"43\")\n  console.log(1+2, \"43\")";
+  [%expect {|
+    Programm output:
+    3 43
+    3 43
+
+    Programm return: undefined |}]
+;;
+
+(**---------------Prototypical inheritance---------------*)
+
+let%expect_test _ =
+  print_return "let a2 = {field2 : 4}; return a2.field1";
+  [%expect {| Programm return: undefined |}]
+;;
+
+let%expect_test _ =
+  print_output
+    "let a1 = {field1 : 10}; \n\
+    \    let a2 = {__proto__ : a1, field2 : 4}; \n\
+    \    alert(a2.field1, a2.field2)";
+  [%expect {|
+    Programm output:
+    10 4
+
+    Programm return: undefined |}]
+;;
+
+let%expect_test _ =
+  print_output
+    "let a1 = {field1 : 10}; \n\
+    \    let a2 = {__proto__ : a1, field1 : 6, field2 : 4}; \n\
+    \    alert(a2.field1, a2.field2)";
+  [%expect {|
+    Programm output:
+    6 4
+
+    Programm return: undefined |}]
+;;
+
+let%expect_test _ =
+  print_return
+    "let a1 = {field1 : 10}; let b1 = {field1 : 10};\n\
+    \    let a2 = {__proto__ : a1, field2 : 6, __proto__ : b1}; \n\
+    \    return a2.field1";
+  [%expect {|
+    Error: Interpreter error > error in var declaration expression > SyntaxError: Duplicate __proto__ fields are not allowed in object literals |}]
+;;
+
+let%expect_test _ =
+  print_return
+    "let a1 = {field1 : 10}; \n\
+    \    let a2 = {field2 : 4}; \n\
+    \    a2.__proto__ = a1\n\
+    \    return a2.field1";
+  [%expect {|
+    Programm return: 10 |}]
+;;
+
+(**---------------Object field assign---------------*)
+
+let%expect_test _ =
+  print_return
+    "let a1 = {field1 : 10}; \n\
+    \    let a2 = {field2 : 4}; \n\
+    \    a2.__proto__ = a1\n\
+    \    return a2.field1";
+  [%expect {|
+    Programm return: 10 |}]
+;;
+
+let%expect_test _ =
+  print_return
+    "let a2 = {field2 : 4}; \n    a2[\"__proto\"+\"__\"] = a2\n    return a2.field1";
+  [%expect {|
+    Error: Interpreter error > error in expression statement > TypeError: Cyclic __proto__ value |}]
+;;
+
+let%expect_test _ =
+  print_return "let a2 = {field2 : 4}; \n    a2[\"field\"+2] = 10\n    return a2.field2";
+  [%expect {|
+    Programm return: 10 |}]
+;;
+
+let%expect_test _ =
+  print_return "let a2 = {field2 : 4}; \n    a2[4] = 10\n    return a2[4]";
+  [%expect {|
+    Programm return: 10 |}]
+;;
+
+let%expect_test _ =
+  print_output
+    "let a1 = {field1 : 5}\n\
+    \  let a2 = {field2 : 4, [\"__proto__\"+\"\"] : a1};\n\
+    \  console.log(a2.field1, a2.field1 = 10, a1.field1, a2.field1)";
+  [%expect {|
+    Programm output:
+    5 10 5 10
+
+    Programm return: undefined |}]
 ;;

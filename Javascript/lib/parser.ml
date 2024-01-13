@@ -134,8 +134,6 @@ let parse_number =
   >>| fun n -> number @@ float_of_string n
 ;;
 
-(*TODO: -,NaN..., BigINT*)
-
 let parse_bool =
   string "true" *> return true <|> string "false" *> return false >>| bool <* end_of_word
 ;;
@@ -178,7 +176,24 @@ let parse_args_names =
 ;;
 
 let parse_comma parser = sep_by (token_ch ',') parser <* (token_ch ',' <|> return ' ')
-let parse_op ops = choice (List.map (fun (js_op, op) -> string js_op *> return op) ops)
+
+let is_long_op_symbol_fail = function
+  | '+' | '-' | '*' | '&' | '|' | '=' | '<' | '>' -> fail ""
+  | _ -> return ()
+;;
+
+let parse_op ops =
+  choice
+    (List.map
+       (fun (js_op, op) ->
+         string js_op
+         *> (peek_char
+             >>= function
+             | Some x -> is_long_op_symbol_fail x
+             | None -> return ())
+         *> return op)
+       ops)
+;;
 
 (*----------unary operators----------*)
 
@@ -190,50 +205,26 @@ type associativity =
   | Left
   | Right
 
-(*[(JS name, Ast bin_op)], associativity*)
-let exp_op = [ "**", Exp ], Right (*precendence 13*)
-let mul_div_rem_op = [ "*", Mul; "/", Div; "%", Rem ], Left (*precedence 12*)
-let add_sub_op = [ "+", Add; "-", Sub ], Left (*precedence 11*)
-
-let logical_shift_op =
-  ( [ ">>>", UnsignedShiftRight; "<<", LogicalShiftLeft; ">>", LogicalShiftRight ]
-  , Left (*precedence 10*) )
-;;
-
-let relational_op =
-  ( [ ">=", GreaterEqual; "<=", LessEqual; ">", GreaterThan; "<", LessThan ]
-  , Left (*precedence 9*) )
-;;
-
-let equality_op =
-  ( [ "===", StrictEqual; "!==", StrictNotEqual; "==", Equal; "!=", NotEqual ]
-  , Left (*precedence 8*) )
-;;
-
-(* let bit_and = [ "&", BitwiseAnd ], Left precendence 7 *)
-let xor = [ "^", Xor ], Left (*precendence 6*)
-
-(* let bit_or = [ "|", BitwiseOr ], Left precendence 5 *)
-let log_and = [ "&&", LogicalAnd ], Left (*precendence 4*)
-let log_or = [ "||", LogicalOr ], Left (*precendence 3*)
-let assign_op = [ "=", Assign ], Right (*precedence 2*)
-
 (*from lower to greater precedence*)
 let list_of_bops =
-  [ assign_op
-  ; log_or
-  ; log_and
-  ; xor
-  ; equality_op
-  ; relational_op
-  ; logical_shift_op
-  ; add_sub_op
-  ; mul_div_rem_op
-  ; exp_op
+  (*[(JS name, Ast bin_op)], associativity*)
+  [ [ "=", Assign ], Right (*precedence 2*)
+  ; [ "||", LogicalOr ], Left (*precendence 3*)
+  ; [ "&&", LogicalAnd ], Left (*precendence 4*)
+  ; [ "|", BitwiseOr ], Left (*precendence 5*)
+  ; [ "^", Xor ], Left (*precendence 6*)
+  ; [ "&", BitwiseAnd ], Left (*precendence 7*)
+  ; ( [ "===", StrictEqual; "!==", StrictNotEqual; "==", Equal; "!=", NotEqual ]
+    , Left (*precedence 8*) )
+  ; ( [ ">=", GreaterEqual; "<=", LessEqual; ">", GreaterThan; "<", LessThan ]
+    , Left (*precedence 9*) )
+  ; ( [ ">>>", UnsignedShiftRight; "<<", LogicalShiftLeft; ">>", LogicalShiftRight ]
+    , Left (*precedence 10*) )
+  ; [ "+", Add; "-", Sub ], Left (*precedence 11*)
+  ; [ "*", Mul; "/", Div; "%", Rem ], Left (*precedence 12*)
+  ; [ "**", Exp ], Right (*precendence 13*)
   ]
 ;;
-
-(* bit_and and bit_or are excluded temporarily *)
 
 let chainl1 parser op =
   let rec go acc =

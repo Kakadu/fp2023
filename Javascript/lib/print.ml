@@ -27,6 +27,6 @@ let print_return str =
 let print_output str =
   match interpret str with
   | Result.Ok x ->
-    Format.eprintf "Programm output: %s\nProgramm return: %s" x.stdout x.return
+    Format.eprintf "Programm output: \n%s\nProgramm return: %s" x.stdout x.return
   | Result.Error x -> Format.eprintf "Error: %s" x
 ;;
