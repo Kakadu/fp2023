@@ -827,6 +827,16 @@ let%expect_test _ =
   [%expect {| Programm return: 0 |}]
 ;;
 
+let%expect_test _ =
+  print_return "return 4--";
+  [%expect {| Programm return: 4 |}]
+;;
+
+let%expect_test _ =
+  print_return "\n  let a = 4; \n  a += 1; \n  return a;";
+  [%expect {| Programm return:  |}]
+;;
+
 (*infinity*)
 let%expect_test _ =
   print_return "return Infinity";
