@@ -539,14 +539,19 @@ let eval_un_op ctx op a =
     <?> "error in minus operator"
   | PrefixIncrement ->
     add_ctx @@ (to_vnumber a >>= get_vnum ctx >>| fun n -> VNumber (n +. 1.))
+    <?> "error in prefix increment operator"
   | PrefixDecrement ->
     add_ctx @@ (to_vnumber a >>= get_vnum ctx >>| fun n -> VNumber (n -. 1.))
-  | LogicalNot -> add_ctx @@ (to_vbool a >>= get_vbool ctx >>| fun b -> VBool (not b))
+    <?> "error in prefix decrement operator"
+  | LogicalNot ->
+    add_ctx @@ (to_vbool a >>= get_vbool ctx >>| fun b -> VBool (not b))
+    <?> "error in logical NOT operator"
   | BitwiseNot ->
     add_ctx
     @@ (to_vnumber a
         >>= get_vnum ctx
         >>| fun n -> VNumber (float_of_int (lnot (Int32.to_int (Int32.of_float n)))))
+    <?> "error in bitwise NOT operator"
   | _ as a -> ensup @@ asprintf "operator %a not supported yet" pp_un_op a
 ;;
 
