@@ -9,14 +9,18 @@ type types =
   | FString of string (** string values: "Ocaml" *)
   | FBool of bool (** boolean values: true and false *)
   | FNil (** empty list: [] *)
-  | FUnit (** ()*)
+  | FUnit (** () *)
   | FFloat of float (** float number: ..., 0.1, ..., 1.2, ...*)
-  | Measure_type of id (** [<Measure>] type = cm*)
-  | Measure_float of types * types (** 5.0 <cm> *)
+  | Measure of measure_type (** initialization [<Measure>] type sec*)
+  | Measure_multiple of measure_type * measure_type (** initialization [<Measure>] type speed = m/sec*)
+  | Measure_float of types * measure_type (** 5.0 <cm> *) 
 
+and measure_type =
+  | Measure_single of id (** single measure: <m>*)
+  | Measure_double of measure_type * binary_op * measure_type (** double measure: <m/sec>*)
 [@@deriving eq, show { with_path = false }]
 
-type binary_op =
+and binary_op =
   | Add (** + *)
   | Sub (** - *)
   | Mul (** * *)
@@ -36,20 +40,19 @@ type pattern =
   | PConst of types (** constant pattern *)
   | PVar of id (** varuable pattern*)
   | PTuple of pattern list (** tuple pattern: (z, v) *)
-  | PList of pattern list
+  | PList of pattern list (** list pattern [1; 2]*)
   | PCons of pattern * pattern (** hd::tl pattern*)
 [@@deriving eq, show { with_path = false }]
 
 type expression = 
-  | EConst of types
-  | EVar of id
-  | EBinaryOp of binary_op
-  | EList of expression list
-  | ETuple of expression list 
-  | EApp of expression * expression
-  | EIfElse of expression * expression * expression
-  | ELet of id * expression
-  | ELetRec of id * expression
-  | EFun of pattern * expression 
-  | EMatch of expression * (pattern * expression) list
+  | EConst of types  (* constant *)
+  | EVar of id (* variable *)
+  | EBinaryOp of binary_op (* binary operation *)
+  | EList of expression list (* list *)
+  | ETuple of expression list  (* tuple *)
+  | EApp of expression * expression (* application *) 
+  | EIfElse of expression * expression * expression (* if z then v else n*)
+  | ELet of bool * id * expression (* let z = ... or let rec z = ...*) 
+  | EFun of pattern * expression  (* fun z -> z + z *)
+  | EMatch of expression * (pattern * expression) list (* matching *)
 [@@deriving show { with_path = false }]

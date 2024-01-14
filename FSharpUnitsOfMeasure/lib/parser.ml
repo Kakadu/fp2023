@@ -88,7 +88,7 @@ let fbool x = FBool x
 let fstring x = FString x
 let fnil = FNil
 let funit = FUnit
-let measure_type s = Measure_type s
+let measure_type s = Measure s
 let measure_float f m = Measure_float (f, m)
 
 (** Types parse *)
@@ -130,15 +130,63 @@ let parse_ffloat =
 let parse_fnil = stoken "[]" *> return fnil
 let parse_funit = stoken "()" *> return funit
 
-let parse_measure_type = square_brackets (angle_brackets (stoken "Measure"))  *> stoken "type" *> parse_id >>| fun x -> measure_type x
-let construct_measure_float = take_empty *> (angle_brackets (parse_id >>| fun x -> measure_type x))
-let parse_measure_float = 
-  lift2 (fun f m -> (measure_float f m))
-  parse_ffloat
-  construct_measure_float
+(* Parsing initialization measure single: [<Measure>] type m*)
+
+let parse_measure_type = 
+  square_brackets (angle_brackets (stoken "Measure")) *> stoken "type" *> parse_id >>| fun x -> Measure_single x
 ;;
 
-let parse_types = parse_measure_float <|> parse_ffloat <|> parse_fint <|> parse_fbool <|> parse_fstring <|> parse_fnil <|> parse_funit <|> parse_measure_type 
+let parse_measure = parse_measure_type >>| fun a -> Measure a
+
+(* Parsing float + measure single: 7.77 <m>*)
+
+let construct_float_measure = take_empty *> (angle_brackets (parse_id >>| fun x -> Measure_single x))
+
+let parse_float_measure = 
+  lift2 (fun f m -> (measure_float f m))
+  parse_ffloat
+  construct_float_measure
+;;
+
+(* Parsing initialization measure double: [<Measure>] type speed = m/sec *)
+
+let parse_bin_op = take_empty *> choice
+  [ 
+    string "*" *> return Mul;
+    string "/" *> return Div; 
+  ]
+
+let parse_measure_multiple = 
+  lift2 (fun typ meaning -> Measure_multiple (typ, meaning)) 
+  (parse_measure_type)
+  ( lift3 (fun m1 op m2 -> Measure_double (m1, op , m2))
+  (stoken "=" *> parse_id >>| fun m1 -> Measure_single m1)
+  (parse_bin_op )
+  (parse_id >>| fun m2 -> Measure_single m2))
+;;
+
+(* Parsing float + measure double: 7.77 <sec/meters>*)
+
+let parse_measure_double = 
+  lift3 (fun m1 op m2 -> Measure_double (m1, op , m2))
+  (parse_id >>| fun m1 -> Measure_single m1)
+  (parse_bin_op )
+  (parse_id >>| fun m2 -> Measure_single m2)
+;;
+
+let parse_float_measure_double = 
+  lift2 (fun f m -> (Measure_float (f, m)))
+  parse_ffloat
+  (take_empty *> angle_brackets parse_measure_double)
+;;
+
+let parse_full_measure = 
+  parse_float_measure_double <|> parse_float_measure <|> parse_measure_multiple <|> parse_measure
+;;
+
+let parse_types = 
+  parse_full_measure <|> parse_ffloat <|> parse_fint <|> parse_fbool <|> parse_fstring <|> parse_fnil <|> parse_funit 
+;;
 
 (** Pattern constructor *)
 
@@ -225,8 +273,7 @@ let parse_pattern = pack.pattern pack
 (** Expression constructor *)
 
 let eifelse i t e = EIfElse (i, t, e)
-let elet name body = ELet (name, body)
-let eletrec name body = ELetRec (name, body)
+let elet is_rec name body = ELet (is_rec, name, body)
 let etuple z = ETuple z
 let elist l = EList l
 let efun id body = EFun (id, body)
@@ -286,7 +333,7 @@ let eletfun parse_expr =
   take_empty *> lift4
     (fun r name arg body ->
       let body = construct_efun arg body 
-      in if r then eletrec name body else elet name body)
+      in elet r name body )
     parse_rec
     parse_id
     parse_arg
@@ -360,10 +407,9 @@ let parse_eapp parse_expr =
 let pack =
   let econst _ = parse_econst
   in let evar _ = parse_evar 
-  in let lets pack = choice [ pack.elet pack ]
   in let expression pack = choice 
     [
-      lets pack;
+      pack.elet pack;
       pack.eifelse pack;
       pack.eapp pack;
       pack.etuple pack;
@@ -412,9 +458,10 @@ let pack =
     fix @@ fun _ -> 
       let parse_eapp_pack = choice
         [
-          pack.etuple pack;
+
           pack.etuple pack;
           pack.ebinaryop pack;
+          pack.efun pack; 
           brackets @@ pack.eifelse pack;
           brackets @@ pack.eapp pack;
           brackets @@ pack.ematch pack
