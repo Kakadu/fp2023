@@ -191,7 +191,7 @@ module Eval (M : MONADERROR) = struct
 
   let rec expr stmt (e_env : global_ctx) ex =
     let rec doer1 c s =
-      if c.signal == Return
+      if c.signal = Return
       then return c.last_return
       else (
         match s with
@@ -201,7 +201,7 @@ module Eval (M : MONADERROR) = struct
           doer1 x tl)
     in
     let rec doer2 c s =
-      if c.signal == Return
+      if c.signal = Return
       then return c.last_return
       else (
         match s with
