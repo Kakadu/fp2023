@@ -71,7 +71,7 @@ type expression =
   | BinOp of bin_op * expression * expression
   | Const of typename
   | Var of string
-  | Array_list of expression list
+  | ArrayList of expression list
   | FunctionCall of expression * expression list
   | AnonFunction of string list * statement
   | ArrowFunction of string list * statement

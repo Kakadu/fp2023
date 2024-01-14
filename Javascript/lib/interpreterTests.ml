@@ -673,7 +673,7 @@ let%expect_test _ =
   [%expect {| Programm return: false |}]
 ;;
 
-(*unary operators*)
+(**---------------unary operators---------------*)
 
 let%expect_test _ =
   print_return "return +4";
@@ -742,25 +742,68 @@ let%expect_test _ =
 
 let%expect_test _ =
   print_return "return ++4";
-  [%expect {| Programm return: 5 |}]
+  [%expect {| Error: Interpreter error > error in return expression > error in prefix increment operator > error in assignment > SyntaxError: Invalid left-hand side in assignment |}]
 ;;
 
 let%expect_test _ =
   print_return "return ++-1";
-  [%expect {| Programm return: 0 |}]
+  [%expect {| Error: Interpreter error > error in return expression > error in prefix increment operator > error in assignment > SyntaxError: Invalid left-hand side in assignment |}]
 ;;
 
 let%expect_test _ =
   print_return "return ---1";
-  [%expect {| Programm return: -2 |}]
+  [%expect {| Error: Interpreter error > error in return expression > error in prefix decrement operator > error in assignment > SyntaxError: Invalid left-hand side in assignment |}]
 ;;
 
 let%expect_test _ =
   print_return "return --+1";
-  [%expect {| Programm return: 0 |}]
+  [%expect {| Error: Interpreter error > error in return expression > error in prefix decrement operator > error in assignment > SyntaxError: Invalid left-hand side in assignment |}]
 ;;
 
 (*assigns*)
+
+let%expect_test _ =
+  print_output "let a = 4; console.log(a++, a)";
+  [%expect {|
+    Programm output:
+    4 5
+
+    Programm return: undefined |}]
+;;
+
+let%expect_test _ =
+  print_output "let a = 4; console.log(a--, a)";
+  [%expect {|
+    Programm output:
+    4 3
+
+    Programm return: undefined |}]
+;;
+
+(*assigns*)
+
+let%expect_test _ =
+  print_output "let a = 4; console.log(++a, a)";
+  [%expect {|
+    Programm output:
+    5 5
+
+    Programm return: undefined |}]
+;;
+
+let%expect_test _ =
+  print_output "let a = 4; console.log(--a, a)";
+  [%expect {|
+    Programm output:
+    3 3
+
+    Programm return: undefined |}]
+;;
+
+let%expect_test _ =
+  print_output "let a = 4; console.log(a, --a++, a)";
+  [%expect {| Error: Interpreter error > error in expression statement > error in function arguments > error in prefix decrement operator > error in assignment > SyntaxError: Invalid left-hand side in assignment |}]
+;;
 
 let%expect_test _ =
   print_return "\n  let a = 4; \n  a += 1; \n  return a;";
@@ -857,7 +900,36 @@ let%expect_test _ =
   [%expect {| Programm return: foo |}]
 ;;
 
+(*new*)
+let%expect_test _ =
+  print_return "function Create() { this.val1 = 4; this.val2 = 10 }; return new Create()";
+  [%expect {|
+    Programm return: { val1: 4, val2: 10 } |}]
+;;
+
+let%expect_test _ =
+  print_return "return new 4";
+  [%expect
+    {|
+    Error: Interpreter error > error in return expression > TypeError: 4 is not a constructor |}]
+;;
+
+(*typeof*)
+let%expect_test _ =
+  print_output
+    "console.log(typeof {}, typeof 4, typeof \"\")\n\
+    \    console.log(typeof null, typeof undefined, typeof (()=>{}))";
+  [%expect
+    {|
+    Programm output:
+    object number string
+    object undefined function
+
+    Programm return: undefined |}]
+;;
+
 (*infinity*)
+
 let%expect_test _ =
   print_return "return Infinity";
   [%expect {| Programm return: Infinity |}]
@@ -897,7 +969,7 @@ let%expect_test _ =
   [%expect {| Programm return: undefined |}]
 ;;
 
-(*Block tests*)
+(**---------------Block tests---------------*)
 
 let%expect_test _ =
   print_return "{ let a; }";
@@ -925,7 +997,7 @@ let%expect_test _ =
   [%expect {| Programm return: 4 |}]
 ;;
 
-(*function test*)
+(**---------------function test---------------*)
 
 let%expect_test _ =
   print_return "function a() {return 5;}; return a()";
@@ -1016,7 +1088,7 @@ let%expect_test _ =
   [%expect {| Programm return: [Function: a] |}]
 ;;
 
-(*objects*)
+(**---------------Objects---------------*)
 
 let%expect_test _ =
   print_return "let var1 = 10; let a = { lang : \"Ocaml\", var1}; return a";
@@ -1063,7 +1135,15 @@ let%expect_test _ =
   [%expect {| Programm return: { sayHi: [Function: sayHi] } |}]
 ;;
 
-(*assign*)
+let%expect_test _ =
+  print_return
+    "let a1 = {field1 : 10, field2 : { field2 : 11, a() {return 15}}};\n\
+    \    return a1.field2.a()";
+  [%expect {|
+    Programm return: 15 |}]
+;;
+
+(**---------------Assign---------------*)
 
 let%expect_test _ =
   print_return "let a = 10; a = 15; return a";
@@ -1104,6 +1184,50 @@ let%expect_test _ =
 let%expect_test _ =
   print_return "let a = 10; let b = 15; let c = 17; return a = b = c";
   [%expect {| Programm return: 17 |}]
+;;
+
+(*Object field assign*)
+
+let%expect_test _ =
+  print_return
+    "let a1 = {field1 : 10}; \n\
+    \    let a2 = {field2 : 4}; \n\
+    \    a2.__proto__ = a1\n\
+    \    return a2.field1";
+  [%expect {|
+    Programm return: 10 |}]
+;;
+
+let%expect_test _ =
+  print_return
+    "let a2 = {field2 : 4}; \n    a2[\"__proto\"+\"__\"] = a2\n    return a2.field1";
+  [%expect
+    {|
+    Error: Interpreter error > error in expression statement > error in assignment > TypeError: Cyclic __proto__ value |}]
+;;
+
+let%expect_test _ =
+  print_return "let a2 = {field2 : 4}; \n    a2[\"field\"+2] = 10\n    return a2.field2";
+  [%expect {|
+    Programm return: 10 |}]
+;;
+
+let%expect_test _ =
+  print_return "let a2 = {field2 : 4}; \n    a2[4] = 10\n    return a2[4]";
+  [%expect {|
+    Programm return: 10 |}]
+;;
+
+let%expect_test _ =
+  print_output
+    "let a1 = {field1 : 5}\n\
+    \  let a2 = {field2 : 4, [\"__proto__\"+\"\"] : a1};\n\
+    \  console.log(a2.field1, a2.field1 = 10, a1.field1, a2.field1)";
+  [%expect {|
+    Programm output:
+    5 10 5 10
+
+    Programm return: undefined |}]
 ;;
 
 (**---------------Lexical env---------------*)
@@ -1490,4 +1614,85 @@ let%expect_test _ =
     \  return (obj2.some_obj.ret_this())";
   [%expect {|
     Programm return: { a: 1, ret_this: [Function: b] } |}]
+;;
+
+(**---------------ValueOf---------------*)
+
+let%expect_test _ =
+  print_return
+    "let a = { val1 : 15 }\n\
+    \    a.valueOf = function () {return 4}\n\
+    \    return a.valueOf()";
+  [%expect {|
+    Programm return: 4 |}]
+;;
+
+let%expect_test _ =
+  print_output
+    "let a = { val1 : 15 }\n\
+    \    console.log(a+4)\n\
+    \    a.valueOf = function () {return 4}\n\
+    \    console.log(a+4)";
+  [%expect
+    {|
+    Programm output:
+    [object Object]4
+    8
+
+    Programm return: undefined |}]
+;;
+
+let%expect_test _ =
+  print_return "let a = { val1 : 15, valueOf() {return 4} }\nreturn a.valueOf()";
+  [%expect {|
+    Programm return: 4 |}]
+;;
+
+let%expect_test _ =
+  print_return "let a = { val1 : 15, valueOf() {return 4} }\nreturn a+4";
+  [%expect {|
+    Programm return: 8 |}]
+;;
+
+(**---------------Arrays---------------*)
+
+let%expect_test _ =
+  print_return "return [4, 5, 6]";
+  [%expect {|
+    Programm return: [ 4, 5, 6 ] |}]
+;;
+
+let%expect_test _ =
+  print_return "return [4, \"10\", { an : 11 }]";
+  [%expect {|
+    Programm return: [ 4, '10', { an: 11 } ] |}]
+;;
+
+let%expect_test _ =
+  print_output "let a = [4, 5, 6]\n  console.log(a.shift(), a)";
+  [%expect {|
+    Programm output:
+    4 [ 5, 6 ]
+
+    Programm return: undefined |}]
+;;
+
+let%expect_test _ =
+  print_output "let a = [4, 5, 6]\n  console.log(a.unshift(7), a)";
+  [%expect
+    {|
+    Programm output:
+    4 [ 7, 4, 5, 6 ]
+
+    Programm return: undefined |}]
+;;
+
+let%expect_test _ =
+  print_output "let a = [4, 5, 6]\n  console.log(a.unshift(7, 8), a)";
+  [%expect
+    {|
+    Programm output:
+    5 [ 7, 8, 4, 5, 6 ]
+
+    Programm return: undefined |}]
 ;;

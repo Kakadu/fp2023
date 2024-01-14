@@ -122,7 +122,7 @@ let const c = Const c
 let var v = Var v
 let expression e = Expression e
 let bop f acc x = BinOp (f, acc, x)
-let array a = Array_list a
+let array a = ArrayList a
 
 let parse_number =
   lift3 (fun a b c -> a ^ b ^ c) (take_while is_digit) (string ".") (take_while is_digit)
