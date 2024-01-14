@@ -152,7 +152,7 @@ let c_eval_ e_stm e_expr lenv ad args = function
     in
     cl_decl
     >>= alloc_instance e_expr
-    >>= fun new_ad -> run_method Void prms args ad lenv body e_stm *> return_n new_ad
+    >>= fun new_ad -> run_method Void prms args new_ad lenv body e_stm *> return_n new_ad
 ;;
 
 let eval_constructor e lenv e_stm e_expr args =
@@ -183,7 +183,6 @@ let eval_bin_op op e1 e2 e_expr lenv =
   let int_op op_t = _op get_int op_t in
   let int_f op r1 r2 = return_n (op r1 r2) >>= ret_int in
   (* bool *)
-  let bool_op op_t = _op get_bool op_t in
   let bool_f op r1 r2 = return_n (op r1 r2) >>= ret_bool in
   (* --- *)
   let div_f op r1 = function
