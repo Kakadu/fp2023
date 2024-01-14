@@ -96,6 +96,148 @@ let%expect_test "Lazy || and && " =
   [%expect {| Result: (Init (Int_v 31)) |}]
 ;;
 
+let%expect_test "Multi-class programm (instance) " =
+  let s =
+    {| 
+      class A1
+      {
+        public int a1;
+
+        public int get_plus(int p){
+          return a1 + p;
+        }
+      }
+
+      class Program
+      {
+        static int Main(){
+          A1 hm = new A1();
+          hm.a1 = 1;
+          return hm.get_plus(1);
+        }
+      }
+    |}
+  in
+  interpret_wrap s;
+  [%expect {| Result: (Init (Int_v 2)) |}]
+;;
+
+let%expect_test "Multi-class programm (constr) " =
+  let s =
+    {| 
+      class A1
+      {
+        public int a1;
+
+        int a1_ = 2 - 2;
+        
+        A1 (int v){
+          a1_ = v;
+        }
+
+        public int get_plus(int p){
+          return a1 + p + a1_;
+        }
+      }
+
+      class Program
+      {
+        static int Main(){
+          A1 hm = new A1(-100);
+          hm.a1 = 1;
+          return hm.get_plus(1);
+        }
+      }
+    |}
+  in
+  interpret_wrap s;
+  [%expect {| Result: (Init (Int_v -98)) |}]
+;;
+
+let%expect_test "Multi-class programm (referential behavior) " =
+  let s =
+    {| 
+      class A1
+      {
+        public int a1;
+      }
+
+      class Program
+      {
+        void change_class (A1 info)
+        {
+          info.a1 = 2;
+        }
+
+        static int Main(){
+          A1 hm1 = new A1();
+          hm1.a1 = 1;
+          change_class(hm1);
+          return hm1.a1;
+        }
+      }
+    |}
+  in
+  interpret_wrap s;
+  [%expect {| Result: (Init (Int_v 2)) |}]
+;;
+
+let%expect_test "Multi-class programm (complex constructor) " =
+  let s =
+    {| 
+      class A1
+      {
+        public int a1;
+      }
+
+      class A2
+      {
+        public A1 f = new A1();
+        public A1 s = new A1();
+      }
+
+      class Program
+      {
+        static int Main(){
+          A2 hm = new A2();
+          hm.f.a1 = 3;
+          hm.s.a1 = 2;
+          return hm.f.a1 + hm.s.a1;
+        }
+      }
+    |}
+  in
+  interpret_wrap s;
+  [%expect {| Result: (Init (Int_v 5)) |}]
+;;
+
+let%expect_test "Base factorial type check" =
+  let s =
+    {| 
+      class Program
+      {
+          int Fac(int num)
+          { 
+              if (num <= 1)
+              {
+                  return 1;
+              }
+              else 
+              {
+                  return num * Fac(num - 1);
+              }
+          }
+
+          static int Main(){
+              return Fac(4);
+          }
+      }
+|}
+  in
+  interpret_wrap s;
+  [%expect {| Result: (Init (Int_v 24)) |}]
+;;
+
 let%expect_test "Base factorial type check" =
   let s =
     {| 

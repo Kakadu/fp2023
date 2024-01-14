@@ -42,7 +42,7 @@ type var_type = TVar of assignable_type [@@deriving show { with_path = false }]
 type meth_type =
   | Void
   | TReturn of assignable_type
-[@@deriving show { with_path = false }]
+[@@deriving show { with_path = false }, eq]
 
 type access_modifier =
   | MPublic
@@ -103,12 +103,12 @@ type catch_decl =
 
 type statement =
   | SExpr of expr
-  | Steps of statement list
-  | SIf_else of expr * statement * statement option
   | SDecl of var_decl * expr option
+  | Steps of statement list
   | SReturn of expr option
-  | SThrow of expr
+  | SIf_else of expr * statement * statement option
   | SBreak
+  | SThrow of expr
   | SWhile of expr * statement
   | SFor of
       { f_init_p : statement option
