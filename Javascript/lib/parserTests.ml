@@ -876,19 +876,23 @@ let%expect_test "while" =
     {|
 
 (Programm
-   [(While ((BinOp (NotEqual, (Var "a"), (Const (Number 0.)))),
-       (Block
-          [(VarInit
-              { var_identifier = "b"; is_const = false;
-                value = (BinOp (Sub, (Var "a"), (Const (Number 1.)))) });
-            (If ((BinOp (Equal, (Var "a"), (Const (Number 1.)))),
-               (Block [(Return (Var "b"))]),
-               (Block [(Return (Const (Number 0.)))])));
-            (VarInit
-               { var_identifier = "a"; is_const = false;
-                 value = (BinOp (Sub, (Var "a"), (Const (Number 1.)))) })
-            ])
-       ))
+   [(Loop
+       { loop_init = None;
+         loop_condition = (BinOp (NotEqual, (Var "a"), (Const (Number 0.))));
+         loop_change = None;
+         loop_body =
+         (Block
+            [(VarInit
+                { var_identifier = "b"; is_const = false;
+                  value = (BinOp (Sub, (Var "a"), (Const (Number 1.)))) });
+              (If ((BinOp (Equal, (Var "a"), (Const (Number 1.)))),
+                 (Block [(Return (Var "b"))]),
+                 (Block [(Return (Const (Number 0.)))])));
+              (VarInit
+                 { var_identifier = "a"; is_const = false;
+                   value = (BinOp (Sub, (Var "a"), (Const (Number 1.)))) })
+              ])
+         })
      ])
              |}]
 ;;
@@ -904,18 +908,16 @@ let%expect_test "for" =
   [%expect
     {|
       (Programm
-         [(For
-             { for_init =
-               (VarInit
-                  { var_identifier = "i"; is_const = false; 
-                    value = (Const (Number 0.)) });
-               for_condition = 
-               (Expression (BinOp (NotEqual, (Var "i"), (Const (Number 10.)))));
-               for_change =
-               (Expression
-                  (BinOp (Assign, (Var "i"), 
-                     (BinOp (Add, (Var "i"), (Const (Number 1.)))))));
-               for_body =
+         [(Loop
+             { loop_init =
+               (Some (VarInit
+                        { var_identifier = "i"; is_const = false;
+                          value = (Const (Number 0.)) }));
+               loop_condition = (BinOp (NotEqual, (Var "i"), (Const (Number 10.))));
+               loop_change =
+               (Some (BinOp (Assign, (Var "i"),
+                        (BinOp (Add, (Var "i"), (Const (Number 1.)))))));
+               loop_body =
                (Block
                   [(VarInit
                       { var_identifier = "a"; is_const = false; value = (Var "i") });
