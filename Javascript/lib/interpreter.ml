@@ -75,9 +75,8 @@ let print_type ctx = function
   | VString _ -> "string"
   | VBool _ -> "boolean"
   | VUndefined -> "undefined"
-  | VNull -> "null"
   | VObject x when is_func_id ctx x -> "function"
-  | VObject _ -> "object"
+  | VNull (*because that's how it is in JS*) | VObject _ -> "object"
 ;;
 
 let proto_obj_fields = []
@@ -570,6 +569,7 @@ let ctx_not_change_unop ctx op a =
     >>= get_vnum ctx
     >>| (fun n -> VNumber (float_of_int (lnot (Int32.to_int (Int32.of_float n)))))
     <?> "error in bitwise NOT operator"
+  | TypeOf -> return @@ VString (print_type ctx a)
   | _ as a -> ensup @@ asprintf "operator %a not supported yet" pp_un_op a
 ;;
 

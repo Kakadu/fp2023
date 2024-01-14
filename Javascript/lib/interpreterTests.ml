@@ -673,7 +673,7 @@ let%expect_test _ =
   [%expect {| Programm return: false |}]
 ;;
 
-(*unary operators*)
+(**---------------unary operators---------------*)
 
 let%expect_test _ =
   print_return "return +4";
@@ -857,7 +857,29 @@ let%expect_test _ =
   [%expect {| Programm return: foo |}]
 ;;
 
+(*new*)
+let%expect_test _ =
+  print_return "function Create() { this.val1 = 4; this.val2 = 10 }; return new Create()";
+  [%expect {|
+    Programm return: { val1: 4, val2: 10 } |}]
+;;
+
+(*typeof*)
+let%expect_test _ =
+  print_output
+    "console.log(typeof {}, typeof 4, typeof \"\")\n\
+    \    console.log(typeof null, typeof undefined, typeof (()=>{}))";
+  [%expect
+    {|
+    Programm output:
+    object number string
+    object undefined function
+
+    Programm return: undefined |}]
+;;
+
 (*infinity*)
+
 let%expect_test _ =
   print_return "return Infinity";
   [%expect {| Programm return: Infinity |}]
