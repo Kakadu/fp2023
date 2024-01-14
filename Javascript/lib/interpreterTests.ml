@@ -897,7 +897,7 @@ let%expect_test _ =
   [%expect {| Programm return: undefined |}]
 ;;
 
-(*Block tests*)
+(**---------------Block tests---------------*)
 
 let%expect_test _ =
   print_return "{ let a; }";
@@ -925,7 +925,7 @@ let%expect_test _ =
   [%expect {| Programm return: 4 |}]
 ;;
 
-(*function test*)
+(**---------------function test---------------*)
 
 let%expect_test _ =
   print_return "function a() {return 5;}; return a()";
@@ -1016,7 +1016,7 @@ let%expect_test _ =
   [%expect {| Programm return: [Function: a] |}]
 ;;
 
-(*objects*)
+(**---------------Objects---------------*)
 
 let%expect_test _ =
   print_return "let var1 = 10; let a = { lang : \"Ocaml\", var1}; return a";
@@ -1063,7 +1063,15 @@ let%expect_test _ =
   [%expect {| Programm return: { sayHi: [Function: sayHi] } |}]
 ;;
 
-(*assign*)
+let%expect_test _ =
+  print_return
+    "let a1 = {field1 : 10, field2 : { field2 : 11, a() {return 15}}};\n\
+    \    return a1.field2.a()";
+  [%expect {|
+    Programm return: 15 |}]
+;;
+
+(**---------------Assign---------------*)
 
 let%expect_test _ =
   print_return "let a = 10; a = 15; return a";
@@ -1104,6 +1112,50 @@ let%expect_test _ =
 let%expect_test _ =
   print_return "let a = 10; let b = 15; let c = 17; return a = b = c";
   [%expect {| Programm return: 17 |}]
+;;
+
+(*Object field assign*)
+
+let%expect_test _ =
+  print_return
+    "let a1 = {field1 : 10}; \n\
+    \    let a2 = {field2 : 4}; \n\
+    \    a2.__proto__ = a1\n\
+    \    return a2.field1";
+  [%expect {|
+    Programm return: 10 |}]
+;;
+
+let%expect_test _ =
+  print_return
+    "let a2 = {field2 : 4}; \n    a2[\"__proto\"+\"__\"] = a2\n    return a2.field1";
+  [%expect
+    {|
+    Error: Interpreter error > error in expression statement > error in assignment > TypeError: Cyclic __proto__ value |}]
+;;
+
+let%expect_test _ =
+  print_return "let a2 = {field2 : 4}; \n    a2[\"field\"+2] = 10\n    return a2.field2";
+  [%expect {|
+    Programm return: 10 |}]
+;;
+
+let%expect_test _ =
+  print_return "let a2 = {field2 : 4}; \n    a2[4] = 10\n    return a2[4]";
+  [%expect {|
+    Programm return: 10 |}]
+;;
+
+let%expect_test _ =
+  print_output
+    "let a1 = {field1 : 5}\n\
+    \  let a2 = {field2 : 4, [\"__proto__\"+\"\"] : a1};\n\
+    \  console.log(a2.field1, a2.field1 = 10, a1.field1, a2.field1)";
+  [%expect {|
+    Programm output:
+    5 10 5 10
+
+    Programm return: undefined |}]
 ;;
 
 (**---------------Lexical env---------------*)
@@ -1490,4 +1542,12 @@ let%expect_test _ =
     \  return (obj2.some_obj.ret_this())";
   [%expect {|
     Programm return: { a: 1, ret_this: [Function: b] } |}]
+;;
+
+(**---------------New---------------*)
+
+let%expect_test _ =
+  print_return "function Create() { this.val1 = 4; this.val2 = 10 }; return new Create()";
+  [%expect {|
+    Programm return: { val1: 4, val2: 10 } |}]
 ;;

@@ -382,6 +382,11 @@ let get_int ctx bit = function
   | _ as t -> etyp @@ asprintf "expect number, but %s was given" @@ print_type ctx t
 ;;
 
+let get_obj_id ctx = function
+  | VObject id -> return id
+  | _ as t -> etyp @@ asprintf "expect object, but %s was given" @@ print_type ctx t
+;;
+
 let rec ctx_not_change_bop ctx op a b =
   let bop_with_num op =
     both to_vnumber a b
@@ -537,7 +542,7 @@ let rec ctx_not_change_bop ctx op a b =
   | _ as a -> ensup @@ asprintf "operator %a not supported yet" pp_bin_op a
 ;;
 
-let eval_un_op ctx op a =
+let ctx_not_change_unop ctx op a =
   match op with
   | Plus -> to_vnumber a <?> "error in plus operator"
   | Minus ->
@@ -623,6 +628,22 @@ let rec eval_fun ctx f args =
   | TArrowFunction f -> valid_and_run ctx ArrowFunction f
   | _ ->
     error @@ InternalError "get unexpected object type, expect function, but get TObject"
+
+and ctx_change_unop ctx op a =
+  let op_new () =
+    add_obj ctx [] TObject
+    >>= fun (ctx, obj) ->
+    get_obj_id ctx obj
+    >>= fun id ->
+    eval_exp { ctx with put_this = Some id } a
+    >>| fun (ctx, _) ->
+    let ctx = { ctx with put_this = None } in
+    ctx, VObject id
+  in
+  let add_ctx = add_ctx ctx in
+  match op with
+  | New -> op_new ()
+  | _ -> eval_exp ctx a >>= fun (ctx, a) -> add_ctx @@ ctx_not_change_unop ctx op a
 
 and ctx_change_bop ctx op a b =
   let assign () =
@@ -731,7 +752,7 @@ and eval_exp ctx =
   function
   | Const x -> return (ctx, const_to_val x)
   | BinOp (op, a, b) -> ctx_change_bop ctx op a b
-  | UnOp (op, a) -> eval_exp ctx a >>= fun (ctx, a) -> add_ctx @@ eval_un_op ctx op a
+  | UnOp (op, a) -> ctx_change_unop ctx op a
   | Var id -> ctx_get_var ctx id >>| fun (var, _) -> ctx, var.value
   | FunctionCall (var, args) ->
     eval_exp ctx var
