@@ -7,3 +7,5 @@
   - : bool * bool = (true, false)
   val fold_left : '6 list -> ('12 -> '6 -> '12) -> '12 -> '12 = <fun>
   - : int = 35
+  val is_123 : int list -> bool = <fun>
+  - : bool * bool * bool = (true, true, true)

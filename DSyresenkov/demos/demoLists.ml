@@ -30,6 +30,18 @@ let input =
       | h :: tl -> fold_left tl f (f init h)
 
     let _ = fold_left [7; 5; 3] (fun acc x -> if x * acc > 100 then acc else x * acc) 1
+
+    let is_123 l =
+      match l with
+      | 1 :: 2 :: 3 :: []
+      | 1 :: 3 :: 2 :: []
+      | 2 :: 1 :: 3 :: []
+      | 2 :: 3 :: 1 :: []
+      | 3 :: 1 :: 2 :: []
+      | 3 :: 2 :: 1 :: [] -> true
+      | _ -> false
+    
+    let _ = is_123 [1; 2; 3], is_123 [3; 1; 2], is_123 [3; 2; 1]
   |}
 ;;
 

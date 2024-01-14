@@ -179,9 +179,13 @@ module Interpret (M : MONAD_FAIL) = struct
           matched env
         | POr (p1, p2, ps), v ->
           let* env =
-            Base.List.fold_left (p1 :: p2 :: ps) ~init:(matched Env.empty) ~f:(fun _ p ->
-              let* env = helper p v in
-              matched env)
+            Base.List.fold_left (p1 :: p2 :: ps) ~init:not_matched ~f:(fun acc p ->
+              match acc with
+              | Matched env -> Matched env
+              | Failed err -> Failed err
+              | NotMatched ->
+                let* env = helper p v in
+                matched env)
           in
           matched env
         | _ -> fail (IncorrectType value)
