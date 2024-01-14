@@ -184,7 +184,7 @@ let get_parent ctx =
   | _ -> error @@ InternalError "cannot get parent"
 ;;
 
-let print ctx values =
+let print ctx values _ =
   fold_left
     (fun ctx value ->
       print_vvalues ctx value >>| fun str -> { ctx with stdout = ctx.stdout ^ str ^ " " })
@@ -210,33 +210,31 @@ let context_init =
     ; stdout = ""
     }
   in
-  let fun_pres ctx name t =
+  let fun_pres ctx name f =
     add_obj
       ctx
       [ { var_id = "name"; is_const = true; value = VString name }
       ; { var_id = "length"; is_const = true; value = VNumber 0. }
       ]
-      t
+      (TFunPreset f)
   in
   let valueOf =
-    fun_pres ctx "valueOf"
-    @@ TFunction
-         { parent_lex_env = first_lex_env
-         ; args = []
-         ; body = Block [ Return (Var "this") ]
-         }
+    fun_pres ctx "valueOf" (fun ctx _ this ->
+      match this with
+      | Some x -> return (ctx, Some (vobject x))
+      | None -> error @@ InternalError "Cannot find this" <?> "error in value of")
     >>| fun (ctx, value) ->
     { ctx with proto_obj_fields = [ { var_id = "valueOf"; is_const = true; value } ] }
   in
   let console ctx =
-    fun_pres ctx "log" @@ TFunPreset print
+    fun_pres ctx "log" print
     >>= fun (ctx, f) ->
     add_obj ctx [ { var_id = "log"; is_const = false; value = f } ] TObject
     >>= fun (ctx, value) ->
     lex_add ctx first_lex_env { var_id = "console"; is_const = false; value }
   in
   let alert ctx =
-    fun_pres ctx "alert" @@ TFunPreset print
+    fun_pres ctx "alert" print
     >>= fun (ctx, f) ->
     lex_add ctx first_lex_env { var_id = "alert"; is_const = false; value = f }
   in
@@ -328,52 +326,7 @@ let rec obj_get_property ctx obj key =
   | _ -> return @@ get_field key ctx.proto_obj_fields
 ;;
 
-let get_primitive ctx = function
-  | VObject _ as x -> obj_get_property ctx x "valueOf"
-  | _ as t -> return t
-;;
-
 (**---------------Expression interpreter---------------*)
-
-let to_string ctx v =
-  get_primitive ctx v
-  >>= function
-  | VString x -> return x
-  | VNumber x -> return (num_to_string x)
-  | VBool true -> return "true"
-  | VBool false -> return "false"
-  | VNull -> return "null"
-  | VUndefined -> return "undefined"
-  | VObject x when is_func_id ctx x -> ensup "conversion func to str"
-  | VObject _ -> return "[object Object]"
-  | _ as t -> etyp ("cannot cast " ^ print_type ctx t ^ " to string")
-;;
-
-let to_bool ctx v =
-  get_primitive ctx v
-  >>| function
-  | VNull | VUndefined -> false
-  | VBool x -> x
-  | VNumber x when Float.is_nan x || x = 0. -> false
-  | VString x when String.trim x = "" -> false
-  | _ -> true
-;;
-
-let to_number ctx v =
-  get_primitive ctx v
-  >>| function
-  | VNumber x -> x
-  | VString x ->
-    (match String.trim x with
-     | "" -> 0.
-     | _ as x ->
-       (match float_of_string_opt x with
-        | Some x -> x
-        | _ -> nan))
-  | VBool x -> Bool.to_float x
-  | VNull -> 0.
-  | _ -> nan
-;;
 
 let const_to_val = function
   | Number x -> VNumber x
@@ -410,7 +363,70 @@ let get_obj_id ctx = function
   | _ as t -> etyp @@ asprintf "expect object, but %s was given" @@ print_type ctx t
 ;;
 
-let rec ctx_not_change_bop ctx op a b =
+let ctx_get_var ctx id =
+  let rec go lex_id =
+    get_lex_env ctx lex_id
+    >>= fun lex_env ->
+    match find_in_vars_opt id lex_env.vars with
+    | Some a -> return (a, lex_id)
+    | None ->
+      (*function mustn't see 'this' in parent lex envs*)
+      if id = "this" && lex_env.scope = Function
+      then return ({ var_id = id; is_const = true; value = VUndefined }, lex_id)
+      else (
+        match lex_env.parent with
+        | Some parent -> go parent
+        | None ->
+          error (ReferenceError (asprintf "Cannot access '%s' before initialization" id)))
+  in
+  go ctx.cur_lex_env
+;;
+
+(**In this interpretator all context change what valueOf make will be discard*)
+let rec get_primitive ctx = function
+  | VObject id as x ->
+    obj_get_property ctx x "valueOf"
+    >>= fun f -> eval_fun ctx f [] (Some id) >>| fun (_, value) -> value
+  | _ as t -> return t
+
+and to_string ctx v =
+  get_primitive ctx v
+  >>= function
+  | VString x -> return x
+  | VNumber x -> return (num_to_string x)
+  | VBool true -> return "true"
+  | VBool false -> return "false"
+  | VNull -> return "null"
+  | VUndefined -> return "undefined"
+  | VObject x when is_func_id ctx x -> ensup "conversion func to str"
+  | VObject _ -> return "[object Object]"
+  | _ as t -> etyp ("cannot cast " ^ print_type ctx t ^ " to string")
+
+and to_bool ctx v =
+  get_primitive ctx v
+  >>| function
+  | VNull | VUndefined -> false
+  | VBool x -> x
+  | VNumber x when Float.is_nan x || x = 0. -> false
+  | VString x when String.trim x = "" -> false
+  | _ -> true
+
+and to_number ctx v =
+  get_primitive ctx v
+  >>| function
+  | VNumber x -> x
+  | VString x ->
+    (match String.trim x with
+     | "" -> 0.
+     | _ as x ->
+       (match float_of_string_opt x with
+        | Some x -> x
+        | _ -> nan))
+  | VBool x -> Bool.to_float x
+  | VNull -> 0.
+  | _ -> nan
+
+and ctx_not_change_bop ctx op a b =
   let bop_with_num op = both (to_number ctx) a b >>| fun (a, b) -> vnumber @@ op a b in
   let bop_logical_with_num op =
     both (to_number ctx) a b >>| fun (a, b) -> vbool @@ op a b
@@ -552,9 +568,8 @@ let rec ctx_not_change_bop ctx op a b =
   | Exp -> bop_with_num ( ** ) <?> "error in exp operator"
   | PropAccs -> prop_accs () <?> "error in property accession"
   | _ as a -> ensup @@ asprintf "operator %a not supported yet" pp_bin_op a
-;;
 
-let ctx_not_change_unop ctx op a =
+and ctx_not_change_unop ctx op a =
   match op with
   | Plus -> to_vnumber a <?> "error in plus operator"
   | Minus ->
@@ -584,28 +599,8 @@ let ctx_not_change_unop ctx op a =
     <?> "error in bitwise NOT operator"
   | TypeOf -> return @@ VString (print_type ctx a)
   | _ as a -> ensup @@ asprintf "operator %a not supported yet" pp_un_op a
-;;
 
-let ctx_get_var ctx id =
-  let rec go lex_id =
-    get_lex_env ctx lex_id
-    >>= fun lex_env ->
-    match find_in_vars_opt id lex_env.vars with
-    | Some a -> return (a, lex_id)
-    | None ->
-      (*function mustn't see 'this' in parent lex envs*)
-      if id = "this" && lex_env.scope = Function
-      then return ({ var_id = id; is_const = true; value = VUndefined }, lex_id)
-      else (
-        match lex_env.parent with
-        | Some parent -> go parent
-        | None ->
-          error (ReferenceError (asprintf "Cannot access '%s' before initialization" id)))
-  in
-  go ctx.cur_lex_env
-;;
-
-let rec eval_fun ctx f args this =
+and eval_fun ctx f args this =
   fold_left_map eval_exp ctx args
   <?> "error in function arguments"
   >>= fun (ctx, args) ->
@@ -639,9 +634,9 @@ let rec eval_fun ctx f args this =
   get_fun
   >>= fun (ctx, obj_t) ->
   match obj_t with
-  | TFunPreset f -> f ctx args >>| fun (ctx, ret) -> ctx, get_vreturn ret
   | TFunction f -> valid_and_run ctx Function f
   | TArrowFunction f -> valid_and_run ctx ArrowFunction f
+  | TFunPreset f -> f ctx args this >>| fun (ctx, ret) -> ctx, get_vreturn ret
   | _ ->
     error @@ InternalError "get unexpected object type, expect function, but get TObject"
 

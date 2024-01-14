@@ -47,7 +47,7 @@ type lexical_env =
   }
 
 and obj_type =
-  | TFunPreset of (ctx -> value list -> (ctx * value option) t)
+  | TFunPreset of (ctx -> value list -> int option -> (ctx * value option) t)
   | TFunction of fun_ctx
   | TArrowFunction of fun_ctx
   | TObject

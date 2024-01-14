@@ -866,7 +866,8 @@ let%expect_test _ =
 
 let%expect_test _ =
   print_return "return new 4";
-  [%expect {|
+  [%expect
+    {|
     Error: Interpreter error > error in return expression > TypeError: 4 is not a constructor |}]
 ;;
 
@@ -1570,4 +1571,41 @@ let%expect_test _ =
     \  return (obj2.some_obj.ret_this())";
   [%expect {|
     Programm return: { a: 1, ret_this: [Function: b] } |}]
+;;
+
+(**---------------ValueOf---------------*)
+
+let%expect_test _ =
+  print_return
+    "let a = { val1 : 15 }\n\
+    \    a.valueOf = function () {return 4}\n\
+    \    return a.valueOf()";
+  [%expect {|
+    Programm return: 4 |}]
+;;
+
+let%expect_test _ =
+  print_output
+    "let a = { val1 : 15 }\n\
+    \    console.log(a+4)\n\
+    \    a.valueOf = function () {return 4}\n\
+    \    console.log(a+4)";
+  [%expect {|
+    Programm output:
+    [object Object]4
+    8
+
+    Programm return: undefined |}]
+;;
+
+let%expect_test _ =
+  print_return "let a = { val1 : 15, valueOf() {return 4} }\nreturn a.valueOf()";
+  [%expect {|
+    Programm return: 4 |}]
+;;
+
+let%expect_test _ =
+  print_return "let a = { val1 : 15, valueOf() {return 4} }\nreturn a+4";
+  [%expect {|
+    Programm return: 8 |}]
 ;;
