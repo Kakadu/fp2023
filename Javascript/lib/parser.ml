@@ -219,10 +219,11 @@ let list_of_bops =
       ; ">>=", RShiftAssign
       ; "&&=", LogAndAssign
       ; "||=", LogOrAssign
+      ; "??=", NullAssign
       ; "=", Assign
       ]
     , Right (*precedence 2*) )
-  ; [ "||", LogicalOr ], Left (*precendence 3*)
+  ; [ "||", LogicalOr; "??", NullishCoal ], Left (*precendence 3*)
   ; [ "&&", LogicalAnd ], Left (*precendence 4*)
   ; [ "|", BitwiseOr ], Left (*precendence 5*)
   ; [ "^", Xor ], Left (*precendence 6*)

@@ -500,6 +500,11 @@ let rec ctx_not_change_bop ctx op a b =
     then bop (to_vstring ctx) a b
     else bop to_vnumber a b
   in
+  let nullish_coal () =
+    match a with
+    | VNull | VUndefined -> return b
+    | _ -> return a
+  in
   match op with
   | Add -> add () <?> "error in add operator"
   | Sub -> bop_with_num ( -. ) <?> "error in sub operator"
@@ -526,6 +531,7 @@ let rec ctx_not_change_bop ctx op a b =
   | BitwiseOr -> bop_with_int ( lor ) <?> "error in bitwise or"
   | LogicalAnd -> logical_and () <?> "error in logical_and operator"
   | LogicalOr -> logical_or () <?> "error in logical_and operator"
+  | NullishCoal -> nullish_coal () <?> "error in nullish_coalescing operator"
   | Xor -> bop_with_int ( lxor )
   | Exp -> bop_with_num ( ** ) <?> "error in exp operator"
   | _ as a -> ensup @@ asprintf "operator %a not supported yet" pp_bin_op a
@@ -559,16 +565,6 @@ let eval_un_op ctx op a =
     >>= get_vnum ctx
     >>| (fun n -> VNumber (float_of_int (lnot (Int32.to_int (Int32.of_float n)))))
     <?> "error in bitwise NOT operator"
-  (* | PostInc ->
-     to_vnumber a
-     >>= get_vnum ctx
-     >>| (fun n -> VNumber n)
-     <?> "error in postfix increment operator" *)
-  | PostDec ->
-    to_vnumber a
-    >>= get_vnum ctx
-    >>| (fun n -> VNumber n)
-    <?> "error in postfix decrement operator"
   | _ as a -> ensup @@ asprintf "operator %a not supported yet" pp_un_op a
 ;;
 
@@ -716,7 +712,7 @@ and ctx_change_bop ctx op a b =
   | BitXorAssign -> ctx_change_bop ctx Assign a (BinOp (Xor, a, b))
   | LogAndAssign -> ctx_change_bop ctx Assign a (BinOp (LogicalAnd, a, b))
   | LogOrAssign -> ctx_change_bop ctx Assign a (BinOp (LogicalOr, a, b))
-  (* | NullAssign -> ctx_change_bop ctx Assign a (BinOp (, a, b)) *)
+  | NullAssign -> ctx_change_bop ctx Assign a (BinOp (NullishCoal, a, b))
   | PropAccs -> prop_accs () <?> "error in property access"
   | _ ->
     both_ext eval_exp ctx a b

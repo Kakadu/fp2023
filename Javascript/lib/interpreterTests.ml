@@ -760,11 +760,6 @@ let%expect_test _ =
   [%expect {| Programm return: 0 |}]
 ;;
 
-let%expect_test _ =
-  print_return "return 4--";
-  [%expect {| Programm return: 4 |}]
-;;
-
 (*assigns*)
 
 let%expect_test _ =
@@ -845,6 +840,21 @@ let%expect_test _ =
 let%expect_test _ =
   print_return "let a = 5; a ^= 2; return a";
   [%expect {| Programm return: 7 |}]
+;;
+
+let%expect_test _ =
+  print_return "let a = null; a ??= 2; return a";
+  [%expect {| Programm return: 2 |}]
+;;
+
+let%expect_test _ =
+  print_return "let a = undefined; a ??= 2; return a";
+  [%expect {| Programm return: 2 |}]
+;;
+
+let%expect_test _ =
+  print_return "let a = 'foo'; a ??= 2; return a";
+  [%expect {| Programm return: foo |}]
 ;;
 
 (*infinity*)
