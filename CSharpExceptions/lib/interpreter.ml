@@ -101,7 +101,9 @@ let eval_point_access e_id e1 lenv_kernel =
 
 let get_params_id (Params x) = List.map (fun (Var_decl (_, id)) -> id) x
 let is_const_v x = is_env_const x >>= is_init >>= is_base
+let is_inst_v x = is_env_const x >>= is_init >>= is_class
 let is_not_null_const_v x = is_const_v x >>= is_not_null
+let is_not_null_inst_v x = is_inst_v x >>= is_not_null
 let get_int x = is_not_null_const_v x >>= is_int
 let ret_int x = return_n (create_val (Int_v x))
 let update_int op x = get_int x >>= fun x -> ret_int (op x)
@@ -112,7 +114,7 @@ let get_string x = is_not_null_const_v x >>= is_sting
 let ret_string x = return_n (create_val (String_v x))
 let get_char x = is_not_null_const_v x >>= is_char
 let ret_char x = return_n (create_val (Char_v x))
-let get_inst x = is_not_null_const_v x >>= is_inst
+let get_inst x = is_not_null_inst_v x >>= is_inst
 let ret_inst x = return_n (create_val (Instance_v x))
 
 let eval_instrs_ f e args lenv e_stm e_expr =
@@ -303,7 +305,7 @@ let catch_eval ad e_stm lenv = function
 ;;
 
 let eval_try_catch_fin e_stm lenv try_ catch_ fin_ =
-  let f_try = e_stm try_ in
+  let f_try =e_stm try_ in
   let f_catch ad = catch_eval ad e_stm lenv catch_ in
   let f_finally =
     match fin_ with
@@ -328,6 +330,7 @@ let eval_statement lenv_kernel stm =
        | Some e -> eval_expr e >>= is_assignable >>= fun x -> return_r (Some x))
     | Steps stm_l -> local @@ iter_left helper stm_l
     | SIf_else (e, stm, stm_opt) ->
+      local @@
       eval_expr e
       >>= get_bool
       >>= (function

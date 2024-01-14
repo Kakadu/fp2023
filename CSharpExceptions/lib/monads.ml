@@ -23,7 +23,7 @@ module Base_monad = struct
   let save : 'st -> ('st, unit, 'err) t = fun new_ctx _ -> new_ctx, Result.ok ()
   let read : ('st, 'a, 'err) t = fun st -> (return st) st
 
-  let continue : ('st, 'a, 'err) t -> 'st  -> 'st * ('a, 'err) Result.t =
+  let continue : ('st, 'a, 'err) t -> 'st -> 'st * ('a, 'err) Result.t =
     fun f c_env -> f c_env
   ;;
 
@@ -257,6 +257,7 @@ module Eval_Monad = struct
   let fold_left custom_f acc mlst =
     let f acc cur = acc >>= fun acc_ -> custom_f acc_ cur >>= return_n in
     List.fold_left f (return_n acc) mlst
+  ;;
 
   let map_left custom_f mlst =
     let f acc cur = acc >>= fun tl -> custom_f cur >>= fun x -> return_n (x :: tl) in
@@ -469,6 +470,7 @@ module Eval_Monad = struct
     | Error x -> fail x
   ;;
 
+  (* TODO: Х*йня не работает *)
   let local f = local_with read_local f
 
   let run_in_another_self ad new_lenv f =
@@ -485,8 +487,8 @@ module Eval_Monad = struct
   ;;
 
   let tcf_run tf cf ff =
-    let cf_new ad = local (cf ad) @!|>>= fun sig_ -> local ff *> further sig_ in
     let ff_new = local ff in
+    let cf_new ad = local (cf ad) @!|>>= fun sig_ -> ff_new *> further sig_ in
     read_mem
     >>= fun mem ->
     local tf
