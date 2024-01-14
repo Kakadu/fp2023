@@ -120,6 +120,29 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
+  pp ~parse:parse_expression "new f()";
+  [%expect {|(Expression (UnOp (New, (FunctionCall ((Var "f"), [])))))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression "typeof 4";
+  [%expect {|(Expression (UnOp (TypeOf, (Const (Number 4.)))))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression "+ 4 ++";
+  [%expect {|(Expression (UnOp (Plus, (UnOp (PostInc, (Const (Number 4.)))))))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression "+ 4 ++ --";
+  [%expect
+    {|
+    (Expression
+       (UnOp (Plus, (UnOp (PostDec, (UnOp (PostInc, (Const (Number 4.)))))))))|}]
+;;
+
+let%expect_test _ =
   pp ~parse:parse_expression "- +";
   [%expect {|Error: incorrect expression > invalid part of expression: no more choices|}]
 ;;

@@ -3,6 +3,10 @@
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
 type un_op =
+  | New
+  | TypeOf
+  | PostInc
+  | PostDec
   | Plus
   | Minus
   | PrefixIncrement
