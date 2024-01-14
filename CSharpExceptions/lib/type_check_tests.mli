@@ -2,4 +2,4 @@
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-val check_stand : string -> unit
+val type_check_wrap : string -> unit

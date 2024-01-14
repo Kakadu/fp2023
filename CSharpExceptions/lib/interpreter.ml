@@ -192,6 +192,7 @@ let eval_bin_op op e1 e2 e_expr lenv =
   in
   let eq_op op_t = _op (fun x -> is_const_v x) op_t in
   let eq_f op r1 r2 = return_n (op r1 r2) >>= ret_bool in
+  let lazy_ f get_ = e_expr e1 >>= get_ >>= f (e_expr e1 >>= get_) in
   (* --- *)
   match op with
   | Asterisk -> int_op @@ int_f ( * )
@@ -200,21 +201,19 @@ let eval_bin_op op e1 e2 e_expr lenv =
   | Mod -> int_op (div_f ( mod ))
   | Division -> int_op (div_f ( / ))
   | And ->
-    let lazy_and r1 r2 =
-      (match r1 with
-       | false -> return_n false
-       | true -> return_n r2)
-      >>= ret_bool
+    let op_and f r1 =
+      match r1 with
+      | false -> return_n false
+      | true -> f
     in
-    bool_op lazy_and
+    lazy_ op_and get_bool >>= ret_bool
   | Or ->
-    let lazy_or r1 r2 =
-      (match r1 with
-       | true -> return_n true
-       | false -> return_n r2)
-      >>= ret_bool
+    let op_or f r1 =
+      match r1 with
+      | true -> return_n true
+      | false -> f
     in
-    bool_op lazy_or
+    lazy_ op_or get_bool >>= ret_bool
   | Less -> int_op @@ bool_f ( < )
   | LessOrEqual -> int_op @@ bool_f ( <= )
   | More -> int_op @@ bool_f ( > )
@@ -361,9 +360,11 @@ let interpret str =
         | _, _ -> Result.error (System_error "Unrecognized signal")))
 ;;
 
+(* ******************** TESTS ******************** *)
+
 let interpret_wrap str =
   match interpret str with
-  | Result.Error x -> Format.printf "Type_check error-: %a@\n" pp_error x
+  | Result.Error x -> Format.printf "Error: %a@\n" pp_error x
   | Result.Ok x ->
     (match x with
      | None -> Format.print_string "Interpreter success\n"
@@ -373,6 +374,82 @@ let interpret_wrap str =
         | _ -> Format.print_string "Interpreter error\n"))
 ;;
 
+(* ******************** Positive ******************** *)
+
+let%expect_test "Bin-un ops" =
+  let s =
+    {| 
+      class Program
+      {
+        int i = 0;
+        char c = 'c';
+        bool b;
+        string s;
+        
+        int? i_n = null;
+        char? c_n = 'b';
+        bool? b_n = true;
+        string s_n = null;
+
+        static int Main(){
+          if (c == 'c' && c != c_n){ i = i + 1; }
+          
+          s = "value";
+          if (s == "value" && s != s_n){ i = i + 1; }
+          
+          if (true) { i = i + 1; }
+          
+          b = false;
+          if(!b) { i = i + 1; }
+          
+          if(s == null) {return -1;}
+          else { i = i + 1; }
+          
+          int x;
+          int y;
+          int z;
+          int p = 3;
+          x = y = z = p;
+          if(x == y && z == p && y == z){  i = i + 1; }
+
+          i_n = 1;
+          i_n = 30 + i_n;
+          if (true && i_n == 31 && (i_n > 0) && (i_n >= 0) && i < 100 && i < 100 || b){
+              return (-(1 + 4 * 2 / 2 - 1) + 4) + i ;
+          }
+          return -1;
+        }
+      }
+    |}
+  in
+  interpret_wrap s;
+  [%expect {| Result: (Init (Int_v 6)) |}]
+;;
+
+let%expect_test "Lazy || and && " =
+  let s =
+    {| 
+      class Program
+      {
+        bool b;
+
+        static int Main(){
+          if (true || b){
+            if (false && b){
+              return -2;
+            } else {
+              return 31;
+            }
+          }
+          return -1;
+        }
+      }
+    |}
+  in
+  interpret_wrap s;
+  [%expect {| Result: (Init (Int_v 31)) |}]
+;;
+
 let%expect_test "Base factorial type check" =
   let s =
     {| 
@@ -380,7 +457,7 @@ let%expect_test "Base factorial type check" =
       {
           int Fac(int num)
           { 
-              if (num == 1)
+              if (num <= 1)
               {
                   return 1;
               }
@@ -391,11 +468,31 @@ let%expect_test "Base factorial type check" =
           }
 
           static int Main(){
-              return Fac(10);
+              return Fac(4);
           }
       }
 |}
   in
   interpret_wrap s;
-  [%expect {| Result: (Init (Int_v 3628800)) |}]
+  [%expect {| Result: (Init (Int_v 24)) |}]
+;;
+
+(* ******************** Negative ******************** *)
+
+let%expect_test "Uninit value " =
+  let s =
+    {| 
+      class Program
+      {
+        bool b;
+
+        static int Main(){
+          if (b){}
+          return -1;
+        }
+      }
+    |}
+  in
+  interpret_wrap s;
+  [%expect {| Error: Using_an_uninitialized_variable |}]
 ;;

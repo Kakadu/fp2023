@@ -7,7 +7,7 @@ open Csharp_Exc_Lib.Parser
 open Csharp_Exc_Lib.Type_check
 
 (* ******************** TESTS ******************** *)
-let check_stand str =
+let type_check_wrap str =
   match parse_ast str with
   | Result.Error x -> Format.print_string ("Parsing error: " ^ x ^ "\n")
   | Result.Ok x ->
@@ -41,7 +41,7 @@ let%expect_test "Base factorial type check" =
       }
 |}
   in
-  check_stand s;
+  type_check_wrap s;
   [%expect {| Type_check success |}]
 ;;
 
@@ -59,7 +59,7 @@ let%expect_test "Base program" =
       }
 |}
   in
-  check_stand s;
+  type_check_wrap s;
   [%expect {| Type_check success |}]
 ;;
 
@@ -83,7 +83,7 @@ let%expect_test "Base program 2" =
     }
 |}
   in
-  check_stand s;
+  type_check_wrap s;
   [%expect {| Type_check success |}]
 ;;
 
@@ -104,12 +104,14 @@ let%expect_test "Type checks" =
 
         int Fac(int num, string str, Program prg)
         { 
+          i_n = i_n + i;
+          b = i_n == i;
           s = "kek";
           b = !(1 == 2 != false && 1 + 2 % 3 == 1 / -2 * 100 || true);
           b_n = c_n == null;
-          i_n = i_n + i;
-          b = i_n == i;
           return Fac(i, s, null);
+
+          
         }
 
         static void Main(){
@@ -118,7 +120,7 @@ let%expect_test "Type checks" =
       }
 |}
   in
-  check_stand s;
+  type_check_wrap s;
   [%expect {| Type_check success |}]
 ;;
 
@@ -160,7 +162,7 @@ let%expect_test "Loops & branches" =
     
 |}
   in
-  check_stand s;
+  type_check_wrap s;
   [%expect {| Type_check success |}]
 ;;
 
@@ -198,7 +200,7 @@ let%expect_test "Many classes" =
     }
 |}
   in
-  check_stand s;
+  type_check_wrap s;
   [%expect {| Type_check success |}]
 ;;
 
@@ -220,7 +222,7 @@ let%expect_test "Throw exceptions" =
       }
 |}
   in
-  check_stand s;
+  type_check_wrap s;
   [%expect {| Type_check success |}]
 ;;
 
@@ -269,7 +271,7 @@ let%expect_test "Try_catch" =
       }
 |}
   in
-  check_stand s;
+  type_check_wrap s;
   [%expect {| Type_check success |}]
 ;;
 
@@ -292,7 +294,7 @@ let%expect_test "Double definition" =
       }
 |}
   in
-  check_stand s;
+  type_check_wrap s;
   [%expect {| Type_check error: (Double_definition_of (Id "b")) |}]
 ;;
 
@@ -318,7 +320,7 @@ let%expect_test "Double \"Main\" definition " =
       }
 |}
   in
-  check_stand s;
+  type_check_wrap s;
   [%expect {| Type_check error: (Double_definition_of (Id "Main")) |}]
 ;;
 
@@ -339,7 +341,7 @@ let%expect_test "Double method declaration" =
       }
 |}
   in
-  check_stand s;
+  type_check_wrap s;
   [%expect {| Type_check error: (Double_definition_of (Id "Fac")) |}]
 ;;
 
@@ -367,7 +369,7 @@ let%expect_test "Access check" =
       }
 |}
   in
-  check_stand s;
+  type_check_wrap s;
   [%expect {| Type_check error: (Access_error "Attempt to get a private class member") |}]
 ;;
 
@@ -389,7 +391,7 @@ let%expect_test "Throw some class" =
       }
 |}
   in
-  check_stand s;
+  type_check_wrap s;
   [%expect {| Type_check error: (Other_error "throw can be used only with exceptions") |}]
 ;;
 
@@ -419,7 +421,7 @@ let%expect_test "Throw some class" =
     }
 |}
   in
-  check_stand s;
+  type_check_wrap s;
   [%expect
     {|
     Type_check error: (Other_error
@@ -445,7 +447,7 @@ let%expect_test "FileInfo_decl" =
         } 
     |}
   in
-  check_stand s;
+  type_check_wrap s;
   [%expect {| Type_check error: (Double_definition_of (Id "FileInfo")) |}]
 ;;
 
@@ -453,6 +455,6 @@ let%expect_test "Exception_decl" =
   let s = {|
         class Exception{} 
     |} in
-  check_stand s;
+  type_check_wrap s;
   [%expect {| Type_check error: (Double_definition_of (Id "Exception")) |}]
 ;;

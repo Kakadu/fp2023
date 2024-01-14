@@ -92,7 +92,7 @@ let ( =!> ) a b =
       match a_tp_opt, b_tp_opt with
       | Some (TNullable (TBase a_tp)), Some (TNot_Nullable b_tp)
         when equal_base_type a_tp b_tp -> Result.ok a_tp_opt
-      | _, _ -> Result.error "Types are not equal."
+      | _, _ -> Result.error "Types are not equal..."
     in
     compare a b helper
 ;;
@@ -245,7 +245,7 @@ let env_string = Value_sig (TVar (TNullable TString))
 let base_type_eq2 tp0 tp1 tp2 = tp0 >>= eq_t_env_opt tp1 <|> (tp0 >>= eq_t_env_opt tp2)
 
 let check_operands oper1 oper2 =
-  greater_t_env_opt oper1 oper2 <|> greater_t_env_opt oper1 oper2
+  greater_t_env_opt oper1 oper2 <|> greater_t_env_opt oper2 oper1 
 ;;
 
 let operands_eq oper1 oper2 =
