@@ -99,6 +99,7 @@ let ( =!> ) a b =
 
 let greater_t_env_opt a b = compare_t_env_opt ( =!> ) a b
 let params_check f prms = map_left f prms
+let get_local_ident id = read_local_el id >>| fun id -> Some id
 
 let v_decl_to_type_v = function
   | Var_decl (tp, _) -> Value_sig tp
@@ -119,38 +120,6 @@ let map2_opt f l1 l2 =
   match Int.equal len1 len2 with
   | true -> Result.ok (List.map2 f l1 l2)
   | false -> Result.error "len(list1) != len(list2)"
-;;
-
-let check_method_ tp params args =
-  let compare_prms = map2_opt ( =!> ) in
-  let to_env elem = Some (v_decl_to_type_v elem) in
-  let args_env = List.map to_env params in
-  let result =
-    args
-    >>| fun prms_env ->
-    match compare_prms args_env prms_env with
-    | Result.Ok ans -> is_success_list ans
-    | Result.Error _ -> false
-  in
-  result
-  >>= function
-  | true -> return (Some tp)
-  | false -> fail Type_mismatch
-;;
-
-let check_invoke sign env_args =
-  match sign with
-  | Some (Method_sig { m_modif = _; m_type; m_id = _; m_params = Params params }) ->
-    let tp = to_type_m m_type in
-    (match tp with
-     | Result.Error _ -> fail Type_mismatch
-     | Result.Ok tp -> check_method_ tp params env_args)
-  | Some (Constructor_sig { con_modif = _; con_id; con_params; base_args }) ->
-    let tp = Value_sig (TVar (TNullable (TClass con_id))) in
-    (match con_params, base_args with
-     | Params params, None -> check_method_ tp params env_args
-     | _ -> fail (Other_error "Inheritance with constructors is not supported"))
-  | _ -> fail Type_mismatch
 ;;
 
 let get_sign id el =
@@ -235,6 +204,61 @@ let check_point_acc e1 e2 =
   helper >>| fun x -> Some x
 ;;
 
+let check_method_ params args =
+  let compare_prms = map2_opt ( =!> ) in
+  let to_env elem = Some (v_decl_to_type_v elem) in
+  let args_env = List.map to_env params in
+  let result =
+    args
+    >>| fun prms_env ->
+    match compare_prms args_env prms_env with
+    | Result.Ok ans -> is_success_list ans
+    | Result.Error _ -> false
+  in
+  result
+  >>= function
+  | true -> return ()
+  | false -> fail Type_mismatch
+;;
+
+let check_invoke f e_expr e args =
+  let is_Eident = function
+    | EIdentifier x -> get_local_ident x
+    | _ -> fail (Other_error "Just for skip")
+  in
+  let is_EPoint_acc = function
+    | EPoint_access (e1, e2) -> check_point_acc e1 e2
+    | _ -> fail Type_mismatch
+  in
+  is_Eident e
+  <|> is_EPoint_acc e
+  >>= fun x ->
+  let env_val_prms = params_check e_expr args in
+  f x env_val_prms
+;;
+
+let inv_cond_return sign env_args =
+  match sign with
+  | Some (Method_sig { m_modif = _; m_type; m_id = _; m_params = Params params }) ->
+    let tp = to_type_m m_type in
+    (match tp with
+     | Result.Error _ -> fail (Other_error "-_-")
+     | Result.Ok tp -> check_method_ params env_args *> return (Some tp))
+  | Some (Constructor_sig { con_modif = _; con_id; con_params; base_args }) ->
+    let tp = Value_sig (TVar (TNullable (TClass con_id))) in
+    (match con_params, base_args with
+     | Params params, None -> check_method_ params env_args *> return (Some tp)
+     | _ -> fail (Other_error "Inheritance with constructors is not supported"))
+  | _ -> fail Type_mismatch
+;;
+
+let inv_cond_void sign env_args =
+  match sign with
+  | Some (Method_sig { m_modif = _; m_type; m_id = _; m_params = Params params })
+    when equal_meth_type m_type Void -> check_method_ params env_args *> return TP_Ok
+  | _ -> fail (Other_error "As a statement can be used only 'Void' methods")
+;;
+
 let env_bool = Value_sig (TVar (TNot_Nullable TBool))
 let env_bool_null = Value_sig (TVar (TNullable (TBase TBool)))
 let env_int = Value_sig (TVar (TNot_Nullable TInt))
@@ -245,7 +269,7 @@ let env_string = Value_sig (TVar (TNullable TString))
 let base_type_eq2 tp0 tp1 tp2 = tp0 >>= eq_t_env_opt tp1 <|> (tp0 >>= eq_t_env_opt tp2)
 
 let check_operands oper1 oper2 =
-  greater_t_env_opt oper1 oper2 <|> greater_t_env_opt oper2 oper1 
+  greater_t_env_opt oper1 oper2 <|> greater_t_env_opt oper2 oper1
 ;;
 
 let operands_eq oper1 oper2 =
@@ -289,26 +313,12 @@ let check_un_op op env1 =
 ;;
 
 let check_expr exp =
-  let get_local_ident id = read_local_el id >>| fun id -> Some id in
   let rec helper = function
     | EConst x ->
       (* None means "there is null" *)
       return (to_type_v @@ to_var_type @@ to_atype x)
     | EIdentifier x -> get_local_ident x
-    | EMethod_invoke (e2, Args args) ->
-      let is_Eident = function
-        | EIdentifier x -> get_local_ident x
-        | _ -> fail (Other_error "Just for skip")
-      in
-      let is_EPoint_acc = function
-        | EPoint_access (e1, e2) -> check_point_acc e1 e2
-        | _ -> fail Type_mismatch
-      in
-      is_Eident e2
-      <|> is_EPoint_acc e2
-      >>= fun x ->
-      let env_val_prms = params_check helper args in
-      check_invoke x env_val_prms
+    | EMethod_invoke (e2, Args args) -> check_invoke inv_cond_return helper e2 args
     | EPoint_access (e1, e2) ->
       let is_EPoint_acc = function
         | Some (Fild_sig _) -> return ()
@@ -453,7 +463,11 @@ let check_statement stat =
   let rec helper_ steps_wrap st =
     let helper = helper_ steps_wrap in
     match st with
-    | SExpr e -> check_expr e *> return TP_Ok
+    | SExpr e ->
+      (match e with
+       | EMethod_invoke (e2, Args args) ->
+         check_invoke inv_cond_void check_expr e2 args *> return TP_Ok
+       | _ -> check_expr e *> return TP_Ok)
     | Steps stp ->
       let f acc = steps_wrap helper acc *> return () in
       let check_steps = iter_left f stp *> return TP_Ok in
