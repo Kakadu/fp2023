@@ -257,9 +257,61 @@ let eval_stm_expr e_expr e_stm lenv_kernel = function
   | _ -> fail (System_error "Trying to use an expression as a statement")
 ;;
 
-(* let eval_try_catch_fin e_stm lenv_kernel try_ catch_ fin_ =
-  let f_finally = local
-;; *)
+let catch_eval ad e_stm lenv = function
+  | None -> return_n ()
+  | Some catch_l ->
+    let f acc (cond, body) =
+      local
+        (match cond, acc with
+         | None, None -> e_stm body *> return_n (Some ())
+         | Some (c_decl, e_opt), None ->
+           let eval_cond =
+             match e_opt with
+             | None -> return_n true
+             | Some e -> eval_expr e_stm lenv e >>= get_bool
+           in
+           let eval_body config = function
+             | true -> config *> e_stm body *> return_n (Some ())
+             | false -> return_n None
+           in
+           let accept_cond inh_cl_id cl_id =
+             equal_ident inh_cl_id cl_id || equal_ident cl_id Base_lib.exception_name
+           in
+           let is_inheritance cl_tp cl_id =
+             match cl_tp with
+             | TVar (TNullable (TClass inh_cl_id)) when accept_cond inh_cl_id cl_id ->
+               eval_cond
+             | _ -> return_n false
+           in
+           read_inst_cl ad
+           >>= fun (Code_ident cl_id) ->
+           (match c_decl with
+            | CDecl (Var_decl (cl_tp, name)) ->
+              let update_env = add_local_el name (IConst Not_init) in
+              is_inheritance cl_tp cl_id >>= eval_body update_env
+            | CIdent inh_cl_id when accept_cond inh_cl_id cl_id ->
+              (match e_opt with
+               | Some _ ->
+                 fail
+                   (Runtime_error
+                      "An exception filter can only be written for a declaration in catch")
+               | None -> e_stm body *> return_n (Some ()))
+            | _ -> fail (Runtime_error "Using normal class as an exception"))
+         | _ -> return_n None)
+    in
+    fold_left f None catch_l *> return_n ()
+;;
+
+let eval_try_catch_fin e_stm lenv try_ catch_ fin_ =
+  let f_try = e_stm try_ in
+  let f_catch ad = catch_eval ad e_stm lenv catch_ in
+  let f_finally =
+    match fin_ with
+    | Some stm -> e_stm stm
+    | None -> return_n ()
+  in
+  tcf_run f_try f_catch f_finally
+;;
 
 let eval_statement lenv_kernel stm =
   let rec helper stm_ =
@@ -285,8 +337,9 @@ let eval_statement lenv_kernel stm =
          | None -> return_n ()
          | Some stm -> helper stm))
     | SBreak -> return_b ()
-    | SThrow e -> eval_expr e >>= get_inst >>= return_e 
-    (* | STry_catch_fin { try_s; catch_s; finally_s } -> *)
+    | SThrow e -> eval_expr e >>= get_inst >>= return_e
+    | STry_catch_fin { try_s; catch_s; finally_s } ->
+      eval_try_catch_fin helper lenv_kernel try_s catch_s finally_s
     (* | SWhile (e, stm) -> *)
     (* | SFor for_sign -> *)
     | _ -> fail (Return_error "TODO: REMOVE")

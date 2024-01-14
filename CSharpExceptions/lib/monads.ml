@@ -21,8 +21,9 @@ module Base_monad = struct
   ;;
 
   let save : 'st -> ('st, unit, 'err) t = fun new_ctx _ -> new_ctx, Result.ok ()
+  let read : ('st, 'a, 'err) t = fun st -> (return st) st
 
-  let continue : ('st, 'a, 'err) t -> 'st -> 'st * ('a, 'err) Result.t =
+  let continue : ('st, 'a, 'err) t -> 'st  -> 'st * ('a, 'err) Result.t =
     fun f c_env -> f c_env
   ;;
 
@@ -252,6 +253,10 @@ module Eval_Monad = struct
   let ( >>| ) x f = x >>= fun x_res -> return_n (f x_res)
   let ( *> ) a b = a >>= fun _ -> b >>= fun b1 -> return_n b1
   let lift2 f a b = a >>= fun a1 -> b >>= fun b1 -> return_n (f a1 b1)
+
+  let fold_left custom_f acc mlst =
+    let f acc cur = acc >>= fun acc_ -> custom_f acc_ cur >>= return_n in
+    List.fold_left f (return_n acc) mlst
 
   let map_left custom_f mlst =
     let f acc cur = acc >>= fun tl -> custom_f cur >>= fun x -> return_n (x :: tl) in
