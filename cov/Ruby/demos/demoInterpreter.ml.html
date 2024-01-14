@@ -18,8 +18,8 @@
       <h2>75.00%</h2>
     </div>
     <div id="navbar">
-      <span class="unvisited" style="bottom:21.43%"></span>
-      <span class="unvisited" style="bottom:7.14%"></span>
+      <span class="unvisited" style="bottom:16.67%"></span>
+      <span class="unvisited" style="bottom:5.56%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -27,17 +27,21 @@
 <a id="L1"></a><span > </span>
 <a id="L2"></a><span > </span>
 <a id="L3"></a><span > </span>
-<a id="L4"></a><span class="visited"> </span>
-<a id="L5"></a><span class="visited"> </span>
-<a id="L6"></a><span class="visited"> </span>
+<a id="L4"></a><span > </span>
+<a id="L5"></a><span > </span>
+<a id="L6"></a><span > </span>
 <a id="L7"></a><span > </span>
 <a id="L8"></a><span class="visited"> </span>
 <a id="L9"></a><span class="visited"> </span>
-<a id="L10"></a><span > </span>
-<a id="L11"></a><span class="unvisited"> </span>
-<a id="L12"></a><span > </span>
-<a id="L13"></a><span class="unvisited"> </span>
+<a id="L10"></a><span class="visited"> </span>
+<a id="L11"></a><span > </span>
+<a id="L12"></a><span class="visited"> </span>
+<a id="L13"></a><span class="visited"> </span>
 <a id="L14"></a><span > </span>
+<a id="L15"></a><span class="unvisited"> </span>
+<a id="L16"></a><span > </span>
+<a id="L17"></a><span class="unvisited"> </span>
+<a id="L18"></a><span > </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -56,8 +60,16 @@
 <a href="#L12">12</a>
 <a href="#L13">13</a>
 <a href="#L14">14</a>
+<a href="#L15">15</a>
+<a href="#L16">16</a>
+<a href="#L17">17</a>
+<a href="#L18">18</a>
 </pre>
-<pre><code class="ocaml">open Ruby_lib.Interpret
+<pre><code class="ocaml">(** Copyright 2023-2024, Ermolovich Anna *)
+
+(** SPDX-License-Identifier: CC0-1.0 *)
+
+open Ruby_lib.Interpret
 
 let () =
   let path = String.trim (Stdio.In_channel.input_al<span data-count="6">l</span> Caml.stdin) in
