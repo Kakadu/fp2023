@@ -120,6 +120,29 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
+  pp ~parse:parse_expression "new f()";
+  [%expect {|(Expression (UnOp (New, (FunctionCall ((Var "f"), [])))))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression "typeof 4";
+  [%expect {|(Expression (UnOp (TypeOf, (Const (Number 4.)))))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression "+ 4 ++";
+  [%expect {|(Expression (UnOp (Plus, (UnOp (PostInc, (Const (Number 4.)))))))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression "+ 4 ++ --";
+  [%expect
+    {|
+    (Expression
+       (UnOp (Plus, (UnOp (PostDec, (UnOp (PostInc, (Const (Number 4.)))))))))|}]
+;;
+
+let%expect_test _ =
   pp ~parse:parse_expression "- +";
   [%expect {|Error: incorrect expression > invalid part of expression: no more choices|}]
 ;;
@@ -143,6 +166,20 @@ let%expect_test _ =
     {|
     (Expression
        (BinOp (Add, (Const (Number 40.)), (UnOp (Minus, (Const (Number 50.)))))))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression "40 && 50";
+  [%expect
+    {|
+    (Expression (BinOp (LogicalAnd, (Const (Number 40.)), (Const (Number 50.)))))|}]
+;;
+
+let%expect_test _ =
+  pp ~parse:parse_expression "40 & 50";
+  [%expect
+    {|
+    (Expression (BinOp (BitwiseAnd, (Const (Number 40.)), (Const (Number 50.)))))|}]
 ;;
 
 let%expect_test _ =
@@ -347,7 +384,7 @@ let%expect_test _ =
     \      sayName : function () {\n\
     \        return this.name;\n\
     \      },\n\
-    \      like : \"OCaml\",\n\
+    \      like,\n\
     \    }";
   [%expect
     {|
@@ -361,7 +398,7 @@ let%expect_test _ =
                        (BinOp (PropAccs, (Var "this"), (Const (String "name")))))
                      ])
                 )));
-            ((Const (String "like")), (Const (String "OCaml")))]))|}]
+            ((Const (String "like")), (Var "like"))]))|}]
 ;;
 
 let%expect_test _ =
@@ -745,6 +782,19 @@ let%expect_test _ =
                  value = (Const Undefined) })
              ])
          ])|}]
+;;
+
+let%expect_test _ =
+  pp "return;";
+  [%expect {|
+    (Programm [(Return (Const Undefined))])|}]
+;;
+
+let%expect_test _ =
+  pp "return\n  4";
+  [%expect
+    {|
+    (Programm [(Return (Const Undefined)); (Expression (Const (Number 4.)))])|}]
 ;;
 
 let%expect_test "factorial" =

@@ -60,6 +60,7 @@ let keywords =
   ; "null"
   ; "NaN"
   ; "Infinity"
+  ; "new"
   ]
 ;;
 
@@ -112,7 +113,7 @@ let rs = token_ch ']'
 let parens p = between p lp rp
 let cur_parens p = between p lc rc
 let sq_parens p = between p ls rs
-let empty_stm = empty *> end_of_input <|> skip is_end
+let empty_stm = spaces *> (end_of_input <|> skip is_end <|> skip is_line_break)
 let to_end_of_stm = empty_stm <|> empty
 let some n = Some n
 let number n = Number n
@@ -133,8 +134,6 @@ let parse_number =
          | _ as num -> return num)
   >>| fun n -> number @@ float_of_string n
 ;;
-
-(*TODO: -,NaN..., BigINT*)
 
 let parse_bool =
   string "true" *> return true <|> string "false" *> return false >>| bool <* end_of_word
@@ -178,22 +177,39 @@ let parse_args_names =
 ;;
 
 let parse_comma parser = sep_by (token_ch ',') parser <* (token_ch ',' <|> return ' ')
-let parse_op ops = choice (List.map (fun (js_op, op) -> string js_op *> return op) ops)
+
+let is_long_op_symbol_fail = function
+  | '+' | '-' | '*' | '&' | '|' | '=' | '<' | '>' -> fail ""
+  | _ -> return ()
+;;
+
+let parse_op ops =
+  choice
+    (List.map
+       (fun (js_op, op) ->
+         string js_op
+         *> (peek_char
+             >>= function
+             | Some x -> is_long_op_symbol_fail x
+             | None -> return ())
+         *> return op)
+       ops)
+;;
 
 (*----------unary operators----------*)
 
-let post_un_op = [ "++", PostfixIncrement; "--", PostfixDecrement ] (*precedence 15*)
+type position =
+  | Pre
+  | Post
 
-let pre_un_op =
-  (*precedence 14*)
-  [ "++", PrefixIncrement
-  ; "--", PrefixDecrement
-  ; "~", BitwiseNot
-  ; "!", LogicalNot
-  ; "+", Plus
-  ; "-", Minus
+let list_of_unops =
+  [ [ "+", Plus; "-", Minus; "typeof ", TypeOf ], Pre (*precedence 14*)
+  ; [ "++", PostInc; "--", PostDec ], Post (*precedence 15*)
+  ; [ "new ", New ], Pre (*precedence 16*)
   ]
 ;;
+
+(*precedence 16*)
 
 (*----------bin operators----------*)
 
@@ -201,50 +217,26 @@ type associativity =
   | Left
   | Right
 
-(*[(JS name, Ast bin_op)], associativity*)
-let exp_op = [ "**", Exp ], Right (*precendence 13*)
-let mul_div_rem_op = [ "*", Mul; "/", Div; "%", Rem ], Left (*precedence 12*)
-let add_sub_op = [ "+", Add; "-", Sub ], Left (*precedence 11*)
-
-let logical_shift_op =
-  ( [ ">>>", UnsignedShiftRight; "<<", LogicalShiftLeft; ">>", LogicalShiftRight ]
-  , Left (*precedence 10*) )
-;;
-
-let relational_op =
-  ( [ ">=", GreaterEqual; "<=", LessEqual; ">", GreaterThan; "<", LessThan ]
-  , Left (*precedence 9*) )
-;;
-
-let equality_op =
-  ( [ "===", StrictEqual; "!==", StrictNotEqual; "==", Equal; "!=", NotEqual ]
-  , Left (*precedence 8*) )
-;;
-
-(* let bit_and = [ "&", BitwiseAnd ], Left precendence 7 *)
-let xor = [ "^", Xor ], Left (*precendence 6*)
-
-(* let bit_or = [ "|", BitwiseOr ], Left precendence 5 *)
-let log_and = [ "&&", LogicalAnd ], Left (*precendence 4*)
-let log_or = [ "||", LogicalOr ], Left (*precendence 3*)
-let assign_op = [ "+=", AddAssign; "=", Assign ], Right (*precedence 2*)
-
 (*from lower to greater precedence*)
 let list_of_bops =
-  [ assign_op
-  ; log_or
-  ; log_and
-  ; xor
-  ; equality_op
-  ; relational_op
-  ; logical_shift_op
-  ; add_sub_op
-  ; mul_div_rem_op
-  ; exp_op
+  (*[(JS name, Ast bin_op)], associativity*)
+  [ [ "=", Assign ], Right (*precedence 2*)
+  ; [ "||", LogicalOr ], Left (*precendence 3*)
+  ; [ "&&", LogicalAnd ], Left (*precendence 4*)
+  ; [ "|", BitwiseOr ], Left (*precendence 5*)
+  ; [ "^", Xor ], Left (*precendence 6*)
+  ; [ "&", BitwiseAnd ], Left (*precendence 7*)
+  ; ( [ "===", StrictEqual; "!==", StrictNotEqual; "==", Equal; "!=", NotEqual ]
+    , Left (*precedence 8*) )
+  ; ( [ ">=", GreaterEqual; "<=", LessEqual; ">", GreaterThan; "<", LessThan ]
+    , Left (*precedence 9*) )
+  ; ( [ ">>>", UnsignedShiftRight; "<<", LogicalShiftLeft; ">>", LogicalShiftRight ]
+    , Left (*precedence 10*) )
+  ; [ "+", Add; "-", Sub ], Left (*precedence 11*)
+  ; [ "*", Mul; "/", Div; "%", Rem ], Left (*precedence 12*)
+  ; [ "**", Exp ], Right (*precendence 13*)
   ]
 ;;
-
-(* bit_and and bit_or are excluded temporarily *)
 
 let chainl1 parser op =
   let rec go acc =
@@ -289,21 +281,25 @@ and parse_anon_func () =
 
 and parse_object_deck () =
   cur_parens
-    (parse_comma
-       (both
-          (choice
-             [ sq_parens @@ start_parse_expression ()
-             ; parse_str >>| const
-             ; (valid_identifier >>| fun x -> const (String x))
-             ])
-          (token_ch ':' *> start_parse_expression ())
-        <|> (*method parser*)
-        (valid_identifier
-         >>= fun name ->
-         token parse_args_names
-         >>= fun arguments ->
-         parse_block_or_stm ()
-         >>| fun body -> const (String name), AnonFunction (arguments, body))))
+  @@ parse_comma
+  @@ choice
+       [ both
+           (choice
+              [ sq_parens @@ start_parse_expression ()
+              ; parse_str >>| const
+              ; (valid_identifier >>| fun x -> const (String x))
+              ])
+           (token_ch ':' *> start_parse_expression ())
+       ; (*method parser*)
+         (valid_identifier
+          >>= fun name ->
+          token parse_args_names
+          >>= fun arguments ->
+          parse_block_or_stm ()
+          >>| fun body -> const (String name), AnonFunction (arguments, body))
+       ; (*var syntax sugar parser*)
+         (valid_identifier >>| fun name -> const (String name), var name)
+       ]
   >>| fun properties -> ObjectDef properties
 
 and parse_mini_expression () =
@@ -325,6 +321,7 @@ and parse_mini_expression () =
   <?> "invalid part of expression"
 
 and parse_spec_bop () =
+  (*precedence 17*)
   let rec go acc =
     choice
       [ (*Property call parser*)
@@ -340,20 +337,41 @@ and parse_spec_bop () =
   in
   parse_mini_expression () >>= fun init -> go init
 
-and parse_pre_uop () =
-  token @@ parse_op pre_un_op
-  >>| (fun op -> Some op)
-  <|> return None
-  >>= function
-  | Some op -> parse_pre_uop () >>| fun ex -> UnOp (op, ex)
+and parse_uop =
+  (*precedence 14-16*)
+  let rec pre next op_parser =
+    token_btw op_parser
+    >>| (fun op -> Some op)
+    <|> return None
+    >>= function
+    | Some op -> pre next op_parser >>| fun ex -> UnOp (op, ex)
+    | _ -> next
+  in
+  let post next op_parser =
+    let rec go acc =
+      token_btw op_parser
+      >>| (fun op -> Some op)
+      <|> return None
+      >>= function
+      | Some op -> go @@ UnOp (op, acc)
+      | _ -> return acc
+    in
+    next >>= go
+  in
+  function
+  | a :: b ->
+    (match a with
+     | unops, Pre -> pre (parse_uop b) (parse_op unops)
+     | unops, Post -> post (parse_uop b) (parse_op unops))
   | _ -> parse_spec_bop ()
 
 and parse_bop = function
+  (*precedence 2-13*)
   | a :: b ->
     (match a with
      | bops, Left -> chainl1 (parse_bop b) bops
      | bops, Right -> chainr1 (parse_bop b) bops)
-  | _ -> parse_pre_uop ()
+  | _ -> parse_uop list_of_unops
 
 and start_parse_expression () =
   fix (fun _ -> parse_bop list_of_bops <* empty) <?> "incorrect expression"
@@ -432,7 +450,10 @@ and parse_stm () =
              | "if" -> token1 @@ parse_if () <?> "wrong if statement"
              | "while" -> token1 @@ parse_while () <?> "wrong while statement"
              | "for" -> token1 @@ parse_for () <?> "wrong for statement"
-             | "return" -> token1 @@ parse_return () <?> "wrong return statement"
+             | "return" ->
+               empty_stm *> return (Return (const Undefined))
+               <|> token1 @@ parse_return ()
+               <?> "wrong return statement"
              | "" ->
                peek_char_fail
                >>= fun ch ->
