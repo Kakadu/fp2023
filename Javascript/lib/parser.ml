@@ -179,7 +179,7 @@ let parse_args_names =
 let parse_comma parser = sep_by (token_ch ',') parser <* (token_ch ',' <|> return ' ')
 
 let is_long_op_symbol_fail = function
-  | '&' | '|' -> fail ""
+  | '&' | '|' | '=' | '*' | '<' | '>' -> fail ""
   | _ -> return ()
 ;;
 
@@ -205,7 +205,23 @@ type associativity =
 (*from lower to greater precedence*)
 let list_of_bops =
   (*[(JS name, Ast bin_op)], associativity*)
-  [ [ "+=", AddAssign; "=", Assign ], Right (*precedence 2*)
+  [ ( [ "+=", AddAssign
+      ; "-=", SubAssign
+      ; "**=", ExpAssign
+      ; "*=", MulAssign
+      ; "/=", DivAssign
+      ; "%=", RemAssign
+      ; "&=", BitAndAssign
+      ; "^=", BitXorAssign
+      ; "|=", BitOrAssign
+      ; ">>>=", URShiftAssign
+      ; "<<=", LShiftAssign
+      ; ">>=", RShiftAssign
+      ; "&&=", LogAndAssign
+      ; "||=", LogOrAssign
+      ; "=", Assign
+      ]
+    , Right (*precedence 2*) )
   ; [ "||", LogicalOr ], Left (*precendence 3*)
   ; [ "&&", LogicalAnd ], Left (*precendence 4*)
   ; [ "|", BitwiseOr ], Left (*precendence 5*)

@@ -367,73 +367,6 @@ let%expect_test _ =
   [%expect {| Programm return: 5 |}]
 ;;
 
-(*greater*)
-(* let%expect_test _ =
-   print_return "return 4 > 3";
-   [%expect {| Programm return: true |}]
-   ;;
-
-   let%expect_test _ =
-   print_return "return 4 > 4";
-   [%expect {| Programm return: false |}]
-   ;;
-
-   let%expect_test _ =
-   print_return "return 4 > '4'";
-   [%expect {| Programm return: false |}]
-   ;;
-
-   let%expect_test _ =
-   print_return "return '4' > 4";
-   [%expect {| Programm return: false |}]
-   ;;
-
-   let%expect_test _ =
-   print_return "return \"aa\" > \"ab\"";
-   [%expect {| Programm return: false |}]
-   ;;
-
-   let%expect_test _ =
-   print_return "return null > 0";
-   [%expect {| Programm return: false |}]
-   ;;
-
-   (*greater_equal*)
-   let%expect_test _ =
-   print_return "return 4 >= 3";
-   [%expect {| Programm return: true |}]
-   ;;
-
-   let%expect_test _ =
-   print_return "return 4 >= 4";
-   [%expect {| Programm return: true |}]
-   ;;
-
-   let%expect_test _ =
-   print_return "return 4 >= '4'";
-   [%expect {| Programm return: true |}]
-   ;;
-
-   let%expect_test _ =
-   print_return "return '4' >= 4";
-   [%expect {| Programm return: true |}]
-   ;;
-
-   let%expect_test _ =
-   print_return "return \"aa\" >= \"ab\"";
-   [%expect {| Programm return: false |}]
-   ;;
-
-   let%expect_test _ =
-   print_return "return null >= 0";
-   [%expect {| Programm return: true |}]
-   ;;
-
-   let%expect_test _ =
-   print_return "return null >= 'test'";
-   [%expect {| Programm return: false |}]
-   ;; *)
-
 (*less*)
 let%expect_test _ =
   print_return "return 4 < 3";
@@ -832,9 +765,86 @@ let%expect_test _ =
   [%expect {| Programm return: 4 |}]
 ;;
 
+(*assigns*)
+
 let%expect_test _ =
   print_return "\n  let a = 4; \n  a += 1; \n  return a;";
-  [%expect {| Programm return:  |}]
+  [%expect {| Programm return: 5 |}]
+;;
+
+let%expect_test _ =
+  print_return "\n  let a = 'test'; \n  a += 'test'; \n  return a;";
+  [%expect {| Programm return: testtest |}]
+;;
+
+let%expect_test _ =
+  print_return "\n  let a = 5; \n  a -= 4; \n  return a;";
+  [%expect {| Programm return: 1 |}]
+;;
+
+let%expect_test _ =
+  print_return "let a = 5; a *= 4; return a";
+  [%expect {| Programm return: 20 |}]
+;;
+
+let%expect_test _ =
+  print_return "let a = 5; a /= 4; return a";
+  [%expect {| Programm return: 1.25 |}]
+;;
+
+let%expect_test _ =
+  print_return "let a = 5; a %= 4; return a";
+  [%expect {| Programm return: 1 |}]
+;;
+
+let%expect_test _ =
+  print_return "let a = 5; a **= 2; return a";
+  [%expect {| Programm return: 25 |}]
+;;
+
+let%expect_test _ =
+  print_return "let a = 25; a **= 0.5; return a";
+  [%expect {| Programm return: 5 |}]
+;;
+
+let%expect_test _ =
+  print_return "let a = 5; a <<= 2; return a";
+  [%expect {| Programm return: 20 |}]
+;;
+
+let%expect_test _ =
+  print_return "let a = 5; a >>= 2; return a";
+  [%expect {| Programm return: 1 |}]
+;;
+
+let%expect_test _ =
+  print_return "let a = -1; a >>>= 2; return a";
+  [%expect {| Programm return: 1073741823 |}]
+;;
+
+let%expect_test _ =
+  print_return "let a = 5; a &= 2; return a";
+  [%expect {| Programm return: 0 |}]
+;;
+
+let%expect_test _ =
+  print_return "let a = 5; a &&= 2; return a";
+  [%expect {| Programm return: 2 |}]
+;;
+
+let%expect_test _ =
+  print_return "let a = 5; a |= 2; return a";
+  [%expect {| Programm return: 7 |}]
+;;
+
+let%expect_test _ =
+  print_return "let a = 5; a ||= 2; return a";
+  [%expect {| Programm return: 5 |}]
+;;
+
+let%expect_test _ =
+  print_return "let a = 5; a ^= 2; return a";
+  [%expect {| Programm return: 7 |}]
 ;;
 
 (*infinity*)
