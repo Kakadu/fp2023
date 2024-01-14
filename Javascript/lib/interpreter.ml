@@ -695,9 +695,9 @@ and ctx_not_change_bop ctx op a b =
   | BitwiseAnd -> bop_with_int ( land ) <?> "error in bitwise and"
   | BitwiseOr -> bop_with_int ( lor ) <?> "error in bitwise or"
   | LogicalAnd -> logical_and () <?> "error in logical_and operator"
-  | LogicalOr -> logical_or () <?> "error in logical_and operator"
+  | LogicalOr -> logical_or () <?> "error in logical_or operator"
   | NullishCoal -> nullish_coal () <?> "error in nullish_coalescing operator"
-  | Xor -> bop_with_int ( lxor )
+  | Xor -> bop_with_int ( lxor ) <?> "error in xor operator"
   | Exp -> bop_with_num ( ** ) <?> "error in exp operator"
   | PropAccs -> prop_accs () <?> "error in property accession"
   | _ as a -> ensup @@ asprintf "operator %a not supported yet" pp_bin_op a
@@ -740,7 +740,7 @@ and eval_fun ctx f args this =
     match f.body with
     | Block x ->
       let* ctx = val_to_args ctx (f.args, args) in
-      let+ ctx, ret = parse_stms ctx x in
+      let+ ctx, ret = eval_stms ctx x in
       ctx, get_vreturn ret
     | _ ->
       error (AstError "in top of fun body expected Block, but something else was given")
@@ -863,21 +863,22 @@ and ctx_change_bop ctx op a b : (ctx * value) t =
   let rec_assign_rehanging op = ctx_change_bop ctx Assign a (BinOp (op, a, b)) in
   match op with
   | Assign -> assign () <?> "error in assignment"
-  | AddAssign -> rec_assign_rehanging Add
-  | SubAssign -> rec_assign_rehanging Sub
-  | MulAssign -> rec_assign_rehanging Mul
-  | DivAssign -> rec_assign_rehanging Div
-  | ExpAssign -> rec_assign_rehanging Exp
-  | RemAssign -> rec_assign_rehanging Rem
-  | LShiftAssign -> rec_assign_rehanging LogicalShiftLeft
-  | RShiftAssign -> rec_assign_rehanging LogicalShiftRight
-  | URShiftAssign -> rec_assign_rehanging UnsignedShiftRight
-  | BitAndAssign -> rec_assign_rehanging BitwiseAnd
-  | BitOrAssign -> rec_assign_rehanging BitwiseOr
-  | BitXorAssign -> rec_assign_rehanging Xor
-  | LogAndAssign -> rec_assign_rehanging LogicalAnd
-  | LogOrAssign -> rec_assign_rehanging LogicalOr
-  | NullAssign -> rec_assign_rehanging NullishCoal
+  | AddAssign -> ctx_change_bop ctx Assign a (BinOp (Add, a, b))
+  | SubAssign -> ctx_change_bop ctx Assign a (BinOp (Sub, a, b))
+  | MulAssign -> ctx_change_bop ctx Assign a (BinOp (Mul, a, b))
+  | DivAssign -> ctx_change_bop ctx Assign a (BinOp (Div, a, b))
+  | ExpAssign -> ctx_change_bop ctx Assign a (BinOp (Exp, a, b))
+  | RemAssign -> ctx_change_bop ctx Assign a (BinOp (Rem, a, b))
+  | LShiftAssign -> ctx_change_bop ctx Assign a (BinOp (LogicalShiftLeft, a, b))
+  | RShiftAssign -> ctx_change_bop ctx Assign a (BinOp (LogicalShiftRight, a, b))
+  | URShiftAssign -> ctx_change_bop ctx Assign a (BinOp (UnsignedShiftRight, a, b))
+  | BitAndAssign -> ctx_change_bop ctx Assign a (BinOp (BitwiseAnd, a, b))
+  | BitOrAssign -> ctx_change_bop ctx Assign a (BinOp (BitwiseOr, a, b))
+  | BitXorAssign -> ctx_change_bop ctx Assign a (BinOp (Xor, a, b))
+  | LogAndAssign -> ctx_change_bop ctx Assign a (BinOp (LogicalAnd, a, b))
+  | LogOrAssign -> ctx_change_bop ctx Assign a (BinOp (LogicalOr, a, b))
+  | NullAssign -> ctx_change_bop ctx Assign a (BinOp (NullishCoal, a, b))
+  | PropAccs -> prop_accs () <?> "error in property access"
   | _ ->
     both_ext eval_exp ctx a b
     >>= fun (ctx, (x, y)) -> add_to_result ctx (ctx_not_change_bop ctx op x y)
@@ -937,7 +938,7 @@ and eval_exp ctx = function
 
 (**---------------Statement interpreter---------------*)
 
-and parse_stm ctx = function
+and eval_stm ctx = function
   | Return x ->
     let+ ctx, ret = eval_exp ctx x <?> "error in return expression" in
     { ctx with vreturn = Some ret }
@@ -952,28 +953,52 @@ and parse_stm ctx = function
     let* ctx, res = eval_exp ctx condition in
     to_bool ctx res
     >>= (function
-     | true -> parse_stm ctx then_stm
-     | false -> parse_stm ctx else_stm)
+     | true -> eval_stm ctx then_stm
+     | false -> eval_stm ctx else_stm)
   | Block ast ->
     let* ctx = create_local_ctx ctx ctx.cur_lex_env Block None in
-    let+ ctx, ret = parse_stms ctx ast <?> "error while interpret block" in
+    let+ ctx, ret = eval_stms ctx ast <?> "error while interpret block" in
     (match ret with
      | Some _ as x -> { ctx with vreturn = x }
      | _ -> ctx)
   | FunInit _ -> return ctx
   | Expression e -> eval_exp ctx e >>| fst <?> "error in expression statement"
+  | Loop loop ->
+    let* ctx = create_local_ctx ctx ctx.cur_lex_env Block None in
+    let* ctx = Option.fold ~none:(return ctx) ~some:(eval_stm ctx) loop.loop_init in
+    let rec go ctx =
+      let* ctx, cond = eval_exp ctx loop.loop_condition in
+      let* cond = to_bool ctx cond in
+      if cond
+      then
+        let* ctx = eval_stm ctx loop.loop_body in
+        match ctx.vreturn with
+        | Some _ as x ->
+          let+ ctx, _ = end_of_block ctx in
+          { ctx with vreturn = x }
+        | None ->
+          let* ctx =
+            Option.fold
+              ~none:(return ctx)
+              ~some:(fun x -> eval_exp ctx x >>| fst)
+              loop.loop_change
+          in
+          go ctx
+      else return ctx
+    in
+    go ctx <?> "error in loop body"
   | _ -> ensup ""
 
-and parse_stms ctx ast =
+and eval_stms ctx ast =
   let* ctx = prefind_funcs ctx ast in
-  fold_left_s parse_stm (fun ctx -> is_some ctx.vreturn) ctx ast >>= end_of_block
+  fold_left_s eval_stm (fun ctx -> is_some ctx.vreturn) ctx ast >>= end_of_block
 ;;
 
 let interpret_ast ast : (program_return, string) Result.t =
   match ast with
   | Programm x ->
     let* ctx = context_init in
-    let* ctx, ret = parse_stms ctx x in
+    let* ctx, ret = eval_stms ctx x in
     let+ ret = print_vvalues ctx @@ get_vreturn ret in
     { stdout = ctx.stdout; return = ret }
   | _ ->

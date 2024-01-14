@@ -90,11 +90,11 @@ and fun_init =
   ; body : statement
   }
 
-and for_loop =
-  { for_init : statement
-  ; for_condition : statement
-  ; for_change : statement
-  ; for_body : statement
+and loop =
+  { loop_init : statement option
+  ; loop_condition : expression
+  ; loop_change : expression option
+  ; loop_body : statement
   }
 
 and statement =
@@ -103,8 +103,7 @@ and statement =
   | VarInit of var_init
   | FunInit of fun_init
   | If of expression * statement * statement
-  | While of expression * statement
-  | For of for_loop
+  | Loop of loop
   | Return of expression
   | Programm of statement list
 [@@deriving show { with_path = false }]
