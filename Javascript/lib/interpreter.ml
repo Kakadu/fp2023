@@ -75,6 +75,18 @@ let is_func_id ctx id =
   | _ -> false
 ;;
 
+let is_array x =
+  match x.obj_type with
+  | TArray _ -> true
+  | _ -> false
+;;
+
+let get_array_list obj =
+  match obj.obj_type with
+  | TArray array -> return array
+  | _ -> error @@ TypeError "Not array was given"
+;;
+
 let print_type ctx = function
   | VNumber _ -> "number"
   | VString _ -> "string"
@@ -99,7 +111,7 @@ let add_obj ctx fields obj_type =
   >>| fun (proto, fields) ->
   let obj = { proto; fields; obj_type } in
   let id = ctx.obj_count in
-  { ctx with obj_count = id + 1; objs = IntMap.add id obj ctx.objs }, VObject id
+  { ctx with obj_count = id + 1; objs = IntMap.add id obj ctx.objs }, id
 ;;
 
 let rec find_in_vars_opt id = function
@@ -127,6 +139,12 @@ let rec print_vvalues ctx ?(str_quote = false) = function
     >>= fun obj ->
     if is_func obj
     then print_vvalues ctx @@ get_field "name" obj.fields >>| asprintf "[Function: %s]"
+    else if is_array obj
+    then
+      get_array_list obj
+      >>= map (fun x -> print_vvalues ctx x ~str_quote:true)
+      >>| fun array ->
+      if List.length array = 0 then "[]" else asprintf "[ %s ]" (String.concat ", " array)
     else
       map
         (fun x -> print_vvalues ctx x.value ~str_quote:true >>| ( ^ ) (x.var_id ^ ": "))
@@ -193,6 +211,29 @@ let print ctx values _ =
   >>| fun ctx -> { ctx with stdout = ctx.stdout ^ "\n" }, None
 ;;
 
+let tfunction x = TFunction x
+let tarrowfun x = TArrowFunction x
+let tfunpreset x = TFunPreset x
+
+let create_func ctx name args obj_type =
+  let length = Float.of_int @@ List.length args in
+  add_obj
+    ctx
+    [ { var_id = "name"; is_const = true; value = VString name }
+    ; { var_id = "length"; is_const = true; value = VNumber length }
+    ]
+    obj_type
+  >>| fun (ctx, id) -> ctx, vobject id
+;;
+
+let create_arrowfunc ctx name args body =
+  create_func ctx name args (tarrowfun { parent_lex_env = ctx.cur_lex_env; args; body })
+;;
+
+let create_function ctx name args body =
+  create_func ctx name args (tfunction { parent_lex_env = ctx.cur_lex_env; args; body })
+;;
+
 let context_init =
   let global_obj_id = 0 in
   let global_obj = { proto = VUndefined; fields = []; obj_type = TObject } in
@@ -205,40 +246,79 @@ let context_init =
     ; lex_envs = IntMap.singleton id lex_env
     ; obj_count = global_obj_id + 1
     ; objs = IntMap.singleton global_obj_id global_obj
+    ; proto_objs = { proto_obj = 0; proto_fun = 0; proto_array = 0 }
     ; vreturn = None
-    ; proto_obj_fields = []
     ; stdout = ""
     }
   in
   let fun_pres ctx name f =
-    add_obj
-      ctx
-      [ { var_id = "name"; is_const = true; value = VString name }
-      ; { var_id = "length"; is_const = true; value = VNumber 0. }
-      ]
-      (TFunPreset f)
+    create_func ctx name [] (TFunPreset f)
+    >>| fun (ctx, value) -> ctx, { var_id = name; is_const = true; value }
   in
-  let valueOf =
-    fun_pres ctx "valueOf" (fun ctx _ this ->
-      match this with
-      | Some x -> return (ctx, Some (vobject x))
-      | None -> error @@ InternalError "Cannot find this" <?> "error in value of")
-    >>| fun (ctx, value) ->
-    { ctx with proto_obj_fields = [ { var_id = "valueOf"; is_const = true; value } ] }
+  let get_this_val = function
+    | Some x -> return x
+    | None -> error @@ InternalError "Cannot find this"
+  in
+  let add_proto_objs new_val ctx vals =
+    add_obj ctx vals TObject
+    >>| fun (ctx, value) -> { ctx with proto_objs = new_val value }
+  in
+  let proto_obj ctx =
+    let valueOf ctx =
+      fun_pres ctx "valueOf" (fun ctx _ this ->
+        get_this_val this >>| fun x -> ctx, Some (vobject x))
+    in
+    valueOf ctx
+    >>= fun (ctx, v) ->
+    add_proto_objs (fun v -> { ctx.proto_objs with proto_obj = v }) ctx [ v ]
+  in
+  let proto_fun ctx =
+    add_proto_objs (fun v -> { ctx.proto_objs with proto_fun = v }) ctx []
+  in
+  let proto_array ctx =
+    let shift ctx =
+      fun_pres ctx "shift" (fun ctx _ this ->
+        get_this_val this
+        >>= fun id ->
+        get_obj_ctx ctx id
+        >>= fun obj ->
+        get_array_list obj
+        >>| (function
+               | a :: tl -> { obj with obj_type = TArray tl }, a
+               | _ -> obj, VUndefined)
+        >>| fun (obj, ret) -> { ctx with objs = IntMap.add id obj ctx.objs }, Some ret)
+    in
+    let unshift ctx =
+      fun_pres ctx "unshift" (fun ctx args this ->
+        get_this_val this
+        >>= fun id ->
+        get_obj_ctx ctx id
+        >>= fun obj ->
+        get_array_list obj
+        >>| fun tl ->
+        let new_arr = List.append args tl in
+        let obj = { obj with obj_type = TArray new_arr } in
+        let ret = vnumber (float_of_int @@ List.length new_arr) in
+        { ctx with objs = IntMap.add id obj ctx.objs }, Some ret)
+    in
+    fold_left_map (fun ctx f -> f ctx) ctx [ shift; unshift ]
+    >>= fun (ctx, v) ->
+    add_proto_objs (fun v -> { ctx.proto_objs with proto_array = v }) ctx v
   in
   let console ctx =
     fun_pres ctx "log" print
     >>= fun (ctx, f) ->
-    add_obj ctx [ { var_id = "log"; is_const = false; value = f } ] TObject
+    add_obj ctx [ f ] TObject
     >>= fun (ctx, value) ->
-    lex_add ctx first_lex_env { var_id = "console"; is_const = false; value }
+    lex_add
+      ctx
+      first_lex_env
+      { var_id = "console"; is_const = false; value = vobject value }
   in
   let alert ctx =
-    fun_pres ctx "alert" print
-    >>= fun (ctx, f) ->
-    lex_add ctx first_lex_env { var_id = "alert"; is_const = false; value = f }
+    fun_pres ctx "alert" print >>= fun (ctx, f) -> lex_add ctx first_lex_env f
   in
-  valueOf >>= console >>= alert
+  fold_left (fun ctx f -> f ctx) ctx [ proto_obj; proto_fun; proto_array; console; alert ]
 ;;
 
 let create_local_ctx ctx parent scope this =
@@ -289,24 +369,10 @@ let rec in_func ctx lex_env =
      | None -> false)
 ;;
 
-let tfunction x = TFunction x
-let tarrowfun x = TArrowFunction x
-
-let create_func ctx name args body obj_type =
-  let length = Float.of_int @@ List.length args in
-  let fun_ctx = { parent_lex_env = ctx.cur_lex_env; args; body } in
-  add_obj
-    ctx
-    [ { var_id = "name"; is_const = true; value = VString name }
-    ; { var_id = "length"; is_const = true; value = VNumber length }
-    ]
-    (obj_type fun_ctx)
-;;
-
 let prefind_funcs ctx ast =
   let ctx_add_if_func ctx = function
     | FunInit x ->
-      create_func ctx x.fun_identifier x.arguments x.body tfunction
+      create_function ctx x.fun_identifier x.arguments x.body
       >>= fun f ->
       let ctx, value = f in
       lex_add ctx ctx.cur_lex_env { var_id = x.fun_identifier; is_const = false; value }
@@ -315,15 +381,37 @@ let prefind_funcs ctx ast =
   fold_left ctx_add_if_func ctx ast
 ;;
 
-let rec obj_get_property ctx obj key =
+let obj_get_property ctx obj key =
   match obj with
-  | VObject x ->
-    get_obj_ctx ctx x
-    >>= fun obj ->
-    (match find_in_vars_opt key obj.fields with
-     | None -> obj_get_property ctx obj.proto key
-     | Some x -> return x.value)
-  | _ -> return @@ get_field key ctx.proto_obj_fields
+  | VObject id as obj_val ->
+    let obj_type = get_obj_ctx ctx id >>| fun obj -> obj.obj_type in
+    let rec go = function
+      | VObject x ->
+        get_obj_ctx ctx x
+        >>= fun obj ->
+        (match find_in_vars_opt key obj.fields with
+         | None -> go obj.proto
+         | Some x -> return @@ Some x.value)
+      | _ -> return None
+    in
+    let if_none f a =
+      a
+      >>= function
+      | Some x -> return x
+      | None -> f
+    in
+    let spec_objs = function
+      | TFunPreset _ | TFunction _ | TArrowFunction _ ->
+        go (vobject ctx.proto_objs.proto_fun)
+      | TArray _ -> go (vobject ctx.proto_objs.proto_array)
+      | _ -> return None
+    in
+    let proto_obj () =
+      if_none (return VUndefined) (go (vobject ctx.proto_objs.proto_obj))
+    in
+    let protos () = obj_type >>= fun typ -> if_none (proto_obj ()) (spec_objs typ) in
+    if_none (protos ()) (go obj_val)
+  | _ -> ensup "reading from not object"
 ;;
 
 (**---------------Expression interpreter---------------*)
@@ -530,13 +618,7 @@ and ctx_not_change_bop ctx op a b =
     then bop (fun x -> to_string ctx x >>| vstring) a b
     else bop (fun x -> to_number ctx x >>| vnumber) a b
   in
-  let prop_accs () =
-    to_string ctx b
-    >>= fun str ->
-    match a with
-    | VObject _ as obj -> obj_get_property ctx obj str
-    | _ -> ensup "reading from not object is not supporting"
-  in
+  let prop_accs () = to_string ctx b >>= obj_get_property ctx a in
   match op with
   | Add -> add () <?> "error in add operator"
   | Sub -> bop_with_num ( -. ) <?> "error in sub operator"
@@ -645,11 +727,10 @@ and ctx_change_unop ctx op a =
     match a with
     | FunctionCall (f, args) ->
       add_obj ctx [] TObject
-      >>= fun (ctx, obj) ->
-      get_obj_id ctx obj
-      >>= fun id ->
+      >>= fun (ctx, id) ->
       eval_exp ctx f
-      >>= fun (ctx, f) -> eval_fun ctx f args (Some id) >>| fun (ctx, _) -> ctx, obj
+      >>= fun (ctx, f) ->
+      eval_fun ctx f args (Some id) >>| fun (ctx, _) -> ctx, vobject id
     | _ as v ->
       eval_exp ctx v
       >>= fun (ctx, v) ->
@@ -730,11 +811,9 @@ and ctx_change_bop ctx op a b =
     both_ext eval_exp ctx a b
     >>= fun (ctx, (x, y)) -> add_ctx @@ ctx_not_change_bop ctx op x y
 
-and eval_for_top_val ctx name =
-  let create = create_func ctx name in
-  function
-  | AnonFunction (args, vals) -> create args vals tfunction
-  | ArrowFunction (args, vals) -> create args vals tarrowfun
+and eval_for_top_val ctx name = function
+  | AnonFunction (args, vals) -> create_function ctx name args vals
+  | ArrowFunction (args, vals) -> create_arrowfunc ctx name args vals
   | _ as ast -> eval_exp ctx ast
 
 (**main expression interpreter*)
@@ -764,8 +843,8 @@ and eval_exp ctx =
     find_this
     <?> "error while try get function"
     >>= fun ((ctx, f), this) -> eval_fun ctx f args this
-  | AnonFunction (args, vals) -> create_func ctx "" args vals tfunction
-  | ArrowFunction (args, vals) -> create_func ctx "" args vals tarrowfun
+  | AnonFunction (args, vals) -> create_function ctx "" args vals
+  | ArrowFunction (args, vals) -> create_arrowfunc ctx "" args vals
   | ObjectDef x ->
     fold_left_map
       (fun ctx (key, value) ->
@@ -777,7 +856,12 @@ and eval_exp ctx =
         >>| fun (ctx, value) -> ctx, { var_id = id; is_const = false; value })
       ctx
       x
-    >>= fun (ctx, fields) -> add_obj ctx fields TObject
+    >>= fun (ctx, fields) ->
+    add_obj ctx fields TObject >>| fun (ctx, id) -> ctx, vobject id
+  | ArrayList array ->
+    fold_left_map (fun ctx elem -> eval_exp ctx elem) ctx array
+    >>= fun (ctx, vals) ->
+    add_obj ctx [] (TArray vals) >>| fun (ctx, id) -> ctx, vobject id
   | _ -> ensup ""
 
 (**---------------Statement interpreter---------------*)

@@ -1590,7 +1590,8 @@ let%expect_test _ =
     \    console.log(a+4)\n\
     \    a.valueOf = function () {return 4}\n\
     \    console.log(a+4)";
-  [%expect {|
+  [%expect
+    {|
     Programm output:
     [object Object]4
     8
@@ -1608,4 +1609,45 @@ let%expect_test _ =
   print_return "let a = { val1 : 15, valueOf() {return 4} }\nreturn a+4";
   [%expect {|
     Programm return: 8 |}]
+;;
+
+(**---------------Arrays---------------*)
+
+let%expect_test _ =
+  print_return "return [4, 5, 6]";
+  [%expect {|
+    Programm return: [ 4, 5, 6 ] |}]
+;;
+
+let%expect_test _ =
+  print_return "return [4, \"10\", { an : 11 }]";
+  [%expect {|
+    Programm return: [ 4, '10', { an: 11 } ] |}]
+;;
+
+let%expect_test _ =
+  print_output "let a = [4, 5, 6]\n  console.log(a.shift(), a)";
+  [%expect {|
+    Programm output:
+    4 [ 5, 6 ]
+
+    Programm return: undefined |}]
+;;
+
+let%expect_test _ =
+  print_output "let a = [4, 5, 6]\n  console.log(a.unshift(7), a)";
+  [%expect {|
+    Programm output:
+    4 [ 7, 4, 5, 6 ]
+
+    Programm return: undefined |}]
+;;
+
+let%expect_test _ =
+  print_output "let a = [4, 5, 6]\n  console.log(a.unshift(7, 8), a)";
+  [%expect {|
+    Programm output:
+    5 [ 7, 8, 4, 5, 6 ]
+
+    Programm return: undefined |}]
 ;;

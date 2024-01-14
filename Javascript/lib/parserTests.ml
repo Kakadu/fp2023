@@ -852,7 +852,7 @@ let%expect_test "array_list" =
    [(VarInit
        { var_identifier = "myArray"; is_const = false;
          value =
-         (Array_list
+         (ArrayList
             [(Const (Number 1.)); (Const (Number 2.)); (Const (Number 3.));
               (Const (Number 4.)); (Const (Number 5.))])
          })
