@@ -15,7 +15,12 @@ type program_return =
   ; return : string
   }
 
+let first_lex_env = 0
 let print_string (ctx : ctx) str = { ctx with stdout = ctx.stdout ^ str ^ "\n" }
+let vbool x = VBool x
+let vnumber x = VNumber x
+let vstring x = VString x
+let vobject x = VObject x
 
 let print_opt f = function
   | Some x -> "Some: " ^ f x
@@ -78,8 +83,6 @@ let print_type ctx = function
   | VObject x when is_func_id ctx x -> "function"
   | VNull (*because that's how it is in JS*) | VObject _ -> "object"
 ;;
-
-let proto_obj_fields : let_ctx list = []
 
 let find_proto fields =
   List.partition (fun field -> field.var_id = "__proto__") fields
@@ -190,8 +193,6 @@ let print ctx values =
   >>| fun ctx -> { ctx with stdout = ctx.stdout ^ "\n" }, None
 ;;
 
-let first_lex_env = 0
-
 let context_init =
   let global_obj_id = 0 in
   let global_obj = { proto = VUndefined; fields = []; obj_type = TObject } in
@@ -205,30 +206,41 @@ let context_init =
     ; obj_count = global_obj_id + 1
     ; objs = IntMap.singleton global_obj_id global_obj
     ; vreturn = None
+    ; proto_obj_fields = []
     ; stdout = ""
     }
   in
-  let fun_print ctx name =
+  let fun_pres ctx name t =
     add_obj
       ctx
       [ { var_id = "name"; is_const = true; value = VString name }
       ; { var_id = "length"; is_const = true; value = VNumber 0. }
       ]
-      (TFunPreset print)
+      t
   in
-  let console =
-    fun_print ctx "log"
+  let valueOf =
+    fun_pres ctx "valueOf"
+    @@ TFunction
+         { parent_lex_env = first_lex_env
+         ; args = []
+         ; body = Block [ Return (Var "this") ]
+         }
+    >>| fun (ctx, value) ->
+    { ctx with proto_obj_fields = [ { var_id = "valueOf"; is_const = true; value } ] }
+  in
+  let console ctx =
+    fun_pres ctx "log" @@ TFunPreset print
     >>= fun (ctx, f) ->
     add_obj ctx [ { var_id = "log"; is_const = false; value = f } ] TObject
     >>= fun (ctx, value) ->
     lex_add ctx first_lex_env { var_id = "console"; is_const = false; value }
   in
   let alert ctx =
-    fun_print ctx "alert"
+    fun_pres ctx "alert" @@ TFunPreset print
     >>= fun (ctx, f) ->
     lex_add ctx first_lex_env { var_id = "alert"; is_const = false; value = f }
   in
-  console >>= alert
+  valueOf >>= console >>= alert
 ;;
 
 let create_local_ctx ctx parent scope this =
@@ -313,51 +325,54 @@ let rec obj_get_property ctx obj key =
     (match find_in_vars_opt key obj.fields with
      | None -> obj_get_property ctx obj.proto key
      | Some x -> return x.value)
-  | _ -> return @@ get_field key proto_obj_fields
+  | _ -> return @@ get_field key ctx.proto_obj_fields
+;;
+
+let get_primitive ctx = function
+  | VObject _ as x -> obj_get_property ctx x "valueOf"
+  | _ as t -> return t
 ;;
 
 (**---------------Expression interpreter---------------*)
 
-let to_vstring ctx =
-  let ret_vstr x = return (VString x) in
-  function
-  | VString x -> ret_vstr x
-  | VNumber x -> ret_vstr (num_to_string x)
-  | VBool true -> ret_vstr "true"
-  | VBool false -> ret_vstr "false"
-  | VNull -> ret_vstr "null"
-  | VUndefined -> ret_vstr "undefined"
+let to_string ctx v =
+  get_primitive ctx v
+  >>= function
+  | VString x -> return x
+  | VNumber x -> return (num_to_string x)
+  | VBool true -> return "true"
+  | VBool false -> return "false"
+  | VNull -> return "null"
+  | VUndefined -> return "undefined"
   | VObject x when is_func_id ctx x -> ensup "conversion func to str"
-  | VObject _ -> ret_vstr "[object Object]"
+  | VObject _ -> return "[object Object]"
   | _ as t -> etyp ("cannot cast " ^ print_type ctx t ^ " to string")
 ;;
 
-let to_vbool ast =
-  return
-  @@ VBool
-       (match ast with
-        | VNull | VUndefined -> false
-        | VBool x -> x
-        | VNumber x when Float.is_nan x || x = 0. -> false
-        | VString x when String.trim x = "" -> false
-        | _ -> true)
+let to_bool ctx v =
+  get_primitive ctx v
+  >>| function
+  | VNull | VUndefined -> false
+  | VBool x -> x
+  | VNumber x when Float.is_nan x || x = 0. -> false
+  | VString x when String.trim x = "" -> false
+  | _ -> true
 ;;
 
-let to_vnumber ast =
-  return
-  @@ VNumber
-       (match ast with
-        | VNumber x -> x
-        | VString x ->
-          (match String.trim x with
-           | "" -> 0.
-           | _ as x ->
-             (match float_of_string_opt x with
-              | Some x -> x
-              | _ -> nan))
-        | VBool x -> Bool.to_float x
-        | VNull -> 0.
-        | _ -> nan)
+let to_number ctx v =
+  get_primitive ctx v
+  >>| function
+  | VNumber x -> x
+  | VString x ->
+    (match String.trim x with
+     | "" -> 0.
+     | _ as x ->
+       (match float_of_string_opt x with
+        | Some x -> x
+        | _ -> nan))
+  | VBool x -> Bool.to_float x
+  | VNull -> 0.
+  | _ -> nan
 ;;
 
 let const_to_val = function
@@ -396,42 +411,32 @@ let get_obj_id ctx = function
 ;;
 
 let rec ctx_not_change_bop ctx op a b =
-  let bop_with_num op =
-    both to_vnumber a b
-    >>= fun (a, b) -> both (get_vnum ctx) a b >>| fun (x, y) -> VNumber (op x y)
-  in
+  let bop_with_num op = both (to_number ctx) a b >>| fun (a, b) -> vnumber @@ op a b in
   let bop_logical_with_num op =
-    both to_vnumber a b
-    >>= fun (a, b) -> both (get_vnum ctx) a b >>| fun (x, y) -> VBool (op x y)
+    both (to_number ctx) a b >>| fun (a, b) -> vbool @@ op a b
   in
-  let bop_with_string op =
-    both (to_vstring ctx) a b
-    >>= fun (a, b) -> both (get_vstring ctx) a b >>| fun (x, y) -> VString (op x y)
-  in
+  let bop_with_string op = both (to_string ctx) a b >>| fun (a, b) -> vstring @@ op a b in
   let bop_logical_with_string op =
-    both (to_vstring ctx) a b
-    >>= fun (a, b) -> both (get_vstring ctx) a b >>| fun (x, y) -> VBool (op x y)
+    both (to_string ctx) a b >>| fun (a, b) -> vbool @@ op a b
   in
   let bop_bitwise_shift op b =
-    both to_vnumber a b
-    >>= fun (a, b) ->
-    both (get_int ctx Int32.of_float) a b
-    >>| fun (x, y) -> VNumber (Int32.to_float (op x (Int32.to_int y)))
+    both (to_number ctx) a b
+    >>| fun (a, b) -> vnumber @@ Int32.to_float (op (Int32.of_float a) (Int.of_float b))
   in
   let bop_with_int op =
-    both to_vnumber a b
-    >>= fun (a, b) ->
-    both (get_int ctx int_of_float) a b >>| fun (x, y) -> VNumber (float_of_int (op x y))
+    both (to_number ctx) a b
+    >>| fun (a, b) -> vnumber (float_of_int (op (int_of_float a) (int_of_float b)))
   in
-  let is_to_string = function
+  let is_to_string v =
+    get_primitive ctx v
+    >>| function
     | VString _ | VObject _ -> true
     | _ -> false
   in
   let negotiate res = res >>= fun x -> get_vbool ctx x >>| fun res -> VBool (not res) in
   let add () =
-    if is_to_string a || is_to_string b
-    then bop_with_string ( ^ )
-    else bop_with_num ( +. )
+    both is_to_string a b
+    >>= fun (l, r) -> if l || r then bop_with_string ( ^ ) else bop_with_num ( +. )
   in
   let strict_equal () = return (VBool (a = b)) in
   let equal () =
@@ -465,9 +470,9 @@ let rec ctx_not_change_bop ctx op a b =
         else return (VBool false)
   in
   let less_than () =
-    if is_to_string a && is_to_string b
-    then bop_logical_with_string ( < )
-    else bop_logical_with_num ( < )
+    both is_to_string a b
+    >>= fun (l, r) ->
+    if l && r then bop_logical_with_string ( < ) else bop_logical_with_num ( < )
   in
   let shift op =
     let get_int = function
@@ -481,9 +486,7 @@ let rec ctx_not_change_bop ctx op a b =
   let logical_and () =
     let a_preserved = a in
     let b_preserved = b in
-    both to_vbool a b
-    >>= fun (a, b) ->
-    both (get_vbool ctx) a b
+    both (to_bool ctx) a b
     >>| function
     | true, _ -> b_preserved
     | _ -> a_preserved
@@ -491,9 +494,7 @@ let rec ctx_not_change_bop ctx op a b =
   let logical_or () =
     let a_preserved = a in
     let b_preserved = b in
-    both to_vbool a b
-    >>= fun (a, b) ->
-    both (get_vbool ctx) a b
+    both (to_bool ctx) a b
     >>| function
     | true, _ -> a_preserved
     | _ -> b_preserved
@@ -505,17 +506,16 @@ let rec ctx_not_change_bop ctx op a b =
       ctx_not_change_bop ctx LessThan x y
       >>= fun res1 ->
       ctx_not_change_bop ctx Equal x y
-      >>= fun res2 ->
-      ctx_not_change_bop ctx LogicalOr res1 res2
-      >>= fun res3 -> get_vbool ctx res3 >>| fun res -> VBool res
+      >>= fun res2 -> ctx_not_change_bop ctx LogicalOr res1 res2
     in
-    if is_to_string a && is_to_string b
-    then bop (to_vstring ctx) a b
-    else bop to_vnumber a b
+    both is_to_string a b
+    >>= fun (l, r) ->
+    if l && r
+    then bop (fun x -> to_string ctx x >>| vstring) a b
+    else bop (fun x -> to_number ctx x >>| vnumber) a b
   in
   let prop_accs () =
-    to_vstring ctx b
-    >>= get_vstring ctx
+    to_string ctx b
     >>= fun str ->
     match a with
     | VObject _ as obj -> obj_get_property ctx obj str
@@ -677,8 +677,7 @@ and ctx_change_bop ctx op a b =
       | ctx, [ obj_val; prop; b ] ->
         get_obj obj_val
         >>= fun (id, obj) ->
-        to_vstring ctx prop
-        >>= get_vstring ctx
+        to_string ctx prop
         >>= fun prop ->
         let get_new_obj =
           match prop with
@@ -712,18 +711,6 @@ and ctx_change_bop ctx op a b =
       >>| fun ctx -> ctx, res
     | BinOp (PropAccs, obj, prop) -> obj_assign obj prop
     | _ -> error @@ SyntaxError "Invalid left-hand side in assignment"
-  in
-  let prop_accs () =
-    eval_exp ctx a
-    >>= fun (ctx, a) ->
-    eval_exp ctx b
-    >>= fun (ctx, b) ->
-    to_vstring ctx b
-    >>= get_vstring ctx
-    >>= fun str ->
-    match a with
-    | VObject _ as obj -> obj_get_property ctx obj str
-    | _ -> ensup "reading from not object is not supporting"
   in
   let add_ctx = add_ctx ctx in
   match op with
@@ -789,8 +776,7 @@ and eval_exp ctx =
       (fun ctx (key, value) ->
         eval_exp ctx key
         >>= fun (ctx, key) ->
-        to_vstring ctx key
-        >>= get_vstring ctx
+        to_string ctx key
         >>= fun id ->
         eval_for_top_val ctx id value
         >>| fun (ctx, value) -> ctx, { var_id = id; is_const = false; value })
@@ -817,8 +803,7 @@ and parse_stm ctx = function
   | If (condition, then_stm, else_stm) ->
     eval_exp ctx condition
     >>= fun (ctx, res) ->
-    to_vbool res
-    >>= get_vbool ctx
+    to_bool ctx res
     >>= (function
      | true -> parse_stm ctx then_stm
      | false -> parse_stm ctx else_stm)
