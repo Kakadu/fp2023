@@ -54,7 +54,7 @@ type from_statement =
       on    : expr 
   }
 
-  (* Full statement *)
+  (** Full statement *)
 type request = {
   select : select_statement list;
   from : from_statement;

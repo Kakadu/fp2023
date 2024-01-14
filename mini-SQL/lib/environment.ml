@@ -26,8 +26,8 @@ let close_channel channel csv_channel =
   Base.close_in channel
 ;;
 
-  let row (rows : Csv.t) i = List.nth rows i
-  let rows_after (rows : Csv.t) i = List.filteri (fun id _ -> id > i) rows
+let row (rows : Csv.t) i = List.nth rows i
+let rows_after (rows : Csv.t) i = List.filteri (fun id _ -> id > i) rows
 
 let column_type_of = function
   | "string" -> String_Column

@@ -1,4 +1,4 @@
-(* --- Types with meta-information --- *)
+(* --- Types with meta-information (name + type) --- *)
 
 type column_type =
   | String_Column (* STRING *)
@@ -25,18 +25,19 @@ type table =
 
 exception Incorrect_type of string
 
-module Row = struct
-  (* array basic element *)
-  type item =
-    | Numeric of int
-    | Real of float
-    | String of string
-    | Bool of bool
-  [@@deriving show { with_path = false }]
+(** Represents basic element in row *)
+type item =
+  | Numeric of int
+  | Real of float
+  | String of string
+  | Bool of bool
+[@@deriving show { with_path = false }]
 
-  (* row *)
+(** Row in a table *)
+module Row = struct
   type t = item array [@@deriving show { with_path = false }]
 
+  (** Create row from types and elements *)
   let init ts es =
     let item_of e = function
       | String_Column -> String e
@@ -66,8 +67,8 @@ module Row = struct
   ;;
 end
 
+(** Array of rows, contain data from csv files *)
 module Sheet = struct
-  (* array of rows || 2D elements array *)
   type t = Row.t array
 
   let init ts es = Array.init (List.length es) (fun i -> Row.init ts (List.nth es i))
@@ -79,6 +80,7 @@ module Sheet = struct
   ;;
 end
 
+(** Contain meta-information and sheet with data *)
 module Table = struct
   type t =
     { data : Sheet.t
@@ -88,6 +90,7 @@ module Table = struct
   let name table = table.meta.table_name
   let columns table = table.meta.table_header.column_list
 
+  (** Find column index *)
   let find_column_i (table : t) name =
     let rec helper acc name cs =
       match cs with
@@ -97,7 +100,7 @@ module Table = struct
     helper 0 name (columns table)
   ;;
 
-  (* faster than with search *)
+  (** get column by index *)
   let get_column (table : t) ~index = List.nth (columns table) index
 
   let show_table (table : t) =
@@ -112,6 +115,7 @@ module Table = struct
   ;;
 end
 
+(** Contain meta-information and some tables *)
 module Database = struct
   type t =
     { tables : Table.t list
@@ -139,6 +143,4 @@ module Database = struct
       base.name
       (String.concat "\n" (List.map Table.show_table base.tables))
   ;;
-
-  (* нужен поиск таблицы по имени и поиск всех колонок *)
 end

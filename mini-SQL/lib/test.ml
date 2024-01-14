@@ -298,7 +298,7 @@ module Types_test = struct
       (Row.init
          [ String_Column; Numeric_Column; Real_Column; Boolean_Column ]
          [ "wow"; "123"; "10.0"; "true" ])
-      [| Row.String "wow"; Row.Numeric 123; Row.Real 10.0; Row.Bool true |]
+      [| String "wow"; Numeric 123; Real 10.0; Bool true |]
       Row.show_row
   ;;
 
@@ -307,8 +307,8 @@ module Types_test = struct
       (Sheet.init
          [ String_Column; Numeric_Column; Real_Column; Boolean_Column ]
          [ [ "wow"; "123"; "10.0"; "true" ]; [ "wt"; "1000"; "15.9"; "false" ] ])
-      [| [| Row.String "wow"; Row.Numeric 123; Row.Real 10.0; Row.Bool true |]
-       ; [| Row.String "wt"; Row.Numeric 1000; Row.Real 15.9; Row.Bool false |]
+      [| [| String "wow"; Numeric 123; Real 10.0; Bool true |]
+       ; [| String "wt"; Numeric 1000; Real 15.9; Bool false |]
       |]
       Sheet.show_sheet
   ;;
