@@ -60,6 +60,7 @@ let keywords =
   ; "null"
   ; "NaN"
   ; "Infinity"
+  ; "new"
   ]
 ;;
 
@@ -112,7 +113,7 @@ let rs = token_ch ']'
 let parens p = between p lp rp
 let cur_parens p = between p lc rc
 let sq_parens p = between p ls rs
-let empty_stm = empty *> end_of_input <|> skip is_end
+let empty_stm = spaces *> (end_of_input <|> skip is_end <|> skip is_line_break)
 let to_end_of_stm = empty_stm <|> empty
 let some n = Some n
 let number n = Number n
@@ -197,7 +198,18 @@ let parse_op ops =
 
 (*----------unary operators----------*)
 
-let pre_un_op = [ "+", Plus; "-", Minus ] (*precedence 14*)
+type position =
+  | Pre
+  | Post
+
+let list_of_unops =
+  [ [ "+", Plus; "-", Minus; "typeof ", TypeOf ], Pre (*precedence 14*)
+  ; [ "++", PostInc; "--", PostDec ], Post (*precedence 15*)
+  ; [ "new ", New ], Pre (*precedence 16*)
+  ]
+;;
+
+(*precedence 16*)
 
 (*----------bin operators----------*)
 
@@ -269,21 +281,25 @@ and parse_anon_func () =
 
 and parse_object_deck () =
   cur_parens
-    (parse_comma
-       (both
-          (choice
-             [ sq_parens @@ start_parse_expression ()
-             ; parse_str >>| const
-             ; (valid_identifier >>| fun x -> const (String x))
-             ])
-          (token_ch ':' *> start_parse_expression ())
-        <|> (*method parser*)
-        (valid_identifier
-         >>= fun name ->
-         token parse_args_names
-         >>= fun arguments ->
-         parse_block_or_stm ()
-         >>| fun body -> const (String name), AnonFunction (arguments, body))))
+  @@ parse_comma
+  @@ choice
+       [ both
+           (choice
+              [ sq_parens @@ start_parse_expression ()
+              ; parse_str >>| const
+              ; (valid_identifier >>| fun x -> const (String x))
+              ])
+           (token_ch ':' *> start_parse_expression ())
+       ; (*method parser*)
+         (valid_identifier
+          >>= fun name ->
+          token parse_args_names
+          >>= fun arguments ->
+          parse_block_or_stm ()
+          >>| fun body -> const (String name), AnonFunction (arguments, body))
+       ; (*var syntax sugar parser*)
+         (valid_identifier >>| fun name -> const (String name), var name)
+       ]
   >>| fun properties -> ObjectDef properties
 
 and parse_mini_expression () =
@@ -305,6 +321,7 @@ and parse_mini_expression () =
   <?> "invalid part of expression"
 
 and parse_spec_bop () =
+  (*precedence 17*)
   let rec go acc =
     choice
       [ (*Property call parser*)
@@ -320,20 +337,41 @@ and parse_spec_bop () =
   in
   parse_mini_expression () >>= fun init -> go init
 
-and parse_pre_uop () =
-  token @@ parse_op pre_un_op
-  >>| (fun op -> Some op)
-  <|> return None
-  >>= function
-  | Some op -> parse_pre_uop () >>| fun ex -> UnOp (op, ex)
+and parse_uop =
+  (*precedence 14-16*)
+  let rec pre next op_parser =
+    token_btw op_parser
+    >>| (fun op -> Some op)
+    <|> return None
+    >>= function
+    | Some op -> pre next op_parser >>| fun ex -> UnOp (op, ex)
+    | _ -> next
+  in
+  let post next op_parser =
+    let rec go acc =
+      token_btw op_parser
+      >>| (fun op -> Some op)
+      <|> return None
+      >>= function
+      | Some op -> go @@ UnOp (op, acc)
+      | _ -> return acc
+    in
+    next >>= go
+  in
+  function
+  | a :: b ->
+    (match a with
+     | unops, Pre -> pre (parse_uop b) (parse_op unops)
+     | unops, Post -> post (parse_uop b) (parse_op unops))
   | _ -> parse_spec_bop ()
 
 and parse_bop = function
+  (*precedence 2-13*)
   | a :: b ->
     (match a with
      | bops, Left -> chainl1 (parse_bop b) bops
      | bops, Right -> chainr1 (parse_bop b) bops)
-  | _ -> parse_pre_uop ()
+  | _ -> parse_uop list_of_unops
 
 and start_parse_expression () =
   fix (fun _ -> parse_bop list_of_bops <* empty) <?> "incorrect expression"
@@ -412,7 +450,10 @@ and parse_stm () =
              | "if" -> token1 @@ parse_if () <?> "wrong if statement"
              | "while" -> token1 @@ parse_while () <?> "wrong while statement"
              | "for" -> token1 @@ parse_for () <?> "wrong for statement"
-             | "return" -> token1 @@ parse_return () <?> "wrong return statement"
+             | "return" ->
+               empty_stm *> return (Return (const Undefined))
+               <|> token1 @@ parse_return ()
+               <?> "wrong return statement"
              | "" ->
                peek_char_fail
                >>= fun ch ->
