@@ -194,7 +194,7 @@ module Eval_Monad = struct
   let return_n : 'a -> ('a, 'b) t = fun x st -> st, nsig x
   let return_r : 'b option -> ('a, 'b) t = fun x st -> st, rsig x
   let return_b : 'c -> ('a, 'b) t = fun _ st -> st, bsig
-  let return_e : code_ident -> address -> ('a, 'b) t = fun id ad st -> st, esig id ad
+  let return_e : address -> ('a, 'b) t = fun ad st -> st, esig ad
   let fail : error -> ('a, 'b) t = fun er st -> st, error er
 
   let ( >>= ) : ('a, 'c) t -> ('a -> ('b, 'c) t) -> ('b, 'c) t =
@@ -203,7 +203,7 @@ module Eval_Monad = struct
     match x1 with
     | Next x -> f x st1
     | Return x -> return_r x st1
-    | Exn (id, ad) -> return_e id ad st1
+    | Exn ad -> return_e ad st1
     | Break -> return_b () st1
     | Error err -> fail err st1
   ;;
@@ -217,14 +217,14 @@ module Eval_Monad = struct
     let st1, x1 = x st in
     match x1 with
     | Return x -> ret_f x st1
-    | Exn (id, ad) -> return_e id ad st1
+    | Exn ad -> return_e ad st1
     | Error err -> fail err st1
     | Next x -> err_g x st1
     | Break -> fail (Break_error "Impossible using of break statement without loop") st1
   ;;
 
   (* TODO: ПЕРЕДЕЛАТЬ, НЕ РАБОТАЕТ, СКОРЕЕ ВСЕГО *)
-  let ( !>>= ) : ('a, 'c) t -> (code_ident * address -> ('b, 'd) t) -> ('b, 'd) t =
+  let ( !>>= ) : ('a, 'c) t -> (address -> ('b, 'd) t) -> ('b, 'd) t =
     (* TODO:
        чтоб обрабатывать 'finally' нужна фигня типа:
        (try !>>= catch |>>= fun x -> finally *> return_r x)
@@ -233,7 +233,7 @@ module Eval_Monad = struct
     fun x f st ->
     let st1, x1 = x st in
     match x1 with
-    | Exn (id, ad) -> f (id, ad) st1
+    | Exn ad -> f ad st1
     | Return x -> return_r x st1
     | Next x -> return_n x st1
     | Break -> return_b () st1
@@ -244,7 +244,7 @@ module Eval_Monad = struct
     fun x f st ->
     let st1, x1 = x st in
     match x1 with
-    | Exn (id, ad) -> return_e id ad st1
+    | Exn ad -> return_e ad st1
     | Return x -> return_r x st1
     | Next _ | Break -> f () st1
     | Error err -> fail err st1
@@ -262,7 +262,7 @@ module Eval_Monad = struct
     match x1 with
     | Next x -> return_n x st1
     | Return x -> return_r x st1
-    | Exn (id, ad) -> return_e id ad st1
+    | Exn ad -> return_e ad st1
     | Break -> return_b () st1
     | Error _ -> a2 st
   ;;
@@ -485,7 +485,7 @@ module Eval_Monad = struct
     f
     @!|>>= function
     | Next x -> return_env *> return_n x
-    | Exn (code_ident, address) -> return_env *> return_e code_ident address
+    | Exn ad -> return_env *> return_e ad
     | Return x -> return_env *> return_r x
     | Break -> return_env *> return_b ()
     | Error x -> fail x

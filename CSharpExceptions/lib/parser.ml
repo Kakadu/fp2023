@@ -289,7 +289,14 @@ let ep_operation =
     lvl8 -<< [ ( =^ ) ])
 ;;
 
-let ep_assign = lift3 (fun ident eq ex -> eq ident ex) (ep_member_ident <|> ep_identifier) ( =^ ) ep_operation
+let ep_assign =
+  lift3
+    (fun ident eq ex -> eq ident ex)
+    (ep_member_ident <|> ep_identifier)
+    ( =^ )
+    ep_operation
+;;
+
 let ep_method_invoke = ep_method_invoke_ ep_operation
 let ep_st_operation = expr_to_st @@ choice [ ep_assign; ep_method_invoke ]
 
@@ -393,13 +400,19 @@ let ep_catch_block_ ep_body =
   lift2 (fun cond body -> cond, body) (ep_is_ "catch" ~then_:p_catch) ep_body
 ;;
 
+let ep_catch_blocks_ ep_body =
+  fix (fun ep_block ->
+    ep_catch_block_ ep_body
+    >>= fun x -> ep_block <|> return [] >>= fun tl -> return (x :: tl))
+;;
+
 let ep_fin_block_ ep_body = ep_is_ "finally" ~then_:ep_body
 
 let ep_try_catch_fin_ ep_body =
   lift3
     (fun try_s catch_s finally_s -> STry_catch_fin { try_s; catch_s; finally_s })
     (ep_try_block_ ep_body)
-    (option None (get_opt @@ ep_catch_block_ ep_body))
+    (option None (get_opt @@ ep_catch_blocks_ ep_body))
     (option None (get_opt @@ ep_fin_block_ ep_body))
 ;;
 

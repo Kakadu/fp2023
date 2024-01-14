@@ -234,6 +234,11 @@ let%expect_test "Try_catch" =
         public string msg;
       }
 
+      class E1:Exception
+      {
+        public string msg;
+      }
+
       class Program
       {
           int Fac(int num)
@@ -264,6 +269,10 @@ let%expect_test "Try_catch" =
 
               try{}
               catch(E e) when(e.msg == "error") {}
+              catch(E1 e) when(e.msg == "error1") {}
+              catch(E1 w) {
+                string s = w.msg;
+              }
               finally{}
               
               return ;

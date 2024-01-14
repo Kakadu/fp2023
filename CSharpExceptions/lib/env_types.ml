@@ -132,13 +132,13 @@ module Eval_env = struct
     | Next of 'a
     (* | Signal of ('b, 'sys_err) sig_ *)
     | Return of 'b option
-    | Exn of code_ident * address
+    | Exn of address
     | Break
     | Error of 'sys_err
 
   let nsig x = Next x
   let rsig x = Return x
   let bsig = Break
-  let esig id add = Exn (id, add)
+  let esig add = Exn (add)
   let error err = Error err
 end

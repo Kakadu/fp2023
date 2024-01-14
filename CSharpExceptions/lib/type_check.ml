@@ -420,30 +420,36 @@ let for_check init_opt e1_opt e2_opt s h =
   lift4 f init_opt_res e1_opt_res e2_opt_res s_res
 ;;
 
-let catch_s_check_ h = function
+let catch_s_check_ h (edecl_opt, s) =
+  match edecl_opt with
+  | None -> h s
+  | Some (CIdent exc_id, _) -> is_exception_ exc_id *> h s
+  | Some (CDecl (Var_decl (tp, id)), e_opt) ->
+    let tp = Value_sig tp in
+    let add = add_local_decl id tp in
+    let is_exc_ =
+      match tp with
+      | Value_sig (TVar (TNullable (TClass exc_id))) -> is_exception_ exc_id
+      | _ -> fail (Other_error "Parsing error in catch statement")
+    in
+    (match e_opt with
+     | Some e -> is_exc_ *> add *> cond_check_ e *> return TP_Ok
+     | None -> is_exc_ *> add *> return TP_Ok)
+    *> h s
+;;
+
+let many_catch_s_check_ h = function
   | None -> return TP_Ok
-  | Some (edecl_opt, s) ->
-    (match edecl_opt with
-     | None -> h s
-     | Some (CIdent exc_id, _) -> is_exception_ exc_id
-     | Some (CDecl (Var_decl (tp, id)), e_opt) ->
-       let tp = Value_sig tp in
-       let add = add_local_decl id tp in
-       let is_exc_ =
-         match tp with
-         | Value_sig (TVar (TNullable (TClass exc_id))) -> is_exception_ exc_id
-         | _ -> fail (Other_error "Parsing error in catch statement")
-       in
-       (match e_opt with
-        | Some e -> is_exc_ *> add *> cond_check_ e *> return TP_Ok
-        | None -> is_exc_ *> add *> return TP_Ok))
+  | Some mc ->
+    let f x = local_scope (catch_s_check_ h x) *> return () in
+    iter_left f mc *> return TP_Ok
 ;;
 
 let try_catch_fin_check try_s catch_s finally_s h =
   let new_h = h (fun x v -> x v) in
   let f _ _ _ = TP_Ok in
   let try_s_res = local_scope (new_h try_s) in
-  let catch_s_res = local_scope (catch_s_check_ new_h catch_s) in
+  let catch_s_res = many_catch_s_check_ new_h catch_s in
   let fin_s_res =
     let steps_wrap h x =
       match x with

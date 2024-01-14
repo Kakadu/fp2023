@@ -280,11 +280,11 @@ let eval_statement lenv_kernel stm =
         (match stm_opt with
          | None -> return_n ()
          | Some stm -> helper stm))
-    (* | SBreak -> *)
-    (* | SThrow e -> *)
+    | SBreak -> return_b ()
+    | SThrow e -> eval_expr e >>= get_inst >>= return_e
+    (* | STry_catch_fin tcf_sign -> *)
     (* | SWhile (e, stm) -> *)
     (* | SFor for_sign -> *)
-    (* | STry_catch_fin tcf_sign -> *)
     | _ -> fail (Return_error "TODO: REMOVE")
   in
   helper stm

@@ -163,21 +163,27 @@ let%expect_test "" =
   test_pp_statement ep_try_catch_fin {|try {} catch() {} finally {}|};
   [%expect
     {|
-      STry_catch_fin {try_s = (Steps []); catch_s = (Some (None, (Steps [])));
+      STry_catch_fin {try_s = (Steps []); catch_s = (Some [(None, (Steps []))]);
         finally_s = (Some (Steps []))} |}]
 ;;
 
 let%expect_test "" =
-  test_pp_statement ep_try_catch_fin {|try {} catch(Excaption e) {} finally {}|};
+  test_pp_statement ep_try_catch_fin {|try {} catch(Excaption e) {} catch(Excaption e) {} finally {}|};
   [%expect
     {|
       STry_catch_fin {try_s = (Steps []);
         catch_s =
-        (Some ((Some ((CDecl
-                         (Var_decl ((TVar (TNullable (TClass (Id "Excaption")))),
-                            (Id "e")))),
-                      None)),
-               (Steps [])));
+        (Some [((Some ((CDecl
+                          (Var_decl ((TVar (TNullable (TClass (Id "Excaption")))),
+                             (Id "e")))),
+                       None)),
+                (Steps []));
+                ((Some ((CDecl
+                           (Var_decl ((TVar (TNullable (TClass (Id "Excaption")))),
+                              (Id "e")))),
+                        None)),
+                 (Steps []))
+                ]);
         finally_s = (Some (Steps []))} |}]
 ;;
 
@@ -187,11 +193,11 @@ let%expect_test "" =
     {|
       STry_catch_fin {try_s = (Steps []);
         catch_s =
-        (Some ((Some ((CDecl
-                         (Var_decl ((TVar (TNullable (TClass (Id "Excaption")))),
-                            (Id "e")))),
-                      (Some (EIdentifier (Id "e"))))),
-               (Steps [])));
+        (Some [((Some ((CDecl
+                          (Var_decl ((TVar (TNullable (TClass (Id "Excaption")))),
+                             (Id "e")))),
+                       (Some (EIdentifier (Id "e"))))),
+                (Steps []))]);
         finally_s = (Some (Steps []))} |}]
 ;;
 
