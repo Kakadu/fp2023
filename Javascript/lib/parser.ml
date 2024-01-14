@@ -182,7 +182,18 @@ let parse_op ops = choice (List.map (fun (js_op, op) -> string js_op *> return o
 
 (*----------unary operators----------*)
 
-let pre_un_op = [ "+", Plus; "-", Minus ] (*precedence 14*)
+let post_un_op = [ "++", PostfixIncrement; "--", PostfixDecrement ] (*precedence 15*)
+
+let pre_un_op =
+  (*precedence 14*)
+  [ "++", PrefixIncrement
+  ; "--", PrefixDecrement
+  ; "~", BitwiseNot
+  ; "!", LogicalNot
+  ; "+", Plus
+  ; "-", Minus
+  ]
+;;
 
 (*----------bin operators----------*)
 
@@ -216,7 +227,7 @@ let xor = [ "^", Xor ], Left (*precendence 6*)
 (* let bit_or = [ "|", BitwiseOr ], Left precendence 5 *)
 let log_and = [ "&&", LogicalAnd ], Left (*precendence 4*)
 let log_or = [ "||", LogicalOr ], Left (*precendence 3*)
-let assign_op = [ "=", Assign ], Right (*precedence 2*)
+let assign_op = [ "+=", AddAssign; "=", Assign ], Right (*precedence 2*)
 
 (*from lower to greater precedence*)
 let list_of_bops =

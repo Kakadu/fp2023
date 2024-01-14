@@ -5,6 +5,8 @@
 type un_op =
   | Plus
   | Minus
+  | PostfixIncrement
+  | PostfixDecrement
   | PrefixIncrement
   | PrefixDecrement
   | BitwiseNot
@@ -22,6 +24,10 @@ type bin_op =
   | StrictEqual
   | StrictNotEqual
   | Assign
+  | AddAssign
+  | SubAssign
+  | MulAssign
+  | DivAssign
   | Rem
   | Exp
   | GreaterThan
