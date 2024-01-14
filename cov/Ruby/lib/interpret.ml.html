@@ -1356,7 +1356,7 @@ module Eval (M : MONADERROR) = struct
             <span data-count="2">l</span>et* index = unpack_int_in_valu<span data-count="2">e</span> x in
             <span data-count="2">l</span>et* l = l in
             <span data-count="2">l</span>et* x = exp<span data-count="2">r</span> stmt e_env (List.nt<span data-count="2">h</span> l index) in
-            <span data-count="2">r</span>eturn @@ x))
+            <span data-count="2">r</span>eturn x))
     | <span data-count="269">F</span>uncMonoCall (i, e) -&gt;
       (match if_func_exists_in_ctx i e_env with
        | <span data-count="0">f</span>alse -&gt; fail "undefined Function"
