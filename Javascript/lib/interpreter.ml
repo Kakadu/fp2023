@@ -535,7 +535,18 @@ let eval_un_op ctx op a =
   match op with
   | Plus -> to_vnumber a <?> "error in plus operator"
   | Minus ->
-    to_vnumber a >>= get_vnum ctx >>| (fun n -> VNumber ~-.n) <?> "error in plus operator"
+    add_ctx @@ (to_vnumber a >>= get_vnum ctx >>| fun n -> VNumber ~-.n)
+    <?> "error in minus operator"
+  | PrefixIncrement ->
+    add_ctx @@ (to_vnumber a >>= get_vnum ctx >>| fun n -> VNumber (n +. 1.))
+  | PrefixDecrement ->
+    add_ctx @@ (to_vnumber a >>= get_vnum ctx >>| fun n -> VNumber (n -. 1.))
+  | LogicalNot -> add_ctx @@ (to_vbool a >>= get_vbool ctx >>| fun b -> VBool (not b))
+  | BitwiseNot ->
+    add_ctx
+    @@ (to_vnumber a
+        >>= get_vnum ctx
+        >>| fun n -> VNumber (float_of_int (lnot (Int32.to_int (Int32.of_float n)))))
   | _ as a -> ensup @@ asprintf "operator %a not supported yet" pp_un_op a
 ;;
 

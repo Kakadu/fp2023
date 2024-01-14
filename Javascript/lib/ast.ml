@@ -5,6 +5,10 @@
 type un_op =
   | Plus
   | Minus
+  | PrefixIncrement
+  | PrefixDecrement
+  | BitwiseNot
+  | LogicalNot
 [@@deriving show { with_path = false }]
 
 type bin_op =

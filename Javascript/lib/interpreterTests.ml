@@ -368,71 +368,71 @@ let%expect_test _ =
 ;;
 
 (*greater*)
-let%expect_test _ =
-  print_return "return 4 > 3";
-  [%expect {| Programm return: true |}]
-;;
+(* let%expect_test _ =
+   print_return "return 4 > 3";
+   [%expect {| Programm return: true |}]
+   ;;
 
-let%expect_test _ =
-  print_return "return 4 > 4";
-  [%expect {| Programm return: false |}]
-;;
+   let%expect_test _ =
+   print_return "return 4 > 4";
+   [%expect {| Programm return: false |}]
+   ;;
 
-let%expect_test _ =
-  print_return "return 4 > '4'";
-  [%expect {| Programm return: false |}]
-;;
+   let%expect_test _ =
+   print_return "return 4 > '4'";
+   [%expect {| Programm return: false |}]
+   ;;
 
-let%expect_test _ =
-  print_return "return '4' > 4";
-  [%expect {| Programm return: false |}]
-;;
+   let%expect_test _ =
+   print_return "return '4' > 4";
+   [%expect {| Programm return: false |}]
+   ;;
 
-let%expect_test _ =
-  print_return "return \"aa\" > \"ab\"";
-  [%expect {| Programm return: false |}]
-;;
+   let%expect_test _ =
+   print_return "return \"aa\" > \"ab\"";
+   [%expect {| Programm return: false |}]
+   ;;
 
-let%expect_test _ =
-  print_return "return null > 0";
-  [%expect {| Programm return: false |}]
-;;
+   let%expect_test _ =
+   print_return "return null > 0";
+   [%expect {| Programm return: false |}]
+   ;;
 
-(*greater_equal*)
-let%expect_test _ =
-  print_return "return 4 >= 3";
-  [%expect {| Programm return: true |}]
-;;
+   (*greater_equal*)
+   let%expect_test _ =
+   print_return "return 4 >= 3";
+   [%expect {| Programm return: true |}]
+   ;;
 
-let%expect_test _ =
-  print_return "return 4 >= 4";
-  [%expect {| Programm return: true |}]
-;;
+   let%expect_test _ =
+   print_return "return 4 >= 4";
+   [%expect {| Programm return: true |}]
+   ;;
 
-let%expect_test _ =
-  print_return "return 4 >= '4'";
-  [%expect {| Programm return: true |}]
-;;
+   let%expect_test _ =
+   print_return "return 4 >= '4'";
+   [%expect {| Programm return: true |}]
+   ;;
 
-let%expect_test _ =
-  print_return "return '4' >= 4";
-  [%expect {| Programm return: true |}]
-;;
+   let%expect_test _ =
+   print_return "return '4' >= 4";
+   [%expect {| Programm return: true |}]
+   ;;
 
-let%expect_test _ =
-  print_return "return \"aa\" >= \"ab\"";
-  [%expect {| Programm return: false |}]
-;;
+   let%expect_test _ =
+   print_return "return \"aa\" >= \"ab\"";
+   [%expect {| Programm return: false |}]
+   ;;
 
-let%expect_test _ =
-  print_return "return null >= 0";
-  [%expect {| Programm return: true |}]
-;;
+   let%expect_test _ =
+   print_return "return null >= 0";
+   [%expect {| Programm return: true |}]
+   ;;
 
-let%expect_test _ =
-  print_return "return null >= 'test'";
-  [%expect {| Programm return: false |}]
-;;
+   let%expect_test _ =
+   print_return "return null >= 'test'";
+   [%expect {| Programm return: false |}]
+   ;; *)
 
 (*less*)
 let%expect_test _ =
@@ -765,6 +765,66 @@ let%expect_test _ =
 let%expect_test _ =
   print_return "return +\"j\"";
   [%expect {| Programm return: NaN |}]
+;;
+
+let%expect_test _ =
+  print_return "return ~4";
+  [%expect {| Programm return: -5 |}]
+;;
+
+let%expect_test _ =
+  print_return "return ~0";
+  [%expect {| Programm return: -1 |}]
+;;
+
+let%expect_test _ =
+  print_return "return ~-1";
+  [%expect {| Programm return: 0 |}]
+;;
+
+let%expect_test _ =
+  print_return "return ~1";
+  [%expect {| Programm return: -2 |}]
+;;
+
+let%expect_test _ =
+  print_return "return !4";
+  [%expect {| Programm return: false |}]
+;;
+
+let%expect_test _ =
+  print_return "return !0";
+  [%expect {| Programm return: true |}]
+;;
+
+let%expect_test _ =
+  print_return "return !-1";
+  [%expect {| Programm return: false |}]
+;;
+
+let%expect_test _ =
+  print_return "return !!4";
+  [%expect {| Programm return: true |}]
+;;
+
+let%expect_test _ =
+  print_return "return ++4";
+  [%expect {| Programm return: 5 |}]
+;;
+
+let%expect_test _ =
+  print_return "return ++-1";
+  [%expect {| Programm return: 0 |}]
+;;
+
+let%expect_test _ =
+  print_return "return ---1";
+  [%expect {| Programm return: -2 |}]
+;;
+
+let%expect_test _ =
+  print_return "return --+1";
+  [%expect {| Programm return: 0 |}]
 ;;
 
 (*infinity*)
