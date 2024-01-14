@@ -64,6 +64,7 @@ and ctx =
   ; lex_envs : lexical_env IntMap.t
   ; obj_count : int
   ; objs : obj_ctx IntMap.t
+  ; proto_obj_fields : let_ctx list
   ; vreturn : value option
   ; stdout : string
   }
