@@ -11,7 +11,7 @@
 
 (library
  (name ml_tests)
- (modules Pars_tests Type_check_tests)
+ (modules Pars_tests Type_check_tests Interpreter_tests)
  (libraries csharp_Exc_Lib)
  (preprocess
   (pps ppx_expect ppx_deriving.show ppx_inline_test))
