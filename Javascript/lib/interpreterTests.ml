@@ -1636,7 +1636,8 @@ let%expect_test _ =
 
 let%expect_test _ =
   print_output "let a = [4, 5, 6]\n  console.log(a.unshift(7), a)";
-  [%expect {|
+  [%expect
+    {|
     Programm output:
     4 [ 7, 4, 5, 6 ]
 
@@ -1645,7 +1646,8 @@ let%expect_test _ =
 
 let%expect_test _ =
   print_output "let a = [4, 5, 6]\n  console.log(a.unshift(7, 8), a)";
-  [%expect {|
+  [%expect
+    {|
     Programm output:
     5 [ 7, 8, 4, 5, 6 ]
 

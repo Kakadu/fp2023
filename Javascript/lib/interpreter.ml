@@ -619,6 +619,11 @@ and ctx_not_change_bop ctx op a b =
     else bop (fun x -> to_number ctx x >>| vnumber) a b
   in
   let prop_accs () = to_string ctx b >>= obj_get_property ctx a in
+  let nullish_coal () =
+    match a with
+    | VNull | VUndefined -> return b
+    | _ -> return a
+  in
   match op with
   | Add -> add () <?> "error in add operator"
   | Sub -> bop_with_num ( -. ) <?> "error in sub operator"
@@ -653,33 +658,14 @@ and ctx_not_change_bop ctx op a b =
 
 and ctx_not_change_unop ctx op a =
   match op with
-  | Plus -> to_vnumber a <?> "error in plus operator"
-  | Minus ->
-    to_vnumber a
-    >>= get_vnum ctx
-    >>| (fun n -> VNumber ~-.n)
-    <?> "error in minus operator"
-  | PreInc ->
-    to_vnumber a
-    >>= get_vnum ctx
-    >>| (fun n -> VNumber (n +. 1.))
-    <?> "error in prefix increment operator"
-  | PreDec ->
-    to_vnumber a
-    >>= get_vnum ctx
-    >>| (fun n -> VNumber (n -. 1.))
-    <?> "error in prefix decrement operator"
-  | LogicalNot ->
-    to_vbool a
-    >>= get_vbool ctx
-    >>| (fun b -> VBool (not b))
-    <?> "error in logical NOT operator"
+  | Plus -> to_number ctx a >>| vnumber <?> "error in plus operator"
+  | Minus -> to_number ctx a >>| ( ~-. ) >>| vnumber <?> "error in plus operator"
+  | TypeOf -> return @@ vstring @@ print_type ctx a
+  | LogicalNot -> to_bool ctx a >>| not >>| vbool <?> "error in logical NOT operator"
   | BitwiseNot ->
-    to_vnumber a
-    >>= get_vnum ctx
-    >>| (fun n -> VNumber (float_of_int (lnot (Int32.to_int (Int32.of_float n)))))
+    to_number ctx a
+    >>| (fun n -> vnumber (float_of_int (lnot (Int32.to_int (Int32.of_float n)))))
     <?> "error in bitwise NOT operator"
-  | TypeOf -> return @@ VString (print_type ctx a)
   | _ as a -> ensup @@ asprintf "operator %a not supported yet" pp_un_op a
 
 and eval_fun ctx f args this =
@@ -738,6 +724,12 @@ and ctx_change_unop ctx op a =
   in
   let add_ctx = add_ctx ctx in
   match op with
+  | PreInc ->
+    ctx_change_bop ctx AddAssign a (Const (Number 1.))
+    <?> "error in prefix increment operator"
+  | PreDec ->
+    ctx_change_bop ctx SubAssign a (Const (Number 1.))
+    <?> "error in prefix decrement operator"
   | New -> op_new ()
   | _ -> eval_exp ctx a >>= fun (ctx, a) -> add_ctx @@ ctx_not_change_unop ctx op a
 
@@ -788,28 +780,27 @@ and ctx_change_bop ctx op a b =
     | BinOp (PropAccs, obj, prop) -> obj_assign obj prop
     | _ -> error @@ SyntaxError "Invalid left-hand side in assignment"
   in
-  let add_ctx = add_ctx ctx in
+  let rec_assign_rehanging op = ctx_change_bop ctx Assign a (BinOp (op, a, b)) in
   match op with
   | Assign -> assign () <?> "error in assignment"
-  | AddAssign -> ctx_change_bop ctx Assign a (BinOp (Add, a, b))
-  | SubAssign -> ctx_change_bop ctx Assign a (BinOp (Sub, a, b))
-  | MulAssign -> ctx_change_bop ctx Assign a (BinOp (Mul, a, b))
-  | DivAssign -> ctx_change_bop ctx Assign a (BinOp (Div, a, b))
-  | ExpAssign -> ctx_change_bop ctx Assign a (BinOp (Exp, a, b))
-  | RemAssign -> ctx_change_bop ctx Assign a (BinOp (Rem, a, b))
-  | LShiftAssign -> ctx_change_bop ctx Assign a (BinOp (LogicalShiftLeft, a, b))
-  | RShiftAssign -> ctx_change_bop ctx Assign a (BinOp (LogicalShiftRight, a, b))
-  | URShiftAssign -> ctx_change_bop ctx Assign a (BinOp (UnsignedShiftRight, a, b))
-  | BitAndAssign -> ctx_change_bop ctx Assign a (BinOp (BitwiseAnd, a, b))
-  | BitOrAssign -> ctx_change_bop ctx Assign a (BinOp (BitwiseOr, a, b))
-  | BitXorAssign -> ctx_change_bop ctx Assign a (BinOp (Xor, a, b))
-  | LogAndAssign -> ctx_change_bop ctx Assign a (BinOp (LogicalAnd, a, b))
-  | LogOrAssign -> ctx_change_bop ctx Assign a (BinOp (LogicalOr, a, b))
-  | NullAssign -> ctx_change_bop ctx Assign a (BinOp (NullishCoal, a, b))
-  | PropAccs -> prop_accs () <?> "error in property access"
+  | AddAssign -> rec_assign_rehanging Add
+  | SubAssign -> rec_assign_rehanging Sub
+  | MulAssign -> rec_assign_rehanging Mul
+  | DivAssign -> rec_assign_rehanging Div
+  | ExpAssign -> rec_assign_rehanging Exp
+  | RemAssign -> rec_assign_rehanging Rem
+  | LShiftAssign -> rec_assign_rehanging LogicalShiftLeft
+  | RShiftAssign -> rec_assign_rehanging LogicalShiftRight
+  | URShiftAssign -> rec_assign_rehanging UnsignedShiftRight
+  | BitAndAssign -> rec_assign_rehanging BitwiseAnd
+  | BitOrAssign -> rec_assign_rehanging BitwiseOr
+  | BitXorAssign -> rec_assign_rehanging Xor
+  | LogAndAssign -> rec_assign_rehanging LogicalAnd
+  | LogOrAssign -> rec_assign_rehanging LogicalOr
+  | NullAssign -> rec_assign_rehanging NullishCoal
   | _ ->
     both_ext eval_exp ctx a b
-    >>= fun (ctx, (x, y)) -> add_ctx @@ ctx_not_change_bop ctx op x y
+    >>= fun (ctx, (x, y)) -> add_ctx ctx @@ ctx_not_change_bop ctx op x y
 
 and eval_for_top_val ctx name = function
   | AnonFunction (args, vals) -> create_function ctx name args vals
