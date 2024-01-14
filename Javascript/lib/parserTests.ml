@@ -440,6 +440,18 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
+  pp ~parse:parse_expression "hello.word.hi()";
+  [%expect
+    {|
+    (Expression
+       (FunctionCall (
+          (BinOp (PropAccs,
+             (BinOp (PropAccs, (Var "hello"), (Const (String "word")))),
+             (Const (String "hi")))),
+          [])))|}]
+;;
+
+let%expect_test _ =
   pp ~parse:parse_expression "{hello : word}.hello";
   [%expect
     {|

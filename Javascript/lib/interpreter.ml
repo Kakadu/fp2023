@@ -79,7 +79,7 @@ let print_type ctx = function
   | VNull (*because that's how it is in JS*) | VObject _ -> "object"
 ;;
 
-let proto_obj_fields = []
+let proto_obj_fields : let_ctx list = []
 
 let find_proto fields =
   List.partition (fun field -> field.var_id = "__proto__") fields
@@ -99,14 +99,14 @@ let add_obj ctx fields obj_type =
   { ctx with obj_count = id + 1; objs = IntMap.add id obj ctx.objs }, VObject id
 ;;
 
-let rec get_field_opt id = function
-  | field :: tl -> if field.var_id = id then Some field.value else get_field_opt id tl
+let rec find_in_vars_opt id = function
+  | a :: b -> if a.var_id = id then Some a else find_in_vars_opt id b
   | _ -> None
 ;;
 
 let get_field id fields =
-  match get_field_opt id fields with
-  | Some x -> x
+  match find_in_vars_opt id fields with
+  | Some x -> x.value
   | None -> VUndefined
 ;;
 
@@ -140,11 +140,6 @@ let get_vreturn = function
   | None -> VUndefined
 ;;
 
-let rec find_in_vars id = function
-  | a :: b -> if a.var_id = id then Some a else find_in_vars id b
-  | _ -> None
-;;
-
 let get_lex_env_opt ctx id = IntMap.find_opt id ctx.lex_envs
 
 let get_lex_env ctx id =
@@ -161,7 +156,7 @@ let rec add_or_replace var = function
 let lex_add ctx ?(replace = false) lex_env_id var =
   get_lex_env ctx lex_env_id
   >>= fun lex_env ->
-  match find_in_vars var.var_id lex_env.vars with
+  match find_in_vars_opt var.var_id lex_env.vars with
   | Some _ when not replace ->
     error
     @@ SyntaxError (asprintf "Identifier \'%s\' has already been declared" var.var_id)
@@ -209,7 +204,6 @@ let context_init =
     ; lex_envs = IntMap.singleton id lex_env
     ; obj_count = global_obj_id + 1
     ; objs = IntMap.singleton global_obj_id global_obj
-    ; put_this = None
     ; vreturn = None
     ; stdout = ""
     }
@@ -237,13 +231,17 @@ let context_init =
   console >>= alert
 ;;
 
-let create_local_ctx ctx parent scope =
+let create_local_ctx ctx parent scope this =
+  get_lex_env ctx ctx.cur_lex_env
+  >>= fun cur_lex_env ->
   let vars =
-    match ctx.put_this with
+    match this with
     | Some int -> [ { var_id = "this"; is_const = true; value = VObject int } ]
-    | None -> []
+    | None ->
+      (match scope, find_in_vars_opt "this" cur_lex_env.vars with
+       | Function, _ | _, None -> []
+       | _, Some x -> [ x ])
   in
-  let ctx = { ctx with put_this = None } in
   let new_lex_env =
     { parent = Some parent; creater = Some ctx.cur_lex_env; vars; scope }
   in
@@ -305,6 +303,17 @@ let prefind_funcs ctx ast =
     | _ -> return ctx
   in
   fold_left ctx_add_if_func ctx ast
+;;
+
+let rec obj_get_property ctx obj key =
+  match obj with
+  | VObject x ->
+    get_obj_ctx ctx x
+    >>= fun obj ->
+    (match find_in_vars_opt key obj.fields with
+     | None -> obj_get_property ctx obj.proto key
+     | Some x -> return x.value)
+  | _ -> return @@ get_field key proto_obj_fields
 ;;
 
 (**---------------Expression interpreter---------------*)
@@ -504,10 +513,13 @@ let rec ctx_not_change_bop ctx op a b =
     then bop (to_vstring ctx) a b
     else bop to_vnumber a b
   in
-  let nullish_coal () =
+  let prop_accs () =
+    to_vstring ctx b
+    >>= get_vstring ctx
+    >>= fun str ->
     match a with
-    | VNull | VUndefined -> return b
-    | _ -> return a
+    | VObject _ as obj -> obj_get_property ctx obj str
+    | _ -> ensup "reading from not object is not supporting"
   in
   match op with
   | Add -> add () <?> "error in add operator"
@@ -538,6 +550,7 @@ let rec ctx_not_change_bop ctx op a b =
   | NullishCoal -> nullish_coal () <?> "error in nullish_coalescing operator"
   | Xor -> bop_with_int ( lxor )
   | Exp -> bop_with_num ( ** ) <?> "error in exp operator"
+  | PropAccs -> prop_accs () <?> "error in property accession"
   | _ as a -> ensup @@ asprintf "operator %a not supported yet" pp_bin_op a
 ;;
 
@@ -577,10 +590,10 @@ let ctx_get_var ctx id =
   let rec go lex_id =
     get_lex_env ctx lex_id
     >>= fun lex_env ->
-    match find_in_vars id lex_env.vars with
+    match find_in_vars_opt id lex_env.vars with
     | Some a -> return (a, lex_id)
     | None ->
-      (*for correct work if function doesn't see this*)
+      (*function mustn't see 'this' in parent lex envs*)
       if id = "this" && lex_env.scope = Function
       then return ({ var_id = id; is_const = true; value = VUndefined }, lex_id)
       else (
@@ -592,7 +605,10 @@ let ctx_get_var ctx id =
   go ctx.cur_lex_env
 ;;
 
-let rec eval_fun ctx f args =
+let rec eval_fun ctx f args this =
+  fold_left_map eval_exp ctx args
+  <?> "error in function arguments"
+  >>= fun (ctx, args) ->
   let get_fun =
     match f with
     | VObject id ->
@@ -611,7 +627,7 @@ let rec eval_fun ctx f args =
         >>= fun ctx -> val_to_args ctx (atl, [])
       | _, _ -> return ctx
     in
-    create_local_ctx ctx f.parent_lex_env scope
+    create_local_ctx ctx f.parent_lex_env scope this
     >>= fun ctx ->
     match f.body with
     | Block x ->
@@ -631,14 +647,18 @@ let rec eval_fun ctx f args =
 
 and ctx_change_unop ctx op a =
   let op_new () =
-    add_obj ctx [] TObject
-    >>= fun (ctx, obj) ->
-    get_obj_id ctx obj
-    >>= fun id ->
-    eval_exp { ctx with put_this = Some id } a
-    >>| fun (ctx, _) ->
-    let ctx = { ctx with put_this = None } in
-    ctx, VObject id
+    match a with
+    | FunctionCall (f, args) ->
+      add_obj ctx [] TObject
+      >>= fun (ctx, obj) ->
+      get_obj_id ctx obj
+      >>= fun id ->
+      eval_exp ctx f
+      >>= fun (ctx, f) -> eval_fun ctx f args (Some id) >>| fun (ctx, _) -> ctx, obj
+    | _ as v ->
+      eval_exp ctx v
+      >>= fun (ctx, v) ->
+      print_vvalues ctx v >>= fun v -> etyp (v ^ " is not a constructor")
   in
   let add_ctx = add_ctx ctx in
   match op with
@@ -667,7 +687,7 @@ and ctx_change_bop ctx op a b =
             then etyp "Cyclic __proto__ value"
             else return { obj with proto = b }
           | _ ->
-            (match find_in_vars prop obj.fields with
+            (match find_in_vars_opt prop obj.fields with
              | Some x when x.is_const ->
                print_vvalues ctx obj_val
                >>= fun str ->
@@ -696,25 +716,14 @@ and ctx_change_bop ctx op a b =
   let prop_accs () =
     eval_exp ctx a
     >>= fun (ctx, a) ->
+    eval_exp ctx b
+    >>= fun (ctx, b) ->
+    to_vstring ctx b
+    >>= get_vstring ctx
+    >>= fun str ->
     match a with
-    | VObject id ->
-      (*to pass this to methods*)
-      eval_exp { ctx with put_this = Some id } b
-      >>= fun (ctx, b) ->
-      to_vstring { ctx with put_this = None } b
-      >>= get_vstring ctx
-      >>= fun str ->
-      let rec proto_find = function
-        | VObject x ->
-          get_obj_ctx ctx x
-          >>= fun obj ->
-          (match get_field_opt str obj.fields with
-           | None -> proto_find obj.proto
-           | Some x -> return x)
-        | _ -> return @@ get_field str proto_obj_fields
-      in
-      add_ctx ctx @@ proto_find (VObject id)
-    | _ -> ensup "reading from not object is not supported"
+    | VObject _ as obj -> obj_get_property ctx obj str
+    | _ -> ensup "reading from not object is not supporting"
   in
   let add_ctx = add_ctx ctx in
   match op with
@@ -755,12 +764,24 @@ and eval_exp ctx =
   | UnOp (op, a) -> ctx_change_unop ctx op a
   | Var id -> ctx_get_var ctx id >>| fun (var, _) -> ctx, var.value
   | FunctionCall (var, args) ->
-    eval_exp ctx var
+    let find_this =
+      match var with
+      | BinOp (PropAccs, x, y) ->
+        eval_exp ctx x
+        >>= fun (ctx, obj) ->
+        let this =
+          match obj with
+          | VObject id -> Some id
+          | _ -> None
+        in
+        eval_exp ctx y
+        >>= fun (ctx, y) ->
+        ctx_not_change_bop ctx PropAccs obj y >>| fun res -> (ctx, res), this
+      | _ -> eval_exp ctx var >>| fun res -> res, None
+    in
+    find_this
     <?> "error while try get function"
-    >>= fun (ctx, f) ->
-    fold_left_map eval_exp ctx args
-    <?> "error in function arguments"
-    >>= fun (ctx, args) -> eval_fun ctx f args
+    >>= fun ((ctx, f), this) -> eval_fun ctx f args this
   | AnonFunction (args, vals) -> create_func ctx "" args vals tfunction
   | ArrowFunction (args, vals) -> create_func ctx "" args vals tarrowfun
   | ObjectDef x ->
@@ -802,7 +823,7 @@ and parse_stm ctx = function
      | true -> parse_stm ctx then_stm
      | false -> parse_stm ctx else_stm)
   | Block ast ->
-    create_local_ctx ctx ctx.cur_lex_env Block
+    create_local_ctx ctx ctx.cur_lex_env Block None
     >>= fun ctx ->
     parse_stms ctx ast
     <?> "error while interpret block"
