@@ -742,25 +742,68 @@ let%expect_test _ =
 
 let%expect_test _ =
   print_return "return ++4";
-  [%expect {| Programm return: 5 |}]
+  [%expect {| Error: Interpreter error > error in return expression > error in prefix increment operator > error in assignment > SyntaxError: Invalid left-hand side in assignment |}]
 ;;
 
 let%expect_test _ =
   print_return "return ++-1";
-  [%expect {| Programm return: 0 |}]
+  [%expect {| Error: Interpreter error > error in return expression > error in prefix increment operator > error in assignment > SyntaxError: Invalid left-hand side in assignment |}]
 ;;
 
 let%expect_test _ =
   print_return "return ---1";
-  [%expect {| Programm return: -2 |}]
+  [%expect {| Error: Interpreter error > error in return expression > error in prefix decrement operator > error in assignment > SyntaxError: Invalid left-hand side in assignment |}]
 ;;
 
 let%expect_test _ =
   print_return "return --+1";
-  [%expect {| Programm return: 0 |}]
+  [%expect {| Error: Interpreter error > error in return expression > error in prefix decrement operator > error in assignment > SyntaxError: Invalid left-hand side in assignment |}]
 ;;
 
 (*assigns*)
+
+let%expect_test _ =
+  print_output "let a = 4; console.log(a++, a)";
+  [%expect {|
+    Programm output:
+    4 5
+
+    Programm return: undefined |}]
+;;
+
+let%expect_test _ =
+  print_output "let a = 4; console.log(a--, a)";
+  [%expect {|
+    Programm output:
+    4 3
+
+    Programm return: undefined |}]
+;;
+
+(*assigns*)
+
+let%expect_test _ =
+  print_output "let a = 4; console.log(++a, a)";
+  [%expect {|
+    Programm output:
+    5 5
+
+    Programm return: undefined |}]
+;;
+
+let%expect_test _ =
+  print_output "let a = 4; console.log(--a, a)";
+  [%expect {|
+    Programm output:
+    3 3
+
+    Programm return: undefined |}]
+;;
+
+let%expect_test _ =
+  print_output "let a = 4; console.log(a, --a++, a)";
+  [%expect {| Error: Interpreter error > error in expression statement > error in function arguments > error in prefix decrement operator > error in assignment > SyntaxError: Invalid left-hand side in assignment |}]
+;;
 
 let%expect_test _ =
   print_return "\n  let a = 4; \n  a += 1; \n  return a;";

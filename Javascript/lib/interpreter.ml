@@ -730,10 +730,22 @@ and ctx_change_unop ctx op a =
   | PreDec ->
     ctx_change_bop ctx SubAssign a (Const (Number 1.))
     <?> "error in prefix decrement operator"
+  | PostInc ->
+    eval_exp ctx a
+    >>= fun (_, res) ->
+    ctx_change_bop ctx AddAssign a (Const (Number 1.))
+    >>| (fun (ctx, _) -> ctx, res)
+    <?> "error in prefix increment operator"
+  | PostDec ->
+    eval_exp ctx a
+    >>= fun (_, res) ->
+    ctx_change_bop ctx SubAssign a (Const (Number 1.))
+    >>| (fun (ctx, _) -> ctx, res)
+    <?> "error in prefix decrement operator"
   | New -> op_new ()
   | _ -> eval_exp ctx a >>= fun (ctx, a) -> add_ctx @@ ctx_not_change_unop ctx op a
 
-and ctx_change_bop ctx op a b =
+and ctx_change_bop ctx op a b : (ctx * value) t =
   let assign () =
     let obj_assign obj prop =
       let get_obj = function
@@ -800,7 +812,7 @@ and ctx_change_bop ctx op a b =
   | NullAssign -> rec_assign_rehanging NullishCoal
   | _ ->
     both_ext eval_exp ctx a b
-    >>= fun (ctx, (x, y)) -> add_ctx ctx @@ ctx_not_change_bop ctx op x y
+    >>= fun (ctx, (x, y)) -> add_ctx ctx (ctx_not_change_bop ctx op x y)
 
 and eval_for_top_val ctx name = function
   | AnonFunction (args, vals) -> create_function ctx name args vals
@@ -808,9 +820,7 @@ and eval_for_top_val ctx name = function
   | _ as ast -> eval_exp ctx ast
 
 (**main expression interpreter*)
-and eval_exp ctx =
-  let add_ctx = add_ctx ctx in
-  function
+and eval_exp ctx = function
   | Const x -> return (ctx, const_to_val x)
   | BinOp (op, a, b) -> ctx_change_bop ctx op a b
   | UnOp (op, a) -> ctx_change_unop ctx op a
