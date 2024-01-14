@@ -55,3 +55,20 @@ type expression =
   | Un_op of un_op * expression
   | List_op of expression * (list_op * expression) list
 [@@deriving show { with_path = false }]
+
+(** Patterns of node or relationship, e. g. :Person:Director{name:"John"}*)
+type pattern = name list * (name * expression) list
+[@@deriving show { with_path = false }]
+
+(** Relationship direction *)
+type direction =
+  | Left (** <-[...]- *)
+  | Right (** --> *)
+  | No (** -- *)
+[@@deriving show { with_path = false }] [@@deriving show { with_path = false }]
+
+(** Path pattern (n:Person)-->()<-[:Loves]-({name:"John"}) *)
+type path =
+  (name option * pattern)
+  * ((name option * pattern * direction) * (name option * pattern)) list
+[@@deriving show { with_path = false }]
