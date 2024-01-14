@@ -8,6 +8,8 @@ let ( >>= ) = Result.bind
 let return = Result.ok
 let uerror = Result.error
 let ( >>| ) x f = x >>= fun r -> return @@ f r
+let ( let* ) = ( >>= )
+let ( let+ ) = ( >>| )
 
 let ( <?> ) x str =
   match x with
