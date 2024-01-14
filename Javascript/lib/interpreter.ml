@@ -500,6 +500,11 @@ let rec ctx_not_change_bop ctx op a b =
     then bop (to_vstring ctx) a b
     else bop to_vnumber a b
   in
+  let nullish_coal () =
+    match a with
+    | VNull | VUndefined -> return b
+    | _ -> return a
+  in
   match op with
   | Add -> add () <?> "error in add operator"
   | Sub -> bop_with_num ( -. ) <?> "error in sub operator"
@@ -526,6 +531,7 @@ let rec ctx_not_change_bop ctx op a b =
   | BitwiseOr -> bop_with_int ( lor ) <?> "error in bitwise or"
   | LogicalAnd -> logical_and () <?> "error in logical_and operator"
   | LogicalOr -> logical_or () <?> "error in logical_and operator"
+  | NullishCoal -> nullish_coal () <?> "error in nullish_coalescing operator"
   | Xor -> bop_with_int ( lxor )
   | Exp -> bop_with_num ( ** ) <?> "error in exp operator"
   | _ as a -> ensup @@ asprintf "operator %a not supported yet" pp_bin_op a
@@ -535,7 +541,30 @@ let eval_un_op ctx op a =
   match op with
   | Plus -> to_vnumber a <?> "error in plus operator"
   | Minus ->
-    to_vnumber a >>= get_vnum ctx >>| (fun n -> VNumber ~-.n) <?> "error in plus operator"
+    to_vnumber a
+    >>= get_vnum ctx
+    >>| (fun n -> VNumber ~-.n)
+    <?> "error in minus operator"
+  | PreInc ->
+    to_vnumber a
+    >>= get_vnum ctx
+    >>| (fun n -> VNumber (n +. 1.))
+    <?> "error in prefix increment operator"
+  | PreDec ->
+    to_vnumber a
+    >>= get_vnum ctx
+    >>| (fun n -> VNumber (n -. 1.))
+    <?> "error in prefix decrement operator"
+  | LogicalNot ->
+    to_vbool a
+    >>= get_vbool ctx
+    >>| (fun b -> VBool (not b))
+    <?> "error in logical NOT operator"
+  | BitwiseNot ->
+    to_vnumber a
+    >>= get_vnum ctx
+    >>| (fun n -> VNumber (float_of_int (lnot (Int32.to_int (Int32.of_float n)))))
+    <?> "error in bitwise NOT operator"
   | _ as a -> ensup @@ asprintf "operator %a not supported yet" pp_un_op a
 ;;
 
@@ -664,12 +693,27 @@ and ctx_change_bop ctx op a b =
         | _ -> return @@ get_field str proto_obj_fields
       in
       add_ctx ctx @@ proto_find (VObject id)
-    | _ -> ensup "reading from not object is not supporting"
+    | _ -> ensup "reading from not object is not supported"
   in
   let add_ctx = add_ctx ctx in
   match op with
   | Assign -> assign () <?> "error in assignment"
-  | PropAccs -> prop_accs () <?> "error in property accession"
+  | AddAssign -> ctx_change_bop ctx Assign a (BinOp (Add, a, b))
+  | SubAssign -> ctx_change_bop ctx Assign a (BinOp (Sub, a, b))
+  | MulAssign -> ctx_change_bop ctx Assign a (BinOp (Mul, a, b))
+  | DivAssign -> ctx_change_bop ctx Assign a (BinOp (Div, a, b))
+  | ExpAssign -> ctx_change_bop ctx Assign a (BinOp (Exp, a, b))
+  | RemAssign -> ctx_change_bop ctx Assign a (BinOp (Rem, a, b))
+  | LShiftAssign -> ctx_change_bop ctx Assign a (BinOp (LogicalShiftLeft, a, b))
+  | RShiftAssign -> ctx_change_bop ctx Assign a (BinOp (LogicalShiftRight, a, b))
+  | URShiftAssign -> ctx_change_bop ctx Assign a (BinOp (UnsignedShiftRight, a, b))
+  | BitAndAssign -> ctx_change_bop ctx Assign a (BinOp (BitwiseAnd, a, b))
+  | BitOrAssign -> ctx_change_bop ctx Assign a (BinOp (BitwiseOr, a, b))
+  | BitXorAssign -> ctx_change_bop ctx Assign a (BinOp (Xor, a, b))
+  | LogAndAssign -> ctx_change_bop ctx Assign a (BinOp (LogicalAnd, a, b))
+  | LogOrAssign -> ctx_change_bop ctx Assign a (BinOp (LogicalOr, a, b))
+  | NullAssign -> ctx_change_bop ctx Assign a (BinOp (NullishCoal, a, b))
+  | PropAccs -> prop_accs () <?> "error in property access"
   | _ ->
     both_ext eval_exp ctx a b
     >>= fun (ctx, (x, y)) -> add_ctx @@ ctx_not_change_bop ctx op x y
