@@ -257,6 +257,10 @@ let eval_stm_expr e_expr e_stm lenv_kernel = function
   | _ -> fail (System_error "Trying to use an expression as a statement")
 ;;
 
+(* let eval_try_catch_fin e_stm lenv_kernel try_ catch_ fin_ =
+  let f_finally = local
+;; *)
+
 let eval_statement lenv_kernel stm =
   let rec helper stm_ =
     let eval_expr expr = eval_expr helper lenv_kernel expr in
@@ -281,8 +285,8 @@ let eval_statement lenv_kernel stm =
          | None -> return_n ()
          | Some stm -> helper stm))
     | SBreak -> return_b ()
-    | SThrow e -> eval_expr e >>= get_inst >>= return_e
-    (* | STry_catch_fin tcf_sign -> *)
+    | SThrow e -> eval_expr e >>= get_inst >>= return_e 
+    (* | STry_catch_fin { try_s; catch_s; finally_s } -> *)
     (* | SWhile (e, stm) -> *)
     (* | SFor for_sign -> *)
     | _ -> fail (Return_error "TODO: REMOVE")

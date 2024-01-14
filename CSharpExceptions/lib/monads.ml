@@ -223,33 +223,6 @@ module Eval_Monad = struct
     | Break -> fail (Break_error "Impossible using of break statement without loop") st1
   ;;
 
-  (* TODO: ПЕРЕДЕЛАТЬ, НЕ РАБОТАЕТ, СКОРЕЕ ВСЕГО *)
-  let ( !>>= ) : ('a, 'c) t -> (address -> ('b, 'd) t) -> ('b, 'd) t =
-    (* TODO:
-       чтоб обрабатывать 'finally' нужна фигня типа:
-       (try !>>= catch |>>= fun x -> finally *> return_r x)
-       * помни, что |>>= срабатывает после получения Return или продолжает падать с ошибкой
-    *)
-    fun x f st ->
-    let st1, x1 = x st in
-    match x1 with
-    | Exn ad -> f ad st1
-    | Return x -> return_r x st1
-    | Next x -> return_n x st1
-    | Break -> return_b () st1
-    | Error err -> fail err st1
-  ;;
-
-  let ( @>>= ) : (unit, 'b) t -> (unit -> ('c, 'd) t) -> ('c, 'd) t =
-    fun x f st ->
-    let st1, x1 = x st in
-    match x1 with
-    | Exn ad -> return_e ad st1
-    | Return x -> return_r x st1
-    | Next _ | Break -> f () st1
-    | Error err -> fail err st1
-  ;;
-
   let ( @!|>>= ) : ('a, 'b) t -> (('a, 'b, error) eval_t -> ('d, 'c) t) -> ('d, 'c) t =
     fun x f st ->
     let st1, x1 = x st in
@@ -496,6 +469,18 @@ module Eval_Monad = struct
   let run_in_another_self ad new_lenv f =
     let new_f = save_local (ad, new_lenv) *> f in
     local new_f
+  ;;
+
+  let tcf_run tf cf ff =
+    read_mem
+    >>= fun mem ->
+    tf
+    @!|>>= function
+    | Exn ad -> save_mem mem *> local (cf ad) *> local ff
+    | Next x -> return_n x
+    | Break -> local ff *> fail (Interpreter_error "Attempt to use break with try")
+    | Return x -> local ff *> return_r x
+    | Error err -> local ff *> fail err
   ;;
 
   let run_method
