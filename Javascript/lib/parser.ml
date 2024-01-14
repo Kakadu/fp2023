@@ -179,7 +179,7 @@ let parse_args_names =
 let parse_comma parser = sep_by (token_ch ',') parser <* (token_ch ',' <|> return ' ')
 
 let is_long_op_symbol_fail = function
-  | '+' | '-' | '*' | '&' | '|' | '=' | '<' | '>' -> fail ""
+  | '&' | '|' -> fail ""
   | _ -> return ()
 ;;
 
@@ -196,21 +196,6 @@ let parse_op ops =
        ops)
 ;;
 
-(*----------unary operators----------*)
-
-type position =
-  | Pre
-  | Post
-
-let list_of_unops =
-  [ [ "+", Plus; "-", Minus; "typeof ", TypeOf ], Pre (*precedence 14*)
-  ; [ "++", PostInc; "--", PostDec ], Post (*precedence 15*)
-  ; [ "new ", New ], Pre (*precedence 16*)
-  ]
-;;
-
-(*precedence 16*)
-
 (*----------bin operators----------*)
 
 type associativity =
@@ -220,7 +205,7 @@ type associativity =
 (*from lower to greater precedence*)
 let list_of_bops =
   (*[(JS name, Ast bin_op)], associativity*)
-  [ [ "=", Assign ], Right (*precedence 2*)
+  [ [ "+=", AddAssign; "=", Assign ], Right (*precedence 2*)
   ; [ "||", LogicalOr ], Left (*precendence 3*)
   ; [ "&&", LogicalAnd ], Left (*precendence 4*)
   ; [ "|", BitwiseOr ], Left (*precendence 5*)
@@ -237,6 +222,29 @@ let list_of_bops =
   ; [ "**", Exp ], Right (*precendence 13*)
   ]
 ;;
+
+(*----------unary operators----------*)
+
+type position =
+  | Pre
+  | Post
+
+let list_of_unops =
+  [ ( [ "++", PreInc
+      ; "--", PreDec
+      ; "+", Plus
+      ; "-", Minus
+      ; "!", LogicalNot
+      ; "~", BitwiseNot
+      ; "typeof ", TypeOf
+      ]
+    , Pre (*precedence 14*) )
+  ; [ "++", PostInc; "--", PostDec ], Post (*precedence 15*)
+  ; [ "new ", New ], Pre (*precedence 16*)
+  ]
+;;
+
+(*precedence 16*)
 
 let chainl1 parser op =
   let rec go acc =

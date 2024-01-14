@@ -3,49 +3,58 @@
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
 type un_op =
-  | New
-  | TypeOf
-  | PostInc
-  | PostDec
-  | Plus
-  | Minus
-  | PostfixIncrement
-  | PostfixDecrement
-  | PrefixIncrement
-  | PrefixDecrement
-  | BitwiseNot
-  | LogicalNot
+  | PreInc (*"++", precedence 14*)
+  | PreDec (*"--", precedence 14*)
+  | Plus (*"+", precedence 14*)
+  | Minus (*"-", precedence 14*)
+  | LogicalNot (*"!", precedence 14*)
+  | BitwiseNot (*"~", precedence 14*)
+  | TypeOf (*"typeof", precedence 14*)
+  | PostInc (*"++", precedence 15*)
+  | PostDec (*"--", precedence 15*)
+  | New (*"new", precedence 16*)
 [@@deriving show { with_path = false }]
 
 type bin_op =
+  | Assign (*"=", precedence 2*)
+  | AddAssign (*"+=", precedence 2*)
+  | SubAssign (*"-=", precedence 2*)
+  | MulAssign (*"*=", precedence 2*)
+  | DivAssign (*"/=", precedence 2*)
+  | ExpAssign (*"**=", precedence 2*)
+  | RemAssign (*"%=", precedence 2*)
+  | BitAndAssign (*"&=", precedence 2*)
+  | BitXorAssign (*"^=", precedence 2*)
+  | BitOrAssign (*"|=", precedence 2*)
+  | LShiftAssign (*"<<=", precedence 2*)
+  | RShiftAssign (*">>=", precedence 2*)
+  | URShiftAssign (*">>>=", precedence 2*)
+  | LogAndAssign (*"&&=", precedence 2*)
+  | LogOrAssign (*"||=", precedence 2*)
+  (* | NullAssign "??=", precedence 2 *)
+  | LogicalOr (*"||", precedence 3*)
+  | LogicalAnd (*"&&", precedence 4*)
+  | BitwiseOr (*"|", precedence 5*)
+  | Xor (*"^", precedence 6*)
+  | BitwiseAnd (*"&", precedence 7*)
+  | Equal (*"==", precedence 8*)
+  | NotEqual (*"!=", precedence 8*)
+  | StrictEqual (*"===", precedence 8*)
+  | StrictNotEqual (*"!==", precedence 8*)
+  | GreaterThan (*">", precedence 9*)
+  | GreaterEqual (*">=", precedence 9*)
+  | LessThan (*"<", precedence 9*)
+  | LessEqual (*"<=", precedence 9*)
+  | LogicalShiftLeft (*"<<", precendence 10*)
+  | LogicalShiftRight (*">>", precendence 10*)
+  | UnsignedShiftRight (*">>>", precendence 10*)
+  | Add (*"+", precendence 11*)
+  | Sub (*"-", precendence 11*)
+  | Mul (*"%", precendence 12*)
+  | Div (*"/", precendence 12*)
+  | Rem (*"%", precendence 12*)
+  | Exp (*"**", precendence 13*)
   | PropAccs
-  | Add
-  | Sub
-  | Mul
-  | Div
-  | Equal
-  | NotEqual
-  | StrictEqual
-  | StrictNotEqual
-  | Assign
-  | AddAssign
-  | SubAssign
-  | MulAssign
-  | DivAssign
-  | Rem
-  | Exp
-  | GreaterThan
-  | GreaterEqual
-  | LessThan
-  | LessEqual
-  | LogicalAnd
-  | LogicalOr
-  | BitwiseAnd
-  | BitwiseOr
-  | LogicalShiftLeft
-  | LogicalShiftRight
-  | UnsignedShiftRight
-  | Xor
 [@@deriving show { with_path = false }]
 
 type typename =
