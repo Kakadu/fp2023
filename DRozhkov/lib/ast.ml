@@ -14,20 +14,19 @@ type pattern =
   | PAny (** _ *)
   | PConst of const (** | const -> ... *)
   | PVar of id (** | varname -> ... *)
-  | PCons of pattern * pattern * pattern list (** | p1 :: p2 -> ... *)
 [@@deriving show { with_path = false }]
 
 type bin_op =
-  | Add (** + *)
-  | Sub (** - *)
-  | Mul (** * *)
-  | Div (** / *)
-  | Eq (** = *)
-  | Neq (** != *)
-  | Les (** < *)
-  | Leq (** <= *)
-  | Gre (** > *)
-  | Geq (** >= *)
+  | Add (** [+] *)
+  | Sub (** [-] *)
+  | Mul (** [*] *)
+  | Div (** [/] *)
+  | Eq (** [=] *)
+  | Neq (** [!=] *)
+  | Les (** [<] *)
+  | Leq (** [<=] *)
+  | Gre (** [>] *)
+  | Geq (** [>=] *)
 [@@deriving show { with_path = false }]
 
 type expression =
@@ -36,6 +35,7 @@ type expression =
   | IfThenElse of expression * expression * expression
   | Binop of bin_op * expression * expression
   | Fun of id * expression
+  | List of expression list
   | Match of expression * (pattern * expression) list
   | App of expression * expression
   | Let of fun_rec * id * expression * expression option
@@ -44,6 +44,5 @@ type expression =
 and fun_rec =
   | Rec
   | NoRec
-[@@deriving show { with_path = false }]
 
 type program = expression list [@@deriving show { with_path = false }]

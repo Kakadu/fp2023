@@ -161,6 +161,11 @@ let let_pars pexpr =
        (token "in" *> pexpr >>| (fun x -> Some x) <|> return None)
 ;;
 
+let list_pars pexpr =
+  let pparens p = token "[" *> p <* token "]" in
+  pparens @@ sep_by (token ";") pexpr >>| fun x -> List x
+;;
+
 let pebinop chain1 e pbinop = chain1 e (pbinop >>| fun op l r -> Binop (op, l, r))
 let plbinop = pebinop chainl1
 let var_pars = ident >>= fun x -> return (Ast.Var x)
@@ -187,14 +192,6 @@ let ppattern =
       ; ppvar
       ]
   in
-  let pat =
-    lift2
-      (fun p1 -> function
-        | h :: tl -> PCons (p1, h, tl)
-        | _ -> p1)
-      pat
-      (many (token "::" *> pat))
-  in
   pat
 ;;
 
@@ -210,7 +207,7 @@ let ematch pexpr =
 
 let pexpr =
   fix (fun parseExpression ->
-    let atom = choice [ parens parseExpression; const_pars; var_pars ] in
+    let atom = choice [ parens parseExpression; const_pars; var_pars; list_pars parseExpression ] in
     let apply =
       lift2
         (fun f args -> List.fold_left ~f:(fun f arg -> App (f, arg)) ~init:f args)
