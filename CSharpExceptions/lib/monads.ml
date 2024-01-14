@@ -471,16 +471,26 @@ module Eval_Monad = struct
     local new_f
   ;;
 
+  let further = function
+    | Exn ad -> return_e ad
+    | Next x -> return_n x
+    | Break -> return_b ()
+    | Return x -> return_r x
+    | Error err -> fail err
+  ;;
+
   let tcf_run tf cf ff =
+    let cf_new ad = local (cf ad) @!|>>= fun sig_ -> local ff *> further sig_ in
+    let ff_new = local ff in
     read_mem
     >>= fun mem ->
-    tf
+    local tf
     @!|>>= function
-    | Exn ad -> save_mem mem *> local (cf ad) *> local ff
+    | Exn ad -> save_mem mem *> cf_new ad
     | Next x -> return_n x
-    | Break -> local ff *> fail (Interpreter_error "Attempt to use break with try")
-    | Return x -> local ff *> return_r x
-    | Error err -> local ff *> fail err
+    | Break -> ff_new *> fail (Interpreter_error "Attempt to use break with try")
+    | Return x -> ff_new *> return_r x
+    | Error err -> ff_new *> fail err
   ;;
 
   let run_method
@@ -505,10 +515,7 @@ module Eval_Monad = struct
     in
     local run_f
   ;;
-  (* Огранизационная функция *)
-  (* TODO: для try local должен и память ловить если что *)
 
   (* По анологии с run_method *)
   (* TODO: Написать функцию обработки для for + while *)
-  (* TODO: Написать функцию обработки для try_catch_finally *)
 end
