@@ -39,6 +39,12 @@ type let_ctx =
   ; value : value
   }
 
+type proto_objs =
+  { proto_obj : int
+  ; proto_fun : int
+  ; proto_array : int
+  }
+
 type lexical_env =
   { parent : int option (*lex env where fun init*)
   ; creater : int option (*lex env where fun call, in block creater = parent*)
@@ -50,6 +56,7 @@ and obj_type =
   | TFunPreset of (ctx -> value list -> int option -> (ctx * value option) t)
   | TFunction of fun_ctx
   | TArrowFunction of fun_ctx
+  | TArray of value list
   | TObject
 
 and obj_ctx =
@@ -64,7 +71,7 @@ and ctx =
   ; lex_envs : lexical_env IntMap.t
   ; obj_count : int
   ; objs : obj_ctx IntMap.t
-  ; proto_obj_fields : let_ctx list
+  ; proto_objs : proto_objs
   ; vreturn : value option
   ; stdout : string
   }
