@@ -407,11 +407,10 @@ let infer_expr =
       let* tv = fresh_var in
       return (Subst.empty, TyList tv)
     | ExprCons (hd, tl) ->
-      let* s1, t1 = helper env hd in
-      let* s2, t2 = helper (TypeEnv.apply s1 env) tl in
-      let list_ty = TyList t1 in
-      let* s3 = unify list_ty t2 in
-      let final_ty = Subst.apply s3 list_ty in
+      let* s2, t2 = helper env tl in
+      let* s1, t1 = helper (TypeEnv.apply s2 env) hd in
+      let* s3 = unify (TyList t1) t2 in
+      let final_ty = Subst.apply s3 t2 in
       let* final_subst = Subst.compose_all [ s3; s2; s1 ] in
       return (final_subst, final_ty)
     | ExprLet (bindings, main_expr) ->
