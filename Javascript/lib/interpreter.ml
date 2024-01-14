@@ -75,9 +75,8 @@ let print_type ctx = function
   | VString _ -> "string"
   | VBool _ -> "boolean"
   | VUndefined -> "undefined"
-  | VNull -> "null"
   | VObject x when is_func_id ctx x -> "function"
-  | VObject _ -> "object"
+  | VNull (*because that's how it is in JS*) | VObject _ -> "object"
 ;;
 
 let proto_obj_fields = []
@@ -541,6 +540,7 @@ let ctx_not_change_unop ctx op a =
   | Plus -> to_vnumber a <?> "error in plus operator"
   | Minus ->
     to_vnumber a >>= get_vnum ctx >>| (fun n -> VNumber ~-.n) <?> "error in plus operator"
+  | TypeOf -> return @@ VString (print_type ctx a)
   | _ as a -> ensup @@ asprintf "operator %a not supported yet" pp_un_op a
 ;;
 
