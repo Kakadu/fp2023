@@ -72,3 +72,37 @@ type path =
   (name option * pattern)
   * ((name option * pattern * direction) * (name option * pattern)) list
 [@@deriving show { with_path = false }]
+
+(** WHERE subclause, e. g. WHERE n.id = 5 *)
+type where = expression list [@@deriving show { with_path = false }]
+
+(** ORDER BY subclause condition*)
+type order_by_cond =
+  | Asc (** ORDER BY n.id ASC, ORDER BY n.id *)
+  | Desc (** ORDER BY n.id DESC *)
+[@@deriving show { with_path = false }]
+
+(** ORDER BY subclause, e. g. ORDER BY n.id ASC, ORDER BY n.age, n.scores DESC *)
+type order_by = (expression list * order_by_cond) list
+[@@deriving show { with_path = false }]
+
+(** Projection of all aliases, e. g. RETURN * *)
+type star = All [@@deriving show { with_path = false }]
+
+(** DELETE attribute *)
+type delete_attr =
+  | Detach (** DETACH DELETE *)
+  | Nodetach (** NODETACH DELETE *)
+[@@deriving show { with_path = false }]
+
+(** Clauses *)
+type clause =
+  | With of star option * (expression * name) list * order_by * where * clause
+  (** WHERE [ORDER BY] [WHERE] *)
+  | Match of path list * where * clause (** MATCH [WHERE] *)
+  | Create of path list * clause option (** CREATE *)
+  | Delete of delete_attr option * name list * clause option
+  (** DELETE, DETACH DELETE, NODETACH DELETE *)
+  | Return of star option * (expression * name option) list * order_by
+  (** RETURN [ORDER BY] *)
+[@@deriving show { with_path = false }]
