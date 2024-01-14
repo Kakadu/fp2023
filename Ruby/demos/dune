@@ -15,14 +15,14 @@
   (backend bisect_ppx)))
 
 (cram
- (deps ./demoParser.exe
-       ./demoInterpreter.exe
-       ../examples/facfib.rb
-       ../examples/testpars.rb
-       ../examples/anonymous.rb
-       ../examples/closure.rb
-       ../examples/method_missing.rb
-       ../examples/multiple_assignment.rb
-       ../examples/object.rb
-       ../examples/recursion.rb
-       ))
+ (deps
+  ./demoParser.exe
+  ./demoInterpreter.exe
+  ../examples/facfib.rb
+  ../examples/testpars.rb
+  ../examples/anonymous.rb
+  ../examples/closure.rb
+  ../examples/method_missing.rb
+  ../examples/multiple_assignment.rb
+  ../examples/object.rb
+  ../examples/recursion.rb))

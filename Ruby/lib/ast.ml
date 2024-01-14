@@ -4,8 +4,7 @@ type signal =
   | Next
   | Return
 
-type id = Id of string (* Id(string) *)
-[@@deriving show { with_path = false }]
+type id = Id of string (* Id(string) *) [@@deriving show { with_path = false }]
 
 type modifier =
   | LocalVar
@@ -24,7 +23,6 @@ type value =
   | Lambda of id list * statement list
   | ListExpr of expr list
 [@@deriving show { with_path = false }]
-
 
 and expr =
   | Const of value
@@ -61,6 +59,5 @@ and statement =
   | While of expr * statement list
   | Class of id * statement list
 [@@deriving show { with_path = false }]
-
 
 type ast = statement list [@@deriving show { with_path = false }]
