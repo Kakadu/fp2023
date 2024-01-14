@@ -269,21 +269,25 @@ and parse_anon_func () =
 
 and parse_object_deck () =
   cur_parens
-    (parse_comma
-       (both
-          (choice
-             [ sq_parens @@ start_parse_expression ()
-             ; parse_str >>| const
-             ; (valid_identifier >>| fun x -> const (String x))
-             ])
-          (token_ch ':' *> start_parse_expression ())
-        <|> (*method parser*)
-        (valid_identifier
-         >>= fun name ->
-         token parse_args_names
-         >>= fun arguments ->
-         parse_block_or_stm ()
-         >>| fun body -> const (String name), AnonFunction (arguments, body))))
+  @@ parse_comma
+  @@ choice
+       [ both
+           (choice
+              [ sq_parens @@ start_parse_expression ()
+              ; parse_str >>| const
+              ; (valid_identifier >>| fun x -> const (String x))
+              ])
+           (token_ch ':' *> start_parse_expression ())
+       ; (*method parser*)
+         (valid_identifier
+          >>= fun name ->
+          token parse_args_names
+          >>= fun arguments ->
+          parse_block_or_stm ()
+          >>| fun body -> const (String name), AnonFunction (arguments, body))
+       ; (*var syntax sugar parser*)
+         (valid_identifier >>| fun name -> const (String name), var name)
+       ]
   >>| fun properties -> ObjectDef properties
 
 and parse_mini_expression () =

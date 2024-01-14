@@ -361,7 +361,7 @@ let%expect_test _ =
     \      sayName : function () {\n\
     \        return this.name;\n\
     \      },\n\
-    \      like : \"OCaml\",\n\
+    \      like,\n\
     \    }";
   [%expect
     {|
@@ -375,7 +375,7 @@ let%expect_test _ =
                        (BinOp (PropAccs, (Var "this"), (Const (String "name")))))
                      ])
                 )));
-            ((Const (String "like")), (Const (String "OCaml")))]))|}]
+            ((Const (String "like")), (Var "like"))]))|}]
 ;;
 
 let%expect_test _ =
@@ -763,8 +763,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   pp "return;";
-  [%expect
-    {|
+  [%expect {|
     (Programm [(Return (Const Undefined))])|}]
 ;;
 

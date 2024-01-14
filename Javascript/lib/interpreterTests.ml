@@ -929,8 +929,8 @@ let%expect_test _ =
 (*objects*)
 
 let%expect_test _ =
-  print_return "let a = { lang : \"Ocaml\", num : 5}; return a";
-  [%expect {| Programm return: { lang: 'Ocaml', num: 5 } |}]
+  print_return "let var1 = 10; let a = { lang : \"Ocaml\", var1}; return a";
+  [%expect {| Programm return: { lang: 'Ocaml', var1: 10 } |}]
 ;;
 
 let%expect_test _ =
@@ -1384,7 +1384,8 @@ let%expect_test _ =
     \  let obj1 = {a : 1, ret_this : b};\n\
     \  let obj2 = {am : 2, __proto__ : obj1};\n\
     \  console.log(obj1.ret_this(), obj2.ret_this())";
-  [%expect {|
+  [%expect
+    {|
     Programm output:
     { a: 1, ret_this: [Function: b] } { am: 2 }
 
