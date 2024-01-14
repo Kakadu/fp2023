@@ -4,51 +4,53 @@
 
 type name = string [@@deriving show { with_path = false }]
 
-type literal =
-  | True
-  | False
-  | Null
-[@@deriving show { with_path = false }]
-
 type constant =
-  | Float of float
-  | Int64 of int64
-  | String of string
+  | Float of float (** 4.4 *)
+  | Int64 of int64 (** 4 *)
+  | String of string (** "Hola" *)
+  | Bool of bool (** TRUE *)
+  | Null (** NULL *)
 [@@deriving show { with_path = false }]
 
+(** Binary operators, e. g. 5 + 10 *)
 type bin_op =
-  | Plus
-  | Minus
-  | Slash
-  | Asterisk
-  | Percent
-  | Caret
-  | AND
-  | OR
-  | XOR
+  | CONTAINS (** CONTAINS *)
+  | STARTS_WITH (** STARTS WITH *)
+  | ENDS_WITH (** ENDS WITH *)
+  | Plus (** + *)
+  | Minus (** - *)
+  | Slash (** / *)
+  | Asterisk (** * *)
+  | Percent (** % *)
+  | Caret (** ^ *)
+  | AND (** AND *)
+  | OR (** OR *)
+  | XOR (** XOR *)
 [@@deriving show { with_path = false }]
 
+(** Unary operators, e. g. n.id IS NULL *)
 type un_op =
-  | Minus
-  | IS_NULL
-  | IS_NOT_NULL
-  | NOT
+  | Minus (** - *)
+  | IS_NULL (** IS NULL *)
+  | IS_NOT_NULL (** IS NOT NULL *)
+  | NOT (** NOT *)
 [@@deriving show { with_path = false }]
 
+(** Comparison operators, e. g. 5 <= 6 >= 3 = n.id *)
 type list_op =
-  | Eq
-  | NEq
-  | Less
-  | Greater
-  | LEq
-  | GEq
+  | Eq (** = *)
+  | NEq (** <> *)
+  | Less (** < *)
+  | Greater (** > *)
+  | LEq (** <= *)
+  | GEq (** >= *)
 [@@deriving show { with_path = false }]
 
+(** Arithmetic expressions *)
 type expression =
-  | Liter of literal
-  | Const of constant
-  | Var of name
-  | Property of name * name
+  | Const of constant (** 5, 4.4, "Hola" *)
+  | Var of name (** n, `hola` *)
+  | Property of name * name (** n.id *)
   | Bin_op of bin_op * expression * expression
   | Un_op of un_op * expression
   | List_op of expression * (list_op * expression) list
