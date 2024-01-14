@@ -307,7 +307,7 @@ module Eval (M : MONADERROR) = struct
             let* index = unpack_int_in_value x in
             let* l = l in
             let* x = expr stmt e_env (List.nth l index) in
-            return @@ x))
+            return x))
     | FuncMonoCall (i, e) ->
       (match if_func_exists_in_ctx i e_env with
        | false -> fail "undefined Function"
