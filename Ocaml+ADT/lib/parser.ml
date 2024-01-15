@@ -286,7 +286,7 @@ let fadd = check_chunk "+" *> return (fun exp1 exp2 -> ebinop bop_add exp1 exp2)
 let pfeadd pfe = chainl1 pfe fadd
 let fsub = check_chunk "-" *> return (fun exp1 exp2 -> ebinop bop_sub exp1 exp2)
 let pfesub pfe = chainl1 pfe fsub
-let feq = check_chunk "==" *> return (fun exp1 exp2 -> ebinop bop_eq exp1 exp2)
+let feq = check_chunk "=" *> return (fun exp1 exp2 -> ebinop bop_eq exp1 exp2)
 let pfeeq pfe = chainl1 pfe feq
 let fneq = check_chunk "<>" *> return (fun exp1 exp2 -> ebinop bop_neq exp1 exp2)
 let pfeneq pfe = chainl1 pfe fneq
@@ -359,5 +359,5 @@ let pdecl =
 ;;
 
 let parse_semicolon = many @@ check_chunk ";;"
-let parse_program = parse_semicolon *> many (pdecl <* parse_semicolon)
-let parse str = parse_string ~consume:Prefix parse_program str
+let parse_program = parse_semicolon *> many (pdecl <* parse_semicolon) <* spaces
+let parse str = parse_string ~consume:All parse_program str

@@ -23,4 +23,13 @@
   (backend bisect_ppx)))
 
 (cram
- (deps %{bin:demoParse} %{bin:demoInterpret} %{bin:demoInference}))
+ (applies_to demoParse)
+ (deps ./demoParse.exe))
+
+(cram
+ (applies_to demoInference)
+ (deps ./demoInference.exe))
+
+(cram
+ (applies_to demoInterpret)
+ (deps ./demoInterpret.exe))

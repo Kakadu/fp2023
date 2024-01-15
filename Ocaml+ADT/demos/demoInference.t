@@ -1,26 +1,26 @@
-  $ dune exec demoInference << EOF
+  $ ./demoInference.exe << EOF
   > let n = fun (a, b) -> a + 1
   "n": '1 . int * '1 -> int
-  $ dune exec demoInference << EOF
+  $ ./demoInference.exe << EOF
   > let n = fun a :: b -> a 
   > let b = n (46 :: 52 :: [])
   "b": int
   "n": '0 . '0 list -> '0
-  $ dune exec demoInference << EOF
+  $ ./demoInference.exe << EOF
   > let rec factorial_recursive = fun n -> if n <= 1 then 1 else n * factorial_recursive (n - 1)
   > let a = factorial_recursive 5
   > let b = factorial_recursive 6
   "a": int
   "b": int
   "factorial_recursive": int -> int
-  $ dune exec demoInference << EOF
+  $ ./demoInference.exe << EOF
   > let rec fix = fun f -> (fun x -> f (fix f) x)
   > let fac = fix (fun self -> (fun n -> if n <= 1 then 1 else n * self (n - 1)))
   > let a = fac 5
   "a": int
   "fac": int -> int
   "fix": '2 '3 . (('2 -> '3) -> '2 -> '3) -> '2 -> '3
-  $ dune exec demoInference << EOF
+  $ ./demoInference.exe << EOF
   > let rev = fun lst ->
   >   (let rec helper = fun acc -> (fun lst ->
   >     match lst with
@@ -35,17 +35,17 @@
   "b": string list
   "c": int list
   "rev": '14 . '14 list -> '14 list
-  $ dune exec demoInference << EOF
+  $ ./demoInference.exe << EOF
   > type name = | LName of string | RName of string
   > let a = LName "tepa"
   type name = | RName of string | LName of string
   "a": name
-  $ dune exec demoInference << EOF
+  $ ./demoInference.exe << EOF
   > type color = | White | Black 
   > let a = White
   type color = | White | Black
   "a": color
-  $ dune exec demoInference << EOF
+  $ ./demoInference.exe << EOF
   > type typ1 = | Num1 of int | Num2 of int
   > 
   > type typ2 = | Num of typ1 | Str of string 
@@ -69,7 +69,7 @@
   "e": typ2
   "f": int
   "id": '8 . '8 -> '8
-  $ dune exec demoInference << EOF
+  $ ./demoInference.exe << EOF
   > type color = | Red | Black
   > 
   > type rbtree =
@@ -80,7 +80,7 @@
   > (fun n -> 
   >  match n with 
   >  | Empty -> false
-  >  | Node (_, y, left, right) -> if x == y then true else if x < y then member x left else member x right)
+  >  | Node (_, y, left, right) -> if x = y then true else if x < y then member x left else member x right)
   > 
   > let node_left_left = Node(Black, 3, Empty, Empty)
   > 
@@ -102,3 +102,14 @@
   "node_left": rbtree
   "node_left_left": rbtree
   "node_right": rbtree
+  $ ./demoInference.exe << EOF
+  > type list = | Nil | Cons of list
+  > let rec x = Cons x
+  > EOF
+  type list = | Nil | Cons of list
+  "x": list
+  $ ./demoInference.exe << EOF
+  > let eq = fun a -> (fun b -> a = b)
+  > let answ = eq (1 :: []) (1 :: [])
+  "answ": bool
+  "eq": '2 . '2 -> '2 -> bool

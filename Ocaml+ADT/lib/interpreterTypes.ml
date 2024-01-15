@@ -38,7 +38,7 @@ and pp_value_tuple fmt = function
   | h :: tl -> fprintf fmt "%a, %a" pp_value h pp_value_tuple tl
 
 and pp_value fmt = function
-  | VInt num -> fprintf fmt "%d" num
+  | VInt num -> fprintf fmt "VInt %d" num
   | VString str -> fprintf fmt "%S" str
   | VBool bool -> fprintf fmt "%b" bool
   | VList lst -> fprintf fmt "[%a]" pp_value_list lst

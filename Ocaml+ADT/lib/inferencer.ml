@@ -510,7 +510,7 @@ let infer_let (let_decl : Ast.let_decl) adt_env env =
     let gen_scheme = generalize (TypeEnv.apply subst3 env) ty in
     let new_env = TypeEnv.extend let_name gen_scheme new_env in
     return new_env
-  | _ -> return env
+  | _ -> fail `Wrong_exp
 ;;
 
 let rec convert_type (typ : Ast.decl_type) =

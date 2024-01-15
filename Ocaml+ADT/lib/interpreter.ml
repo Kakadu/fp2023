@@ -142,6 +142,40 @@ end = struct
     let* lst = all (List.map (fun tuple_item -> exec tuple_item env) tuple) in
     return @@ vtuple lst
 
+  and exec_binop_match = function
+    | And, VBool true, VBool bool | Or, VBool false, VBool bool -> return @@ vbool bool
+    | Eq, VBool bool1, VBool bool2 -> return @@ vbool (bool1 = bool2)
+    | Neq, VBool bool1, VBool bool2 -> return @@ vbool (bool1 <> bool2)
+    | Add, VInt num1, VInt num2 -> return @@ vint (num1 + num2)
+    | Sub, VInt num1, VInt num2 -> return @@ vint (num1 - num2)
+    | Mul, VInt num1, VInt num2 -> return @@ vint (num1 * num2)
+    | Div, VInt _, VInt num2 when num2 = 0 -> fail DivisionByZeroError
+    | Div, VInt num1, VInt num2 -> return @@ vint (num1 / num2)
+    | Eq, VInt num1, VInt num2 -> return @@ vbool (num1 = num2)
+    | Neq, VInt num1, VInt num2 -> return @@ vbool (num1 <> num2)
+    | Les, VInt num1, VInt num2 -> return @@ vbool (num1 < num2)
+    | Leq, VInt num1, VInt num2 -> return @@ vbool (num1 <= num2)
+    | Gre, VInt num1, VInt num2 -> return @@ vbool (num1 > num2)
+    | Geq, VInt num1, VInt num2 -> return @@ vbool (num1 > num2)
+    | Eq, VString str1, VString str2 -> return @@ vbool (str1 = str2)
+    | Neq, VString str1, VString str2 -> return @@ vbool (str1 <> str2)
+    | Cons, h, VList tl -> return @@ vlist (h :: tl)
+    | Eq, VList lst1, VList lst2 ->
+      let* res =
+        List.fold_left2
+          (fun acc h1 h2 ->
+            let* acc = acc in
+            let* res = exec_binop_match (Eq, h1, h2) in
+            match res with
+            | VBool true -> return (true && acc)
+            | _ -> return false)
+          (return true)
+          lst1
+          lst2
+      in
+      return @@ vbool res
+    | _ -> fail @@ PatternMatchingError
+
   and exec_arith binop exp1 exp2 env =
     let* val1 = exec exp1 env in
     match binop, val1 with
@@ -149,25 +183,7 @@ end = struct
     | Or, VBool true -> return @@ vbool true
     | _ ->
       let* val2 = exec exp2 env in
-      (match binop, val1, val2 with
-       | And, VBool true, VBool bool | Or, VBool false, VBool bool -> return @@ vbool bool
-       | Eq, VBool bool1, VBool bool2 -> return @@ vbool (bool1 = bool2)
-       | Neq, VBool bool1, VBool bool2 -> return @@ vbool (bool1 <> bool2)
-       | Add, VInt num1, VInt num2 -> return @@ vint (num1 + num2)
-       | Sub, VInt num1, VInt num2 -> return @@ vint (num1 - num2)
-       | Mul, VInt num1, VInt num2 -> return @@ vint (num1 * num2)
-       | Div, VInt _, VInt num2 when num2 = 0 -> fail DivisionByZeroError
-       | Div, VInt num1, VInt num2 -> return @@ vint (num1 / num2)
-       | Eq, VInt num1, VInt num2 -> return @@ vbool (num1 = num2)
-       | Neq, VInt num1, VInt num2 -> return @@ vbool (num1 <> num2)
-       | Les, VInt num1, VInt num2 -> return @@ vbool (num1 < num2)
-       | Leq, VInt num1, VInt num2 -> return @@ vbool (num1 <= num2)
-       | Gre, VInt num1, VInt num2 -> return @@ vbool (num1 > num2)
-       | Geq, VInt num1, VInt num2 -> return @@ vbool (num1 > num2)
-       | Eq, VString str1, VString str2 -> return @@ vbool (str1 = str2)
-       | Neq, VString str1, VString str2 -> return @@ vbool (str1 <> str2)
-       | Cons, h, VList tl -> return @@ vlist (h :: tl)
-       | _ -> fail @@ ExecError (val1, val2))
+      exec_binop_match (binop, val1, val2)
 
   and exec_fun pattern decl_exp env = return @@ vfun pattern decl_exp env
 

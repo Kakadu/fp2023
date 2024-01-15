@@ -7,7 +7,7 @@ type binop =
   | Sub (**  -   *)
   | Mul (**  * *)
   | Div (**  / *)
-  | Eq (** == *)
+  | Eq (** = *)
   | Neq (** <> *)
   | Les (**  < *)
   | Leq (**  <= *)
@@ -37,6 +37,11 @@ type decl_name =
   | UName of string (* Number *)
 [@@deriving eq, show { with_path = false }]
 
+(* It is used to denote the type of an algebraic type constructor
+   example: type node = | Red of int | Black of int
+   (DType
+   ((LName "node"),
+   [((UName "Red"), (DType TInt)); ((UName "Black"), (DType TInt))])) *)
 type decl_type =
   | DType of decl_type
   | TEmptyType
@@ -87,6 +92,12 @@ let pcons pattern1 pattern2 = PCons (pattern1, pattern2)
 let ptuple pattern_lst = PTuple pattern_lst
 let padt decl_name pattern = PAdt (decl_name, pattern)
 
+(* type_decl is used for creating custom ADT types
+   example: type node = | Red of int | Black of int
+   (DType
+   ((LName "node"),
+   [((UName "Red"), (DType TInt)); ((UName "Black"), (DType TInt))]))
+*)
 type type_decl = decl_name * (decl_name * decl_type) list
 [@@deriving eq, show { with_path = false }]
 

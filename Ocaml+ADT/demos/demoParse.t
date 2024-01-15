@@ -1,4 +1,4 @@
-  $ dune exec demoParse << EOF
+  $ ./demoParse.exe << EOF
   > let rec factorial_recursive = fun n -> if n <= 1 then 1 else n * factorial_recursive (n - 1)
   > EOF
   [(DLet
@@ -12,7 +12,7 @@
              ))
           ))))
     ]
-  $ dune exec demoParse << EOF
+  $ ./demoParse.exe << EOF
   > let rec fix = fun f -> (fun x -> f (fix f) x)
   > let fac = fix (fun self -> (fun n -> if n <= 1 then 1 else n * self (n - 1)))
   > EOF
@@ -41,7 +41,7 @@
               ))
            ))))
     ]
-  $ dune exec demoParse << EOF
+  $ ./demoParse.exe << EOF
   > type node = | Red of int | Black of int
   > let is_black = fun x -> match x with | Black _ -> true | Red _ -> false
   > let a = is_black (Black 5)
@@ -62,7 +62,7 @@
         (EApp ((EVar (LName "is_black")),
            (EConstr ((UName "Black"), (Some (EInt 5))))))))
     ]
-  $ dune exec demoParse << EOF
+  $ ./demoParse.exe << EOF
   > type color = | White | Green | Yellow | Blue | Red | Black
   > type eatable = | Yes | No
   > type thing = | Apple of color * eatable | Chair of color * eatable | Potato of color * eatable
@@ -97,7 +97,7 @@
                       (EConstr ((UName "Yes"), None))]))
            ))))
     ]
-  $ dune exec demoParse << EOF
+  $ ./demoParse.exe << EOF
   > type color = | Red | Black
   > 
   > type rbtree =
@@ -108,7 +108,7 @@
   > (fun n -> 
   >  match n with 
   >  | Empty -> false
-  >  | Node (_, y, left, right) -> if x == y then true else if x < y then member x left else member x right)
+  >  | Node (_, y, left, right) -> if x = y then true else if x < y then member x left else member x right)
   > 
   > let node_left_left = Node(Black, 3, Empty, Empty)
   > 
@@ -205,4 +205,19 @@
        ((DRec false), (LName "is_member2"),
         (EApp ((EApp ((EVar (LName "member")), (EInt 52))),
            (EVar (LName "node"))))))
+    ]
+  $ ./demoParse.exe << EOF
+  > let eq = fun a -> (fun b -> a = b)
+  > let answ = eq  (1 :: []) (1 :: [])
+  [(DLet
+      ((DRec false), (LName "eq"),
+       (EFun ((PVar (LName "a")),
+          (EFun ((PVar (LName "b")),
+             (EBinop (Eq, (EVar (LName "a")), (EVar (LName "b"))))))
+          ))));
+    (DLet
+       ((DRec false), (LName "answ"),
+        (EApp (
+           (EApp ((EVar (LName "eq")), (EBinop (Cons, (EInt 1), EEmptyList)))),
+           (EBinop (Cons, (EInt 1), EEmptyList))))))
     ]

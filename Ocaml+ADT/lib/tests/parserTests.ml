@@ -486,7 +486,7 @@ let%test _ =
         (fun n -> 
         match n with 
         | Empty -> false
-        | Node (_, y, left, right) -> if x == y then true else if x < y then member x left else member x right)
+        | Node (_, y, left, right) -> if x = y then true else if x < y then member x left else member x right)
 
        let node_left_left = Node(Black, 3, Empty, Empty)
 
