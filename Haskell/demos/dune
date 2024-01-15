@@ -1,9 +1,9 @@
 (executable
- (name haskellParser)
- (public_name haskellParser)
+ (name ubiycaHaskella)
+ (public_name ubiycaHaskella)
  (libraries haskellLib base)
  (instrumentation
   (backend bisect_ppx)))
 
 (cram
- (deps ./haskellParser.exe))
+ (deps ./ubiycaHaskella.exe))

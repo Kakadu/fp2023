@@ -6,5 +6,4 @@
  (instrumentation
   (backend bisect_ppx))
  (preprocess
-  (pps ppx_expect ppx_deriving.show))
- (inline_tests))
+  (pps ppx_deriving.show)))

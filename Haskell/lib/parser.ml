@@ -230,10 +230,6 @@ let pexpr =
     in
     lift2 expr_case (pstoken "case" *> pexpr <* pstoken "of") (many pbranch)
   in
-  (* let pcase =
-     let branch = ppat >>= fun pat -> pstoken "->" *> pexpr >>| fun e -> pat, e in
-     pstoken "case" *> pexpr >>= fun e -> pstoken "of" *> many1 branch >>| expr_case e
-     in *)
   choice
     ~failure_msg:"Parsing error: can't parse expression"
     [ pcase; plocbind; pif; pebinop; plambda ]
