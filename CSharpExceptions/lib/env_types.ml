@@ -111,7 +111,7 @@ module Eval_env = struct
   let create_val x = to_const @@ to_init x
   let create_inst x = to_const @@ to_init @@ to_inst x
 
-  type t_loc_env = address * t_env_value IdentMap.t
+  type t_loc_env = address * (t_env_value IdentMap.t) list
 
   (*  *)
   type t_global_env = text

@@ -373,6 +373,8 @@ let interpret_ genv cl_id =
     CodeMap.fold f genv (Some local_env)
   in
   let run_main lenv =
+    (* >< TODO: lenv конвертировать в список *)
+    let lenv = [lenv] in
     let cl_decl_t = read_global cl_id >>= fun x -> return_n @@ get_class_decl x in
     let get_main cl_decl =
       let f res_opt el =

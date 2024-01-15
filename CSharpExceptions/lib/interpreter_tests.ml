@@ -72,6 +72,56 @@ let%expect_test "Bin-un ops" =
   [%expect {| Result: (Init (Int_v 6)) |}]
 ;;
 
+let%expect_test "Bin-un ops2" =
+  let s =
+    {| 
+      class Program
+      {
+        char c = 'c';
+        bool b;
+        string s;
+        
+        int? i_n = null;
+        char? c_n = 'b';
+        bool? b_n = true;
+        string s_n = null;
+
+        static int Main(){
+          int i = 10;
+          if (c == 'c' && c != c_n){ i = i + 1; }
+          
+          s = "value";
+          if (s == "value" && s != s_n){ i = i + 1; }
+          
+          if (true) { i = i + 1; }
+          
+          b = false;
+          if(!b) { i = i + 1; }
+          
+          if(s == null) {return -1;}
+          else { i = i + 1; }
+          
+          int x;
+          int y;
+          int z;
+          int p = 3;
+          x = y = z = p;
+          if(x == y && z == p && y == z){  i = i + 1; }
+
+          i_n = 1;
+          i_n = 30 + i_n;
+          if (true && i_n == 31 && (i_n > 0) && (i_n >= 0) && i < 100 && i < 100 || b){
+              return (-(1 + 4 * 2 / 2 - 1) + 4) + i ;
+          }
+          return -1;
+        }
+      }
+    |}
+  in
+  interpret_wrap s;
+  [%expect {| Result: (Init (Int_v 16)) |}]
+;;
+
 let%expect_test "Lazy || and && " =
   let s =
     {| 
@@ -94,6 +144,30 @@ let%expect_test "Lazy || and && " =
   in
   interpret_wrap s;
   [%expect {| Result: (Init (Int_v 31)) |}]
+;;
+
+let%expect_test "Scope" =
+  let s =
+    {| 
+      class Program
+      {
+        static int Main(){
+          int d = 0; 
+          if (true){
+            d = d + 5;
+            if (false){
+              return -2;
+            } else {
+              d = d + 5;
+            }
+          }
+          return d;
+        }
+      }
+    |}
+  in
+  interpret_wrap s;
+  [%expect {| Result: (Init (Int_v 10)) |}]
 ;;
 
 let%expect_test "Multi-class programm (instance) " =
@@ -209,6 +283,35 @@ let%expect_test "Multi-class programm (complex constructor) " =
   in
   interpret_wrap s;
   [%expect {| Result: (Init (Int_v 5)) |}]
+;;
+
+let%expect_test "Try" =
+  let s =
+    {| 
+      class A1 : Exception
+      {
+        public int flag;
+      }
+
+      class Program
+      {
+        static int Main(){
+          int a = 0;
+            try
+            {
+              a = 10;
+              throw new A1();
+              a = 11;
+            } finally {
+              a = 100;
+            }
+          return a;
+        }
+      }
+    |}
+  in
+  interpret_wrap s;
+  [%expect {| Result: (Init (Int_v 100)) |}]
 ;;
 
 let%expect_test "Base factorial type check" =

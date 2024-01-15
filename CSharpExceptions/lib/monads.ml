@@ -242,7 +242,7 @@ module Eval_Monad = struct
   ;;
 
   let run : 'c CodeMap.t -> ('a, 'b) t -> ctx_env * ('a, 'b, error) eval_t =
-    fun glenv f -> f (glenv, (ln (-1), IdentMap.empty), (ln 0, MemMap.empty))
+    fun glenv f -> f (glenv, (ln (-1), [ IdentMap.empty ]), (ln 0, MemMap.empty))
   ;;
 
   let save : ctx_env -> (unit, 'b) t = fun new_ctx _ -> new_ctx, nsig ()
@@ -400,15 +400,46 @@ module Eval_Monad = struct
   (* ****************** Local_env handling ****************** *)
 
   let save_local : t_loc_env -> (unit, 'c) t =
-    fun l_env (code, _, mem) -> (code, l_env, mem), nsig ()
+    fun l_env_l (code, _, mem) -> (code, l_env_l, mem), nsig ()
   ;;
 
-  let read_local = read >>| fun (_, l_env, _) -> l_env
+  let read_local = read >>| fun (_, l_env_l, _) -> l_env_l
 
-  let find_local_ id l_env =
-    match IdentMap.find_opt id l_env with
+  let find_local_ id l_env_l =
+    (* >< TODO: фолдлевт по списку всех окружений *)
+    let f acc x =
+      match acc with
+      | Some x -> Some x
+      | None -> IdentMap.find_opt id x
+    in
+    List.fold_left f None l_env_l
+    |> function
     | Some x -> return_n x
     | None -> fail (Other_error "Just for skip")
+  ;;
+
+  let find_local_split_ id l_env_l =
+    let f acc x =
+      match acc with
+      | fist_part, None, second_part ->
+        (match second_part with
+         | [] ->
+           IdentMap.find_opt id x
+           |> (function
+           | Some v -> fist_part, Some (x, v), []
+           | None -> x :: fist_part, None, [])
+         | x :: tl ->
+           IdentMap.find_opt id x
+           |> (function
+           | Some v -> fist_part, Some (x, v), tl
+           | None -> x :: fist_part, None, tl))
+      | fist_part, Some x, second_part -> fist_part, Some x, second_part
+    in
+    List.fold_left f ([], None, l_env_l) l_env_l
+    |> fun (fst, lenv, tl) ->
+    match lenv with
+    | Some x -> List.rev fst |> fun fst -> return_n (fst, x, tl)
+    | None -> fail (Non_existent_id id)
   ;;
 
   let read_local_el id =
@@ -419,16 +450,21 @@ module Eval_Monad = struct
 
   let update_local_el id v =
     read_local
-    >>= fun (ad, l_env) ->
+    >>= fun (ad, l_env_l) ->
     let s_local =
-      let new_l_env = IdentMap.add id v l_env in
-      let is_mutable =
-        find_local_ id l_env
-        >>= function
+      let new_l_env l_env = return_n @@ IdentMap.add id v l_env in
+      let is_mutable_ = function
         | ICode _ -> fail Methods_cannot_be_assignable
         | x -> return_n x
       in
-      is_mutable *> save_local (ad, new_l_env)
+      let update_l_env l_env v = is_mutable_ v *> new_l_env l_env in
+      find_local_split_ id l_env_l
+      >>= function
+      | [], (x, v), tl -> update_l_env x v >>= fun x -> save_local (ad, x :: tl)
+      | fst, (x, v), [] ->
+        update_l_env x v >>= fun x -> save_local (ad, List.append fst [ x ])
+      | fst, (x, v), tl ->
+        update_l_env x v >>= fun x -> save_local (ad, List.append fst (x :: tl))
     in
     let s_self = update_instance_el id ad v in
     s_local <|> s_self
@@ -436,18 +472,21 @@ module Eval_Monad = struct
 
   let add_local_el id v =
     read_local
-    >>= fun (ad, l_env) ->
-    let s_local =
-      let new_l_env = IdentMap.add id v l_env in
-      save_local (ad, new_l_env)
-    in
-    let cond = read_local_el id *> return_n false <|> return_n true in
-    cond
-    >>= function
-    | true -> s_local
-    | false ->
-      let (Id s) = id in
-      fail (Runtime_error ("The id:" ^ s ^ " already exists"))
+    >>= fun (ad, l_env_l) ->
+    match l_env_l with
+    | [] -> fail (Runtime_error "")
+    | l_env :: tl ->
+      let s_local =
+        let new_l_env = IdentMap.add id v l_env in
+        save_local (ad, new_l_env :: tl)
+      in
+      let cond = read_local_el id *> return_n false <|> return_n true in
+      cond
+      >>= (function
+      | true -> s_local
+      | false ->
+        let (Id s) = id in
+        fail (Runtime_error ("The id:" ^ s ^ " already exists")))
   ;;
 
   let read_self_ad = read_local >>= fun (self_ad, _) -> return_n self_ad
@@ -457,11 +496,19 @@ module Eval_Monad = struct
 
   (* ****************** -_- ****************** *)
 
-  let local_with loc_ f =
-    loc_
-    >>= fun old_env ->
-    let return_env = save_local old_env in
-    f
+  let local f =
+    read_local
+    >>= fun (ad, l_env_l) ->
+    (* TODO: добавить в начало списка новую мапу в начала списка *)
+    let return_env =
+      read_local
+      >>= function
+      | _, [] -> fail (Runtime_error "--|--")
+      | ad, _ :: tl -> save_local (ad, tl)
+    in
+    (* let return_env = save_local (ad, l_env_l) in *)
+    let new_l_env_l = save_local (ad, IdentMap.empty :: l_env_l) in
+    (new_l_env_l *> f)
     @!|>>= function
     | Next x -> return_env *> return_n x
     | Exn ad -> return_env *> return_e ad
@@ -470,10 +517,20 @@ module Eval_Monad = struct
     | Error x -> fail x
   ;;
 
-  (* TODO: Х*йня не работает *)
-  let local f = local_with read_local f
-
   let run_in_another_self ad new_lenv f =
+    let local_with loc_ f =
+      loc_
+      >>= fun old_env ->
+      let return_env = save_local old_env in
+      f
+      @!|>>= function
+      | Next x -> return_env *> return_n x
+      | Exn ad -> return_env *> return_e ad
+      | Return x -> return_env *> return_r x
+      | Break -> return_env *> return_b ()
+      | Error x -> fail x
+    in
+    let local f = local_with read_local f in
     let new_f = save_local (ad, new_lenv) *> f in
     local new_f
   ;;
@@ -501,8 +558,9 @@ module Eval_Monad = struct
   ;;
 
   let run_method
-    :  meth_type -> ident list -> t_env_value list -> address -> t_env_value IdentMap.t
-    -> statement -> (statement -> ('a, 'c) t) -> ('c option, 'd) t
+    :  meth_type -> ident list -> t_env_value list -> address
+    -> t_env_value IdentMap.t list -> statement -> (statement -> ('a, 'c) t)
+    -> ('c option, 'd) t
     =
     fun return_tp params args ad base_lenv steps handle ->
     let run_f =
@@ -520,6 +578,19 @@ module Eval_Monad = struct
       let if_ret x = return_n x in
       narrow_down_lenv *> add_args_in_lenv *> handle steps |>>= (if_ret, if_no_ret)
     in
+    let local_with loc_ f =
+      loc_
+      >>= fun old_env ->
+      let return_env = save_local old_env in
+      f
+      @!|>>= function
+      | Next x -> return_env *> return_n x
+      | Exn ad -> return_env *> return_e ad
+      | Return x -> return_env *> return_r x
+      | Break -> return_env *> return_b ()
+      | Error x -> fail x
+    in
+    let local f = local_with read_local f in
     local run_f
   ;;
 

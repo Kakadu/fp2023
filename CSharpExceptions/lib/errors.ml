@@ -23,6 +23,7 @@ type error =
   | Methods_cannot_be_assignable
   | System_error of string
   | Interpreter_error of string
+  | Non_existent_id of ident
   (*  *)
   | Double_definition_of of ident
   | User_exception of address
