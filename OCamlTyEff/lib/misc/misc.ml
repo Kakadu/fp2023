@@ -5,6 +5,8 @@
 open! Base
 open Monads.Std
 
+module Ident = Ident
+
 module MakeRWSEMonad
     (ReaderT : T)
     (WriterT : Monoid.S)

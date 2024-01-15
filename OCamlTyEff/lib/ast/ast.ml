@@ -3,7 +3,7 @@
 (** SPDX-License-Identifier: MIT *)
 
 open! Base
-module Ident = Ident
+open Misc
 
 type constant =
   | Const_integer of int  (** Integer such as [25] *)

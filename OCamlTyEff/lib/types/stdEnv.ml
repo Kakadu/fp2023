@@ -5,7 +5,7 @@
 open! Base
 open Tys
 open Vars
-open Ast
+open Misc
 
 let id name = Ident.Ident name
 

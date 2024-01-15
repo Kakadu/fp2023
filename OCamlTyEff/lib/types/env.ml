@@ -4,7 +4,7 @@
 
 open! Base
 open Tys
-open Ast
+open Misc
 
 type t =
   {weak_counter: int; map: (Ident.t, Scheme.t, Ident.comparator_witness) Map.t}

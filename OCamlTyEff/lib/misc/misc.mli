@@ -5,6 +5,8 @@
 open! Base
 open Monads.Std
 
+module Ident : module type of Ident
+
 (** Makes Reader-Writer-State-Error monad *)
 module MakeRWSEMonad : functor
   (ReaderT : T)
