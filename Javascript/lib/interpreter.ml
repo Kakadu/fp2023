@@ -542,18 +542,26 @@ and to_bool ctx v =
 
 and to_number ctx v =
   get_primitive ctx v
-  >>| function
-  | VNumber x -> x
+  >>= function
+  | VNumber x -> return x
   | VString x ->
-    (match String.trim x with
-     | "" -> 0.
-     | _ as x ->
-       (match float_of_string_opt x with
-        | Some x -> x
-        | _ -> nan))
-  | VBool x -> Bool.to_float x
-  | VNull -> 0.
-  | _ -> nan
+    return
+      (match String.trim x with
+       | "" -> 0.
+       | _ as x ->
+         (match float_of_string_opt x with
+          | Some x -> x
+          | _ -> nan))
+  | VBool x -> return @@ Bool.to_float x
+  | VNull -> return 0.
+  | VObject x when is_obj_by_id ctx is_array x ->
+    let* obj = get_obj_ctx ctx x in
+    let* array = get_array_list obj in
+    (match List.length array with
+     | 0 -> return 0.
+     | 1 -> Option.fold ~none:(return 0.) ~some:(to_number ctx) (List.hd array)
+     | _ -> return nan)
+  | _ -> return nan
 
 and ctx_not_change_bop ctx op a b =
   let bop_with_num op =
