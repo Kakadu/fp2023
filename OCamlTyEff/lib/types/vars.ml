@@ -6,9 +6,9 @@ open! Base
 
 module Var = struct
   module T = struct
-    type t = Var of string [@@deriving eq, ord, sexp_of]
+    type t = Var of string | Var_weak of string [@@deriving eq, ord, sexp_of]
 
-    let pp ppf (Var name) = Stdlib.Format.fprintf ppf "'%s" name
+    let pp ppf (Var name | Var_weak name) = Stdlib.Format.fprintf ppf "'%s" name
   end
 
   include T
@@ -54,6 +54,7 @@ module VarSet = struct
   let inter = Set.inter
   let diff = Set.diff
 
+  let filter = Set.filter
   let fold = Set.fold
   let fold_right = Set.fold_right
 end
