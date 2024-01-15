@@ -55,7 +55,7 @@ type bin_op =
   | Div (*"/", precendence 12*)
   | Rem (*"%", precendence 12*)
   | Exp (*"**", precendence 13*)
-  | PropAccs
+  | PropAccs (*x[y], precedence 17*)
 [@@deriving show { with_path = false }]
 
 type typename =
@@ -71,11 +71,12 @@ type expression =
   | BinOp of bin_op * expression * expression
   | Const of typename
   | Var of string
-  | ArrayList of expression list
   | FunctionCall of expression * expression list
-  | AnonFunction of string list * statement
-  | ArrowFunction of string list * statement
-  | ObjectDef of (expression * expression) list
+  | AnonFunction of string list * statement (*objects like: function (args) {...}*)
+  | ArrowFunction of
+      string list * statement (*objects like: (args)=>... or (args)=>{...}*)
+  | ArrayList of expression list (*objects like: [val, val, ...]*)
+  | ObjectDef of (expression * expression) list (*objects like: { key : val, ...}*)
 [@@deriving show { with_path = false }]
 
 and var_init =
@@ -98,12 +99,12 @@ and loop =
   }
 
 and statement =
-  | Block of statement list
+  | Block of statement list (*{...}*)
   | Expression of expression
-  | VarInit of var_init
-  | FunInit of fun_init
+  | VarInit of var_init (*let id = ...*)
+  | FunInit of fun_init (*function id(args) {...}*)
   | If of expression * statement * statement
-  | Loop of loop
+  | Loop of loop (*for or while loop*)
   | Return of expression
   | Programm of statement list
 [@@deriving show { with_path = false }]
