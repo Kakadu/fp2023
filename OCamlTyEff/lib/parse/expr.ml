@@ -119,6 +119,8 @@ let peek_infix_op disabled_op =
     >>= function
     | "::" ->
         return {op= IOpList; op_length= 2}
+    | ":=" ->
+        return {op= IOpCustom (Ident ":="); op_length= 2}
     | _ ->
         fail "not an infix operator"
   in
@@ -163,6 +165,7 @@ let get_infix_binding_power = function
       then (75, 76)
       else if is_equal "&" || is_equal "&&" then (71, 70)
       else if is_equal "||" then (66, 65)
+      else if is_equal ":=" then (45, 44)
       else assert false
 
 type expr_prefix_op = POpPlus | POpMinus | POpCustom of Ident.t
