@@ -1,6 +1,9 @@
-(** Copyright 2023-2024, Danil P, Kakadu *)
+(** Copyright 2023-2024, Danil *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
+
+(* The basis for algorithm is taken from
+   https://gitlab.com/Kakadu/fp2020course-materials/-/blob/master/code/miniml/inferencer.ml *)
 
 (* Some bugs are left unintentionally. *)
 
@@ -8,12 +11,23 @@ open Typedtree
 open Ast
 
 type error =
-  | Occurs_check
-  | No_variable of string
-  | Unification_failed of ty * ty
-  | Type_error of string
-  | Test
+  | OccursCheck
+  | NoVariable of string
+  | UnificationFailed of ty * ty
 [@@deriving show { with_path = false }]
+
+let pp_error fmt = function
+  | OccursCheck -> Format.printf "Occurs check"
+  | NoVariable s -> Format.fprintf fmt "Variable not in scope: %s" s
+  | UnificationFailed (l, r) ->
+    Format.fprintf
+      fmt
+      "This expression has type (%a) but an expression was expected of type (%a)"
+      pp_type
+      l
+      pp_type
+      r
+;;
 
 module R : sig
   type 'a t
@@ -135,7 +149,7 @@ end = struct
 
   let singleton k v =
     if Type.occurs_in k v
-    then fail Occurs_check
+    then fail OccursCheck
     else return @@ Map.singleton (module Base.Int) k v
   ;;
 
@@ -178,11 +192,11 @@ end = struct
             (List.map ~f:(apply subs) ts1')
             (List.map ~f:(apply subs) ts2')
             acc'
-        | _, _ -> fail @@ Unification_failed (l, r)
+        | _, _ -> fail @@ UnificationFailed (l, r)
         (* todo: mismatch *)
       in
       unify_tuples ts1 ts2 empty
-    | _ -> fail (Unification_failed (l, r))
+    | _ -> fail @@ UnificationFailed (l, r)
 
   and extend k v s =
     match find s k with
@@ -295,7 +309,7 @@ let generalize : TypeEnv.t -> Type.t -> Scheme.t =
 
 let lookup_env id map =
   match Base.Map.find map id with
-  | None -> fail (No_variable id)
+  | None -> fail (NoVariable id)
   | Some scheme ->
     let* ans = instantiate scheme in
     return (Subst.empty, ans)
@@ -317,22 +331,12 @@ let infer_pattern =
        | LitString _ -> return (env, TyLit "String")
        | LitChar _ -> return (env, TyLit "Char"))
     | PatVar x ->
-      (* TODO: would be a good idea to allow multiple definitons
-         as a way to pattern match *)
       let* tv = fresh_var in
       let env = TypeEnv.extend env (x, S (VarSet.empty, tv)) in
       return (env, tv)
-      (* (match Base.Map.find env x with
-       | None ->
-         let* tv = fresh_var in
-         let env = TypeEnv.extend env (x, S (VarSet.empty, tv)) in
-         return (env, tv)
-       | Some sch ->
-         Format.printf "%s %a" x pp_scheme sch;
-         fail @@ `Occurs_check) *)
     | PatTuple ps ->
-      let rec infer_pattern_elements env patterns types_acc =
-        match patterns with
+      let rec infer_pattern_elements env pats types_acc =
+        match pats with
         | [] -> return (env, List.rev types_acc)
         | p :: tl ->
           let* env', ty = helper env p in
@@ -361,6 +365,7 @@ let infer_expr =
       let exp_ty =
         match op with
         | Neg -> TyLit "Int"
+        | Not -> TyLit "Bool"
       in
       let* s, t = helper env e in
       let* subst = unify t exp_ty in
@@ -471,9 +476,10 @@ let infer_expr =
   helper
 ;;
 
+(* since we don't have 'rec' flag, we have to traverse AST *)
 let rec is_recursive pat = function
-  | ExprLit _ -> false
   | ExprVar v -> v = pat
+  | ExprLit _ -> false
   | ExprFunc (_, expr) -> is_recursive pat expr
   | ExprApp (e1, e2) -> is_recursive pat e1 || is_recursive pat e2
   | ExprIf (cond, e1, e2) ->
