@@ -202,9 +202,9 @@ let pexpr =
   let pif =
     lift3
       expr_if
-      (pstoken "if" *> pexpr)
-      (pstoken "then" *> pexpr)
-      (pstoken "else" *> pexpr)
+      (pstoken_eol "if" *> pexpr)
+      (pstoken_eol "then" *> pexpr)
+      (pstoken_eol "else" *> pexpr)
   in
   let plambda =
     pstoken "\\" *> lift2 expr_fun (many ppat) (pstoken "->" *> ptoken pexpr)
@@ -216,11 +216,11 @@ let pexpr =
           bind
           (ptoken_eol ppat)
           (lift2 expr_fun (many ppat) (pstoken_eol "=" *> ptoken_eol pexpr))
-        <* pwspaces
       in
       pstoken_eol "let"
       *> many1 (ptoken_eol pbind <* ptoken_eol @@ many @@ take_while1 is_eol)
       <* pstoken_eol "in"
+      <* pspaces
     in
     lift2 expr_let pbinds pexpr
   in
@@ -228,10 +228,7 @@ let pexpr =
     let pbranch =
       lift2 (fun pattern expr -> pattern, expr) (pspaces1 *> ppat) (pstoken "->" *> pexpr)
     in
-    lift2
-      (fun case_expr branches -> ExprCase (case_expr, branches))
-      (pstoken "case" *> pexpr <* pstoken "of")
-      (many pbranch)
+    lift2 expr_case (pstoken "case" *> pexpr <* pstoken "of") (many pbranch)
   in
   (* let pcase =
      let branch = ppat >>= fun pat -> pstoken "->" *> pexpr >>| fun e -> pat, e in
@@ -246,7 +243,7 @@ let pdecl =
   lift2
     dec_let
     (ptoken_eol ppat)
-    (lift2 expr_fun (many ppat) (pstoken "=" *> ptoken pexpr))
+    (lift2 expr_fun (many ppat) (pstoken "=" *> ptoken_eol pexpr))
   <* pwspaces
 ;;
 

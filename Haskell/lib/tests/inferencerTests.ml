@@ -7,31 +7,32 @@ open HaskellLib
 let parse_infer input =
   match Parser.parse input with
   | Ok e -> Inferencer.infer e
-  | Error err -> Format.printf "%s\n" err;;
+  | Error err -> Format.printf "%s\n" err
+;;
 
-  let%expect_test _ =
+let%expect_test _ =
   parse_infer {|(x, y) = (5, 6)|};
   [%expect {|
     x :: Int
     y :: Int |}]
 ;;
 
-
 let%expect_test _ =
-  parse_infer {|
+  parse_infer
+    {|
   lst = [1, 2, 6]
 incr x = x + 1
 map f (x:xs) = f x : map f xs
 (x:xs) = map incr lst
 |};
-  [%expect {|
+  [%expect
+    {|
     incr :: Int -> Int
     lst :: [Int]
-    map :: (p8 -> p9) -> [p8] -> [p9]
+    map :: (p8 -> p11) -> [p8] -> [p11]
     x :: Int
     xs :: [Int] |}]
 ;;
-
 
 let%expect_test _ =
   parse_infer {|y = \x -> [x]|};
@@ -107,8 +108,7 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  parse_infer
-    {|dam = let f x g = g x in let id x = x in let fst x y = x in fst (f id)|};
+  parse_infer {|dam = let f x g = g x in let id x = x in let fst x y = x in fst (f id)|};
   [%expect {|
     dam :: p11 -> ((p14 -> p14) -> p13) -> p13 |}]
 ;;
@@ -118,7 +118,6 @@ let%expect_test _ =
   [%expect {|
     dam :: (p2 -> p3) -> p2 -> p3 |}]
 ;;
-
 
 let%expect_test _ =
   parse_infer {|dam f  = let z = f 5 in \x -> []|};
@@ -135,7 +134,87 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  parse_infer {| (a:b:c) = [3, "asds"] |};
+  parse_infer
+    {|
+    numbers_starting_at n = n : numbers_starting_at (n + 1)
+
+    index (x:xs) n = if n == 0 then x else index xs (n - 1)
+    
+        res = index (numbers_starting_at 2) 20|};
+  [%expect
+    {|
+    index :: [p10] -> Int -> p10
+    numbers_starting_at :: Int -> [Int]
+    res :: Int |}]
+;;
+
+let%expect_test _ =
+  parse_infer {|
+    fix f = let x = f x in x
+
+|};
+  [%expect {| fix :: (p2 -> p3) -> p3 |}]
+;;
+
+let%expect_test _ =
+  parse_infer {|
+    fix f = f (fix f)
+
+|};
+  [%expect {| fix :: (p3 -> p3) -> p3 |}]
+;;
+
+let%expect_test _ =
+  parse_infer {|   f a = 
+  let x = x
+      y = 5
+      z = 7
+  in x + y + z + a|};
   [%expect {|
-    `Unification_failed (((TyLit "Int"), (TyLit "String"))) |}]
+    f :: Int -> Int |}]
+;;
+
+let%expect_test _ =
+  parse_infer {|
+    fix f = f (fix f)
+
+|};
+  [%expect {| fix :: (p3 -> p3) -> p3 |}]
+;;
+
+let%expect_test _ =
+  parse_infer {| take n lst = case (n, lst) of
+      (_, (x:xs)) -> x|};
+  [%expect {|
+    take :: p4 -> [p7] -> p7 |}]
+;;
+
+let%expect_test _ =
+  parse_infer {| dam (_, (x:xs)) = x|};
+  [%expect {|
+    dam :: (p1, [p4]) -> p4 |}]
+;;
+
+let%expect_test _ =
+  parse_infer {| take lst = case lst of
+      (x:xs) -> x|};
+  [%expect {|
+    take :: [p5] -> p5 |}]
+;;
+
+let%expect_test _ =
+  parse_infer
+    {| take n lst = case (n, lst) of
+        (_, []) -> []
+      (1, (x:_)) -> [x]
+      (n, (x:xs)) -> x : xs|};
+  [%expect {|
+    take :: Int -> [p5] -> [p5] |}]
+;;
+
+let%expect_test _ =
+  parse_infer
+    {| merge (x:xs) (y:ys) = if x < y then x : merge xs (y:ys) else if x == y then x : merge xs ys else y : merge (x:xs) ys|};
+  [%expect {|
+    take :: Int -> [p5] -> [p5] |}]
 ;;

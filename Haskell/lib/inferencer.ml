@@ -171,12 +171,28 @@ end = struct
     | TyLit l, TyLit r when String.equal l r -> return empty
     | TyVar a, TyVar b when Int.equal a b -> return empty
     | TyVar b, t | t, TyVar b -> singleton b t
-    | TyArrow (hd, tl), TyArrow (l2, r2) ->
-      let* subs1 = unify hd l2 in
-      let* subs2 = unify (apply subs1 tl) (apply subs1 r2) in
+    | TyArrow (hd1, tl1), TyArrow (hd2, tl2) ->
+      let* subs1 = unify hd1 hd2 in
+      let* subs2 = unify (apply subs1 tl1) (apply subs1 tl2) in
       compose subs1 subs2
     | TyList t1, TyList t2 -> unify t1 t2
+    | TyTuple ts1, TyTuple ts2 when List.length ts1 = List.length ts2 ->
+      let rec unify_tuples ts1 ts2 acc =
+        match ts1, ts2 with
+        | [], [] -> return acc
+        | t1 :: ts1', t2 :: ts2' ->
+          let* subs = unify t1 t2 in
+          let* acc' = compose subs acc in
+          unify_tuples
+            (List.map ~f:(apply subs) ts1')
+            (List.map ~f:(apply subs) ts2')
+            acc'
+        | _, _ -> fail @@ `Unification_failed (l, r)
+        (* todo: mismatch *)
+      in
+      unify_tuples ts1 ts2 empty
     | _ -> fail (`Unification_failed (l, r))
+  (* todo add tuple *)
 
   and extend k v s =
     match find s k with
@@ -311,12 +327,18 @@ let infer_pattern =
        | LitString _ -> return (env, TyLit "String")
        | LitChar _ -> return (env, TyLit "Char"))
     | PatVar x ->
-      (match Base.Map.find env x with
+      (* todo check types *)
+      let* tv = fresh_var in
+      let env = TypeEnv.extend env (x, S (VarSet.empty, tv)) in
+      return (env, tv)
+      (* (match Base.Map.find env x with
        | None ->
          let* tv = fresh_var in
          let env = TypeEnv.extend env (x, S (VarSet.empty, tv)) in
          return (env, tv)
-       | Some _ -> fail `Occurs_check)
+       | Some sch ->
+         Format.printf "%s %a" x pp_scheme sch;
+         fail @@ `Occurs_check) *)
     | PatTuple ps ->
       let rec infer_pattern_elements env patterns types_acc =
         match patterns with
@@ -344,25 +366,30 @@ let infer_pattern =
 let infer_expr =
   let rec (helper : TypeEnv.t -> expr -> (Subst.t * ty) R.t) =
     fun env -> function
+    | ExprUnOp (op, e) ->
+      let exp_ty =
+        match op with
+        | Neg -> TyLit "Int"
+      in
+      let* s, t = helper env e in
+      let* subst = unify t exp_ty in
+      let* final_subs = Subst.compose s subst in
+      return (final_subs, exp_ty)
     | ExprBinOp (op, e1, e2) ->
+      let* elem_ty, expr_ty =
+        match op with
+        | Add | Sub | Mul | Div -> return (TyLit "Int", TyLit "Int")
+        | And | Or -> return (TyLit "Bool", TyLit "Bool")
+        | Eq | Neq | Lt | Gt | Leq | Geq ->
+          let* tv = fresh_var in
+          return (tv, TyLit "Bool")
+      in
       let* s1, t1 = helper env e1 in
       let* s2, t2 = helper env e2 in
-      (match op with
-       | Add | Sub | Mul | Div ->
-         let* s3 = unify t1 (TyLit "Int") in
-         let* s4 = unify t2 (TyLit "Int") in
-         let* final_subst = Subst.compose_all [ s1; s2; s3; s4 ] in
-         return (final_subst, TyLit "Int")
-       | And | Or ->
-         let* s3 = unify t1 (TyLit "Bool") in
-         let* s4 = unify t2 (TyLit "Bool") in
-         let* final_subst = Subst.compose_all [ s1; s2; s3; s4 ] in
-         return (final_subst, TyLit "Bool")
-       | Eq | Neq | Lt | Gt | Leq | Geq ->
-         let* s3 = unify t1 (TyLit "Int") in
-         let* s4 = unify t2 (TyLit "Int") in
-         let* final_subst = Subst.compose_all [ s1; s2; s3; s4 ] in
-         return (final_subst, TyLit "Bool"))
+      let* s3 = unify t1 elem_ty in
+      let* s4 = unify (Subst.apply s1 t2) elem_ty in
+      let* final_sub = Subst.compose_all [ s1; s2; s3; s4 ] in
+      return (final_sub, expr_ty)
     | ExprVar x -> lookup_env x env
     | ExprFunc (x, e1) ->
       let* env2, tv = infer_pattern env x in
@@ -373,7 +400,7 @@ let infer_expr =
       let* s1, t1 = helper env e1 in
       let* s2, t2 = helper (TypeEnv.apply s1 env) e2 in
       let* tv = fresh_var in
-      let* s3 = unify (Subst.apply s2 t1) (TyArrow (t2, tv)) in
+      let* s3 = unify t1 (TyArrow (t2, tv)) in
       let trez = Subst.apply s3 tv in
       let* final_subst = Subst.compose_all [ s3; s2; s1 ] in
       return (final_subst, trez)
@@ -390,7 +417,7 @@ let infer_expr =
       let* s4 = unify t1 (TyLit "Bool") in
       let* s5 = unify t2 t3 in
       let* final_subst = Subst.compose_all [ s5; s4; s3; s2; s1 ] in
-      R.return (final_subst, Subst.apply s5 t2)
+      R.return (final_subst, Subst.apply final_subst t2)
     | ExprTuple es ->
       let rec infer_elements env es subst_acc types_acc =
         match es with
@@ -432,17 +459,64 @@ let infer_expr =
       let* subst, ty = helper env' main_expr in
       let* final_subst = Subst.compose subst subst_acc in
       return (final_subst, ty)
+    | ExprCase (c, cases) ->
+      let* c_subst, c_ty = helper env c in
+      let* tv = fresh_var in
+      let* e_subst, e_ty =
+        Base.List.fold_left
+          cases
+          ~init:(return (c_subst, tv))
+          ~f:(fun acc (pat, e) ->
+            let* subst, ty = acc in
+            let* pat_env, pat_ty = infer_pattern env pat in
+            let* subst2 = unify c_ty pat_ty in
+            let* _, e_ty = helper pat_env e in
+            let* subst4 = unify ty e_ty in
+            let* final_subst = Subst.compose_all [ subst; subst2; subst4 ] in
+            return (final_subst, Subst.apply final_subst ty))
+      in
+      let* final_subst = Subst.compose c_subst e_subst in
+      return (final_subst, Subst.apply final_subst e_ty)
   in
   helper
 ;;
 
-let rec infer_decl env (Ast.DeclLet (pat, expr)) =
-  let* env', _ = infer_pattern env pat in
-  (* TODO: переделать; какая-то грязь тут *)
-  let* subst, inferred_type = infer_expr env' expr in
-  let scheme = generalize env' inferred_type in
-  let env = TypeEnv.extend_by_pattern scheme env' pat in
-  return env
+let rec is_recursive pat = function
+  | ExprLit _ -> false
+  | ExprVar v -> v = pat
+  | ExprFunc (_, expr) -> is_recursive pat expr
+  | ExprApp (e1, e2) -> is_recursive pat e1 || is_recursive pat e2
+  | ExprIf (cond, e1, e2) ->
+    is_recursive pat cond || is_recursive pat e1 || is_recursive pat e2
+  | ExprTuple exprs -> List.exists (is_recursive pat) exprs
+  | ExprCons (hd, tl) -> is_recursive pat hd || is_recursive pat tl
+  | ExprNil -> false
+  | ExprCase (e, alts) ->
+    is_recursive pat e || List.exists (fun (_, expr) -> is_recursive pat expr) alts
+  | ExprBinOp (_, e1, e2) -> is_recursive pat e1 || is_recursive pat e2
+  | ExprUnOp (_, e) -> is_recursive pat e
+  | ExprLet (bindings, e) ->
+    List.exists (fun (_, binding_expr) -> is_recursive pat binding_expr) bindings
+    || is_recursive pat e
+;;
+
+let infer_decl env (Ast.DeclLet (pat, expr)) =
+  match pat with
+  | PatVar v when is_recursive v expr ->
+    let* tv = fresh_var in
+    let env = TypeEnv.extend env (v, S (VarSet.empty, tv)) in
+    let* s1, t1 = infer_expr env expr in
+    let* s2 = unify (Subst.apply s1 tv) t1 in
+    let* s = Subst.compose s2 s1 in
+    let env = TypeEnv.apply s env in
+    let t2 = generalize env (Subst.apply s tv) in
+    return (TypeEnv.extend env (v, t2))
+  | _ ->
+    let* env', _ = infer_pattern env pat in
+    let* _, inferred_type = infer_expr env' expr in
+    let scheme = generalize env' inferred_type in
+    let env = TypeEnv.extend_by_pattern scheme env' pat in
+    return env
 ;;
 
 let rec infer_prog env p =
@@ -456,7 +530,7 @@ let rec infer_prog env p =
 let run_prog p = run (infer_prog TypeEnv.empty p)
 
 let pp_program fmt env =
-  Base.Map.iteri env (fun ~key:v ~data:(S (_, ty)) ->
+  Base.Map.iteri env ~f:(fun ~key:v ~data:(S (_, ty)) ->
     Format.fprintf fmt "%s :: %a\n" v pp_type ty)
 ;;
 

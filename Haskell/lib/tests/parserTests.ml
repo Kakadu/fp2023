@@ -233,13 +233,172 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  ptest pdecl pp_decl {|f = [1, 2, 3]|};
+  ptest pdecl pp_decl {|(x:xs)= [52]|};
   [%expect
     {|
     (DeclLet
-       ((PatVar "f"),
-        (ExprCons ((ExprLit (LitInt 1)),
-           (ExprCons ((ExprLit (LitInt 2)),
-              (ExprCons ((ExprLit (LitInt 3)), ExprNil))))
-           )))) |}]
+       ((PatCons ((PatVar "x"), (PatVar "xs"))),
+        (ExprCons ((ExprLit (LitInt 52)), ExprNil)))) |}]
+;;
+
+let%expect_test _ =
+  ptest pdecl pp_decl {| map f (x:xs) = f x : 5|};
+  [%expect
+    {|
+    (DeclLet
+       ((PatVar "map"),
+        (ExprFunc
+           ((PatVar "f"),
+            (ExprFunc
+               ((PatCons ((PatVar "x"), (PatVar "xs"))),
+                (ExprCons ((ExprApp ((ExprVar "f"), (ExprVar "x"))),
+                   (ExprLit (LitInt 5)))))))))) |}]
+;;
+
+let%expect_test _ =
+  ptest pexpr pp_expr {|case x of
+1 -> 1 + 1
+2 -> 2|};
+  [%expect
+    {|
+    (ExprCase ((ExprVar "x"),
+       [((PatLit (LitInt 1)),
+         (ExprBinOp (Add, (ExprLit (LitInt 1)), (ExprLit (LitInt 1)))));
+         ((PatLit (LitInt 2)), (ExprLit (LitInt 2)))]
+       )) |}]
+;;
+
+let%expect_test _ =
+  ptest
+    pdecl
+    pp_decl
+    {|sieve lst = case lst of
+    [] -> []
+    (p:xs) -> p : sieve (filter (\x -> mod x p /= 0) xs)|};
+  [%expect
+    {|
+    (DeclLet
+       ((PatVar "sieve"),
+        (ExprFunc
+           ((PatVar "lst"),
+            (ExprCase ((ExprVar "lst"),
+               [(PatNil, ExprNil);
+                 ((PatCons ((PatVar "p"), (PatVar "xs"))),
+                  (ExprCons ((ExprVar "p"),
+                     (ExprApp ((ExprVar "sieve"),
+                        (ExprApp (
+                           (ExprApp ((ExprVar "filter"),
+                              (ExprFunc
+                                 ((PatVar "x"),
+                                  (ExprBinOp (Neq,
+                                     (ExprApp (
+                                        (ExprApp ((ExprVar "mod"), (ExprVar "x")
+                                           )),
+                                        (ExprVar "p"))),
+                                     (ExprLit (LitInt 0))))))
+                              )),
+                           (ExprVar "xs")))
+                        ))
+                     )))
+                 ]
+               )))))) |}]
+;;
+
+let%expect_test _ =
+  ptest
+    pdecl
+    pp_decl
+    {|index lst n = case (lst, n) of 
+([], _) -> []
+((x:xs), n) -> (if n == 0 then x else myIndex xs (n - 1))|};
+  [%expect
+    {|
+    (DeclLet
+       ((PatVar "index"),
+        (ExprFunc
+           ((PatVar "lst"),
+            (ExprFunc
+               ((PatVar "n"),
+                (ExprCase ((ExprTuple [(ExprVar "lst"); (ExprVar "n")]),
+                   [((PatTuple [PatNil; PatWild]), ExprNil);
+                     ((PatTuple
+                         [(PatCons ((PatVar "x"), (PatVar "xs"))); (PatVar "n")]),
+                      (ExprIf (
+                         (ExprBinOp (Eq, (ExprVar "n"), (ExprLit (LitInt 0)))),
+                         (ExprVar "x"),
+                         (ExprApp (
+                            (ExprApp ((ExprVar "myIndex"), (ExprVar "xs"))),
+                            (ExprBinOp (Sub, (ExprVar "n"), (ExprLit (LitInt 1))
+                               ))
+                            ))
+                         )))
+                     ]
+                   )))))))) |}]
+;;
+
+let%expect_test _ =
+  ptest
+    pdecl
+    pp_decl
+    {|take n lst = case (n, lst) of
+  (n, (x:xs)) -> x : take (n - 1) xs
+  (1, (x:_)) -> [x]
+  (_, []) -> []|};
+  [%expect
+    {|
+    (DeclLet
+       ((PatVar "take"),
+        (ExprFunc
+           ((PatVar "n"),
+            (ExprFunc
+               ((PatVar "lst"),
+                (ExprCase ((ExprTuple [(ExprVar "n"); (ExprVar "lst")]),
+                   [((PatTuple
+                        [(PatVar "n"); (PatCons ((PatVar "x"), (PatVar "xs")))]),
+                     (ExprCons ((ExprVar "x"),
+                        (ExprApp (
+                           (ExprApp ((ExprVar "take"),
+                              (ExprBinOp (Sub, (ExprVar "n"),
+                                 (ExprLit (LitInt 1))))
+                              )),
+                           (ExprVar "xs")))
+                        )));
+                     ((PatTuple
+                         [(PatLit (LitInt 1)); (PatCons ((PatVar "x"), PatWild))]),
+                      (ExprCons ((ExprVar "x"), ExprNil)));
+                     ((PatTuple [PatWild; PatNil]), ExprNil)]
+                   )))))))) |}]
+;;
+
+let%expect_test _ =
+  ptest
+    pdecl
+    pp_decl
+    {|merge (x:xs) (y:ys) = if x < y then x : merge xs (y:ys) else (if x == y then x : merge xs ys else y : merge (x:xs) ys)|};
+  [%expect
+    {|
+    (DeclLet
+       ((PatVar "merge"),
+        (ExprFunc
+           ((PatCons ((PatVar "x"), (PatVar "xs"))),
+            (ExprFunc
+               ((PatCons ((PatVar "y"), (PatVar "ys"))),
+                (ExprIf ((ExprBinOp (Lt, (ExprVar "x"), (ExprVar "y"))),
+                   (ExprCons ((ExprVar "x"),
+                      (ExprApp ((ExprApp ((ExprVar "merge"), (ExprVar "xs"))),
+                         (ExprCons ((ExprVar "y"), (ExprVar "ys")))))
+                      )),
+                   (ExprIf ((ExprBinOp (Eq, (ExprVar "x"), (ExprVar "y"))),
+                      (ExprCons ((ExprVar "x"),
+                         (ExprApp ((ExprApp ((ExprVar "merge"), (ExprVar "xs"))),
+                            (ExprVar "ys")))
+                         )),
+                      (ExprCons ((ExprVar "y"),
+                         (ExprApp (
+                            (ExprApp ((ExprVar "merge"),
+                               (ExprCons ((ExprVar "x"), (ExprVar "xs"))))),
+                            (ExprVar "ys")))
+                         ))
+                      ))
+                   )))))))) |}]
 ;;
