@@ -1,4 +1,4 @@
-(** Copyright 2023, Kuarni, AlexShmak *)
+(** Copyright 2023-2024, Kuarni, AlexShmak *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
@@ -9,7 +9,6 @@ type vt_error =
   | NotSupported of string
   | AstError of string
   | ReferenceError of string
-  | RangeError of string
   | InternalError of string
   | TypeError of string
   | SyntaxError of string
@@ -54,6 +53,7 @@ type lexical_env =
 
 and obj_type =
   | TFunPreset of (ctx -> value list -> int option -> (ctx * value option) t)
+    (*functions in OCaml native code*)
   | TFunction of fun_ctx
   | TArrowFunction of fun_ctx
   | TArray of value option list

@@ -1,4 +1,4 @@
-(** Copyright 2023, Kuarni, AlexShmak *)
+(** Copyright 2023-2024, Kuarni, AlexShmak *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
@@ -15,17 +15,10 @@ type program_return =
   ; return : string
   }
 
-let first_lex_env = 0
-let print_string (ctx : ctx) str = { ctx with stdout = ctx.stdout ^ str ^ "\n" }
 let vbool x = VBool x
 let vnumber x = VNumber x
 let vstring x = VString x
 let vobject x = VObject x
-
-let print_opt f = function
-  | Some x -> "Some: " ^ f x
-  | None -> "None"
-;;
 
 let error err =
   uerror
@@ -36,7 +29,6 @@ let error err =
        else "Feature " ^ str ^ " is not supported"
      | AstError str -> "Invalid ast was given: " ^ str
      | ReferenceError str -> "ReferenceError: " ^ str
-     | RangeError str -> "RangeError: " ^ str
      | InternalError str -> "InternalError: " ^ str
      | TypeError str -> "TypeError: " ^ str
      | SyntaxError str -> "SyntaxError: " ^ str)
@@ -85,7 +77,7 @@ let is_obj_by_id ctx cond id =
 let get_array_list obj =
   match obj.obj_type with
   | TArray array -> return array
-  | _ -> error @@ TypeError "Not array was given"
+  | _ -> etyp "Not array was given"
 ;;
 
 let print_type ctx = function
@@ -167,7 +159,6 @@ let rec print_vvalues ctx ?(str_quote = false) = function
       else if fields_empty
       then return "{}"
       else return @@ asprintf "{%s }" (concat fields))
-  | _ as t -> return @@ asprintf "Cannot convert '%s' to string" @@ print_type ctx t
 ;;
 
 let get_vreturn = function
@@ -175,9 +166,8 @@ let get_vreturn = function
   | None -> VUndefined
 ;;
 
-let get_lex_env_opt ctx id = IntMap.find_opt id ctx.lex_envs
-
 let get_lex_env ctx id =
+  let get_lex_env_opt ctx id = IntMap.find_opt id ctx.lex_envs in
   match get_lex_env_opt ctx id with
   | Some x -> return x
   | _ -> error @@ ReferenceError (asprintf "cannot find lexical env with id = %i" id)
@@ -186,33 +176,6 @@ let get_lex_env ctx id =
 let rec add_or_replace var = function
   | a :: b -> if a.var_id = var.var_id then var :: b else a :: add_or_replace var b
   | _ -> [ var ]
-;;
-
-let lex_add ctx ?(replace = false) lex_env_id var =
-  get_lex_env ctx lex_env_id
-  >>= fun lex_env ->
-  match find_in_vars_opt var.var_id lex_env.vars with
-  | Some _ when not replace ->
-    error
-    @@ SyntaxError (asprintf "Identifier \'%s\' has already been declared" var.var_id)
-  | Some var when var.is_const -> etyp "Assignment to constant variable."
-  | None when replace -> error @@ ReferenceError (asprintf "%s is not defined" var.var_id)
-  | _ ->
-    return
-      { ctx with
-        lex_envs =
-          IntMap.add
-            lex_env_id
-            { lex_env with vars = add_or_replace var lex_env.vars }
-            ctx.lex_envs
-      }
-;;
-
-let get_parent ctx =
-  let* lex_env = get_lex_env ctx ctx.cur_lex_env in
-  match lex_env.parent with
-  | Some x -> return x
-  | _ -> error @@ InternalError "cannot get parent"
 ;;
 
 let print ctx values _ =
@@ -248,6 +211,29 @@ let create_arrowfunc ctx name args body =
 
 let create_function ctx name args body =
   create_func ctx name args (tfunction { parent_lex_env = ctx.cur_lex_env; args; body })
+;;
+
+(*init number of lexical envs counter*)
+let first_lex_env = 0
+
+let lex_add ctx ?(replace = false) lex_env_id var =
+  get_lex_env ctx lex_env_id
+  >>= fun lex_env ->
+  match find_in_vars_opt var.var_id lex_env.vars with
+  | Some _ when not replace ->
+    error
+    @@ SyntaxError (asprintf "Identifier \'%s\' has already been declared" var.var_id)
+  | Some var when var.is_const -> etyp "Assignment to constant variable."
+  | None when replace -> error @@ ReferenceError (asprintf "%s is not defined" var.var_id)
+  | _ ->
+    return
+      { ctx with
+        lex_envs =
+          IntMap.add
+            lex_env_id
+            { lex_env with vars = add_or_replace var lex_env.vars }
+            ctx.lex_envs
+      }
 ;;
 
 let context_init =
@@ -363,18 +349,6 @@ let end_of_block ctx =
   | _ -> error @@ InternalError "Cannot find the lexical environment creater"
 ;;
 
-let rec in_func ctx lex_env =
-  match lex_env.scope with
-  | Function | ArrowFunction -> true
-  | Block ->
-    (match lex_env.creater with
-     | Some x ->
-       (match get_lex_env_opt ctx x with
-        | Some x -> in_func ctx x
-        | _ -> false)
-     | None -> false)
-;;
-
 let prefind_funcs ctx ast =
   let ctx_add_if_func ctx = function
     | FunInit x ->
@@ -452,16 +426,6 @@ let const_to_val = function
   | Null -> VNull
 ;;
 
-let get_vnum ctx = function
-  | VNumber x -> return x
-  | _ as t -> etyp @@ asprintf "expect number, but %s was given" @@ print_type ctx t
-;;
-
-let get_vstring ctx = function
-  | VString x -> return x
-  | _ as t -> etyp @@ asprintf "expect string, but %s was given" @@ print_type ctx t
-;;
-
 let get_vbool ctx = function
   | VBool x -> return x
   | _ as t -> etyp @@ asprintf "expect boolean, but %s was given" @@ print_type ctx t
@@ -470,11 +434,6 @@ let get_vbool ctx = function
 let get_int ctx bit = function
   | VNumber x -> return (bit x)
   | _ as t -> etyp @@ asprintf "expect number, but %s was given" @@ print_type ctx t
-;;
-
-let get_obj_id ctx = function
-  | VObject id -> return id
-  | _ as t -> etyp @@ asprintf "expect object, but %s was given" @@ print_type ctx t
 ;;
 
 let ctx_get_var ctx id =
@@ -529,7 +488,6 @@ and to_string ctx v =
     >>| fun (_, array) -> String.concat "," array
   | VObject x when is_obj_by_id ctx is_func x -> ensup "conversion func to str"
   | VObject _ -> return "[object Object]"
-  | _ as t -> etyp ("cannot cast " ^ print_type ctx t ^ " to string")
 
 and to_bool ctx v =
   get_primitive ctx v
@@ -542,18 +500,26 @@ and to_bool ctx v =
 
 and to_number ctx v =
   get_primitive ctx v
-  >>| function
-  | VNumber x -> x
+  >>= function
+  | VNumber x -> return x
   | VString x ->
-    (match String.trim x with
-     | "" -> 0.
-     | _ as x ->
-       (match float_of_string_opt x with
-        | Some x -> x
-        | _ -> nan))
-  | VBool x -> Bool.to_float x
-  | VNull -> 0.
-  | _ -> nan
+    return
+      (match String.trim x with
+       | "" -> 0.
+       | _ as x ->
+         (match float_of_string_opt x with
+          | Some x -> x
+          | _ -> nan))
+  | VBool x -> return @@ Bool.to_float x
+  | VNull -> return 0.
+  | VObject x when is_obj_by_id ctx is_array x ->
+    let* obj = get_obj_ctx ctx x in
+    let* array = get_array_list obj in
+    (match List.length array with
+     | 0 -> return 0.
+     | 1 -> Option.fold ~none:(return 0.) ~some:(to_number ctx) (List.hd array)
+     | _ -> return nan)
+  | _ -> return nan
 
 and ctx_not_change_bop ctx op a b =
   let bop_with_num op =
@@ -591,50 +557,6 @@ and ctx_not_change_bop ctx op a b =
     let* l, r = both is_to_string a b in
     if l || r then bop_with_string ( ^ ) else bop_with_num ( +. )
   in
-  let strict_equal () = return (VBool (a = b)) in
-  let equal () =
-    let is_undefined = function
-      | VUndefined -> true
-      | _ -> false
-    in
-    let is_null = function
-      | VNull -> true
-      | _ -> false
-    in
-    let is_num_bool = function
-      | VNumber _ | VBool _ -> true
-      | _ -> false
-    in
-    let is_obj = function
-      | VObject _ -> true
-      | _ -> false
-    in
-    if is_null a || is_null b
-    then return (VBool ((is_null a || is_null b) && (is_undefined a || is_undefined b)))
-    else if is_num_bool a || is_num_bool b
-    then bop_logical_with_num ( = )
-    else
-      ctx_not_change_bop ctx StrictEqual a b
-      >>= function
-      | VBool true -> return (VBool true)
-      | _ ->
-        if is_obj a || is_obj b
-        then bop_logical_with_string ( = )
-        else return (VBool false)
-  in
-  let less_than () =
-    let* l, r = both is_to_string a b in
-    if l && r then bop_logical_with_string ( < ) else bop_logical_with_num ( < )
-  in
-  let shift op =
-    let get_int = function
-      | VNumber x -> Some (int_of_float x)
-      | _ -> None
-    in
-    match b with
-    | VNumber x when x >= 0. -> bop_bitwise_shift op b
-    | _ -> bop_bitwise_shift op (VNumber (float_of_int (32 + Option.get (get_int b))))
-  in
   let logical_and () =
     let a_preserved = a in
     let b_preserved = b in
@@ -650,6 +572,45 @@ and ctx_not_change_bop ctx op a b =
     >>| function
     | true, _ -> a_preserved
     | _ -> b_preserved
+  in
+  let strict_equal () = return (VBool (a = b)) in
+  let equal () =
+    let is_obj = function
+      | VObject _ -> true
+      | _ -> false
+    in
+    let* res1 = ctx_not_change_bop ctx StrictEqual a b in
+    let* a, b =
+      both
+        (fun x ->
+          get_primitive ctx x
+          >>= fun x -> if is_obj x then to_string ctx x >>| vstring else return x)
+        a
+        b
+    in
+    let* res2 =
+      match a, b with
+      | VNull, (VNull | VUndefined) | VUndefined, (VNull | VUndefined) ->
+        return @@ vbool true
+      | VBool x, y | y, VBool x ->
+        to_number ctx (vbool x) >>| vnumber >>= ctx_not_change_bop ctx Equal y
+      | VNumber _, VString _ | VString _, VNumber _ -> bop_logical_with_num ( = )
+      | _ -> ctx_not_change_bop ctx StrictEqual a b
+    in
+    ctx_not_change_bop ctx LogicalOr res1 res2
+  in
+  let less_than () =
+    let* l, r = both is_to_string a b in
+    if l && r then bop_logical_with_string ( < ) else bop_logical_with_num ( < )
+  in
+  let shift op =
+    let get_int = function
+      | VNumber x -> Some (int_of_float x)
+      | _ -> None
+    in
+    match b with
+    | VNumber x when x >= 0. -> bop_bitwise_shift op b
+    | _ -> bop_bitwise_shift op (VNumber (float_of_int (32 + Option.get (get_int b))))
   in
   let less_eq () =
     let bop cast a b =
@@ -695,9 +656,9 @@ and ctx_not_change_bop ctx op a b =
   | BitwiseAnd -> bop_with_int ( land ) <?> "error in bitwise and"
   | BitwiseOr -> bop_with_int ( lor ) <?> "error in bitwise or"
   | LogicalAnd -> logical_and () <?> "error in logical_and operator"
-  | LogicalOr -> logical_or () <?> "error in logical_and operator"
+  | LogicalOr -> logical_or () <?> "error in logical_or operator"
   | NullishCoal -> nullish_coal () <?> "error in nullish_coalescing operator"
-  | Xor -> bop_with_int ( lxor )
+  | Xor -> bop_with_int ( lxor ) <?> "error in xor operator"
   | Exp -> bop_with_num ( ** ) <?> "error in exp operator"
   | PropAccs -> prop_accs () <?> "error in property accession"
   | _ as a -> ensup @@ asprintf "operator %a not supported yet" pp_bin_op a
@@ -740,7 +701,7 @@ and eval_fun ctx f args this =
     match f.body with
     | Block x ->
       let* ctx = val_to_args ctx (f.args, args) in
-      let+ ctx, ret = parse_stms ctx x in
+      let+ ctx, ret = eval_stms ctx x in
       ctx, get_vreturn ret
     | _ ->
       error (AstError "in top of fun body expected Block, but something else was given")
@@ -860,24 +821,23 @@ and ctx_change_bop ctx op a b : (ctx * value) t =
     | BinOp (PropAccs, obj, prop) -> obj_assign obj prop
     | _ -> error @@ SyntaxError "Invalid left-hand side in assignment"
   in
-  let rec_assign_rehanging op = ctx_change_bop ctx Assign a (BinOp (op, a, b)) in
   match op with
   | Assign -> assign () <?> "error in assignment"
-  | AddAssign -> rec_assign_rehanging Add
-  | SubAssign -> rec_assign_rehanging Sub
-  | MulAssign -> rec_assign_rehanging Mul
-  | DivAssign -> rec_assign_rehanging Div
-  | ExpAssign -> rec_assign_rehanging Exp
-  | RemAssign -> rec_assign_rehanging Rem
-  | LShiftAssign -> rec_assign_rehanging LogicalShiftLeft
-  | RShiftAssign -> rec_assign_rehanging LogicalShiftRight
-  | URShiftAssign -> rec_assign_rehanging UnsignedShiftRight
-  | BitAndAssign -> rec_assign_rehanging BitwiseAnd
-  | BitOrAssign -> rec_assign_rehanging BitwiseOr
-  | BitXorAssign -> rec_assign_rehanging Xor
-  | LogAndAssign -> rec_assign_rehanging LogicalAnd
-  | LogOrAssign -> rec_assign_rehanging LogicalOr
-  | NullAssign -> rec_assign_rehanging NullishCoal
+  | AddAssign -> ctx_change_bop ctx Assign a (BinOp (Add, a, b))
+  | SubAssign -> ctx_change_bop ctx Assign a (BinOp (Sub, a, b))
+  | MulAssign -> ctx_change_bop ctx Assign a (BinOp (Mul, a, b))
+  | DivAssign -> ctx_change_bop ctx Assign a (BinOp (Div, a, b))
+  | ExpAssign -> ctx_change_bop ctx Assign a (BinOp (Exp, a, b))
+  | RemAssign -> ctx_change_bop ctx Assign a (BinOp (Rem, a, b))
+  | LShiftAssign -> ctx_change_bop ctx Assign a (BinOp (LogicalShiftLeft, a, b))
+  | RShiftAssign -> ctx_change_bop ctx Assign a (BinOp (LogicalShiftRight, a, b))
+  | URShiftAssign -> ctx_change_bop ctx Assign a (BinOp (UnsignedShiftRight, a, b))
+  | BitAndAssign -> ctx_change_bop ctx Assign a (BinOp (BitwiseAnd, a, b))
+  | BitOrAssign -> ctx_change_bop ctx Assign a (BinOp (BitwiseOr, a, b))
+  | BitXorAssign -> ctx_change_bop ctx Assign a (BinOp (Xor, a, b))
+  | LogAndAssign -> ctx_change_bop ctx Assign a (BinOp (LogicalAnd, a, b))
+  | LogOrAssign -> ctx_change_bop ctx Assign a (BinOp (LogicalOr, a, b))
+  | NullAssign -> ctx_change_bop ctx Assign a (BinOp (NullishCoal, a, b))
   | _ ->
     both_ext eval_exp ctx a b
     >>= fun (ctx, (x, y)) -> add_to_result ctx (ctx_not_change_bop ctx op x y)
@@ -933,11 +893,10 @@ and eval_exp ctx = function
         array
     in
     add_obj ctx [] (TArray vals) >>| fun (ctx, id) -> ctx, vobject id
-  | _ -> ensup ""
 
 (**---------------Statement interpreter---------------*)
 
-and parse_stm ctx = function
+and eval_stm ctx = function
   | Return x ->
     let+ ctx, ret = eval_exp ctx x <?> "error in return expression" in
     { ctx with vreturn = Some ret }
@@ -952,28 +911,52 @@ and parse_stm ctx = function
     let* ctx, res = eval_exp ctx condition in
     to_bool ctx res
     >>= (function
-     | true -> parse_stm ctx then_stm
-     | false -> parse_stm ctx else_stm)
+     | true -> eval_stm ctx then_stm
+     | false -> eval_stm ctx else_stm)
   | Block ast ->
     let* ctx = create_local_ctx ctx ctx.cur_lex_env Block None in
-    let+ ctx, ret = parse_stms ctx ast <?> "error while interpret block" in
+    let+ ctx, ret = eval_stms ctx ast <?> "error while interpret block" in
     (match ret with
      | Some _ as x -> { ctx with vreturn = x }
      | _ -> ctx)
   | FunInit _ -> return ctx
   | Expression e -> eval_exp ctx e >>| fst <?> "error in expression statement"
-  | _ -> ensup ""
+  | Loop loop ->
+    let* ctx = create_local_ctx ctx ctx.cur_lex_env Block None in
+    let* ctx = Option.fold ~none:(return ctx) ~some:(eval_stm ctx) loop.loop_init in
+    let rec go ctx =
+      let* ctx, cond = eval_exp ctx loop.loop_condition in
+      let* cond = to_bool ctx cond in
+      if cond
+      then
+        let* ctx = eval_stm ctx loop.loop_body in
+        match ctx.vreturn with
+        | Some _ as x ->
+          let+ ctx, _ = end_of_block ctx in
+          { ctx with vreturn = x }
+        | None ->
+          let* ctx =
+            Option.fold
+              ~none:(return ctx)
+              ~some:(fun x -> eval_exp ctx x >>| fst)
+              loop.loop_change
+          in
+          go ctx
+      else return ctx
+    in
+    go ctx <?> "error in loop body"
+  | _ -> error @@ InternalError "unexpected statement"
 
-and parse_stms ctx ast =
+and eval_stms ctx ast =
   let* ctx = prefind_funcs ctx ast in
-  fold_left_s parse_stm (fun ctx -> is_some ctx.vreturn) ctx ast >>= end_of_block
+  fold_left_s eval_stm (fun ctx -> is_some ctx.vreturn) ctx ast >>= end_of_block
 ;;
 
 let interpret_ast ast : (program_return, string) Result.t =
   match ast with
   | Programm x ->
     let* ctx = context_init in
-    let* ctx, ret = parse_stms ctx x in
+    let* ctx, ret = eval_stms ctx x in
     let+ ret = print_vvalues ctx @@ get_vreturn ret in
     { stdout = ctx.stdout; return = ret }
   | _ ->

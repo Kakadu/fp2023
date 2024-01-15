@@ -1,4 +1,4 @@
-(** Copyright 2023, Kuarni, AlexShmak *)
+(** Copyright 2023-2024, Kuarni, AlexShmak *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
@@ -18,15 +18,19 @@ let pp ?(parse = parse) str =
   if Result.is_ok result then pp_ok result else pp_error result
 ;;
 
-let print_return str =
+let print_interpreter str ok_fun =
   match interpret str with
-  | Result.Ok x -> Format.eprintf "Programm return: %s" x.return
+  | Result.Ok x -> ok_fun x
   | Result.Error x -> Format.eprintf "Error: %s" x
 ;;
 
-let print_output str =
-  match interpret str with
-  | Result.Ok x ->
-    Format.eprintf "Programm output: \n%s\nProgramm return: %s" x.stdout x.return
-  | Result.Error x -> Format.eprintf "Error: %s" x
+let print_return str =
+  print_interpreter str @@ fun x -> Format.printf "Programm return: %s" x.return
 ;;
+
+let print_output str =
+  print_interpreter str
+  @@ fun x -> Format.printf "Programm output: \n%s\nProgramm return: %s" x.stdout x.return
+;;
+
+let print_stdout str = print_interpreter str @@ fun x -> print_string x.stdout

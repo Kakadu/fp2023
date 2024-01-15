@@ -6,9 +6,12 @@
 
 (license LGPL-3.0-or-later)
 
-(authors "Kuarni <kuarni22@gmail.com>, AlexShmak <lexnder9@gmail.com>")
+(authors "Kuarni <kuarni22@gmail.com>" , "AlexShmak <lexnder9@gmail.com>")
 
-(maintainers "Kuarni <kuarni22@gmail.com>, AlexShmak <lexnder9@gmail.com>")
+(maintainers
+ "Kuarni <kuarni22@gmail.com>"
+ ,
+ "AlexShmak <lexnder9@gmail.com>")
 
 (bug_reports "https://github.com/AlexShmak/fp2023/issues")
 
@@ -16,10 +19,10 @@
 
 (package
  (name Javascript)
- (synopsis "Parser for javascript and it's interepreter in future")
+ (synopsis "Interpreter for Javascript")
  (description
-  "Here is parser of javascript which can parse factorial code")
- (version 0.1)
+  "An interpreter and parser for Javascript. It can work with arrays, functions, let statement,\n  for, while loops, objects (class isn't supported). \nThe interpreter work in string mode by default. \n  You can print values with alert, console.log and return from main body.")
+ (version 0.2)
  (depends
   dune
   angstrom
@@ -28,5 +31,4 @@
   ppx_deriving
   bisect_ppx
   (odoc :with-doc)
-  (ocamlformat :build)
-  ))
+  (ocamlformat :build)))

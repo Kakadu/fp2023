@@ -1,4 +1,4 @@
-(** Copyright 2023, Kuarni, AlexShmak *)
+(** Copyright 2023-2024, Kuarni, AlexShmak *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
@@ -1823,4 +1823,84 @@ let%expect_test _ =
     5 [ 7, 8, 4, 5, 6 ]
 
     Programm return: undefined |}]
+;;
+
+(**---------------Loops---------------*)
+
+let%expect_test _ =
+  print_output "for (let a = 0; a < 5; a++) {\n    console.log(a)\n  }";
+  [%expect
+    {|
+    Programm output:
+    0
+    1
+    2
+    3
+    4
+
+    Programm return: undefined |}]
+;;
+
+let%expect_test _ =
+  print_output "let a = 0; while (a < 5) {\n    console.log(a++)\n  }";
+  [%expect
+    {|
+    Programm output:
+    0
+    1
+    2
+    3
+    4
+
+    Programm return: undefined |}]
+;;
+
+let%expect_test _ =
+  print_output "for (let a = 0; a < 3; a++) {\n  let a = 4;  console.log(a)\n  }";
+  [%expect {|
+    Programm output:
+    4
+    4
+    4
+
+    Programm return: undefined |}]
+;;
+
+let%expect_test _ =
+  print_output
+    "let arr = []\n\
+    \  for (let a = 0; a < 3; a++) {let b = a; arr[b] = ()=>++b}\n\
+    \  console.log(arr[0](), arr[0]())\n\
+    \  console.log(arr[1](), arr[1]())\n\
+    \  ";
+  [%expect {|
+    Programm output:
+    1 2
+    2 3
+
+    Programm return: undefined |}]
+;;
+
+let%expect_test _ =
+  print_return "let a = 0; while (a < 10) {if (a++ == 5) return a}";
+  [%expect {|
+    Programm return: 6 |}]
+;;
+
+let%expect_test _ =
+  print_return "let a = 0\n      for (; a < 3; ) {a++}\n  return a";
+  [%expect {|
+    Programm return: 3 |}]
+;;
+
+let%expect_test _ =
+  print_return "let a = 0\n      while () {a++; if (a=10) return a}\n";
+  [%expect {|
+    Programm return: 10 |}]
+;;
+
+let%expect_test _ =
+  print_return "let a = 0\n      for (;;) {a++; if (a=10) return a}";
+  [%expect {|
+    Programm return: 10 |}]
 ;;
