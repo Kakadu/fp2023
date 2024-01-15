@@ -5,7 +5,7 @@
 open! Base
 
 module Var : sig
-  type t = Var of string  (** Type / effect variable *)
+  type t = Var of string | Var_weak of string  (** Type / effect variable *)
 
   val pp : Format.formatter -> t -> unit
 
@@ -46,6 +46,7 @@ module VarSet : sig
   val inter : t -> t -> t
   val diff : t -> t -> t
 
+  val filter : t -> f:(Elt.t -> bool) -> t
   val fold : t -> init:'acc -> f:('acc -> Elt.t -> 'acc) -> 'acc
   val fold_right : t -> init:'acc -> f:(Elt.t -> 'acc -> 'acc) -> 'acc
 end
