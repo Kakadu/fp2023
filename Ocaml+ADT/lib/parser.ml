@@ -122,7 +122,7 @@ let prvarname =
      | "" ->
        take_while1 (fun ch -> is_wildcard ch || is_char ch || is_digit ch)
        >>= fun str -> if is_keyword str then fail "invalid var name" else return str
-     | _ -> fail @@ "invalid var name")
+     | _ -> fail "invalid var name")
 ;;
 
 let prconstrname =
