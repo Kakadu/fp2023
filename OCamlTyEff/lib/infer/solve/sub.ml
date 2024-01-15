@@ -71,15 +71,20 @@ let apply_to_scheme sub (Scheme.Forall (quantified, ty)) =
   in
   Scheme.Forall (quantified, apply_to_ty sub' ty)
 
+let apply_to_env sub = Env.map ~f:(apply_to_scheme sub)
+
 let apply_to_constrs sub =
   let apply_single : Constr.t -> Constr.t = function
-    | TyEqConstr (t1, t2, unify_eff) ->
-        TyEqConstr (apply_to_ty sub t1, apply_to_ty sub t2, unify_eff)
-    | EffEqConstr (eff1, eff2) ->
-        EffEqConstr (apply_to_eff sub eff1, apply_to_eff sub eff2)
-    | ImplInstConstr (t1, mset, t2) ->
+    | TyEqConstr (t1, t2, flag) ->
+        TyEqConstr (apply_to_ty sub t1, apply_to_ty sub t2, flag)
+    | EffEqConstr (eff1, eff2, flag) ->
+        EffEqConstr (apply_to_eff sub eff1, apply_to_eff sub eff2, flag)
+    | ImplInstConstr (t1, mset, t2, eff2) ->
         ImplInstConstr
-          (apply_to_ty sub t1, apply_to_varset sub mset, apply_to_ty sub t2)
+          ( apply_to_ty sub t1
+          , apply_to_varset sub mset
+          , apply_to_ty sub t2
+          , apply_to_eff sub eff2 )
     | ExplInstConstr (ty, sc) ->
         ExplInstConstr (apply_to_ty sub ty, apply_to_scheme sub sc)
   in

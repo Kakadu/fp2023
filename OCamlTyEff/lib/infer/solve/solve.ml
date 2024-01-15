@@ -19,6 +19,7 @@ module SolveMonad : sig
 
   module Solve : sig
     val fresh_var : Var.t t
+    val fresh_weak : Var.t t
     val fail : TyError.t -> 'a t
   end
 end = struct
@@ -27,12 +28,15 @@ end = struct
   let run m = run m 0 |> Result.map ~f:fst
 
   module Solve = struct
-    let fresh_var =
+    let fresh_name =
       let* count = State.get in
       let* () = State.put (count + 1) in
       (* "solve" prefix is important to avoid collision
          with vars created in gen monad *)
-      return @@ Var.Var ("solve" ^ Int.to_string count)
+      return ("solve" ^ Int.to_string count)
+
+    let fresh_var = fresh_name >>| fun name -> Var.Var name
+    let fresh_weak = fresh_name >>| fun name -> Var.Var_weak name
 
     let fail = Error.fail
   end
@@ -137,7 +141,28 @@ module Unify = struct
         fail UnificationMismatch
 end
 
-let generalize free ty = Scheme.Forall (VarSet.diff (Ty.vars ty) free, ty)
+let generalize free ty =
+  let not_weak =
+    (* don't quantify weak vars *)
+    VarSet.filter (Ty.vars ty) ~f:(function
+      | Var_ty (Var _) | Var_eff (Var _) ->
+          true
+      | Var_ty (Var_weak _) | Var_eff (Var_weak _) ->
+          false )
+  in
+  Scheme.Forall (VarSet.diff not_weak free, ty)
+
+let weaken ty =
+  let sub =
+    VarSet.fold (Ty.vars ty) ~init:Sub.empty ~f:(fun acc -> function
+      | Var_ty (Var name as var) ->
+          Sub.compose acc @@ Sub.singleton_ty var @@ Ty_var (Var_weak name)
+      | Var_eff (Var name as var) ->
+          Sub.compose acc @@ Sub.singleton_eff var @@ Eff_var (Var_weak name)
+      | Var_ty (Var_weak _) | Var_eff (Var_weak _) ->
+          acc )
+  in
+  Sub.apply_to_ty sub ty
 
 let instantiate (Scheme.Forall (quantified, ty)) =
   (* construct substitution that maps quantified vars to fresh vars *)
@@ -156,14 +181,20 @@ let instantiate (Scheme.Forall (quantified, ty)) =
   in
   return @@ Sub.apply_to_ty subst ty
 
-let activevars =
+let activevars ?(incl_impl_inst = true) ?(incl_effeq_late = true) =
   let activevars_single = function
     | Constr.TyEqConstr (ty1, ty2, _) ->
         VarSet.union (Ty.vars ty1) (Ty.vars ty2)
-    | EffEqConstr (eff1, eff2) ->
+    | EffEqConstr (eff1, eff2, EffEq_Normal) ->
         VarSet.union (Eff.vars eff1) (Eff.vars eff2)
-    | ImplInstConstr (ty1, mset, ty2) ->
-        VarSet.union (Ty.vars ty1) (VarSet.inter mset (Ty.vars ty2))
+    | EffEqConstr (eff1, eff2, EffEq_Late) ->
+        if incl_effeq_late then VarSet.union (Eff.vars eff1) (Eff.vars eff2)
+        else VarSet.empty
+    | ImplInstConstr (ty1, mset, ty2, eff2) ->
+        if incl_impl_inst then
+          VarSet.union_list
+            [Ty.vars ty1; VarSet.inter mset (Ty.vars ty2); Eff.vars eff2]
+        else VarSet.empty
     | ExplInstConstr (ty, sc) ->
         VarSet.union (Ty.vars ty) (Scheme.free_vars sc)
   in
@@ -180,27 +211,44 @@ let solve cs =
           (* enforce order in which constraints must be solved *)
           match constr with
           | TyEqConstr (_, _, Unify_eff)
-          | EffEqConstr (_, _)
+          | EffEqConstr (_, _, EffEq_Normal)
           | ExplInstConstr (_, _) ->
               ok
           | TyEqConstr (t1, t2, Dont_unify_eff)
-          (* solve after all other eq constraints on `t1` & `t2` are solved *)
+          (* solve after all other eq constraints on [t1] & [t2] are solved *)
             when VarSet.is_empty
                  @@ VarSet.inter (activevars rest)
                       (VarSet.union (Ty.vars t1) (Ty.vars t2)) ->
               ok
-          | ImplInstConstr (_, mset, t2)
-          (* solve after all eq constraints on `t2` are solved *)
+          | EffEqConstr (eff1, eff2, EffEq_Late)
+          (* solve after all other constraints on [eff1] & [eff2] are solved *)
             when VarSet.is_empty
-                 @@ VarSet.inter (activevars rest)
-                      (VarSet.diff (Ty.vars t2) mset) ->
+                 @@ VarSet.inter
+                      (activevars ~incl_effeq_late:false rest)
+                      (VarSet.union (Eff.vars eff1) (Eff.vars eff2)) ->
               ok
-          | TyEqConstr (_, _, _) | ImplInstConstr (_, _, _) ->
+          | ImplInstConstr (_, mset, t2, eff2)
+          (* solve after all other (excluding late EffEqs)
+             constraints on [t2] & [eff2] are solved *)
+            when VarSet.is_empty
+                 @@ VarSet.union
+                      (VarSet.inter (activevars rest)
+                         (VarSet.diff (Ty.vars t2) mset) )
+                      (VarSet.inter
+                         (activevars ~incl_impl_inst:false
+                            ~incl_effeq_late:false rest )
+                         (Eff.vars eff2) ) ->
+              ok
+          | TyEqConstr (_, _, _)
+          | EffEqConstr (_, _, _)
+          | ImplInstConstr (_, _, _, _) ->
               None )
     in
+
     match next_solvable with
     | None ->
         (* no constraints left to solve *)
+        assert (ConstrSet.is_empty cs) ;
         return Sub.empty
     | Some constr -> (
       match constr with
@@ -208,12 +256,18 @@ let solve cs =
           let* s1 = Unify.unify t1 t2 unify_eff_flag in
           let* s2 = solve' (Sub.apply_to_constrs s1 cs) in
           return @@ Sub.compose s2 s1
-      | EffEqConstr (eff1, eff2), cs ->
+      | EffEqConstr (eff1, eff2, _), cs ->
           let* s1 = Unify.unify_eff eff1 eff2 in
           let* s2 = solve' (Sub.apply_to_constrs s1 cs) in
           return @@ Sub.compose s2 s1
-      | ImplInstConstr (t1, mset, t2), cs ->
-          solve' @@ ConstrSet.add cs (ExplInstConstr (t1, generalize mset t2))
+      | ImplInstConstr (t1, mset, t2, eff2), cs ->
+          let sc =
+            (* do not generalize if [eff2] contains [ref] label *)
+            if Eff.contains eff2 (Eff.Label.ref ()) then
+              Scheme.Forall (VarSet.empty, weaken t2)
+            else generalize mset t2
+          in
+          solve' @@ ConstrSet.add cs (ExplInstConstr (t1, sc))
       | ExplInstConstr (ty, sc), cs ->
           let* ty' = instantiate sc in
           solve' @@ ConstrSet.add cs (TyEqConstr (ty, ty', Unify_eff)) )
