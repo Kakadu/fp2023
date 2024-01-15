@@ -12,4 +12,3 @@ module Eff : module type of Tys.Eff
 module Scheme : module type of Tys.Scheme
 
 module Env : module type of Env
-module StdEnv : module type of StdEnv

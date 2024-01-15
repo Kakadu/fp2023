@@ -184,10 +184,6 @@ let%expect_test _ =
   run
     {|
     ref None;;
-
-    let fst (a, b) = a;;
-    let snd (a, b) = b;;
-
     let a = (fun x -> x), ref None;;
     let b = ref None;;
     (fst a) "hi"; (snd a) := Some true; b := Some 1;;
@@ -196,8 +192,6 @@ let%expect_test _ =
   [%expect
     {|
     '_weak1 option ref
-    fst: 'a 'b. ('a * 'b) -> 'a
-    snd: 'a 'b. ('a * 'b) -> 'b
     a: ('_weak2 -> '_weak2) * '_weak3 option ref
     b: '_weak4 option ref
     unit

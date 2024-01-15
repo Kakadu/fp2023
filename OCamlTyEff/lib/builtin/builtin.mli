@@ -3,5 +3,8 @@
 (** SPDX-License-Identifier: MIT *)
 
 open! Base
+open Types
 
-val env : Env.t
+module Prelude : module type of Prelude
+
+val ty_env : Env.t
