@@ -119,7 +119,7 @@ type statement =
   | STry_catch_fin of
       { try_s : statement
       ; catch_s : (((catch_decl * expr option) option * statement) list) option
-          (*!!! only new decl in catch_cond |-> (catch_cond * filter_opt)_opt * body *)
+          (*!!! only new decl in [catch_cond |-> (catch_cond * filter_opt)_opt * body] option *)
       ; finally_s : statement option
       }
 [@@deriving show { with_path = false }]

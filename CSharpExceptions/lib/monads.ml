@@ -517,22 +517,22 @@ module Eval_Monad = struct
     | Error x -> fail x
   ;;
 
+  let in_isolation f =
+    read_local
+    >>= fun old_env ->
+    let return_env = save_local old_env in
+    f
+    @!|>>= function
+    | Next x -> return_env *> return_n x
+    | Exn ad -> return_env *> return_e ad
+    | Return x -> return_env *> return_r x
+    | Break -> return_env *> return_b ()
+    | Error x -> fail x
+  ;;
+
   let run_in_another_self ad new_lenv f =
-    let local_with loc_ f =
-      loc_
-      >>= fun old_env ->
-      let return_env = save_local old_env in
-      f
-      @!|>>= function
-      | Next x -> return_env *> return_n x
-      | Exn ad -> return_env *> return_e ad
-      | Return x -> return_env *> return_r x
-      | Break -> return_env *> return_b ()
-      | Error x -> fail x
-    in
-    let local f = local_with read_local f in
     let new_f = save_local (ad, new_lenv) *> f in
-    local new_f
+    in_isolation new_f
   ;;
 
   let further = function
@@ -564,7 +564,6 @@ module Eval_Monad = struct
     =
     fun return_tp params args ad base_lenv steps handle ->
     let run_f =
-      let narrow_down_lenv = save_local (ad, base_lenv) in
       let add_args_in_lenv =
         let f id env_val = add_local_el id env_val in
         iter2_left f params args
@@ -576,22 +575,9 @@ module Eval_Monad = struct
           fail (Return_error "Without return can be used only methods of 'Void' type")
       in
       let if_ret x = return_n x in
-      narrow_down_lenv *> add_args_in_lenv *> handle steps |>>= (if_ret, if_no_ret)
+      add_args_in_lenv *> handle steps |>>= (if_ret, if_no_ret)
     in
-    let local_with loc_ f =
-      loc_
-      >>= fun old_env ->
-      let return_env = save_local old_env in
-      f
-      @!|>>= function
-      | Next x -> return_env *> return_n x
-      | Exn ad -> return_env *> return_e ad
-      | Return x -> return_env *> return_r x
-      | Break -> return_env *> return_b ()
-      | Error x -> fail x
-    in
-    let local f = local_with read_local f in
-    local run_f
+    run_in_another_self ad base_lenv run_f
   ;;
 
   (* По анологии с run_method *)
