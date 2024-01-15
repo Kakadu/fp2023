@@ -21,7 +21,9 @@ let run s =
     (match Inferencer.run_prog a with
      | Ok res ->
        (match Eval.eval_prog a with
-        | Result (Ok res2) -> pp_combined_output res res2)
+        | Result (Ok res2) -> pp_combined_output res res2
+        | Result (Error err) -> Format.printf "%a" Env.pp_err err
+        | _ -> ())
      | Error err -> Format.printf "%a" Inferencer.pp_error err)
   | Error err ->
     Format.printf "%s\n" err;
