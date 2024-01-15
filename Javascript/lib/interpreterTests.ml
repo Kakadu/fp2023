@@ -1212,6 +1212,17 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
+  print_return
+    "let a1 = {field2 : 4}; \n\
+    \  let a2 = {field2 : 4, __proto__ : a1};\n\
+    \    a1.__proto__ = a2\n\
+    \    return a2.field2";
+  [%expect
+    {|
+    Error: Interpreter error > error in expression statement > error in assignment > TypeError: Cyclic __proto__ value |}]
+;;
+
+let%expect_test _ =
   print_return "let a2 = {field2 : 4}; \n    a2[\"field\"+2] = 10\n    return a2.field2";
   [%expect {|
     Programm return: 10 |}]
