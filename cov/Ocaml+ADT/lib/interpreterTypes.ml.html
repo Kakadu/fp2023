@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8"/>
     <title>interpreterTypes.ml &mdash; Coverage report</title>
-    <meta name="description" content="51.11% coverage in lib/interpreterTypes.ml">
+    <meta name="description" content="47.83% coverage in lib/interpreterTypes.ml">
     <link rel="stylesheet" href="../coverage.css"/>
     <script src="../highlight.pack.js"></script>
     <script>hljs.initHighlightingOnLoad();</script>
@@ -15,26 +15,27 @@
           <span class="dirname">lib/</span>interpreterTypes.ml
         </a>
       </h1>
-      <h2>51.11%</h2>
+      <h2>47.83%</h2>
     </div>
     <div id="navbar">
-      <span class="unvisited" style="top:12.86%"></span>
-      <span class="unvisited" style="top:14.29%"></span>
-      <span class="unvisited" style="top:15.71%"></span>
-      <span class="unvisited" style="top:17.14%"></span>
-      <span class="unvisited" style="top:18.57%"></span>
-      <span class="unvisited" style="top:20.00%"></span>
-      <span class="unvisited" style="top:21.43%"></span>
-      <span class="unvisited" style="top:22.86%"></span>
-      <span class="unvisited" style="top:24.29%"></span>
-      <span class="unvisited" style="top:27.14%"></span>
-      <span class="unvisited" style="top:44.29%"></span>
-      <span class="unvisited" style="bottom:48.57%"></span>
-      <span class="unvisited" style="bottom:47.14%"></span>
-      <span class="unvisited" style="bottom:45.71%"></span>
-      <span class="unvisited" style="bottom:35.71%"></span>
-      <span class="unvisited" style="bottom:7.14%"></span>
-      <span class="unvisited" style="bottom:5.71%"></span>
+      <span class="unvisited" style="top:12.68%"></span>
+      <span class="unvisited" style="top:14.08%"></span>
+      <span class="unvisited" style="top:15.49%"></span>
+      <span class="unvisited" style="top:16.90%"></span>
+      <span class="unvisited" style="top:18.31%"></span>
+      <span class="unvisited" style="top:19.72%"></span>
+      <span class="unvisited" style="top:21.13%"></span>
+      <span class="unvisited" style="top:22.54%"></span>
+      <span class="unvisited" style="top:23.94%"></span>
+      <span class="unvisited" style="top:26.76%"></span>
+      <span class="unvisited" style="top:43.66%"></span>
+      <span class="unvisited" style="bottom:49.30%"></span>
+      <span class="unvisited" style="bottom:25.35%"></span>
+      <span class="unvisited" style="bottom:8.45%"></span>
+      <span class="unvisited" style="bottom:7.04%"></span>
+      <span class="unvisited" style="bottom:5.63%"></span>
+      <span class="unvisited" style="bottom:2.82%"></span>
+      <span class="unvisited" style="bottom:1.41%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -75,23 +76,23 @@
 <a id="L34"></a><span > </span>
 <a id="L35"></a><span > </span>
 <a id="L36"></a><span class="unvisited"> </span>
-<a id="L37"></a><span class="unvisited"> </span>
-<a id="L38"></a><span class="unvisited"> </span>
+<a id="L37"></a><span class="visited"> </span>
+<a id="L38"></a><span class="visited"> </span>
 <a id="L39"></a><span > </span>
 <a id="L40"></a><span > </span>
 <a id="L41"></a><span class="visited"> </span>
 <a id="L42"></a><span class="visited"> </span>
 <a id="L43"></a><span class="visited"> </span>
 <a id="L44"></a><span class="visited"> </span>
-<a id="L45"></a><span class="unvisited"> </span>
+<a id="L45"></a><span class="visited"> </span>
 <a id="L46"></a><span class="visited"> </span>
 <a id="L47"></a><span class="visited"> </span>
 <a id="L48"></a><span class="visited"> </span>
-<a id="L49"></a><span > </span>
+<a id="L49"></a><span class="visited"> </span>
 <a id="L50"></a><span > </span>
 <a id="L51"></a><span > </span>
-<a id="L52"></a><span class="visited"> </span>
-<a id="L53"></a><span > </span>
+<a id="L52"></a><span > </span>
+<a id="L53"></a><span class="unvisited"> </span>
 <a id="L54"></a><span > </span>
 <a id="L55"></a><span > </span>
 <a id="L56"></a><span > </span>
@@ -102,13 +103,14 @@
 <a id="L61"></a><span > </span>
 <a id="L62"></a><span > </span>
 <a id="L63"></a><span > </span>
-<a id="L64"></a><span class="visited"> </span>
+<a id="L64"></a><span > </span>
 <a id="L65"></a><span class="unvisited"> </span>
 <a id="L66"></a><span class="unvisited"> </span>
-<a id="L67"></a><span class="visited"> </span>
+<a id="L67"></a><span class="unvisited"> </span>
 <a id="L68"></a><span class="visited"> </span>
-<a id="L69"></a><span class="visited"> </span>
-<a id="L70"></a><span > </span>
+<a id="L69"></a><span class="unvisited"> </span>
+<a id="L70"></a><span class="unvisited"> </span>
+<a id="L71"></a><span > </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -183,6 +185,7 @@
 <a href="#L68">68</a>
 <a href="#L69">69</a>
 <a href="#L70">70</a>
+<a href="#L71">71</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2023-2024, tepa46 *)
 
@@ -198,44 +201,45 @@ module StringMap = Map.Make (String)
   <span data-count="0">|</span> VBool of bool
   <span data-count="0">|</span> VList of value lis<span data-count="0">t</span>
   <span data-count="0">|</span> VTuple of value lis<span data-count="0">t</span>
-  <span data-count="0">|</span> VAdt of string * valu<span data-count="0">e</span>
+  <span data-count="0">|</span> VAdt of string * value optio<span data-count="0">n</span>
   <span data-count="0">|</span> VFun of pattern * decl_exp * en<span data-count="0">v</span>
   <span data-count="0">|</span> VLetRec of string * valu<span data-count="0">e</span>
 
 and env = value StringMap.t [@@deriving eq<span data-count="0">]</span>
 
-let vint num = <span data-count="190">V</span>Int num
-let vstring str = <span data-count="5">V</span>String str
-let vbool bool = <span data-count="66">V</span>Bool bool
-let vlist lst = <span data-count="18">V</span>List lst
-let vtuple tuple = <span data-count="18">V</span>Tuple tuple
-let vadt type_name type_value = <span data-count="22">V</span>Adt (type_name, type_value)
-let vfun pattern decl_exp env = <span data-count="91">V</span>Fun (pattern, decl_exp, env)
-let vletrec let_name let_value = <span data-count="4">V</span>LetRec (let_name, let_value)
+let vint num = <span data-count="204">V</span>Int num
+let vstring str = <span data-count="6">V</span>String str
+let vbool bool = <span data-count="82">V</span>Bool bool
+let vlist lst = <span data-count="60">V</span>List lst
+let vtuple tuple = <span data-count="22">V</span>Tuple tuple
+let vadt type_name type_value = <span data-count="62">V</span>Adt (type_name, type_value)
+let vfun pattern decl_exp env = <span data-count="129">V</span>Fun (pattern, decl_exp, env)
+let vletrec let_name let_value = <span data-count="9">V</span>LetRec (let_name, let_value)
 
 let rec pp_value_list fmt = function
   | <span data-count="0">[</span>] -&gt; ()
-  | <span data-count="3">[</span> h ] -&gt; fprintf fmt "%a" pp_value h
-  | <span data-count="3">h</span> :: tl -&gt; fprintf fmt "%a; %a" pp_value h pp_value_list tl
+  | <span data-count="7">[</span> h ] -&gt; fprintf fmt "%a" pp_value h
+  | <span data-count="7">h</span> :: tl -&gt; fprintf fmt "%a; %a" pp_value h pp_value_list tl
 
 and pp_value_tuple fmt = function
   | <span data-count="0">[</span>] -&gt; ()
-  | <span data-count="0">[</span> h ] -&gt; fprintf fmt "%a" pp_value h
-  | <span data-count="0">h</span> :: tl -&gt; fprintf fmt "%a, %a" pp_value h pp_value_tuple tl
+  | <span data-count="16">[</span> h ] -&gt; fprintf fmt "%a" pp_value h
+  | <span data-count="48">h</span> :: tl -&gt; fprintf fmt "%a, %a" pp_value h pp_value_tuple tl
 
 and pp_value fmt = function
-  | <span data-count="27">V</span>Int num -&gt; fprintf fmt "%d" num
-  | <span data-count="2">V</span>String str -&gt; fprintf fmt "%S" str
-  | <span data-count="22">V</span>Bool bool -&gt; fprintf fmt "%b" bool
-  | <span data-count="3">V</span>List lst -&gt; fprintf fmt "[%a]" pp_value_list lst
-  | <span data-count="0">V</span>Tuple tuple -&gt; fprintf fmt "(%a)" pp_value_tuple tuple
-  | <span data-count="3">V</span>Adt (type_name, type_value) -&gt; fprintf fmt "%S %a" type_name pp_value type_value
-  | <span data-count="32">V</span>Fun (_, _, _) -&gt; fprintf fmt "&lt;fun&gt;"
-  | <span data-count="4">V</span>LetRec (_, _) -&gt; fprintf fmt "&lt;let rec&gt;"
+  | <span data-count="47">V</span>Int num -&gt; fprintf fmt "%d" num
+  | <span data-count="3">V</span>String str -&gt; fprintf fmt "%S" str
+  | <span data-count="28">V</span>Bool bool -&gt; fprintf fmt "%b" bool
+  | <span data-count="7">V</span>List lst -&gt; fprintf fmt "[%a]" pp_value_list lst
+  | <span data-count="16">V</span>Tuple tuple -&gt; fprintf fmt "(%a)" pp_value_tuple tuple
+  | <span data-count="21">V</span>Adt (type_name, Some type_value) -&gt; fprintf fmt "%s %a" type_name pp_value type_value
+  | <span data-count="40">V</span>Adt (type_name, None) -&gt; fprintf fmt "%s" type_name
+  | <span data-count="35">V</span>Fun (_, _, _) -&gt; fprintf fmt "&lt;fun&gt;"
+  | <span data-count="6">V</span>LetRec (_, _) -&gt; fprintf fmt "&lt;let rec&gt;"
 ;;
 
 let pp_env fmt (environment : env) =
-  <span data-count="36">S</span>tringMap.iter (fun key data -&gt; <span data-count="82">f</span>printf fmt "%S: %a\n" key pp_value data) environment
+  <span data-count="0">S</span>tringMap.iter (fun key data -&gt; <span data-count="0">f</span>printf fmt "%S: %a\n" key pp_value data) environment
 ;;
 
 type failure =
@@ -247,12 +251,12 @@ type failure =
   | PatternMatchingError
 
 let pp_failure fmt = function
-  | <span data-count="1">U</span>nboundVariable str -&gt; fprintf fmt "UnboundVariable: %S" str
+  | <span data-count="0">U</span>nboundVariable str -&gt; fprintf fmt "UnboundVariable: %S" str
   | <span data-count="0">V</span>alueTypeError err_val -&gt; fprintf fmt "ValueTypeError: %a" pp_value err_val
   | <span data-count="0">E</span>xprTypeError err_expr -&gt; fprintf fmt "TypeError: %S" err_expr
   | <span data-count="1">D</span>ivisionByZeroError -&gt; fprintf fmt "DivisionByZeroError"
-  | <span data-count="1">E</span>xecError (val1, val2) -&gt; fprintf fmt "ExecError: %a # %a" pp_value val1 pp_value val2
-  | <span data-count="1">P</span>atternMatchingError -&gt; fprintf fmt "PatternMatchingError"
+  | <span data-count="0">E</span>xecError (val1, val2) -&gt; fprintf fmt "ExecError: %a # %a" pp_value val1 pp_value val2
+  | <span data-count="0">P</span>atternMatchingError -&gt; fprintf fmt "PatternMatchingError"
 ;;
 </code></pre>
       </div>
