@@ -3,18 +3,29 @@
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
 open HaskellLib
+open Interpreter
 
-let parse s =
+(* todo: change this abomination *)
+
+let pp_combined_output env environment =
+  let open Typedtree in
+  Base.Map.iteri env (fun ~key:v ~data:(S (_, ty)) ->
+    match Hashtbl.find_opt environment v with
+    | Some value -> Format.printf "%s :: %a => %a\n" v pp_type ty Env.pp_value_t value
+    | None -> Format.printf "%s :: %a => [No Value]\n" v pp_type ty)
+;;
+
+let run s =
   match Parser.parse s with
-  | Ok a -> a
+  | Ok a ->
+    (match Inferencer.run_prog a with
+     | Ok res ->
+       (match Eval.run_prog a with
+        | Result (Ok res2) -> pp_combined_output res res2)
+     | Error err -> Format.printf "%a" Inferencer.pp_error err)
   | Error err ->
     Format.printf "%s\n" err;
     exit 1
 ;;
 
-let () =
-  In_channel.(input_all stdin)
-  |> parse
-  |> Ast.show_prog
-  |> Out_channel.(output_string stdout)
-;;
+let () = In_channel.(input_all stdin) |> run
