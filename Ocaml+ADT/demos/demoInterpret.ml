@@ -12,8 +12,7 @@ let () =
      | Ok (adt_env, env) ->
        (match Interpreter.InterpreterResult.exec_program parse_result with
         | Ok res -> InterpreterResultPrinter.pp_interpret_res adt_env env res
-        | Error err ->
-          Format.printf "%a" InterpreterTypes.pp_failure err)
+        | Error err -> Format.printf "%a" InterpreterTypes.pp_failure err)
      | Error err -> Format.printf "%a" InferencerTypes.pp_inf_err err)
   | Error err -> Format.printf "Parsing error: %s\n" err
 ;;
