@@ -2,8 +2,8 @@
 <html lang="en">
   <head>
     <meta charset="utf-8"/>
-    <title>demoLists.ml &mdash; Coverage report</title>
-    <meta name="description" content="53.85% coverage in demos/demoLists.ml">
+    <title>demoTest.ml &mdash; Coverage report</title>
+    <meta name="description" content="53.85% coverage in demos/demoTest.ml">
     <link rel="stylesheet" href="../coverage.css"/>
     <script src="../highlight.pack.js"></script>
     <script>hljs.initHighlightingOnLoad();</script>
@@ -12,15 +12,15 @@
     <div id="header">
       <h1>
         <a href="../index.html">
-          <span class="dirname">demos/</span>demoLists.ml
+          <span class="dirname">demos/</span>demoTest.ml
         </a>
       </h1>
       <h2>53.85%</h2>
     </div>
     <div id="navbar">
-      <span class="unvisited" style="bottom:4.69%"></span>
-      <span class="unvisited" style="bottom:3.12%"></span>
-      <span class="unvisited" style="bottom:1.56%"></span>
+      <span class="unvisited" style="bottom:6.98%"></span>
+      <span class="unvisited" style="bottom:4.65%"></span>
+      <span class="unvisited" style="bottom:2.33%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -53,42 +53,21 @@
 <a id="L26"></a><span > </span>
 <a id="L27"></a><span > </span>
 <a id="L28"></a><span > </span>
-<a id="L29"></a><span > </span>
+<a id="L29"></a><span class="visited"> </span>
 <a id="L30"></a><span > </span>
-<a id="L31"></a><span > </span>
+<a id="L31"></a><span class="visited"> </span>
 <a id="L32"></a><span > </span>
-<a id="L33"></a><span > </span>
-<a id="L34"></a><span > </span>
+<a id="L33"></a><span class="visited"> </span>
+<a id="L34"></a><span class="visited"> </span>
 <a id="L35"></a><span > </span>
-<a id="L36"></a><span > </span>
-<a id="L37"></a><span > </span>
-<a id="L38"></a><span > </span>
+<a id="L36"></a><span class="visited"> </span>
+<a id="L37"></a><span class="visited"> </span>
+<a id="L38"></a><span class="visited"> </span>
 <a id="L39"></a><span > </span>
-<a id="L40"></a><span > </span>
-<a id="L41"></a><span > </span>
-<a id="L42"></a><span > </span>
+<a id="L40"></a><span class="unvisited"> </span>
+<a id="L41"></a><span class="unvisited"> </span>
+<a id="L42"></a><span class="unvisited"> </span>
 <a id="L43"></a><span > </span>
-<a id="L44"></a><span > </span>
-<a id="L45"></a><span > </span>
-<a id="L46"></a><span > </span>
-<a id="L47"></a><span > </span>
-<a id="L48"></a><span > </span>
-<a id="L49"></a><span > </span>
-<a id="L50"></a><span class="visited"> </span>
-<a id="L51"></a><span > </span>
-<a id="L52"></a><span class="visited"> </span>
-<a id="L53"></a><span > </span>
-<a id="L54"></a><span class="visited"> </span>
-<a id="L55"></a><span class="visited"> </span>
-<a id="L56"></a><span > </span>
-<a id="L57"></a><span class="visited"> </span>
-<a id="L58"></a><span class="visited"> </span>
-<a id="L59"></a><span class="visited"> </span>
-<a id="L60"></a><span > </span>
-<a id="L61"></a><span class="unvisited"> </span>
-<a id="L62"></a><span class="unvisited"> </span>
-<a id="L63"></a><span class="unvisited"> </span>
-<a id="L64"></a><span > </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -136,72 +115,30 @@
 <a href="#L41">41</a>
 <a href="#L42">42</a>
 <a href="#L43">43</a>
-<a href="#L44">44</a>
-<a href="#L45">45</a>
-<a href="#L46">46</a>
-<a href="#L47">47</a>
-<a href="#L48">48</a>
-<a href="#L49">49</a>
-<a href="#L50">50</a>
-<a href="#L51">51</a>
-<a href="#L52">52</a>
-<a href="#L53">53</a>
-<a href="#L54">54</a>
-<a href="#L55">55</a>
-<a href="#L56">56</a>
-<a href="#L57">57</a>
-<a href="#L58">58</a>
-<a href="#L59">59</a>
-<a href="#L60">60</a>
-<a href="#L61">61</a>
-<a href="#L62">62</a>
-<a href="#L63">63</a>
-<a href="#L64">64</a>
 </pre>
 <pre><code class="ocaml">open Miniml_lib
 open Format
 
 let input =
   {| 
-    let rec equal_lengths l1 l2 =
-      match l1, l2 with
-      | _ :: _, [] | [], _ :: _ -&gt; false
-      | [], [] -&gt; true
-      | _ :: tl1, _ :: tl2 -&gt; equal_lengths tl1 tl2
+    let rec fix f x = f (fix f) x
+
+    let map f p = 
+      match p with 
+      | a, b -&gt; (f a, f b)
     
-    let _ = [equal_lengths [1; 2] [1; 2; 3]; equal_lengths [1; 2] [3; 4]]
+    let fixpoly l = fix (fun self l -&gt; map (fun li x -&gt; li (self l) x) l) l
 
-    let rec zip_sum_all lst init =
-      match lst with
-      | (l, r) :: tl -&gt; zip_sum_all tl l + r + init
-      | [] -&gt; init 
+    let feven p n = match p with 
+      | o, e -&gt; if n = 0 then 1 else o (n - 1)
 
-    let _ = zip_sum_all [1, 2; 3, 4; 5, 6] 0
-
-    let rec even_length xs = match xs with 
-      | h :: h :: tl -&gt; even_length tl
-      | h :: [] -&gt; false
-      | _ -&gt; true
+    let fodd p n = match p with 
+      | e, o -&gt; if n = 0 then 0 else e (n - 1)
     
-    let _ = even_length [1; 2; 3; 4], even_length [1; 2; 3; 4; 5]
+    let tie = fixpoly (feven, fodd)
 
-    let rec fold_left lst f init = match lst with
-      | [] -&gt; init
-      | h :: tl -&gt; fold_left tl f (f init h)
-
-    let _ = fold_left [7; 5; 3] (fun acc x -&gt; if x * acc &gt; 100 then acc else x * acc) 1
-
-    let is_123 l =
-      match l with
-      | 1 :: 2 :: 3 :: []
-      | 1 :: 3 :: 2 :: []
-      | 2 :: 1 :: 3 :: []
-      | 2 :: 3 :: 1 :: []
-      | 3 :: 1 :: 2 :: []
-      | 3 :: 2 :: 1 :: [] -&gt; true
-      | _ -&gt; false
-    
-    let _ = is_123 [1; 2; 3], is_123 [3; 1; 2], is_123 [3; 2; 1]
+    let _ = match tie with 
+      | even, odd -&gt; odd 1
   |}
 ;;
 
@@ -215,8 +152,8 @@ let () =
           print<span data-count="1">f</span>
             "%a"
             (pp_print_lis<span data-count="1">t</span>
-               ~pp_sep:(fun _ _ -&gt; <span data-count="9">p</span>rintf "\n")
-               (fun _ res -&gt; <span data-count="10">p</span>rintf "%a" Interpret.pp_interpret_result res))
+               ~pp_sep:(fun _ _ -&gt; <span data-count="6">p</span>rintf "\n")
+               (fun _ res -&gt; <span data-count="7">p</span>rintf "%a" Interpret.pp_interpret_result res))
             rs
         | <span data-count="0">R</span>esult.Error err -&gt; print<span data-count="0">f</span> "Interpretation error: %a\n" Interpret.pp_error err)
      | <span data-count="0">R</span>esult.Error err -&gt; print<span data-count="0">f</span> "Typecheck error: %a\n" Typing.pp_error err)

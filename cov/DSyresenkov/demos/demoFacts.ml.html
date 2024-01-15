@@ -125,8 +125,8 @@ let () =
   match Parser.parse input with
   | <span data-count="1">R</span>esult.Ok tree -&gt;
     (match Infer.typecheck tree with
-     | <span data-count="1">R</span>esult.Ok tyenv -&gt;
-       (match Interpret.interpret ~tyenv tree with
+     | <span data-count="1">R</span>esult.Ok (_, program) -&gt;
+       (match Interpret.interpret program with
         | <span data-count="1">R</span>esult.Ok (_, rs) -&gt;
           print<span data-count="1">f</span>
             "%a"
@@ -134,9 +134,9 @@ let () =
                ~pp_sep:(fun _ _ -&gt; <span data-count="4">p</span>rintf "\n")
                (fun _ res -&gt; <span data-count="5">p</span>rintf "%a" Interpret.pp_interpret_result res))
             rs
-        | <span data-count="0">R</span>esult.Error err -&gt; print<span data-count="0">f</span> "Interpretation error: %a" Interpret.pp_error err)
-     | <span data-count="0">R</span>esult.Error err -&gt; print<span data-count="0">f</span> "Typecheck error: %a" Typing.pp_error err)
-  | <span data-count="0">_</span> -&gt; print<span data-count="0">f</span> "Parsing error"
+        | <span data-count="0">R</span>esult.Error err -&gt; print<span data-count="0">f</span> "Interpretation error: %a\n" Interpret.pp_error err)
+     | <span data-count="0">R</span>esult.Error err -&gt; print<span data-count="0">f</span> "Typecheck error: %a\n" Typing.pp_error err)
+  | <span data-count="0">_</span> -&gt; print<span data-count="0">f</span> "Parsing error\n"
 ;;
 </code></pre>
       </div>
