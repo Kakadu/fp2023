@@ -10,11 +10,14 @@ module Constr = struct
     type unify_eff = Unify_eff | Dont_unify_eff
     [@@deriving ord, sexp_of, show {with_path= false}]
 
+    type eff_eq = EffEq_Normal | EffEq_Late
+    [@@deriving ord, sexp_of, show {with_path= false}]
+
     type t =
       | TyEqConstr of Ty.t * Ty.t * unify_eff
-      | EffEqConstr of Eff.t * Eff.t
+      | EffEqConstr of Eff.t * Eff.t * eff_eq
       | ExplInstConstr of Ty.t * Scheme.t
-      | ImplInstConstr of Ty.t * VarSet.t * Ty.t
+      | ImplInstConstr of Ty.t * VarSet.t * Ty.t * Eff.t
     [@@deriving ord, sexp_of, show {with_path= false}]
   end
 
@@ -25,13 +28,11 @@ end
 module ConstrSet = struct
   type t = (Constr.t, Constr.comparator_witness) Set.t
 
-  let pp ppf set =
-    Set.to_list set |> List.map ~f:Constr.show |> String.concat ~sep:", "
-    |> Stdlib.Format.fprintf ppf "{%s}"
-
   let empty = Set.empty (module Constr)
   let singleton = Set.singleton (module Constr)
   let of_list = Set.of_list (module Constr)
+
+  let is_empty = Set.is_empty
 
   let add = Set.add
   let union = Set.union
