@@ -314,7 +314,7 @@ let%expect_test "Try_fin" =
   [%expect {| Result: (Init (Int_v 100)) |}]
 ;;
 
-let%expect_test "Try_fin" =
+let%expect_test "Try_catch_fin" =
   let s =
     {| 
       class A1 : Exception
@@ -349,31 +349,129 @@ let%expect_test "Try_fin" =
   [%expect {| Result: (Init (Int_v 101)) |}]
 ;;
 
-let%expect_test "Base factorial type check" =
+let%expect_test "Try_catch_fin + filter" =
   let s =
     {| 
+      class A1 : Exception
+      {
+        public int flag;
+        A1(int flag1){
+          flag = flag1;
+        }
+      }
+
       class Program
       {
-          int Fac(int num)
-          { 
-              if (num <= 1)
-              {
-                  return 1;
-              }
-              else 
-              {
-                  return num * Fac(num - 1);
-              }
-          }
-
-          static int Main(){
-              return Fac(4);
-          }
+        static int Main(){
+          int a = 0;
+            try
+            {
+              a = 10;
+              A1 exn = new A1(1);
+              throw exn;
+              a = 11;
+            } catch(A1 e) when (e.flag == 1){
+              a = a + 1;
+            } 
+            finally {
+              a = a + 100;
+            }
+          return a;
+        }
       }
-|}
+    |}
   in
   interpret_wrap s;
-  [%expect {| Result: (Init (Int_v 24)) |}]
+  [%expect {| Result: (Init (Int_v 101)) |}]
+;;
+
+let%expect_test "Try_catch_fin + filter + many catch" =
+  let s =
+    {| 
+      class A1 : Exception
+      {
+        public int flag;
+        A1(int flag1){
+          flag = flag1;
+        }
+      }
+
+      class A2 : Exception
+      {
+        public string msg;
+        A2(string info){
+          msg = info;
+        }
+      }
+
+      class Program
+      {
+        static int Main(){
+          int a = 0;
+            try
+            {
+              a = 1111111;
+              A2 exn1 = new A2("error");
+              throw exn1;
+            } catch(A1 e) when (e.flag == 1){
+              a = a + 1;
+            } catch(A2 e) when (e.msg == "error_no"){
+              a = a + 2;
+            } catch(A2 e) when (e.msg == "error"){
+              a = a + 3;
+            } 
+            finally {
+              a = a + 100;
+            }
+          return a;
+        }
+      }
+    |}
+  in
+  interpret_wrap s;
+  [%expect {| Result: (Init (Int_v 103)) |}]
+;;
+
+let%expect_test "Nested try_catch_fin " =
+  let s =
+    {| 
+      class A1 : Exception
+      {
+        public int flag;
+        A1(int flag1){
+          flag = flag1;
+        }
+      }
+
+      class Program
+      {
+        static int Main(){
+          int a = 0;
+            try
+            {
+              a = 10;
+
+              try{
+                throw new A1(2);
+              } catch {
+                throw new A1(1);
+              } finally {
+                a = -999;
+              }
+
+            } catch(A1 e){
+              a = a + 1;
+            } 
+            finally {
+              a = a + 100;
+            }
+          return a;
+        }
+      }
+    |}
+  in
+  interpret_wrap s;
+  [%expect {| Result: (Init (Int_v 101)) |}]
 ;;
 
 (* ******************** Negative ******************** *)

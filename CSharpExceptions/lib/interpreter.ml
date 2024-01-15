@@ -102,6 +102,7 @@ let eval_point_access e_id e1 lenv_kernel =
 let get_params_id (Params x) = List.map (fun (Var_decl (_, id)) -> id) x
 let is_const_v x = is_env_const x >>= is_init >>= is_base
 let is_inst_v x = is_env_const x >>= is_init >>= is_class
+let is_v x = is_env_const x >>= is_init >>= fun x -> is_base x <|> is_class x
 let is_not_null_const_v x = is_const_v x >>= is_not_null
 let is_not_null_inst_v x = is_inst_v x >>= is_not_null
 let get_int x = is_not_null_const_v x >>= is_int
@@ -186,7 +187,7 @@ let eval_bin_op op e1 e2 e_expr lenv =
     | 0 -> fail Division_by_zero
     | r2 -> return_n (op r1 r2) >>= ret_int
   in
-  let eq_op op_t = _op (fun x -> is_const_v x) op_t in
+  let eq_op op_t = _op (fun x -> is_v x) op_t in
   let eq_f op r1 r2 = return_n (op r1 r2) >>= ret_bool in
   let lazy_ f get_ = e_expr e1 >>= get_ >>= f (e_expr e1 >>= get_) in
   (* --- *)
@@ -272,25 +273,25 @@ let catch_eval ad e_stm lenv = function
              | None -> return_n true
              | Some e -> eval_expr e_stm lenv e >>= get_bool
            in
-           let eval_body config = function
-             | true -> config *> e_stm body *> return_n (Some ())
+           let eval_body = function
+             | true -> e_stm body *> return_n (Some ())
              | false -> return_n None
            in
            let accept_cond inh_cl_id cl_id =
              equal_ident inh_cl_id cl_id || equal_ident cl_id Base_lib.exception_name
            in
-           let is_inheritance cl_tp cl_id =
+           let is_inheritance cl_tp cl_id config =
              match cl_tp with
              | TVar (TNullable (TClass inh_cl_id)) when accept_cond inh_cl_id cl_id ->
-               eval_cond
+               config *> eval_cond
              | _ -> return_n false
            in
            read_inst_cl ad
            >>= fun (Code_ident cl_id) ->
            (match c_decl with
             | CDecl (Var_decl (cl_tp, name)) ->
-              let update_env = add_local_el name (IConst Not_init) in
-              is_inheritance cl_tp cl_id >>= eval_body update_env
+              let update_env = add_local_el name (IConst (Init (Instance_v ad))) in
+              is_inheritance cl_tp cl_id update_env >>= eval_body
             | CIdent inh_cl_id when accept_cond inh_cl_id cl_id ->
               (match e_opt with
                | Some _ ->
@@ -305,7 +306,7 @@ let catch_eval ad e_stm lenv = function
 ;;
 
 let eval_try_catch_fin e_stm lenv try_ catch_ fin_ =
-  let f_try =e_stm try_ in
+  let f_try = e_stm try_ in
   let f_catch ad = catch_eval ad e_stm lenv catch_ in
   let f_finally =
     match fin_ with
@@ -330,8 +331,7 @@ let eval_statement lenv_kernel stm =
        | Some e -> eval_expr e >>= is_assignable >>= fun x -> return_r (Some x))
     | Steps stm_l -> local @@ iter_left helper stm_l
     | SIf_else (e, stm, stm_opt) ->
-      local @@
-      eval_expr e
+      local @@ eval_expr e
       >>= get_bool
       >>= (function
       | true -> helper stm
@@ -374,7 +374,7 @@ let interpret_ genv cl_id =
   in
   let run_main lenv =
     (* >< TODO: lenv конвертировать в список *)
-    let lenv = [lenv] in
+    let lenv = [ lenv ] in
     let cl_decl_t = read_global cl_id >>= fun x -> return_n @@ get_class_decl x in
     let get_main cl_decl =
       let f res_opt el =
