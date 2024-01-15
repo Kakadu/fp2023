@@ -473,10 +473,16 @@ let check_program env program =
       return (env, ty)
     | _ -> return (env, ty)
   in
-  Base.List.fold_left program ~init:(return env) ~f:(fun env e ->
-    let* env = env in
-    let* env, _ = check_expr env e in
-    return env)
+  let* env, tys =
+    Base.List.fold_left
+      program
+      ~init:(return (env, []))
+      ~f:(fun acc e ->
+        let* env, program = acc in
+        let* env, ty = check_expr env e in
+        return (env, (e, ty) :: program))
+  in
+  return (env, List.rev tys)
 ;;
 
 let typecheck ?(env = TypeEnv.empty) program = run (check_program env program)

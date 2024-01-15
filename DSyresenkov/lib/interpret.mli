@@ -30,13 +30,11 @@ type error =
   | IncorrectType of value
   | NotAFunction of value
   | LetWithoutIn (** Inner let expressions without in are forbidden *)
-  | TypeInferFailed of Typing.error
   | NoMatchCase of value
   | NotImplemented
 
 val pp_error : Format.formatter -> error -> unit
 
 val interpret
-  :  ?tyenv:Infer.TypeEnv.t
-  -> program
+  :  (expr * Typing.ty) list
   -> (bindings * interpret_result list, error) Result.t

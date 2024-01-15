@@ -49,8 +49,8 @@ let () =
   match Parser.parse input with
   | Result.Ok tree ->
     (match Infer.typecheck tree with
-     | Result.Ok tyenv ->
-       (match Interpret.interpret ~tyenv tree with
+     | Result.Ok (_, program) ->
+       (match Interpret.interpret program with
         | Result.Ok (_, rs) ->
           printf
             "%a"
@@ -58,7 +58,7 @@ let () =
                ~pp_sep:(fun _ _ -> printf "\n")
                (fun _ res -> printf "%a" Interpret.pp_interpret_result res))
             rs
-        | Result.Error err -> printf "Interpretation error: %a" Interpret.pp_error err)
-     | Result.Error err -> printf "Typecheck error: %a" Typing.pp_error err)
-  | _ -> printf "Parsing error"
+        | Result.Error err -> printf "Interpretation error: %a\n" Interpret.pp_error err)
+     | Result.Error err -> printf "Typecheck error: %a\n" Typing.pp_error err)
+  | _ -> printf "Parsing error\n"
 ;;

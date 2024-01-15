@@ -2,18 +2,25 @@ open Miniml_lib
 open Format
 
 let input =
-  {|
-    let rec fact x = if x = 1 then x else x * fact (x - 1)
-
-    let factCPS x =  
-      let rec helper x k = if x = 1 then k 1 else helper (x - 1) (fun n -> n * k x) 
-    in helper x (fun x -> x)
-
+  {| 
     let rec fix f x = f (fix f) x
 
-    let factFix = fix (fun f x -> if x < 2 then x else x * f (x - 1))
+    let map f p = 
+      match p with 
+      | a, b -> (f a, f b)
+    
+    let fixpoly l = fix (fun self l -> map (fun li x -> li (self l) x) l) l
 
-    let _ = fact 5, factCPS 5, factFix 5 
+    let feven p n = match p with 
+      | o, e -> if n = 0 then 1 else o (n - 1)
+
+    let fodd p n = match p with 
+      | e, o -> if n = 0 then 0 else e (n - 1)
+    
+    let tie = fixpoly (feven, fodd)
+
+    let _ = match tie with 
+      | even, odd -> odd 1
   |}
 ;;
 

@@ -62,7 +62,6 @@ type error =
   | IncorrectType of value
   | NotAFunction of value
   | LetWithoutIn (** Inner let expressions without in are forbidden *)
-  | TypeInferFailed of Typing.error
   | NoMatchCase of value
   | NotImplemented
 
@@ -75,7 +74,6 @@ let pp_error fmt =
   | NotAFunction v ->
     fprintf fmt "Value %a is not a function; it can not be applied" pp_value v
   | LetWithoutIn -> fprintf fmt "Let without in is not allowed in this part of expression"
-  | TypeInferFailed err -> fprintf fmt "%a" Typing.pp_error err
   | NoMatchCase v ->
     fprintf fmt "Value %a can not be match with any case in this expression" pp_value v
   | NotImplemented -> Stdlib.print_endline "Expression contains not implemented features"
@@ -302,12 +300,7 @@ module Interpret (M : MONAD_FAIL) = struct
 
   open Infer
 
-  let interpret_expr ?(tyenv = TypeEnv.empty) env e =
-    let* ty =
-      match run_infer ~env:tyenv e with
-      | Result.Ok ty -> return ty
-      | Result.Error err -> fail (TypeInferFailed err)
-    in
+  let interpret_single env (e, ty) =
     match e with
     | ELet (_, id, e, None) ->
       let* v = eval env e in
@@ -318,14 +311,14 @@ module Interpret (M : MONAD_FAIL) = struct
       return (env, { id = None; value = v; ty })
   ;;
 
-  let interpret ?(tyenv = TypeEnv.empty) program =
+  let interpret program =
     let* env, rs =
       Base.List.fold_left
         program
         ~init:(return (Env.empty, []))
         ~f:(fun acc e ->
           let* env, rs = acc in
-          let* env, res = interpret_expr ~tyenv env e in
+          let* env, res = interpret_single env e in
           return (env, res :: rs))
     in
     return (env, List.rev rs)
