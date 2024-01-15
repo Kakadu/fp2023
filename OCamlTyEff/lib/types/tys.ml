@@ -162,7 +162,7 @@ end = struct
         fprintf ppf "%a" pp_tys tys
     | Ty_con (Ident name, args) -> (
         let pp_args =
-          pp_print_list pp ~pp_sep:(fun out () -> fprintf out ",@")
+          pp_print_list pp ~pp_sep:(fun out () -> fprintf out ", ")
         in
         match args with
         | [] ->
