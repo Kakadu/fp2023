@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>ast.ml &mdash; Coverage report</title>
+    <meta name="description" content="78.57% coverage in lib/ast.ml">
+    <link rel="stylesheet" href="../coverage.css"/>
+    <script src="../highlight.pack.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+  </head>
+  <body>
+    <div id="header">
+      <h1>
+        <a href="../index.html">
+          <span class="dirname">lib/</span>ast.ml
+        </a>
+      </h1>
+      <h2>78.57%</h2>
+    </div>
+    <div id="navbar">
+      <span class="some-visited" style="top:7.50%"></span>
+      <span class="some-visited" style="top:42.50%"></span>
+      <span class="unvisited" style="bottom:13.75%"></span>
+      <span class="unvisited" style="bottom:1.25%"></span>
+    </div>
+    <div id="report">
+      <div id="lines-layer">
+        <pre>
+<a id="L1"></a><span > </span>
+<a id="L2"></a><span > </span>
+<a id="L3"></a><span > </span>
+<a id="L4"></a><span > </span>
+<a id="L5"></a><span > </span>
+<a id="L6"></a><span class="some-visited"> </span>
+<a id="L7"></a><span > </span>
+<a id="L8"></a><span > </span>
+<a id="L9"></a><span class="visited"> </span>
+<a id="L10"></a><span > </span>
+<a id="L11"></a><span > </span>
+<a id="L12"></a><span > </span>
+<a id="L13"></a><span > </span>
+<a id="L14"></a><span > </span>
+<a id="L15"></a><span class="visited"> </span>
+<a id="L16"></a><span > </span>
+<a id="L17"></a><span > </span>
+<a id="L18"></a><span > </span>
+<a id="L19"></a><span > </span>
+<a id="L20"></a><span > </span>
+<a id="L21"></a><span > </span>
+<a id="L22"></a><span > </span>
+<a id="L23"></a><span > </span>
+<a id="L24"></a><span > </span>
+<a id="L25"></a><span > </span>
+<a id="L26"></a><span > </span>
+<a id="L27"></a><span > </span>
+<a id="L28"></a><span > </span>
+<a id="L29"></a><span > </span>
+<a id="L30"></a><span > </span>
+<a id="L31"></a><span class="visited"> </span>
+<a id="L32"></a><span > </span>
+<a id="L33"></a><span > </span>
+<a id="L34"></a><span class="some-visited"> </span>
+<a id="L35"></a><span > </span>
+<a id="L36"></a><span > </span>
+<a id="L37"></a><span class="visited"> </span>
+<a id="L38"></a><span > </span>
+<a id="L39"></a><span > </span>
+<a id="L40"></a><span > </span>
+<a id="L41"></a><span > </span>
+<a id="L42"></a><span > </span>
+<a id="L43"></a><span class="visited"> </span>
+<a id="L44"></a><span > </span>
+<a id="L45"></a><span > </span>
+<a id="L46"></a><span class="visited"> </span>
+<a id="L47"></a><span > </span>
+<a id="L48"></a><span > </span>
+<a id="L49"></a><span > </span>
+<a id="L50"></a><span > </span>
+<a id="L51"></a><span > </span>
+<a id="L52"></a><span class="visited"> </span>
+<a id="L53"></a><span > </span>
+<a id="L54"></a><span > </span>
+<a id="L55"></a><span > </span>
+<a id="L56"></a><span class="visited"> </span>
+<a id="L57"></a><span > </span>
+<a id="L58"></a><span > </span>
+<a id="L59"></a><span > </span>
+<a id="L60"></a><span class="visited"> </span>
+<a id="L61"></a><span > </span>
+<a id="L62"></a><span > </span>
+<a id="L63"></a><span > </span>
+<a id="L64"></a><span > </span>
+<a id="L65"></a><span > </span>
+<a id="L66"></a><span class="visited"> </span>
+<a id="L67"></a><span class="visited"> </span>
+<a id="L68"></a><span class="visited"> </span>
+<a id="L69"></a><span class="unvisited"> </span>
+<a id="L70"></a><span class="visited"> </span>
+<a id="L71"></a><span > </span>
+<a id="L72"></a><span > </span>
+<a id="L73"></a><span > </span>
+<a id="L74"></a><span > </span>
+<a id="L75"></a><span class="visited"> </span>
+<a id="L76"></a><span > </span>
+<a id="L77"></a><span > </span>
+<a id="L78"></a><span > </span>
+<a id="L79"></a><span class="unvisited"> </span>
+<a id="L80"></a><span class="visited"> </span>
+</pre>
+      </div>
+      <div id="text-layer">
+        <pre id="line-numbers">
+<a href="#L1"> 1</a>
+<a href="#L2"> 2</a>
+<a href="#L3"> 3</a>
+<a href="#L4"> 4</a>
+<a href="#L5"> 5</a>
+<a href="#L6"> 6</a>
+<a href="#L7"> 7</a>
+<a href="#L8"> 8</a>
+<a href="#L9"> 9</a>
+<a href="#L10">10</a>
+<a href="#L11">11</a>
+<a href="#L12">12</a>
+<a href="#L13">13</a>
+<a href="#L14">14</a>
+<a href="#L15">15</a>
+<a href="#L16">16</a>
+<a href="#L17">17</a>
+<a href="#L18">18</a>
+<a href="#L19">19</a>
+<a href="#L20">20</a>
+<a href="#L21">21</a>
+<a href="#L22">22</a>
+<a href="#L23">23</a>
+<a href="#L24">24</a>
+<a href="#L25">25</a>
+<a href="#L26">26</a>
+<a href="#L27">27</a>
+<a href="#L28">28</a>
+<a href="#L29">29</a>
+<a href="#L30">30</a>
+<a href="#L31">31</a>
+<a href="#L32">32</a>
+<a href="#L33">33</a>
+<a href="#L34">34</a>
+<a href="#L35">35</a>
+<a href="#L36">36</a>
+<a href="#L37">37</a>
+<a href="#L38">38</a>
+<a href="#L39">39</a>
+<a href="#L40">40</a>
+<a href="#L41">41</a>
+<a href="#L42">42</a>
+<a href="#L43">43</a>
+<a href="#L44">44</a>
+<a href="#L45">45</a>
+<a href="#L46">46</a>
+<a href="#L47">47</a>
+<a href="#L48">48</a>
+<a href="#L49">49</a>
+<a href="#L50">50</a>
+<a href="#L51">51</a>
+<a href="#L52">52</a>
+<a href="#L53">53</a>
+<a href="#L54">54</a>
+<a href="#L55">55</a>
+<a href="#L56">56</a>
+<a href="#L57">57</a>
+<a href="#L58">58</a>
+<a href="#L59">59</a>
+<a href="#L60">60</a>
+<a href="#L61">61</a>
+<a href="#L62">62</a>
+<a href="#L63">63</a>
+<a href="#L64">64</a>
+<a href="#L65">65</a>
+<a href="#L66">66</a>
+<a href="#L67">67</a>
+<a href="#L68">68</a>
+<a href="#L69">69</a>
+<a href="#L70">70</a>
+<a href="#L71">71</a>
+<a href="#L72">72</a>
+<a href="#L73">73</a>
+<a href="#L74">74</a>
+<a href="#L75">75</a>
+<a href="#L76">76</a>
+<a href="#L77">77</a>
+<a href="#L78">78</a>
+<a href="#L79">79</a>
+<a href="#L80">80</a>
+</pre>
+<pre><code class="ocaml">(** Copyright 2023-2024, Danil P *)
+
+(** SPDX-License-Identifier: LGPL-3.0-or-later *)
+
+(** Unique identifier typically representing variable names. *)
+<span data-count="0">t</span>ype id = <span data-count="127">s</span>tring [@@deriving show { with_path = false }]
+
+(** Type representing unary operations. *)
+<span data-count="1">t</span>ype un_op =
+  | Neg (** Negation operator [-a] *)
+  | Not (** Logical NOT [not a] *)
+[@@deriving show { with_path = false }]
+
+(** Type representing binary operations. *)
+<span data-count="29">t</span>ype bin_op =
+  | Add (** Addition [a + b] *)
+  | Sub (** Subtraction [a - b] *)
+  | Mul (** Multiplication [a * b] *)
+  | Div (** Division [a / b] *)
+  | And (** Logical AND [a &amp;&amp; b] *)
+  | Or (** Logical OR [a || b] *)
+  | Eq (** Equality [a == b] *)
+  | Neq (** Inequality [a /= b] *)
+  | Lt (** Less than [a &lt; b] *)
+  | Gt (** Greater than [a &gt; b] *)
+  | Leq (** Less than or equal to [a &lt;= b] *)
+  | Geq (** Greater than or equal to [a &gt;= b] *)
+[@@deriving show { with_path = false }]
+
+(** Type representing binding from patterns to expressions. *)
+<span data-count="1303">t</span>ype binding = <span data-count="86">p</span>at * expr [@@deriving show { with_path = false }]
+
+(** Type representing case alternative in pattern matching. *)
+<span data-count="0">a</span>nd alt = <span data-count="18">p</span>at * expr [@@deriving show { with_path = false }]
+
+(** Type representing possible expressions *)
+<span data-count="352">a</span>nd expr =
+  | ExprLit of lit (** Literal value [1], ['a'], ["abc"] *)
+  | ExprVar of id (** Variable reference [x] *)
+  | ExprFunc of binding (** Function/closure definition [\x -&gt; x + 1] *)
+  | ExprApp of expr * expr (** Function application [f x] *)
+  | ExprIf of expr * expr * expr (** If expression [if x then y else z] *)
+  | ExprTuple of <span data-count="53">e</span>xpr lis<span data-count="12">t</span> (** Tuple [(x, y)] *)
+  | ExprCons of expr * expr (** List construction [x:xs] *)
+  | ExprNil (** Empty list [[]] *)
+  | ExprCase of expr * <span data-count="44">a</span>lt lis<span data-count="13">t</span> (** Case expression [case (m,ys) of
+                          (0,_)       -&gt;  []
+                            (_,[])      -&gt;  []
+                            (n,x:xs)    -&gt;  x : take (n-1) xs] *)
+  | ExprBinOp of bin_op * expr * expr (** Binary operation [a + b] *)
+  | ExprUnOp of un_op * expr (** Unary operation [not a] *)
+  | ExprLet of <span data-count="23">b</span>inding lis<span data-count="5">t</span> * expr (** Local binding [let x = 1 in x + 2] *)
+[@@deriving show { with_path = false }]
+
+(** Type representing possible patterns in pattern-matching. *)
+<span data-count="175">a</span>nd pat =
+  | PatWild (** Wildcard pattern [_] *)
+  | PatVar of id (** Variable pattern [x] *)
+  | PatLit of lit (** Literal pattern [1], ['a'], ["abc"] *)
+  | PatTuple of <span data-count="80">p</span>at lis<span data-count="18">t</span> (** Tuple pattern [(x, y)] *)
+  | PatCons of pat * pat (** List constructor pattern [x:xs] *)
+  | PatNil (** Empty list pattern [[]] *)
+[@@deriving show { with_path = false }]
+
+(** Type representing literals *)
+<span data-count="114">a</span>nd lit =
+  | LitInt of in<span data-count="53">t</span>  (** Integer literal [7] *)
+  | LitBool of boo<span data-count="3">l</span> (** Boolean literal [True] *)
+  | LitChar of cha<span data-count="0">r</span>  (** Character literal ['a'] *)
+  | LitString of strin<span data-count="1">g</span>  (** String literal ["abc"] *)
+  (* | LitFloat of float  * Float literal [3.14] *)
+[@@deriving show { with_path = false }]
+
+(** Type representing a single declaration. *)
+<span data-count="34">a</span>nd decl = DeclLet of binding  (** Let binding declaration [x = 5] *)
+[@@deriving show { with_path = false }]
+
+(** Type representing a whole program as a series of declarations. *)
+<span data-count="0">a</span>nd prog = <span data-count="0">d</span>ecl lis<span data-count="0">t</span>  (** Series of declarations [x = 5; y = 3] *)
+[@@deriving show { with_path = false }<span data-count="1342">]</span>
+</code></pre>
+      </div>
+    </div>
+    <script src="../coverage.js"></script>
+  </body>
+</html>

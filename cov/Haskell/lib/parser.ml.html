@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>parser.ml &mdash; Coverage report</title>
+    <meta name="description" content="93.53% coverage in lib/parser.ml">
+    <link rel="stylesheet" href="../coverage.css"/>
+    <script src="../highlight.pack.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+  </head>
+  <body>
+    <div id="header">
+      <h1>
+        <a href="../index.html">
+          <span class="dirname">lib/</span>parser.ml
+        </a>
+      </h1>
+      <h2>93.53%</h2>
+    </div>
+    <div id="navbar">
+      <span class="some-visited" style="top:3.64%"></span>
+      <span class="some-visited" style="top:5.67%"></span>
+      <span class="unvisited" style="top:13.77%"></span>
+      <span class="unvisited" style="top:14.57%"></span>
+      <span class="unvisited" style="top:15.79%"></span>
+      <span class="unvisited" style="top:16.60%"></span>
+      <span class="unvisited" style="top:17.00%"></span>
+      <span class="unvisited" style="top:17.41%"></span>
+      <span class="unvisited" style="top:17.81%"></span>
+      <span class="unvisited" style="top:23.89%"></span>
+      <span class="unvisited" style="top:24.70%"></span>
+      <span class="unvisited" style="top:25.51%"></span>
+      <span class="unvisited" style="top:26.32%"></span>
+      <span class="unvisited" style="top:32.79%"></span>
+      <span class="some-visited" style="top:40.89%"></span>
+      <span class="unvisited" style="bottom:44.94%"></span>
+    </div>
+    <div id="report">
+      <div id="lines-layer">
+        <pre>
+<a id="L1"></a><span > </span>
+<a id="L2"></a><span > </span>
+<a id="L3"></a><span > </span>
+<a id="L4"></a><span > </span>
+<a id="L5"></a><span > </span>
+<a id="L6"></a><span > </span>
+<a id="L7"></a><span > </span>
+<a id="L8"></a><span > </span>
+<a id="L9"></a><span class="some-visited"> </span>
+<a id="L10"></a><span class="visited"> </span>
+<a id="L11"></a><span > </span>
+<a id="L12"></a><span > </span>
+<a id="L13"></a><span > </span>
+<a id="L14"></a><span class="some-visited"> </span>
+<a id="L15"></a><span class="visited"> </span>
+<a id="L16"></a><span > </span>
+<a id="L17"></a><span > </span>
+<a id="L18"></a><span > </span>
+<a id="L19"></a><span class="visited"> </span>
+<a id="L20"></a><span class="visited"> </span>
+<a id="L21"></a><span > </span>
+<a id="L22"></a><span > </span>
+<a id="L23"></a><span > </span>
+<a id="L24"></a><span class="visited"> </span>
+<a id="L25"></a><span class="visited"> </span>
+<a id="L26"></a><span > </span>
+<a id="L27"></a><span > </span>
+<a id="L28"></a><span > </span>
+<a id="L29"></a><span class="visited"> </span>
+<a id="L30"></a><span class="visited"> </span>
+<a id="L31"></a><span > </span>
+<a id="L32"></a><span > </span>
+<a id="L33"></a><span > </span>
+<a id="L34"></a><span class="unvisited"> </span>
+<a id="L35"></a><span class="visited"> </span>
+<a id="L36"></a><span class="unvisited"> </span>
+<a id="L37"></a><span class="visited"> </span>
+<a id="L38"></a><span class="visited"> </span>
+<a id="L39"></a><span class="unvisited"> </span>
+<a id="L40"></a><span class="visited"> </span>
+<a id="L41"></a><span class="unvisited"> </span>
+<a id="L42"></a><span class="unvisited"> </span>
+<a id="L43"></a><span class="unvisited"> </span>
+<a id="L44"></a><span class="unvisited"> </span>
+<a id="L45"></a><span class="visited"> </span>
+<a id="L46"></a><span > </span>
+<a id="L47"></a><span > </span>
+<a id="L48"></a><span > </span>
+<a id="L49"></a><span class="visited"> </span>
+<a id="L50"></a><span class="visited"> </span>
+<a id="L51"></a><span > </span>
+<a id="L52"></a><span > </span>
+<a id="L53"></a><span class="visited"> </span>
+<a id="L54"></a><span class="visited"> </span>
+<a id="L55"></a><span class="visited"> </span>
+<a id="L56"></a><span class="visited"> </span>
+<a id="L57"></a><span class="visited"> </span>
+<a id="L58"></a><span class="visited"> </span>
+<a id="L59"></a><span class="unvisited"> </span>
+<a id="L60"></a><span class="visited"> </span>
+<a id="L61"></a><span class="unvisited"> </span>
+<a id="L62"></a><span class="visited"> </span>
+<a id="L63"></a><span class="unvisited"> </span>
+<a id="L64"></a><span class="visited"> </span>
+<a id="L65"></a><span class="unvisited"> </span>
+<a id="L66"></a><span class="visited"> </span>
+<a id="L67"></a><span class="visited"> </span>
+<a id="L68"></a><span class="visited"> </span>
+<a id="L69"></a><span class="visited"> </span>
+<a id="L70"></a><span class="visited"> </span>
+<a id="L71"></a><span class="visited"> </span>
+<a id="L72"></a><span class="visited"> </span>
+<a id="L73"></a><span class="visited"> </span>
+<a id="L74"></a><span class="visited"> </span>
+<a id="L75"></a><span class="visited"> </span>
+<a id="L76"></a><span class="visited"> </span>
+<a id="L77"></a><span class="visited"> </span>
+<a id="L78"></a><span class="visited"> </span>
+<a id="L79"></a><span class="visited"> </span>
+<a id="L80"></a><span class="visited"> </span>
+<a id="L81"></a><span class="unvisited"> </span>
+<a id="L82"></a><span class="visited"> </span>
+<a id="L83"></a><span class="visited"> </span>
+<a id="L84"></a><span class="visited"> </span>
+<a id="L85"></a><span class="visited"> </span>
+<a id="L86"></a><span class="visited"> </span>
+<a id="L87"></a><span class="visited"> </span>
+<a id="L88"></a><span class="visited"> </span>
+<a id="L89"></a><span class="visited"> </span>
+<a id="L90"></a><span class="visited"> </span>
+<a id="L91"></a><span class="visited"> </span>
+<a id="L92"></a><span class="visited"> </span>
+<a id="L93"></a><span class="visited"> </span>
+<a id="L94"></a><span > </span>
+<a id="L95"></a><span > </span>
+<a id="L96"></a><span > </span>
+<a id="L97"></a><span class="visited"> </span>
+<a id="L98"></a><span class="visited"> </span>
+<a id="L99"></a><span class="visited"> </span>
+<a id="L100"></a><span class="visited"> </span>
+<a id="L101"></a><span class="some-visited"> </span>
+<a id="L102"></a><span class="visited"> </span>
+<a id="L103"></a><span class="visited"> </span>
+<a id="L104"></a><span class="visited"> </span>
+<a id="L105"></a><span class="visited"> </span>
+<a id="L106"></a><span class="visited"> </span>
+<a id="L107"></a><span class="visited"> </span>
+<a id="L108"></a><span > </span>
+<a id="L109"></a><span > </span>
+<a id="L110"></a><span > </span>
+<a id="L111"></a><span > </span>
+<a id="L112"></a><span class="visited"> </span>
+<a id="L113"></a><span class="visited"> </span>
+<a id="L114"></a><span class="visited"> </span>
+<a id="L115"></a><span class="visited"> </span>
+<a id="L116"></a><span class="visited"> </span>
+<a id="L117"></a><span > </span>
+<a id="L118"></a><span > </span>
+<a id="L119"></a><span > </span>
+<a id="L120"></a><span > </span>
+<a id="L121"></a><span class="visited"> </span>
+<a id="L122"></a><span > </span>
+<a id="L123"></a><span class="visited"> </span>
+<a id="L124"></a><span class="visited"> </span>
+<a id="L125"></a><span class="visited"> </span>
+<a id="L126"></a><span class="visited"> </span>
+<a id="L127"></a><span class="visited"> </span>
+<a id="L128"></a><span class="visited"> </span>
+<a id="L129"></a><span class="visited"> </span>
+<a id="L130"></a><span > </span>
+<a id="L131"></a><span class="visited"> </span>
+<a id="L132"></a><span class="visited"> </span>
+<a id="L133"></a><span class="visited"> </span>
+<a id="L134"></a><span class="visited"> </span>
+<a id="L135"></a><span class="visited"> </span>
+<a id="L136"></a><span class="unvisited"> </span>
+<a id="L137"></a><span class="visited"> </span>
+<a id="L138"></a><span > </span>
+<a id="L139"></a><span > </span>
+<a id="L140"></a><span > </span>
+<a id="L141"></a><span > </span>
+<a id="L142"></a><span > </span>
+<a id="L143"></a><span > </span>
+<a id="L144"></a><span > </span>
+<a id="L145"></a><span > </span>
+<a id="L146"></a><span class="visited"> </span>
+<a id="L147"></a><span class="visited"> </span>
+<a id="L148"></a><span class="visited"> </span>
+<a id="L149"></a><span class="visited"> </span>
+<a id="L150"></a><span class="visited"> </span>
+<a id="L151"></a><span class="visited"> </span>
+<a id="L152"></a><span class="visited"> </span>
+<a id="L153"></a><span class="visited"> </span>
+<a id="L154"></a><span class="visited"> </span>
+<a id="L155"></a><span class="visited"> </span>
+<a id="L156"></a><span class="visited"> </span>
+<a id="L157"></a><span class="visited"> </span>
+<a id="L158"></a><span class="visited"> </span>
+<a id="L159"></a><span > </span>
+<a id="L160"></a><span > </span>
+<a id="L161"></a><span class="visited"> </span>
+<a id="L162"></a><span > </span>
+<a id="L163"></a><span class="visited"> </span>
+<a id="L164"></a><span class="visited"> </span>
+<a id="L165"></a><span class="visited"> </span>
+<a id="L166"></a><span class="visited"> </span>
+<a id="L167"></a><span class="visited"> </span>
+<a id="L168"></a><span class="visited"> </span>
+<a id="L169"></a><span class="visited"> </span>
+<a id="L170"></a><span class="visited"> </span>
+<a id="L171"></a><span > </span>
+<a id="L172"></a><span class="visited"> </span>
+<a id="L173"></a><span class="visited"> </span>
+<a id="L174"></a><span class="visited"> </span>
+<a id="L175"></a><span class="visited"> </span>
+<a id="L176"></a><span class="visited"> </span>
+<a id="L177"></a><span > </span>
+<a id="L178"></a><span class="visited"> </span>
+<a id="L179"></a><span class="visited"> </span>
+<a id="L180"></a><span class="visited"> </span>
+<a id="L181"></a><span > </span>
+<a id="L182"></a><span class="visited"> </span>
+<a id="L183"></a><span > </span>
+<a id="L184"></a><span > </span>
+<a id="L185"></a><span > </span>
+<a id="L186"></a><span class="visited"> </span>
+<a id="L187"></a><span > </span>
+<a id="L188"></a><span > </span>
+<a id="L189"></a><span class="visited"> </span>
+<a id="L190"></a><span class="visited"> </span>
+<a id="L191"></a><span > </span>
+<a id="L192"></a><span > </span>
+<a id="L193"></a><span > </span>
+<a id="L194"></a><span class="visited"> </span>
+<a id="L195"></a><span > </span>
+<a id="L196"></a><span > </span>
+<a id="L197"></a><span > </span>
+<a id="L198"></a><span class="visited"> </span>
+<a id="L199"></a><span > </span>
+<a id="L200"></a><span > </span>
+<a id="L201"></a><span > </span>
+<a id="L202"></a><span > </span>
+<a id="L203"></a><span > </span>
+<a id="L204"></a><span > </span>
+<a id="L205"></a><span class="visited"> </span>
+<a id="L206"></a><span class="visited"> </span>
+<a id="L207"></a><span class="visited"> </span>
+<a id="L208"></a><span > </span>
+<a id="L209"></a><span class="visited"> </span>
+<a id="L210"></a><span class="visited"> </span>
+<a id="L211"></a><span > </span>
+<a id="L212"></a><span class="visited"> </span>
+<a id="L213"></a><span > </span>
+<a id="L214"></a><span > </span>
+<a id="L215"></a><span > </span>
+<a id="L216"></a><span > </span>
+<a id="L217"></a><span class="visited"> </span>
+<a id="L218"></a><span class="visited"> </span>
+<a id="L219"></a><span > </span>
+<a id="L220"></a><span class="visited"> </span>
+<a id="L221"></a><span class="visited"> </span>
+<a id="L222"></a><span class="visited"> </span>
+<a id="L223"></a><span class="visited"> </span>
+<a id="L224"></a><span > </span>
+<a id="L225"></a><span class="visited"> </span>
+<a id="L226"></a><span > </span>
+<a id="L227"></a><span > </span>
+<a id="L228"></a><span > </span>
+<a id="L229"></a><span class="visited"> </span>
+<a id="L230"></a><span > </span>
+<a id="L231"></a><span class="visited"> </span>
+<a id="L232"></a><span > </span>
+<a id="L233"></a><span > </span>
+<a id="L234"></a><span > </span>
+<a id="L235"></a><span > </span>
+<a id="L236"></a><span > </span>
+<a id="L237"></a><span > </span>
+<a id="L238"></a><span > </span>
+<a id="L239"></a><span class="visited"> </span>
+<a id="L240"></a><span > </span>
+<a id="L241"></a><span class="visited"> </span>
+<a id="L242"></a><span class="visited"> </span>
+<a id="L243"></a><span class="visited"> </span>
+<a id="L244"></a><span > </span>
+<a id="L245"></a><span > </span>
+<a id="L246"></a><span class="visited"> </span>
+<a id="L247"></a><span class="visited"> </span>
+</pre>
+      </div>
+      <div id="text-layer">
+        <pre id="line-numbers">
+<a href="#L1">  1</a>
+<a href="#L2">  2</a>
+<a href="#L3">  3</a>
+<a href="#L4">  4</a>
+<a href="#L5">  5</a>
+<a href="#L6">  6</a>
+<a href="#L7">  7</a>
+<a href="#L8">  8</a>
+<a href="#L9">  9</a>
+<a href="#L10"> 10</a>
+<a href="#L11"> 11</a>
+<a href="#L12"> 12</a>
+<a href="#L13"> 13</a>
+<a href="#L14"> 14</a>
+<a href="#L15"> 15</a>
+<a href="#L16"> 16</a>
+<a href="#L17"> 17</a>
+<a href="#L18"> 18</a>
+<a href="#L19"> 19</a>
+<a href="#L20"> 20</a>
+<a href="#L21"> 21</a>
+<a href="#L22"> 22</a>
+<a href="#L23"> 23</a>
+<a href="#L24"> 24</a>
+<a href="#L25"> 25</a>
+<a href="#L26"> 26</a>
+<a href="#L27"> 27</a>
+<a href="#L28"> 28</a>
+<a href="#L29"> 29</a>
+<a href="#L30"> 30</a>
+<a href="#L31"> 31</a>
+<a href="#L32"> 32</a>
+<a href="#L33"> 33</a>
+<a href="#L34"> 34</a>
+<a href="#L35"> 35</a>
+<a href="#L36"> 36</a>
+<a href="#L37"> 37</a>
+<a href="#L38"> 38</a>
+<a href="#L39"> 39</a>
+<a href="#L40"> 40</a>
+<a href="#L41"> 41</a>
+<a href="#L42"> 42</a>
+<a href="#L43"> 43</a>
+<a href="#L44"> 44</a>
+<a href="#L45"> 45</a>
+<a href="#L46"> 46</a>
+<a href="#L47"> 47</a>
+<a href="#L48"> 48</a>
+<a href="#L49"> 49</a>
+<a href="#L50"> 50</a>
+<a href="#L51"> 51</a>
+<a href="#L52"> 52</a>
+<a href="#L53"> 53</a>
+<a href="#L54"> 54</a>
+<a href="#L55"> 55</a>
+<a href="#L56"> 56</a>
+<a href="#L57"> 57</a>
+<a href="#L58"> 58</a>
+<a href="#L59"> 59</a>
+<a href="#L60"> 60</a>
+<a href="#L61"> 61</a>
+<a href="#L62"> 62</a>
+<a href="#L63"> 63</a>
+<a href="#L64"> 64</a>
+<a href="#L65"> 65</a>
+<a href="#L66"> 66</a>
+<a href="#L67"> 67</a>
+<a href="#L68"> 68</a>
+<a href="#L69"> 69</a>
+<a href="#L70"> 70</a>
+<a href="#L71"> 71</a>
+<a href="#L72"> 72</a>
+<a href="#L73"> 73</a>
+<a href="#L74"> 74</a>
+<a href="#L75"> 75</a>
+<a href="#L76"> 76</a>
+<a href="#L77"> 77</a>
+<a href="#L78"> 78</a>
+<a href="#L79"> 79</a>
+<a href="#L80"> 80</a>
+<a href="#L81"> 81</a>
+<a href="#L82"> 82</a>
+<a href="#L83"> 83</a>
+<a href="#L84"> 84</a>
+<a href="#L85"> 85</a>
+<a href="#L86"> 86</a>
+<a href="#L87"> 87</a>
+<a href="#L88"> 88</a>
+<a href="#L89"> 89</a>
+<a href="#L90"> 90</a>
+<a href="#L91"> 91</a>
+<a href="#L92"> 92</a>
+<a href="#L93"> 93</a>
+<a href="#L94"> 94</a>
+<a href="#L95"> 95</a>
+<a href="#L96"> 96</a>
+<a href="#L97"> 97</a>
+<a href="#L98"> 98</a>
+<a href="#L99"> 99</a>
+<a href="#L100">100</a>
+<a href="#L101">101</a>
+<a href="#L102">102</a>
+<a href="#L103">103</a>
+<a href="#L104">104</a>
+<a href="#L105">105</a>
+<a href="#L106">106</a>
+<a href="#L107">107</a>
+<a href="#L108">108</a>
+<a href="#L109">109</a>
+<a href="#L110">110</a>
+<a href="#L111">111</a>
+<a href="#L112">112</a>
+<a href="#L113">113</a>
+<a href="#L114">114</a>
+<a href="#L115">115</a>
+<a href="#L116">116</a>
+<a href="#L117">117</a>
+<a href="#L118">118</a>
+<a href="#L119">119</a>
+<a href="#L120">120</a>
+<a href="#L121">121</a>
+<a href="#L122">122</a>
+<a href="#L123">123</a>
+<a href="#L124">124</a>
+<a href="#L125">125</a>
+<a href="#L126">126</a>
+<a href="#L127">127</a>
+<a href="#L128">128</a>
+<a href="#L129">129</a>
+<a href="#L130">130</a>
+<a href="#L131">131</a>
+<a href="#L132">132</a>
+<a href="#L133">133</a>
+<a href="#L134">134</a>
+<a href="#L135">135</a>
+<a href="#L136">136</a>
+<a href="#L137">137</a>
+<a href="#L138">138</a>
+<a href="#L139">139</a>
+<a href="#L140">140</a>
+<a href="#L141">141</a>
+<a href="#L142">142</a>
+<a href="#L143">143</a>
+<a href="#L144">144</a>
+<a href="#L145">145</a>
+<a href="#L146">146</a>
+<a href="#L147">147</a>
+<a href="#L148">148</a>
+<a href="#L149">149</a>
+<a href="#L150">150</a>
+<a href="#L151">151</a>
+<a href="#L152">152</a>
+<a href="#L153">153</a>
+<a href="#L154">154</a>
+<a href="#L155">155</a>
+<a href="#L156">156</a>
+<a href="#L157">157</a>
+<a href="#L158">158</a>
+<a href="#L159">159</a>
+<a href="#L160">160</a>
+<a href="#L161">161</a>
+<a href="#L162">162</a>
+<a href="#L163">163</a>
+<a href="#L164">164</a>
+<a href="#L165">165</a>
+<a href="#L166">166</a>
+<a href="#L167">167</a>
+<a href="#L168">168</a>
+<a href="#L169">169</a>
+<a href="#L170">170</a>
+<a href="#L171">171</a>
+<a href="#L172">172</a>
+<a href="#L173">173</a>
+<a href="#L174">174</a>
+<a href="#L175">175</a>
+<a href="#L176">176</a>
+<a href="#L177">177</a>
+<a href="#L178">178</a>
+<a href="#L179">179</a>
+<a href="#L180">180</a>
+<a href="#L181">181</a>
+<a href="#L182">182</a>
+<a href="#L183">183</a>
+<a href="#L184">184</a>
+<a href="#L185">185</a>
+<a href="#L186">186</a>
+<a href="#L187">187</a>
+<a href="#L188">188</a>
+<a href="#L189">189</a>
+<a href="#L190">190</a>
+<a href="#L191">191</a>
+<a href="#L192">192</a>
+<a href="#L193">193</a>
+<a href="#L194">194</a>
+<a href="#L195">195</a>
+<a href="#L196">196</a>
+<a href="#L197">197</a>
+<a href="#L198">198</a>
+<a href="#L199">199</a>
+<a href="#L200">200</a>
+<a href="#L201">201</a>
+<a href="#L202">202</a>
+<a href="#L203">203</a>
+<a href="#L204">204</a>
+<a href="#L205">205</a>
+<a href="#L206">206</a>
+<a href="#L207">207</a>
+<a href="#L208">208</a>
+<a href="#L209">209</a>
+<a href="#L210">210</a>
+<a href="#L211">211</a>
+<a href="#L212">212</a>
+<a href="#L213">213</a>
+<a href="#L214">214</a>
+<a href="#L215">215</a>
+<a href="#L216">216</a>
+<a href="#L217">217</a>
+<a href="#L218">218</a>
+<a href="#L219">219</a>
+<a href="#L220">220</a>
+<a href="#L221">221</a>
+<a href="#L222">222</a>
+<a href="#L223">223</a>
+<a href="#L224">224</a>
+<a href="#L225">225</a>
+<a href="#L226">226</a>
+<a href="#L227">227</a>
+<a href="#L228">228</a>
+<a href="#L229">229</a>
+<a href="#L230">230</a>
+<a href="#L231">231</a>
+<a href="#L232">232</a>
+<a href="#L233">233</a>
+<a href="#L234">234</a>
+<a href="#L235">235</a>
+<a href="#L236">236</a>
+<a href="#L237">237</a>
+<a href="#L238">238</a>
+<a href="#L239">239</a>
+<a href="#L240">240</a>
+<a href="#L241">241</a>
+<a href="#L242">242</a>
+<a href="#L243">243</a>
+<a href="#L244">244</a>
+<a href="#L245">245</a>
+<a href="#L246">246</a>
+<a href="#L247">247</a>
+</pre>
+<pre><code class="ocaml">(** Copyright 2023-2024, Danil P *)
+
+(** SPDX-License-Identifier: LGPL-3.0-or-later *)
+
+open Angstrom
+open Ast
+
+let is_ws = function
+  | <span data-count="10815">'</span> ' | <span data-count="0">'</span>\t' -&gt; true
+  | <span data-count="27549">_</span> -&gt; false
+;;
+
+let is_eol = function
+  | <span data-count="196">'</span>\n' | <span data-count="0">'</span>\r' -&gt; true
+  | <span data-count="1588">_</span> -&gt; false
+;;
+
+let is_digit = function
+  | <span data-count="206">'</span>0' .. '9' -&gt; true
+  | <span data-count="2945">_</span> -&gt; false
+;;
+
+let is_alpha = function
+  | <span data-count="2151">'</span>a' .. 'z' -&gt; true
+  | <span data-count="1791">_</span> -&gt; false
+;;
+
+let is_capital = function
+  | <span data-count="4">'</span>A' .. 'Z' -&gt; true
+  | <span data-count="972">_</span> -&gt; false
+;;
+
+let is_keyword = function
+  | <span data-count="0">"</span>case"
+  | <span data-count="18">"</span>of"
+  | <span data-count="0">"</span>if"
+  | <span data-count="22">"</span>then"
+  | <span data-count="22">"</span>else"
+  | <span data-count="0">"</span>let"
+  | <span data-count="23">"</span>in"
+  | <span data-count="0">"</span>where"
+  | <span data-count="0">"</span>data"
+  | <span data-count="0">"</span>True"
+  | <span data-count="0">"</span>False" -&gt; true
+  | <span data-count="897">_</span> -&gt; false
+;;
+
+let chainl1 e op =
+  <span data-count="65">l</span>et rec go acc = <span data-count="2707">l</span>ift<span data-count="2707">2</span> (fun f x -&gt; <span data-count="308">f</span> acc x) op e &gt;&gt;<span data-count="2707">=</span> go &lt;|&gt; retur<span data-count="2707">n</span> acc in
+  e &gt;&gt;= fun init -&gt; <span data-count="2399">g</span>o init
+;;
+
+let rec chainr1 e op = <span data-count="127">e</span> &gt;&gt;= fun a -&gt; <span data-count="585">o</span>p &gt;&gt;<span data-count="585">=</span> (fun f -&gt; <span data-count="101">c</span>hainr<span data-count="101">1</span> e op &gt;&gt;| <span data-count="101">f</span> a) &lt;|&gt; retur<span data-count="585">n</span> a
+let pwspaces = take_whil<span data-count="14">e</span> is_ws
+let pwspaces1 = take_while<span data-count="14">1</span> is_ws
+let pspaces = take_whil<span data-count="14">e</span> (fun c -&gt; <span data-count="2077">i</span>s_w<span data-count="2077">s</span> <span data-count="650">c</span> || is_eol c)
+let pspaces1 = take_while<span data-count="14">1</span> (fun c -&gt; <span data-count="261">i</span>s_w<span data-count="261">s</span> <span data-count="155">c</span> || is_eol c)
+let ptoken p = <span data-count="307">p</span>wspaces *&gt; p
+let ptoken1 p = <span data-count="0">p</span>wspaces1 *&gt; p
+let pstoken s = <span data-count="172">p</span>token (strin<span data-count="172">g</span> s)
+let pstoken1 s = <span data-count="0">p</span>token1 (strin<span data-count="0">g</span> s)
+let ptoken_eol p = <span data-count="158">p</span>spaces *&gt; p
+let ptoken_eol1 p = <span data-count="0">p</span>spaces1 *&gt; p
+let pstoken_eol s = <span data-count="78">p</span>token_eol (strin<span data-count="78">g</span> s)
+let pstoken_eol1 s = <span data-count="0">p</span>token_eol1 (strin<span data-count="0">g</span> s)
+let between l r p = <span data-count="119">p</span>wspaces *<span data-count="119">&gt;</span> strin<span data-count="119">g</span> l *<span data-count="119">&gt;</span> p &lt;* pwspaces *<span data-count="119">&gt;</span> strin<span data-count="119">g</span> r
+let pparens p = <span data-count="65">b</span>etween "(" ")" p
+let pbrackets p = <span data-count="26">b</span>etween "[" "]" p
+let lit_int s = <span data-count="182">L</span>itInt (int_of_strin<span data-count="182">g</span> s)
+let lit_bool s = <span data-count="5">L</span>itBool (bool_of_strin<span data-count="5">g</span> @@ String.lowercase_asci<span data-count="5">i</span> s)
+let lit_str s = <span data-count="4">L</span>itString s
+let lit_char s = <span data-count="8">L</span>itChar s
+let expr_var id = <span data-count="433">E</span>xprVar id
+let expr_lit lit = <span data-count="188">E</span>xprLit lit
+let expr_fun args expr = <span data-count="164">L</span>ist.fold_right (fun p e -&gt; <span data-count="148">E</span>xprFunc (p, e)) args expr
+let expr_binop op lexp rexp = <span data-count="101">E</span>xprBinOp (op, lexp, rexp)
+let expr_tuple l = <span data-count="18">E</span>xprTuple l
+let expr_app o1 o2 = <span data-count="207">E</span>xprApp (o1, o2)
+let expr_cons e1 e2 = <span data-count="48">E</span>xprCons (e1, e2)
+let expr_list l = <span data-count="35">L</span>ist.fold_right (fun e1 e2 -&gt; <span data-count="34">E</span>xprCons (e1, e2)) l ExprNil
+let expr_nil _ = <span data-count="0">E</span>xprNil
+let expr_let dl e = <span data-count="13">E</span>xprLet (dl, e)
+let expr_if e1 e2 e3 = <span data-count="23">E</span>xprIf (e1, e2, e3)
+let expr_case e l = <span data-count="18">E</span>xprCase (e, l)
+let pat_var pat = <span data-count="444">P</span>atVar pat
+let pat_lit lit = <span data-count="10">P</span>atLit lit
+let pat_wild _ = <span data-count="20">P</span>atWild
+let pat_nil _ = <span data-count="17">P</span>atNil
+let pat_cons e1 e2 = <span data-count="53">P</span>atCons (e1, e2)
+let pat_list l = <span data-count="1">L</span>ist.fold_right (fun e1 e2 -&gt; <span data-count="3">P</span>atCons (e1, e2)) l PatNil
+let pat_tuple l = <span data-count="31">P</span>atTuple l
+let dec_let pat expr = <span data-count="134">D</span>eclLet (pat, expr)
+let bind p e = <span data-count="19">p</span>, e
+
+let pname =
+  pwspaces
+  *<span data-count="14">&gt;</span> lift<span data-count="14">2</span>
+       (fun hd tl -&gt; <span data-count="982">S</span>tring.mak<span data-count="982">e</span> 1 hd ^ tl)
+       (satisf<span data-count="14">y</span> (fun ch -&gt; <span data-count="1797">c</span>h = '_<span data-count="20">'</span> || is_alpha ch))
+       (take_whil<span data-count="14">e</span> (fun ch -&gt;
+          <span data-count="2189">c</span>h = '_<span data-count="24">'</span> || ch = '\'<span data-count="0">'</span> || is_alph<span data-count="2165">a</span> c<span data-count="1189">h</span> || is_capita<span data-count="976">l</span> c<span data-count="4">h</span> || is_digit ch))
+  &gt;&gt;<span data-count="14">=</span> fun s -&gt;
+  <span data-count="982">i</span>f is_keyword s
+  then <span data-count="85">f</span>ail "Parsing error: keyword reserved"
+  else <span data-count="897">i</span>f s = "_"
+  then <span data-count="20">f</span>ail "Parsing error: variable name can't be \"_\""
+  else <span data-count="877">r</span>eturn s
+;;
+
+(* Literals *)
+
+let pint = lit_int &lt;$<span data-count="14">&gt;</span> ptoke<span data-count="14">n</span> @@ take_while<span data-count="14">1</span> is_digit
+let pbool = lit_bool &lt;$<span data-count="14">&gt;</span> (pstoke<span data-count="14">n</span> "True" &lt;|<span data-count="14">&gt;</span> pstoke<span data-count="14">n</span> "False")
+let pstring = lit_str &lt;$<span data-count="14">&gt;</span> ptoke<span data-count="14">n</span> @@ betwee<span data-count="14">n</span> "\"" "\"" (take_til<span data-count="14">l</span> (Char.equa<span data-count="14">l</span> '"'))
+let pchar = lit_char &lt;$<span data-count="14">&gt;</span> ptoke<span data-count="14">n</span> @@ betwee<span data-count="14">n</span> "\'" "\'" any_char
+let plit = choic<span data-count="14">e</span> [ pint; pbool; pstring; pchar ]
+
+(* Patterns *)
+
+let ppat =
+  fi<span data-count="14">x</span>
+  @@ fun pattern -&gt;
+  <span data-count="13">l</span>et pplit = pat_lit &lt;$&gt; plit in
+  <span data-count="13">l</span>et pwild = pat_wild &lt;$&gt; pstoke<span data-count="13">n</span> "_" in
+  <span data-count="13">l</span>et ppvar = pat_var &lt;$&gt; pname in
+  <span data-count="13">l</span>et ppnil = pat_nil &lt;$&gt; pstoke<span data-count="13">n</span> "[]" in
+  <span data-count="13">l</span>et pplist =
+    let contents = sep_by (cha<span data-count="13">r</span> ',') @@ ptoke<span data-count="13">n</span> pattern in
+    <span data-count="13">p</span>bracket<span data-count="13">s</span> contents &gt;&gt;<span data-count="13">|</span> pat_list
+  in
+  let pcons = pparens @@ chainr<span data-count="13">1</span> pattern (pstoke<span data-count="13">n</span> ":" *<span data-count="13">&gt;</span> retur<span data-count="13">n</span> pat_cons) in
+  <span data-count="13">l</span>et pptuple =
+    let contents = sep_by (cha<span data-count="13">r</span> ',') @@ ptoke<span data-count="13">n</span> pattern in
+    <span data-count="13">p</span>paren<span data-count="13">s</span> contents
+    &gt;&gt;<span data-count="13">|</span> function
+    | <span data-count="0">[</span> x ] -&gt; x
+    | <span data-count="31">e</span>lems -&gt; pat_tuple elems
+  in
+  choice
+    ~failure_msg:"Parsing error: can't parse pattern"
+    [ ppnil; pptuple; pplit; ppvar; pwild; pplist; pcons ]
+;;
+
+(* Expressions *)
+
+let pbinop op op_constr = <span data-count="168">p</span>wspaces *<span data-count="168">&gt;</span> strin<span data-count="168">g</span> op *&gt; retur<span data-count="168">n</span> (expr_bino<span data-count="168">p</span> op_constr)
+let padd = pbino<span data-count="14">p</span> "+" Add
+let psub = pbino<span data-count="14">p</span> "-" Sub
+let pmul = pbino<span data-count="14">p</span> "*" Mul
+let pdiv = pbino<span data-count="14">p</span> "/" Div
+let pand = pbino<span data-count="14">p</span> "&amp;&amp;" And
+let por = pbino<span data-count="14">p</span> "||" Or
+let peq = pbino<span data-count="14">p</span> "==" Eq
+let pneq = pbino<span data-count="14">p</span> "/=" Neq
+let plt = pbino<span data-count="14">p</span> "&lt;" Lt
+let pgt = pbino<span data-count="14">p</span> "&gt;" Gt
+let pleq = pbino<span data-count="14">p</span> "&lt;=" Leq
+let pgeq = pbino<span data-count="14">p</span> "&gt;=" Geq
+
+let pexpr =
+  fi<span data-count="14">x</span>
+  @@ fun pexpr -&gt;
+  <span data-count="13">l</span>et pexprlit = expr_lit &lt;$&gt; plit in
+  <span data-count="13">l</span>et pexprvar = expr_var &lt;$&gt; pname in
+  <span data-count="13">l</span>et pexprtuple =
+    let contents = sep_by (cha<span data-count="13">r</span> ',') @@ ptoke<span data-count="13">n</span> pexpr in
+    <span data-count="13">p</span>paren<span data-count="13">s</span> contents
+    &gt;&gt;<span data-count="13">=</span> function
+    | <span data-count="90">[</span> x ] -&gt; return x
+    | <span data-count="18">e</span>lems -&gt; return (expr_tupl<span data-count="18">e</span> elems)
+  in
+  let pneg = cha<span data-count="13">r</span> '-' *<span data-count="13">&gt;</span> (pexprlit &lt;|<span data-count="13">&gt;</span> pparen<span data-count="13">s</span> pexpr) &gt;&gt;| fun e -&gt; <span data-count="2">E</span>xprUnOp (Neg, e) in
+  <span data-count="13">l</span>et penil = expr_nil &lt;$&gt; pstoke<span data-count="13">n</span> "[]" in
+  <span data-count="13">l</span>et pelist = expr_list &lt;$&gt; pbracket<span data-count="13">s</span> (sep_by (cha<span data-count="13">r</span> ','<span data-count="13">)</span> @@ ptoke<span data-count="13">n</span> pexpr) in
+  <span data-count="13">l</span>et pvalue =
+    choice [ pexprlit; pexprvar; pneg; pexprtuple; pelist; penil; pparen<span data-count="13">s</span> pexpr ]
+  in
+  <span data-count="13">l</span>et pebinop =
+    let app = chainl1 pvalue (retur<span data-count="13">n</span> expr_app) in
+    <span data-count="13">l</span>et pmuldiv =
+      let op = choice [ pmul; pdiv ] in
+      <span data-count="13">c</span>hainl<span data-count="13">1</span> app op
+    in
+    let paddsub =
+      let op = choice [ padd; psub ] in
+      <span data-count="13">c</span>hainl<span data-count="13">1</span> pmuldiv op
+    in
+    let pcons =
+      let op = pstoke<span data-count="13">n</span> ":" *&gt; retur<span data-count="13">n</span> expr_cons in
+      <span data-count="13">c</span>hainr<span data-count="13">1</span> paddsub op
+    in
+    let pcmpr =
+      let op = choice [ peq; pneq; pleq; pgeq; plt; pgt ] in
+      <span data-count="13">c</span>hainl<span data-count="13">1</span> pcons op
+    in
+    let pandor =
+      let op = choice [ pand; por ] in
+      <span data-count="13">c</span>hainl<span data-count="13">1</span> pcmpr op
+    in
+    pandor
+  in
+  let pif =
+    lift3
+      expr_if
+      (pstoken_eo<span data-count="13">l</span> "if" *<span data-count="13">&gt;</span> pexpr)
+      (pstoken_eo<span data-count="13">l</span> "then" *<span data-count="13">&gt;</span> pexpr)
+      (pstoken_eo<span data-count="13">l</span> "else" *<span data-count="13">&gt;</span> pexpr)
+  in
+  <span data-count="13">l</span>et plambda =
+    pstoke<span data-count="13">n</span> "\\" *&gt; lift<span data-count="13">2</span> expr_fun (man<span data-count="13">y</span> ppat) (pstoke<span data-count="13">n</span> "-&gt;" *<span data-count="13">&gt;</span> ptoke<span data-count="13">n</span> pexpr)
+  in
+  <span data-count="13">l</span>et plocbind =
+    let pbinds =
+      let pbind =
+        lift2
+          bind
+          (ptoken_eo<span data-count="13">l</span> ppat)
+          (lift<span data-count="13">2</span> expr_fun (man<span data-count="13">y</span> ppat) (pstoken_eo<span data-count="13">l</span> "=" *<span data-count="13">&gt;</span> ptoken_eo<span data-count="13">l</span> pexpr))
+      in
+      <span data-count="13">p</span>stoken_eo<span data-count="13">l</span> "let"
+      *<span data-count="13">&gt;</span> many<span data-count="13">1</span> (ptoken_eo<span data-count="13">l</span> pbind &lt;<span data-count="13">*</span> ptoken_eo<span data-count="13">l</span> @@ man<span data-count="13">y</span> @@ take_while<span data-count="13">1</span> is_eol)
+      &lt;<span data-count="13">*</span> pstoken_eo<span data-count="13">l</span> "in"
+      &lt;<span data-count="13">*</span> pspaces
+    in
+    lift<span data-count="13">2</span> expr_let pbinds pexpr
+  in
+  let pcase =
+    let pbranch =
+      lift2 (fun pattern expr -&gt; <span data-count="40">p</span>attern, expr) (pspaces1 *<span data-count="13">&gt;</span> ppat) (pstoke<span data-count="13">n</span> "-&gt;" *<span data-count="13">&gt;</span> pexpr)
+    in
+    <span data-count="13">l</span>ift<span data-count="13">2</span> expr_case (pstoke<span data-count="13">n</span> "case" *<span data-count="13">&gt;</span> pexpr &lt;<span data-count="13">*</span> pstoke<span data-count="13">n</span> "of") (man<span data-count="13">y</span> pbranch)
+  in
+  choice
+    ~failure_msg:"Parsing error: can't parse expression"
+    [ pcase; plocbind; pif; pebinop; plambda ]
+;;
+
+let pdecl =
+  lift<span data-count="14">2</span>
+    dec_let
+    (ptoken_eo<span data-count="14">l</span> ppat)
+    (lift<span data-count="14">2</span> expr_fun (man<span data-count="14">y</span> ppat) (pstoke<span data-count="14">n</span> "=" *<span data-count="14">&gt;</span> ptoken_eo<span data-count="14">l</span> pexpr))
+  &lt;<span data-count="14">*</span> pwspaces
+;;
+
+let pprog : prog t = many<span data-count="14">1</span> (ptoke<span data-count="14">n</span> pdecl &lt;<span data-count="14">*</span> ptoke<span data-count="14">n</span> @@ man<span data-count="14">y</span> @@ take_while<span data-count="14">1</span> is_eol)
+let parse s = <span data-count="54">p</span>arse_string ~consume:All pprog s
+</code></pre>
+      </div>
+    </div>
+    <script src="../coverage.js"></script>
+  </body>
+</html>
