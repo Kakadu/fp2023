@@ -20,13 +20,13 @@ let pp ?(parse = parse) str =
 
 let print_return str =
   match interpret str with
-  | Result.Ok x -> Format.eprintf "Programm return: %s" x.return
+  | Result.Ok x -> Format.printf "Programm return: %s" x.return
   | Result.Error x -> Format.eprintf "Error: %s" x
 ;;
 
 let print_output str =
   match interpret str with
   | Result.Ok x ->
-    Format.eprintf "Programm output: \n%s\nProgramm return: %s" x.stdout x.return
+    Format.printf "Programm output: \n%s\nProgramm return: %s" x.stdout x.return
   | Result.Error x -> Format.eprintf "Error: %s" x
 ;;
