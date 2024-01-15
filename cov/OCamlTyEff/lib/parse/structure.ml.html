@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>structure.ml &mdash; Coverage report</title>
+    <meta name="description" content="100.00% coverage in lib/parse/structure.ml">
+    <link rel="stylesheet" href="../../coverage.css"/>
+    <script src="../../highlight.pack.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+  </head>
+  <body>
+    <div id="header">
+      <h1>
+        <a href="../../index.html">
+          <span class="dirname">lib/parse/</span>structure.ml
+        </a>
+      </h1>
+      <h2>100.00%</h2>
+    </div>
+    <div id="navbar">
+    </div>
+    <div id="report">
+      <div id="lines-layer">
+        <pre>
+<a id="L1"></a><span > </span>
+<a id="L2"></a><span > </span>
+<a id="L3"></a><span > </span>
+<a id="L4"></a><span > </span>
+<a id="L5"></a><span > </span>
+<a id="L6"></a><span > </span>
+<a id="L7"></a><span > </span>
+<a id="L8"></a><span > </span>
+<a id="L9"></a><span > </span>
+<a id="L10"></a><span > </span>
+<a id="L11"></a><span > </span>
+<a id="L12"></a><span > </span>
+<a id="L13"></a><span > </span>
+<a id="L14"></a><span > </span>
+<a id="L15"></a><span > </span>
+<a id="L16"></a><span > </span>
+<a id="L17"></a><span class="visited"> </span>
+<a id="L18"></a><span class="visited"> </span>
+<a id="L19"></a><span > </span>
+<a id="L20"></a><span > </span>
+<a id="L21"></a><span > </span>
+<a id="L22"></a><span class="visited"> </span>
+<a id="L23"></a><span class="visited"> </span>
+<a id="L24"></a><span > </span>
+<a id="L25"></a><span > </span>
+<a id="L26"></a><span > </span>
+<a id="L27"></a><span > </span>
+<a id="L28"></a><span > </span>
+<a id="L29"></a><span > </span>
+<a id="L30"></a><span > </span>
+<a id="L31"></a><span > </span>
+<a id="L32"></a><span > </span>
+<a id="L33"></a><span > </span>
+<a id="L34"></a><span > </span>
+<a id="L35"></a><span class="visited"> </span>
+<a id="L36"></a><span > </span>
+<a id="L37"></a><span > </span>
+<a id="L38"></a><span > </span>
+<a id="L39"></a><span class="visited"> </span>
+</pre>
+      </div>
+      <div id="text-layer">
+        <pre id="line-numbers">
+<a href="#L1"> 1</a>
+<a href="#L2"> 2</a>
+<a href="#L3"> 3</a>
+<a href="#L4"> 4</a>
+<a href="#L5"> 5</a>
+<a href="#L6"> 6</a>
+<a href="#L7"> 7</a>
+<a href="#L8"> 8</a>
+<a href="#L9"> 9</a>
+<a href="#L10">10</a>
+<a href="#L11">11</a>
+<a href="#L12">12</a>
+<a href="#L13">13</a>
+<a href="#L14">14</a>
+<a href="#L15">15</a>
+<a href="#L16">16</a>
+<a href="#L17">17</a>
+<a href="#L18">18</a>
+<a href="#L19">19</a>
+<a href="#L20">20</a>
+<a href="#L21">21</a>
+<a href="#L22">22</a>
+<a href="#L23">23</a>
+<a href="#L24">24</a>
+<a href="#L25">25</a>
+<a href="#L26">26</a>
+<a href="#L27">27</a>
+<a href="#L28">28</a>
+<a href="#L29">29</a>
+<a href="#L30">30</a>
+<a href="#L31">31</a>
+<a href="#L32">32</a>
+<a href="#L33">33</a>
+<a href="#L34">34</a>
+<a href="#L35">35</a>
+<a href="#L36">36</a>
+<a href="#L37">37</a>
+<a href="#L38">38</a>
+<a href="#L39">39</a>
+</pre>
+<pre><code class="ocaml">(** Copyright 2023-2024, Danil S, Andrei *)
+
+(** SPDX-License-Identifier: MIT *)
+
+open! Base
+open Angstrom
+open Ast
+open Common
+open Expr
+open Pattern
+
+(**
+  [let P1 = E1 and P2 = E2 and ...]
+  [let rec ValName1 PArg1 = E1 and P1 = E2 and ...]
+*)
+let parse_str_let =
+  parse_let_bindin<span data-count="3">g</span> parse_expression parse_pattern
+  &gt;&gt;<span data-count="3">|</span> fun (rec_flag, bindings) -&gt; <span data-count="40">S</span>tr_value (rec_flag, bindings)
+
+(** [exception Some_exc] *)
+let parse_str_exception =
+  ws *<span data-count="3">&gt;</span> strin<span data-count="3">g</span> "exception" *<span data-count="3">&gt;</span> ws *<span data-count="3">&gt;</span> parse_capitalized_ident
+  &gt;&gt;<span data-count="3">|</span> fun name -&gt; <span data-count="5">S</span>tr_exception (Ident name)
+
+let parse_structure : structure t =
+  let parse_structure_item =
+    (*
+       XXX: parsing of let structure items seems to require 2 passes.
+       first it tries to parse let expression, fails when doesn't find `in`,
+       then starts all over again trying to parse let structure item.
+
+       we probably should use lookahead to check for `in`
+    *)
+    choice
+      [ (parse_expression &gt;&gt;<span data-count="3">|</span> fun e -&gt; <span data-count="80">S</span>tr_eval e)
+      ; parse_str_let
+      ; parse_str_exception ]
+  in
+  <span data-count="3">s</span>ep_b<span data-count="3">y</span> (ws *<span data-count="3">&gt;</span> optio<span data-count="3">n</span> () (strin<span data-count="3">g</span> ";;" *<span data-count="3">&gt;</span> retur<span data-count="3">n</span> ())) parse_structure_item &lt;<span data-count="3">*</span> ws
+</code></pre>
+      </div>
+    </div>
+    <script src="../../coverage.js"></script>
+  </body>
+</html>

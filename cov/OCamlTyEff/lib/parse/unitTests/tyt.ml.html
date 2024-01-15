@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>tyt.ml &mdash; Coverage report</title>
+    <meta name="description" content="100.00% coverage in lib/parse/unitTests/tyt.ml">
+    <link rel="stylesheet" href="../../../coverage.css"/>
+    <script src="../../../highlight.pack.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+  </head>
+  <body>
+    <div id="header">
+      <h1>
+        <a href="../../../index.html">
+          <span class="dirname">lib/parse/unitTests/</span>tyt.ml
+        </a>
+      </h1>
+      <h2>100.00%</h2>
+    </div>
+    <div id="navbar">
+    </div>
+    <div id="report">
+      <div id="lines-layer">
+        <pre>
+<a id="L1"></a><span > </span>
+<a id="L2"></a><span > </span>
+<a id="L3"></a><span > </span>
+<a id="L4"></a><span > </span>
+<a id="L5"></a><span > </span>
+<a id="L6"></a><span > </span>
+<a id="L7"></a><span > </span>
+<a id="L8"></a><span > </span>
+<a id="L9"></a><span > </span>
+<a id="L10"></a><span > </span>
+<a id="L11"></a><span > </span>
+<a id="L12"></a><span > </span>
+<a id="L13"></a><span class="visited"> </span>
+<a id="L14"></a><span class="visited"> </span>
+<a id="L15"></a><span > </span>
+<a id="L16"></a><span > </span>
+<a id="L17"></a><span class="visited"> </span>
+<a id="L18"></a><span class="visited"> </span>
+<a id="L19"></a><span > </span>
+<a id="L20"></a><span > </span>
+<a id="L21"></a><span class="visited"> </span>
+<a id="L22"></a><span class="visited"> </span>
+<a id="L23"></a><span > </span>
+<a id="L24"></a><span class="visited"> </span>
+<a id="L25"></a><span > </span>
+<a id="L26"></a><span > </span>
+<a id="L27"></a><span class="visited"> </span>
+<a id="L28"></a><span class="visited"> </span>
+<a id="L29"></a><span > </span>
+<a id="L30"></a><span > </span>
+<a id="L31"></a><span class="visited"> </span>
+<a id="L32"></a><span class="visited"> </span>
+<a id="L33"></a><span class="visited"> </span>
+<a id="L34"></a><span > </span>
+<a id="L35"></a><span > </span>
+<a id="L36"></a><span class="visited"> </span>
+<a id="L37"></a><span class="visited"> </span>
+<a id="L38"></a><span class="visited"> </span>
+</pre>
+      </div>
+      <div id="text-layer">
+        <pre id="line-numbers">
+<a href="#L1"> 1</a>
+<a href="#L2"> 2</a>
+<a href="#L3"> 3</a>
+<a href="#L4"> 4</a>
+<a href="#L5"> 5</a>
+<a href="#L6"> 6</a>
+<a href="#L7"> 7</a>
+<a href="#L8"> 8</a>
+<a href="#L9"> 9</a>
+<a href="#L10">10</a>
+<a href="#L11">11</a>
+<a href="#L12">12</a>
+<a href="#L13">13</a>
+<a href="#L14">14</a>
+<a href="#L15">15</a>
+<a href="#L16">16</a>
+<a href="#L17">17</a>
+<a href="#L18">18</a>
+<a href="#L19">19</a>
+<a href="#L20">20</a>
+<a href="#L21">21</a>
+<a href="#L22">22</a>
+<a href="#L23">23</a>
+<a href="#L24">24</a>
+<a href="#L25">25</a>
+<a href="#L26">26</a>
+<a href="#L27">27</a>
+<a href="#L28">28</a>
+<a href="#L29">29</a>
+<a href="#L30">30</a>
+<a href="#L31">31</a>
+<a href="#L32">32</a>
+<a href="#L33">33</a>
+<a href="#L34">34</a>
+<a href="#L35">35</a>
+<a href="#L36">36</a>
+<a href="#L37">37</a>
+<a href="#L38">38</a>
+</pre>
+<pre><code class="ocaml">(** Copyright 2023-2024, Danil S, Andrei *)
+
+(** SPDX-License-Identifier: MIT *)
+
+open! Base
+open Pp
+
+let parse_ty = Ty.parse_ty
+
+open Types
+
+let%expect_test "parse_var" =
+  <span data-count="1">p</span>p Ty.pp parse_ty "'some_type_var" ;
+  <span data-count="1">[</span>%expect {| 'some_type_var |}<span data-count="7">]</span>
+
+let%expect_test "parse_arrow" =
+  <span data-count="1">p</span>p Ty.pp parse_ty "'a -&gt; 'b -&gt; 'c" ;
+  <span data-count="1">[</span>%expect {| 'a -&gt; 'b -&gt; 'c |}<span data-count="7">]</span>
+
+let%expect_test "parse_tuple" =
+  <span data-count="1">p</span>p Ty.pp parse_ty "'a * 'b * 'c" ;
+  <span data-count="1">[</span>%expect {| 'a * 'b * 'c |}<span data-count="7">]</span>
+
+let%expect_test "parse_constr1" = <span data-count="1">p</span>p Ty.pp parse_ty "int" ; <span data-count="1">[</span>%expect {| int |}<span data-count="7">]</span>
+
+let%expect_test "parse_constr2" =
+  <span data-count="1">p</span>p Ty.pp parse_ty "int list" ;
+  <span data-count="1">[</span>%expect {| int list |}<span data-count="7">]</span>
+
+let%expect_test "parse_constr3" =
+  <span data-count="1">p</span>p Ty.pp parse_ty "(int, string) map" ;
+  <span data-count="1">[</span>%expect {|
+    (int, string) map |}<span data-count="7">]</span>
+
+let%expect_test "parse_constr4" =
+  <span data-count="1">p</span>p Ty.pp parse_ty "('a -&gt; int * (string, unit, 'b -&gt; 'c) foo bar) -&gt; e" ;
+  <span data-count="1">[</span>%expect {|
+    ('a -&gt; int * (string, unit, ('b -&gt; 'c)) foo bar) -&gt; e |}<span data-count="7">]</span>
+</code></pre>
+      </div>
+    </div>
+    <script src="../../../coverage.js"></script>
+  </body>
+</html>
