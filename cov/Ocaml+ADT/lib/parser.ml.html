@@ -936,7 +936,7 @@ let prvarname =
      | <span data-count="5747">"</span>" -&gt;
        take_while<span data-count="5747">1</span> (fun ch -&gt; <span data-count="9470">i</span>s_wildcar<span data-count="9470">d</span> c<span data-count="83">h</span> || is_cha<span data-count="9387">r</span> c<span data-count="3740">h</span> || is_digit ch)
        &gt;&gt;= fun str -&gt; <span data-count="1220">i</span>f is_keyword str then <span data-count="248">f</span>ail "invalid var name" else <span data-count="972">r</span>eturn str
-     | <span data-count="0">_</span> -&gt; fail @@ "invalid var name")
+     | <span data-count="0">_</span> -&gt; fail "invalid var name")
 ;;
 
 let prconstrname =
