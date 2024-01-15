@@ -69,15 +69,15 @@ let is_func x =
   | _ -> false
 ;;
 
-let is_func_id ctx id =
-  match get_obj_ctx_opt ctx id with
-  | Some x -> is_func x
-  | _ -> false
-;;
-
 let is_array x =
   match x.obj_type with
   | TArray _ -> true
+  | _ -> false
+;;
+
+let is_obj_by_id ctx cond id =
+  match get_obj_ctx_opt ctx id with
+  | Some x -> cond x
   | _ -> false
 ;;
 
@@ -92,7 +92,7 @@ let print_type ctx = function
   | VString _ -> "string"
   | VBool _ -> "boolean"
   | VUndefined -> "undefined"
-  | VObject x when is_func_id ctx x -> "function"
+  | VObject x when is_obj_by_id ctx is_func x -> "function"
   | VNull (*because that's how it is in JS*) | VObject _ -> "object"
 ;;
 
@@ -392,33 +392,37 @@ let array_find_by_index id array =
 ;;
 
 let obj_get_property ctx obj key =
+  let if_none a f =
+    a
+    >>= function
+    | Some _ as x -> return x
+    | None -> f
+  in
   match obj with
   | VObject id as obj_val ->
     let* obj = get_obj_ctx ctx id in
     let rec go = function
       | VObject x ->
         let* obj = get_obj_ctx ctx x in
-        (match find_in_vars_opt key obj.fields with
-         | None -> go obj.proto
-         | Some x -> return @@ Some x.value)
+        let find_in_vars () =
+          match find_in_vars_opt key obj.fields with
+          | None -> go obj.proto
+          | Some x -> return @@ Some x.value
+        in
+        (match obj.obj_type with
+         | TArray arr ->
+           if_none (return @@ array_find_by_index key arr) @@ find_in_vars ()
+         | _ -> find_in_vars ())
       | _ -> return None
     in
-    let if_none a f =
-      a
-      >>= function
-      | Some _ as x -> return x
-      | None -> f
+    let spec_proto =
+      if is_func obj
+      then go (vobject ctx.proto_objs.proto_fun)
+      else if is_array obj
+      then go (vobject ctx.proto_objs.proto_array)
+      else return None
     in
-    let find_in_objects =
-      match obj.obj_type with
-      | TFunPreset _ | TFunction _ | TArrowFunction _ ->
-        if_none (go obj_val) @@ go (vobject ctx.proto_objs.proto_fun)
-      | TArray arr ->
-        if_none (return @@ array_find_by_index key arr)
-        @@ go (vobject ctx.proto_objs.proto_array)
-      | TObject -> go obj_val
-    in
-    if_none find_in_objects (go (vobject ctx.proto_objs.proto_obj))
+    if_none (go obj_val) @@ if_none spec_proto @@ go (vobject ctx.proto_objs.proto_obj)
     >>| (function
      | Some x -> x
      | None -> VUndefined)
@@ -480,7 +484,7 @@ let ctx_get_var ctx id =
   go ctx.cur_lex_env
 ;;
 
-(**In this interpretator all context change what valueOf make will be discard*)
+(**All context change what valueOf makes will be discarded!*)
 let rec get_primitive ctx = function
   | VObject id as x ->
     let* f = obj_get_property ctx x "valueOf" in
@@ -496,7 +500,12 @@ and to_string ctx v =
   | VBool false -> return "false"
   | VNull -> return "null"
   | VUndefined -> return "undefined"
-  | VObject x when is_func_id ctx x -> ensup "conversion func to str"
+  | VObject x when is_obj_by_id ctx is_array x ->
+    let* obj = get_obj_ctx ctx x in
+    get_array_list obj
+    >>= map (fun el -> Option.fold ~none:(return "") ~some:(to_string ctx) el)
+    >>| fun array -> String.concat "," array
+  | VObject x when is_obj_by_id ctx is_func x -> ensup "conversion func to str"
   | VObject _ -> return "[object Object]"
   | _ as t -> etyp ("cannot cast " ^ print_type ctx t ^ " to string")
 
@@ -766,7 +775,7 @@ and ctx_change_bop ctx op a b : (ctx * value) t =
       | ctx, [ obj_val; prop; b ] ->
         let* id, obj = get_obj obj_val in
         let* prop = to_string ctx prop in
-        let get_new_obj =
+        let+ new_obj =
           match prop with
           | "__proto__" ->
             if obj_val = b
@@ -784,7 +793,7 @@ and ctx_change_bop ctx op a b : (ctx * value) t =
                in
                return { obj with fields })
         in
-        get_new_obj >>| fun obj -> { ctx with objs = IntMap.add id obj ctx.objs }, b
+        { ctx with objs = IntMap.add id new_obj ctx.objs }, b
       | _ -> error @@ InternalError "Error in assignment to object field"
     in
     match a with

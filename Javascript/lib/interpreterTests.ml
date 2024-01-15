@@ -1686,6 +1686,18 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
+  print_return "return [4, \"10\", { an : 11 }]+\"\"";
+  [%expect {|
+    Programm return: 4,10,[object Object] |}]
+;;
+
+let%expect_test _ =
+  print_return "return []+\"\"";
+  [%expect {|
+    Programm return: |}]
+;;
+
+let%expect_test _ =
   print_return "let a = [4, \"10\", { an : 11 }]; a.ab = \"something\"; return a";
   [%expect {|
     Programm return: [ 4, '10', { an: 11 }, ab: 'something' ] |}]
