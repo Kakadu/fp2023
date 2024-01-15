@@ -189,11 +189,11 @@ let type_var x = <span data-count="0">T</span>Var x
 let tprim_int = TPrim "int"
 let tprim_bool = TPrim "bool"
 let tprim_string = TPrim "string"
-let tarr l r = <span data-count="229">T</span>Arr (l, r)
+let tarr l r = <span data-count="237">T</span>Arr (l, r)
 let ( @-&gt; ) = tarr
-let tlist ty = <span data-count="169">T</span>List ty
+let tlist ty = <span data-count="181">T</span>List ty
 let ttuple ty_lst = <span data-count="57">T</span>Tuple ty_lst
-let tadt str1 = <span data-count="161">T</span>Adt str1
+let tadt str1 = <span data-count="165">T</span>Adt str1
 
 let rec pp_ty_tuple fmt = function
   | <span data-count="0">[</span>] -&gt; ()
@@ -201,15 +201,15 @@ let rec pp_ty_tuple fmt = function
   | <span data-count="28">h</span> :: tl -&gt; fprintf fmt "%a * %a" pp_ty h pp_ty_tuple tl
 
 and pp_ty fmt = function
-  | <span data-count="67">T</span>Var num -&gt; fprintf fmt "'%d" num
-  | <span data-count="200">T</span>Prim str -&gt; fprintf fmt "%s" str
-  | <span data-count="96">T</span>Arr (ty1, ty2) -&gt;
+  | <span data-count="71">T</span>Var num -&gt; fprintf fmt "'%d" num
+  | <span data-count="204">T</span>Prim str -&gt; fprintf fmt "%s" str
+  | <span data-count="100">T</span>Arr (ty1, ty2) -&gt;
     (match ty1, ty2 with
      | <span data-count="10">T</span>Arr (_, _), _ -&gt; fprintf fmt "(%a) -&gt; %a" pp_ty ty1 pp_ty ty2
-     | <span data-count="86">_</span> -&gt; fprintf fmt "%a -&gt; %a" pp_ty ty1 pp_ty ty2)
+     | <span data-count="90">_</span> -&gt; fprintf fmt "%a -&gt; %a" pp_ty ty1 pp_ty ty2)
   | <span data-count="19">T</span>Tuple ty_lst -&gt; fprintf fmt "%a" pp_ty_tuple ty_lst
   | <span data-count="39">T</span>List ty1 -&gt; fprintf fmt "%a list" pp_ty ty1
-  | <span data-count="86">T</span>Adt str1 -&gt; fprintf fmt "%s" str1
+  | <span data-count="88">T</span>Adt str1 -&gt; fprintf fmt "%s" str1
 ;;
 
 type scheme = Scheme of VarSet.t * ty

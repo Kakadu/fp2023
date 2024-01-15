@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8"/>
     <title>parser.ml &mdash; Coverage report</title>
-    <meta name="description" content="86.62% coverage in lib/parser.ml">
+    <meta name="description" content="86.65% coverage in lib/parser.ml">
     <link rel="stylesheet" href="../coverage.css"/>
     <script src="../highlight.pack.js"></script>
     <script>hljs.initHighlightingOnLoad();</script>
@@ -15,7 +15,7 @@
           <span class="dirname">lib/</span>parser.ml
         </a>
       </h1>
-      <h2>86.62%</h2>
+      <h2>86.65%</h2>
     </div>
     <div id="navbar">
       <span class="unvisited" style="top:2.48%"></span>
@@ -846,7 +846,7 @@ let is_keyword = function
   | <span data-count="0">"</span>initializer"
   | <span data-count="0">"</span>land"
   | <span data-count="0">"</span>lazy"
-  | <span data-count="137">"</span>let"
+  | <span data-count="140">"</span>let"
   | <span data-count="0">"</span>lor"
   | <span data-count="0">"</span>lsl"
   | <span data-count="0">"</span>lsr"
@@ -876,305 +876,305 @@ let is_keyword = function
   | <span data-count="0">"</span>when"
   | <span data-count="0">"</span>while"
   | <span data-count="33">"</span>with" -&gt; true
-  | <span data-count="1261">_</span> -&gt; false
+  | <span data-count="1299">_</span> -&gt; false
 ;;
 
 let letdecl a b d = <span data-count="8">a</span>, b, d
-let totuple a b = <span data-count="62">l</span>ift2 (fun a b -&gt; <span data-count="172">a</span>, b) a b
+let totuple a b = <span data-count="73">l</span>ift2 (fun a b -&gt; <span data-count="176">a</span>, b) a b
 
 let chainl1 e op =
-  <span data-count="330">l</span>et rec go acc = <span data-count="7996">l</span>ift<span data-count="7996">2</span> (fun f x -&gt; <span data-count="264">f</span> acc x) op e &gt;&gt;<span data-count="7996">=</span> go &lt;|&gt; retur<span data-count="7996">n</span> acc in
-  e &gt;&gt;= fun init -&gt; <span data-count="7732">g</span>o init
+  <span data-count="385">l</span>et rec go acc = <span data-count="8240">l</span>ift<span data-count="8240">2</span> (fun f x -&gt; <span data-count="273">f</span> acc x) op e &gt;&gt;<span data-count="8240">=</span> go &lt;|&gt; retur<span data-count="8240">n</span> acc in
+  e &gt;&gt;= fun init -&gt; <span data-count="7967">g</span>o init
 ;;
 
-let rec chainr1 e op = <span data-count="221">e</span> &gt;&gt;= fun a -&gt; <span data-count="2354">o</span>p &gt;&gt;<span data-count="2354">=</span> (fun f -&gt; <span data-count="92">c</span>hainr<span data-count="92">1</span> e op &gt;&gt;| <span data-count="92">f</span> a) &lt;|&gt; retur<span data-count="2354">n</span> a
+let rec chainr1 e op = <span data-count="247">e</span> &gt;&gt;= fun a -&gt; <span data-count="2422">o</span>p &gt;&gt;<span data-count="2422">=</span> (fun f -&gt; <span data-count="98">c</span>hainr<span data-count="98">1</span> e op &gt;&gt;| <span data-count="98">f</span> a) &lt;|&gt; retur<span data-count="2422">n</span> a
 
 let is_space = function
-  | <span data-count="42364">'</span> ' | <span data-count="0">'</span>\t' | <span data-count="5574">'</span>\n' | <span data-count="0">'</span>\r' -&gt; true
-  | <span data-count="54562">_</span> -&gt; false
+  | <span data-count="43190">'</span> ' | <span data-count="0">'</span>\t' | <span data-count="5814">'</span>\n' | <span data-count="0">'</span>\r' -&gt; true
+  | <span data-count="55608">_</span> -&gt; false
 ;;
 
 let is_wildcard = function
   | <span data-count="148">'</span>_' -&gt; true
-  | <span data-count="21351">_</span> -&gt; false
+  | <span data-count="21704">_</span> -&gt; false
 ;;
 
 let is_lchar = function
-  | <span data-count="6166">'</span>a' .. 'z' -&gt; true
-  | <span data-count="11434">_</span> -&gt; false
+  | <span data-count="6278">'</span>a' .. 'z' -&gt; true
+  | <span data-count="11606">_</span> -&gt; false
 ;;
 
 let is_uchar = function
-  | <span data-count="335">'</span>A' .. 'Z' -&gt; true
-  | <span data-count="13466">_</span> -&gt; false
+  | <span data-count="341">'</span>A' .. 'Z' -&gt; true
+  | <span data-count="13677">_</span> -&gt; false
 ;;
 
-let is_char ch = <span data-count="12756">i</span>s_lcha<span data-count="12756">r</span> c<span data-count="4593">h</span> || is_uchar ch
+let is_char ch = <span data-count="12970">i</span>s_lcha<span data-count="12970">r</span> c<span data-count="4685">h</span> || is_uchar ch
 
 let is_digit = function
-  | <span data-count="558">'</span>0' .. '9' -&gt; true
-  | <span data-count="22041">_</span> -&gt; false
+  | <span data-count="570">'</span>0' .. '9' -&gt; true
+  | <span data-count="22382">_</span> -&gt; false
 ;;
 
-let spaces = take_whil<span data-count="32">e</span> is_space
-let spaces1 = take_while<span data-count="32">1</span> is_space
-let pchunk p = <span data-count="1725">s</span>paces *&gt; p
-let check_chunk s = <span data-count="1605">p</span>chunk @@ strin<span data-count="1605">g</span> s
-let pparens p = <span data-count="69">c</span>heck_chun<span data-count="69">k</span> "(" *<span data-count="69">&gt;</span> p &lt;* check_chun<span data-count="69">k</span> ")"
+let spaces = take_whil<span data-count="38">e</span> is_space
+let spaces1 = take_while<span data-count="38">1</span> is_space
+let pchunk p = <span data-count="2026">s</span>paces *&gt; p
+let check_chunk s = <span data-count="1886">p</span>chunk @@ strin<span data-count="1886">g</span> s
+let pparens p = <span data-count="79">c</span>heck_chun<span data-count="79">k</span> "(" *<span data-count="79">&gt;</span> p &lt;* check_chun<span data-count="79">k</span> ")"
 
 (* variable and constructor parsers *)
 
-let prstring = check_chun<span data-count="32">k</span> "\"" *<span data-count="32">&gt;</span> take_whil<span data-count="32">e</span> (fun ch -&gt; <span data-count="66">c</span>h != '\"') &lt;<span data-count="32">*</span> check_chun<span data-count="32">k</span> "\""
-let prnumber = int_of_string &lt;$<span data-count="32">&gt;</span> take_while<span data-count="32">1</span> is_digit
-let prbool = check_chun<span data-count="32">k</span> "true" *<span data-count="32">&gt;</span> retur<span data-count="32">n</span> true &lt;|<span data-count="32">&gt;</span> check_chun<span data-count="32">k</span> "false" *<span data-count="32">&gt;</span> retur<span data-count="32">n</span> false
-let premptylist = check_chun<span data-count="32">k</span> "[]" *<span data-count="32">&gt;</span> retur<span data-count="32">n</span> true
+let prstring = check_chun<span data-count="38">k</span> "\"" *<span data-count="38">&gt;</span> take_whil<span data-count="38">e</span> (fun ch -&gt; <span data-count="66">c</span>h != '\"') &lt;<span data-count="38">*</span> check_chun<span data-count="38">k</span> "\""
+let prnumber = int_of_string &lt;$<span data-count="38">&gt;</span> take_while<span data-count="38">1</span> is_digit
+let prbool = check_chun<span data-count="38">k</span> "true" *<span data-count="38">&gt;</span> retur<span data-count="38">n</span> true &lt;|<span data-count="38">&gt;</span> check_chun<span data-count="38">k</span> "false" *<span data-count="38">&gt;</span> retur<span data-count="38">n</span> false
+let premptylist = check_chun<span data-count="38">k</span> "[]" *<span data-count="38">&gt;</span> retur<span data-count="38">n</span> true
 
 let prvarname =
-  pchun<span data-count="32">k</span>
-    (take_whil<span data-count="32">e</span> (fun ch -&gt; <span data-count="5638">i</span>s_ucha<span data-count="5638">r</span> c<span data-count="0">h</span> || is_digi<span data-count="5638">t</span> c<span data-count="0">h</span> || is_wildcard ch)
-     &gt;&gt;<span data-count="32">=</span> function
-     | <span data-count="5747">"</span>" -&gt;
-       take_while<span data-count="5747">1</span> (fun ch -&gt; <span data-count="9470">i</span>s_wildcar<span data-count="9470">d</span> c<span data-count="83">h</span> || is_cha<span data-count="9387">r</span> c<span data-count="3740">h</span> || is_digit ch)
-       &gt;&gt;= fun str -&gt; <span data-count="1220">i</span>f is_keyword str then <span data-count="248">f</span>ail "invalid var name" else <span data-count="972">r</span>eturn str
+  pchun<span data-count="38">k</span>
+    (take_whil<span data-count="38">e</span> (fun ch -&gt; <span data-count="5733">i</span>s_ucha<span data-count="5733">r</span> c<span data-count="0">h</span> || is_digi<span data-count="5733">t</span> c<span data-count="0">h</span> || is_wildcard ch)
+     &gt;&gt;<span data-count="38">=</span> function
+     | <span data-count="5847">"</span>" -&gt;
+       take_while<span data-count="5847">1</span> (fun ch -&gt; <span data-count="9641">i</span>s_wildcar<span data-count="9641">d</span> c<span data-count="83">h</span> || is_cha<span data-count="9558">r</span> c<span data-count="3816">h</span> || is_digit ch)
+       &gt;&gt;= fun str -&gt; <span data-count="1255">i</span>f is_keyword str then <span data-count="251">f</span>ail "invalid var name" else <span data-count="1004">r</span>eturn str
      | <span data-count="0">_</span> -&gt; fail "invalid var name")
 ;;
 
 let prconstrname =
-  pchun<span data-count="32">k</span>
-    (take_whil<span data-count="32">e</span> (fun ch -&gt; <span data-count="4844">i</span>s_lcha<span data-count="4844">r</span> c<span data-count="1573">h</span> || is_digi<span data-count="3271">t</span> c<span data-count="249">h</span> || is_wildcard ch)
-     &gt;&gt;<span data-count="32">=</span> function
-     | <span data-count="2169">"</span>" -&gt;
-       take_while<span data-count="2169">1</span> (fun ch -&gt; <span data-count="3369">i</span>s_wildcar<span data-count="3369">d</span> c<span data-count="0">h</span> || is_cha<span data-count="3369">r</span> c<span data-count="1188">h</span> || is_digit ch)
-       &gt;&gt;= fun str -&gt; <span data-count="289">i</span>f is_keyword str then <span data-count="0">f</span>ail "invalid constr name" else <span data-count="289">r</span>eturn str
-     | <span data-count="791">_</span> -&gt; fail "invalid constr name")
+  pchun<span data-count="38">k</span>
+    (take_whil<span data-count="38">e</span> (fun ch -&gt; <span data-count="4914">i</span>s_lcha<span data-count="4914">r</span> c<span data-count="1593">h</span> || is_digi<span data-count="3321">t</span> c<span data-count="255">h</span> || is_wildcard ch)
+     &gt;&gt;<span data-count="38">=</span> function
+     | <span data-count="2190">"</span>" -&gt;
+       take_while<span data-count="2190">1</span> (fun ch -&gt; <span data-count="3412">i</span>s_wildcar<span data-count="3412">d</span> c<span data-count="0">h</span> || is_cha<span data-count="3412">r</span> c<span data-count="1210">h</span> || is_digit ch)
+       &gt;&gt;= fun str -&gt; <span data-count="295">i</span>f is_keyword str then <span data-count="0">f</span>ail "invalid constr name" else <span data-count="295">r</span>eturn str
+     | <span data-count="814">_</span> -&gt; fail "invalid constr name")
 ;;
 
 (* type parser *)
 
 let pftbase pftype =
-  <span data-count="13">c</span>hoice
-    [ pparen<span data-count="13">s</span> pftype
-    ; check_chun<span data-count="13">k</span> "int" *<span data-count="13">&gt;</span> retur<span data-count="13">n</span> tint
-    ; check_chun<span data-count="13">k</span> "string" *<span data-count="13">&gt;</span> retur<span data-count="13">n</span> tstring
-    ; check_chun<span data-count="13">k</span> "bool" *<span data-count="13">&gt;</span> retur<span data-count="13">n</span> tbool
-    ; tvar &lt;$<span data-count="13">&gt;</span> (lname &lt;$<span data-count="13">&gt;</span> prvarname)
+  <span data-count="15">c</span>hoice
+    [ pparen<span data-count="15">s</span> pftype
+    ; check_chun<span data-count="15">k</span> "int" *<span data-count="15">&gt;</span> retur<span data-count="15">n</span> tint
+    ; check_chun<span data-count="15">k</span> "string" *<span data-count="15">&gt;</span> retur<span data-count="15">n</span> tstring
+    ; check_chun<span data-count="15">k</span> "bool" *<span data-count="15">&gt;</span> retur<span data-count="15">n</span> tbool
+    ; tvar &lt;$<span data-count="15">&gt;</span> (lname &lt;$<span data-count="15">&gt;</span> prvarname)
     ]
 ;;
 
-let pftlist pft = <span data-count="13">t</span>list &lt;$<span data-count="13">&gt;</span> pft &lt;* check_chun<span data-count="13">k</span> "list"
+let pftlist pft = <span data-count="15">t</span>list &lt;$<span data-count="15">&gt;</span> pft &lt;* check_chun<span data-count="15">k</span> "list"
 
 let pfttuple pft =
-  <span data-count="13">s</span>ep_b<span data-count="13">y</span> (check_chun<span data-count="13">k</span> "*") pft
+  <span data-count="15">s</span>ep_b<span data-count="15">y</span> (check_chun<span data-count="15">k</span> "*") pft
   &gt;&gt;= function
   | <span data-count="0">[</span>] -&gt; pft
-  | <span data-count="43">[</span> h ] -&gt; return h
+  | <span data-count="45">[</span> h ] -&gt; return h
   | <span data-count="17">h</span> :: tl -&gt; return (ttupl<span data-count="17">e</span> (h :: tl))
 ;;
 
-let pftfun = check_chun<span data-count="32">k</span> "-&gt;" *<span data-count="32">&gt;</span> retur<span data-count="32">n</span> (fun type1 type2 -&gt; <span data-count="1">t</span>fun type1 type2)
+let pftfun = check_chun<span data-count="38">k</span> "-&gt;" *<span data-count="38">&gt;</span> retur<span data-count="38">n</span> (fun type1 type2 -&gt; <span data-count="1">t</span>fun type1 type2)
 
 let pftype =
-  fi<span data-count="32">x</span>
+  fi<span data-count="38">x</span>
   @@ fun pftype -&gt;
-  <span data-count="13">l</span>et pft = pftbase pftype in
-  <span data-count="13">l</span>et pft = pftlis<span data-count="13">t</span> pft &lt;|&gt; pft in
-  <span data-count="13">l</span>et pft = pfttupl<span data-count="13">e</span> pft &lt;|&gt; pft in
-  <span data-count="13">c</span>hainr1 pft pftfun
+  <span data-count="15">l</span>et pft = pftbase pftype in
+  <span data-count="15">l</span>et pft = pftlis<span data-count="15">t</span> pft &lt;|&gt; pft in
+  <span data-count="15">l</span>et pft = pfttupl<span data-count="15">e</span> pft &lt;|&gt; pft in
+  <span data-count="15">c</span>hainr1 pft pftfun
 ;;
 
 (* pattern parser *)
 
-let ppnill = check_chun<span data-count="32">k</span> "[]" *<span data-count="32">&gt;</span> retur<span data-count="32">n</span> pnill
-let ppwild = (check_chun<span data-count="32">k</span> "_" &lt;<span data-count="32">*</span> spaces) *<span data-count="32">&gt;</span> retur<span data-count="32">n</span> pwild
-let fcons = check_chun<span data-count="32">k</span> "::" *<span data-count="32">&gt;</span> retur<span data-count="32">n</span> (fun ptr1 ptr2 -&gt; <span data-count="21">p</span>cons ptr1 ptr2)
-let ppcons pp = <span data-count="26">c</span>hainr1 pp fcons
+let ppnill = check_chun<span data-count="38">k</span> "[]" *<span data-count="38">&gt;</span> retur<span data-count="38">n</span> pnill
+let ppwild = (check_chun<span data-count="38">k</span> "_" &lt;<span data-count="38">*</span> spaces) *<span data-count="38">&gt;</span> retur<span data-count="38">n</span> pwild
+let fcons = check_chun<span data-count="38">k</span> "::" *<span data-count="38">&gt;</span> retur<span data-count="38">n</span> (fun ptr1 ptr2 -&gt; <span data-count="21">p</span>cons ptr1 ptr2)
+let ppcons pp = <span data-count="29">c</span>hainr1 pp fcons
 
 let ppcase pp =
-  <span data-count="26">f</span>ix
+  <span data-count="29">f</span>ix
   @@ fun ppcase -&gt;
-  <span data-count="26">u</span>name
-  &lt;$<span data-count="26">&gt;</span> prconstrname
+  <span data-count="29">u</span>name
+  &lt;$<span data-count="29">&gt;</span> prconstrname
   &gt;&gt;= fun name -&gt;
   <span data-count="33">p</span>pcase &lt;|<span data-count="33">&gt;</span> (pp &gt;&gt;<span data-count="33">=</span> fun exp -&gt; <span data-count="27">r</span>eturn (pad<span data-count="27">t</span> name (Some exp))) &lt;|&gt; retur<span data-count="33">n</span> (pad<span data-count="33">t</span> name None)
 ;;
 
 let pptuple pp =
-  <span data-count="26">s</span>ep_b<span data-count="26">y</span> (check_chun<span data-count="26">k</span> ",") pp
+  <span data-count="29">s</span>ep_b<span data-count="29">y</span> (check_chun<span data-count="29">k</span> ",") pp
   &gt;&gt;= function
-  | <span data-count="133">[</span>] -&gt; pp
-  | <span data-count="191">[</span> h ] -&gt; return h
+  | <span data-count="139">[</span>] -&gt; pp
+  | <span data-count="197">[</span> h ] -&gt; return h
   | <span data-count="18">h</span> :: tl -&gt; return (ptupl<span data-count="18">e</span> (h :: tl))
 ;;
 
 let ppbase ppatern =
-  <span data-count="26">c</span>hoice
-    [ pparen<span data-count="26">s</span> ppatern
-    ; pint &lt;$<span data-count="26">&gt;</span> pchun<span data-count="26">k</span> prnumber
-    ; pbool &lt;$<span data-count="26">&gt;</span> prbool
-    ; pvar &lt;$<span data-count="26">&gt;</span> (lname &lt;$<span data-count="26">&gt;</span> prvarname)
-    ; pstring &lt;$<span data-count="26">&gt;</span> prstring
+  <span data-count="29">c</span>hoice
+    [ pparen<span data-count="29">s</span> ppatern
+    ; pint &lt;$<span data-count="29">&gt;</span> pchun<span data-count="29">k</span> prnumber
+    ; pbool &lt;$<span data-count="29">&gt;</span> prbool
+    ; pvar &lt;$<span data-count="29">&gt;</span> (lname &lt;$<span data-count="29">&gt;</span> prvarname)
+    ; pstring &lt;$<span data-count="29">&gt;</span> prstring
     ]
 ;;
 
 let ppattern =
-  fi<span data-count="32">x</span>
+  fi<span data-count="38">x</span>
   @@ fun ppattern -&gt;
-  <span data-count="26">l</span>et pp = ppbase ppattern in
-  <span data-count="26">l</span>et pp = ppnill &lt;|&gt; pp in
-  <span data-count="26">l</span>et pp = ppwild &lt;|&gt; pp in
-  <span data-count="26">l</span>et pp = ppcon<span data-count="26">s</span> pp &lt;|&gt; pp in
-  <span data-count="26">l</span>et pp = pptupl<span data-count="26">e</span> pp &lt;|&gt; pp in
-  <span data-count="26">l</span>et pp = ppcas<span data-count="26">e</span> pp &lt;|&gt; pp in
-  <span data-count="26">p</span>p
+  <span data-count="29">l</span>et pp = ppbase ppattern in
+  <span data-count="29">l</span>et pp = ppnill &lt;|&gt; pp in
+  <span data-count="29">l</span>et pp = ppwild &lt;|&gt; pp in
+  <span data-count="29">l</span>et pp = ppcon<span data-count="29">s</span> pp &lt;|&gt; pp in
+  <span data-count="29">l</span>et pp = pptupl<span data-count="29">e</span> pp &lt;|&gt; pp in
+  <span data-count="29">l</span>et pp = ppcas<span data-count="29">e</span> pp &lt;|&gt; pp in
+  <span data-count="29">p</span>p
 ;;
 
 (* expression parser *)
 
 let pfelet pfexp =
-  <span data-count="30">c</span>heck_chun<span data-count="30">k</span> "let"
-  *&gt; lift<span data-count="30">3</span>
+  <span data-count="35">c</span>heck_chun<span data-count="35">k</span> "let"
+  *&gt; lift<span data-count="35">3</span>
        letdecl
-       (drec &lt;$<span data-count="30">&gt;</span> (check_chun<span data-count="30">k</span> "rec" *<span data-count="30">&gt;</span> retur<span data-count="30">n</span> true &lt;|<span data-count="30">&gt;</span> retur<span data-count="30">n</span> false))
-       (lname &lt;$<span data-count="30">&gt;</span> prvarname)
-       (check_chun<span data-count="30">k</span> "=" *<span data-count="30">&gt;</span> pfexp)
+       (drec &lt;$<span data-count="35">&gt;</span> (check_chun<span data-count="35">k</span> "rec" *<span data-count="35">&gt;</span> retur<span data-count="35">n</span> true &lt;|<span data-count="35">&gt;</span> retur<span data-count="35">n</span> false))
+       (lname &lt;$<span data-count="35">&gt;</span> prvarname)
+       (check_chun<span data-count="35">k</span> "=" *<span data-count="35">&gt;</span> pfexp)
 ;;
 
 let pfebase pfexp =
-  <span data-count="30">c</span>hoice
-    [ pparen<span data-count="30">s</span> pfexp
-    ; eint &lt;$<span data-count="30">&gt;</span> pchun<span data-count="30">k</span> prnumber
-    ; ebool &lt;$<span data-count="30">&gt;</span> prbool
-    ; evar &lt;$<span data-count="30">&gt;</span> (lname &lt;$<span data-count="30">&gt;</span> prvarname)
-    ; estring &lt;$<span data-count="30">&gt;</span> prstring
-    ; retur<span data-count="30">n</span> eemptylist &lt;<span data-count="30">*</span> premptylist
+  <span data-count="35">c</span>hoice
+    [ pparen<span data-count="35">s</span> pfexp
+    ; eint &lt;$<span data-count="35">&gt;</span> pchun<span data-count="35">k</span> prnumber
+    ; ebool &lt;$<span data-count="35">&gt;</span> prbool
+    ; evar &lt;$<span data-count="35">&gt;</span> (lname &lt;$<span data-count="35">&gt;</span> prvarname)
+    ; estring &lt;$<span data-count="35">&gt;</span> prstring
+    ; retur<span data-count="35">n</span> eemptylist &lt;<span data-count="35">*</span> premptylist
     ]
 ;;
 
 let pfetuple pfexp =
-  <span data-count="30">s</span>ep_b<span data-count="30">y</span> (check_chun<span data-count="30">k</span> ",") pfexp
+  <span data-count="35">s</span>ep_b<span data-count="35">y</span> (check_chun<span data-count="35">k</span> ",") pfexp
   &gt;&gt;= function
   | <span data-count="0">[</span>] -&gt; pfexp
-  | <span data-count="497">[</span> h ] -&gt; return h
+  | <span data-count="514">[</span> h ] -&gt; return h
   | <span data-count="45">h</span> :: tl -&gt; return (etupl<span data-count="45">e</span> (h :: tl))
 ;;
 
 let pfefun pfe =
-  <span data-count="30">f</span>ix @@ fun pfefun -&gt; <span data-count="26">l</span>ift2 efun ppattern (pfefun &lt;|<span data-count="26">&gt;</span> check_chun<span data-count="26">k</span> "-&gt;" *<span data-count="26">&gt;</span> pfe)
+  <span data-count="35">f</span>ix @@ fun pfefun -&gt; <span data-count="29">l</span>ift2 efun ppattern (pfefun &lt;|<span data-count="29">&gt;</span> check_chun<span data-count="29">k</span> "-&gt;" *<span data-count="29">&gt;</span> pfe)
 ;;
 
 let pfeif pfexp =
-  <span data-count="30">f</span>ix
+  <span data-count="35">f</span>ix
   @@ fun pfeif -&gt;
-  <span data-count="30">l</span>ift3
+  <span data-count="35">l</span>ift3
     eif
-    (check_chun<span data-count="30">k</span> "if" *<span data-count="30">&gt;</span> (pfeif &lt;|<span data-count="30">&gt;</span> pfexp))
-    (check_chun<span data-count="30">k</span> "then" *<span data-count="30">&gt;</span> (pfeif &lt;|<span data-count="30">&gt;</span> pfexp))
-    (check_chun<span data-count="30">k</span> "else" *<span data-count="30">&gt;</span> (pfeif &lt;|<span data-count="30">&gt;</span> pfexp))
+    (check_chun<span data-count="35">k</span> "if" *<span data-count="35">&gt;</span> (pfeif &lt;|<span data-count="35">&gt;</span> pfexp))
+    (check_chun<span data-count="35">k</span> "then" *<span data-count="35">&gt;</span> (pfeif &lt;|<span data-count="35">&gt;</span> pfexp))
+    (check_chun<span data-count="35">k</span> "else" *<span data-count="35">&gt;</span> (pfeif &lt;|<span data-count="35">&gt;</span> pfexp))
 ;;
 
 let pfematch pfe =
-  <span data-count="30">l</span>ift2
+  <span data-count="35">l</span>ift2
     ematch
-    (check_chun<span data-count="30">k</span> "match" *<span data-count="30">&gt;</span> pfe &lt;<span data-count="30">*</span> check_chun<span data-count="30">k</span> "with")
-    (many<span data-count="30">1</span> @@ totupl<span data-count="30">e</span> (check_chun<span data-count="30">k</span> "|" *<span data-count="30">&gt;</span> ppattern &lt;<span data-count="30">*</span> check_chun<span data-count="30">k</span> "-&gt;") pfe)
+    (check_chun<span data-count="35">k</span> "match" *<span data-count="35">&gt;</span> pfe &lt;<span data-count="35">*</span> check_chun<span data-count="35">k</span> "with")
+    (many<span data-count="35">1</span> @@ totupl<span data-count="35">e</span> (check_chun<span data-count="35">k</span> "|" *<span data-count="35">&gt;</span> ppattern &lt;<span data-count="35">*</span> check_chun<span data-count="35">k</span> "-&gt;") pfe)
 ;;
 
-let pfeapp pfe = <span data-count="30">c</span>hainl1 pfe (retur<span data-count="30">n</span> (fun exp1 exp2 -&gt; <span data-count="181">e</span>app exp1 exp2))
+let pfeapp pfe = <span data-count="35">c</span>hainl1 pfe (retur<span data-count="35">n</span> (fun exp1 exp2 -&gt; <span data-count="187">e</span>app exp1 exp2))
 
 let pfeconstr pfe =
-  <span data-count="30">f</span>ix
+  <span data-count="35">f</span>ix
   @@ fun pfeconstr -&gt;
-  <span data-count="30">l</span>ift2
-    (fun decl_name decl_exp -&gt; <span data-count="150">e</span>constr decl_name decl_exp)
-    (uname &lt;$<span data-count="30">&gt;</span> prconstrname)
-    (pfeconstr &lt;|<span data-count="30">&gt;</span> pfe &gt;&gt;<span data-count="30">=</span> (fun exp -&gt; <span data-count="88">r</span>eturn (Some exp)) &lt;|<span data-count="30">&gt;</span> retur<span data-count="30">n</span> None)
+  <span data-count="35">l</span>ift2
+    (fun decl_name decl_exp -&gt; <span data-count="152">e</span>constr decl_name decl_exp)
+    (uname &lt;$<span data-count="35">&gt;</span> prconstrname)
+    (pfeconstr &lt;|<span data-count="35">&gt;</span> pfe &gt;&gt;<span data-count="35">=</span> (fun exp -&gt; <span data-count="90">r</span>eturn (Some exp)) &lt;|<span data-count="35">&gt;</span> retur<span data-count="35">n</span> None)
 ;;
 
 (* parse operators *)
 
-let fmul = check_chun<span data-count="32">k</span> "*" *<span data-count="32">&gt;</span> retur<span data-count="32">n</span> (fun exp1 exp2 -&gt; <span data-count="17">e</span>binop bop_mul exp1 exp2)
-let pfemul pfe = <span data-count="30">c</span>hainl1 pfe fmul
-let fdiv = check_chun<span data-count="32">k</span> "/" *<span data-count="32">&gt;</span> retur<span data-count="32">n</span> (fun exp1 exp2 -&gt; <span data-count="2">e</span>binop bop_div exp1 exp2)
-let pfediv pfe = <span data-count="30">c</span>hainl1 pfe fdiv
-let fadd = check_chun<span data-count="32">k</span> "+" *<span data-count="32">&gt;</span> retur<span data-count="32">n</span> (fun exp1 exp2 -&gt; <span data-count="13">e</span>binop bop_add exp1 exp2)
-let pfeadd pfe = <span data-count="30">c</span>hainl1 pfe fadd
-let fsub = check_chun<span data-count="32">k</span> "-" *<span data-count="32">&gt;</span> retur<span data-count="32">n</span> (fun exp1 exp2 -&gt; <span data-count="18">e</span>binop bop_sub exp1 exp2)
-let pfesub pfe = <span data-count="30">c</span>hainl1 pfe fsub
-let feq = check_chun<span data-count="32">k</span> "==" *<span data-count="32">&gt;</span> retur<span data-count="32">n</span> (fun exp1 exp2 -&gt; <span data-count="9">e</span>binop bop_eq exp1 exp2)
-let pfeeq pfe = <span data-count="30">c</span>hainl1 pfe feq
-let fneq = check_chun<span data-count="32">k</span> "&lt;&gt;" *<span data-count="32">&gt;</span> retur<span data-count="32">n</span> (fun exp1 exp2 -&gt; <span data-count="2">e</span>binop bop_neq exp1 exp2)
-let pfeneq pfe = <span data-count="30">c</span>hainl1 pfe fneq
-let fles = check_chun<span data-count="32">k</span> "&lt;" *<span data-count="32">&gt;</span> retur<span data-count="32">n</span> (fun exp1 exp2 -&gt; <span data-count="7">e</span>binop bop_les exp1 exp2)
-let pfeles pfe = <span data-count="30">c</span>hainl1 pfe fles
-let fleq = check_chun<span data-count="32">k</span> "&lt;=" *<span data-count="32">&gt;</span> retur<span data-count="32">n</span> (fun exp1 exp2 -&gt; <span data-count="12">e</span>binop bop_leq exp1 exp2)
-let pfeleq pfe = <span data-count="30">c</span>hainl1 pfe fleq
-let fgre = check_chun<span data-count="32">k</span> "&gt;" *<span data-count="32">&gt;</span> retur<span data-count="32">n</span> (fun exp1 exp2 -&gt; <span data-count="3">e</span>binop bop_gre exp1 exp2)
-let pfegre pfe = <span data-count="30">c</span>hainl1 pfe fgre
-let fgeq = check_chun<span data-count="32">k</span> "&gt;=" *<span data-count="32">&gt;</span> retur<span data-count="32">n</span> (fun exp1 exp2 -&gt; <span data-count="0">e</span>binop bop_geq exp1 exp2)
-let pfegeq pfe = <span data-count="30">c</span>hainl1 pfe fgeq
-let fand = check_chun<span data-count="32">k</span> "&amp;&amp;" *<span data-count="32">&gt;</span> retur<span data-count="32">n</span> (fun exp1 exp2 -&gt; <span data-count="3">e</span>binop bop_and exp1 exp2)
-let pfeand pfe = <span data-count="30">c</span>hainr1 pfe fand
-let ffor = check_chun<span data-count="32">k</span> "||" *<span data-count="32">&gt;</span> retur<span data-count="32">n</span> (fun exp1 exp2 -&gt; <span data-count="3">e</span>binop bop_or exp1 exp2)
-let pfeor pfe = <span data-count="30">c</span>hainr1 pfe ffor
-let fcons = check_chun<span data-count="32">k</span> "::" *<span data-count="32">&gt;</span> retur<span data-count="32">n</span> (fun exp1 exp2 -&gt; <span data-count="64">e</span>binop bop_cons exp1 exp2)
-let pfecons pfe = <span data-count="30">c</span>hainr1 pfe fcons
+let fmul = check_chun<span data-count="38">k</span> "*" *<span data-count="38">&gt;</span> retur<span data-count="38">n</span> (fun exp1 exp2 -&gt; <span data-count="17">e</span>binop bop_mul exp1 exp2)
+let pfemul pfe = <span data-count="35">c</span>hainl1 pfe fmul
+let fdiv = check_chun<span data-count="38">k</span> "/" *<span data-count="38">&gt;</span> retur<span data-count="38">n</span> (fun exp1 exp2 -&gt; <span data-count="2">e</span>binop bop_div exp1 exp2)
+let pfediv pfe = <span data-count="35">c</span>hainl1 pfe fdiv
+let fadd = check_chun<span data-count="38">k</span> "+" *<span data-count="38">&gt;</span> retur<span data-count="38">n</span> (fun exp1 exp2 -&gt; <span data-count="13">e</span>binop bop_add exp1 exp2)
+let pfeadd pfe = <span data-count="35">c</span>hainl1 pfe fadd
+let fsub = check_chun<span data-count="38">k</span> "-" *<span data-count="38">&gt;</span> retur<span data-count="38">n</span> (fun exp1 exp2 -&gt; <span data-count="18">e</span>binop bop_sub exp1 exp2)
+let pfesub pfe = <span data-count="35">c</span>hainl1 pfe fsub
+let feq = check_chun<span data-count="38">k</span> "=" *<span data-count="38">&gt;</span> retur<span data-count="38">n</span> (fun exp1 exp2 -&gt; <span data-count="12">e</span>binop bop_eq exp1 exp2)
+let pfeeq pfe = <span data-count="35">c</span>hainl1 pfe feq
+let fneq = check_chun<span data-count="38">k</span> "&lt;&gt;" *<span data-count="38">&gt;</span> retur<span data-count="38">n</span> (fun exp1 exp2 -&gt; <span data-count="2">e</span>binop bop_neq exp1 exp2)
+let pfeneq pfe = <span data-count="35">c</span>hainl1 pfe fneq
+let fles = check_chun<span data-count="38">k</span> "&lt;" *<span data-count="38">&gt;</span> retur<span data-count="38">n</span> (fun exp1 exp2 -&gt; <span data-count="7">e</span>binop bop_les exp1 exp2)
+let pfeles pfe = <span data-count="35">c</span>hainl1 pfe fles
+let fleq = check_chun<span data-count="38">k</span> "&lt;=" *<span data-count="38">&gt;</span> retur<span data-count="38">n</span> (fun exp1 exp2 -&gt; <span data-count="12">e</span>binop bop_leq exp1 exp2)
+let pfeleq pfe = <span data-count="35">c</span>hainl1 pfe fleq
+let fgre = check_chun<span data-count="38">k</span> "&gt;" *<span data-count="38">&gt;</span> retur<span data-count="38">n</span> (fun exp1 exp2 -&gt; <span data-count="3">e</span>binop bop_gre exp1 exp2)
+let pfegre pfe = <span data-count="35">c</span>hainl1 pfe fgre
+let fgeq = check_chun<span data-count="38">k</span> "&gt;=" *<span data-count="38">&gt;</span> retur<span data-count="38">n</span> (fun exp1 exp2 -&gt; <span data-count="0">e</span>binop bop_geq exp1 exp2)
+let pfegeq pfe = <span data-count="35">c</span>hainl1 pfe fgeq
+let fand = check_chun<span data-count="38">k</span> "&amp;&amp;" *<span data-count="38">&gt;</span> retur<span data-count="38">n</span> (fun exp1 exp2 -&gt; <span data-count="3">e</span>binop bop_and exp1 exp2)
+let pfeand pfe = <span data-count="35">c</span>hainr1 pfe fand
+let ffor = check_chun<span data-count="38">k</span> "||" *<span data-count="38">&gt;</span> retur<span data-count="38">n</span> (fun exp1 exp2 -&gt; <span data-count="3">e</span>binop bop_or exp1 exp2)
+let pfeor pfe = <span data-count="35">c</span>hainr1 pfe ffor
+let fcons = check_chun<span data-count="38">k</span> "::" *<span data-count="38">&gt;</span> retur<span data-count="38">n</span> (fun exp1 exp2 -&gt; <span data-count="70">e</span>binop bop_cons exp1 exp2)
+let pfecons pfe = <span data-count="35">c</span>hainr1 pfe fcons
 
 let pfearith pfe =
-  <span data-count="30">l</span>et pfe = pfemu<span data-count="30">l</span> pfe &lt;|&gt; pfe in
-  <span data-count="30">l</span>et pfe = pfedi<span data-count="30">v</span> pfe &lt;|&gt; pfe in
-  <span data-count="30">l</span>et pfe = pfead<span data-count="30">d</span> pfe &lt;|&gt; pfe in
-  <span data-count="30">l</span>et pfe = pfesu<span data-count="30">b</span> pfe &lt;|&gt; pfe in
-  <span data-count="30">l</span>et pfe = pfecon<span data-count="30">s</span> pfe &lt;|&gt; pfe in
-  <span data-count="30">l</span>et pfe = pfene<span data-count="30">q</span> pfe &lt;|&gt; pfe in
-  <span data-count="30">l</span>et pfe = pfee<span data-count="30">q</span> pfe &lt;|&gt; pfe in
-  <span data-count="30">l</span>et pfe = pfele<span data-count="30">s</span> pfe &lt;|&gt; pfe in
-  <span data-count="30">l</span>et pfe = pfele<span data-count="30">q</span> pfe &lt;|&gt; pfe in
-  <span data-count="30">l</span>et pfe = pfegr<span data-count="30">e</span> pfe &lt;|&gt; pfe in
-  <span data-count="30">l</span>et pfe = pfege<span data-count="30">q</span> pfe &lt;|&gt; pfe in
-  <span data-count="30">p</span>fe
+  <span data-count="35">l</span>et pfe = pfemu<span data-count="35">l</span> pfe &lt;|&gt; pfe in
+  <span data-count="35">l</span>et pfe = pfedi<span data-count="35">v</span> pfe &lt;|&gt; pfe in
+  <span data-count="35">l</span>et pfe = pfead<span data-count="35">d</span> pfe &lt;|&gt; pfe in
+  <span data-count="35">l</span>et pfe = pfesu<span data-count="35">b</span> pfe &lt;|&gt; pfe in
+  <span data-count="35">l</span>et pfe = pfecon<span data-count="35">s</span> pfe &lt;|&gt; pfe in
+  <span data-count="35">l</span>et pfe = pfene<span data-count="35">q</span> pfe &lt;|&gt; pfe in
+  <span data-count="35">l</span>et pfe = pfee<span data-count="35">q</span> pfe &lt;|&gt; pfe in
+  <span data-count="35">l</span>et pfe = pfele<span data-count="35">s</span> pfe &lt;|&gt; pfe in
+  <span data-count="35">l</span>et pfe = pfele<span data-count="35">q</span> pfe &lt;|&gt; pfe in
+  <span data-count="35">l</span>et pfe = pfegr<span data-count="35">e</span> pfe &lt;|&gt; pfe in
+  <span data-count="35">l</span>et pfe = pfege<span data-count="35">q</span> pfe &lt;|&gt; pfe in
+  <span data-count="35">p</span>fe
 ;;
 
 (* doc:https://v2.ocaml.org/manual/expr.html#ss:precedence-and-associativity *)
 let pfexp =
-  fi<span data-count="32">x</span>
+  fi<span data-count="38">x</span>
   @@ fun pfexp -&gt;
-  <span data-count="30">l</span>et pfe = pfebase pfexp in
-  <span data-count="30">l</span>et pfe = pfeap<span data-count="30">p</span> pfe &lt;|&gt; pfe in
-  <span data-count="30">l</span>et pfe = pfeconst<span data-count="30">r</span> pfe &lt;|&gt; pfe in
-  <span data-count="30">l</span>et pfe = pfearit<span data-count="30">h</span> pfe &lt;|&gt; pfe in
-  <span data-count="30">l</span>et pfe = pfean<span data-count="30">d</span> pfe &lt;|&gt; pfe in
-  <span data-count="30">l</span>et pfe = pfeo<span data-count="30">r</span> pfe &lt;|&gt; pfe in
-  <span data-count="30">l</span>et pfe = pfetupl<span data-count="30">e</span> pfe &lt;|&gt; pfe in
-  <span data-count="30">l</span>et pfe = pfei<span data-count="30">f</span> pfe &lt;|&gt; pfe in
-  <span data-count="30">l</span>et pfe = pfematc<span data-count="30">h</span> pfe &lt;|&gt; pfe in
-  <span data-count="30">l</span>et pfe = check_chun<span data-count="30">k</span> "fun" *<span data-count="30">&gt;</span> pfefu<span data-count="30">n</span> pfe &lt;|&gt; pfe in
-  <span data-count="30">l</span>et pfe = lift<span data-count="30">2</span> elet (pfele<span data-count="30">t</span> pfe) (check_chun<span data-count="30">k</span> "in" *<span data-count="30">&gt;</span> pfe) &lt;|&gt; pfe in
-  <span data-count="30">p</span>fe
+  <span data-count="35">l</span>et pfe = pfebase pfexp in
+  <span data-count="35">l</span>et pfe = pfeap<span data-count="35">p</span> pfe &lt;|&gt; pfe in
+  <span data-count="35">l</span>et pfe = pfeconst<span data-count="35">r</span> pfe &lt;|&gt; pfe in
+  <span data-count="35">l</span>et pfe = pfearit<span data-count="35">h</span> pfe &lt;|&gt; pfe in
+  <span data-count="35">l</span>et pfe = pfean<span data-count="35">d</span> pfe &lt;|&gt; pfe in
+  <span data-count="35">l</span>et pfe = pfeo<span data-count="35">r</span> pfe &lt;|&gt; pfe in
+  <span data-count="35">l</span>et pfe = pfetupl<span data-count="35">e</span> pfe &lt;|&gt; pfe in
+  <span data-count="35">l</span>et pfe = pfei<span data-count="35">f</span> pfe &lt;|&gt; pfe in
+  <span data-count="35">l</span>et pfe = pfematc<span data-count="35">h</span> pfe &lt;|&gt; pfe in
+  <span data-count="35">l</span>et pfe = check_chun<span data-count="35">k</span> "fun" *<span data-count="35">&gt;</span> pfefu<span data-count="35">n</span> pfe &lt;|&gt; pfe in
+  <span data-count="35">l</span>et pfe = lift<span data-count="35">2</span> elet (pfele<span data-count="35">t</span> pfe) (check_chun<span data-count="35">k</span> "in" *<span data-count="35">&gt;</span> pfe) &lt;|&gt; pfe in
+  <span data-count="35">p</span>fe
 ;;
 
 (* declaration parser *)
 
 let pdecl =
-  check_chun<span data-count="32">k</span> "let"
-  *<span data-count="32">&gt;</span> lift<span data-count="32">3</span>
+  check_chun<span data-count="38">k</span> "let"
+  *<span data-count="38">&gt;</span> lift<span data-count="38">3</span>
        decllet
-       (drec &lt;$<span data-count="32">&gt;</span> (check_chun<span data-count="32">k</span> "rec" *<span data-count="32">&gt;</span> retur<span data-count="32">n</span> true &lt;|<span data-count="32">&gt;</span> retur<span data-count="32">n</span> false))
-       (lname &lt;$<span data-count="32">&gt;</span> prvarname)
-       (check_chun<span data-count="32">k</span> "=" *<span data-count="32">&gt;</span> pfexp)
-  &lt;|<span data-count="32">&gt;</span> check_chun<span data-count="32">k</span> "type"
-      *<span data-count="32">&gt;</span> lift<span data-count="32">2</span>
+       (drec &lt;$<span data-count="38">&gt;</span> (check_chun<span data-count="38">k</span> "rec" *<span data-count="38">&gt;</span> retur<span data-count="38">n</span> true &lt;|<span data-count="38">&gt;</span> retur<span data-count="38">n</span> false))
+       (lname &lt;$<span data-count="38">&gt;</span> prvarname)
+       (check_chun<span data-count="38">k</span> "=" *<span data-count="38">&gt;</span> pfexp)
+  &lt;|<span data-count="38">&gt;</span> check_chun<span data-count="38">k</span> "type"
+      *<span data-count="38">&gt;</span> lift<span data-count="38">2</span>
            decltype
-           (lname &lt;$<span data-count="32">&gt;</span> prvarname)
-           (check_chun<span data-count="32">k</span> "="
-            *<span data-count="32">&gt;</span> (many<span data-count="32">1</span>
-                @@ totupl<span data-count="32">e</span>
-                     (check_chun<span data-count="32">k</span> "|" *<span data-count="32">&gt;</span> (uname &lt;$<span data-count="32">&gt;</span> prconstrname))
-                     (dtype &lt;$<span data-count="32">&gt;</span> (check_chun<span data-count="32">k</span> "of" *<span data-count="32">&gt;</span> pftype &lt;|<span data-count="32">&gt;</span> retur<span data-count="32">n</span> temptytype))))
+           (lname &lt;$<span data-count="38">&gt;</span> prvarname)
+           (check_chun<span data-count="38">k</span> "="
+            *<span data-count="38">&gt;</span> (many<span data-count="38">1</span>
+                @@ totupl<span data-count="38">e</span>
+                     (check_chun<span data-count="38">k</span> "|" *<span data-count="38">&gt;</span> (uname &lt;$<span data-count="38">&gt;</span> prconstrname))
+                     (dtype &lt;$<span data-count="38">&gt;</span> (check_chun<span data-count="38">k</span> "of" *<span data-count="38">&gt;</span> pftype &lt;|<span data-count="38">&gt;</span> retur<span data-count="38">n</span> temptytype))))
 ;;
 
-let parse_semicolon = man<span data-count="32">y</span> @@ check_chun<span data-count="32">k</span> ";;"
-let parse_program = parse_semicolon *<span data-count="32">&gt;</span> man<span data-count="32">y</span> (pdecl &lt;<span data-count="32">*</span> parse_semicolon)
-let parse str = <span data-count="110">p</span>arse_string ~consume:Prefix parse_program str
+let parse_semicolon = man<span data-count="38">y</span> @@ check_chun<span data-count="38">k</span> ";;"
+let parse_program = parse_semicolon *<span data-count="38">&gt;</span> man<span data-count="38">y</span> (pdecl &lt;<span data-count="38">*</span> parse_semicolon) &lt;<span data-count="38">*</span> spaces
+let parse str = <span data-count="116">p</span>arse_string ~consume:All parse_program str
 </code></pre>
       </div>
     </div>
