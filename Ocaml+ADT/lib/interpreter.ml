@@ -142,6 +142,21 @@ end = struct
     let* lst = all (List.map (fun tuple_item -> exec tuple_item env) tuple) in
     return @@ vtuple lst
 
+  and exec_eq_lst lst1 lst2 =
+    let* res =
+      List.fold_left2
+        (fun acc h1 h2 ->
+          let* acc = acc in
+          let* res = exec_binop_match (Eq, h1, h2) in
+          match res with
+          | VBool true -> return acc
+          | _ -> return false)
+        (return true)
+        lst1
+        lst2
+    in
+    return @@ vbool res
+
   and exec_binop_match = function
     | And, VBool true, VBool bool | Or, VBool false, VBool bool -> return @@ vbool bool
     | Eq, VBool bool1, VBool bool2 -> return @@ vbool (bool1 = bool2)
@@ -160,21 +175,17 @@ end = struct
     | Eq, VString str1, VString str2 -> return @@ vbool (str1 = str2)
     | Neq, VString str1, VString str2 -> return @@ vbool (str1 <> str2)
     | Cons, h, VList tl -> return @@ vlist (h :: tl)
-    | Eq, VList lst1, VList lst2 ->
-      let* res =
-        List.fold_left2
-          (fun acc h1 h2 ->
-            let* acc = acc in
-            let* res = exec_binop_match (Eq, h1, h2) in
-            match res with
-            | VBool true -> return (true && acc)
-            | _ -> return false)
-          (return true)
-          lst1
-          lst2
-      in
-      return @@ vbool res
-    | _ -> fail @@ PatternMatchingError
+    | Eq, VList lst1, VList lst2 -> exec_eq_lst lst1 lst2
+    | Eq, VTuple lst1, VTuple lst2 -> exec_eq_lst lst1 lst2
+    | Eq, VAdt (name1, val1), VAdt (name2, val2) ->
+      if name1 = name2
+      then (
+        match val1, val2 with
+        | Some val1, Some val2 -> exec_binop_match (Eq, val1, val2)
+        | None, None -> return @@ vbool true
+        | _ -> return @@ vbool false)
+      else return @@ vbool false
+    | _, val1, val2 -> fail @@ ExecError (val1, val2)
 
   and exec_arith binop exp1 exp2 env =
     let* val1 = exec exp1 env in

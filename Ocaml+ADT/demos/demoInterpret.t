@@ -158,6 +158,22 @@
   > let answ = eq (1 :: []) (1 :: [])
   "answ": bool = true
   "eq": '2 . '2 -> '2 -> bool = <fun>
+  $ ./demoInterpret.exe << EOF
+  > let eq = fun a -> (fun b -> a = b)
+  > let answ = eq (1 :: 2 :: []) (1 :: 4 :: [])
+  "answ": bool = false
+  "eq": '2 . '2 -> '2 -> bool = <fun>
+  $ ./demoInterpret.exe << EOF
+  > type a = | First of int * string | Second of string * int
+  > let eq = fun a -> (fun b -> a = b)
+  > let answ1 = eq (First(5, "5")) (First(5, "5"))
+  > let answ2 = eq (First(4, "5")) (First(5, "5"))
+  > let answ3 = eq (First(4, "5")) (Second("5", 5))
+  type a = | Second of string * int | First of int * string
+  "answ1": bool = true
+  "answ2": bool = false
+  "answ3": bool = false
+  "eq": '2 . '2 -> '2 -> bool = <fun>
   $ ./demoInterpret.exe <<EOF
   > type list = | Nil | Cons of list
   > let rec x = Cons x
