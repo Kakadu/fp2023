@@ -12,4 +12,3 @@ module Eff = Tys.Eff
 module Scheme = Tys.Scheme
 
 module Env = Env
-module StdEnv = StdEnv
