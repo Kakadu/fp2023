@@ -72,8 +72,7 @@ let%expect_test _ =
     a = 1 / 0 
     x = a + 5 
     b = [1, 2]|};
-  [%expect
-    {|
+  [%expect {|
     a => Infinity
     b => [1, 2]
     lst => [1, 2, 6]
