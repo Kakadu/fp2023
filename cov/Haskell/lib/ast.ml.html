@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8"/>
     <title>ast.ml &mdash; Coverage report</title>
-    <meta name="description" content="78.57% coverage in lib/ast.ml">
+    <meta name="description" content="77.42% coverage in lib/ast.ml">
     <link rel="stylesheet" href="../coverage.css"/>
     <script src="../highlight.pack.js"></script>
     <script>hljs.initHighlightingOnLoad();</script>
@@ -15,13 +15,14 @@
           <span class="dirname">lib/</span>ast.ml
         </a>
       </h1>
-      <h2>78.57%</h2>
+      <h2>77.42%</h2>
     </div>
     <div id="navbar">
-      <span class="some-visited" style="top:7.50%"></span>
-      <span class="some-visited" style="top:42.50%"></span>
-      <span class="unvisited" style="bottom:13.75%"></span>
-      <span class="unvisited" style="bottom:1.25%"></span>
+      <span class="some-visited" style="top:7.32%"></span>
+      <span class="unvisited" style="top:41.46%"></span>
+      <span class="some-visited" style="bottom:34.15%"></span>
+      <span class="unvisited" style="bottom:1.22%"></span>
+      <span class="unvisited" style="bottom:0.00%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -57,55 +58,57 @@
 <a id="L29"></a><span > </span>
 <a id="L30"></a><span > </span>
 <a id="L31"></a><span class="visited"> </span>
-<a id="L32"></a><span > </span>
-<a id="L33"></a><span > </span>
-<a id="L34"></a><span class="some-visited"> </span>
-<a id="L35"></a><span > </span>
+<a id="L32"></a><span class="visited"> </span>
+<a id="L33"></a><span class="visited"> </span>
+<a id="L34"></a><span class="unvisited"> </span>
+<a id="L35"></a><span class="visited"> </span>
 <a id="L36"></a><span > </span>
-<a id="L37"></a><span class="visited"> </span>
+<a id="L37"></a><span > </span>
 <a id="L38"></a><span > </span>
 <a id="L39"></a><span > </span>
 <a id="L40"></a><span > </span>
-<a id="L41"></a><span > </span>
+<a id="L41"></a><span class="visited"> </span>
 <a id="L42"></a><span > </span>
-<a id="L43"></a><span class="visited"> </span>
+<a id="L43"></a><span > </span>
 <a id="L44"></a><span > </span>
-<a id="L45"></a><span > </span>
-<a id="L46"></a><span class="visited"> </span>
+<a id="L45"></a><span class="visited"> </span>
+<a id="L46"></a><span > </span>
 <a id="L47"></a><span > </span>
-<a id="L48"></a><span > </span>
+<a id="L48"></a><span class="visited"> </span>
 <a id="L49"></a><span > </span>
 <a id="L50"></a><span > </span>
-<a id="L51"></a><span > </span>
-<a id="L52"></a><span class="visited"> </span>
+<a id="L51"></a><span class="visited"> </span>
+<a id="L52"></a><span > </span>
 <a id="L53"></a><span > </span>
-<a id="L54"></a><span > </span>
+<a id="L54"></a><span class="some-visited"> </span>
 <a id="L55"></a><span > </span>
-<a id="L56"></a><span class="visited"> </span>
-<a id="L57"></a><span > </span>
+<a id="L56"></a><span > </span>
+<a id="L57"></a><span class="visited"> </span>
 <a id="L58"></a><span > </span>
 <a id="L59"></a><span > </span>
-<a id="L60"></a><span class="visited"> </span>
+<a id="L60"></a><span > </span>
 <a id="L61"></a><span > </span>
 <a id="L62"></a><span > </span>
-<a id="L63"></a><span > </span>
+<a id="L63"></a><span class="visited"> </span>
 <a id="L64"></a><span > </span>
 <a id="L65"></a><span > </span>
 <a id="L66"></a><span class="visited"> </span>
-<a id="L67"></a><span class="visited"> </span>
-<a id="L68"></a><span class="visited"> </span>
-<a id="L69"></a><span class="unvisited"> </span>
-<a id="L70"></a><span class="visited"> </span>
+<a id="L67"></a><span > </span>
+<a id="L68"></a><span > </span>
+<a id="L69"></a><span > </span>
+<a id="L70"></a><span > </span>
 <a id="L71"></a><span > </span>
 <a id="L72"></a><span > </span>
-<a id="L73"></a><span > </span>
-<a id="L74"></a><span > </span>
-<a id="L75"></a><span class="visited"> </span>
+<a id="L73"></a><span class="visited"> </span>
+<a id="L74"></a><span class="visited"> </span>
+<a id="L75"></a><span > </span>
 <a id="L76"></a><span > </span>
-<a id="L77"></a><span > </span>
-<a id="L78"></a><span > </span>
-<a id="L79"></a><span class="unvisited"> </span>
-<a id="L80"></a><span class="visited"> </span>
+<a id="L77"></a><span class="visited"> </span>
+<a id="L78"></a><span class="visited"> </span>
+<a id="L79"></a><span > </span>
+<a id="L80"></a><span > </span>
+<a id="L81"></a><span class="unvisited"> </span>
+<a id="L82"></a><span class="unvisited"> </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -190,87 +193,91 @@
 <a href="#L78">78</a>
 <a href="#L79">79</a>
 <a href="#L80">80</a>
+<a href="#L81">81</a>
+<a href="#L82">82</a>
 </pre>
-<pre><code class="ocaml">(** Copyright 2023-2024, Danil P *)
+<pre><code class="ocaml">(* Copyright 2023-2024, Danil P *)
 
-(** SPDX-License-Identifier: LGPL-3.0-or-later *)
+(* SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-(** Unique identifier typically representing variable names. *)
+(* Unique identifier typically representing variable names. *)
 <span data-count="0">t</span>ype id = <span data-count="127">s</span>tring [@@deriving show { with_path = false }]
 
-(** Type representing unary operations. *)
+(* Type representing unary operations. *)
 <span data-count="1">t</span>ype un_op =
-  | Neg (** Negation operator [-a] *)
-  | Not (** Logical NOT [not a] *)
+  | Neg (* Negation operator [-a] *)
+  | Not (* Logical NOT [not a] *)
 [@@deriving show { with_path = false }]
 
-(** Type representing binary operations. *)
+(* Type representing binary operations. *)
 <span data-count="29">t</span>ype bin_op =
-  | Add (** Addition [a + b] *)
-  | Sub (** Subtraction [a - b] *)
-  | Mul (** Multiplication [a * b] *)
-  | Div (** Division [a / b] *)
-  | And (** Logical AND [a &amp;&amp; b] *)
-  | Or (** Logical OR [a || b] *)
-  | Eq (** Equality [a == b] *)
-  | Neq (** Inequality [a /= b] *)
-  | Lt (** Less than [a &lt; b] *)
-  | Gt (** Greater than [a &gt; b] *)
-  | Leq (** Less than or equal to [a &lt;= b] *)
-  | Geq (** Greater than or equal to [a &gt;= b] *)
+  | Add (* Addition [a + b] *)
+  | Sub (* Subtraction [a - b] *)
+  | Mul (* Multiplication [a * b] *)
+  | Div (* Division [a / b] *)
+  | And (* Logical AND [a &amp;&amp; b] *)
+  | Or (* Logical OR [a || b] *)
+  | Eq (* Equality [a == b] *)
+  | Neq (* Inequality [a /= b] *)
+  | Lt (* Less than [a &lt; b] *)
+  | Gt (* Greater than [a &gt; b] *)
+  | Leq (* Less than or equal to [a &lt;= b] *)
+  | Geq (* Greater than or equal to [a &gt;= b] *)
 [@@deriving show { with_path = false }]
 
-(** Type representing binding from patterns to expressions. *)
-<span data-count="1303">t</span>ype binding = <span data-count="86">p</span>at * expr [@@deriving show { with_path = false }]
+(* Type representing literals *)
+<span data-count="171">t</span>ype lit =
+  | LitInt of in<span data-count="53">t</span> (* Integer literal [7] *)
+  | LitBool of boo<span data-count="3">l</span> (* Boolean literal [True] *)
+  | LitChar of cha<span data-count="0">r</span> (* Character literal ['a'] *)
+  | LitString of strin<span data-count="1">g</span>
+(* String literal ["abc"] *)
+(* | LitFloat of float  * Float literal [3.14] *)
+[@@deriving show { with_path = false }]
 
-(** Type representing case alternative in pattern matching. *)
+(* Type representing possible patterns in pattern-matching. *)
+<span data-count="428">t</span>ype pat =
+  | PatWild (* Wildcard pattern [_] *)
+  | PatVar of id (* Variable pattern [x] *)
+  | PatLit of lit (* Literal pattern [1], ['a'], ["abc"] *)
+  | PatTuple of <span data-count="80">p</span>at lis<span data-count="18">t</span> (* Tuple pattern [(x, y)] *)
+  | PatCons of pat * pat (* List constructor pattern [x:xs] *)
+  | PatNil (* Empty list pattern [[]] *)
+[@@deriving show { with_path = false }<span data-count="255">]</span>
+
+(* Type representing binding from patterns to expressions. *)
+<span data-count="959">t</span>ype binding = <span data-count="86">p</span>at * expr [@@deriving show { with_path = false }]
+
+(* Type representing case alternative in pattern matching. *)
 <span data-count="0">a</span>nd alt = <span data-count="18">p</span>at * expr [@@deriving show { with_path = false }]
 
-(** Type representing possible expressions *)
+(* Type representing possible expressions *)
 <span data-count="352">a</span>nd expr =
-  | ExprLit of lit (** Literal value [1], ['a'], ["abc"] *)
-  | ExprVar of id (** Variable reference [x] *)
-  | ExprFunc of binding (** Function/closure definition [\x -&gt; x + 1] *)
-  | ExprApp of expr * expr (** Function application [f x] *)
-  | ExprIf of expr * expr * expr (** If expression [if x then y else z] *)
-  | ExprTuple of <span data-count="53">e</span>xpr lis<span data-count="12">t</span> (** Tuple [(x, y)] *)
-  | ExprCons of expr * expr (** List construction [x:xs] *)
-  | ExprNil (** Empty list [[]] *)
-  | ExprCase of expr * <span data-count="44">a</span>lt lis<span data-count="13">t</span> (** Case expression [case (m,ys) of
+  | ExprLit of lit (* Literal value [1], ['a'], ["abc"] *)
+  | ExprVar of id (* Variable reference [x] *)
+  | ExprFunc of binding (* Function/closure definition [\x -&gt; x + 1] *)
+  | ExprApp of expr * expr (* Function application [f x] *)
+  | ExprIf of expr * expr * expr (* If expression [if x then y else z] *)
+  | ExprTuple of <span data-count="53">e</span>xpr lis<span data-count="12">t</span> (* Tuple [(x, y)] *)
+  | ExprCons of expr * expr (* List construction [x:xs] *)
+  | ExprNil (* Empty list [[]] *)
+  | ExprCase of expr * <span data-count="44">a</span>lt lis<span data-count="13">t</span>
+    (* Case expression [case (m,ys) of
                           (0,_)       -&gt;  []
                             (_,[])      -&gt;  []
                             (n,x:xs)    -&gt;  x : take (n-1) xs] *)
-  | ExprBinOp of bin_op * expr * expr (** Binary operation [a + b] *)
-  | ExprUnOp of un_op * expr (** Unary operation [not a] *)
-  | ExprLet of <span data-count="23">b</span>inding lis<span data-count="5">t</span> * expr (** Local binding [let x = 1 in x + 2] *)
-[@@deriving show { with_path = false }]
+  | ExprBinOp of bin_op * expr * expr (* Binary operation [a + b] *)
+  | ExprUnOp of un_op * expr (* Unary operation [not a] *)
+  | ExprLet of <span data-count="23">b</span>inding lis<span data-count="5">t</span> * expr (* Local binding [let x = 1 in x + 2] *)
+[@@deriving show { with_path = false }<span data-count="1053">]</span>
 
-(** Type representing possible patterns in pattern-matching. *)
-<span data-count="175">a</span>nd pat =
-  | PatWild (** Wildcard pattern [_] *)
-  | PatVar of id (** Variable pattern [x] *)
-  | PatLit of lit (** Literal pattern [1], ['a'], ["abc"] *)
-  | PatTuple of <span data-count="80">p</span>at lis<span data-count="18">t</span> (** Tuple pattern [(x, y)] *)
-  | PatCons of pat * pat (** List constructor pattern [x:xs] *)
-  | PatNil (** Empty list pattern [[]] *)
-[@@deriving show { with_path = false }]
+(* Type representing a single declaration. *)
+<span data-count="68">t</span>ype decl = DeclLet of binding (* Let binding declaration [x = 5] *)
+[@@deriving show { with_path = false }<span data-count="34">]</span>
 
-(** Type representing literals *)
-<span data-count="114">a</span>nd lit =
-  | LitInt of in<span data-count="53">t</span>  (** Integer literal [7] *)
-  | LitBool of boo<span data-count="3">l</span> (** Boolean literal [True] *)
-  | LitChar of cha<span data-count="0">r</span>  (** Character literal ['a'] *)
-  | LitString of strin<span data-count="1">g</span>  (** String literal ["abc"] *)
-  (* | LitFloat of float  * Float literal [3.14] *)
-[@@deriving show { with_path = false }]
-
-(** Type representing a single declaration. *)
-<span data-count="34">a</span>nd decl = DeclLet of binding  (** Let binding declaration [x = 5] *)
-[@@deriving show { with_path = false }]
-
-(** Type representing a whole program as a series of declarations. *)
-<span data-count="0">a</span>nd prog = <span data-count="0">d</span>ecl lis<span data-count="0">t</span>  (** Series of declarations [x = 5; y = 3] *)
-[@@deriving show { with_path = false }<span data-count="1342">]</span>
+(* Type representing a whole program as a series of declarations. *)
+<span data-count="0">t</span>ype prog = <span data-count="0">d</span>ecl lis<span data-count="0">t</span> (* Series of declarations [x = 5; y = 3] *)
+[@@deriving show { with_path = false }<span data-count="0">]</span>
 </code></pre>
       </div>
     </div>
