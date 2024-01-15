@@ -139,20 +139,33 @@ let rec print_vvalues ctx ?(str_quote = false) = function
     >>= fun obj ->
     if is_func obj
     then print_vvalues ctx @@ get_field "name" obj.fields >>| asprintf "[Function: %s]"
-    else if is_array obj
-    then
-      get_array_list obj
-      >>= map (fun x -> print_vvalues ctx x ~str_quote:true)
-      >>| fun array ->
-      if List.length array = 0 then "[]" else asprintf "[ %s ]" (String.concat ", " array)
-    else
-      map
-        (fun x -> print_vvalues ctx x.value ~str_quote:true >>| ( ^ ) (x.var_id ^ ": "))
-        obj.fields
-      >>| fun fields ->
-      if List.length fields = 0
-      then "{}"
-      else asprintf "{ %s }" (String.concat ", " fields)
+    else (
+      let concat = String.concat "," in
+      let* fields =
+        map
+          (fun x ->
+            print_vvalues ctx x.value ~str_quote:true >>| ( ^ ) (" " ^ x.var_id ^ ": "))
+          obj.fields
+      in
+      let fields_empty = List.length fields = 0 in
+      if is_array obj
+      then
+        let+ array =
+          get_array_list obj
+          >>= map (function
+            | Some x -> print_vvalues ctx ~str_quote:true x >>| ( ^ ) " "
+            | None -> return "")
+        in
+        if List.length array = 0 && fields_empty
+        then "[]"
+        else
+          asprintf
+            "[%s%s ]"
+            (concat array)
+            (if fields_empty then "" else "," ^ concat fields)
+      else if fields_empty
+      then return "{}"
+      else return @@ asprintf "{%s }" (concat fields))
   | _ as t -> return @@ asprintf "Cannot convert '%s' to string" @@ print_type ctx t
 ;;
 
@@ -195,20 +208,22 @@ let lex_add ctx ?(replace = false) lex_env_id var =
 ;;
 
 let get_parent ctx =
-  get_lex_env ctx ctx.cur_lex_env
-  >>= fun lex_env ->
+  let* lex_env = get_lex_env ctx ctx.cur_lex_env in
   match lex_env.parent with
   | Some x -> return x
   | _ -> error @@ InternalError "cannot get parent"
 ;;
 
 let print ctx values _ =
-  fold_left
-    (fun ctx value ->
-      print_vvalues ctx value >>| fun str -> { ctx with stdout = ctx.stdout ^ str ^ " " })
-    ctx
-    values
-  >>| fun ctx -> { ctx with stdout = ctx.stdout ^ "\n" }, None
+  let+ ctx =
+    fold_left
+      (fun ctx value ->
+        print_vvalues ctx value
+        >>| fun str -> { ctx with stdout = ctx.stdout ^ str ^ " " })
+      ctx
+      values
+  in
+  { ctx with stdout = ctx.stdout ^ "\n" }, None
 ;;
 
 let tfunction x = TFunction x
@@ -252,24 +267,23 @@ let context_init =
     }
   in
   let fun_pres ctx name f =
-    create_func ctx name [] (TFunPreset f)
-    >>| fun (ctx, value) -> ctx, { var_id = name; is_const = true; value }
+    let+ ctx, value = create_func ctx name [] (TFunPreset f) in
+    ctx, { var_id = name; is_const = true; value }
   in
   let get_this_val = function
     | Some x -> return x
     | None -> error @@ InternalError "Cannot find this"
   in
   let add_proto_objs new_val ctx vals =
-    add_obj ctx vals TObject
-    >>| fun (ctx, value) -> { ctx with proto_objs = new_val value }
+    let+ ctx, value = add_obj ctx vals TObject in
+    { ctx with proto_objs = new_val value }
   in
   let proto_obj ctx =
     let valueOf ctx =
       fun_pres ctx "valueOf" (fun ctx _ this ->
         get_this_val this >>| fun x -> ctx, Some (vobject x))
     in
-    valueOf ctx
-    >>= fun (ctx, v) ->
+    let* ctx, v = valueOf ctx in
     add_proto_objs (fun v -> { ctx.proto_objs with proto_obj = v }) ctx [ v ]
   in
   let proto_fun ctx =
@@ -278,38 +292,31 @@ let context_init =
   let proto_array ctx =
     let shift ctx =
       fun_pres ctx "shift" (fun ctx _ this ->
-        get_this_val this
-        >>= fun id ->
-        get_obj_ctx ctx id
-        >>= fun obj ->
+        let* id = get_this_val this in
+        let* obj = get_obj_ctx ctx id in
         get_array_list obj
         >>| (function
-               | a :: tl -> { obj with obj_type = TArray tl }, a
+               | Some a :: tl -> { obj with obj_type = TArray tl }, a
                | _ -> obj, VUndefined)
         >>| fun (obj, ret) -> { ctx with objs = IntMap.add id obj ctx.objs }, Some ret)
     in
     let unshift ctx =
       fun_pres ctx "unshift" (fun ctx args this ->
-        get_this_val this
-        >>= fun id ->
-        get_obj_ctx ctx id
-        >>= fun obj ->
-        get_array_list obj
-        >>| fun tl ->
+        let* id = get_this_val this in
+        let* obj = get_obj_ctx ctx id in
+        let* tl = get_array_list obj in
+        let+ args = map (fun elem -> return @@ Some elem) args in
         let new_arr = List.append args tl in
         let obj = { obj with obj_type = TArray new_arr } in
         let ret = vnumber (float_of_int @@ List.length new_arr) in
         { ctx with objs = IntMap.add id obj ctx.objs }, Some ret)
     in
-    fold_left_map (fun ctx f -> f ctx) ctx [ shift; unshift ]
-    >>= fun (ctx, v) ->
+    let* ctx, v = fold_left_map (fun ctx f -> f ctx) ctx [ shift; unshift ] in
     add_proto_objs (fun v -> { ctx.proto_objs with proto_array = v }) ctx v
   in
   let console ctx =
-    fun_pres ctx "log" print
-    >>= fun (ctx, f) ->
-    add_obj ctx [ f ] TObject
-    >>= fun (ctx, value) ->
+    let* ctx, f = fun_pres ctx "log" print in
+    let* ctx, value = add_obj ctx [ f ] TObject in
     lex_add
       ctx
       first_lex_env
@@ -322,8 +329,7 @@ let context_init =
 ;;
 
 let create_local_ctx ctx parent scope this =
-  get_lex_env ctx ctx.cur_lex_env
-  >>= fun cur_lex_env ->
+  let* cur_lex_env = get_lex_env ctx ctx.cur_lex_env in
   let vars =
     match this with
     | Some int -> [ { var_id = "this"; is_const = true; value = VObject int } ]
@@ -349,8 +355,7 @@ let create_local_ctx ctx parent scope this =
 
 let end_of_block ctx =
   let ret = ctx.vreturn in
-  get_lex_env ctx ctx.cur_lex_env
-  >>= fun lex_env ->
+  let* lex_env = get_lex_env ctx ctx.cur_lex_env in
   match lex_env.creater with
   | Some x -> return ({ ctx with cur_lex_env = x; vreturn = None }, ret)
   | _ when ctx.cur_lex_env = first_lex_env -> return (ctx, ret)
@@ -372,8 +377,7 @@ let rec in_func ctx lex_env =
 let prefind_funcs ctx ast =
   let ctx_add_if_func ctx = function
     | FunInit x ->
-      create_function ctx x.fun_identifier x.arguments x.body
-      >>= fun f ->
+      let* f = create_function ctx x.fun_identifier x.arguments x.body in
       let ctx, value = f in
       lex_add ctx ctx.cur_lex_env { var_id = x.fun_identifier; is_const = false; value }
     | _ -> return ctx
@@ -381,36 +385,43 @@ let prefind_funcs ctx ast =
   fold_left ctx_add_if_func ctx ast
 ;;
 
+let array_find_by_index id array =
+  match int_of_string_opt id with
+  | Some x when x >= 0 -> Option.join @@ List.nth_opt array x
+  | _ -> None
+;;
+
 let obj_get_property ctx obj key =
   match obj with
   | VObject id as obj_val ->
-    let obj_type = get_obj_ctx ctx id >>| fun obj -> obj.obj_type in
+    let* obj = get_obj_ctx ctx id in
     let rec go = function
       | VObject x ->
-        get_obj_ctx ctx x
-        >>= fun obj ->
+        let* obj = get_obj_ctx ctx x in
         (match find_in_vars_opt key obj.fields with
          | None -> go obj.proto
          | Some x -> return @@ Some x.value)
       | _ -> return None
     in
-    let if_none f a =
+    let if_none a f =
       a
       >>= function
-      | Some x -> return x
+      | Some _ as x -> return x
       | None -> f
     in
-    let spec_objs = function
+    let find_in_objects =
+      match obj.obj_type with
       | TFunPreset _ | TFunction _ | TArrowFunction _ ->
-        go (vobject ctx.proto_objs.proto_fun)
-      | TArray _ -> go (vobject ctx.proto_objs.proto_array)
-      | _ -> return None
+        if_none (go obj_val) @@ go (vobject ctx.proto_objs.proto_fun)
+      | TArray arr ->
+        if_none (return @@ array_find_by_index key arr)
+        @@ go (vobject ctx.proto_objs.proto_array)
+      | TObject -> go obj_val
     in
-    let proto_obj () =
-      if_none (return VUndefined) (go (vobject ctx.proto_objs.proto_obj))
-    in
-    let protos () = obj_type >>= fun typ -> if_none (proto_obj ()) (spec_objs typ) in
-    if_none (protos ()) (go obj_val)
+    if_none find_in_objects (go (vobject ctx.proto_objs.proto_obj))
+    >>| (function
+     | Some x -> x
+     | None -> VUndefined)
   | _ -> ensup "reading from not object"
 ;;
 
@@ -453,8 +464,7 @@ let get_obj_id ctx = function
 
 let ctx_get_var ctx id =
   let rec go lex_id =
-    get_lex_env ctx lex_id
-    >>= fun lex_env ->
+    let* lex_env = get_lex_env ctx lex_id in
     match find_in_vars_opt id lex_env.vars with
     | Some a -> return (a, lex_id)
     | None ->
@@ -473,8 +483,8 @@ let ctx_get_var ctx id =
 (**In this interpretator all context change what valueOf make will be discard*)
 let rec get_primitive ctx = function
   | VObject id as x ->
-    obj_get_property ctx x "valueOf"
-    >>= fun f -> eval_fun ctx f [] (Some id) >>| fun (_, value) -> value
+    let* f = obj_get_property ctx x "valueOf" in
+    eval_fun ctx f [] (Some id) >>| fun (_, value) -> value
   | _ as t -> return t
 
 and to_string ctx v =
@@ -515,21 +525,29 @@ and to_number ctx v =
   | _ -> nan
 
 and ctx_not_change_bop ctx op a b =
-  let bop_with_num op = both (to_number ctx) a b >>| fun (a, b) -> vnumber @@ op a b in
-  let bop_logical_with_num op =
-    both (to_number ctx) a b >>| fun (a, b) -> vbool @@ op a b
+  let bop_with_num op =
+    let+ a, b = both (to_number ctx) a b in
+    vnumber @@ op a b
   in
-  let bop_with_string op = both (to_string ctx) a b >>| fun (a, b) -> vstring @@ op a b in
+  let bop_logical_with_num op =
+    let+ a, b = both (to_number ctx) a b in
+    vbool @@ op a b
+  in
+  let bop_with_string op =
+    let+ a, b = both (to_string ctx) a b in
+    vstring @@ op a b
+  in
   let bop_logical_with_string op =
-    both (to_string ctx) a b >>| fun (a, b) -> vbool @@ op a b
+    let+ a, b = both (to_string ctx) a b in
+    vbool @@ op a b
   in
   let bop_bitwise_shift op b =
-    both (to_number ctx) a b
-    >>| fun (a, b) -> vnumber @@ Int32.to_float (op (Int32.of_float a) (Int.of_float b))
+    let+ a, b = both (to_number ctx) a b in
+    vnumber @@ Int32.to_float (op (Int32.of_float a) (Int.of_float b))
   in
   let bop_with_int op =
-    both (to_number ctx) a b
-    >>| fun (a, b) -> vnumber (float_of_int (op (int_of_float a) (int_of_float b)))
+    let+ a, b = both (to_number ctx) a b in
+    vnumber (float_of_int (op (int_of_float a) (int_of_float b)))
   in
   let is_to_string v =
     get_primitive ctx v
@@ -539,8 +557,8 @@ and ctx_not_change_bop ctx op a b =
   in
   let negotiate res = res >>= fun x -> get_vbool ctx x >>| fun res -> VBool (not res) in
   let add () =
-    both is_to_string a b
-    >>= fun (l, r) -> if l || r then bop_with_string ( ^ ) else bop_with_num ( +. )
+    let* l, r = both is_to_string a b in
+    if l || r then bop_with_string ( ^ ) else bop_with_num ( +. )
   in
   let strict_equal () = return (VBool (a = b)) in
   let equal () =
@@ -574,8 +592,7 @@ and ctx_not_change_bop ctx op a b =
         else return (VBool false)
   in
   let less_than () =
-    both is_to_string a b
-    >>= fun (l, r) ->
+    let* l, r = both is_to_string a b in
     if l && r then bop_logical_with_string ( < ) else bop_logical_with_num ( < )
   in
   let shift op =
@@ -605,12 +622,10 @@ and ctx_not_change_bop ctx op a b =
   in
   let less_eq () =
     let bop cast a b =
-      both cast a b
-      >>= fun (x, y) ->
-      ctx_not_change_bop ctx LessThan x y
-      >>= fun res1 ->
-      ctx_not_change_bop ctx Equal x y
-      >>= fun res2 -> ctx_not_change_bop ctx LogicalOr res1 res2
+      let* x, y = both cast a b in
+      let* res1 = ctx_not_change_bop ctx LessThan x y in
+      let* res2 = ctx_not_change_bop ctx Equal x y in
+      ctx_not_change_bop ctx LogicalOr res1 res2
     in
     both is_to_string a b
     >>= fun (l, r) ->
@@ -669,33 +684,33 @@ and ctx_not_change_unop ctx op a =
   | _ as a -> ensup @@ asprintf "operator %a not supported yet" pp_un_op a
 
 and eval_fun ctx f args this =
-  fold_left_map eval_exp ctx args
-  <?> "error in function arguments"
-  >>= fun (ctx, args) ->
+  let* ctx, args = fold_left_map eval_exp ctx args <?> "error in function arguments" in
   let get_fun =
     match f with
     | VObject id ->
-      get_obj_ctx ctx id
-      >>= fun obj ->
+      let* obj = get_obj_ctx ctx id in
       if is_func obj then return (ctx, obj.obj_type) else etyp "object is not a function"
     | _ -> etyp @@ asprintf "'%s' is not a function" (print_type ctx f)
   in
   let valid_and_run ctx scope f =
     let rec val_to_args ctx = function
       | a1 :: atl, v1 :: vtl ->
-        lex_add ctx ctx.cur_lex_env { var_id = a1; is_const = false; value = v1 }
-        >>= fun ctx -> val_to_args ctx (atl, vtl)
+        let var = { var_id = a1; is_const = false; value = v1 } in
+        let* ctx = lex_add ctx ctx.cur_lex_env var in
+        val_to_args ctx (atl, vtl)
       | a1 :: atl, _ ->
-        lex_add ctx ctx.cur_lex_env { var_id = a1; is_const = false; value = VUndefined }
-        >>= fun ctx -> val_to_args ctx (atl, [])
+        let var = { var_id = a1; is_const = false; value = VUndefined } in
+        let* ctx = lex_add ctx ctx.cur_lex_env var in
+        val_to_args ctx (atl, [])
       | _, _ -> return ctx
     in
     create_local_ctx ctx f.parent_lex_env scope this
     >>= fun ctx ->
     match f.body with
     | Block x ->
-      val_to_args ctx (f.args, args)
-      >>= fun ctx -> parse_stms ctx x >>| fun (ctx, ret) -> ctx, get_vreturn ret
+      let* ctx = val_to_args ctx (f.args, args) in
+      let+ ctx, ret = parse_stms ctx x in
+      ctx, get_vreturn ret
     | _ ->
       error (AstError "in top of fun body expected Block, but something else was given")
   in
@@ -712,14 +727,12 @@ and ctx_change_unop ctx op a =
   let op_new () =
     match a with
     | FunctionCall (f, args) ->
-      add_obj ctx [] TObject
-      >>= fun (ctx, id) ->
-      eval_exp ctx f
-      >>= fun (ctx, f) ->
-      eval_fun ctx f args (Some id) >>| fun (ctx, _) -> ctx, vobject id
+      let* ctx, id = add_obj ctx [] TObject in
+      let* ctx, f = eval_exp ctx f in
+      let+ ctx, _ = eval_fun ctx f args (Some id) in
+      ctx, vobject id
     | _ as v ->
-      eval_exp ctx v
-      >>= fun (ctx, v) ->
+      let* ctx, v = eval_exp ctx v in
       print_vvalues ctx v >>= fun v -> etyp (v ^ " is not a constructor")
   in
   let add_ctx = add_ctx ctx in
@@ -731,17 +744,13 @@ and ctx_change_unop ctx op a =
     ctx_change_bop ctx SubAssign a (Const (Number 1.))
     <?> "error in prefix decrement operator"
   | PostInc ->
-    eval_exp ctx a
-    >>= fun (_, res) ->
-    ctx_change_bop ctx AddAssign a (Const (Number 1.))
-    >>| (fun (ctx, _) -> ctx, res)
-    <?> "error in prefix increment operator"
+    let* _, res = eval_exp ctx a in
+    let* ctx, _ = ctx_change_bop ctx AddAssign a (Const (Number 1.)) in
+    return (ctx, res) <?> "error in prefix increment operator"
   | PostDec ->
-    eval_exp ctx a
-    >>= fun (_, res) ->
-    ctx_change_bop ctx SubAssign a (Const (Number 1.))
-    >>| (fun (ctx, _) -> ctx, res)
-    <?> "error in prefix decrement operator"
+    let* _, res = eval_exp ctx a in
+    let* ctx, _ = ctx_change_bop ctx SubAssign a (Const (Number 1.)) in
+    return (ctx, res) <?> "error in prefix decrement operator"
   | New -> op_new ()
   | _ -> eval_exp ctx a >>= fun (ctx, a) -> add_ctx @@ ctx_not_change_unop ctx op a
 
@@ -755,10 +764,8 @@ and ctx_change_bop ctx op a b : (ctx * value) t =
       fold_left_map eval_exp ctx [ obj; prop; b ]
       >>= function
       | ctx, [ obj_val; prop; b ] ->
-        get_obj obj_val
-        >>= fun (id, obj) ->
-        to_string ctx prop
-        >>= fun prop ->
+        let* id, obj = get_obj obj_val in
+        let* prop = to_string ctx prop in
         let get_new_obj =
           match prop with
           | "__proto__" ->
@@ -768,8 +775,7 @@ and ctx_change_bop ctx op a b : (ctx * value) t =
           | _ ->
             (match find_in_vars_opt prop obj.fields with
              | Some x when x.is_const ->
-               print_vvalues ctx obj_val
-               >>= fun str ->
+               let* str = print_vvalues ctx obj_val in
                etyp
                @@ asprintf "Cannot assign to read only property '%s' of %s" x.var_id str
              | _ ->
@@ -783,12 +789,12 @@ and ctx_change_bop ctx op a b : (ctx * value) t =
     in
     match a with
     | Var id ->
-      eval_exp ctx b
-      >>= fun (ctx, res) ->
-      ctx_get_var ctx id
-      >>= fun (_, lex_id) ->
-      lex_add ctx ~replace:true lex_id { var_id = id; is_const = false; value = res }
-      >>| fun ctx -> ctx, res
+      let* ctx, res = eval_exp ctx b in
+      let* _, lex_id = ctx_get_var ctx id in
+      let+ ctx =
+        lex_add ctx ~replace:true lex_id { var_id = id; is_const = false; value = res }
+      in
+      ctx, res
     | BinOp (PropAccs, obj, prop) -> obj_assign obj prop
     | _ -> error @@ SyntaxError "Invalid left-hand side in assignment"
   in
@@ -829,15 +835,13 @@ and eval_exp ctx = function
     let find_this =
       match var with
       | BinOp (PropAccs, x, y) ->
-        eval_exp ctx x
-        >>= fun (ctx, obj) ->
+        let* ctx, obj = eval_exp ctx x in
         let this =
           match obj with
           | VObject id -> Some id
           | _ -> None
         in
-        eval_exp ctx y
-        >>= fun (ctx, y) ->
+        let* ctx, y = eval_exp ctx y in
         ctx_not_change_bop ctx PropAccs obj y >>| fun res -> (ctx, res), this
       | _ -> eval_exp ctx var >>| fun res -> res, None
     in
@@ -849,19 +853,23 @@ and eval_exp ctx = function
   | ObjectDef x ->
     fold_left_map
       (fun ctx (key, value) ->
-        eval_exp ctx key
-        >>= fun (ctx, key) ->
-        to_string ctx key
-        >>= fun id ->
-        eval_for_top_val ctx id value
-        >>| fun (ctx, value) -> ctx, { var_id = id; is_const = false; value })
+        let* ctx, key = eval_exp ctx key in
+        let* id = to_string ctx key in
+        let+ ctx, value = eval_for_top_val ctx id value in
+        ctx, { var_id = id; is_const = false; value })
       ctx
       x
     >>= fun (ctx, fields) ->
     add_obj ctx fields TObject >>| fun (ctx, id) -> ctx, vobject id
   | ArrayList array ->
-    fold_left_map (fun ctx elem -> eval_exp ctx elem) ctx array
-    >>= fun (ctx, vals) ->
+    let* ctx, vals =
+      fold_left_map
+        (fun ctx elem ->
+          let+ ctx, value = eval_exp ctx elem in
+          ctx, Some value)
+        ctx
+        array
+    in
     add_obj ctx [] (TArray vals) >>| fun (ctx, id) -> ctx, vobject id
   | _ -> ensup ""
 
@@ -869,30 +877,24 @@ and eval_exp ctx = function
 
 and parse_stm ctx = function
   | Return x ->
-    eval_exp ctx x
-    <?> "error in return expression"
-    >>| fun (ctx, ret) -> { ctx with vreturn = Some ret }
+    let+ ctx, ret = eval_exp ctx x <?> "error in return expression" in
+    { ctx with vreturn = Some ret }
   | VarInit x ->
-    eval_for_top_val ctx x.var_identifier x.value
-    <?> "error in var declaration expression"
-    >>= fun (ctx, v) ->
-    lex_add
-      ctx
-      ctx.cur_lex_env
-      { var_id = x.var_identifier; is_const = x.is_const; value = v }
+    let* ctx, v =
+      eval_for_top_val ctx x.var_identifier x.value
+      <?> "error in var declaration expression"
+    in
+    let var = { var_id = x.var_identifier; is_const = x.is_const; value = v } in
+    lex_add ctx ctx.cur_lex_env var
   | If (condition, then_stm, else_stm) ->
-    eval_exp ctx condition
-    >>= fun (ctx, res) ->
+    let* ctx, res = eval_exp ctx condition in
     to_bool ctx res
     >>= (function
      | true -> parse_stm ctx then_stm
      | false -> parse_stm ctx else_stm)
   | Block ast ->
-    create_local_ctx ctx ctx.cur_lex_env Block None
-    >>= fun ctx ->
-    parse_stms ctx ast
-    <?> "error while interpret block"
-    >>| fun (ctx, ret) ->
+    let* ctx = create_local_ctx ctx ctx.cur_lex_env Block None in
+    let+ ctx, ret = parse_stms ctx ast <?> "error while interpret block" in
     (match ret with
      | Some _ as x -> { ctx with vreturn = x }
      | _ -> ctx)
@@ -901,20 +903,17 @@ and parse_stm ctx = function
   | _ -> ensup ""
 
 and parse_stms ctx ast =
-  prefind_funcs ctx ast
-  >>= fun ctx ->
+  let* ctx = prefind_funcs ctx ast in
   fold_left_s parse_stm (fun ctx -> is_some ctx.vreturn) ctx ast >>= end_of_block
 ;;
 
 let interpret_ast ast : (program_return, string) Result.t =
   match ast with
   | Programm x ->
-    context_init
-    >>= fun ctx ->
-    parse_stms ctx x
-    >>= fun (ctx, ret) ->
-    print_vvalues ctx @@ get_vreturn ret
-    >>| fun ret -> { stdout = ctx.stdout; return = ret }
+    let* ctx = context_init in
+    let* ctx, ret = parse_stms ctx x in
+    let+ ret = print_vvalues ctx @@ get_vreturn ret in
+    { stdout = ctx.stdout; return = ret }
   | _ ->
     error @@ AstError "expect Programm in start of programm, but something else was given"
 ;;
