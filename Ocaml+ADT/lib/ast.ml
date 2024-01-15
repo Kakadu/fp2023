@@ -90,7 +90,7 @@ let padt decl_name pattern = PAdt (decl_name, pattern)
 type type_decl = decl_name * (decl_name * decl_type) list
 [@@deriving eq, show { with_path = false }]
 
-type let_decl = decl_rec * decl_name * decl_type * decl_exp
+type let_decl = decl_rec * decl_name * decl_exp
 [@@deriving eq, show { with_path = false }]
 
 and decl_exp =
@@ -127,7 +127,7 @@ let elet let_decl decl_exp = ELet (let_decl, decl_exp)
 let eapp decl_exp1 decl_exp2 = EApp (decl_exp1, decl_exp2)
 let ematch decl_exp lst = EMatch (decl_exp, lst)
 let eif decl_exp1 decl_exp2 decl_exp3 = EIf (decl_exp1, decl_exp2, decl_exp3)
-let decllet bool decl_name decl_type decl_exp = DLet (bool, decl_name, decl_type, decl_exp)
+let decllet bool decl_name decl_exp = DLet (bool, decl_name, decl_exp)
 let decltype decl_name lst = DType (decl_name, lst)
 
 type program = decl list [@@deriving eq, show { with_path = false }]

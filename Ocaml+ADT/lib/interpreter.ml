@@ -166,18 +166,6 @@ end = struct
        | Geq, VInt num1, VInt num2 -> return @@ vbool (num1 > num2)
        | Eq, VString str1, VString str2 -> return @@ vbool (str1 = str2)
        | Neq, VString str1, VString str2 -> return @@ vbool (str1 <> str2)
-       | Cons, VBool h, VBool tl -> return @@ vlist (VBool h :: [ VBool tl ])
-       | Cons, VInt h, VInt tl -> return @@ vlist (VInt h :: [ VInt tl ])
-       | Cons, VString h, VString tl -> return @@ vlist (VString h :: [ VString tl ])
-       | Cons, VTuple h, VTuple tl -> return @@ vlist (VTuple h :: [ VTuple tl ])
-       | Cons, VFun (h_pattern, h_decl_exp, h_env), VFun (tl_pattern, tl_decl_exp, tl_env)
-         ->
-         return
-         @@ vlist
-              (VFun (h_pattern, h_decl_exp, h_env)
-               :: [ VFun (tl_pattern, tl_decl_exp, tl_env) ])
-       | Cons, VAdt (h_string, h_value), VAdt (tl_string, tl_value) ->
-         return @@ vlist (VAdt (h_string, h_value) :: [ VAdt (tl_string, tl_value) ])
        | Cons, h, VList tl -> return @@ vlist (h :: tl)
        | _ -> fail @@ ExecError (val1, val2))
 
@@ -192,13 +180,22 @@ end = struct
     | LName _, _ -> fail @@ ExprTypeError "unexpected LName"
 
   and exec_let let_decl exp1 env =
-    let _, decl_name, _, decl_exp = let_decl in
-    match decl_name with
-    | LName decl_name ->
+    let is_rec, decl_name, decl_exp = let_decl in
+    match is_rec, decl_name with
+    | DRec false, LName decl_name ->
       let* exp_val = exec decl_exp env in
       let new_env = extend_env decl_name exp_val env in
       exec exp1 new_env
-    | UName _ -> fail @@ ExprTypeError "unexpected Uname"
+    | DRec true, LName decl_name ->
+      let* exp_val = exec decl_exp env in
+      let exp_val =
+        match exp_val with
+        | VFun (_, _, _) -> vletrec decl_name exp_val
+        | _ -> exp_val
+      in
+      let new_env = extend_env decl_name exp_val env in
+      exec exp1 new_env
+    | _, _ -> fail @@ ExprTypeError "unexpected Uname"
 
   and exec_app app_exp_val app_arg env =
     match app_exp_val with
@@ -259,7 +256,7 @@ end = struct
   ;;
 
   let exec_let program_decl env =
-    let decl_is_rec, decl_name, _, decl_exp = program_decl in
+    let decl_is_rec, decl_name, decl_exp = program_decl in
     match decl_name with
     | LName decl_name ->
       (match decl_is_rec with

@@ -8,41 +8,44 @@ open Format
 let parse_and_interpret_result str =
   match Parser.parse str with
   | Ok parse_result ->
-    (match Interpreter.InterpreterResult.exec_program parse_result with
-     | Ok actual -> printf "%a" InterpreterTypes.pp_env actual
-     | Error err -> printf "%a" InterpreterTypes.pp_failure err)
+    (match Inferencer.run_infer_program parse_result with
+     | Ok (adt_env, env) ->
+       (match Interpreter.InterpreterResult.exec_program parse_result with
+        | Ok res -> InterpreterResultPrinter.pp_interpret_res adt_env env res
+        | Error err -> printf "Interpreting error: %a" InterpreterTypes.pp_failure err)
+     | Error err -> printf "Inferencing error: %a" InferencerTypes.pp_inf_err err)
   | Error err -> printf "Parsing error: %s\n" err
 ;;
 
 (* tests *)
 let%expect_test _ =
   let _ = parse_and_interpret_result {| let n = 5 |} in
-  [%expect {| "n": 5 |}]
+  [%expect {| "n": int = 5 |}]
 ;;
 
 let%expect_test _ =
-  let _ = parse_and_interpret_result {| let x : bool = (false || true) && true |} in
-  [%expect {| "x": true|}]
+  let _ = parse_and_interpret_result {| let x = (false || true) && true |} in
+  [%expect {| "x": bool = true|}]
 ;;
 
 let%expect_test _ =
-  let _ = parse_and_interpret_result {| let x : bool = false && true |} in
-  [%expect {| "x": false|}]
+  let _ = parse_and_interpret_result {| let x = false && true |} in
+  [%expect {| "x": bool = false|}]
 ;;
 
 let%expect_test _ =
-  let _ = parse_and_interpret_result {| let x : bool = true || true |} in
-  [%expect {| "x": true|}]
+  let _ = parse_and_interpret_result {| let x = true || true |} in
+  [%expect {| "x": bool = true|}]
 ;;
 
 let%expect_test _ =
-  let _ = parse_and_interpret_result {| let x : bool = true == true |} in
-  [%expect {| "x": true|}]
+  let _ = parse_and_interpret_result {| let x = true == true |} in
+  [%expect {| "x": bool = true|}]
 ;;
 
 let%expect_test _ =
-  let _ = parse_and_interpret_result {| let x : bool = true <> false |} in
-  [%expect {| "x": true|}]
+  let _ = parse_and_interpret_result {| let x = true <> false |} in
+  [%expect {| "x": bool = true|}]
 ;;
 
 let%expect_test _ =
@@ -52,8 +55,8 @@ let%expect_test _ =
          let a = n 4 |}
   in
   [%expect {|
-    "a": true
-    "n": <fun> |}]
+    "a": bool = true
+    "n": int -> bool = <fun> |}]
 ;;
 
 let%expect_test _ =
@@ -64,9 +67,9 @@ let%expect_test _ =
          let b = "b" <> n |}
   in
   [%expect {|
-    "a": true
-    "b": true
-    "n": "a" |}]
+    "a": bool = true
+    "b": bool = true
+    "n": string = "a" |}]
 ;;
 
 let%expect_test _ =
@@ -76,10 +79,11 @@ let%expect_test _ =
          let a = factorial_recursive 5
          let b = factorial_recursive 6 |}
   in
-  [%expect {|
-    "a": 120
-    "b": 720
-    "factorial_recursive": <let rec> |}]
+  [%expect
+    {|
+    "a": int = 120
+    "b": int = 720
+    "factorial_recursive": int -> int = <let rec> |}]
 ;;
 
 let%expect_test _ =
@@ -89,15 +93,16 @@ let%expect_test _ =
          let fac = fix (fun self -> (fun n -> if n <= 1 then 1 else n * self (n - 1)))
          let a = fac 5 |}
   in
-  [%expect {|
-    "a": 120
-    "fac": <fun>
-    "fix": <let rec> |}]
+  [%expect
+    {|
+    "a": int = 120
+    "fac": int -> int = <fun>
+    "fix": '2 '3 . (('2 -> '3) -> '2 -> '3) -> '2 -> '3 = <let rec> |}]
 ;;
 
 let%expect_test _ =
   let _ = parse_and_interpret_result {| let rec n = 5 |} in
-  [%expect {| "n": 5 |}]
+  [%expect {| "n": int = 5 |}]
 ;;
 
 let%expect_test _ =
@@ -107,8 +112,8 @@ let%expect_test _ =
          let f = n 7 |}
   in
   [%expect {|
-    "f": 12
-    "n": <fun> |}]
+    "f": int = 12
+    "n": int -> int = <fun> |}]
 ;;
 
 let%expect_test _ =
@@ -118,8 +123,8 @@ let%expect_test _ =
          let f = n 7 |}
   in
   [%expect {|
-    "f": 3
-    "n": <fun>  |}]
+    "f": int = 3
+    "n": int -> int = <fun>  |}]
 ;;
 
 let%expect_test _ =
@@ -129,41 +134,50 @@ let%expect_test _ =
          let f = n 100 |}
   in
   [%expect {|
-    "f": 5
-    "n": <fun> |}]
+    "f": int = 5
+    "n": int -> int = <fun> |}]
 ;;
 
 let%expect_test _ =
   let _ =
     parse_and_interpret_result
-      {| let a = fun x -> match x with | Tepa 4 -> true | _ -> false
+      {| type me = | Tepa of int
+      let a = fun x -> match x with | Tepa 4 -> true | _ -> false
          let n = a (Tepa 4) |}
   in
-  [%expect {|
-    "a": <fun>
-    "n": true |}]
+  [%expect
+    {|
+    type me = | Tepa of int
+    "a": me -> bool = <fun>
+    "n": bool = true |}]
 ;;
 
 let%expect_test _ =
   let _ =
     parse_and_interpret_result
-      {| let a = fun x -> match x with | Tepa 4 -> true | _ -> false
+      {| type me = | Tepa of int
+      let a = fun x -> match x with | Tepa 4 -> true | _ -> false
          let n = a (Tepa 5) |}
   in
-  [%expect {|
-    "a": <fun>
-    "n": false |}]
+  [%expect
+    {|
+    type me = | Tepa of int
+    "a": me -> bool = <fun>
+    "n": bool = false |}]
 ;;
 
 let%expect_test _ =
   let _ =
     parse_and_interpret_result
-      {| let a = fun x -> match x with | Tepa 4 -> true | _ -> false
+      {| type me = | Tepa of int | NeTepa of int
+      let a = fun x -> match x with | Tepa 4 -> true | _ -> false
          let n = a (NeTepa 5) |}
   in
-  [%expect {|
-    "a": <fun>
-    "n": false |}]
+  [%expect
+    {|
+    type me = | Tepa of int | NeTepa of int
+    "a": me -> bool = <fun>
+    "n": bool = false |}]
 ;;
 
 let%expect_test _ =
@@ -171,14 +185,15 @@ let%expect_test _ =
     parse_and_interpret_result
       {| let h = fun h :: tl -> h
          let tl = fun h :: tl -> tl
-         let n = h (4 :: 5 :: 6)
-         let m = tl (4 :: 5 :: 6) |}
+         let n = h (4 :: 5 :: 6 :: [])
+         let m = tl (4 :: 5 :: 6 :: []) |}
   in
-  [%expect {|
-    "h": <fun>
-    "m": [5; 6]
-    "n": 4
-    "tl": <fun> |}]
+  [%expect
+    {|
+    "h": '0 . '0 list -> '0 = <fun>
+    "m": int list = [5; 6]
+    "n": int = 4
+    "tl": '2 . '2 list -> '2 list = <fun> |}]
 ;;
 
 let%expect_test _ =
@@ -193,50 +208,55 @@ let%expect_test _ =
   in
   [%expect
     {|
-    "k": 40
-    "m": -1
-    "mul": <fun>
-    "n": 9
-    "sub": <fun>
-    "sum": <fun> |}]
+    "k": int = 40
+    "m": int = -1
+    "mul": int * int -> int = <fun>
+    "n": int = 9
+    "sub": int * int -> int = <fun>
+    "sum": int * int -> int = <fun> |}]
 ;;
 
 let%expect_test _ =
   let _ =
     parse_and_interpret_result
-      {| let h = fun h :: tl -> h
+      {| type me = | Tepa of int
+         let h = fun h :: tl -> h
          let tl = fun h :: tl -> tl
-         let n = h (Tepa 46 :: Tepa 45 :: Tepa 44)
-         let m = tl (Tepa 46 :: Tepa 45 :: Tepa 44) |}
+         let n = h (Tepa 46 :: Tepa 45 :: Tepa 44 :: [])
+         let m = tl (Tepa 46 :: Tepa 45 :: Tepa 44 :: []) |}
   in
   [%expect
     {|
-      "h": <fun>
-      "m": ["Tepa" 45; "Tepa" 44]
-      "n": "Tepa" 46
-      "tl": <fun> |}]
+      type me = | Tepa of int
+      "h": '0 . '0 list -> '0 = <fun>
+      "m": me list = [Tepa 45; Tepa 44]
+      "n": me = Tepa 46
+      "tl": '2 . '2 list -> '2 list = <fun> |}]
 ;;
 
 let%expect_test _ =
   let _ =
     parse_and_interpret_result
-      {| let a = fun x -> match x with | Tree (_, _) -> true | _ -> false
-         let n = a (Tree (Tree (Tree (2, 3), 2), Tree(2, 3))) |}
+      {| type tree = | Tree of tree * tree | Num of int
+         let a = fun x -> match x with | Tree (_, _) -> true | _ -> false
+         let n = a (Tree (Tree (Tree (Num 2, Num 3), Num 2), Tree(Num 2, Num 3))) |}
   in
-  [%expect {|
-    "a": <fun>
-    "n": true |}]
+  [%expect
+    {|
+    type tree = | Tree of tree * tree | Num of int
+    "a": tree -> bool = <fun>
+    "n": bool = true |}]
 ;;
 
 let%expect_test _ =
   let _ =
     parse_and_interpret_result
       {| let a = fun x -> match x with | [] -> false | h :: tl -> true
-         let n = a (44 :: 45 :: 56) |}
+         let n = a (44 :: 45 :: 56 :: []) |}
   in
   [%expect {|
-    "a": <fun>
-    "n": true |}]
+    "a": '2 . '2 list -> bool = <fun>
+    "n": bool = true |}]
 ;;
 
 let%expect_test _ =
@@ -246,8 +266,8 @@ let%expect_test _ =
          let n = a [] |}
   in
   [%expect {|
-    "a": <fun>
-    "n": false |}]
+    "a": '2 . '2 list -> bool = <fun>
+    "n": bool = false |}]
 ;;
 
 let%expect_test _ =
@@ -257,8 +277,8 @@ let%expect_test _ =
          let n = a true |}
   in
   [%expect {|
-    "a": <fun>
-    "n": false |}]
+    "a": bool -> bool = <fun>
+    "n": bool = false |}]
 ;;
 
 let%expect_test _ =
@@ -268,31 +288,67 @@ let%expect_test _ =
          let n = a "C" |}
   in
   [%expect {|
-    "a": <fun>
-    "n": false |}]
+    "a": string -> bool = <fun>
+    "n": bool = false |}]
 ;;
 
 let%expect_test _ =
   let _ = parse_and_interpret_result {| let n = 5 / 0 |} in
-  [%expect {| DivisionByZeroError |}]
+  [%expect {| Interpreting error: DivisionByZeroError |}]
 ;;
 
 let%expect_test _ =
   let _ =
-    parse_and_interpret_result {| let sum = fun (a, b) -> a + b
-         let k = sum 8 |}
+    parse_and_interpret_result
+      {| type me = | Tepa of int
+         let h = fun (Tepa h) :: tl -> h
+         let tl = fun h :: tl -> tl
+         let n = h (Tepa 46 :: Tepa 45 :: Tepa 44 :: [])
+         let m = tl (Tepa 46 :: Tepa 45 :: Tepa 44 :: []) |}
   in
-  [%expect {| PatternMatchingError |}]
+  [%expect
+    {|
+      type me = | Tepa of int
+      "h": me list -> int = <fun>
+      "m": me list = [Tepa 45; Tepa 44]
+      "n": int = 46
+      "tl": '2 . '2 list -> '2 list = <fun> |}]
 ;;
 
 let%expect_test _ =
-  let _ = parse_and_interpret_result {| let n = 5 + "S" |} in
-  [%expect {| ExecError: 5 # "S" |}]
-;;
+  let _ =
+    parse_and_interpret_result
+      {| type color = | Red | Black
 
-let%expect_test _ =
-  let _ = parse_and_interpret_result {| let a = fun x -> x
-         let n = b 5 |} in
-  [%expect {|
-    UnboundVariable: "b" |}]
+         type rbtree =
+         | Empty
+         | Node of color * int * rbtree * rbtree
+
+         let rec member = fun x -> 
+          (fun n -> 
+          match n with 
+           | Empty -> false
+           | Node (_, y, left, right) -> if x == y then true else if x < y then member x left else member x right)
+
+         let node_left_left = Node(Black, 3, Empty, Empty)
+
+         let node_left = Node (Red, 4, node_left_left, Empty)
+
+         let node_right = Node(Red, 10, Empty, Empty)
+   
+         let node = Node (Black, 5, node_left, node_right)
+
+         let is_member = member 4 node
+      |}
+  in
+  [%expect
+    {|
+      type color = | Red | Black
+      type rbtree = | Node of color * int * rbtree * rbtree | Empty
+      "is_member": bool = true
+      "member": int -> rbtree -> bool = <let rec>
+      "node": rbtree = Node (Black, 5, Node (Red, 4, Node (Black, 3, Empty, Empty), Empty), Node (Red, 10, Empty, Empty))
+      "node_left": rbtree = Node (Red, 4, Node (Black, 3, Empty, Empty), Empty)
+      "node_left_left": rbtree = Node (Black, 3, Empty, Empty)
+      "node_right": rbtree = Node (Red, 10, Empty, Empty) |}]
 ;;

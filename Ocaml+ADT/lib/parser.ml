@@ -65,7 +65,7 @@ let is_keyword = function
   | _ -> false
 ;;
 
-let letdecl a b c d = a, b, c, d
+let letdecl a b d = a, b, d
 let totuple a b = lift2 (fun a b -> a, b) a b
 
 let chainl1 e op =
@@ -82,11 +82,6 @@ let is_space = function
 
 let is_wildcard = function
   | '_' -> true
-  | _ -> false
-;;
-
-let is_apostrophe = function
-  | '\'' -> true
   | _ -> false
 ;;
 
@@ -122,22 +117,20 @@ let premptylist = check_chunk "[]" *> return true
 
 let prvarname =
   pchunk
-    (take_while (fun ch -> is_uchar ch || is_digit ch)
+    (take_while (fun ch -> is_uchar ch || is_digit ch || is_wildcard ch)
      >>= function
      | "" ->
-       take_while1 (fun ch ->
-         is_wildcard ch || is_apostrophe ch || is_char ch || is_digit ch)
+       take_while1 (fun ch -> is_wildcard ch || is_char ch || is_digit ch)
        >>= fun str -> if is_keyword str then fail @@ "invalid var name" else return str
      | _ -> fail @@ "invalid var name")
 ;;
 
 let prconstrname =
   pchunk
-    (take_while (fun ch -> is_lchar ch || is_digit ch)
+    (take_while (fun ch -> is_lchar ch || is_digit ch || is_wildcard ch)
      >>= function
      | "" ->
-       take_while1 (fun ch ->
-         is_wildcard ch || is_apostrophe ch || is_char ch || is_digit ch)
+       take_while1 (fun ch -> is_wildcard ch || is_char ch || is_digit ch)
        >>= fun str -> if is_keyword str then fail "invalid constr name" else return str
      | _ -> fail "invalid constr name")
 ;;
@@ -188,7 +181,7 @@ let ppcase pp =
   uname
   <$> prconstrname
   >>= fun name ->
-  ppcase <|> pp >>= fun exp -> return (padt name (Some exp)) <|> return (padt name None)
+  ppcase <|> (pp >>= fun exp -> return (padt name (Some exp))) <|> return (padt name None)
 ;;
 
 let pptuple pp =
@@ -225,11 +218,10 @@ let ppattern =
 
 let pfelet pfexp =
   check_chunk "let"
-  *> lift4
+  *> lift3
        letdecl
        (drec <$> (check_chunk "rec" *> return true <|> return false))
        (lname <$> prvarname)
-       (dtype <$> (check_chunk ":" *> pftype <|> return temptytype))
        (check_chunk "=" *> pfexp)
 ;;
 
@@ -350,11 +342,10 @@ let pfexp =
 
 let pdecl =
   check_chunk "let"
-  *> lift4
+  *> lift3
        decllet
        (drec <$> (check_chunk "rec" *> return true <|> return false))
        (lname <$> prvarname)
-       (dtype <$> (check_chunk ":" *> pftype <|> return temptytype))
        (check_chunk "=" *> pfexp)
   <|> check_chunk "type"
       *> lift2

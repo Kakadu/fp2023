@@ -14,5 +14,13 @@
  (instrumentation
   (backend bisect_ppx)))
 
+(executable
+ (name demoInference)
+ (modules demoInference)
+ (public_name demoInference)
+ (libraries ocamladt_lib stdio)
+ (instrumentation
+  (backend bisect_ppx)))
+
 (cram
- (deps %{bin:demoParse} %{bin:demoInterpret}))
+ (deps %{bin:demoParse} %{bin:demoInterpret} %{bin:demoInference}))

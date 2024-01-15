@@ -43,8 +43,8 @@ and pp_value fmt = function
   | VBool bool -> fprintf fmt "%b" bool
   | VList lst -> fprintf fmt "[%a]" pp_value_list lst
   | VTuple tuple -> fprintf fmt "(%a)" pp_value_tuple tuple
-  | VAdt (type_name, Some type_value) -> fprintf fmt "%S %a" type_name pp_value type_value
-  | VAdt (type_name, None) -> fprintf fmt "%S" type_name
+  | VAdt (type_name, Some type_value) -> fprintf fmt "%s %a" type_name pp_value type_value
+  | VAdt (type_name, None) -> fprintf fmt "%s" type_name
   | VFun (_, _, _) -> fprintf fmt "<fun>"
   | VLetRec (_, _) -> fprintf fmt "<let rec>"
 ;;

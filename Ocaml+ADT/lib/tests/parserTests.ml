@@ -20,171 +20,37 @@ let ptest str expected =
 
 (* tests *)
 
-(* tests for declaration type parsing *)
-let%test _ =
-  ptest
-    {| let a : int -> (int -> string) -> int = "a" |}
-    [ DLet
-        ( DRec false
-        , LName "a"
-        , DType (TFun (TInt, TFun (TFun (TInt, TString), TInt)))
-        , EString "a" )
-    ]
-;;
+let%test _ = ptest {| let rec abc = "a" |} [ DLet (DRec true, LName "abc", EString "a") ]
+let%test _ = ptest {| let aBC = "a" |} [ DLet (DRec false, LName "aBC", EString "a") ]
 
 let%test _ =
   ptest
-    {| let a : int list  = "a" |}
-    [ DLet (DRec false, LName "a", DType (TList TInt), EString "a") ]
-;;
-
-let%test _ =
-  ptest
-    {| let rec abc : ((int list) list) list = "a" |}
-    [ DLet (DRec true, LName "abc", DType (TList (TList (TList TInt))), EString "a") ]
-;;
-
-let%test _ =
-  ptest
-    {| let rec abc : int -> (int -> (int -> int)) -> int = "a" |}
-    [ DLet
-        ( DRec true
-        , LName "abc"
-        , DType (TFun (TInt, TFun (TFun (TInt, TFun (TInt, TInt)), TInt)))
-        , EString "a" )
-    ]
-;;
-
-let%test _ =
-  ptest
-    {| let aBC:  (string * int) list = "a" |}
-    [ DLet (DRec false, LName "aBC", DType (TList (TTuple [ TString; TInt ])), EString "a")
-    ]
-;;
-
-let%test _ =
-  ptest
-    {| let aBC: (int list * (string -> int)) list = "a" |}
+    {| let aBC = fun x -> (let summ = 5 in b) |}
     [ DLet
         ( DRec false
         , LName "aBC"
-        , DType (TList (TTuple [ TList TInt; TFun (TString, TInt) ]))
-        , EString "a" )
+        , EFun
+            (PVar (LName "x"), ELet ((DRec false, LName "summ", EInt 5), EVar (LName "b")))
+        )
     ]
 ;;
 
 let%test _ =
   ptest
-    {| let aBC: (int list * string * a) -> string list = "a" |}
+    {| let aBC = fun n -> if n then 5 else 0 |}
     [ DLet
         ( DRec false
         , LName "aBC"
-        , DType (TFun (TTuple [ TList TInt; TString; TVar (LName "a") ], TList TString))
-        , EString "a" )
-    ]
-;;
-
-let%test _ =
-  ptest
-    {| let aBC: (int list * string * a) -> string list = "a" |}
-    [ DLet
-        ( DRec false
-        , LName "aBC"
-        , DType (TFun (TTuple [ TList TInt; TString; TVar (LName "a") ], TList TString))
-        , EString "a" )
-    ]
-;;
-
-let%test _ =
-  ptest
-    {| let aBC: ((int list -> int) * string * (int * int)) -> string list = "a" |}
-    [ DLet
-        ( DRec false
-        , LName "aBC"
-        , DType
-            (TFun
-               ( TTuple [ TFun (TList TInt, TInt); TString; TTuple [ TInt; TInt ] ]
-               , TList TString ))
-        , EString "a" )
-    ]
-;;
-
-(* tests for expression type parsing *)
-let%test _ =
-  ptest
-    {| let aBC: (int list) list = fun a b -> 5 |}
-    [ DLet
-        ( DRec false
-        , LName "aBC"
-        , DType (TList (TList TInt))
-        , EFun (PVar (LName "a"), EFun (PVar (LName "b"), EInt 5)) )
-    ]
-;;
-
-let%test _ =
-  ptest
-    {| let aBC: (int list) list = let b: string = 5 in 5 |}
-    [ DLet
-        ( DRec false
-        , LName "aBC"
-        , DType (TList (TList TInt))
-        , ELet ((DRec false, LName "b", DType TString, EInt 5), EInt 5) )
-    ]
-;;
-
-let%test _ =
-  ptest
-    {| let aBC: int -> int = let b: int -> int = fun x -> x in b |}
-    [ DLet
-        ( DRec false
-        , LName "aBC"
-        , DType (TFun (TInt, TInt))
-        , ELet
-            ( ( DRec false
-              , LName "b"
-              , DType (TFun (TInt, TInt))
-              , EFun (PVar (LName "x"), EVar (LName "x")) )
-            , EVar (LName "b") ) )
-    ]
-;;
-
-let%test _ =
-  ptest
-    {| let aBC: int -> int = let b: int -> int = fun x -> (let summ: int = 5 in b) in c |}
-    [ DLet
-        ( DRec false
-        , LName "aBC"
-        , DType (TFun (TInt, TInt))
-        , ELet
-            ( ( DRec false
-              , LName "b"
-              , DType (TFun (TInt, TInt))
-              , EFun
-                  ( PVar (LName "x")
-                  , ELet ((DRec false, LName "summ", DType TInt, EInt 5), EVar (LName "b"))
-                  ) )
-            , EVar (LName "c") ) )
-    ]
-;;
-
-let%test _ =
-  ptest
-    {| let aBC: int = fun n -> if n then 5 else 0 |}
-    [ DLet
-        ( DRec false
-        , LName "aBC"
-        , DType TInt
         , EFun (PVar (LName "n"), EIf (EVar (LName "n"), EInt 5, EInt 0)) )
     ]
 ;;
 
 let%test _ =
   ptest
-    {| let aBC: int = fun n -> if 2 - n * (1 - 1 * 3 + 1)  then 5 else 0 |}
+    {| let aBC = fun n -> if 2 - n * (1 - 1 * 3 + 1)  then 5 else 0 |}
     [ DLet
         ( DRec false
         , LName "aBC"
-        , DType TInt
         , EFun
             ( PVar (LName "n")
             , EIf
@@ -205,11 +71,10 @@ let%test _ =
 
 let%test _ =
   ptest
-    {| let aBC: int -> int = f n e |}
+    {| let aBC = f n e |}
     [ DLet
         ( DRec false
         , LName "aBC"
-        , DType (TFun (TInt, TInt))
         , EApp (EApp (EVar (LName "f"), EVar (LName "n")), EVar (LName "e")) )
     ]
 ;;
@@ -220,7 +85,6 @@ let%test _ =
     [ DLet
         ( DRec false
         , LName "x"
-        , DType TEmptyType
         , EFun
             (PVar (LName "x"), EIf (EBool true, EIf (EBool true, EInt 1, EInt 2), EInt 3))
         )
@@ -234,7 +98,6 @@ let%test _ =
     [ DLet
         ( DRec true
         , LName "factorial_recursive"
-        , DType TEmptyType
         , EFun
             ( PVar (LName "n")
             , EIf
@@ -256,7 +119,6 @@ let%test _ =
     [ DLet
         ( DRec true
         , LName "fix"
-        , DType TEmptyType
         , EFun
             ( PVar (LName "f")
             , EFun
@@ -267,7 +129,6 @@ let%test _ =
     ; DLet
         ( DRec false
         , LName "fac"
-        , DType TEmptyType
         , EApp
             ( EVar (LName "fix")
             , EFun
@@ -288,34 +149,15 @@ let%test _ =
 
 let%test _ =
   ptest
-    {| let a: int -> bool = fun x -> match x with | [] :: [] -> (f n) | a ->  false | _ -> true |}
+    {| let a = fun x -> match x with | [] :: [] -> (f n) | a ->  false | _ -> true |}
     [ DLet
         ( DRec false
         , LName "a"
-        , DType (TFun (TInt, TBool))
         , EFun
             ( PVar (LName "x")
             , EMatch
                 ( EVar (LName "x")
                 , [ PCons (PNill, PNill), EApp (EVar (LName "f"), EVar (LName "n"))
-                  ; PVar (LName "a"), EBool false
-                  ; PWild, EBool true
-                  ] ) ) )
-    ]
-;;
-
-let%test _ =
-  ptest
-    {| let a: int -> bool = fun x -> match x with | _ :: [] -> (f n) | a ->  false | _ -> true |}
-    [ DLet
-        ( DRec false
-        , LName "a"
-        , DType (TFun (TInt, TBool))
-        , EFun
-            ( PVar (LName "x")
-            , EMatch
-                ( EVar (LName "x")
-                , [ PCons (PWild, PNill), EApp (EVar (LName "f"), EVar (LName "n"))
                   ; PVar (LName "a"), EBool false
                   ; PWild, EBool true
                   ] ) ) )
@@ -343,9 +185,9 @@ let%test _ =
 let%test _ =
   ptest
     {| type a = | Azaza of string -> string
-       let b: int = 5 |}
+       let b = 5 |}
     [ DType (LName "a", [ UName "Azaza", DType (TFun (TString, TString)) ])
-    ; DLet (DRec false, LName "b", DType TInt, EInt 5)
+    ; DLet (DRec false, LName "b", EInt 5)
     ]
 ;;
 
@@ -358,7 +200,6 @@ let%test _ =
     ; DLet
         ( DRec false
         , LName "is_black"
-        , DType TEmptyType
         , EFun
             ( PVar (LName "x")
             , EMatch
@@ -369,18 +210,16 @@ let%test _ =
     ; DLet
         ( DRec false
         , LName "a"
-        , DType TEmptyType
         , EApp (EVar (LName "is_black"), EConstr (UName "Black", Some (EInt 5))) )
     ]
 ;;
 
 let%test _ =
   ptest
-    {| let a: int -> bool = fun x -> match x with | Tepa Kuka 46 -> true |}
+    {| let a = fun x -> match x with | Tepa (Kuka 46) -> true |}
     [ DLet
         ( DRec false
         , LName "a"
-        , DType (TFun (TInt, TBool))
         , EFun
             ( PVar (LName "x")
             , EMatch
@@ -393,11 +232,10 @@ let%test _ =
 
 let%test _ =
   ptest
-    {| let a: int -> bool = fun x -> match x with | (a, b, c, d) -> true |}
+    {| let a = fun x -> match x with | (a, b, c, d) -> true |}
     [ DLet
         ( DRec false
         , LName "a"
-        , DType (TFun (TInt, TBool))
         , EFun
             ( PVar (LName "x")
             , EMatch
@@ -415,11 +253,10 @@ let%test _ =
 
 let%test _ =
   ptest
-    {| let aBC: int = fun n -> if n then 5 else (0, 1, 2, 3) |}
+    {| let aBC = fun n -> if n then 5 else (0, 1, 2, 3) |}
     [ DLet
         ( DRec false
         , LName "aBC"
-        , DType TInt
         , EFun
             ( PVar (LName "n")
             , EIf (EVar (LName "n"), EInt 5, ETuple [ EInt 0; EInt 1; EInt 2; EInt 3 ]) )
@@ -429,22 +266,16 @@ let%test _ =
 
 let%test _ =
   ptest
-    {| let aBC: int -> int = F 5 |}
-    [ DLet
-        ( DRec false
-        , LName "aBC"
-        , DType (TFun (TInt, TInt))
-        , EConstr (UName "F", Some (EInt 5)) )
-    ]
+    {| let aBC = F 5 |}
+    [ DLet (DRec false, LName "aBC", EConstr (UName "F", Some (EInt 5))) ]
 ;;
 
 let%test _ =
   ptest
-    {| let aBC: int -> int = F (5, 4, 3, 2) |}
+    {| let aBC= F (5, 4, 3, 2) |}
     [ DLet
         ( DRec false
         , LName "aBC"
-        , DType (TFun (TInt, TInt))
         , EConstr (UName "F", Some (ETuple [ EInt 5; EInt 4; EInt 3; EInt 2 ])) )
     ]
 ;;
@@ -452,7 +283,7 @@ let%test _ =
 let%test _ =
   ptest
     {| let n = fun x -> 5 |}
-    [ DLet (DRec false, LName "n", DType TEmptyType, EFun (PVar (LName "x"), EInt 5)) ]
+    [ DLet (DRec false, LName "n", EFun (PVar (LName "x"), EInt 5)) ]
 ;;
 
 let%test _ =
@@ -462,9 +293,8 @@ let%test _ =
     [ DLet
         ( DRec false
         , LName "n"
-        , DType TEmptyType
         , EFun (PVar (LName "x"), EBinop (Add, EVar (LName "x"), EInt 5)) )
-    ; DLet (DRec false, LName "a", DType TEmptyType, EApp (EVar (LName "n"), EInt 5))
+    ; DLet (DRec false, LName "a", EApp (EVar (LName "n"), EInt 5))
     ]
 ;;
 
@@ -475,13 +305,12 @@ let%test _ =
     [ DLet
         ( DRec false
         , LName "n"
-        , DType TEmptyType
         , EFun
             ( PVar (LName "y")
             , ELet
-                ( (DRec false, LName "x", DType TEmptyType, EInt 5)
+                ( (DRec false, LName "x", EInt 5)
                 , EBinop (Add, EVar (LName "x"), EVar (LName "y")) ) ) )
-    ; DLet (DRec false, LName "f", DType TEmptyType, EApp (EVar (LName "n"), EInt 7))
+    ; DLet (DRec false, LName "f", EApp (EVar (LName "n"), EInt 7))
     ]
 ;;
 
@@ -492,11 +321,10 @@ let%test _ =
     [ DLet
         ( DRec false
         , LName "n"
-        , DType TEmptyType
         , EFun
             ( PVar (LName "y")
             , EIf (EBinop (Gre, EVar (LName "y"), EInt 7), EInt 5, EInt 3) ) )
-    ; DLet (DRec false, LName "f", DType TEmptyType, EApp (EVar (LName "n"), EInt 7))
+    ; DLet (DRec false, LName "f", EApp (EVar (LName "n"), EInt 7))
     ]
 ;;
 
@@ -507,12 +335,10 @@ let%test _ =
     [ DLet
         ( DRec false
         , LName "a"
-        , DType TEmptyType
         , EFun (PCons (PVar (LName "h"), PVar (LName "tl")), EVar (LName "h")) )
     ; DLet
         ( DRec false
         , LName "n"
-        , DType TEmptyType
         , EApp
             ( EVar (LName "a")
             , EBinop
@@ -552,11 +378,222 @@ let%test _ =
     ; DLet
         ( DRec false
         , LName "a"
-        , DType TEmptyType
         , EConstr
             ( UName "Apple"
             , Some
                 (ETuple [ EConstr (UName "Yellow", None); EConstr (UName "Yes", None) ])
             ) )
+    ]
+;;
+
+let%test _ =
+  ptest
+    {| let n = fun h :: tl -> h
+  let b = n (5 :: 4)|}
+    [ DLet
+        ( DRec false
+        , LName "n"
+        , EFun (PCons (PVar (LName "h"), PVar (LName "tl")), EVar (LName "h")) )
+    ; DLet (DRec false, LName "b", EApp (EVar (LName "n"), EBinop (Cons, EInt 5, EInt 4)))
+    ]
+;;
+
+let%test _ =
+  ptest
+    {| let n = fun x -> match x with | true -> true | false -> false |}
+    [ DLet
+        ( DRec false
+        , LName "n"
+        , EFun
+            ( PVar (LName "x")
+            , EMatch
+                (EVar (LName "x"), [ PBool true, EBool true; PBool false, EBool false ])
+            ) )
+    ]
+;;
+
+let%test _ =
+  ptest
+    {| let rec fix = fun f -> (fun x -> f (fix x) x) |}
+    [ DLet
+        ( DRec true
+        , LName "fix"
+        , EFun
+            ( PVar (LName "f")
+            , EFun
+                ( PVar (LName "x")
+                , EApp
+                    ( EApp (EVar (LName "f"), EApp (EVar (LName "fix"), EVar (LName "x")))
+                    , EVar (LName "x") ) ) ) )
+    ]
+;;
+
+let%test _ =
+  ptest
+    {| let rev = fun lst ->
+      (let rec helper = fun acc -> (fun lst ->
+      match lst with
+        | [] -> acc
+        | h :: tl -> helper (h :: acc) tl)
+      in helper [] lst) |}
+    [ DLet
+        ( DRec false
+        , LName "rev"
+        , EFun
+            ( PVar (LName "lst")
+            , ELet
+                ( ( DRec true
+                  , LName "helper"
+                  , EFun
+                      ( PVar (LName "acc")
+                      , EFun
+                          ( PVar (LName "lst")
+                          , EMatch
+                              ( EVar (LName "lst")
+                              , [ PNill, EVar (LName "acc")
+                                ; ( PCons (PVar (LName "h"), PVar (LName "tl"))
+                                  , EApp
+                                      ( EApp
+                                          ( EVar (LName "helper")
+                                          , EBinop
+                                              (Cons, EVar (LName "h"), EVar (LName "acc"))
+                                          )
+                                      , EVar (LName "tl") ) )
+                                ] ) ) ) )
+                , EApp (EApp (EVar (LName "helper"), EEmptyList), EVar (LName "lst")) ) )
+        )
+    ]
+;;
+
+let%test _ =
+  ptest
+    {| type name = | LName of string | RName of string
+    let a = LName "tepa" |}
+    [ DType (LName "name", [ UName "LName", DType TString; UName "RName", DType TString ])
+    ; DLet (DRec false, LName "a", EConstr (UName "LName", Some (EString "tepa")))
+    ]
+;;
+
+let%test _ =
+  ptest
+    {| type color = | Red | Black
+
+       type rbtree =
+       | Empty
+       | Node of color * int * rbtree * rbtree
+
+       let rec member = fun x -> 
+        (fun n -> 
+        match n with 
+        | Empty -> false
+        | Node (_, y, left, right) -> if x == y then true else if x < y then member x left else member x right)
+
+       let node_left_left = Node(Black, 3, Empty, Empty)
+
+       let node_left = Node (Red, 4, node_left_left, Empty)
+
+       let node_right = Node(Red, 10, Empty, Empty)
+ 
+       let node = Node (Black, 5, node_left, node_right)
+
+       let is_member = member 4 node
+    |}
+    [ DType
+        (LName "color", [ UName "Red", DType TEmptyType; UName "Black", DType TEmptyType ])
+    ; DType
+        ( LName "rbtree"
+        , [ UName "Empty", DType TEmptyType
+          ; ( UName "Node"
+            , DType
+                (TTuple
+                   [ TVar (LName "color")
+                   ; TInt
+                   ; TVar (LName "rbtree")
+                   ; TVar (LName "rbtree")
+                   ]) )
+          ] )
+    ; DLet
+        ( DRec true
+        , LName "member"
+        , EFun
+            ( PVar (LName "x")
+            , EFun
+                ( PVar (LName "n")
+                , EMatch
+                    ( EVar (LName "n")
+                    , [ PAdt (UName "Empty", None), EBool false
+                      ; ( PAdt
+                            ( UName "Node"
+                            , Some
+                                (PTuple
+                                   [ PWild
+                                   ; PVar (LName "y")
+                                   ; PVar (LName "left")
+                                   ; PVar (LName "right")
+                                   ]) )
+                        , EIf
+                            ( EBinop (Eq, EVar (LName "x"), EVar (LName "y"))
+                            , EBool true
+                            , EIf
+                                ( EBinop (Les, EVar (LName "x"), EVar (LName "y"))
+                                , EApp
+                                    ( EApp (EVar (LName "member"), EVar (LName "x"))
+                                    , EVar (LName "left") )
+                                , EApp
+                                    ( EApp (EVar (LName "member"), EVar (LName "x"))
+                                    , EVar (LName "right") ) ) ) )
+                      ] ) ) ) )
+    ; DLet
+        ( DRec false
+        , LName "node_left_left"
+        , EConstr
+            ( UName "Node"
+            , Some
+                (ETuple
+                   [ EConstr (UName "Black", None)
+                   ; EInt 3
+                   ; EConstr (UName "Empty", None)
+                   ; EConstr (UName "Empty", None)
+                   ]) ) )
+    ; DLet
+        ( DRec false
+        , LName "node_left"
+        , EConstr
+            ( UName "Node"
+            , Some
+                (ETuple
+                   [ EConstr (UName "Red", None)
+                   ; EInt 4
+                   ; EVar (LName "node_left_left")
+                   ; EConstr (UName "Empty", None)
+                   ]) ) )
+    ; DLet
+        ( DRec false
+        , LName "node_right"
+        , EConstr
+            ( UName "Node"
+            , Some
+                (ETuple
+                   [ EConstr (UName "Red", None)
+                   ; EInt 10
+                   ; EConstr (UName "Empty", None)
+                   ; EConstr (UName "Empty", None)
+                   ]) ) )
+    ; DLet
+        ( DRec false
+        , LName "node"
+        , EConstr
+            ( UName "Node"
+            , Some
+                (ETuple
+                   [ EConstr (UName "Black", None)
+                   ; EInt 5
+                   ; EVar (LName "node_left")
+                   ; EVar (LName "node_right")
+                   ]) ) )
+    ; DLet
+        ( DRec false
+        , LName "is_member"
+        , EApp (EApp (EVar (LName "member"), EInt 4), EVar (LName "node")) )
     ]
 ;;
