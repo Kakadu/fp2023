@@ -325,6 +325,25 @@ let eval_while e_stm l_env_l cond_e body =
   run_loop f_cond f_body
 ;;
 
+let eval_for e_stm l_env_l init cond iter body =
+  let f_cond =
+    let eval_cond e = eval_expr e_stm l_env_l e >>= get_bool in
+    let eval_iter e = eval_expr e_stm l_env_l e in
+    match cond, iter with
+    | Some cond_e, Some iter_e ->
+      lift2 (fun x _ -> x) (eval_cond cond_e) (eval_iter iter_e)
+    | Some cond_e, None -> eval_cond cond_e
+    | None, Some iter_e -> eval_iter iter_e *> return_n true
+    | None, None -> return_n true
+  in
+  let f_body = e_stm body in
+  local
+  @@ ((match init with
+       | Some stm -> e_stm stm
+       | None -> return_n ())
+      *> run_loop f_cond f_body)
+;;
+
 let eval_statement lenv_kernel stm =
   let rec helper stm_ =
     let eval_expr expr = eval_expr helper lenv_kernel expr in
@@ -353,8 +372,8 @@ let eval_statement lenv_kernel stm =
     | STry_catch_fin { try_s; catch_s; finally_s } ->
       eval_try_catch_fin helper lenv_kernel try_s catch_s finally_s
     | SWhile (e, stm) -> eval_while helper lenv_kernel e stm
-    (* | SFor for_sign -> *)
-    | _ -> fail (Return_error "TODO: REMOVE")
+    | SFor { f_init_p; f_cond_p; f_iter_p; f_body } ->
+      eval_for helper lenv_kernel f_init_p f_cond_p f_iter_p f_body
   in
   helper stm
 ;;
@@ -366,7 +385,6 @@ let interpret_ genv cl_id =
   let local_env = IdentMap.empty in
   let lenv_with_constructors =
     let f cl_id cl_decl acc_opt =
-      (* let this_class = get_class_decl cl_decl in *)
       match acc_opt with
       | None -> None
       | Some acc ->
@@ -382,7 +400,6 @@ let interpret_ genv cl_id =
     CodeMap.fold f genv (Some local_env)
   in
   let run_main l_env_l =
-    (* >< TODO: l_env_l конвертировать в список *)
     let l_env_l = [ l_env_l ] in
     let cl_decl_t = read_global cl_id >>= fun x -> return_n @@ get_class_decl x in
     let get_main cl_decl =

@@ -496,6 +496,96 @@ let%expect_test "While" =
   [%expect {| Result: (Init (Int_v 15)) |}]
 ;;
 
+let%expect_test "For" =
+  let s =
+    {| 
+      class Program
+      {
+        static int Main(){
+          int d = 0; 
+          int i1;
+          int i2;
+
+          for(int i = 0; i < 10; i = i + 1){
+            d = d + 1;
+          }
+
+          for (;;){
+            d = d + 10;
+            break;
+          }
+
+          for (i1 = 0; i1 < 10;){
+            d = d + 1;
+            i1 = i1 + 1;
+          }
+
+          i2 = 0;
+          for (; i2 < 10; i2 = i2 + 1){
+            d = d + 1;
+          }
+          return d;
+        }
+      }
+    |}
+  in
+  interpret_wrap s;
+  [%expect {| Result: (Init (Int_v 40)) |}]
+;;
+
+let%expect_test "For + while" =
+  let s =
+    {| 
+      class Program
+      {
+        static int Main(){
+          int d = 0;
+          while (true){
+            for (int i = 0; i < 10; i = i + 1){
+              d = d + 1;
+              if (d == 5){
+                break;
+              }
+            }
+            if (5 < d && d <= 20){
+              break;
+            }
+          }
+          return d;
+        }
+      }
+    |}
+  in
+  interpret_wrap s;
+  [%expect {| Result: (Init (Int_v 15)) |}]
+;;
+
+let%expect_test "While + try" =
+  let s =
+    {| 
+      class A1 : Exception {}
+      class Program
+      {
+        static int Main(){
+          int d = 0;
+          try{
+            while (true){
+              d = d + 1;
+              throw new Exception();
+              if (5 < d && d <= 20){
+              break;
+              }
+            } 
+          } finally {d = 1;}
+          return d;
+        }
+      }
+    |}
+  in
+  interpret_wrap s;
+  [%expect {| Result: (Init (Int_v 1)) |}]
+;;
+
 (* ******************** Negative ******************** *)
 
 let%expect_test "Uninit value " =
