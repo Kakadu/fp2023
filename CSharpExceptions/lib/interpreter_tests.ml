@@ -453,7 +453,7 @@ let%expect_test "Nested try_catch_fin " =
 
               try{
                 throw new A1(2);
-              } catch {
+              } catch(Exception) {
                 throw new A1(1);
               } finally {
                 a = -999;
@@ -472,6 +472,28 @@ let%expect_test "Nested try_catch_fin " =
   in
   interpret_wrap s;
   [%expect {| Result: (Init (Int_v 101)) |}]
+;;
+
+let%expect_test "While" =
+  let s =
+    {| 
+      class Program
+      {
+        static int Main(){
+          int d = 0; 
+          while(d < 100){
+            d = d + 1;
+            if(d == 15){
+              break;
+            }
+          }
+          return d;
+        }
+      }
+    |}
+  in
+  interpret_wrap s;
+  [%expect {| Result: (Init (Int_v 15)) |}]
 ;;
 
 (* ******************** Negative ******************** *)

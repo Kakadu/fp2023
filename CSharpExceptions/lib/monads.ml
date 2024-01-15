@@ -543,7 +543,7 @@ module Eval_Monad = struct
     | Error err -> fail err
   ;;
 
-  let tcf_run tf cf ff =
+  let run_tcf tf cf ff =
     let save_reserv_mem_and_lenvl =
       lift2 (fun mem lenv -> mem, lenv) read_local read_mem
     in
@@ -592,6 +592,19 @@ module Eval_Monad = struct
     run_in_another_self ad base_lenv run_f
   ;;
 
-  (* По анологии с run_method *)
-  (* TODO: Написать функцию обработки для for + while *)
+  let run_loop f_cond f_body =
+    let rec helper _ =
+      f_cond
+      >>= function
+      | true -> f_body *> helper ()
+      | false -> return_n ()
+    in
+    local
+    @@ helper ()
+    @!|>>= function
+    | Next _ | Break -> return_n ()
+    | Exn x -> return_e x
+    | Return x -> return_r x
+    | Error err -> fail err
+  ;;
 end

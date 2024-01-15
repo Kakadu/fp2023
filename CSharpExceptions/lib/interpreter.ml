@@ -72,7 +72,7 @@ let is_env_code = function
   | _ -> fail (Runtime_error "There isn't method or consructor")
 ;;
 
-let rec get_point_access_value e_id e1 lenv =
+let rec get_point_access_value e_id e1 l_env_l =
   let get_id =
     match e_id with
     | EIdentifier id -> return_n id
@@ -81,13 +81,13 @@ let rec get_point_access_value e_id e1 lenv =
   let helper =
     match e1 with
     | EIdentifier id -> lift2 (fun ad v -> id, ad, v) read_self_ad (read_local_el id)
-    | EPoint_access (e1, e2) -> get_point_access_value e1 e2 lenv
+    | EPoint_access (e1, e2) -> get_point_access_value e1 e2 l_env_l
     | _ -> fail (Runtime_error "Impossible after point argument in point_access")
   in
   get_id
   >>= read_local_el
   >>= function
-  | IConst (Init (Instance_v ad)) -> run_in_another_self ad lenv helper
+  | IConst (Init (Instance_v ad)) -> run_in_another_self ad l_env_l helper
   | _ -> fail (Runtime_error "Point_access is only available with instances of a class")
 ;;
 
@@ -118,29 +118,31 @@ let ret_char x = return_n (create_val (Char_v x))
 let get_inst x = is_not_null_inst_v x >>= is_inst
 let ret_inst x = return_n (create_val (Instance_v x))
 
-let eval_instrs_ f e args lenv e_stm e_expr =
-  let f_new = f e_stm e_expr lenv in
+let eval_instrs_ f e args l_env_l e_stm e_expr =
+  let f_new = f e_stm e_expr l_env_l in
   match e with
   | EIdentifier id ->
     let cur_ad = read_self_ad in
     let mc_decl = read_local_el id in
     cur_ad >>= fun ad -> mc_decl >>= is_env_code >>= f_new ad args
   | EPoint_access (e_id, e1) ->
-    let info = get_point_access_value e_id e1 lenv in
+    let info = get_point_access_value e_id e1 l_env_l in
     info >>= fun (_, ad, decl) -> return_n decl >>= is_env_code >>= f_new ad args
   | _ -> fail (Runtime_error "Impossible method name")
 ;;
 
-let m_eval_ e_stm _ lenv ad args = function
+let m_eval_ e_stm _ l_env_l ad args = function
   | IMethod (sign, body) ->
     let prms = get_params_id sign.m_params in
-    run_method sign.m_type prms args ad lenv body e_stm
+    run_method sign.m_type prms args ad l_env_l body e_stm
   | IConstructor _ -> fail (Constructor_error "Trying to call a constructor without new")
 ;;
 
-let eval_method e lenv e_stm e_expr args = eval_instrs_ m_eval_ e args lenv e_stm e_expr
+let eval_method e l_env_l e_stm e_expr args =
+  eval_instrs_ m_eval_ e args l_env_l e_stm e_expr
+;;
 
-let c_eval_ e_stm e_expr lenv _ args = function
+let c_eval_ e_stm e_expr l_env_l _ args = function
   | IMethod _ -> fail (Constructor_error "'New' can be used only with constructor")
   | IConstructor (sign, body) ->
     let prms = get_params_id sign.con_params in
@@ -150,11 +152,12 @@ let c_eval_ e_stm e_expr lenv _ args = function
     cl_decl
     >>= fun x ->
     alloc_instance e_expr x
-    >>= fun new_ad -> run_method Void prms args new_ad lenv body e_stm *> return_n new_ad
+    >>= fun new_ad ->
+    run_method Void prms args new_ad l_env_l body e_stm *> return_n new_ad
 ;;
 
-let eval_constructor e lenv e_stm e_expr args =
-  eval_instrs_ c_eval_ e args lenv e_stm e_expr >>= return_n
+let eval_constructor e l_env_l e_stm e_expr args =
+  eval_instrs_ c_eval_ e args l_env_l e_stm e_expr >>= return_n
 ;;
 
 let eval_un_op un_op res lenv_kernel e_stm e_expr =
@@ -172,7 +175,7 @@ let eval_un_op un_op res lenv_kernel e_stm e_expr =
      | _ -> fail (Constructor_error "'New' can be used only with constructor"))
 ;;
 
-let eval_bin_op op e1 e2 e_expr lenv =
+let eval_bin_op op e1 e2 e_expr l_env_l =
   let _op get_ op_t =
     let res = lift2 (fun r1 r2 -> r1, r2) (e_expr e1 >>= get_) (e_expr e2 >>= get_) in
     res >>= fun (r1, r2) -> op_t r1 r2
@@ -224,7 +227,7 @@ let eval_bin_op op e1 e2 e_expr lenv =
     (match e1 with
      | EIdentifier id -> update_local_el id x
      | EPoint_access (e_id, e1) ->
-       get_point_access_value e_id e1 lenv
+       get_point_access_value e_id e1 l_env_l
        >>= fun (id, ad, _) -> update_instance_el id ad x
      | _ -> fail Methods_cannot_be_assignable)
     *> res
@@ -260,7 +263,7 @@ let eval_stm_expr e_expr e_stm lenv_kernel = function
   | _ -> fail (System_error "Trying to use an expression as a statement")
 ;;
 
-let catch_eval ad e_stm lenv = function
+let catch_eval ad e_stm l_env_l = function
   | None -> return_n ()
   | Some catch_l ->
     let f acc (cond, body) =
@@ -271,14 +274,14 @@ let catch_eval ad e_stm lenv = function
            let eval_cond =
              match e_opt with
              | None -> return_n true
-             | Some e -> eval_expr e_stm lenv e >>= get_bool
+             | Some e -> eval_expr e_stm l_env_l e >>= get_bool
            in
            let eval_body = function
              | true -> e_stm body *> return_n (Some ())
              | false -> return_n None
            in
            let accept_cond inh_cl_id cl_id =
-             equal_ident inh_cl_id cl_id || equal_ident cl_id Base_lib.exception_name
+             equal_ident inh_cl_id cl_id || equal_ident inh_cl_id Base_lib.exception_name
            in
            let is_inheritance cl_tp cl_id config =
              match cl_tp with
@@ -305,15 +308,21 @@ let catch_eval ad e_stm lenv = function
     fold_left f None catch_l *> return_n ()
 ;;
 
-let eval_try_catch_fin e_stm lenv try_ catch_ fin_ =
+let eval_try_catch_fin e_stm l_env_l try_ catch_ fin_ =
   let f_try = e_stm try_ in
-  let f_catch ad = catch_eval ad e_stm lenv catch_ in
+  let f_catch ad = catch_eval ad e_stm l_env_l catch_ in
   let f_finally =
     match fin_ with
     | Some stm -> e_stm stm
     | None -> return_n ()
   in
-  tcf_run f_try f_catch f_finally
+  run_tcf f_try f_catch f_finally
+;;
+
+let eval_while e_stm l_env_l cond_e body =
+  let f_cond = eval_expr e_stm l_env_l cond_e >>= get_bool >>= return_n in
+  let f_body = e_stm body in
+  run_loop f_cond f_body
 ;;
 
 let eval_statement lenv_kernel stm =
@@ -343,14 +352,14 @@ let eval_statement lenv_kernel stm =
     | SThrow e -> eval_expr e >>= get_inst >>= return_e
     | STry_catch_fin { try_s; catch_s; finally_s } ->
       eval_try_catch_fin helper lenv_kernel try_s catch_s finally_s
-    (* | SWhile (e, stm) -> *)
+    | SWhile (e, stm) -> eval_while helper lenv_kernel e stm
     (* | SFor for_sign -> *)
     | _ -> fail (Return_error "TODO: REMOVE")
   in
   helper stm
 ;;
 
-let eval_expr lenv = eval_expr (eval_statement lenv) lenv
+let eval_expr l_env_l = eval_expr (eval_statement l_env_l) l_env_l
 
 let interpret_ genv cl_id =
   let (Code_ident main_cl_id) = cl_id in
@@ -372,9 +381,9 @@ let interpret_ genv cl_id =
     in
     CodeMap.fold f genv (Some local_env)
   in
-  let run_main lenv =
-    (* >< TODO: lenv конвертировать в список *)
-    let lenv = [ lenv ] in
+  let run_main l_env_l =
+    (* >< TODO: l_env_l конвертировать в список *)
+    let l_env_l = [ l_env_l ] in
     let cl_decl_t = read_global cl_id >>= fun x -> return_n @@ get_class_decl x in
     let get_main cl_decl =
       let f res_opt el =
@@ -390,14 +399,15 @@ let interpret_ genv cl_id =
     in
     cl_decl_t
     >>= fun cl_decl ->
-    alloc_instance (eval_expr lenv) cl_decl
+    alloc_instance (eval_expr l_env_l) cl_decl
     >>= fun main_ad ->
     save_self_ad main_ad *> get_main cl_decl
-    >>= fun (tp, body) -> run_method tp [] [] main_ad lenv body (eval_statement lenv)
+    >>= fun (tp, body) ->
+    run_method tp [] [] main_ad l_env_l body (eval_statement l_env_l)
   in
   let eval =
     match lenv_with_constructors with
-    | Some lenv -> run_main lenv
+    | Some l_env_l -> run_main l_env_l
     | None -> fail (Type_check_error "Some class has no constructor")
   in
   run genv eval
