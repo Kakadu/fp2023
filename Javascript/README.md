@@ -9,8 +9,8 @@ Authors:
   AlexShmak, lexnder9@gmail.com
 
 Features done (append only):
-- Parser for part of Javascript
+- Interpreter for Javascript
+- Parser for Javascript
+- Arrays, Objects, Functions (also closures and recursion)
 
 Features in progress (and TODOs):
-- finish parser
-- TODO: Interpreter
