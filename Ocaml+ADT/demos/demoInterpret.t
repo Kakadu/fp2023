@@ -103,6 +103,11 @@
   "a": bool = true
   "b": bool = false
   "is_black": node -> bool = <fun>
+
+  $ dune exec demoInterpret << EOF
+  > type list = | Nil | Cons of list
+  > let rec x = Cons x
+
   $ dune exec demoInterpret << EOF
   > type color = | Red | Black
   > 
