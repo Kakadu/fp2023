@@ -1,3 +1,7 @@
+(** Copyright 2023-2024, Danil P *)
+
+(** SPDX-License-Identifier: LGPL-3.0-or-later *)
+
 type binder = int
 
 val pp_binder : Format.formatter -> binder -> unit

@@ -48,6 +48,12 @@ end = struct
 end
 
 module EnvTypes = struct
+  type err =
+    | NotInScopeError of string
+    | DivisionByZeroError
+    | NonExhaustivePatterns of string
+    | TypeMismatch
+
   type res = (value, err) LazyResult.t
   and environment = (string, res) Hashtbl.t
 
@@ -60,12 +66,6 @@ module EnvTypes = struct
     | ValList of res * res
     | ValTuple of res list
     | ValFun of pat * expr * environment
-
-  and err =
-    | NotInScopeError of string
-    | DivisionByZeroError
-    | NonExhaustivePatterns of string
-    | TypeMismatch
 end
 
 module Env : sig
@@ -104,9 +104,8 @@ end = struct
     | Result (Ok (ValList (hd, nil))) when force nil = Result (Ok ValNil) ->
       force hd :: []
     | Result (Ok (ValList (hd, tl))) -> force hd :: transform tl
-    | Result (Ok ValNil) -> []
     | Thunk t -> transform (t ())
-    | _ -> failwith "bad list"
+    | _ -> []
 
   and pp_err fmt = function
     | NotInScopeError str -> fprintf fmt "Not in scope: %S" str
@@ -208,8 +207,7 @@ end = struct
         let* local_env = List.fold_left helper (return env) bindings in
         eval local_env expr)
 
-  and eval_case env res branches =
-    match branches with
+  and eval_case env res = function
     | (pat, expr) :: rest ->
       (match match_pattern env pat res with
        | Result (Ok env) -> eval env expr

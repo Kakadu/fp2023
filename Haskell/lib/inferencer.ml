@@ -513,8 +513,7 @@ let infer_decl env (Ast.DeclLet (pat, expr)) =
     return env
 ;;
 
-let rec infer_prog env p =
-  match p with
+let rec infer_prog env = function
   | [] -> return env
   | decl :: rest ->
     let* env2 = infer_decl env decl in

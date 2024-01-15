@@ -20,6 +20,12 @@ module LazyResult : sig
 end
 
 module EnvTypes : sig
+  type err =
+    | NotInScopeError of string
+    | DivisionByZeroError
+    | NonExhaustivePatterns of string
+    | TypeMismatch
+
   type res = (value, err) LazyResult.t
   and environment = (string, res) Hashtbl.t
 
@@ -32,12 +38,6 @@ module EnvTypes : sig
     | ValList of res * res
     | ValTuple of res list
     | ValFun of Ast.pat * Ast.expr * environment
-
-  and err =
-    | NotInScopeError of string
-    | DivisionByZeroError
-    | NonExhaustivePatterns of string
-    | TypeMismatch
 end
 
 module Env : sig
