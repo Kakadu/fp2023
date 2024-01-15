@@ -2,7 +2,7 @@ Here infinite lists are defined as functions with wildcard pattern
 to avoid printing it out as an infinite list (otherwise we are stuck in a loop) 
 
 FACTORIAL 
-  $ ./haskellParser.exe <<EOF
+  $ ./ubiycaHaskella.exe <<EOF
   > fact n = if (n < 2) then 1 else fact (n - 1) * n
   > x = fact 7
   > EOF
@@ -10,13 +10,13 @@ FACTORIAL
   x :: Int => 5040
 
 YET ANOTHER FACTORIAL
-  $ ./haskellParser.exe <<EOF
+  $ ./ubiycaHaskella.exe <<EOF
   > fact 0 = 1
   > fact n = n * fact (n - 1)
   > EOF
   fact :: Int -> Int => <fun>
 
-  $ ./haskellParser.exe <<EOF
+  $ ./ubiycaHaskella.exe <<EOF
   > f a b = a + b
   > x = f 5
   > y = x 6
@@ -25,13 +25,13 @@ YET ANOTHER FACTORIAL
   y :: Int => 11
 
 
-  $ ./haskellParser.exe <<EOF
+  $ ./ubiycaHaskella.exe <<EOF
   > f x = x 
   > x =  f (f (f (10 + 5) + f 3 ))
   f :: p1 -> p1 => <fun>
   x :: Int => 18
 
-  $ ./haskellParser.exe <<EOF
+  $ ./ubiycaHaskella.exe <<EOF
   > lst = [1, 2, 6]
   > incr x  = x + 1
   > map f lst = case lst of
@@ -45,7 +45,7 @@ YET ANOTHER FACTORIAL
 
 
 YET ANOTHER FACTORIAL
-  $ ./haskellParser.exe <<EOF
+  $ ./ubiycaHaskella.exe <<EOF
   > cond p f g x = if p x then f x else g x
   > equal a b = (a == b)
   > mul a b = a * b
@@ -70,7 +70,7 @@ YET ANOTHER FACTORIAL
   y :: (p42 -> p42) -> p42 => <fun>
 
 SIEVE OF ERATOSTHENES  
-  $ ./haskellParser.exe <<EOF
+  $ ./ubiycaHaskella.exe <<EOF
   > mod x y = (x - (y * (x / y)))
   > 
   > numbers_starting_at n = n : numbers_starting_at (n + 1)  
@@ -104,7 +104,7 @@ SIEVE OF ERATOSTHENES
   take :: Int -> [p20] -> [p20] => <fun>
 
 HAMMING
-  $ ./haskellParser.exe <<EOF
+  $ ./ubiycaHaskella.exe <<EOF
   > merge (x:xs) (y:ys) = if x < y then x : merge xs (y:ys) else if x == y then x : merge xs ys else y : merge (x:xs) ys
   > 
   > mul x y = x * y
@@ -131,7 +131,7 @@ HAMMING
   take :: Int -> [p44] -> [p44] => <fun>
 
 FIBONACCI
-  $ ./haskellParser.exe <<EOF
+  $ ./ubiycaHaskella.exe <<EOF
   > zipWith f lst1 lst2 = 
   >   case (lst1, lst2) of
   >     (_, []) -> []
@@ -155,7 +155,7 @@ FIBONACCI
   zipWith :: (p13 -> p16 -> p21) -> [p13] -> [p16] -> [p21] => <fun>
 
 YET ANOTHER FACTORIAL
-  $ ./haskellParser.exe <<EOF
+  $ ./ubiycaHaskella.exe <<EOF
   > numbers_starting_at n = n : numbers_starting_at (n + 1) 
   > 
   > scanl f q ls = q : (case ls of
