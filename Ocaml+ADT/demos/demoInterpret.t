@@ -108,6 +108,15 @@
   > type list = | Nil | Cons of list
   > let rec x = Cons x
 
+  $ cat > lists.ml  << EOF
+  > let eq = fun a -> (fun b -> a == b)
+  > let answ = eq  (1 :: []) (1 :: [])
+  $ cat lists.ml | dune exec demoInterpret 
+  $ ocaml << EOF
+  > let eq = fun a -> (fun b -> a == b);;
+  > let answ = eq  (1 :: []) (1 :: []);;
+  
+
   $ dune exec demoInterpret << EOF
   > type color = | Red | Black
   > 
