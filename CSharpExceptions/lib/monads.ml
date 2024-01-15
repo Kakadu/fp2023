@@ -544,13 +544,25 @@ module Eval_Monad = struct
   ;;
 
   let tcf_run tf cf ff =
+    let save_reserv_mem_and_lenvl =
+      lift2 (fun mem lenv -> mem, lenv) read_local read_mem
+    in
     let ff_new = local ff in
     let cf_new ad = local (cf ad) @!|>>= fun sig_ -> ff_new *> further sig_ in
-    read_mem
-    >>= fun mem ->
+    save_reserv_mem_and_lenvl
+    >>= fun (old_l_env_l, old_mem) ->
     local tf
     @!|>>= function
-    | Exn ad -> save_mem mem *> cf_new ad
+    | Exn ad ->
+      let restore_old_mem_and_lenvl =
+        let save_old_mem_with_exn el =
+          let ad, mem = old_mem in
+          save_mem (incr_ ad, mem) *> save_instance ad el
+        in
+        read_instance ad
+        >>= fun mem_el -> save_local old_l_env_l *> save_old_mem_with_exn mem_el
+      in
+      restore_old_mem_and_lenvl *> cf_new ad
     | Next x -> return_n x
     | Break -> ff_new *> fail (Interpreter_error "Attempt to use break with try")
     | Return x -> ff_new *> return_r x

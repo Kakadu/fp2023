@@ -285,7 +285,7 @@ let%expect_test "Multi-class programm (complex constructor) " =
   [%expect {| Result: (Init (Int_v 5)) |}]
 ;;
 
-let%expect_test "Try" =
+let%expect_test "Try_fin" =
   let s =
     {| 
       class A1 : Exception
@@ -312,6 +312,41 @@ let%expect_test "Try" =
   in
   interpret_wrap s;
   [%expect {| Result: (Init (Int_v 100)) |}]
+;;
+
+let%expect_test "Try_fin" =
+  let s =
+    {| 
+      class A1 : Exception
+      {
+        public int flag;
+        A1(int flag1){
+          flag = flag1;
+        }
+      }
+
+      class Program
+      {
+        static int Main(){
+          int a = 0;
+            try
+            {
+              a = 10;
+              throw new A1(1);
+              a = 11;
+            } catch(A1 e){
+              a = a + 1;
+            } 
+            finally {
+              a = a + 100;
+            }
+          return a;
+        }
+      }
+    |}
+  in
+  interpret_wrap s;
+  [%expect {| Result: (Init (Int_v 101)) |}]
 ;;
 
 let%expect_test "Base factorial type check" =
