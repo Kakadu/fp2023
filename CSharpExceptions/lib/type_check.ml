@@ -593,7 +593,13 @@ let type_check_ ast =
   let (Ast ast) = ast in
   let type_checker_ = iter_left class_check ast in
   match run_with_base_exception with
-  | (ctx, _, _, _), Result.Ok _ -> continue type_checker_ (ctx, IdentMap.empty, None, None)
+  | (ctx, _, _, _), Result.Ok _ ->
+    let add_exception_constr =
+      add_local
+        Base_lib.exception_name
+        (Constructor_sig (default_cons Base_lib.exception_name))
+    in
+    continue (add_exception_constr *> type_checker_) (ctx, IdentMap.empty, None, None)
   | _, Result.Error info -> run (fail info)
 ;;
 
@@ -607,7 +613,13 @@ let type_check ast =
   in
   match lib_ctx with
   | _, Result.Error info -> run (fail info)
-  | (ctx, _, _, _), Result.Ok _ -> continue type_checker_ (ctx, IdentMap.empty, None, None)
+  | (ctx, _, _, _), Result.Ok _ ->
+    continue
+      (add_local
+         Base_lib.exception_name
+         (Constructor_sig (default_cons Base_lib.exception_name))
+       *> type_checker_)
+      (ctx, IdentMap.empty, None, None)
 ;;
 
 let type_check_with_main ast =
