@@ -143,7 +143,8 @@ module Eval (M : Utils.MONAD_FAIL) = struct
   ;;
 
   let transform_select_statement (base : Database.t) = function
-    | Ast.Asterisk -> fail (NotImplementedYet "using an asterisk instead of a column name")
+    | Ast.Asterisk ->
+      fail (NotImplementedYet "using an asterisk instead of a column name")
     | Ast.Expression e -> transform_ast_expression base e
   ;;
 

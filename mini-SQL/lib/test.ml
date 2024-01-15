@@ -378,4 +378,42 @@ module Types_test = struct
   let request1 =
     Result.get_ok (Parser.parse "SELECT name FROM table1 WHERE table1.name > 10")
   ;;
+
+  open Typecheck.Exec (Utils.Result)
+
+  let%test _ =
+    assert_equal
+      (Types.Numeric 15) #+ (Types.Numeric 15)
+      (Types.Numeric 30)
+      Types.show_item
+  ;;
+
+  (* typecheck *)
+
+  let%test _ =
+    assert_equal (Types.Numeric 15) #+ (Types.Real 15.) (Types.Real 30.) Types.show_item
+  ;;
+
+  let%test _ =
+    assert_equal (Types.Numeric 15) #- (Types.Real 15.) (Types.Real 0.) Types.show_item
+  ;;
+
+  let%test _ =
+    assert_equal (Types.Bool true) #* (Types.Real 5.) (Types.Real 5.) Types.show_item
+  ;;
+
+  let%test _ =
+    assert_equal (Types.Bool true) #* (Types.Real 5.) (Types.Real 5.) Types.show_item
+  ;;
+
+  let%test _ =
+    assert_equal (Types.Numeric 10) #/ (Types.Real 5.) (Types.Real 2.) Types.show_item
+  ;;
+
+  let%test _ =
+    assert_equal
+      (Types.String "15") #+ (Types.Real 5.)
+      (Types.String "155.")
+      Types.show_item
+  ;;
 end

@@ -4,6 +4,7 @@ type error =
   | UnknownTable of string
   | UknownColumn of string
   | TypesMismatch of Types.item * string * Types.item
+  | TypeConversionFail of Types.item * string
   | DivisionByZero
   | NotImplementedYet of string
 [@@deriving show { with_path = false }]
@@ -14,9 +15,16 @@ let error_to_string = function
   | UnknownTable msg -> Format.sprintf "Can't find table '%s'" msg
   | UknownColumn msg -> Format.sprintf "Can't find column '%s'" msg
   | TypesMismatch (t1, op, t2) ->
-    Format.sprintf "Type check failed: %s %s %s" (Types.show_item t1) op (Types.show_item t2)
+    Format.sprintf
+      "Type check failed: %s %s %s"
+      (Types.show_item t1)
+      op
+      (Types.show_item t2)
+  | TypeConversionFail (x, y) ->
+    Format.sprintf "Failure to convert %s to type %s" (Types.show_item x) y
   | DivisionByZero -> "Division by zero encountered"
-  | NotImplementedYet f -> Format.sprintf "You used a feature that has not yet been implemented yet (%s)" f
+  | NotImplementedYet f ->
+    Format.sprintf "You used a feature that has not yet been implemented yet (%s)" f
 ;;
 
 module type MONAD_FAIL = sig
