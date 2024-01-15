@@ -2,13 +2,14 @@
 opam-version: "2.0"
 version: "0.1"
 synopsis: "An interpreter for Golang language"
-description:"A longer description, for example, which are the most interesing features being supported, etc."
+description:
+  "A longer description, for example, which are the most interesing features being supported, etc."
 maintainer: ["Nikita Lukonenko"]
 authors: ["Nikita Lukonenko"]
 license: "LGPL-3.0-or-later"
 homepage: "FIXME Homepage"
 bug-reports: "FIXME where to put bug reports about the code"
-depends: depends: [
+depends: [
   "dune" {>= "3.7"}
   "angstrom"
   "ppx_inline_test" {with-test}
@@ -18,6 +19,7 @@ depends: depends: [
   "odoc" {with-doc}
   "ocamlformat" {build}
   "base"
+  "dune"
 ]
 build: [
   ["dune" "subst"] {dev}
