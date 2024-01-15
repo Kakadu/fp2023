@@ -56,7 +56,7 @@ and obj_type =
   | TFunPreset of (ctx -> value list -> int option -> (ctx * value option) t)
   | TFunction of fun_ctx
   | TArrowFunction of fun_ctx
-  | TArray of value list
+  | TArray of value option list
   | TObject
 
 and obj_ctx =

@@ -742,22 +742,26 @@ let%expect_test _ =
 
 let%expect_test _ =
   print_return "return ++4";
-  [%expect {| Error: Interpreter error > error in return expression > error in prefix increment operator > error in assignment > SyntaxError: Invalid left-hand side in assignment |}]
+  [%expect
+    {| Error: Interpreter error > error in return expression > error in prefix increment operator > error in assignment > SyntaxError: Invalid left-hand side in assignment |}]
 ;;
 
 let%expect_test _ =
   print_return "return ++-1";
-  [%expect {| Error: Interpreter error > error in return expression > error in prefix increment operator > error in assignment > SyntaxError: Invalid left-hand side in assignment |}]
+  [%expect
+    {| Error: Interpreter error > error in return expression > error in prefix increment operator > error in assignment > SyntaxError: Invalid left-hand side in assignment |}]
 ;;
 
 let%expect_test _ =
   print_return "return ---1";
-  [%expect {| Error: Interpreter error > error in return expression > error in prefix decrement operator > error in assignment > SyntaxError: Invalid left-hand side in assignment |}]
+  [%expect
+    {| Error: Interpreter error > error in return expression > error in prefix decrement operator > error in assignment > SyntaxError: Invalid left-hand side in assignment |}]
 ;;
 
 let%expect_test _ =
   print_return "return --+1";
-  [%expect {| Error: Interpreter error > error in return expression > error in prefix decrement operator > error in assignment > SyntaxError: Invalid left-hand side in assignment |}]
+  [%expect
+    {| Error: Interpreter error > error in return expression > error in prefix decrement operator > error in assignment > SyntaxError: Invalid left-hand side in assignment |}]
 ;;
 
 (*assigns*)
@@ -802,7 +806,8 @@ let%expect_test _ =
 
 let%expect_test _ =
   print_output "let a = 4; console.log(a, --a++, a)";
-  [%expect {| Error: Interpreter error > error in expression statement > error in function arguments > error in prefix decrement operator > error in assignment > SyntaxError: Invalid left-hand side in assignment |}]
+  [%expect
+    {| Error: Interpreter error > error in expression statement > error in function arguments > error in prefix decrement operator > error in assignment > SyntaxError: Invalid left-hand side in assignment |}]
 ;;
 
 let%expect_test _ =
@@ -1201,6 +1206,17 @@ let%expect_test _ =
 let%expect_test _ =
   print_return
     "let a2 = {field2 : 4}; \n    a2[\"__proto\"+\"__\"] = a2\n    return a2.field1";
+  [%expect
+    {|
+    Error: Interpreter error > error in expression statement > error in assignment > TypeError: Cyclic __proto__ value |}]
+;;
+
+let%expect_test _ =
+  print_return
+    "let a1 = {field2 : 4}; \n\
+    \  let a2 = {field2 : 4, __proto__ : a1};\n\
+    \    a1.__proto__ = a2\n\
+    \    return a2.field2";
   [%expect
     {|
     Error: Interpreter error > error in expression statement > error in assignment > TypeError: Cyclic __proto__ value |}]
@@ -1663,9 +1679,121 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
+  print_return "return [4, 5, 6][2]";
+  [%expect {|
+    Programm return: 6 |}]
+;;
+
+let%expect_test _ =
+  print_return "return [4, 5, 6][3]";
+  [%expect {|
+    Programm return: undefined |}]
+;;
+
+let%expect_test _ =
   print_return "return [4, \"10\", { an : 11 }]";
   [%expect {|
     Programm return: [ 4, '10', { an: 11 } ] |}]
+;;
+
+let%expect_test _ =
+  print_return "return [4, \"10\", { an : 11 }][1]";
+  [%expect {|
+    Programm return: 10 |}]
+;;
+
+let%expect_test _ =
+  print_return "return [4, \"10\", { an : 11 }][5]";
+  [%expect {|
+    Programm return: undefined |}]
+;;
+
+let%expect_test _ =
+  print_return "return [4, \"10\", { an : 11 }]+\"\"";
+  [%expect {|
+    Programm return: 4,10,[object Object] |}]
+;;
+
+let%expect_test _ =
+  print_return "return []+\"\"";
+  [%expect {|
+    Programm return: |}]
+;;
+
+let%expect_test _ =
+  print_output "let a = [4, 5, 6]; a[6] = 10; console.log(a, a+\"\")";
+  [%expect
+    {|
+    Programm output:
+    [ 4, 5, 6,,,, 10 ] 4,5,6,,,,10
+
+    Programm return: undefined |}]
+;;
+
+let%expect_test _ =
+  print_output
+    "let a1 = [4, 5, 6]; \n\
+    \  let a2 = [1, 2];\n\
+    \  a2.__proto__ = a1; console.log(a2, a2+\"\")";
+  [%expect {|
+    Programm output:
+    [ 1, 2 ] 1,2
+
+    Programm return: undefined |}]
+;;
+
+let%expect_test _ =
+  print_output
+    "let a1 = [116, 117, 118, 119, 120]; \n\
+    \  let a2 = [1, 2];\n\
+    \  a2.__proto__ = a1; a2[6] = 10; console.log(a2, a2+\"\")";
+  [%expect
+    {|
+    Programm output:
+    [ 1, 2,,,,, 10 ] 1,2,118,119,120,,10
+
+    Programm return: undefined |}]
+;;
+
+let%expect_test _ =
+  print_output
+    "let a1 = [116, 117, 118, 119, 120]; \n\
+    \  let a2 = [1, 2];\n\
+    \  a2.__proto__ = a1; a2[6] = 10; a2[3] = 3; \n\
+    \    console.log(a2, a2+\"\")\n\
+    \    console.log(a1, a1+\"\")";
+  [%expect
+    {|
+    Programm output:
+    [ 1, 2,, 3,,, 10 ] 1,2,118,3,120,,10
+    [ 116, 117, 118, 119, 120 ] 116,117,118,119,120
+
+    Programm return: undefined |}]
+;;
+
+let%expect_test _ =
+  print_output
+    "let a1 = [116, 117, 118, 119, 120]; \n\
+    \  let a2 = [1, 2];\n\
+    \  a2.__proto__ = a1; a2[6] = 10;\n\
+    \    console.log(a2[4], a2[5], a2[6])";
+  [%expect
+    {|
+    Programm output:
+    120 undefined 10
+
+    Programm return: undefined |}]
+;;
+
+let%expect_test _ =
+  print_output
+    "let a = [4, \"10\", { an : 11 }]; a.ab = \"something\"; console.log(a,a+\"\")";
+  [%expect
+    {|
+    Programm output:
+    [ 4, '10', { an: 11 }, ab: 'something' ] 4,10,[object Object]
+
+    Programm return: undefined |}]
 ;;
 
 let%expect_test _ =
