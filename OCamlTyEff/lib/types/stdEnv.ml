@@ -62,4 +62,4 @@ let env_functions =
 
 let env =
   List.concat [env_arith; env_constructors; env_exceptions; env_functions]
-  |> Env.of_alist_exn
+  |> Env.of_alist_exn ~weak_counter:1
