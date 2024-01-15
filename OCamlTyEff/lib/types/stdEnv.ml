@@ -58,7 +58,17 @@ let env_functions =
     , Scheme.Forall
         ( VarSet.of_list [Var_ty (Var "a"); Var_ty (Var "b")]
         , Ty_arr (Ty.exn alpha, single_eff @@ Eff.Label.exn @@ var "a", var "b")
-        ) ) ]
+        ) )
+  ; ( id "ref"
+    , single_var (Ty_arr (alpha, single_eff @@ Eff.Label.ref (), Ty.ref alpha))
+    )
+  ; ( id "!"
+    , single_var (Ty_arr (Ty.ref alpha, single_eff @@ Eff.Label.ref (), alpha))
+    )
+  ; ( id ":="
+    , single_var
+        (Ty.ref alpha @> Ty_arr (alpha, single_eff @@ Eff.Label.ref (), Ty.unit))
+    ) ]
 
 let env =
   List.concat [env_arith; env_constructors; env_exceptions; env_functions]
