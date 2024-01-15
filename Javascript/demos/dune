@@ -1,0 +1,33 @@
+(env
+ (dev
+  (flags
+   (:standard -warn-error -A -w -26)
+   (-short-paths))))
+
+(executable
+ (name demoFactorial)
+ (modules demoFactorial)
+ (libraries javascript_lib stdio))
+
+(executable
+ (name demoObjects)
+ (modules demoObjects)
+ (libraries javascript_lib stdio))
+
+(executable
+ (name demoClosures)
+ (modules demoClosures)
+ (libraries javascript_lib stdio))
+
+(executable
+ (name demo)
+ (modules demo)
+ (libraries javascript_lib stdio))
+
+(cram
+ (deps
+  ./demoFactorial.exe
+  ./demoObjects.exe
+  ./demoClosures.exe
+  ./demo.exe
+  ./javascriptSamples/demoArray.js))
