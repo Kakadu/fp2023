@@ -174,7 +174,117 @@ let%expect_test _ =
   run
     {|
     fun _ -> (print_string "42", raise Exc1, raise Exc2);;
-    fun _ -> [print_string "42"; raise Exc1; raise Exc2] |};
-  [%expect {|
+    fun _ -> [print_string "42"; raise Exc1; raise Exc2] |} ;
+  [%expect
+    {|
     'a 'b 'c. 'a -[exn _Exc2, console, exn _Exc1]-> unit * 'b * 'c
     'a. 'a -[exn _Exc2, console, exn _Exc1]-> unit list |}]
+
+let%expect_test _ =
+  run
+    {|
+    ref None;;
+
+    let fst (a, b) = a;;
+    let snd (a, b) = b;;
+
+    let a = (fun x -> x), ref None;;
+    let b = ref None;;
+    (fst a) "hi"; (snd a) := Some true; b := Some 1;;
+
+    a;; b|} ;
+  [%expect
+    {|
+    '_weak1 option ref
+    fst: 'a 'b. ('a * 'b) -> 'a
+    snd: 'a 'b. ('a * 'b) -> 'b
+    a: ('_weak2 -> '_weak2) * '_weak3 option ref
+    b: '_weak4 option ref
+    unit
+    (string -> string) * bool option ref
+    int option ref |}]
+
+let%expect_test _ =
+  run {| let x () = ref None |} ;
+  [%expect {| x: 'a. unit -[ref]-> 'a option ref |}]
+
+let%expect_test _ =
+  run
+    {|
+    let const x y = y in
+    const ();;
+
+    id (fun x -> [x;x]);;
+    (fun _ _ -> 0) () |} ;
+  [%expect {|
+    'a. 'a -> 'a
+    'a. 'a -> 'a list
+    'a. 'a -> int |}]
+
+let%expect_test _ =
+  run
+    {|
+    let cache1 =
+      let cache = ref None in
+      fun x -> match !cache with
+        | Some cached -> cached
+        | _ -> cache := Some x; x;;
+    cache1 5; cache1
+
+    let cache2 _ =
+      let cache = ref None in
+      fun x -> match !cache with
+        | Some cached -> cached
+        | _ -> cache := Some x; x;;
+
+    let id = cache2 () in id 5; id
+    |} ;
+  [%expect
+    {|
+    cache1: '_weak1 -[ref]-> '_weak1
+    int -[ref]-> int
+    cache2: 'a. 'a -[ref]-> '_weak2 -[ref]-> '_weak2
+    int -[ref]-> int |}]
+
+let%expect_test _ =
+  run
+    {|
+    let a = ref None in a := Some 1; a;;
+    let a = ref None in a := Some 1; a := Some true |} ;
+  [%expect {|
+    int option ref
+    (UnificationFailTy (int, bool)) |}]
+
+let%expect_test _ =
+  run
+    {| fun _ ->
+         let id = print_string "42"; fun x -> x
+         in ref None; id 1; id "hello" |} ;
+  [%expect {| 'a. 'a -[ref, console]-> string |}]
+
+let%expect_test _ =
+  run
+    {| let a = ref None in let b = a in b := Some 1; b;;
+       let a = ref None;;
+       let b = a |} ;
+  [%expect
+    {|
+    int option ref
+    a: '_weak1 option ref
+    b: '_weak1 option ref |}]
+
+let%expect_test _ =
+  run {| let f = ref None; id |} ;
+  [%expect {| f: '_weak1 -> '_weak1 |}]
+
+let%expect_test _ =
+  run {| match Some id with Some f -> ref None; f 1; f "hi"; f |} ;
+  [%expect {| '_weak1 -> '_weak1 |}]
+
+let%expect_test _ =
+  run
+    {| fun () ->
+       let _ =
+         let _ = print_string "hi" in ()
+       in () |} ;
+  [%expect {| unit -[console]-> unit |}]
