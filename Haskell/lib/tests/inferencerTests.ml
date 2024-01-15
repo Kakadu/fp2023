@@ -209,12 +209,55 @@ let%expect_test _ =
       (1, (x:_)) -> [x]
       (n, (x:xs)) -> x : xs|};
   [%expect {|
-    take :: Int -> [p5] -> [p5] |}]
+    take :: Int -> [p14] -> [p14] |}]
 ;;
 
 let%expect_test _ =
   parse_infer
     {| merge (x:xs) (y:ys) = if x < y then x : merge xs (y:ys) else if x == y then x : merge xs ys else y : merge (x:xs) ys|};
   [%expect {|
-    take :: Int -> [p5] -> [p5] |}]
+    merge :: [p7] -> [p7] -> [p7] |}]
+;;
+
+let%expect_test _ =
+  parse_infer
+    {| merge (x:xs) (y:ys) = if x < y then x : merge xs (y:ys) else if x == y then x : merge xs ys else y : merge (x:xs) ys
+    mul x y = x * y
+   
+   map1 f (x:xs) = f x : map1 f xs
+
+   map f lst =
+     case lst of
+       [] -> []
+       (x:xs) -> f x : map f xs
+ 
+   hamming = 1 : merge (map (mul 2) hamming) (merge (map (mul 3) hamming) (map (mul 5) hamming))|};
+  [%expect
+    {|
+    hamming :: [Int]
+    map :: (p34 -> p37) -> [p34] -> [p37]
+    map1 :: (p22 -> p25) -> [p22] -> [p25]
+    merge :: [p7] -> [p7] -> [p7]
+    mul :: Int -> Int -> Int |}]
+;;
+
+let%expect_test _ =
+  parse_infer {|dumb = 1 + "asd"|};
+  [%expect
+    {|
+    This expression has type (String) but an expression was expected of type (Int) |}]
+;;
+
+let%expect_test _ =
+  parse_infer {|dumb = asd|};
+  [%expect {|
+    Variable not in scope: asd |}]
+;;
+
+let%expect_test _ =
+  parse_infer {|(x, y, z) = ('c', 'e', 'r', 'f')|};
+  [%expect {|
+    x :: p0
+    y :: p1
+    z :: p2 |}]
 ;;
