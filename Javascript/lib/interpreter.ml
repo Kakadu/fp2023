@@ -44,6 +44,7 @@ let error err =
 
 let ensup str = error (NotSupported str)
 let etyp str = error (TypeError str)
+let add_to_result elem result = result >>| fun x -> elem, x
 
 let num_to_string n =
   if Float.is_integer n
@@ -398,13 +399,13 @@ let if_none a f =
   | None -> f
 ;;
 
-let rec obj_find_property ctx obj_fun array_fun = function
+let rec find_obj_in_protos ctx obj_fun array_fun = function
   | VObject x ->
     let* obj = get_obj_ctx ctx x in
     let find_in_vars () =
       match obj_fun obj with
       | Some _ as x -> return x
-      | None -> obj_find_property ctx obj_fun array_fun obj.proto
+      | None -> find_obj_in_protos ctx obj_fun array_fun obj.proto
     in
     (match obj.obj_type with
      | TArray arr -> if_none (return @@ array_fun arr) @@ find_in_vars ()
@@ -412,9 +413,9 @@ let rec obj_find_property ctx obj_fun array_fun = function
   | _ -> return None
 ;;
 
-let obj_get_property ctx obj key =
+let get_obj_property_opt ctx obj key =
   let go obj =
-    obj_find_property
+    find_obj_in_protos
       ctx
       (fun obj -> Option.map (fun x -> x.value) (find_in_vars_opt key obj.fields))
       (fun arr -> array_find_by_index key arr)
@@ -431,10 +432,14 @@ let obj_get_property ctx obj key =
       else return None
     in
     if_none (go obj_val) @@ if_none spec_proto @@ go (vobject ctx.proto_objs.proto_obj)
-    >>| (function
-     | Some x -> x
-     | None -> VUndefined)
   | _ -> ensup "reading from not object"
+;;
+
+let get_obj_property ctx obj key =
+  get_obj_property_opt ctx obj key
+  >>| function
+  | Some x -> x
+  | None -> VUndefined
 ;;
 
 (**---------------Expression interpreter---------------*)
@@ -446,8 +451,6 @@ let const_to_val = function
   | Undefined -> VUndefined
   | Null -> VNull
 ;;
-
-let add_to_result elem result = result >>| fun x -> elem, x
 
 let get_vnum ctx = function
   | VNumber x -> return x
@@ -495,7 +498,7 @@ let ctx_get_var ctx id =
 (**All context change what valueOf makes will be discarded!*)
 let rec get_primitive ctx = function
   | VObject id as x ->
-    let* f = obj_get_property ctx x "valueOf" in
+    let* f = get_obj_property ctx x "valueOf" in
     eval_fun ctx f [] (Some id) >>| fun (_, value) -> value
   | _ as t -> return t
 
@@ -508,11 +511,22 @@ and to_string ctx v =
   | VBool false -> return "false"
   | VNull -> return "null"
   | VUndefined -> return "undefined"
-  | VObject x when is_obj_by_id ctx is_array x ->
+  | VObject x as obj_val when is_obj_by_id ctx is_array x ->
     let* obj = get_obj_ctx ctx x in
     get_array_list obj
-    >>= map (fun el -> Option.fold ~none:(return "") ~some:(to_string ctx) el)
-    >>| fun array -> String.concat "," array
+    >>= fold_left_map
+          (fun counter el ->
+            add_to_result (counter + 1)
+            @@ Option.fold
+                 ~none:
+                   (get_obj_property_opt ctx obj_val (string_of_int counter)
+                    >>= function
+                    | Some x -> to_string ctx x
+                    | None -> return "")
+                 ~some:(to_string ctx)
+                 el)
+          0
+    >>| fun (_, array) -> String.concat "," array
   | VObject x when is_obj_by_id ctx is_func x -> ensup "conversion func to str"
   | VObject _ -> return "[object Object]"
   | _ as t -> etyp ("cannot cast " ^ print_type ctx t ^ " to string")
@@ -650,7 +664,7 @@ and ctx_not_change_bop ctx op a b =
     then bop (fun x -> to_string ctx x >>| vstring) a b
     else bop (fun x -> to_number ctx x >>| vnumber) a b
   in
-  let prop_accs () = to_string ctx b >>= obj_get_property ctx a in
+  let prop_accs () = to_string ctx b >>= get_obj_property ctx a in
   let nullish_coal () =
     match a with
     | VNull | VUndefined -> return b
@@ -789,7 +803,7 @@ and ctx_change_bop ctx op a b : (ctx * value) t =
             if obj_val = new_val
             then return @@ Some ()
             else
-              obj_find_property
+              find_obj_in_protos
                 ctx
                 (fun x -> if x.proto = obj_val then Some () else None)
                 (fun _ -> None)
@@ -799,18 +813,39 @@ and ctx_change_bop ctx op a b : (ctx * value) t =
           then etyp "Cyclic __proto__ value"
           else return { obj with proto = new_val }
         | _ ->
-          (match find_in_vars_opt prop obj.fields with
-           | Some x when x.is_const ->
-             let* str = print_vvalues ctx obj_val in
-             etyp
-             @@ asprintf "Cannot assign to read only property '%s' of %s" x.var_id str
-           | _ ->
-             let fields =
-               add_or_replace
-                 { var_id = prop; is_const = false; value = new_val }
-                 obj.fields
-             in
-             return { obj with fields })
+          let get_array_index =
+            match int_of_string_opt prop with
+            | Some x when x >= 0 -> Some x
+            | _ -> None
+          in
+          if is_array obj && Option.is_some get_array_index
+          then
+            let* id = Option.to_result ~none:"" get_array_index in
+            let+ array = get_array_list obj in
+            let rec add_to_array counter = function
+              | a :: tl ->
+                if id = counter
+                then Some new_val :: tl
+                else a :: add_to_array (counter + 1) tl
+              | _ ->
+                if id = counter
+                then [ Some new_val ]
+                else None :: add_to_array (counter + 1) []
+            in
+            { obj with obj_type = TArray (add_to_array 0 array) }
+          else (
+            match find_in_vars_opt prop obj.fields with
+            | Some x when x.is_const ->
+              let* str = print_vvalues ctx obj_val in
+              etyp
+              @@ asprintf "Cannot assign to read only property '%s' of %s" x.var_id str
+            | _ ->
+              let fields =
+                add_or_replace
+                  { var_id = prop; is_const = false; value = new_val }
+                  obj.fields
+              in
+              return { obj with fields })
       in
       { ctx with objs = IntMap.add id new_obj ctx.objs }, new_val
     in
