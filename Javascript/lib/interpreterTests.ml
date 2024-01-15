@@ -742,22 +742,26 @@ let%expect_test _ =
 
 let%expect_test _ =
   print_return "return ++4";
-  [%expect {| Error: Interpreter error > error in return expression > error in prefix increment operator > error in assignment > SyntaxError: Invalid left-hand side in assignment |}]
+  [%expect
+    {| Error: Interpreter error > error in return expression > error in prefix increment operator > error in assignment > SyntaxError: Invalid left-hand side in assignment |}]
 ;;
 
 let%expect_test _ =
   print_return "return ++-1";
-  [%expect {| Error: Interpreter error > error in return expression > error in prefix increment operator > error in assignment > SyntaxError: Invalid left-hand side in assignment |}]
+  [%expect
+    {| Error: Interpreter error > error in return expression > error in prefix increment operator > error in assignment > SyntaxError: Invalid left-hand side in assignment |}]
 ;;
 
 let%expect_test _ =
   print_return "return ---1";
-  [%expect {| Error: Interpreter error > error in return expression > error in prefix decrement operator > error in assignment > SyntaxError: Invalid left-hand side in assignment |}]
+  [%expect
+    {| Error: Interpreter error > error in return expression > error in prefix decrement operator > error in assignment > SyntaxError: Invalid left-hand side in assignment |}]
 ;;
 
 let%expect_test _ =
   print_return "return --+1";
-  [%expect {| Error: Interpreter error > error in return expression > error in prefix decrement operator > error in assignment > SyntaxError: Invalid left-hand side in assignment |}]
+  [%expect
+    {| Error: Interpreter error > error in return expression > error in prefix decrement operator > error in assignment > SyntaxError: Invalid left-hand side in assignment |}]
 ;;
 
 (*assigns*)
@@ -802,7 +806,8 @@ let%expect_test _ =
 
 let%expect_test _ =
   print_output "let a = 4; console.log(a, --a++, a)";
-  [%expect {| Error: Interpreter error > error in expression statement > error in function arguments > error in prefix decrement operator > error in assignment > SyntaxError: Invalid left-hand side in assignment |}]
+  [%expect
+    {| Error: Interpreter error > error in expression statement > error in function arguments > error in prefix decrement operator > error in assignment > SyntaxError: Invalid left-hand side in assignment |}]
 ;;
 
 let%expect_test _ =
@@ -1666,6 +1671,24 @@ let%expect_test _ =
   print_return "return [4, \"10\", { an : 11 }]";
   [%expect {|
     Programm return: [ 4, '10', { an: 11 } ] |}]
+;;
+
+let%expect_test _ =
+  print_return "return [4, \"10\", { an : 11 }][1]";
+  [%expect {|
+    Programm return: 10 |}]
+;;
+
+let%expect_test _ =
+  print_return "return [4, \"10\", { an : 11 }][5]";
+  [%expect {|
+    Programm return: undefined |}]
+;;
+
+let%expect_test _ =
+  print_return "let a = [4, \"10\", { an : 11 }]; a.ab = \"something\"; return a";
+  [%expect {|
+    Programm return: [ 4, '10', { an: 11 }, ab: 'something' ] |}]
 ;;
 
 let%expect_test _ =
