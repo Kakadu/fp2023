@@ -14,7 +14,6 @@ type error =
   | OccursCheck
   | NoVariable of string
   | UnificationFailed of ty * ty
-[@@deriving show { with_path = false }]
 
 let pp_error fmt = function
   | OccursCheck -> Format.printf "Occurs check"
