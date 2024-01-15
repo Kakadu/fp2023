@@ -18,8 +18,8 @@
       <h2>50.00%</h2>
     </div>
     <div id="navbar">
-      <span class="unvisited" style="bottom:13.33%"></span>
-      <span class="unvisited" style="bottom:6.67%"></span>
+      <span class="unvisited" style="bottom:12.50%"></span>
+      <span class="unvisited" style="bottom:6.25%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -31,14 +31,15 @@
 <a id="L5"></a><span > </span>
 <a id="L6"></a><span > </span>
 <a id="L7"></a><span > </span>
-<a id="L8"></a><span class="visited"> </span>
+<a id="L8"></a><span > </span>
 <a id="L9"></a><span class="visited"> </span>
-<a id="L10"></a><span > </span>
-<a id="L11"></a><span class="visited"> </span>
+<a id="L10"></a><span class="visited"> </span>
+<a id="L11"></a><span > </span>
 <a id="L12"></a><span class="visited"> </span>
-<a id="L13"></a><span class="unvisited"> </span>
+<a id="L13"></a><span class="visited"> </span>
 <a id="L14"></a><span class="unvisited"> </span>
-<a id="L15"></a><span > </span>
+<a id="L15"></a><span class="unvisited"> </span>
+<a id="L16"></a><span > </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -58,12 +59,14 @@
 <a href="#L13">13</a>
 <a href="#L14">14</a>
 <a href="#L15">15</a>
+<a href="#L16">16</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2023-2024, tepa46 *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
 open Ocamladt_lib
+
 let () =
   let s = Stdio.In_channel.input_all Stdlib.stdin in
   <span data-count="9">m</span>atch Parser.parse s with
