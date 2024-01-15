@@ -3,7 +3,7 @@
 (library
  (name parse)
  (public_name OCamlTyEff.Parse)
- (libraries base angstrom ast)
+ (libraries base angstrom ast types)
  (preprocess
   (pps ppx_expect ppx_deriving.eq))
  (inline_tests)
