@@ -1,4 +1,4 @@
-(** Copyright 2023, Kuarni, AlexShmak *)
+(** Copyright 2023-2024, Kuarni, AlexShmak *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
@@ -6,8 +6,6 @@ open Angstrom
 open Ast
 
 type error = [ `ParsingError of string ]
-
-let chars2string chars = List.fold_left (fun a b -> a ^ Char.escaped b) "" chars
 
 let is_space = function
   | ' ' | '\t' -> true
@@ -97,7 +95,6 @@ let end_of_word =
 let empty = skip_while is_empty
 let empty1 = take_while1 is_empty *> return ()
 let spaces = skip_while is_space
-let token_space p = spaces *> p
 let token p = empty *> p
 let token1 p = empty1 *> p
 let token_btw p = empty *> p <* empty
@@ -178,12 +175,11 @@ let parse_args_names =
 
 let parse_comma parser = sep_by (token_ch ',') parser <* (token_ch ',' <|> return ' ')
 
-let is_long_op_symbol_fail = function
-  | '&' | '|' | '=' | '*' | '<' | '>' -> fail ""
-  | _ -> return ()
-;;
-
 let parse_op ops =
+  let is_long_op_symbol_fail = function
+    | '&' | '|' | '=' | '*' | '<' | '>' -> fail ""
+    | _ -> return ()
+  in
   choice
     (List.map
        (fun (js_op, op) ->

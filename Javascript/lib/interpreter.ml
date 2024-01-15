@@ -1,4 +1,4 @@
-(** Copyright 2023, Kuarni, AlexShmak *)
+(** Copyright 2023-2024, Kuarni, AlexShmak *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
@@ -15,17 +15,10 @@ type program_return =
   ; return : string
   }
 
-let first_lex_env = 0
-let print_string (ctx : ctx) str = { ctx with stdout = ctx.stdout ^ str ^ "\n" }
 let vbool x = VBool x
 let vnumber x = VNumber x
 let vstring x = VString x
 let vobject x = VObject x
-
-let print_opt f = function
-  | Some x -> "Some: " ^ f x
-  | None -> "None"
-;;
 
 let error err =
   uerror
@@ -36,7 +29,6 @@ let error err =
        else "Feature " ^ str ^ " is not supported"
      | AstError str -> "Invalid ast was given: " ^ str
      | ReferenceError str -> "ReferenceError: " ^ str
-     | RangeError str -> "RangeError: " ^ str
      | InternalError str -> "InternalError: " ^ str
      | TypeError str -> "TypeError: " ^ str
      | SyntaxError str -> "SyntaxError: " ^ str)
@@ -85,7 +77,7 @@ let is_obj_by_id ctx cond id =
 let get_array_list obj =
   match obj.obj_type with
   | TArray array -> return array
-  | _ -> error @@ TypeError "Not array was given"
+  | _ -> etyp "Not array was given"
 ;;
 
 let print_type ctx = function
@@ -167,7 +159,6 @@ let rec print_vvalues ctx ?(str_quote = false) = function
       else if fields_empty
       then return "{}"
       else return @@ asprintf "{%s }" (concat fields))
-  | _ as t -> return @@ asprintf "Cannot convert '%s' to string" @@ print_type ctx t
 ;;
 
 let get_vreturn = function
@@ -175,9 +166,8 @@ let get_vreturn = function
   | None -> VUndefined
 ;;
 
-let get_lex_env_opt ctx id = IntMap.find_opt id ctx.lex_envs
-
 let get_lex_env ctx id =
+  let get_lex_env_opt ctx id = IntMap.find_opt id ctx.lex_envs in
   match get_lex_env_opt ctx id with
   | Some x -> return x
   | _ -> error @@ ReferenceError (asprintf "cannot find lexical env with id = %i" id)
@@ -186,33 +176,6 @@ let get_lex_env ctx id =
 let rec add_or_replace var = function
   | a :: b -> if a.var_id = var.var_id then var :: b else a :: add_or_replace var b
   | _ -> [ var ]
-;;
-
-let lex_add ctx ?(replace = false) lex_env_id var =
-  get_lex_env ctx lex_env_id
-  >>= fun lex_env ->
-  match find_in_vars_opt var.var_id lex_env.vars with
-  | Some _ when not replace ->
-    error
-    @@ SyntaxError (asprintf "Identifier \'%s\' has already been declared" var.var_id)
-  | Some var when var.is_const -> etyp "Assignment to constant variable."
-  | None when replace -> error @@ ReferenceError (asprintf "%s is not defined" var.var_id)
-  | _ ->
-    return
-      { ctx with
-        lex_envs =
-          IntMap.add
-            lex_env_id
-            { lex_env with vars = add_or_replace var lex_env.vars }
-            ctx.lex_envs
-      }
-;;
-
-let get_parent ctx =
-  let* lex_env = get_lex_env ctx ctx.cur_lex_env in
-  match lex_env.parent with
-  | Some x -> return x
-  | _ -> error @@ InternalError "cannot get parent"
 ;;
 
 let print ctx values _ =
@@ -248,6 +211,29 @@ let create_arrowfunc ctx name args body =
 
 let create_function ctx name args body =
   create_func ctx name args (tfunction { parent_lex_env = ctx.cur_lex_env; args; body })
+;;
+
+(*init number of lexical envs counter*)
+let first_lex_env = 0
+
+let lex_add ctx ?(replace = false) lex_env_id var =
+  get_lex_env ctx lex_env_id
+  >>= fun lex_env ->
+  match find_in_vars_opt var.var_id lex_env.vars with
+  | Some _ when not replace ->
+    error
+    @@ SyntaxError (asprintf "Identifier \'%s\' has already been declared" var.var_id)
+  | Some var when var.is_const -> etyp "Assignment to constant variable."
+  | None when replace -> error @@ ReferenceError (asprintf "%s is not defined" var.var_id)
+  | _ ->
+    return
+      { ctx with
+        lex_envs =
+          IntMap.add
+            lex_env_id
+            { lex_env with vars = add_or_replace var lex_env.vars }
+            ctx.lex_envs
+      }
 ;;
 
 let context_init =
@@ -363,18 +349,6 @@ let end_of_block ctx =
   | _ -> error @@ InternalError "Cannot find the lexical environment creater"
 ;;
 
-let rec in_func ctx lex_env =
-  match lex_env.scope with
-  | Function | ArrowFunction -> true
-  | Block ->
-    (match lex_env.creater with
-     | Some x ->
-       (match get_lex_env_opt ctx x with
-        | Some x -> in_func ctx x
-        | _ -> false)
-     | None -> false)
-;;
-
 let prefind_funcs ctx ast =
   let ctx_add_if_func ctx = function
     | FunInit x ->
@@ -452,16 +426,6 @@ let const_to_val = function
   | Null -> VNull
 ;;
 
-let get_vnum ctx = function
-  | VNumber x -> return x
-  | _ as t -> etyp @@ asprintf "expect number, but %s was given" @@ print_type ctx t
-;;
-
-let get_vstring ctx = function
-  | VString x -> return x
-  | _ as t -> etyp @@ asprintf "expect string, but %s was given" @@ print_type ctx t
-;;
-
 let get_vbool ctx = function
   | VBool x -> return x
   | _ as t -> etyp @@ asprintf "expect boolean, but %s was given" @@ print_type ctx t
@@ -470,11 +434,6 @@ let get_vbool ctx = function
 let get_int ctx bit = function
   | VNumber x -> return (bit x)
   | _ as t -> etyp @@ asprintf "expect number, but %s was given" @@ print_type ctx t
-;;
-
-let get_obj_id ctx = function
-  | VObject id -> return id
-  | _ as t -> etyp @@ asprintf "expect object, but %s was given" @@ print_type ctx t
 ;;
 
 let ctx_get_var ctx id =
@@ -529,7 +488,6 @@ and to_string ctx v =
     >>| fun (_, array) -> String.concat "," array
   | VObject x when is_obj_by_id ctx is_func x -> ensup "conversion func to str"
   | VObject _ -> return "[object Object]"
-  | _ as t -> etyp ("cannot cast " ^ print_type ctx t ^ " to string")
 
 and to_bool ctx v =
   get_primitive ctx v
@@ -937,7 +895,6 @@ and eval_exp ctx = function
         array
     in
     add_obj ctx [] (TArray vals) >>| fun (ctx, id) -> ctx, vobject id
-  | _ -> ensup ""
 
 (**---------------Statement interpreter---------------*)
 
