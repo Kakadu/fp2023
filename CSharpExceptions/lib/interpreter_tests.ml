@@ -586,6 +586,40 @@ let%expect_test "While + try" =
   [%expect {| Result: (Init (Int_v 1)) |}]
 ;;
 
+let%expect_test "Run void_method" =
+  let s =
+    {| 
+      class A1 : Exception {}
+      class Program
+      {
+        int justForFun(){return 1;}
+
+        static int Main(){
+          return justForFun();
+        }
+      }
+    |}
+  in
+  interpret_wrap s;
+  [%expect {| Result: (Init (Int_v 1)) |}]
+;;
+
+let%expect_test "Run void_method-" =
+  let s =
+    {| 
+      class Program
+      {
+        static void Main(){
+          FileInfo fl = new FileInfo("my.txt");
+          return;
+        }
+      }
+    |}
+  in
+  interpret_wrap s;
+  [%expect {| Result: (Init (Int_v 1)) |}]
+;;
+
 (* ******************** Negative ******************** *)
 
 let%expect_test "Uninit value " =

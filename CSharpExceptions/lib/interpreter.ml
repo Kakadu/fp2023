@@ -7,70 +7,7 @@ open Errors
 open Common_types
 open Env_types.Eval_env
 open Monads.Eval_Monad
-
-let is_assignable = function
-  | IConst x -> return_n (IConst x)
-  | _ -> fail (Runtime_error "There isn't a assignable value")
-;;
-
-let is_env_const = function
-  | IConst x -> return_n x
-  | _ -> fail (Runtime_error "There isn't a calculated value")
-;;
-
-let is_init = function
-  | Init x -> return_n x
-  | _ -> fail Using_an_uninitialized_variable
-;;
-
-let is_base = function
-  | Null_v -> return_n Null_v
-  | String_v x -> return_n (String_v x)
-  | Int_v x -> return_n (Int_v x)
-  | Bool_v x -> return_n (Bool_v x)
-  | Char_v x -> return_n (Char_v x)
-  | _ -> fail (Runtime_error "Not a base value")
-;;
-
-let is_class = function
-  | Instance_v x -> return_n (Instance_v x)
-  | _ -> fail (Runtime_error "Not a class instance value")
-;;
-
-let is_inst = function
-  | Instance_v x -> return_n x
-  | _ -> fail (Runtime_error "Not a instance value")
-;;
-
-let is_not_null = function
-  | Null_v -> fail Trying_to_change_Null
-  | x -> return_n x
-;;
-
-let is_int = function
-  | Int_v x -> return_n x
-  | _ -> fail (Runtime_error "Type mismatch")
-;;
-
-let is_bool = function
-  | Bool_v x -> return_n x
-  | _ -> fail (Runtime_error "Type mismatch")
-;;
-
-let is_sting = function
-  | String_v x -> return_n x
-  | _ -> fail (Runtime_error "Type mismatch")
-;;
-
-let is_char = function
-  | Char_v x -> return_n x
-  | _ -> fail (Runtime_error "Type mismatch")
-;;
-
-let is_env_code = function
-  | ICode x -> return_n x
-  | _ -> fail (Runtime_error "There isn't method or consructor")
-;;
+open Interpret_converters
 
 let rec get_point_access_value e_id e1 l_env_l =
   let get_id =
@@ -99,25 +36,6 @@ let eval_point_access e_id e1 lenv_kernel =
   | _ -> fail (Return_error "Eval of the expression hsven't implemented yet")
 ;;
 
-let get_params_id (Params x) = List.map (fun (Var_decl (_, id)) -> id) x
-let is_const_v x = is_env_const x >>= is_init >>= is_base
-let is_inst_v x = is_env_const x >>= is_init >>= is_class
-let is_v x = is_env_const x >>= is_init >>= fun x -> is_base x <|> is_class x
-let is_not_null_const_v x = is_const_v x >>= is_not_null
-let is_not_null_inst_v x = is_inst_v x >>= is_not_null
-let get_int x = is_not_null_const_v x >>= is_int
-let ret_int x = return_n (create_val (Int_v x))
-let update_int op x = get_int x >>= fun x -> ret_int (op x)
-let get_bool x = is_not_null_const_v x >>= is_bool
-let ret_bool x = return_n (create_val (Bool_v x))
-let update_bool op x = get_bool x >>= fun x -> ret_bool (op x)
-let get_string x = is_not_null_const_v x >>= is_sting
-let ret_string x = return_n (create_val (String_v x))
-let get_char x = is_not_null_const_v x >>= is_char
-let ret_char x = return_n (create_val (Char_v x))
-let get_inst x = is_not_null_inst_v x >>= is_inst
-let ret_inst x = return_n (create_val (Instance_v x))
-
 let eval_instrs_ f e args l_env_l e_stm e_expr =
   let f_new = f e_stm e_expr l_env_l in
   match e with
@@ -133,8 +51,15 @@ let eval_instrs_ f e args l_env_l e_stm e_expr =
 
 let m_eval_ e_stm _ l_env_l ad args = function
   | IMethod (sign, body) ->
+    let get_sys_meth_opt =
+      read_inst_cl ad >>| fun id -> Base_lib.get_system_method_opt id sign.m_id
+    in
     let prms = get_params_id sign.m_params in
-    run_method sign.m_type prms args ad l_env_l body e_stm
+    get_sys_meth_opt
+    >>= (function
+          | Some f -> return_n f
+          | None -> return_n @@ e_stm body)
+    >>= run_method sign.m_type prms args ad l_env_l
   | IConstructor _ -> fail (Constructor_error "Trying to call a constructor without new")
 ;;
 
@@ -149,11 +74,15 @@ let c_eval_ e_stm e_expr l_env_l _ args = function
     let cl_decl =
       read_global (Code_ident sign.con_id) >>= fun x -> return_n @@ get_class_decl x
     in
-    cl_decl
-    >>= fun x ->
-    alloc_instance e_expr x
-    >>= fun new_ad ->
-    run_method Void prms args new_ad l_env_l body e_stm *> return_n new_ad
+    let eval_constructor =
+      cl_decl
+      >>= fun x ->
+      alloc_instance e_expr x
+      >>= fun new_ad ->
+      let f = e_stm body in
+      run_method Void prms args new_ad l_env_l f *> return_n new_ad
+    in
+    Base_lib.run_sys_constructor_ornormal eval_constructor (Code_ident sign.con_id)
 ;;
 
 let eval_constructor e l_env_l e_stm e_expr args =
@@ -420,7 +349,8 @@ let interpret_ genv cl_id =
     >>= fun main_ad ->
     save_self_ad main_ad *> get_main cl_decl
     >>= fun (tp, body) ->
-    run_method tp [] [] main_ad l_env_l body (eval_statement l_env_l)
+    let f = (eval_statement l_env_l) body in
+    run_method tp [] [] main_ad l_env_l f
   in
   let eval =
     match lenv_with_constructors with
@@ -440,5 +370,9 @@ let interpret str =
        (match interpret_ genv main_id with
         | _, Next x -> Result.ok x
         | _, Error x -> Result.error x
+        | (_, _, (_, mem), _), Exn x ->
+          (match MemMap.find_opt x mem with
+           | Some (cl_id, _) -> Result.error (User_exception cl_id)
+           | None -> Result.error (System_error "Exception instance missing"))
         | _, _ -> Result.error (System_error "Unrecognized signal")))
 ;;

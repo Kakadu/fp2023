@@ -580,10 +580,10 @@ module Eval_Monad = struct
 
   let run_method
     :  meth_type -> ident list -> t_env_value list -> address
-    -> t_env_value IdentMap.t list -> statement -> (statement -> ('a, 'c) t)
+    -> t_env_value IdentMap.t list -> (('a, 'c) t)
     -> ('c option, 'd) t
     =
-    fun return_tp params args ad base_lenv steps handle ->
+    fun return_tp params args ad base_lenv f ->
     let run_f =
       let add_args_in_lenv =
         let f id env_val = add_local_el id env_val in
@@ -596,7 +596,7 @@ module Eval_Monad = struct
           fail (Return_error "Without return can be used only methods of 'Void' type")
       in
       let if_ret x = return_n x in
-      add_args_in_lenv *> handle steps |>>= (if_ret, if_no_ret)
+      add_args_in_lenv *> f |>>= (if_ret, if_no_ret)
     in
     run_in_another_self ad base_lenv run_f
   ;;

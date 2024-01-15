@@ -24,9 +24,9 @@ type error =
   | System_error of string
   | Interpreter_error of string
   | Non_existent_id of ident
+  | User_exception of code_ident
   (*  *)
   | Double_definition_of of ident
-  | User_exception of address
   | Access_error of string
   | Other_error of string
   | Type_check_error of string

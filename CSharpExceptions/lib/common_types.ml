@@ -4,7 +4,7 @@
 
 open Ast
 
-type code_ident = Code_ident of ident [@@deriving show { with_path = false }]
+type code_ident = Code_ident of ident [@@deriving show { with_path = false }, eq]
 
 module Code_id = struct
   type t = code_ident

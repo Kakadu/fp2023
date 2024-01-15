@@ -10,7 +10,8 @@
   Errors
   Monads
   Base_lib
-  Interpreter)
+  Interpreter
+  Interpret_converters)
  (libraries base angstrom str)
  (preprocess
   (pps ppx_expect ppx_deriving.show ppx_inline_test ppx_deriving.eq))
