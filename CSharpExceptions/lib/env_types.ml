@@ -4,52 +4,8 @@
 
 open Ast
 
-module Common_env = struct
-  type code_ident = Code_ident of ident [@@deriving show { with_path = false }]
-
-  module Code_id = struct
-    type t = code_ident
-
-    let compare = compare
-  end
-
-  module CodeMap = Stdlib.Map.Make (Code_id)
-
-  module Ident = struct
-    type t = ident
-
-    let compare = compare
-  end
-
-  module IdentMap = Stdlib.Map.Make (Ident)
-
-  type address = Link of int [@@deriving show { with_path = false }, eq]
-
-  let incr_ (Link ad) = Link (ad + 1)
-  let ln x = Link x
-
-  module MemAddress = struct
-    type t = address
-
-    let compare = compare
-  end
-
-  module MemMap = Stdlib.Map.Make (MemAddress)
-
-  type code_ctx =
-    | Exception_ctx of class_decl
-    | Class_ctx of class_decl
-
-  let get_class_decl = function
-    | Exception_ctx exc -> exc
-    | Class_ctx cl -> cl
-  ;;
-
-  type text = code_ctx CodeMap.t
-end
-
 module Type_check_env = struct
-  open Common_env
+  open Common_types
 
   type t_env_value =
     | Method_sig of method_sign
@@ -64,7 +20,7 @@ module Type_check_env = struct
 end
 
 module Eval_env = struct
-  open Common_env
+  open Common_types
 
   type iconst =
     | Null_v
@@ -111,15 +67,17 @@ module Eval_env = struct
   let create_val x = to_const @@ to_init x
   let create_inst x = to_const @@ to_init @@ to_inst x
 
-  type t_loc_env = address * (t_env_value IdentMap.t) list
+  type t_loc_env = address * t_env_value IdentMap.t list
 
   (*  *)
   type t_global_env = text
 
   (*  *)
-  type mem_el = code_ident * (t_env_value * fild_sign) IdentMap.t
-  type memory = address * mem_el MemMap.t
-  type interpret_ctx = t_global_env * t_loc_env * memory
+  type mem_els = code_ident * (t_env_value * fild_sign) IdentMap.t
+  (** Next available address * Map *)
+  type memory = address * mem_els MemMap.t
+  (** Interpreter state *)
+  type interpret_ctx = t_global_env * t_loc_env * memory * sys_memory
 
   (* TODO: мб переписать эту штуку, встроить в signals *)
   type ('b, 'sys_err) sig_ =
@@ -139,6 +97,6 @@ module Eval_env = struct
   let nsig x = Next x
   let rsig x = Return x
   let bsig = Break
-  let esig add = Exn (add)
+  let esig add = Exn add
   let error err = Error err
 end

@@ -1,8 +1,16 @@
 (library
  (name csharp_Exc_Lib)
  (public_name CSharpExceptions.Lib)
- (modules Ast Parser Type_check Env_types Errors Monads Base_lib Interpreter
- )
+ (modules
+  Ast
+  Parser
+  Type_check
+  Env_types
+  Common_types
+  Errors
+  Monads
+  Base_lib
+  Interpreter)
  (libraries base angstrom str)
  (preprocess
   (pps ppx_expect ppx_deriving.show ppx_inline_test ppx_deriving.eq))
@@ -12,8 +20,7 @@
 
 (library
  (name ml_tests)
- (modules Pars_tests Type_check_tests Interpreter_tests
- )
+ (modules Pars_tests Type_check_tests Interpreter_tests)
  (libraries csharp_Exc_Lib)
  (preprocess
   (pps ppx_expect ppx_deriving.show ppx_inline_test))

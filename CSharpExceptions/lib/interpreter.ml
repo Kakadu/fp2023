@@ -4,7 +4,7 @@
 
 open Ast
 open Errors
-open Env_types.Common_env
+open Common_types
 open Env_types.Eval_env
 open Monads.Eval_Monad
 

@@ -4,7 +4,7 @@
 
 open Ast
 open Errors
-open Env_types.Common_env
+open Common_types
 
 module Base_monad = struct
   type ('st, 'a, 'err) t = 'st -> 'st * ('a, 'err) Result.t
@@ -242,7 +242,8 @@ module Eval_Monad = struct
   ;;
 
   let run : 'c CodeMap.t -> ('a, 'b) t -> ctx_env * ('a, 'b, error) eval_t =
-    fun glenv f -> f (glenv, (ln (-1), [ IdentMap.empty ]), (ln 0, MemMap.empty))
+    fun glenv f ->
+    f (glenv, (ln (-1), [ IdentMap.empty ]), (ln 0, MemMap.empty), Sys_Map.empty)
   ;;
 
   let save : ctx_env -> (unit, 'b) t = fun new_ctx _ -> new_ctx, nsig ()
@@ -284,7 +285,7 @@ module Eval_Monad = struct
   let read_global : code_ident -> (code_ctx, 'c) t =
     fun id st ->
     let (Code_ident id_) = id in
-    let code, _, _ = st in
+    let code, _, _, _ = st in
     match CodeMap.find_opt id code with
     | Some x -> return_n x st
     | None -> fail (Not_find_ident_of id_) st
@@ -325,10 +326,10 @@ module Eval_Monad = struct
   (* ****************** Memory handling ****************** *)
 
   let save_mem : memory -> (unit, 'c) t =
-    fun mem (code, l_env, _) -> (code, l_env, mem), nsig ()
+    fun mem (code, l_env, _, smem) -> (code, l_env, mem, smem), nsig ()
   ;;
 
-  let read_mem = read >>| fun (_, _, mem) -> mem
+  let read_mem = read >>| fun (_, _, mem, _) -> mem
 
   let alloc_instance custom_f decl =
     let { cl_modif = _; cl_id; parent = _; cl_mems } = decl in
@@ -397,13 +398,21 @@ module Eval_Monad = struct
     | None -> fail (Not_find_ident_of id)
   ;;
 
-  (* ****************** Local_env handling ****************** *)
+  (* ****************** Sys_memory handling ****************** *)
 
-  let save_local : t_loc_env -> (unit, 'c) t =
-    fun l_env_l (code, _, mem) -> (code, l_env_l, mem), nsig ()
+  let save_smem : sys_memory -> (unit, 'c) t =
+    fun smem (code, l_env_l, mem, _) -> (code, l_env_l, mem, smem), nsig ()
   ;;
 
-  let read_local = read >>| fun (_, l_env_l, _) -> l_env_l
+  let read_smem = read >>| fun (_, _, _, smem) -> smem
+
+  (* ****************** Local_env handling ******************* *)
+
+  let save_local : t_loc_env -> (unit, 'c) t =
+    fun l_env_l (code, _, mem, smem) -> (code, l_env_l, mem, smem), nsig ()
+  ;;
+
+  let read_local = read >>| fun (_, l_env_l, _, _) -> l_env_l
 
   let find_local_ id l_env_l =
     (* >< TODO: фолдлевт по списку всех окружений *)

@@ -3,7 +3,7 @@
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
 open Ast
-open Env_types.Common_env
+open Common_types
 
 type error =
   | Not_find_ident

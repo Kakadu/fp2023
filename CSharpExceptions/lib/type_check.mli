@@ -71,7 +71,7 @@ and new without a constructor are not checked. )
 
 open Ast
 open Errors
-open Env_types.Common_env
+open Common_types
 open Env_types.Type_check_env
 
 val check_expr
