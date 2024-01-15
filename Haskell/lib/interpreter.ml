@@ -5,7 +5,7 @@
 open Ast
 open Format
 
-module LAZY_RESULT : sig
+module LazyResult : sig
   type ('a, 'e) t =
     | Result of ('a, 'e) result
     | Thunk of (unit -> ('a, 'e) t)
@@ -38,7 +38,6 @@ end = struct
   let rec ( >>= ) mx f =
     match mx with
     | Result (Ok x) -> f x
-    (* todo: something seems wrong, look up OCaml's result.ml*)
     | Result (Error e) -> Result (Error e)
     | Thunk thunk -> thunk () >>= f
   ;;
@@ -49,7 +48,7 @@ end = struct
 end
 
 module EnvTypes = struct
-  type res = (value, err) LAZY_RESULT.t
+  type res = (value, err) LazyResult.t
   and environment = (string, res) Hashtbl.t
 
   and value =
@@ -64,13 +63,9 @@ module EnvTypes = struct
 
   and err =
     | NotInScopeError of string
-    | ValueTypeError of value
-    | TypeError of string
-    | RuntimeError of string
     | DivisionByZeroError
-    | EvalError of value * value
-    | NonExhaustivePatterns
-    | TypeMismatch of value * value
+    | NonExhaustivePatterns of string
+    | TypeMismatch
 end
 
 module Env : sig
@@ -79,9 +74,9 @@ module Env : sig
   val pp_err : formatter -> err -> unit
   val pp_value : formatter -> value -> unit
   val pp_environment : formatter -> environment -> unit
-  val pp_value_t : formatter -> (value, err) LAZY_RESULT.t -> unit
+  val pp_value_t : formatter -> (value, err) LazyResult.t -> unit
 end = struct
-  open LAZY_RESULT
+  open LazyResult
   include EnvTypes
 
   let rec pp_value fmt = function
@@ -104,26 +99,21 @@ end = struct
       fprintf fmt ")"
     | ValFun (_param, _body, _env) -> fprintf fmt "<fun>"
 
-  (* very inefficient and abhorrent *)
+  (* very inefficient, verbose and abhorrent *)
   and transform = function
     | Result (Ok (ValList (hd, nil))) when force nil = Result (Ok ValNil) ->
       force hd :: []
     | Result (Ok (ValList (hd, tl))) -> force hd :: transform tl
     | Result (Ok ValNil) -> []
     | Thunk t -> transform (t ())
-    | _ -> failwith "error"
+    | _ -> failwith "bad list"
 
   and pp_err fmt = function
     | NotInScopeError str -> fprintf fmt "Not in scope: %S" str
-    | ValueTypeError err_val -> fprintf fmt "ValueTypeError: %a" pp_value err_val
-    | TypeError err_expr -> fprintf fmt "TypeError: %S" err_expr
-    | RuntimeError str -> fprintf fmt "RuntimeError: %S" str
-    | DivisionByZeroError -> fprintf fmt "DivisionByZeroError"
-    | EvalError (val1, val2) ->
-      fprintf fmt "EvalError: %a # %a" pp_value val1 pp_value val2
-    | NonExhaustivePatterns -> printf "Non-exhausitve patterns"
-    | TypeMismatch (val1, val2) ->
-      fprintf fmt "Couldn't match %a with %a" pp_value val1 pp_value val2
+    | DivisionByZeroError -> fprintf fmt "Infinity"
+    | NonExhaustivePatterns s -> fprintf fmt "Non-exhausitve patterns in %s" s
+    | TypeMismatch ->
+      printf "Type mismatch. Please run type checker to get more information."
 
   and pp_value_t fmt = function
     | Result (Ok x) -> pp_value fmt x
@@ -137,15 +127,20 @@ end
 
 module Eval : sig
   val interpret : prog -> unit
-  val run_prog : prog -> ((string, Env.res) Hashtbl.t, Env.err) LAZY_RESULT.t
+  val eval_prog : prog -> ((string, Env.res) Hashtbl.t, Env.err) LazyResult.t
 end = struct
-  open LAZY_RESULT
-  open LAZY_RESULT.Syntax
+  open LazyResult
+  open LazyResult.Syntax
   open Env
 
-  (*TODO: too coupled, very cringe*)
   let rec eval env expr =
     match expr with
+    | ExprUnOp (op, e) ->
+      let* e = eval env e in
+      (match op, e with
+       | Neg, ValInt i -> return (ValInt (-i))
+       | Not, ValBool b -> return (ValBool (not b))
+       | _ -> fail TypeMismatch)
     | ExprBinOp (op, e1, e2) ->
       thunk (fun () ->
         let* e1' = eval env e1 in
@@ -169,7 +164,7 @@ end = struct
         match cond_val with
         | ValBool true -> then'
         | ValBool false -> else'
-        | _ -> fail @@ TypeError "Condition in if-expression is not a boolean")
+        | _ -> fail TypeMismatch)
     | ExprApp (f, arg) ->
       thunk (fun () ->
         let* f_val = eval env f in
@@ -187,7 +182,7 @@ end = struct
                  return arg))
           in
           eval local_env body
-        | _ -> fail @@ TypeError "Application to a non-function")
+        | _ -> fail TypeMismatch)
     | ExprNil -> thunk (fun () -> return ValNil)
     | ExprCons (hd, tl) ->
       let hd_t = eval env hd in
@@ -205,7 +200,6 @@ end = struct
         return (ValTuple es))
     | ExprLet (bindings, expr) ->
       thunk (fun () ->
-        (* todo: refactor *)
         let helper env (pat, expr) =
           let* env' = env in
           let value = eval env' expr in
@@ -213,7 +207,6 @@ end = struct
         in
         let* local_env = List.fold_left helper (return env) bindings in
         eval local_env expr)
-    | _ -> fail @@ TypeError "DSdasda"
 
   and eval_case env res branches =
     match branches with
@@ -221,7 +214,7 @@ end = struct
       (match match_pattern env pat res with
        | Result (Ok env) -> eval env expr
        | _ -> eval_case env res rest)
-    | [] -> fail @@ TypeError "No matching pattern"
+    | [] -> fail TypeMismatch
 
   and force_binop l r op =
     match l, r, op with
@@ -232,6 +225,8 @@ end = struct
       if y = 0 then fail DivisionByZeroError else return (ValInt (x / y))
     | ValBool x, ValBool y, And -> return (ValBool (x && y))
     | ValBool x, ValBool y, Or -> return (ValBool (x || y))
+    | _, _, Add | _, _, Sub | _, _, Mul | _, _, Div | _, _, And | _, _, Or ->
+      fail TypeMismatch
     | l, r, op ->
       let rec compare l r =
         match l, r with
@@ -249,6 +244,7 @@ end = struct
              let* tl2 = tl2 in
              compare tl1 tl2
            | _ -> return res)
+        | _ -> fail TypeMismatch
       in
       let* compare_args = compare l r in
       (match op with
@@ -258,14 +254,6 @@ end = struct
        | Leq -> return (ValBool (compare_args < 1))
        | Gt -> return (ValBool (compare_args = 1))
        | _ -> return (ValBool (compare_args > -1)))
-    | _ -> fail @@ TypeMismatch (l, r)
-  (* | Undefined, _, _ | _, Undefined, _ -> fail @@ Unbound "name" *)
-  (* | _ -> fail (Incorrect_force (EBinOp (op, l, r))) *)
-
-  and eval_decl env (DeclLet (pat, e)) =
-    let* env' = env in
-    let val_e = eval env' e in
-    match_pattern env pat val_e
 
   and match_pattern env pat value =
     match pat with
@@ -273,12 +261,13 @@ end = struct
       let* env = env in
       (match Hashtbl.find_opt env x with
        | Some _ ->
-         (* todo: need to compare types *)
-         (* replace bad *)
+         (* TODO: would be a good idea to allow multiple definitons
+            as a way to pattern match lIkE iN hAsKeLL 😈😈😈.
+
+            Currently it overshadows previous definition.*)
          Hashtbl.replace env x value;
          return env
        | None ->
-         (* todo: прочиттать про add, мб поезно *)
          Hashtbl.add env x value;
          return env)
     | PatCons (hd1, tl1) ->
@@ -286,21 +275,21 @@ end = struct
        | Result (Ok (ValList (hd2, tl2))) ->
          let env = match_pattern env hd1 hd2 in
          match_pattern env tl1 tl2
-       | _ -> fail NonExhaustivePatterns)
+       | _ -> fail @@ NonExhaustivePatterns "list")
     | PatNil ->
       (match force value with
        | Result (Ok ValNil) -> env
-       | _ -> fail NonExhaustivePatterns)
+       | _ -> fail @@ NonExhaustivePatterns "[]")
     | PatWild -> env
     | PatTuple pats ->
       (match force value with
-       | Result (Ok (ValTuple values)) ->
+       | Result (Ok (ValTuple values)) when List.length values = List.length pats ->
          List.fold_left2
            (fun env pat_elem val_elem -> match_pattern env pat_elem val_elem)
            env
            pats
            values
-       | _ -> fail NonExhaustivePatterns)
+       | _ -> fail @@ NonExhaustivePatterns "tuple")
     | PatLit lit ->
       force value
       >>= fun value ->
@@ -312,21 +301,24 @@ end = struct
        (*
           | LitFloat f, ValFloat fv when f = fv -> env
        *)
-       | _ -> fail NonExhaustivePatterns)
+       | _ -> fail @@ NonExhaustivePatterns "literal")
+
+  and eval_decl env (DeclLet (pat, e)) =
+    let* env' = env in
+    let val_e = eval env' e in
+    match_pattern env pat val_e
   ;;
 
   let eval_prog p = List.fold_left eval_decl (return (Hashtbl.create 69)) p
 
   and pp_environment fmt env =
-    match env with
-    | Result (Ok env) ->
-      Hashtbl.iter (fun key value -> fprintf fmt "%s => %a \n" key pp_value_t value) env
-    | Result (Error err) -> fprintf fmt "%a" pp_err err
-    | _ -> ()
+    Hashtbl.iter (fun key value -> fprintf fmt "%s => %a \n" key pp_value_t value) env
   ;;
 
-  let run_prog p = eval_prog p
-  let interpret p = Format.printf "%a" pp_environment (eval_prog p)
+  let interpret p =
+    match eval_prog p with
+    | Result (Ok env) -> printf "%a" pp_environment env
+    | Result (Error err) -> printf "%a" pp_err err
+    | _ -> ()
+  ;;
 end
-
-module Interpret = Eval
