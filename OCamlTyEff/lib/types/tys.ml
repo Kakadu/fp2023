@@ -13,12 +13,10 @@ module rec Eff : sig
           (** Effect label. E.g. [console], [exn Division_by_zero] *)
 
     val pp : Format.formatter -> t -> unit
-
     val equal : t -> t -> bool
-    val compare : t -> t -> int
-    val sexp_of_t : t -> Sexp.t
 
     val console : unit -> t
+    val ref : unit -> t
     val exn : Ty.t -> t
   end
 
@@ -38,6 +36,9 @@ module rec Eff : sig
 
   val vars : t -> VarSet.t
   (** Effect variables occuring in an effect *)
+
+  val contains : t -> Label.t -> bool
+  (** Check if an effect contains specified label *)
 end = struct
   module Label = struct
     type t = Label of Ident.t * Ty.t option [@@deriving eq, ord, sexp_of]
@@ -51,6 +52,7 @@ end = struct
           fprintf ppf "%s %a" name Ty.pp arg
 
     let console () = Label (Ident "console", None)
+    let ref () = Label (Ident "ref", None)
     let exn ty = Label (Ident "exn", Some ty)
   end
 
@@ -82,6 +84,15 @@ end = struct
         vars eff_rest
     | Eff_total ->
         VarSet.empty
+
+  let rec contains eff lbl_to_find =
+    match eff with
+    | Eff_row (lbl, _) when Label.equal lbl_to_find lbl ->
+        true
+    | Eff_row (_, eff_rest) ->
+        contains eff_rest lbl_to_find
+    | Eff_var _ | Eff_total ->
+        false
 end
 
 and Ty : sig
@@ -114,6 +125,9 @@ and Ty : sig
 
   val exn : t -> t
   (** Construct exception type. E.g. [_Exc1 exception] *)
+
+  val ref : t -> t
+  (** Construct ref type. E.g. [int ref] *)
 
   val vars : t -> VarSet.t
   (** Type variables occuring in a type *)
@@ -164,6 +178,7 @@ end = struct
   let char = Ty_con (Ident "char", [])
   let string = Ty_con (Ident "string", [])
   let exn ty = Ty_con (Ident "exception", [ty])
+  let ref ty = Ty_con (Ident "ref", [ty])
 
   let rec vars = function
     | Ty_var x ->
