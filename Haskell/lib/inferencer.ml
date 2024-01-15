@@ -7,21 +7,12 @@
 open Typedtree
 open Ast
 
-let use_logging = false
-
-let log fmt =
-  if use_logging
-  then Format.kasprintf (fun s -> Format.printf "%s\n%!" s) fmt
-  else Format.ifprintf Format.std_formatter fmt
-;;
-
 type error =
-  [ `Occurs_check
-  | `No_variable of string
-  | `Unification_failed of ty * ty
-  | `Type_error of string
-  | `Test
-  ]
+  | Occurs_check
+  | No_variable of string
+  | Unification_failed of ty * ty
+  | Type_error of string
+  | Test
 [@@deriving show { with_path = false }]
 
 module R : sig
@@ -144,7 +135,7 @@ end = struct
 
   let singleton k v =
     if Type.occurs_in k v
-    then fail `Occurs_check
+    then fail Occurs_check
     else return @@ Map.singleton (module Base.Int) k v
   ;;
 
@@ -187,12 +178,11 @@ end = struct
             (List.map ~f:(apply subs) ts1')
             (List.map ~f:(apply subs) ts2')
             acc'
-        | _, _ -> fail @@ `Unification_failed (l, r)
+        | _, _ -> fail @@ Unification_failed (l, r)
         (* todo: mismatch *)
       in
       unify_tuples ts1 ts2 empty
-    | _ -> fail (`Unification_failed (l, r))
-  (* todo add tuple *)
+    | _ -> fail (Unification_failed (l, r))
 
   and extend k v s =
     match find s k with
@@ -305,7 +295,7 @@ let generalize : TypeEnv.t -> Type.t -> Scheme.t =
 
 let lookup_env id map =
   match Base.Map.find map id with
-  | None -> fail (`No_variable id)
+  | None -> fail (No_variable id)
   | Some scheme ->
     let* ans = instantiate scheme in
     return (Subst.empty, ans)
@@ -327,7 +317,8 @@ let infer_pattern =
        | LitString _ -> return (env, TyLit "String")
        | LitChar _ -> return (env, TyLit "Char"))
     | PatVar x ->
-      (* todo check types *)
+      (* TODO: would be a good idea to allow multiple definitons
+         as a way to pattern match *)
       let* tv = fresh_var in
       let env = TypeEnv.extend env (x, S (VarSet.empty, tv)) in
       return (env, tv)
@@ -402,7 +393,7 @@ let infer_expr =
       let* tv = fresh_var in
       let* s3 = unify t1 (TyArrow (t2, tv)) in
       let trez = Subst.apply s3 tv in
-      let* final_subst = Subst.compose_all [ s3; s2; s1 ] in
+      let* final_subst = Subst.compose_all [ s1; s2; s3 ] in
       return (final_subst, trez)
     | ExprLit lit ->
       (match lit with
@@ -416,7 +407,7 @@ let infer_expr =
       let* s3, t3 = helper env el in
       let* s4 = unify t1 (TyLit "Bool") in
       let* s5 = unify t2 t3 in
-      let* final_subst = Subst.compose_all [ s5; s4; s3; s2; s1 ] in
+      let* final_subst = Subst.compose_all [ s1; s2; s3; s4; s5 ] in
       R.return (final_subst, Subst.apply final_subst t2)
     | ExprTuple es ->
       let rec infer_elements env es subst_acc types_acc =
@@ -438,7 +429,7 @@ let infer_expr =
       let* s1, t1 = helper (TypeEnv.apply s2 env) hd in
       let* s3 = unify (TyList t1) t2 in
       let final_ty = Subst.apply s3 t2 in
-      let* final_subst = Subst.compose_all [ s3; s2; s1 ] in
+      let* final_subst = Subst.compose_all [ s1; s2; s3 ] in
       return (final_subst, final_ty)
     | ExprLet (bindings, main_expr) ->
       let rec process_bindings env subst_acc = function
@@ -459,24 +450,23 @@ let infer_expr =
       let* subst, ty = helper env' main_expr in
       let* final_subst = Subst.compose subst subst_acc in
       return (final_subst, ty)
-    | ExprCase (c, cases) ->
-      let* c_subst, c_ty = helper env c in
+    | ExprCase (expr, alts) ->
+      let* e_subst, e_ty = helper env expr in
       let* tv = fresh_var in
-      let* e_subst, e_ty =
+      let* e_subst, e_ty, _ =
         Base.List.fold_left
-          cases
-          ~init:(return (c_subst, tv))
+          alts
+          ~init:(return (e_subst, tv, e_ty))
           ~f:(fun acc (pat, e) ->
-            let* subst, ty = acc in
+            let* subst, ty, c_ty = acc in
             let* pat_env, pat_ty = infer_pattern env pat in
             let* subst2 = unify c_ty pat_ty in
-            let* _, e_ty = helper pat_env e in
+            let* subst3, e_ty = helper pat_env e in
             let* subst4 = unify ty e_ty in
-            let* final_subst = Subst.compose_all [ subst; subst2; subst4 ] in
-            return (final_subst, Subst.apply final_subst ty))
+            let* final_subst = Subst.compose_all [ subst; subst2; subst3; subst4 ] in
+            return (final_subst, Subst.apply final_subst ty, Subst.apply final_subst c_ty))
       in
-      let* final_subst = Subst.compose c_subst e_subst in
-      return (final_subst, Subst.apply final_subst e_ty)
+      return (e_subst, Subst.apply e_subst e_ty)
   in
   helper
 ;;
@@ -508,7 +498,6 @@ let infer_decl env (Ast.DeclLet (pat, expr)) =
     let* s1, t1 = infer_expr env expr in
     let* s2 = unify (Subst.apply s1 tv) t1 in
     let* s = Subst.compose s2 s1 in
-    let env = TypeEnv.apply s env in
     let t2 = generalize env (Subst.apply s tv) in
     return (TypeEnv.extend env (v, t2))
   | _ ->
