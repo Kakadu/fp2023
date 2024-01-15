@@ -262,9 +262,8 @@ module Parse_test = struct
   ;;
 
   let%test _ =
-    assert_eq_output
-      show_request
-      parse
+    assert_equal
+      request_p
       "SELECT name, age, phone_number FROM User WHERE age > 18"
       { select =
           [ Expression (Const (Name "name"))
@@ -356,12 +355,13 @@ module Types_test = struct
          Format.printf "%s\n" (show x);
          false)
     | Error e ->
-      Format.printf "Interpret error: %s\n" e;
+      Format.printf "Interpret error: %s\n" (Utils.show_error e);
       false
   ;;
 
   (* find tables test *)
   let%test _ = assert_equal (find_table_id base2 "email2") 1 string_of_int
+  let%test _ = assert_equal (find_table_id base1 "table1.name") 0 string_of_int
   let%test _ = assert_equal (find_table_id base2 "second_email") 0 string_of_int
 
   (* transform *)
@@ -373,5 +373,9 @@ module Types_test = struct
       ; meta = { column_name = "email2"; column_type = String_Column }
       }
       Interpreter.show_int_column
+  ;;
+
+  let request1 =
+    Result.get_ok (Parser.parse "SELECT name FROM table1 WHERE table1.name > 10")
   ;;
 end

@@ -43,7 +43,7 @@ module Row = struct
       | String_Column -> String e
       | Numeric_Column ->
         (try Numeric (int_of_string e) with
-         | _ -> raise (Incorrect_type ("Value '" ^ e ^ "'\"' should be Numeric")))
+         | _ -> raise (Incorrect_type ("Value '" ^ e ^ "' should be Numeric")))
       | Real_Column ->
         (try Real (float_of_string e) with
          | _ -> raise (Incorrect_type ("Value '" ^ e ^ "' should be Real")))
@@ -69,7 +69,7 @@ end
 
 (** Array of rows, contain data from csv files *)
 module Sheet = struct
-  type t = Row.t array
+  type t = Row.t array [@@deriving show { with_path = false }]
 
   let init ts es = Array.init (List.length es) (fun i -> Row.init ts (List.nth es i))
   let get_row (rs : t) i = Array.get rs i
@@ -86,12 +86,19 @@ module Table = struct
     { data : Sheet.t
     ; meta : table
     }
+  [@@deriving show { with_path = false }]
 
   let name table = table.meta.table_name
   let columns table = table.meta.table_header.column_list
 
   (** Find column index *)
   let find_column_i (table : t) name =
+    (* table.column -> column *)
+    let name =
+      if String.contains name '.'
+      then List.nth (String.split_on_char '.' name) 1
+      else name
+    in
     let rec helper acc name cs =
       match cs with
       | [] -> None
@@ -121,6 +128,7 @@ module Database = struct
     { tables : Table.t list
     ; name : string
     }
+  [@@deriving show { with_path = false }]
 
   let name database = database.name
   let tables database = database.tables

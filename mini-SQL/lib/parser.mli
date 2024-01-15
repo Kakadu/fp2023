@@ -25,5 +25,8 @@ val join_p : Ast.from_statement Angstrom.t
 (** FROM-statement parser *)
 val from_p : Ast.from_statement Angstrom.t
 
+(** SQL-statements (angstrom) parser *)
+val request_p : Ast.request Angstrom.t
+
 (** SQL-statements parser *)
-val parse : Ast.request Angstrom.t
+val parse : string -> (Ast.request, string) result

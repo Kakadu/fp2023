@@ -3,20 +3,20 @@ type error =
   | UnknownDatabase of string
   | UnknownTable of string
   | UknownColumn of string
-  | TypesMismatch of string * string
+  | TypesMismatch of Types.item * string * Types.item
   | DivisionByZero
-  | NotImplementedYet
+  | NotImplementedYet of string
 [@@deriving show { with_path = false }]
 
 let error_to_string = function
-  | ParsingError msg -> Format.sprintf "Error \"%s\" occurred during parsing" msg
-  | UnknownDatabase msg -> Format.sprintf "Can't find database \"%s\"" msg
-  | UnknownTable msg -> Format.sprintf "Can't find table \"%s\"" msg
-  | UknownColumn msg -> Format.sprintf "Can't find column \"%s\"" msg
-  | TypesMismatch (t1, t2) ->
-    Format.sprintf "Incompatible types encountered: \"%s\", \"%s\"" t1 t2
+  | ParsingError msg -> Format.sprintf "Error '%s' occurred during parsing" msg
+  | UnknownDatabase msg -> Format.sprintf "Can't find database '%s'" msg
+  | UnknownTable msg -> Format.sprintf "Can't find table '%s'" msg
+  | UknownColumn msg -> Format.sprintf "Can't find column '%s'" msg
+  | TypesMismatch (t1, op, t2) ->
+    Format.sprintf "Type check failed: %s %s %s" (Types.show_item t1) op (Types.show_item t2)
   | DivisionByZero -> "Division by zero encountered"
-  | NotImplementedYet -> "This feature cannot be used because it is not yet implemented"
+  | NotImplementedYet f -> Format.sprintf "You used a feature that has not yet been implemented yet (%s)" f
 ;;
 
 module type MONAD_FAIL = sig

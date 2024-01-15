@@ -297,7 +297,7 @@ let word (w : string) (p : 'a t) =
   | _ -> fail (String.concat "\"" [ "Can't parse special word "; w; " :<" ])
 ;;
 
-let parse =
+let request_p =
   bspace (word "SELECT" (bspace select_p))
   >>= fun s_expr ->
   bspace (word "FROM" (bspace from_p))
@@ -305,3 +305,5 @@ let parse =
   bspace (opt_word "WHERE" (bspace expr_p))
   >>= fun w_expr -> return { select = s_expr; from = f_st; where = w_expr }
 ;;
+
+let parse inp = Angstrom.parse_string ~consume:All request_p inp

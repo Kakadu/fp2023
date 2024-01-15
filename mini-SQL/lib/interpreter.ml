@@ -1,4 +1,5 @@
 open Types
+open Utils
 (* --- TYPES FOR TYPECHECK & INTERPRETATION --- *)
 
 (** extended version of column type *)
@@ -34,11 +35,19 @@ type join_type =
   | Left of expr (** ( LEFT JOIN ) *)
   | Right of expr (** ( RIGHT JOIN ) *)
   | Full of expr (** ( FULL JOIN ) *)
+[@@deriving show { with_path = false }]
 
-(* --- TYPECHECK --- *)
+type qot_node =
+  | Load of Table.t (* load tables from database *)
+  | Join of qot_node * qot_node * join_type (* JOIN, combines several nodes *)
+  | Restrict of qot_node * expr (* WHERE ( node + condition ) *)
+  | Project of qot_node * expr list (* SELECT ( node + columns ) *)
+[@@deriving show { with_path = false }]
 
 module Eval (M : Utils.MONAD_FAIL) = struct
   open M
+
+  (** --- Transform AST into new types --- *)
 
   (** parse table name in column string name *)
   let parse_table_name cname =
@@ -58,7 +67,7 @@ module Eval (M : Utils.MONAD_FAIL) = struct
   let find_table_id (base : Database.t) name =
     let index_of table =
       match Database.find_table_i base table with
-      | None -> fail ("Can't find table with column '" ^ name ^ "'")
+      | None -> fail (UnknownTable table)
       | Some id -> return id
     in
     match parse_table_name name with
@@ -66,7 +75,7 @@ module Eval (M : Utils.MONAD_FAIL) = struct
     | None ->
       (match find_table_by_column base name with
        | [ x ] -> index_of (Table.name x)
-       | _ -> fail ("Can't determine which table a column '" ^ name ^ "' belongs to"))
+       | _ -> fail (UknownColumn name))
   ;;
 
   (** Transform column name to int_column *)
@@ -76,7 +85,7 @@ module Eval (M : Utils.MONAD_FAIL) = struct
     let get_column_i t =
       match Table.find_column_i t name with
       | Some x -> return x
-      | None -> fail ("Can't find table with column " ^ name ^ "'")
+      | None -> fail (UknownColumn name)
     in
     let column colid t = return (Table.get_column t ~index:colid) in
     let meta col colid ti = { table_index = ti; column_index = colid; meta = col } in
@@ -134,7 +143,7 @@ module Eval (M : Utils.MONAD_FAIL) = struct
   ;;
 
   let transform_select_statement (base : Database.t) = function
-    | Ast.Asterisk -> fail "I'm too lazy to support asterisk (TODO)"
+    | Ast.Asterisk -> fail (NotImplementedYet "using an asterisk instead of a column name")
     | Ast.Expression e -> transform_ast_expression base e
   ;;
 
@@ -147,17 +156,11 @@ module Eval (M : Utils.MONAD_FAIL) = struct
 
   (* ----- SQL Query Operator Tree ----- *)
 
-  type qot_node =
-    | Load of Table.t (* load tables from database *)
-    | Join of qot_node * qot_node * join_type (* JOIN, combines several nodes *)
-    | Restrict of qot_node * expr (* WHERE ( node + condition ) *)
-    | Project of qot_node * expr list (* SELECT ( node + columns ) *)
-
   let load_table (base : Database.t) tname =
     let get_id t =
       match Database.find_table_i base t with
       | Some x -> return x
-      | None -> fail ("Can't load table '" ^ tname ^ "' from database '" ^ base.name ^ "'")
+      | None -> fail (UnknownTable tname)
     in
     get_id tname >>= fun id -> return (Database.get_table base ~index:id)
   ;;
@@ -191,22 +194,21 @@ module Eval (M : Utils.MONAD_FAIL) = struct
     >>= fun where_expr ->
     return (Restrict (join_node, where_expr))
     >>= fun restrict_node ->
-    return (List.map (transform_select_statement base) req.select) 
-    >>= fun select_exprs -> M.all select_exprs 
-    >>= fun exprs ->
-      return (Project(restrict_node, exprs))
+    return (List.map (transform_select_statement base) req.select)
+    >>= fun select_exprs ->
+    M.all select_exprs >>= fun exprs -> return (Project (restrict_node, exprs))
   ;;
 
-  let execute_join (base : Database.t) left right jtype : (Table.t, string) t =
-    
+  (** --- Expressions computation --- *)
+
+  (* let execute_join (base : Database.t) left right jtype : (Table.t, string) t = *)
 
   (** Execute SQL Query Operator Tree *)
-  let execute (base : Database.t) (node: qot_node) : (Table.t, string) t = match node with
-  | Load t -> return t
-  | Join (left, right, jtype) -> execute_join left right jtype
+  (* let execute (base : Database.t) (node: qot_node) : (Table.t, string) t = match node with
+     | Load t -> return t
+     | Join (left, right, jtype) -> execute_join left right jtype *)
   (* | Restrict (node, expr) -> ...
-  | Project (node, expr_list) -> *)
-  
+     | Project (node, expr_list) -> *)
 
   (* let eval (base_folder : string) (request: Ast.request) : (Table.t, string) t *)
 end
