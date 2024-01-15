@@ -20,6 +20,9 @@ val apply_to_ty : t -> Ty.t -> Ty.t
 val apply_to_eff : t -> Eff.t -> Eff.t
 (** Apply substitution to effect *)
 
+val apply_to_env : t -> Env.t -> Env.t
+(** Apply substitution to environment *)
+
 val apply_to_constrs : t -> ConstrSet.t -> ConstrSet.t
 (** Apply substitution to a set of constraints *)
 

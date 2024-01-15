@@ -76,7 +76,12 @@ let rec gen : expression -> (As.t * Ty.t * Eff.t) GenMonad.t = function
       let* as1, ty1, eff1 = gen e1 in
       let* as2, ty2, eff2 = gen e2 in
 
-      let* () = add_constrs [ty_pat == ty1; eff1 === eff2] in
+      let* () =
+        add_constrs
+          [ ty_pat == ty1
+          ; (* unify eff1 & eff2 only after ImplInstConstrs with eff1 are solved *)
+            EffEqConstr (eff1, eff2, EffEq_Late) ]
+      in
       let* mset = varset in
       let constrs =
         Pattern.BoundVars.fold bounds_pat ~init:[]
@@ -84,7 +89,7 @@ let rec gen : expression -> (As.t * Ty.t * Eff.t) GenMonad.t = function
             let cs =
               As.lookup as2 id
               |> List.map ~f:(fun var_expr ->
-                     Constr.ImplInstConstr (!var_expr, mset, !var_pat) )
+                     Constr.ImplInstConstr (!var_expr, mset, !var_pat, eff1) )
             in
             cs :: acc )
       in
@@ -111,7 +116,6 @@ let rec gen : expression -> (As.t * Ty.t * Eff.t) GenMonad.t = function
       let* as1, ty1, eff1 = gen e1 in
       let* as2, ty2, eff2 = gen e2 in
 
-      let* () = add_constrs [eff1 === eff2] in
       let* () =
         add_constrs
           ( As.lookup as1 id
@@ -121,13 +125,19 @@ let rec gen : expression -> (As.t * Ty.t * Eff.t) GenMonad.t = function
                  Constr.TyEqConstr (!var_expr, ty1, Dont_unify_eff) ) )
       in
 
+      let* () =
+        add_constrs
+          [ (* unify eff1 & eff2 only after ImplInstConstrs with eff1 are solved *)
+            EffEqConstr (eff1, eff2, EffEq_Late) ]
+      in
       let* mset = varset in
       let* () =
         add_constrs
           ( As.lookup as2 id
           |> List.map ~f:(fun var_expr ->
-                 Constr.ImplInstConstr (!var_expr, mset, ty1) ) )
+                 Constr.ImplInstConstr (!var_expr, mset, ty1, eff1) ) )
       in
+
       return (as1 ++ as2 -- [id], ty2, eff2)
   | Exp_ifthenelse (e_cond, e_th, e_el) ->
       let* as_cond, ty_cond, eff_cond = gen e_cond in
@@ -198,7 +208,7 @@ let rec gen : expression -> (As.t * Ty.t * Eff.t) GenMonad.t = function
                 (* generalize in patterns *)
                 As.lookup as_rhs id
                 |> List.map ~f:(fun var_expr ->
-                       Constr.ImplInstConstr (!var_expr, mset, !var_pat) )
+                       Constr.ImplInstConstr (!var_expr, mset, !var_pat, eff_e) )
               in
               cs :: acc )
         in
@@ -214,7 +224,12 @@ let rec gen : expression -> (As.t * Ty.t * Eff.t) GenMonad.t = function
       let* as_cases =
         GenMonad.List.fold cases ~init:As.empty ~f:(fun acc case ->
             let* as_case, ty_case, eff_case = gen_case case in
-            let* () = add_constrs [ty_case == ty_res; eff_case === eff_e] in
+            let* () =
+              add_constrs
+                [ ty_case == ty_res
+                ; (* unify eff_case & eff_e only after ImplInstConstrs with eff_e are solved *)
+                  EffEqConstr (eff_case, eff_e, EffEq_Late) ]
+            in
             return (acc ++ as_case) )
       in
 
