@@ -391,30 +391,38 @@ let array_find_by_index id array =
   | _ -> None
 ;;
 
+let if_none a f =
+  a
+  >>= function
+  | Some _ as x -> return x
+  | None -> f
+;;
+
+let rec obj_find_property ctx obj_fun array_fun = function
+  | VObject x ->
+    let* obj = get_obj_ctx ctx x in
+    let find_in_vars () =
+      match obj_fun obj with
+      | Some _ as x -> return x
+      | None -> obj_find_property ctx obj_fun array_fun obj.proto
+    in
+    (match obj.obj_type with
+     | TArray arr -> if_none (return @@ array_fun arr) @@ find_in_vars ()
+     | _ -> find_in_vars ())
+  | _ -> return None
+;;
+
 let obj_get_property ctx obj key =
-  let if_none a f =
-    a
-    >>= function
-    | Some _ as x -> return x
-    | None -> f
+  let go obj =
+    obj_find_property
+      ctx
+      (fun obj -> Option.map (fun x -> x.value) (find_in_vars_opt key obj.fields))
+      (fun arr -> array_find_by_index key arr)
+      obj
   in
   match obj with
   | VObject id as obj_val ->
     let* obj = get_obj_ctx ctx id in
-    let rec go = function
-      | VObject x ->
-        let* obj = get_obj_ctx ctx x in
-        let find_in_vars () =
-          match find_in_vars_opt key obj.fields with
-          | None -> go obj.proto
-          | Some x -> return @@ Some x.value
-        in
-        (match obj.obj_type with
-         | TArray arr ->
-           if_none (return @@ array_find_by_index key arr) @@ find_in_vars ()
-         | _ -> find_in_vars ())
-      | _ -> return None
-    in
     let spec_proto =
       if is_func obj
       then go (vobject ctx.proto_objs.proto_fun)
@@ -439,7 +447,7 @@ let const_to_val = function
   | Null -> VNull
 ;;
 
-let add_ctx ctx x = x >>| fun x -> ctx, x
+let add_to_result elem result = result >>| fun x -> elem, x
 
 let get_vnum ctx = function
   | VNumber x -> return x
@@ -744,7 +752,6 @@ and ctx_change_unop ctx op a =
       let* ctx, v = eval_exp ctx v in
       print_vvalues ctx v >>= fun v -> etyp (v ^ " is not a constructor")
   in
-  let add_ctx = add_ctx ctx in
   match op with
   | PreInc ->
     ctx_change_bop ctx AddAssign a (Const (Number 1.))
@@ -761,40 +768,51 @@ and ctx_change_unop ctx op a =
     let* ctx, _ = ctx_change_bop ctx SubAssign a (Const (Number 1.)) in
     return (ctx, res) <?> "error in prefix decrement operator"
   | New -> op_new ()
-  | _ -> eval_exp ctx a >>= fun (ctx, a) -> add_ctx @@ ctx_not_change_unop ctx op a
+  | _ ->
+    eval_exp ctx a >>= fun (ctx, a) -> add_to_result ctx @@ ctx_not_change_unop ctx op a
 
 and ctx_change_bop ctx op a b : (ctx * value) t =
   let assign () =
     let obj_assign obj prop =
-      let get_obj = function
-        | VObject x -> get_obj_ctx ctx x >>| fun obj -> x, obj
+      let* ctx, (obj_val, prop) = both_ext eval_exp ctx obj prop in
+      let* ctx, new_val = eval_exp ctx b in
+      let* id, obj =
+        match obj_val with
+        | VObject x -> add_to_result x @@ get_obj_ctx ctx x
         | _ -> error @@ SyntaxError "Invalid or unexpected token"
       in
-      fold_left_map eval_exp ctx [ obj; prop; b ]
-      >>= function
-      | ctx, [ obj_val; prop; b ] ->
-        let* id, obj = get_obj obj_val in
-        let* prop = to_string ctx prop in
-        let+ new_obj =
-          match prop with
-          | "__proto__" ->
-            if obj_val = b
-            then etyp "Cyclic __proto__ value"
-            else return { obj with proto = b }
-          | _ ->
-            (match find_in_vars_opt prop obj.fields with
-             | Some x when x.is_const ->
-               let* str = print_vvalues ctx obj_val in
-               etyp
-               @@ asprintf "Cannot assign to read only property '%s' of %s" x.var_id str
-             | _ ->
-               let fields =
-                 add_or_replace { var_id = prop; is_const = false; value = b } obj.fields
-               in
-               return { obj with fields })
-        in
-        { ctx with objs = IntMap.add id new_obj ctx.objs }, b
-      | _ -> error @@ InternalError "Error in assignment to object field"
+      let* prop = to_string ctx prop in
+      let+ new_obj =
+        match prop with
+        | "__proto__" ->
+          let* find_proto_cyclic =
+            if obj_val = new_val
+            then return @@ Some ()
+            else
+              obj_find_property
+                ctx
+                (fun x -> if x.proto = obj_val then Some () else None)
+                (fun _ -> None)
+                new_val
+          in
+          if Option.is_some find_proto_cyclic
+          then etyp "Cyclic __proto__ value"
+          else return { obj with proto = new_val }
+        | _ ->
+          (match find_in_vars_opt prop obj.fields with
+           | Some x when x.is_const ->
+             let* str = print_vvalues ctx obj_val in
+             etyp
+             @@ asprintf "Cannot assign to read only property '%s' of %s" x.var_id str
+           | _ ->
+             let fields =
+               add_or_replace
+                 { var_id = prop; is_const = false; value = new_val }
+                 obj.fields
+             in
+             return { obj with fields })
+      in
+      { ctx with objs = IntMap.add id new_obj ctx.objs }, new_val
     in
     match a with
     | Var id ->
@@ -827,7 +845,7 @@ and ctx_change_bop ctx op a b : (ctx * value) t =
   | NullAssign -> rec_assign_rehanging NullishCoal
   | _ ->
     both_ext eval_exp ctx a b
-    >>= fun (ctx, (x, y)) -> add_ctx ctx (ctx_not_change_bop ctx op x y)
+    >>= fun (ctx, (x, y)) -> add_to_result ctx (ctx_not_change_bop ctx op x y)
 
 and eval_for_top_val ctx name = function
   | AnonFunction (args, vals) -> create_function ctx name args vals
