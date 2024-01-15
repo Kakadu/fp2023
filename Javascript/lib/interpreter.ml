@@ -599,50 +599,6 @@ and ctx_not_change_bop ctx op a b =
     let* l, r = both is_to_string a b in
     if l || r then bop_with_string ( ^ ) else bop_with_num ( +. )
   in
-  let strict_equal () = return (VBool (a = b)) in
-  let equal () =
-    let is_undefined = function
-      | VUndefined -> true
-      | _ -> false
-    in
-    let is_null = function
-      | VNull -> true
-      | _ -> false
-    in
-    let is_num_bool = function
-      | VNumber _ | VBool _ -> true
-      | _ -> false
-    in
-    let is_obj = function
-      | VObject _ -> true
-      | _ -> false
-    in
-    if is_null a || is_null b
-    then return (VBool ((is_null a || is_null b) && (is_undefined a || is_undefined b)))
-    else if is_num_bool a || is_num_bool b
-    then bop_logical_with_num ( = )
-    else
-      ctx_not_change_bop ctx StrictEqual a b
-      >>= function
-      | VBool true -> return (VBool true)
-      | _ ->
-        if is_obj a || is_obj b
-        then bop_logical_with_string ( = )
-        else return (VBool false)
-  in
-  let less_than () =
-    let* l, r = both is_to_string a b in
-    if l && r then bop_logical_with_string ( < ) else bop_logical_with_num ( < )
-  in
-  let shift op =
-    let get_int = function
-      | VNumber x -> Some (int_of_float x)
-      | _ -> None
-    in
-    match b with
-    | VNumber x when x >= 0. -> bop_bitwise_shift op b
-    | _ -> bop_bitwise_shift op (VNumber (float_of_int (32 + Option.get (get_int b))))
-  in
   let logical_and () =
     let a_preserved = a in
     let b_preserved = b in
@@ -658,6 +614,45 @@ and ctx_not_change_bop ctx op a b =
     >>| function
     | true, _ -> a_preserved
     | _ -> b_preserved
+  in
+  let strict_equal () = return (VBool (a = b)) in
+  let equal () =
+    let is_obj = function
+      | VObject _ -> true
+      | _ -> false
+    in
+    let* res1 = ctx_not_change_bop ctx StrictEqual a b in
+    let* a, b =
+      both
+        (fun x ->
+          get_primitive ctx x
+          >>= fun x -> if is_obj x then to_string ctx x >>| vstring else return x)
+        a
+        b
+    in
+    let* res2 =
+      match a, b with
+      | VNull, (VNull | VUndefined) | VUndefined, (VNull | VUndefined) ->
+        return @@ vbool true
+      | VBool x, y | y, VBool x ->
+        to_number ctx (vbool x) >>| vnumber >>= ctx_not_change_bop ctx Equal y
+      | VNumber _, VString _ | VString _, VNumber _ -> bop_logical_with_num ( = )
+      | _ -> ctx_not_change_bop ctx StrictEqual a b
+    in
+    ctx_not_change_bop ctx LogicalOr res1 res2
+  in
+  let less_than () =
+    let* l, r = both is_to_string a b in
+    if l && r then bop_logical_with_string ( < ) else bop_logical_with_num ( < )
+  in
+  let shift op =
+    let get_int = function
+      | VNumber x -> Some (int_of_float x)
+      | _ -> None
+    in
+    match b with
+    | VNumber x when x >= 0. -> bop_bitwise_shift op b
+    | _ -> bop_bitwise_shift op (VNumber (float_of_int (32 + Option.get (get_int b))))
   in
   let less_eq () =
     let bop cast a b =
