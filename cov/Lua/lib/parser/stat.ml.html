@@ -685,7 +685,7 @@ let parse_function1 pblock =
 let parse_assign pblock =
   <span data-count="2">(</span>let parse_flag = option Nonlocal (strin<span data-count="2">g</span> "local" *<span data-count="2">&gt;</span> retur<span data-count="2">n</span> Local) in
    <span data-count="2">l</span>ift<span data-count="2">3</span>
-     (fun flag lhs expr -&gt; <span data-count="32">S</span>tat_assign (flag, lhs, expr))
+     (fun flag lhs expr -&gt; <span data-count="33">S</span>tat_assign (flag, lhs, expr))
      parse_flag
      (ws *<span data-count="2">&gt;</span> parse_ident)
      (ws *<span data-count="2">&gt;</span> cha<span data-count="2">r</span> '=' *<span data-count="2">&gt;</span> ws *<span data-count="2">&gt;</span> parse_exp<span data-count="2">r</span> pblock))

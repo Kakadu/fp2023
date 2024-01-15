@@ -220,16 +220,16 @@ let parse_nil = strin<span data-count="4">g</span> "nil" *<span data-count="4">&
 
 let parse_string =
   strin<span data-count="4">g</span> "\"" *<span data-count="4">&gt;</span> many_til<span data-count="4">l</span> any_char (strin<span data-count="4">g</span> "\"")
-  &gt;&gt;<span data-count="4">=</span> fun str -&gt; <span data-count="1">r</span>eturn (Exp_string (Base.String.of_char_lis<span data-count="1">t</span> str))
+  &gt;&gt;<span data-count="4">=</span> fun str -&gt; <span data-count="3">r</span>eturn (Exp_string (Base.String.of_char_lis<span data-count="3">t</span> str))
 ;;
 
 let parse_number =
   take_whil<span data-count="4">e</span> (function
     | <span data-count="77">'</span>0' .. '9' | <span data-count="0">'</span>.' | <span data-count="0">'</span>-' -&gt; true
-    | <span data-count="81">_</span> -&gt; false)
+    | <span data-count="83">_</span> -&gt; false)
   &gt;&gt;<span data-count="4">=</span> fun s -&gt;
-  <span data-count="85">t</span>ry retur<span data-count="54">n</span> (Exp_number (Float.of_strin<span data-count="54">g</span> s)) with
-  | <span data-count="31">I</span>nvalid_argument _ -&gt; fail "not a number"
+  <span data-count="87">t</span>ry retur<span data-count="54">n</span> (Exp_number (Float.of_strin<span data-count="54">g</span> s)) with
+  | <span data-count="33">I</span>nvalid_argument _ -&gt; fail "not a number"
 ;;
 
 let parse_explhs = parse_ident &gt;&gt;<span data-count="4">|</span> fun lhs -&gt; <span data-count="65">E</span>xp_lhs lhs
@@ -274,7 +274,7 @@ let psub = strin<span data-count="4">g</span> "-" *<span data-count="4">&gt;</sp
 let pmod = strin<span data-count="4">g</span> "%" *<span data-count="4">&gt;</span> retur<span data-count="4">n</span> (fun x y -&gt; <span data-count="1">E</span>xp_op (Op_mod, x, y))
 let pcon = strin<span data-count="4">g</span> ".." *<span data-count="4">&gt;</span> retur<span data-count="4">n</span> (fun x y -&gt; <span data-count="0">E</span>xp_op (Op_concat, x, y))
 let peq = strin<span data-count="4">g</span> "==" *<span data-count="4">&gt;</span> retur<span data-count="4">n</span> (fun x y -&gt; <span data-count="4">E</span>xp_op (Op_eq, x, y))
-let pneq = strin<span data-count="4">g</span> "~=" *<span data-count="4">&gt;</span> retur<span data-count="4">n</span> (fun x y -&gt; <span data-count="1">E</span>xp_op (Op_neq, x, y))
+let pneq = strin<span data-count="4">g</span> "~=" *<span data-count="4">&gt;</span> retur<span data-count="4">n</span> (fun x y -&gt; <span data-count="2">E</span>xp_op (Op_neq, x, y))
 let plt = strin<span data-count="4">g</span> "&lt;" *<span data-count="4">&gt;</span> retur<span data-count="4">n</span> (fun x y -&gt; <span data-count="1">E</span>xp_op (Op_lt, x, y))
 let pgt = strin<span data-count="4">g</span> "&gt;" *<span data-count="4">&gt;</span> retur<span data-count="4">n</span> (fun x y -&gt; <span data-count="2">E</span>xp_op (Op_lt, y, x))
 let ple = strin<span data-count="4">g</span> "&lt;=" *<span data-count="4">&gt;</span> retur<span data-count="4">n</span> (fun x y -&gt; <span data-count="2">E</span>xp_op (Op_le, x, y))
