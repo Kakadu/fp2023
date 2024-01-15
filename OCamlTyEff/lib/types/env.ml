@@ -6,12 +6,16 @@ open! Base
 open Tys
 open Ast
 
-type t = (Ident.t, Scheme.t, Ident.comparator_witness) Map.t
+type t =
+  {weak_counter: int; map: (Ident.t, Scheme.t, Ident.comparator_witness) Map.t}
 
-let empty = Map.empty (module Ident)
-let singleton = Map.singleton (module Ident)
-let of_alist_exn = Map.of_alist_exn (module Ident)
+let of_alist_exn ~weak_counter alist =
+  {weak_counter; map= Map.of_alist_exn (module Ident) alist}
 
-let set = Map.set
-let find = Map.find
-let find_exn = Map.find_exn
+let get_weak_counter env = env.weak_counter
+let set_weak_counter env weak_counter = {env with weak_counter}
+
+let set env ~key ~data = {env with map= Map.set env.map ~key ~data}
+let map env ~f = {env with map= Map.map env.map ~f}
+let find env = Map.find env.map
+let find_exn env = Map.find_exn env.map
