@@ -259,9 +259,6 @@ let%expect_test "Try_catch" =
               catch(E){}
 
               try{}
-              catch(Division_by_zero e){}
-
-              try{}
               catch(Exception e){}
 
               try{}

@@ -28,8 +28,6 @@ let pars_ast str =
 let base_lib_decl =
   let info =
     {|
-      class Division_by_zero : Exception {}
-
       class FileInfo{
         string path;
         bool Exists = false;
