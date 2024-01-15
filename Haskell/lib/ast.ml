@@ -1,6 +1,6 @@
-(* Copyright 2023-2024, Danil P *)
+(** Copyright 2023-2024, Danil P *)
 
-(* SPDX-License-Identifier: LGPL-3.0-or-later *)
+(** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
 (* Unique identifier typically representing variable names. *)
 type id = string [@@deriving show { with_path = false }]

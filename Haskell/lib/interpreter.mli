@@ -41,24 +41,7 @@ module EnvTypes : sig
 end
 
 module Env : sig
-  type res = (value, err) LazyResult.t
-  and environment = (string, res) Hashtbl.t
-
-  and value =
-    | ValInt of int
-    | ValBool of bool
-    | ValString of string
-    | ValChar of char
-    | ValNil
-    | ValList of res * res
-    | ValTuple of res list
-    | ValFun of Ast.pat * Ast.expr * environment
-
-  and err =
-    | NotInScopeError of string
-    | DivisionByZeroError
-    | NonExhaustivePatterns of string
-    | TypeMismatch
+  include module type of EnvTypes
 
   val pp_err : Format.formatter -> err -> unit
   val pp_value : Format.formatter -> value -> unit
