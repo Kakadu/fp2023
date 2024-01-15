@@ -4,7 +4,7 @@
 
 open! Base
 open Vars
-open Ast
+open Misc
 
 module rec Eff : sig
   module Label : sig
@@ -104,7 +104,7 @@ and Ty : sig
         (** [Ty_tuple([T1 ; ... ; Tn])] represents [T1 * ... * Tn].
             Invariant: [n >= 2].
         *)
-    | Ty_con of Ast.Ident.t * t list
+    | Ty_con of Ident.t * t list
         (** [Ty_con(ident, l)] represents:
               - [tconstr]               when [l=[]],
               - [T tconstr]             when [l=[T]],

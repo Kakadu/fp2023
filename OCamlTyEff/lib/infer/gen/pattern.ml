@@ -3,6 +3,7 @@
 (** SPDX-License-Identifier: MIT *)
 
 open! Base
+open Misc
 open Types
 open Ast
 

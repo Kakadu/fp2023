@@ -4,6 +4,7 @@
 
 open! Base
 open Monads.Std
+open Misc
 open Types
 open Constraints
 open Ast

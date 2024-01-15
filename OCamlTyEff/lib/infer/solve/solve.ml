@@ -6,9 +6,8 @@ module Sub = Sub
 
 open! Base
 open Monads.Std
-open Utils
+open Misc
 
-open Ast
 open Types
 open Constraints
 

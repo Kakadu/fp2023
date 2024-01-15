@@ -4,6 +4,7 @@
 
 open! Base
 open Angstrom
+open Misc
 open Ast
 open Common
 open Pattern

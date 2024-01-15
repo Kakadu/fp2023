@@ -4,7 +4,7 @@
 
 open! Base
 open Tys
-open Ast
+open Misc
 
 (** Type environment. Maps identifiers to types *)
 type t
