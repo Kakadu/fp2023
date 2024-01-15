@@ -821,7 +821,6 @@ and ctx_change_bop ctx op a b : (ctx * value) t =
     | BinOp (PropAccs, obj, prop) -> obj_assign obj prop
     | _ -> error @@ SyntaxError "Invalid left-hand side in assignment"
   in
-  let rec_assign_rehanging op = ctx_change_bop ctx Assign a (BinOp (op, a, b)) in
   match op with
   | Assign -> assign () <?> "error in assignment"
   | AddAssign -> ctx_change_bop ctx Assign a (BinOp (Add, a, b))
@@ -839,7 +838,6 @@ and ctx_change_bop ctx op a b : (ctx * value) t =
   | LogAndAssign -> ctx_change_bop ctx Assign a (BinOp (LogicalAnd, a, b))
   | LogOrAssign -> ctx_change_bop ctx Assign a (BinOp (LogicalOr, a, b))
   | NullAssign -> ctx_change_bop ctx Assign a (BinOp (NullishCoal, a, b))
-  | PropAccs -> prop_accs () <?> "error in property access"
   | _ ->
     both_ext eval_exp ctx a b
     >>= fun (ctx, (x, y)) -> add_to_result ctx (ctx_not_change_bop ctx op x y)
@@ -947,7 +945,7 @@ and eval_stm ctx = function
       else return ctx
     in
     go ctx <?> "error in loop body"
-  | _ -> ensup ""
+  | _ -> error @@ InternalError "unexpected statement"
 
 and eval_stms ctx ast =
   let* ctx = prefind_funcs ctx ast in
