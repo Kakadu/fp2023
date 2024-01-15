@@ -92,9 +92,9 @@ and fun_init =
   }
 
 and loop =
-  { loop_init : statement option
+  { loop_init : statement option (*in 'for' only*)
   ; loop_condition : expression
-  ; loop_change : expression option
+  ; loop_change : expression option (*in 'for' only*)
   ; loop_body : statement
   }
 
@@ -104,7 +104,7 @@ and statement =
   | VarInit of var_init (*let id = ...*)
   | FunInit of fun_init (*function id(args) {...}*)
   | If of expression * statement * statement
-  | Loop of loop (*for or while loop*)
+  | Loop of loop (*'for' or 'while' loop*)
   | Return of expression
   | Programm of statement list
 [@@deriving show { with_path = false }]
