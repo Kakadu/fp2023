@@ -1,8 +1,8 @@
 type error =
   | ParsingError of string
-  | UnknownDatabase of string
+  | ReadError of string
   | UnknownTable of string
-  | UknownColumn of string
+  | UnknownColumn of string
   | TypesMismatch of Types.item * string * Types.item
   | TypeConversionFail of Types.item * string
   | DivisionByZero
@@ -11,9 +11,9 @@ type error =
 
 let error_to_string = function
   | ParsingError msg -> Format.sprintf "Error '%s' occurred during parsing" msg
-  | UnknownDatabase msg -> Format.sprintf "Can't find database '%s'" msg
+  | ReadError msg -> Format.sprintf "Can't read data from database '%s'" msg
   | UnknownTable msg -> Format.sprintf "Can't find table '%s'" msg
-  | UknownColumn msg -> Format.sprintf "Can't find column '%s'" msg
+  | UnknownColumn msg -> Format.sprintf "Can't find column '%s'" msg
   | TypesMismatch (t1, op, t2) ->
     Format.sprintf
       "Type check failed: %s %s %s"

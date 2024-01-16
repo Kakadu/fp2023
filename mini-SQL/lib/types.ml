@@ -13,7 +13,7 @@ type column =
   }
 [@@deriving show { with_path = false }]
 
-type header = { column_list : column list } [@@deriving show { with_path = false }]
+type header = column array [@@deriving show { with_path = false }]
 
 type table =
   { table_name : string
@@ -60,6 +60,9 @@ module Row = struct
   ;;
 
   let get_item = Array.get
+  let join (a : t) (b : t) = Array.append a b
+  let sub = Array.sub
+  let empty : t = [||]
 
   let show_row row =
     let s_arr = Array.map show_item row in
@@ -73,6 +76,15 @@ module Sheet = struct
 
   let init ts es = Array.init (List.length es) (fun i -> Row.init ts (List.nth es i))
   let get_row (rs : t) i = Array.get rs i
+  let column_length (sheet : t) = Array.length sheet
+  let row_length (sheet : t) = Array.length (Array.get sheet 0)
+  let join (a : t) (b : t) = Array.mapi (fun i el -> Row.join el (Array.get b i)) a
+  let empty length : t = Array.init length ( fun _ -> Row.empty)
+
+  (* обрезать каждый ряд *)
+  let sub_width (s : t) (from_id : int) (len : int) =
+    Array.map (fun row -> Row.sub row from_id len) s
+  ;;
 
   let show_sheet sheet =
     let s_arr = Array.map Row.show_row sheet in
@@ -89,26 +101,45 @@ module Table = struct
   [@@deriving show { with_path = false }]
 
   let name table = table.meta.table_name
-  let columns table = table.meta.table_header.column_list
+  let columns table = table.meta.table_header
+
+  let empty len =
+    { data = Sheet.empty len; meta = { table_name = "new table"; table_header = [||] } }
+  ;;
+
+  let join (a : t) (b : t) =
+    { data = Sheet.join a.data b.data
+    ; meta =
+        { table_name = "new table"
+        ; table_header = Array.append a.meta.table_header b.meta.table_header
+        }
+    }
+  ;;
+
+  let column_length (t : t) = Sheet.column_length t.data
+  let row_length (t : t) = Sheet.row_length t.data
+
+  let sub_width (s : t) (from_id : int) (len : int) =
+    { data = Sheet.sub_width s.data from_id len
+    ; meta =
+        { table_name = s.meta.table_name
+        ; table_header = Array.sub s.meta.table_header from_id len
+        }
+    }
+  ;;
 
   (** Find column index *)
   let find_column_i (table : t) name =
-    (* table.column -> column *)
-    let name =
-      if String.contains name '.'
-      then List.nth (String.split_on_char '.' name) 1
-      else name
-    in
     let rec helper acc name cs =
       match cs with
       | [] -> None
       | hd :: tl -> if hd.column_name = name then Some acc else helper (acc + 1) name tl
     in
-    helper 0 name (columns table)
+    helper 0 name (Array.to_list (columns table))
   ;;
 
   (** get column by index *)
-  let get_column (table : t) ~index = List.nth (columns table) index
+  let get_column (table : t) ~index = Array.get (columns table) index
 
   let show_table (table : t) =
     let sep = ref ("+" ^ String.make (String.length (name table)) '-' ^ "+") in
@@ -117,7 +148,7 @@ module Table = struct
       sep.contents
       (" " ^ name table ^ " ")
       sep.contents
-      (String.concat ", " (List.map show_column (columns table)))
+      (String.concat ", " (Array.to_list (Array.map show_column (columns table))))
       (Sheet.show_sheet table.data)
   ;;
 end

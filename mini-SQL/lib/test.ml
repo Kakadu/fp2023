@@ -368,15 +368,8 @@ module Types_test = struct
   let%test _ =
     assert_equal
       (transform_column base2 "email2")
-      { table_index = 1
-      ; column_index = 4
-      ; meta = { column_name = "email2"; column_type = String_Column }
-      }
+      { column_index = 4; meta = { column_name = "email2"; column_type = String_Column } }
       Interpreter.show_int_column
-  ;;
-
-  let request1 =
-    Result.get_ok (Parser.parse "SELECT name FROM table1 WHERE table1.name > 10")
   ;;
 
   open Typecheck.Exec (Utils.Result)
@@ -415,5 +408,57 @@ module Types_test = struct
       (Types.String "15") #+ (Types.Real 5.)
       (Types.String "155.")
       Types.show_item
+  ;;
+
+  let parse inp = Result.get_ok (Parser.parse inp)
+  let transform base inp = transform_request base (parse inp)
+
+  let exec base req =
+    match eval base req with
+    | Ok table -> Format.printf "Result:\n%s\n" (Types.Table.show_table table)
+    | Error e -> Format.printf "Execute error: %s\n" (Utils.show_error e)
+  ;;
+
+  let%test _ =
+    assert_equal
+      (transform base1 "SELECT name FROM table1")
+      (Project
+         ( Restrict
+             ( Load
+                 { data =
+                     [| [| String "Rachel Klein"; Numeric 65; Bool false |]
+                      ; [| String "Frank James"; Numeric 24; Bool false |]
+                      ; [| String "Barbara Fletcher"; Numeric 38; Bool true |]
+                      ; [| String "Polly Drake"; Numeric 33; Bool false |]
+                      ; [| String "Howard Glover"; Numeric 42; Bool false |]
+                      ; [| String "Alice Houston"; Numeric 50; Bool true |]
+                      ; [| String "Gregory Cunningham"; Numeric 62; Bool true |]
+                      ; [| String "Jim Gregory"; Numeric 27; Bool false |]
+                      ; [| String "Eleanor Johnston"; Numeric 37; Bool true |]
+                      ; [| String "Eliza Norton"; Numeric 43; Bool false |]
+                     |]
+                 ; meta =
+                     { table_name = "table1"
+                     ; table_header =
+                         [| { column_name = "name"; column_type = String_Column }
+                          ; { column_name = "age"; column_type = Numeric_Column }
+                          ; { column_name = "is_gay"; column_type = Boolean_Column }
+                         |]
+                     }
+                 }
+             , Const (Bool true) )
+         , [ Col
+               { column_index = 0
+               ; meta = { column_name = "name"; column_type = String_Column }
+               }
+           ] ))
+      Interpreter.show_qot_node
+  ;;
+
+  let%test _ =
+    exec
+      "/home/dmitriy/Desktop/fp2023/mini-SQL/test_data/two_files_database"
+      (parse "SELECT myFile1.id, myFile1.firstname, myFile1.lastname FROM myFile1");
+    false
   ;;
 end

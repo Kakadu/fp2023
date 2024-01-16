@@ -1,10 +1,4 @@
-module Exec (M : Utils.MONAD_FAIL) : sig
-  val ( #+ ) : Types.item -> Types.item -> (Types.item, Utils.error) M.t
-  val ( #* ) : Types.item -> Types.item -> (Types.item, Utils.error) M.t
-  val ( #- ) : Types.item -> Types.item -> (Types.item, Utils.error) M.t
-  val ( #/ ) : Types.item -> Types.item -> (Types.item, Utils.error) M.t
-  val ( #% ) : Types.item -> Types.item -> (Types.item, Utils.error) M.t
-end = struct
+module Exec (M : Utils.MONAD_FAIL) = struct
   open M
   open Types
   open Utils
@@ -264,46 +258,4 @@ end = struct
   ;;
 
   (** Get current item from sheet *)
-  let item_from_col (sheet : Sheet.t) (int_col : Interpreter.int_column) (i : int) =
-    return (Row.get_item (Sheet.get_row sheet int_col.column_index) i)
-  ;;
-
-  open Interpreter
-
-  let rec expr_exec (sheet : Sheet.t) (i : int) =
-    let exec = expr_exec sheet i in
-    function
-    | Const x -> return x
-    | Col col -> item_from_col sheet col i
-    | Plus (x, y) -> exec x >>= fun x -> exec y >>= fun y -> x #+ y
-    | Minus (x, y) -> exec x >>= fun x -> exec y >>= fun y -> x #- y
-    | Mul (x, y) -> exec x >>= fun x -> exec y >>= fun y -> x #* y
-    | Div (x, y) -> exec x >>= fun x -> exec y >>= fun y -> x #/ y
-    | Mod (x, y) -> exec x >>= fun x -> exec y >>= fun y -> x #% y
-    | Equal (x, y) ->
-      exec x >>= fun x -> exec y >>= fun y -> x #= y >>= fun res -> return (Bool res)
-    | NEqual (x, y) ->
-      exec x >>= fun x -> exec y >>= fun y -> x #!= y >>= fun res -> return (Bool res)
-    | GThan (x, y) ->
-      exec x >>= fun x -> exec y >>= fun y -> x #> y >>= fun res -> return (Bool res)
-    | GThanEq (x, y) ->
-      exec x >>= fun x -> exec y >>= fun y -> x #>= y >>= fun res -> return (Bool res)
-    | LThan (x, y) ->
-      exec x >>= fun x -> exec y >>= fun y -> x #< y >>= fun res -> return (Bool res)
-    | LThanEq (x, y) ->
-      exec x >>= fun x -> exec y >>= fun y -> x #<= y >>= fun res -> return (Bool res)
-    | And (x, y) ->
-      exec x
-      >>= fun x ->
-      exec y
-      >>= fun y ->
-      bool_of_item x >>= fun x -> bool_of_item y >>= fun y -> return (Bool (x && y))
-    | Or (x, y) ->
-      exec x
-      >>= fun x ->
-      exec y
-      >>= fun y ->
-      bool_of_item x >>= fun x -> bool_of_item y >>= fun y -> return (Bool (x || y))
-    | Not x -> exec x >>= fun x -> bool_of_item x >>= fun x -> return (Bool (not x))
-  ;;
 end

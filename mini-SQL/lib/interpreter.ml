@@ -4,8 +4,7 @@ open Utils
 
 (** extended version of column type *)
 type int_column =
-  { table_index : int (* we need to store indexes *)
-  ; column_index : int
+  { column_index : int
   ; meta : column (* meta from Types.Column *)
   }
 [@@deriving show { with_path = false }]
@@ -75,7 +74,7 @@ module Eval (M : Utils.MONAD_FAIL) = struct
     | None ->
       (match find_table_by_column base name with
        | [ x ] -> index_of (Table.name x)
-       | _ -> fail (UknownColumn name))
+       | _ -> fail (UnknownColumn name))
   ;;
 
   (** Transform column name to int_column *)
@@ -85,16 +84,15 @@ module Eval (M : Utils.MONAD_FAIL) = struct
     let get_column_i t =
       match Table.find_column_i t name with
       | Some x -> return x
-      | None -> fail (UknownColumn name)
+      | None -> fail (UnknownColumn name)
     in
     let column colid t = return (Table.get_column t ~index:colid) in
-    let meta col colid ti = { table_index = ti; column_index = colid; meta = col } in
+    let meta col colid = { column_index = colid; meta = col } in
     get_table_i
     >>= fun ti ->
     get_table ti
     >>= fun t ->
-    get_column_i t
-    >>= fun colid -> column colid t >>= fun col -> return (meta col colid ti)
+    get_column_i t >>= fun colid -> column colid t >>= fun col -> return (meta col colid)
   ;;
 
   (** tranform Ast.value into Interpreter.value *)
@@ -202,14 +200,172 @@ module Eval (M : Utils.MONAD_FAIL) = struct
 
   (** --- Expressions computation --- *)
 
-  (* let execute_join (base : Database.t) left right jtype : (Table.t, string) t = *)
+  open Typecheck.Exec (M)
 
-  (** Execute SQL Query Operator Tree *)
-  (* let execute (base : Database.t) (node: qot_node) : (Table.t, string) t = match node with
-     | Load t -> return t
-     | Join (left, right, jtype) -> execute_join left right jtype *)
-  (* | Restrict (node, expr) -> ...
-     | Project (node, expr_list) -> *)
+  (* Execute expr for cur row *)
+  let rec row_expr_exec (sheet : Sheet.t) (i : int) expr =
+    let run expr = row_expr_exec sheet i expr in
+    match expr with
+    | Const x -> return x
+    | Col col -> return (Row.get_item (Sheet.get_row sheet i) col.column_index)
+    | Plus (x, y) -> run x >>= fun x -> run y >>= fun y -> x #+ y
+    | Minus (x, y) -> run x >>= fun x -> run y >>= fun y -> x #- y
+    | Mul (x, y) -> run x >>= fun x -> run y >>= fun y -> x #* y
+    | Div (x, y) -> run x >>= fun x -> run y >>= fun y -> x #/ y
+    | Mod (x, y) -> run x >>= fun x -> run y >>= fun y -> x #% y
+    | Equal (x, y) ->
+      run x >>= fun x -> run y >>= fun y -> x #= y >>= fun res -> return (Bool res)
+    | NEqual (x, y) ->
+      run x >>= fun x -> run y >>= fun y -> x #!= y >>= fun res -> return (Bool res)
+    | GThan (x, y) ->
+      run x >>= fun x -> run y >>= fun y -> x #> y >>= fun res -> return (Bool res)
+    | GThanEq (x, y) ->
+      run x >>= fun x -> run y >>= fun y -> x #>= y >>= fun res -> return (Bool res)
+    | LThan (x, y) ->
+      run x >>= fun x -> run y >>= fun y -> x #< y >>= fun res -> return (Bool res)
+    | LThanEq (x, y) ->
+      run x >>= fun x -> run y >>= fun y -> x #<= y >>= fun res -> return (Bool res)
+    | And (x, y) ->
+      run x
+      >>= fun x ->
+      run y
+      >>= fun y ->
+      bool_of_item x >>= fun x -> bool_of_item y >>= fun y -> return (Bool (x && y))
+    | Or (x, y) ->
+      run x
+      >>= fun x ->
+      run y
+      >>= fun y ->
+      bool_of_item x >>= fun x -> bool_of_item y >>= fun y -> return (Bool (x || y))
+    | Not x -> run x >>= fun x -> bool_of_item x >>= fun x -> return (Bool (not x))
+  ;;
 
-  (* let eval (base_folder : string) (request: Ast.request) : (Table.t, string) t *)
+  (* run expr for all rows and return new sheet with true exprs *)
+  let exec_expr (sheet : Sheet.t) (ex : expr) =
+    let rec rows_runner (acc : Row.t list) (max_i : int) (i : int) =
+      match i with
+      | i when i > max_i -> return acc (* end of column *)
+      | i ->
+        row_expr_exec sheet i ex
+        >>= fun res ->
+        bool_of_item res
+        >>= fun res ->
+        if res
+        then rows_runner (List.append acc [ Sheet.get_row sheet i ]) max_i (i + 1)
+        else rows_runner acc max_i (i + 1)
+    in
+    rows_runner [] (Sheet.column_length sheet - 1) 0
+  ;;
+
+  (* indexes may be incorrect *)
+  let rec update_column_indexes (table : Table.t) (expr : expr) =
+    let run expr = update_column_indexes table expr in
+    let get_id col =
+      match Table.find_column_i table col.meta.column_name with
+      | Some x -> return x
+      | None -> fail (UnknownColumn col.meta.column_name)
+    in
+    match expr with
+    | Const x -> return (Const x)
+    | Col col ->
+      get_id col >>= fun id -> return (Col { column_index = id; meta = col.meta })
+    | Plus (e1, e2) -> run e1 >>= fun r1 -> run e2 >>= fun r2 -> return (Plus (r1, r2))
+    | Minus (e1, e2) -> run e1 >>= fun r1 -> run e2 >>= fun r2 -> return (Minus (r1, r2))
+    | Mul (e1, e2) -> run e1 >>= fun r1 -> run e2 >>= fun r2 -> return (Mul (r1, r2))
+    | Div (e1, e2) -> run e1 >>= fun r1 -> run e2 >>= fun r2 -> return (Div (r1, r2))
+    | Mod (e1, e2) -> run e1 >>= fun r1 -> run e2 >>= fun r2 -> return (Mod (r1, r2))
+    | And (e1, e2) -> run e1 >>= fun r1 -> run e2 >>= fun r2 -> return (And (r1, r2))
+    | Or (e1, e2) -> run e1 >>= fun r1 -> run e2 >>= fun r2 -> return (Or (r1, r2))
+    | Not e1 -> run e1 >>= fun r1 -> return (Not r1)
+    | Equal (e1, e2) -> run e1 >>= fun r1 -> run e2 >>= fun r2 -> return (Equal (r1, r2))
+    | NEqual (e1, e2) ->
+      run e1 >>= fun r1 -> run e2 >>= fun r2 -> return (NEqual (r1, r2))
+    | GThan (e1, e2) -> run e1 >>= fun r1 -> run e2 >>= fun r2 -> return (GThan (r1, r2))
+    | LThan (e1, e2) -> run e1 >>= fun r1 -> run e2 >>= fun r2 -> return (LThan (r1, r2))
+    | GThanEq (e1, e2) ->
+      run e1 >>= fun r1 -> run e2 >>= fun r2 -> return (GThanEq (r1, r2))
+    | LThanEq (e1, e2) ->
+      run e1 >>= fun r1 -> run e2 >>= fun r2 -> return (LThanEq (r1, r2))
+  ;;
+
+  let exec_join (table1 : Table.t) (table2 : Table.t) (jtype : join_type) =
+    let filter (sheet : Sheet.t) (ex : expr) =
+      exec_expr sheet ex >>= fun list -> return (Array.of_list list)
+    in
+    let replace_sheet (sheet : Sheet.t) (table : Table.t) =
+      { Table.data = sheet; Table.meta = table.meta }
+    in
+    let join t1 t2 = return (Table.join t1 t2) in
+    let update new_table expr = update_column_indexes new_table expr in
+    let run t1 t2 ex =
+      join t1 t2
+      >>= fun new_table ->
+      update new_table ex
+      >>= fun expr ->
+      filter new_table.data expr >>= fun res -> return (replace_sheet res new_table)
+    in
+    match jtype with
+    | Full _ -> join table1 table2 >>= fun new_table -> return new_table
+    | Inner expr -> run table1 table2 expr >>= fun res -> return res
+    | Left expr ->
+      run table1 table2 expr
+      >>= fun gen_table ->
+      return
+        (Table.join
+           (Table.sub_width
+              gen_table
+              (Table.row_length table1)
+              (Table.row_length gen_table))
+           table2)
+    | Right expr ->
+      run table1 table2 expr
+      >>= fun gen_table ->
+      return (Table.join table1 (Table.sub_width gen_table 0 (Table.row_length table1)))
+  ;;
+
+  let exec_restrict (table : Table.t) (expr : expr) =
+    update_column_indexes table expr
+    >>= fun expr ->
+    exec_expr table.data expr
+    >>= fun res -> return { Table.data = Array.of_list res; Table.meta = table.meta }
+  ;;
+
+  let exec_project (table : Table.t) (cols : expr list) =
+    let expr_to_col = function
+      | Col x -> return x
+      | x -> fail (UnknownColumn (show_expr x))
+    in
+    let to_cols_list table cols =
+      M.all
+        (List.map
+           (fun el -> update_column_indexes table el >>= fun expr -> expr_to_col expr)
+           cols)
+    in
+    let rec helper (acc_table : Table.t) cols table =
+      match cols with
+      | [] -> return acc_table
+      | hd :: tl -> helper (Table.join acc_table (Table.sub_width table hd 1)) tl table
+    in
+    to_cols_list table cols
+    >>= fun cols ->
+    helper (Table.empty (Table.column_length table)) (List.map (fun el -> el.column_index) cols) table
+    >>= fun res_table -> return res_table
+  ;;
+
+  let rec execute node =
+    match node with
+    | Load table -> return table
+    | Join (left, right, jtype) ->
+      execute left
+      >>= fun left -> execute right >>= fun right -> exec_join left right jtype
+    | Restrict (node, expr) -> execute node >>= fun table -> exec_restrict table expr
+    | Project (node, exprs) -> execute node >>= fun table -> exec_project table exprs
+  ;;
+
+  let eval (base_folder : string) (request : Ast.request) : (Table.t, error) t =
+    let get_base folder = try return (Environment.load_database folder) with _ -> fail (ReadError base_folder) in
+    let get_node base request = transform_request base request in
+    get_base base_folder
+    >>= fun base -> get_node base request >>= fun node -> execute node
+  ;;
 end

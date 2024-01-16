@@ -20,12 +20,6 @@ let open_file file =
 ;;
 
 let get_csv_channel channel = Csv.of_channel ?separator:(Some ',') channel
-
-let close_channel channel csv_channel =
-  Csv.close_in csv_channel;
-  Base.close_in channel
-;;
-
 let row (rows : Csv.t) i = List.nth rows i
 let rows_after (rows : Csv.t) i = List.filteri (fun id _ -> id > i) rows
 
@@ -44,7 +38,6 @@ let to_columns_list ns ts =
   List.map2 init_column ns ts
 ;;
 
-let to_header list = { column_list = list }
 let to_table ~filename ~columns = { table_name = filename; table_header = columns }
 
 (* loads table from file.csv *)
@@ -59,9 +52,8 @@ let load_table file =
   let table =
     to_table
       ~filename:(Filename.basename (Filename.remove_extension file))
-      ~columns:(to_header columns.contents)
+      ~columns:(Array.of_list columns.contents)
   in
-  close_channel file_channel.contents csv_channel.contents;
   { Table.data = sheet; Table.meta = table }
 ;;
 
