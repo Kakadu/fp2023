@@ -113,3 +113,24 @@
   > let answ = eq (1 :: []) (1 :: [])
   "answ": bool
   "eq": '2 . '2 -> '2 -> bool
+  $ ./demoInference.exe << EOF
+  > let rec fix = fun f -> (fun x -> f (fix f) x)
+  > let map = fun f -> (fun (a, b) -> (f a, f b))
+  > let fixpoly = fun l ->
+  >   fix (fun self -> (fun l -> map (fun li -> (fun x -> li (self l) x)) l)) l
+  > let feven = fun (e, o) -> (fun n ->
+  >   if n = 0 then 1 else o (n - 1))
+  > let fodd = fun (e, o) -> (fun n ->
+  >   if n = 0 then 0 else e (n - 1))
+  > let tie = fixpoly (feven, fodd)
+  > let helper = fun (even, odd) -> (odd 1)
+  > let rezult = helper tie
+  > EOF
+  "feven": '27 . '27 * int -> int -> int -> int
+  "fix": '2 '3 . (('2 -> '3) -> '2 -> '3) -> '2 -> '3
+  "fixpoly": '23 '24 . '23 -> '24 * '23 -> '24 -> '23 -> '24 * '23 -> '24 * '23 -> '24 -> '23 -> '24 -> '23 -> '24 * '23 -> '24
+  "fodd": '33 . int -> int * '33 -> int -> int
+  "helper": '42 '44 . '42 * int -> '44 -> '44
+  "map": '7 '9 . ('7 -> '9) -> '7 * '7 -> '9 * '9
+  "rezult": int
+  "tie": int -> int * int -> int

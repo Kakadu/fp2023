@@ -37,7 +37,7 @@ type decl_name =
   | UName of string (* Number *)
 [@@deriving eq, show { with_path = false }]
 
-(* It is used to denote the type of an algebraic type constructor
+(* decl_type is used to denote the type of an algebraic type constructor
    example: type node = | Red of int | Black of int
    (DType
    ((LName "node"),

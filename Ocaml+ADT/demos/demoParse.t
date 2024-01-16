@@ -221,3 +221,93 @@
            (EApp ((EVar (LName "eq")), (EBinop (Cons, (EInt 1), EEmptyList)))),
            (EBinop (Cons, (EInt 1), EEmptyList))))))
     ]
+  $ ./demoParse.exe << EOF
+  > let rec fix = fun f -> (fun x -> f (fix f) x)
+  > let map = fun f -> (fun (a, b) -> (f a, f b))
+  > let fixpoly = fun l ->
+  >   fix (fun self -> (fun l -> map (fun li -> (fun x -> li (self l) x)) l)) l
+  > let feven = fun (e, o) -> (fun n ->
+  >   if n = 0 then 1 else o (n - 1))
+  > let fodd = fun (e, o) -> (fun n ->
+  >   if n = 0 then 0 else e (n - 1))
+  > let tie = fixpoly (feven, fodd)
+  > let helper = fun (even, odd) -> (odd 1)
+  > let rezult = helper tie
+  > EOF
+  [(DLet
+      ((DRec true), (LName "fix"),
+       (EFun ((PVar (LName "f")),
+          (EFun ((PVar (LName "x")),
+             (EApp (
+                (EApp ((EVar (LName "f")),
+                   (EApp ((EVar (LName "fix")), (EVar (LName "f")))))),
+                (EVar (LName "x"))))
+             ))
+          ))));
+    (DLet
+       ((DRec false), (LName "map"),
+        (EFun ((PVar (LName "f")),
+           (EFun ((PTuple [(PVar (LName "a")); (PVar (LName "b"))]),
+              (ETuple
+                 [(EApp ((EVar (LName "f")), (EVar (LName "a"))));
+                   (EApp ((EVar (LName "f")), (EVar (LName "b"))))])
+              ))
+           ))));
+    (DLet
+       ((DRec false), (LName "fixpoly"),
+        (EFun ((PVar (LName "l")),
+           (EApp (
+              (EApp ((EVar (LName "fix")),
+                 (EFun ((PVar (LName "self")),
+                    (EFun ((PVar (LName "l")),
+                       (EApp (
+                          (EApp ((EVar (LName "map")),
+                             (EFun ((PVar (LName "li")),
+                                (EFun ((PVar (LName "x")),
+                                   (EApp (
+                                      (EApp ((EVar (LName "li")),
+                                         (EApp ((EVar (LName "self")),
+                                            (EVar (LName "l"))))
+                                         )),
+                                      (EVar (LName "x"))))
+                                   ))
+                                ))
+                             )),
+                          (EVar (LName "l"))))
+                       ))
+                    ))
+                 )),
+              (EVar (LName "l"))))
+           ))));
+    (DLet
+       ((DRec false), (LName "feven"),
+        (EFun ((PTuple [(PVar (LName "e")); (PVar (LName "o"))]),
+           (EFun ((PVar (LName "n")),
+              (EIf ((EBinop (Eq, (EVar (LName "n")), (EInt 0))), (EInt 1),
+                 (EApp ((EVar (LName "o")),
+                    (EBinop (Sub, (EVar (LName "n")), (EInt 1)))))
+                 ))
+              ))
+           ))));
+    (DLet
+       ((DRec false), (LName "fodd"),
+        (EFun ((PTuple [(PVar (LName "e")); (PVar (LName "o"))]),
+           (EFun ((PVar (LName "n")),
+              (EIf ((EBinop (Eq, (EVar (LName "n")), (EInt 0))), (EInt 0),
+                 (EApp ((EVar (LName "e")),
+                    (EBinop (Sub, (EVar (LName "n")), (EInt 1)))))
+                 ))
+              ))
+           ))));
+    (DLet
+       ((DRec false), (LName "tie"),
+        (EApp ((EVar (LName "fixpoly")),
+           (ETuple [(EVar (LName "feven")); (EVar (LName "fodd"))])))));
+    (DLet
+       ((DRec false), (LName "helper"),
+        (EFun ((PTuple [(PVar (LName "even")); (PVar (LName "odd"))]),
+           (EApp ((EVar (LName "odd")), (EInt 1)))))));
+    (DLet
+       ((DRec false), (LName "rezult"),
+        (EApp ((EVar (LName "helper")), (EVar (LName "tie"))))))
+    ]

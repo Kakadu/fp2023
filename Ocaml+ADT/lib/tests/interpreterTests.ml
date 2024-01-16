@@ -20,7 +20,7 @@ let parse_and_interpret_result str =
 (* tests *)
 let%expect_test _ =
   let _ = parse_and_interpret_result {| let n = 5 |} in
-  [%expect {| "n": int = VInt 5 |}]
+  [%expect {| "n": int = 5 |}]
 ;;
 
 let%expect_test _ =
@@ -81,9 +81,9 @@ let%expect_test _ =
   in
   [%expect
     {|
-    "a": int = VInt 120
-    "b": int = VInt 720
-    "factorial_recursive": int -> int = <let rec> |}]
+    "a": int = 120
+    "b": int = 720
+    "factorial_recursive": int -> int = <rec fun> |}]
 ;;
 
 let%expect_test _ =
@@ -95,14 +95,14 @@ let%expect_test _ =
   in
   [%expect
     {|
-    "a": int = VInt 120
+    "a": int = 120
     "fac": int -> int = <fun>
-    "fix": '2 '3 . (('2 -> '3) -> '2 -> '3) -> '2 -> '3 = <let rec> |}]
+    "fix": '2 '3 . (('2 -> '3) -> '2 -> '3) -> '2 -> '3 = <rec fun> |}]
 ;;
 
 let%expect_test _ =
   let _ = parse_and_interpret_result {| let rec n = 5 |} in
-  [%expect {| "n": int = VInt 5 |}]
+  [%expect {| "n": int = 5 |}]
 ;;
 
 let%expect_test _ =
@@ -112,7 +112,7 @@ let%expect_test _ =
          let f = n 7 |}
   in
   [%expect {|
-    "f": int = VInt 12
+    "f": int = 12
     "n": int -> int = <fun> |}]
 ;;
 
@@ -123,7 +123,7 @@ let%expect_test _ =
          let f = n 7 |}
   in
   [%expect {|
-    "f": int = VInt 3
+    "f": int = 3
     "n": int -> int = <fun>  |}]
 ;;
 
@@ -134,7 +134,7 @@ let%expect_test _ =
          let f = n 100 |}
   in
   [%expect {|
-    "f": int = VInt 5
+    "f": int = 5
     "n": int -> int = <fun> |}]
 ;;
 
@@ -191,8 +191,8 @@ let%expect_test _ =
   [%expect
     {|
     "h": '0 . '0 list -> '0 = <fun>
-    "m": int list = [VInt 5; VInt 6]
-    "n": int = VInt 4
+    "m": int list = [5; 6]
+    "n": int = 4
     "tl": '2 . '2 list -> '2 list = <fun> |}]
 ;;
 
@@ -208,10 +208,10 @@ let%expect_test _ =
   in
   [%expect
     {|
-    "k": int = VInt 40
-    "m": int = VInt -1
+    "k": int = 40
+    "m": int = -1
     "mul": int * int -> int = <fun>
-    "n": int = VInt 9
+    "n": int = 9
     "sub": int * int -> int = <fun>
     "sum": int * int -> int = <fun> |}]
 ;;
@@ -229,8 +229,8 @@ let%expect_test _ =
     {|
       type me = | Tepa of int
       "h": '0 . '0 list -> '0 = <fun>
-      "m": me list = [Tepa VInt 45; Tepa VInt 44]
-      "n": me = Tepa VInt 46
+      "m": me list = [Tepa 45; Tepa 44]
+      "n": me = Tepa 46
       "tl": '2 . '2 list -> '2 list = <fun> |}]
 ;;
 
@@ -310,8 +310,8 @@ let%expect_test _ =
     {|
       type me = | Tepa of int
       "h": me list -> int = <fun>
-      "m": me list = [Tepa VInt 45; Tepa VInt 44]
-      "n": int = VInt 46
+      "m": me list = [Tepa 45; Tepa 44]
+      "n": int = 46
       "tl": '2 . '2 list -> '2 list = <fun> |}]
 ;;
 
@@ -346,9 +346,9 @@ let%expect_test _ =
       type color = | Red | Black
       type rbtree = | Node of color * int * rbtree * rbtree | Empty
       "is_member": bool = true
-      "member": int -> rbtree -> bool = <let rec>
-      "node": rbtree = Node (Black, VInt 5, Node (Red, VInt 4, Node (Black, VInt 3, Empty, Empty), Empty), Node (Red, VInt 10, Empty, Empty))
-      "node_left": rbtree = Node (Red, VInt 4, Node (Black, VInt 3, Empty, Empty), Empty)
-      "node_left_left": rbtree = Node (Black, VInt 3, Empty, Empty)
-      "node_right": rbtree = Node (Red, VInt 10, Empty, Empty) |}]
+      "member": int -> rbtree -> bool = <rec fun>
+      "node": rbtree = Node (Black, 5, Node (Red, 4, Node (Black, 3, Empty, Empty), Empty), Node (Red, 10, Empty, Empty))
+      "node_left": rbtree = Node (Red, 4, Node (Black, 3, Empty, Empty), Empty)
+      "node_left_left": rbtree = Node (Black, 3, Empty, Empty)
+      "node_right": rbtree = Node (Red, 10, Empty, Empty) |}]
 ;;

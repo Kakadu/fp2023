@@ -38,7 +38,7 @@ and pp_value_tuple fmt = function
   | h :: tl -> fprintf fmt "%a, %a" pp_value h pp_value_tuple tl
 
 and pp_value fmt = function
-  | VInt num -> fprintf fmt "VInt %d" num
+  | VInt num -> fprintf fmt "%d" num
   | VString str -> fprintf fmt "%S" str
   | VBool bool -> fprintf fmt "%b" bool
   | VList lst -> fprintf fmt "[%a]" pp_value_list lst
@@ -46,7 +46,7 @@ and pp_value fmt = function
   | VAdt (type_name, Some type_value) -> fprintf fmt "%s %a" type_name pp_value type_value
   | VAdt (type_name, None) -> fprintf fmt "%s" type_name
   | VFun (_, _, _) -> fprintf fmt "<fun>"
-  | VLetRec (_, _) -> fprintf fmt "<let rec>"
+  | VLetRec (_, _) -> fprintf fmt "<rec fun>"
 ;;
 
 let pp_env fmt (environment : env) =
