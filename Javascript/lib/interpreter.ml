@@ -140,7 +140,7 @@ let rec print_vvalues ctx ?(str_quote = false) = function
             print_vvalues ctx x.value ~str_quote:true >>| ( ^ ) (" " ^ x.var_id ^ ": "))
           obj.fields
       in
-      let fields_empty = List.length fields = 0 in
+      let fields_empty = List.is_empty fields in
       if is_array obj
       then
         let+ array =
@@ -149,7 +149,7 @@ let rec print_vvalues ctx ?(str_quote = false) = function
             | Some x -> print_vvalues ctx ~str_quote:true x >>| ( ^ ) " "
             | None -> return "")
         in
-        if List.length array = 0 && fields_empty
+        if List.is_empty array && fields_empty
         then "[]"
         else
           asprintf
