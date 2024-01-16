@@ -234,7 +234,7 @@ let catch_eval ad e_stm l_env_l = function
             | _ -> fail (Runtime_error "Using normal class as an exception"))
          | _ -> return_n None)
     in
-    fold_left f None catch_l *> return_n ()
+    fold_left f None catch_l >>= function | Some _ -> return_n () | None -> return_e ad
 ;;
 
 let eval_try_catch_fin e_stm l_env_l try_ catch_ fin_ =
@@ -320,11 +320,10 @@ let interpret_ genv cl_id =
         (match cl_id with
          | Code_ident id when equal_ident id main_cl_id -> Some acc
          | Code_ident id ->
-           find_cl_meth id cl_decl
-           |> fun x ->
-           (match x with
+           find_cl_meth id cl_decl |>
+           function
             | None -> None
-            | Some constr -> Some (IdentMap.add id (ICode constr) acc)))
+            | Some constr -> Some (IdentMap.add id (ICode constr) acc))
     in
     CodeMap.fold f genv (Some local_env)
   in

@@ -604,14 +604,54 @@ let%expect_test "Run void_method" =
   [%expect {| Result: (Init (Int_v 1)) |}]
 ;;
 
-let%expect_test "Run void_method-" =
+let%expect_test "Just save information" =
   let s =
     {| 
       class Program
       {
         static void Main(){
-          FileInfo fl = new FileInfo("my.txt");
+          FileInfo fl = new FileInfo("../../../../my.txt");
+          fl.AppendAllText("I fucked it");
+          fl.CloseFile();
           return;
+        }
+      }
+    |}
+  in
+  interpret_wrap s;
+  [%expect {| Result: (Init (Int_v 1)) |}]
+;;
+
+let%expect_test "What" =
+  let s =
+    {| 
+      class A1 : Exception
+      {
+        public string msg;
+        A1(string msg_){
+          msg = msg_;
+        }
+      }
+
+      class Program
+      {
+        static int Main(){
+          FileInfo fl = new FileInfo("../../../../my.txt");
+          int a = 0;
+          try 
+          {
+            throw new A1("the win?");
+          } 
+          catch (A1 e) when (e.msg == "the win?") 
+          {
+            a = 2;
+          } finally {
+            a = 3;
+          }
+          if(a == 3){
+            fl.AppendAllText("No no no, not now");
+          }
+          return 1;
         }
       }
     |}

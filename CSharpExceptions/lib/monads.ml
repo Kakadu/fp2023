@@ -241,9 +241,13 @@ module Eval_Monad = struct
     | Error _ -> a2 st
   ;;
 
+  let init_sys_mem = 
+    let empt = Sys_Map.empty in
+    Sys_Map.add Fl_descriptors (Files (i_ln 0, Intern_Mem.empty)) empt
+
   let run : 'c CodeMap.t -> ('a, 'b) t -> ctx_env * ('a, 'b, error) eval_t =
     fun glenv f ->
-    f (glenv, (ln (-1), [ IdentMap.empty ]), (ln 0, MemMap.empty), Sys_Map.empty)
+    f (glenv, (ln (-1), [ IdentMap.empty ]), (ln 0, MemMap.empty), init_sys_mem)
   ;;
 
   let save : ctx_env -> (unit, 'b) t = fun new_ctx _ -> new_ctx, nsig ()
@@ -381,7 +385,7 @@ module Eval_Monad = struct
 
   let read_inst_meth id ad =
     read_instance ad
-    >>= fun (cl_id, _) ->
+    >>= fun (cl_id, _) -> (Format.printf "%a@\n" pp_code_ident cl_id) |> fun _ ->  
     read_global_method cl_id id
     >>= function
     | Some x -> return_n (to_code x)
@@ -580,8 +584,7 @@ module Eval_Monad = struct
 
   let run_method
     :  meth_type -> ident list -> t_env_value list -> address
-    -> t_env_value IdentMap.t list -> (('a, 'c) t)
-    -> ('c option, 'd) t
+    -> t_env_value IdentMap.t list -> ('a, 'c) t -> ('c option, 'd) t
     =
     fun return_tp params args ad base_lenv f ->
     let run_f =

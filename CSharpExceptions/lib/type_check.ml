@@ -228,7 +228,7 @@ let check_invoke f e_expr e args =
   in
   let is_EPoint_acc = function
     | EPoint_access (e1, e2) -> check_point_acc e1 e2
-    | _ -> fail Type_mismatch
+    | _ -> fail Type_mismatch (*TODO: here*)
   in
   is_Eident e
   <|> is_EPoint_acc e
@@ -580,27 +580,28 @@ let class_check cl_decl =
   >>= fun x -> add_class x *> (local_scope @@ (add_members *> iter_left helper cl_mems))
 ;;
 
-let run_with_base_exception =
-  let cd = CodeMap.empty in
-  match Base_lib.exception_decl with
-  | Some second ->
-    let hm = CodeMap.add (Code_ident Base_lib.exception_name) (Exception_ctx second) cd in
-    continue (return ()) (hm, IdentMap.empty, None, None)
-  | _ -> run (fail (Other_error "Base_lib Not connected"))
-;;
-
 let type_check_ ast =
   let (Ast ast) = ast in
   let type_checker_ = iter_left class_check ast in
-  match run_with_base_exception with
-  | (ctx, _, _, _), Result.Ok _ ->
-    let add_exception_constr =
-      add_local
-        Base_lib.exception_name
-        (Constructor_sig (default_cons Base_lib.exception_name))
+  continue type_checker_ (CodeMap.empty, IdentMap.empty, None, None)
+;;
+
+let update_local lib =
+  let f el =
+    let get_const_opt =
+      List.find_opt
+        (function
+         | Constructor (_, _) -> true
+         | _ -> false)
+        el.cl_mems
     in
-    continue (add_exception_constr *> type_checker_) (ctx, IdentMap.empty, None, None)
-  | _, Result.Error info -> run (fail info)
+    get_const_opt
+    |> function
+    | Some (Constructor (sign, _)) -> add_local sign.con_id (Constructor_sig sign)
+    | None -> add_local el.cl_id (Constructor_sig (default_cons el.cl_id))
+    | _ -> fail (Other_error "Impossible case")
+  in
+  iter_left f lib
 ;;
 
 let type_check ast =
@@ -608,17 +609,19 @@ let type_check ast =
   let type_checker_ = iter_left class_check ast in
   let lib_ctx =
     match Base_lib.base_lib_decl with
-    | Some lib -> type_check_ lib
-    | None -> run (fail (Other_error "Base_lib Not connected"))
+    | Some (Ast lib) -> type_check_ (Ast lib), lib
+    | None -> run (fail (Other_error "Base_lib Not connected")), []
   in
   match lib_ctx with
-  | _, Result.Error info -> run (fail info)
-  | (ctx, _, _, _), Result.Ok _ ->
+  | (_, Result.Error info), _ -> run (fail info)
+  | ((ctx, _, _, _), Result.Ok _), lib ->
     continue
-      (add_local
+    
+      (* add_local
          Base_lib.exception_name
          (Constructor_sig (default_cons Base_lib.exception_name))
-       *> type_checker_)
+         *> *)
+      (update_local lib *>type_checker_)
       (ctx, IdentMap.empty, None, None)
 ;;
 

@@ -35,11 +35,12 @@ module File_Info = struct
       >>= fun info ->
       match Sys_Map.find_opt Fl_descriptors info with
       | Some (Files (id, info)) -> return_n (id, info)
-      | _ -> fail (System_error "The file was not opened for writing")
+      | _ -> fail (System_error "The file was not opened for writing!!")
     ;;
 
     let save_fl_descriptors new_discrs =
-      read_smem >>| fun info -> Sys_Map.add Fl_descriptors new_discrs info |> fun _ -> ()
+      read_smem
+      >>= fun info -> return_n (Sys_Map.add Fl_descriptors new_discrs info) >>= save_smem
     ;;
 
     let read_out_channel i_ad =
@@ -54,6 +55,7 @@ module File_Info = struct
       read_fl_descriptors
       >>= fun (i_ad, info) ->
       save_fl_descriptors (Files (i_incr_ i_ad, Intern_Mem.add i_ad (W_File oc) info))
+      *> return_n i_ad
     ;;
 
     let read_out_channel_from_self intern_fild_name =
@@ -107,7 +109,11 @@ module File_Info = struct
 
     module After_constructor_handler = struct
       let run ad =
-        read_inst_el path ad >>= get_string >>= Open_file.run >>= append_out_channel
+        read_inst_el path ad
+        >>= get_string
+        >>= Open_file.run
+        >>= append_out_channel
+        >>= fun (ILink x) -> ret_int x >>= update_instance_el internal_address_name ad
       ;;
     end
   end
@@ -137,10 +143,9 @@ module File_Info = struct
               Opened = true;
             }
             
-            void CloseFile() {}
+            public void CloseFile() {}
             
-            void AppendAllText(string info) {}
-            
+            public void AppendAllText(string info) {}
             } 
             |}
       in
@@ -194,7 +199,7 @@ let exception_decl =
 ;;
 
 let base_lib_decl =
-  let base_lib_decl_ = [ File_Info.Declaration.decl_ast ] in
+  let base_lib_decl_ = [ File_Info.Declaration.decl_ast; exception_decl ] in
   let f acc = function
     | Some x -> x :: acc
     | None -> acc
