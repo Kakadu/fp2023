@@ -471,7 +471,8 @@ let%expect_test "Nested try_catch_fin " =
     |}
   in
   interpret_wrap s;
-  [%expect {| Result: (Init (Int_v 101)) |}]
+  [%expect {|
+    Result: (Init (Int_v 101)) |}]
 ;;
 
 let%expect_test "While" =
@@ -619,7 +620,7 @@ let%expect_test "Just save information" =
     |}
   in
   interpret_wrap s;
-  [%expect {| Result: (Init (Int_v 1)) |}]
+  [%expect {| Interpreter success |}]
 ;;
 
 let%expect_test "What" =
@@ -637,27 +638,32 @@ let%expect_test "What" =
       {
         static int Main(){
           FileInfo fl = new FileInfo("../../../../my.txt");
+          A1 f = new A1("");
+          A1 h = new A1("");
           int a = 0;
           try 
           {
             throw new A1("the win?");
           } 
-          catch (A1 e) when (e.msg == "the win?") 
+          catch (A1 e) when (e.msg == "bluati")
+          {
+            a = 1;
+            fl.AppendAllText("shit228");
+          }
+          catch (A1 e) when (e.msg == "the win?")
           {
             a = 2;
+            fl.AppendAllText("shit");
           } finally {
-            a = 3;
+            fl.CloseFile();
           }
-          if(a == 3){
-            fl.AppendAllText("No no no, not now");
-          }
-          return 1;
+          return a;
         }
       }
     |}
   in
   interpret_wrap s;
-  [%expect {| Result: (Init (Int_v 1)) |}]
+  [%expect {| Result: (Init (Int_v 2)) |}]
 ;;
 
 (* ******************** Negative ******************** *)

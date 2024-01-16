@@ -105,12 +105,12 @@ let eval_un_op un_op res lenv_kernel e_stm e_expr =
 ;;
 
 let eval_bin_op op e1 e2 e_expr l_env_l =
-  let _op get_ op_t =
+  let op_ get_ op_t =
     let res = lift2 (fun r1 r2 -> r1, r2) (e_expr e1 >>= get_) (e_expr e2 >>= get_) in
     res >>= fun (r1, r2) -> op_t r1 r2
   in
   (* int *)
-  let int_op op_t = _op get_int op_t in
+  let int_op op_t = op_ get_int op_t in
   let int_f op r1 r2 = return_n (op r1 r2) >>= ret_int in
   (* bool *)
   let bool_f op r1 r2 = return_n (op r1 r2) >>= ret_bool in
@@ -119,7 +119,7 @@ let eval_bin_op op e1 e2 e_expr l_env_l =
     | 0 -> fail Division_by_zero
     | r2 -> return_n (op r1 r2) >>= ret_int
   in
-  let eq_op op_t = _op (fun x -> is_v x) op_t in
+  let eq_op op_t = op_ (fun x -> is_v x) op_t in
   let eq_f op r1 r2 = return_n (op r1 r2) >>= ret_bool in
   let lazy_ f get_ = e_expr e1 >>= get_ >>= f (e_expr e1 >>= get_) in
   (* --- *)
@@ -130,15 +130,13 @@ let eval_bin_op op e1 e2 e_expr l_env_l =
   | Mod -> int_op (div_f ( mod ))
   | Division -> int_op (div_f ( / ))
   | And ->
-    let op_and f r1 =
-      match r1 with
+    let op_and f = function
       | false -> return_n false
       | true -> f
     in
     lazy_ op_and get_bool >>= ret_bool
   | Or ->
-    let op_or f r1 =
-      match r1 with
+    let op_or f = function
       | true -> return_n true
       | false -> f
     in
@@ -234,7 +232,10 @@ let catch_eval ad e_stm l_env_l = function
             | _ -> fail (Runtime_error "Using normal class as an exception"))
          | _ -> return_n None)
     in
-    fold_left f None catch_l >>= function | Some _ -> return_n () | None -> return_e ad
+    fold_left f None catch_l
+    >>= (function
+    | Some _ -> return_n ()
+    | None -> return_e ad)
 ;;
 
 let eval_try_catch_fin e_stm l_env_l try_ catch_ fin_ =
@@ -313,17 +314,16 @@ let interpret_ genv cl_id =
   let (Code_ident main_cl_id) = cl_id in
   let local_env = IdentMap.empty in
   let lenv_with_constructors =
-    let f cl_id cl_decl acc_opt =
-      match acc_opt with
+    let f cl_id cl_decl = function
       | None -> None
       | Some acc ->
         (match cl_id with
          | Code_ident id when equal_ident id main_cl_id -> Some acc
          | Code_ident id ->
-           find_cl_meth id cl_decl |>
-           function
-            | None -> None
-            | Some constr -> Some (IdentMap.add id (ICode constr) acc))
+           find_cl_meth id cl_decl
+           |> (function
+           | None -> None
+           | Some constr -> Some (IdentMap.add id (ICode constr) acc)))
     in
     CodeMap.fold f genv (Some local_env)
   in

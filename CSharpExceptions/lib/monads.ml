@@ -91,9 +91,7 @@ module Type_check_Monad = struct
   type ctx_env = type_check_ctx
   type 'a t = ctx_env -> ctx_env * ('a, error) Result.t
 
-  let choice : 'a t list -> 'a t =
-    fun l ->
-    match l with
+  let choice : 'a t list -> 'a t = function
     | [] -> fail (Other_error "Empty choice\n")
     | h :: tl -> List.fold_left ( <|> ) h tl
   ;;
@@ -170,16 +168,12 @@ module Type_check_Monad = struct
     fun id c_env -> (read_global_el id >>| (fun x -> Some x) <|> return None) c_env
   ;;
 
-  let read_scope_tp : meth_type option t =
-    fun st ->
-    match st with
-    | _, _, scope_tp, _ -> (return scope_tp) st
+  let read_scope_tp : meth_type option t = function
+    | t, l, scope_tp, c -> (return scope_tp) (t, l, scope_tp, c)
   ;;
 
-  let read_main_ctx : code_ident option t =
-    fun st ->
-    let _, _, _, id = st in
-    (return id) st
+  let read_main_ctx : code_ident option t = function
+    | t, l, m, id -> (return id) (t, l, m, id)
   ;;
 end
 
@@ -241,9 +235,10 @@ module Eval_Monad = struct
     | Error _ -> a2 st
   ;;
 
-  let init_sys_mem = 
+  let init_sys_mem =
     let empt = Sys_Map.empty in
     Sys_Map.add Fl_descriptors (Files (i_ln 0, Intern_Mem.empty)) empt
+  ;;
 
   let run : 'c CodeMap.t -> ('a, 'b) t -> ctx_env * ('a, 'b, error) eval_t =
     fun glenv f ->
@@ -368,7 +363,7 @@ module Eval_Monad = struct
   ;;
 
   let save_instance ad mem_el =
-    read_mem >>= fun (_, mem) -> save_mem (ad, MemMap.add ad mem_el mem)
+    read_mem >>= fun (x, mem) -> save_mem (x, MemMap.add ad mem_el mem)
   ;;
 
   let read_inst_cl ad = read_instance ad >>= fun (cl_id, _) -> return_n cl_id
@@ -378,14 +373,14 @@ module Eval_Monad = struct
     >>= fun (_, el) ->
     match IdentMap.find_opt id el with
     | Some x -> return_n x
-    | None -> fail (Not_find_ident_of id)
+    | None -> fail (Runtime_error "Non-existent id")
   ;;
 
   let read_inst_el id ad = read_inst_el id ad >>| fun (v, _) -> v
 
   let read_inst_meth id ad =
     read_instance ad
-    >>= fun (cl_id, _) -> (Format.printf "%a@\n" pp_code_ident cl_id) |> fun _ ->  
+    >>= fun (cl_id, _) ->
     read_global_method cl_id id
     >>= function
     | Some x -> return_n (to_code x)
@@ -393,7 +388,7 @@ module Eval_Monad = struct
   ;;
 
   let update_instance_el id ad v =
-    read_instance ad
+    return_n () *> read_instance ad
     >>= fun (cl_id, el) ->
     match IdentMap.find_opt id el with
     | Some (_, sign) ->
@@ -419,7 +414,6 @@ module Eval_Monad = struct
   let read_local = read >>| fun (_, l_env_l, _, _) -> l_env_l
 
   let find_local_ id l_env_l =
-    (* >< TODO: фолдлевт по списку всех окружений *)
     let f acc x =
       match acc with
       | Some x -> Some x
@@ -512,14 +506,12 @@ module Eval_Monad = struct
   let local f =
     read_local
     >>= fun (ad, l_env_l) ->
-    (* TODO: добавить в начало списка новую мапу в начала списка *)
     let return_env =
       read_local
       >>= function
       | _, [] -> fail (Runtime_error "--|--")
       | ad, _ :: tl -> save_local (ad, tl)
     in
-    (* let return_env = save_local (ad, l_env_l) in *)
     let new_l_env_l = save_local (ad, IdentMap.empty :: l_env_l) in
     (new_l_env_l *> f)
     @!|>>= function
@@ -569,14 +561,15 @@ module Eval_Monad = struct
     | Exn ad ->
       let restore_old_mem_and_lenvl =
         let save_old_mem_with_exn el =
-          let ad, mem = old_mem in
-          save_mem (incr_ ad, mem) *> save_instance ad el
+          let ad_, mem = old_mem in
+          save_mem (incr_ ad_, mem) *> read_mem
+          >>= fun (x, mem) -> save_mem (x, MemMap.add ad_ el mem) *> return_n ad_
         in
         read_instance ad
         >>= fun mem_el -> save_local old_l_env_l *> save_old_mem_with_exn mem_el
       in
-      restore_old_mem_and_lenvl *> cf_new ad
-    | Next x -> return_n x
+      restore_old_mem_and_lenvl >>= cf_new
+    | Next x -> ff_new *> return_n x
     | Break -> ff_new *> fail (Interpreter_error "Attempt to use break with try")
     | Return x -> ff_new *> return_r x
     | Error err -> ff_new *> fail err
