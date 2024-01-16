@@ -330,7 +330,7 @@
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-<span data-count="32">t</span>ype binop =
+<span data-count="36">t</span>ype binop =
   <span data-count="3">|</span> Add (**  +   *)
   <span data-count="4">|</span> Sub (**  -   *)
   <span data-count="4">|</span> Mul (**  * *)
@@ -360,12 +360,12 @@ let bop_and = And
 let bop_or = Or
 let bop_cons = Cons
 
-<span data-count="573">t</span>ype decl_name =
-  <span data-count="342">|</span> LName of strin<span data-count="79">g</span> (* abc, aBc *)
+<span data-count="735">t</span>ype decl_name =
+  <span data-count="342">|</span> LName of strin<span data-count="133">g</span> (* abc, aBc *)
   <span data-count="102">|</span> UName of strin<span data-count="38">g</span> (* Number *)
 [@@deriving eq, show { with_path = false }]
 
-(* It is used to denote the type of an algebraic type constructor
+(* decl_type is used to denote the type of an algebraic type constructor
    example: type node = | Red of int | Black of int
    (DType
    ((LName "node"),
@@ -382,23 +382,23 @@ let bop_cons = Cons
   <span data-count="66">|</span> TTuple of <span data-count="44">d</span>ecl_type lis<span data-count="30">t</span>
 [@@deriving eq, show { with_path = false }<span data-count="72">]</span>
 
-let lname str = <span data-count="1004">L</span>Name str
-let uname str = <span data-count="295">U</span>Name str
-let dtype decl_type = <span data-count="110">D</span>Type decl_type
+let lname str = <span data-count="1185">L</span>Name str
+let uname str = <span data-count="303">U</span>Name str
+let dtype decl_type = <span data-count="112">D</span>Type decl_type
 let temptytype = TEmptyType
 let tint = TInt
 let tstring = TString
 let tbool = TBool
 let tfun decl_type1 decl_type2 = <span data-count="1">T</span>Fun (decl_type1, decl_type2)
 let tvar string = <span data-count="90">T</span>Var string
-let tlist decl_type = <span data-count="91">T</span>List decl_type
-let ttuple decl_type_list = <span data-count="17">T</span>Tuple decl_type_list
+let tlist decl_type = <span data-count="95">T</span>List decl_type
+let ttuple decl_type_list = <span data-count="19">T</span>Tuple decl_type_list
 
-<span data-count="89">t</span>ype decl_rec = <span data-count="88">D</span>Rec of boo<span data-count="15">l</span> [@@deriving eq, show { with_path = false }]
+<span data-count="113">t</span>ype decl_rec = <span data-count="88">D</span>Rec of boo<span data-count="23">l</span> [@@deriving eq, show { with_path = false }]
 
-let drec bool = <span data-count="261">D</span>Rec bool
+let drec bool = <span data-count="291">D</span>Rec bool
 
-<span data-count="143">t</span>ype pattern =
+<span data-count="235">t</span>ype pattern =
   <span data-count="3">|</span> PNill (* [] *)
   <span data-count="4">|</span> PWild (* _ *)
   <span data-count="0">|</span> PString of strin<span data-count="0">g</span>
@@ -406,18 +406,18 @@ let drec bool = <span data-count="261">D</span>Rec bool
   <span data-count="2">|</span> PInt of in<span data-count="0">t</span>
   <span data-count="120">|</span> PVar of decl_nam<span data-count="40">e</span>
   <span data-count="24">|</span> PCons of pattern * patter<span data-count="12">n</span>
-  <span data-count="48">|</span> PTuple of <span data-count="17">p</span>attern lis<span data-count="20">t</span>
+  <span data-count="48">|</span> PTuple of <span data-count="53">p</span>attern lis<span data-count="28">t</span>
   <span data-count="46">|</span> PAdt of decl_name * <span data-count="14">p</span>attern optio<span data-count="21">n</span> (* pattern for ADT types: Tree(_, _) *)
-[@@deriving eq, show { with_path = false }<span data-count="48">]</span>
+[@@deriving eq, show { with_path = false }<span data-count="100">]</span>
 
 let pnill = PNill
 let pwild = PWild
 let pstring str = <span data-count="2">P</span>String str
 let pbool bool = <span data-count="6">P</span>Bool bool
 let pint int = <span data-count="5">P</span>Int int
-let pvar decl_name = <span data-count="197">P</span>Var decl_name
+let pvar decl_name = <span data-count="255">P</span>Var decl_name
 let pcons pattern1 pattern2 = <span data-count="21">P</span>Cons (pattern1, pattern2)
-let ptuple pattern_lst = <span data-count="18">P</span>Tuple pattern_lst
+let ptuple pattern_lst = <span data-count="30">P</span>Tuple pattern_lst
 let padt decl_name pattern = <span data-count="60">P</span>Adt (decl_name, pattern)
 
 (* type_decl is used for creating custom ADT types
@@ -429,16 +429,16 @@ let padt decl_name pattern = <span data-count="60">P</span>Adt (decl_name, patte
 <span data-count="382">t</span>ype type_decl = <span data-count="12">d</span>ecl_name * <span data-count="80">(</span><span data-count="34">d</span>ecl_name * decl_type) lis<span data-count="23">t</span>
 [@@deriving eq, show { with_path = false }<span data-count="219">]</span>
 
-<span data-count="1179">t</span>ype let_decl = <span data-count="30">d</span>ecl_rec * decl_name * decl_exp
+<span data-count="1493">t</span>ype let_decl = <span data-count="46">d</span>ecl_rec * decl_name * decl_exp
 [@@deriving eq, show { with_path = false }]
 
-<span data-count="181">a</span>nd decl_exp =
+<span data-count="292">a</span>nd decl_exp =
   <span data-count="2">|</span> EEmptyList
-  <span data-count="100">|</span> EInt of in<span data-count="15">t</span>
+  <span data-count="100">|</span> EInt of in<span data-count="22">t</span>
   <span data-count="6">|</span> EString of strin<span data-count="0">g</span>
   <span data-count="24">|</span> EBool of boo<span data-count="4">l</span>
   <span data-count="201">|</span> EVar of decl_nam<span data-count="67">e</span>
-  <span data-count="158">|</span> ETuple of <span data-count="77">d</span>ecl_exp lis<span data-count="70">t</span>
+  <span data-count="158">|</span> ETuple of <span data-count="95">d</span>ecl_exp lis<span data-count="74">t</span>
   <span data-count="189">|</span> EBinop of binop * decl_exp * decl_ex<span data-count="105">p</span>
   <span data-count="168">|</span> EFun of pattern * decl_ex<span data-count="84">p</span> (* fun n -&gt; n + 1 *)
   <span data-count="138">|</span> EConstr of decl_name * <span data-count="46">d</span>ecl_exp optio<span data-count="66">n</span>
@@ -446,30 +446,30 @@ let padt decl_name pattern = <span data-count="60">P</span>Adt (decl_name, patte
   <span data-count="168">|</span> EApp of decl_exp * decl_ex<span data-count="84">p</span>
   <span data-count="166">|</span> EMatch of decl_exp * <span data-count="20">(</span><span data-count="8">p</span>attern * decl_exp) lis<span data-count="72">t</span>
   <span data-count="90">|</span> EIf of decl_exp * decl_exp * decl_ex<span data-count="50">p</span>
-[@@deriving eq, show { with_path = false }<span data-count="773">]</span>
+[@@deriving eq, show { with_path = false }<span data-count="1104">]</span>
 
-<span data-count="136">t</span>ype decl =
+<span data-count="168">t</span>ype decl =
   <span data-count="123">|</span> DLet of let_dec<span data-count="41">l</span>
   <span data-count="33">|</span> DType of type_dec<span data-count="11">l</span>
-[@@deriving eq, show { with_path = false }<span data-count="42">]</span>
+[@@deriving eq, show { with_path = false }<span data-count="58">]</span>
 
 let eemptylist = EEmptyList
-let eint num = <span data-count="243">E</span>Int num
-let estring str = <span data-count="19">E</span>String str
+let eint num = <span data-count="274">E</span>Int num
+let estring str = <span data-count="25">E</span>String str
 let ebool bool = <span data-count="79">E</span>Bool bool
-let evar var = <span data-count="405">E</span>Var var
-let etuple decl_exp_list = <span data-count="45">E</span>Tuple decl_exp_list
-let ebinop binop decl_exp1 decl_exp2 = <span data-count="162">E</span>Binop (binop, decl_exp1, decl_exp2)
-let efun pattern decl_exp = <span data-count="133">E</span>Fun (pattern, decl_exp)
-let econstr decl_name decl_exp = <span data-count="152">E</span>Constr (decl_name, decl_exp)
+let evar var = <span data-count="497">E</span>Var var
+let etuple decl_exp_list = <span data-count="57">E</span>Tuple decl_exp_list
+let ebinop binop decl_exp1 decl_exp2 = <span data-count="180">E</span>Binop (binop, decl_exp1, decl_exp2)
+let efun pattern decl_exp = <span data-count="179">E</span>Fun (pattern, decl_exp)
+let econstr decl_name decl_exp = <span data-count="158">E</span>Constr (decl_name, decl_exp)
 let elet let_decl decl_exp = <span data-count="8">E</span>Let (let_decl, decl_exp)
-let eapp decl_exp1 decl_exp2 = <span data-count="187">E</span>App (decl_exp1, decl_exp2)
+let eapp decl_exp1 decl_exp2 = <span data-count="246">E</span>App (decl_exp1, decl_exp2)
 let ematch decl_exp lst = <span data-count="33">E</span>Match (decl_exp, lst)
-let eif decl_exp1 decl_exp2 decl_exp3 = <span data-count="35">E</span>If (decl_exp1, decl_exp2, decl_exp3)
-let decllet bool decl_name decl_exp = <span data-count="252">D</span>Let (bool, decl_name, decl_exp)
-let decltype decl_name lst = <span data-count="51">D</span>Type (decl_name, lst)
+let eif decl_exp1 decl_exp2 decl_exp3 = <span data-count="41">E</span>If (decl_exp1, decl_exp2, decl_exp3)
+let decllet bool decl_name decl_exp = <span data-count="282">D</span>Let (bool, decl_name, decl_exp)
+let decltype decl_name lst = <span data-count="52">D</span>Type (decl_name, lst)
 
-<span data-count="21">t</span>ype program = <span data-count="90">d</span>ecl lis<span data-count="21">t</span> [@@deriving eq, show { with_path = false }<span data-count="42">]</span>
+<span data-count="29">t</span>ype program = <span data-count="123">d</span>ecl lis<span data-count="29">t</span> [@@deriving eq, show { with_path = false }<span data-count="58">]</span>
 </code></pre>
       </div>
     </div>

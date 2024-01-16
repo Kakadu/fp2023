@@ -69,11 +69,11 @@ open Ocamladt_lib
 
 let () =
   let s = Stdio.In_channel.input_all Stdlib.stdin in
-  <span data-count="11">m</span>atch Parser.parse s with
-  | <span data-count="11">O</span>k parse_result -&gt;
+  <span data-count="12">m</span>atch Parser.parse s with
+  | <span data-count="12">O</span>k parse_result -&gt;
     (match Inferencer.run_infer_program parse_result with
-     | <span data-count="11">O</span>k (adt_env, env) -&gt;
-       Format.print<span data-count="11">f</span> "%a%a" Inferencer.AdtEnv.pp_env adt_env Inferencer.TypeEnv.pp_env env
+     | <span data-count="12">O</span>k (adt_env, env) -&gt;
+       Format.print<span data-count="12">f</span> "%a%a" Inferencer.AdtEnv.pp_env adt_env Inferencer.TypeEnv.pp_env env
      | <span data-count="0">E</span>rror err -&gt; Format.print<span data-count="0">f</span> "%a" InferencerTypes.pp_inf_err err)
   | <span data-count="0">E</span>rror err -&gt; Format.print<span data-count="0">f</span> "Parsing error: %s\n" err
 ;;

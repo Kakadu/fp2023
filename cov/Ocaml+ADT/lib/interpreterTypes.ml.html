@@ -206,14 +206,14 @@ module StringMap = Map.Make (String)
 
 and env = value StringMap.t [@@deriving eq<span data-count="0">]</span>
 
-let vint num = <span data-count="206">V</span>Int num
-let vstring str = <span data-count="6">V</span>String str
-let vbool bool = <span data-count="84">V</span>Bool bool
-let vlist lst = <span data-count="64">V</span>List lst
-let vtuple tuple = <span data-count="22">V</span>Tuple tuple
-let vadt type_name type_value = <span data-count="62">V</span>Adt (type_name, type_value)
-let vfun pattern decl_exp env = <span data-count="131">V</span>Fun (pattern, decl_exp, env)
-let vletrec let_name let_value = <span data-count="9">V</span>LetRec (let_name, let_value)
+let vint num = <span data-count="222">V</span>Int num
+let vstring str = <span data-count="12">V</span>String str
+let vbool bool = <span data-count="96">V</span>Bool bool
+let vlist lst = <span data-count="70">V</span>List lst
+let vtuple tuple = <span data-count="32">V</span>Tuple tuple
+let vadt type_name type_value = <span data-count="68">V</span>Adt (type_name, type_value)
+let vfun pattern decl_exp env = <span data-count="169">V</span>Fun (pattern, decl_exp, env)
+let vletrec let_name let_value = <span data-count="10">V</span>LetRec (let_name, let_value)
 
 let rec pp_value_list fmt = function
   | <span data-count="0">[</span>] -&gt; ()
@@ -222,19 +222,19 @@ let rec pp_value_list fmt = function
 
 and pp_value_tuple fmt = function
   | <span data-count="0">[</span>] -&gt; ()
-  | <span data-count="16">[</span> h ] -&gt; fprintf fmt "%a" pp_value h
-  | <span data-count="48">h</span> :: tl -&gt; fprintf fmt "%a, %a" pp_value h pp_value_tuple tl
+  | <span data-count="17">[</span> h ] -&gt; fprintf fmt "%a" pp_value h
+  | <span data-count="49">h</span> :: tl -&gt; fprintf fmt "%a, %a" pp_value h pp_value_tuple tl
 
 and pp_value fmt = function
-  | <span data-count="47">V</span>Int num -&gt; fprintf fmt "VInt %d" num
+  | <span data-count="48">V</span>Int num -&gt; fprintf fmt "%d" num
   | <span data-count="3">V</span>String str -&gt; fprintf fmt "%S" str
-  | <span data-count="29">V</span>Bool bool -&gt; fprintf fmt "%b" bool
+  | <span data-count="33">V</span>Bool bool -&gt; fprintf fmt "%b" bool
   | <span data-count="7">V</span>List lst -&gt; fprintf fmt "[%a]" pp_value_list lst
-  | <span data-count="16">V</span>Tuple tuple -&gt; fprintf fmt "(%a)" pp_value_tuple tuple
+  | <span data-count="17">V</span>Tuple tuple -&gt; fprintf fmt "(%a)" pp_value_tuple tuple
   | <span data-count="21">V</span>Adt (type_name, Some type_value) -&gt; fprintf fmt "%s %a" type_name pp_value type_value
   | <span data-count="40">V</span>Adt (type_name, None) -&gt; fprintf fmt "%s" type_name
-  | <span data-count="36">V</span>Fun (_, _, _) -&gt; fprintf fmt "&lt;fun&gt;"
-  | <span data-count="6">V</span>LetRec (_, _) -&gt; fprintf fmt "&lt;let rec&gt;"
+  | <span data-count="45">V</span>Fun (_, _, _) -&gt; fprintf fmt "&lt;fun&gt;"
+  | <span data-count="7">V</span>LetRec (_, _) -&gt; fprintf fmt "&lt;rec fun&gt;"
 ;;
 
 let pp_env fmt (environment : env) =

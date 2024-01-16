@@ -95,11 +95,11 @@ open Inferencer
 open Format
 
 let pp_env_res fmt (infer_env, interpret_env) =
-  <span data-count="41">S</span>tringMap.iter
+  <span data-count="44">S</span>tringMap.iter
     (fun key data -&gt;
-      <span data-count="106">l</span>et scheme = StringMap.find_opt key infer_env in
-      <span data-count="106">m</span>atch scheme with
-      | <span data-count="106">S</span>ome scheme -&gt;
+      <span data-count="120">l</span>et scheme = StringMap.find_opt key infer_env in
+      <span data-count="120">m</span>atch scheme with
+      | <span data-count="120">S</span>ome scheme -&gt;
         fprintf
           fmt
           "%S: %a = %a\n"
@@ -113,7 +113,7 @@ let pp_env_res fmt (infer_env, interpret_env) =
 ;;
 
 let pp_interpret_res adt_env env res =
-  <span data-count="41">p</span>rintf "%a%a" AdtEnv.pp_env adt_env pp_env_res (env, res)
+  <span data-count="44">p</span>rintf "%a%a" AdtEnv.pp_env adt_env pp_env_res (env, res)
 ;;
 </code></pre>
       </div>
