@@ -150,6 +150,7 @@ let eval_bin_op op e1 e2 e_expr l_env_l =
   | Assign ->
     let res = e_expr e2 >>= is_assignable in
     res
+    >>= is_init_v
     >>= fun x ->
     (match e1 with
      | EIdentifier id -> update_local_el id x

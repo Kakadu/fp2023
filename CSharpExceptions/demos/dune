@@ -7,5 +7,5 @@
   (backend bisect_ppx)))
 
 (cram
- (applies_to interpreterTests)
+ (applies_to interpreterTests try_catch_finTests failTests)
  (deps ./demoInterpret.exe))
