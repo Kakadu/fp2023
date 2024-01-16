@@ -428,7 +428,7 @@ let ep_steps =
         ; step ep_break
         ; step ep_return
         ; step ep_throw
-        ; step @@ ep_st_operation
+        ; step ep_st_operation
         ; op_step @@ ep_brunch_loop_ steps
         ; op_step @@ ep_try_catch_fin_ steps
         ]

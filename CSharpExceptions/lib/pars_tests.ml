@@ -168,7 +168,9 @@ let%expect_test "" =
 ;;
 
 let%expect_test "" =
-  test_pp_statement ep_try_catch_fin {|try {} catch(Excaption e) {} catch(Excaption e) {} finally {}|};
+  test_pp_statement
+    ep_try_catch_fin
+    {|try {} catch(Excaption e) {} catch(Excaption e) {} finally {}|};
   [%expect
     {|
       STry_catch_fin {try_s = (Steps []);

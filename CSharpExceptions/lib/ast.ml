@@ -6,10 +6,10 @@
 
 type value_ =
   | Null
-  | VString of string (* Операции над типом не поддерживаются *)
-  | VInt of int (* Арифметические операции *)
-  | VChar of char (* Операции над типом не поддерживаются *)
-  | VBool of bool (* Только логические операции *)
+  | VString of string (** Operations on type are not supported *)
+  | VInt of int (** Only arithmetic operations are supported *)
+  | VChar of char (** Operations on type are not supported *)
+  | VBool of bool (** Only logical operations are supported *)
 [@@deriving show { with_path = false }]
 
 type ident = Id of string [@@deriving show { with_path = false }, eq]
@@ -118,7 +118,7 @@ type statement =
       }
   | STry_catch_fin of
       { try_s : statement
-      ; catch_s : (((catch_decl * expr option) option * statement) list) option
+      ; catch_s : ((catch_decl * expr option) option * statement) list option
           (*!!! only new decl in [catch_cond |-> (catch_cond * filter_opt)_opt * body] option *)
       ; finally_s : statement option
       }

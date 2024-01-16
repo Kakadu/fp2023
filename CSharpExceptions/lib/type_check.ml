@@ -228,7 +228,7 @@ let check_invoke f e_expr e args =
   in
   let is_EPoint_acc = function
     | EPoint_access (e1, e2) -> check_point_acc e1 e2
-    | _ -> fail Type_mismatch (*TODO: here*)
+    | _ -> fail Type_mismatch
   in
   is_Eident e
   <|> is_EPoint_acc e
@@ -288,7 +288,6 @@ let check_bin_op op (env1, env2) =
   let bool_op = base_type_eq2 (Some env_bool) (Some env_bool_null) in
   (*  *)
   let compare_op = check_operands env1 env2 in
-  (* TODO: Тут разрешил проверку на равенство классов, придумать, как обрабатывать в интерпритаторе *)
   match op with
   | Asterisk | Plus | Minus | Division | Mod -> int_op
   | Less | LessOrEqual | More | MoreOrEqual -> int_bool_op
@@ -615,14 +614,7 @@ let type_check ast =
   match lib_ctx with
   | (_, Result.Error info), _ -> run (fail info)
   | ((ctx, _, _, _), Result.Ok _), lib ->
-    continue
-    
-      (* add_local
-         Base_lib.exception_name
-         (Constructor_sig (default_cons Base_lib.exception_name))
-         *> *)
-      (update_local lib *>type_checker_)
-      (ctx, IdentMap.empty, None, None)
+    continue (update_local lib *> type_checker_) (ctx, IdentMap.empty, None, None)
 ;;
 
 let type_check_with_main ast =
