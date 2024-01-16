@@ -72,6 +72,7 @@ let is_env_code = function
 ;;
 
 let get_params_id (Params x) = List.map (fun (Var_decl (_, id)) -> id) x
+let is_init_v x = is_env_const x >>= is_init >>| fun x -> IConst (Init x)
 let is_const_v x = is_env_const x >>= is_init >>= is_base
 let is_inst_v x = is_env_const x >>= is_init >>= is_class
 let is_v x = is_env_const x >>= is_init >>= fun x -> is_base x <|> is_class x

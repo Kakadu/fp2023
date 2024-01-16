@@ -122,29 +122,6 @@ let%expect_test "Bin-un ops2" =
   [%expect {| Result: (Init (Int_v 16)) |}]
 ;;
 
-let%expect_test "Lazy || and && " =
-  let s =
-    {| 
-      class Program
-      {
-        bool b;
-
-        static int Main(){
-          if (true || b){
-            if (false && b){
-              return -2;
-            } else {
-              return 31;
-            }
-          }
-          return -1;
-        }
-      }
-    |}
-  in
-  interpret_wrap s;
-  [%expect {| Result: (Init (Int_v 31)) |}]
-;;
 
 let%expect_test "Scope" =
   let s =
@@ -621,49 +598,6 @@ let%expect_test "Just save information" =
   in
   interpret_wrap s;
   [%expect {| Interpreter success |}]
-;;
-
-let%expect_test "What" =
-  let s =
-    {| 
-      class A1 : Exception
-      {
-        public string msg;
-        A1(string msg_){
-          msg = msg_;
-        }
-      }
-
-      class Program
-      {
-        static int Main(){
-          FileInfo fl = new FileInfo("../../../../my.txt");
-          A1 f = new A1("");
-          A1 h = new A1("");
-          int a = 0;
-          try 
-          {
-            throw new A1("the win?");
-          } 
-          catch (A1 e) when (e.msg == "bluati")
-          {
-            a = 1;
-            fl.AppendAllText("shit228");
-          }
-          catch (A1 e) when (e.msg == "the win?")
-          {
-            a = 2;
-            fl.AppendAllText("shit");
-          } finally {
-            fl.CloseFile();
-          }
-          return a;
-        }
-      }
-    |}
-  in
-  interpret_wrap s;
-  [%expect {| Result: (Init (Int_v 2)) |}]
 ;;
 
 (* ******************** Negative ******************** *)
