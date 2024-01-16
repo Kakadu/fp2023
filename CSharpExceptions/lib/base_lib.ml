@@ -154,6 +154,23 @@ module File_Info = struct
   end
 end
 
+module Exception = struct
+  let name = Id "Exception"
+
+  module Declaration = struct
+    let decl_ast =
+      let info =
+        {|
+        class Exception : Exception {
+          Exception(){}
+        } 
+        |}
+      in
+      pars_class info
+    ;;
+  end
+end
+
 let classes_with_system_classes = [ File_Info.name ]
 
 let get_system_method_opt cl_id meth_id =
@@ -187,19 +204,10 @@ let run_sys_constructor_ornormal f cl_id =
   *> return_n ad
 ;;
 
-let exception_name = Id "Exception"
-
-let exception_decl =
-  let info = {|
-    class Exception : Exception {
-      Exception(){}
-      } 
-      |} in
-  pars_class info
-;;
-
 let base_lib_decl =
-  let base_lib_decl_ = [ File_Info.Declaration.decl_ast; exception_decl ] in
+  let base_lib_decl_ =
+    [ File_Info.Declaration.decl_ast; Exception.Declaration.decl_ast ]
+  in
   let f acc = function
     | Some x -> x :: acc
     | None -> acc

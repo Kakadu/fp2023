@@ -209,7 +209,7 @@ let catch_eval ad e_stm l_env_l = function
              | false -> return_n None
            in
            let accept_cond inh_cl_id cl_id =
-             equal_ident inh_cl_id cl_id || equal_ident inh_cl_id Base_lib.exception_name
+             equal_ident inh_cl_id cl_id || equal_ident inh_cl_id Base_lib.Exception.name
            in
            let is_inheritance cl_tp cl_id config =
              match cl_tp with

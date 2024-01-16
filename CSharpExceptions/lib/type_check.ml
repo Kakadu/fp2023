@@ -533,7 +533,7 @@ let class_check cl_decl =
   let is_class_main = is_main cl_id "Main cann't be a class" in
   let add_class cl_decl_update =
     match parent with
-    | Some id when equal_ident id Base_lib.exception_name ->
+    | Some id when equal_ident id Base_lib.Exception.name ->
       add_global (Code_ident cl_id) (Exception_ctx cl_decl_update)
     | None -> add_global (Code_ident cl_id) (Class_ctx cl_decl_update)
     | _ ->
