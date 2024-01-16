@@ -1,39 +1,33 @@
-(executable
- (name demoAO)
- (modules demoAO)
- (public_name demoAO)
- (libraries lambda_lib)
- (instrumentation
-  (backend bisect_ppx)))
+(env
+ (dev
+  (flags
+   (:standard -warn-error -A -w -26)
+   (-short-paths))))
 
 (executable
- (name demoNO)
- (modules demoNO)
- (public_name demoNO)
- (libraries lambda_lib)
- (instrumentation
-  (backend bisect_ppx)))
+ (name demoFactorial)
+ (modules demoFactorial)
+ (libraries javascript_lib stdio))
 
 (executable
- (name demoParse)
- (modules demoParse)
- (public_name demoParse)
- (libraries lambda_lib stdio)
- (instrumentation
-  (backend bisect_ppx)))
+ (name demoObjects)
+ (modules demoObjects)
+ (libraries javascript_lib stdio))
+
+(executable
+ (name demoClosures)
+ (modules demoClosures)
+ (libraries javascript_lib stdio))
+
+(executable
+ (name demo)
+ (modules demo)
+ (libraries javascript_lib stdio))
 
 (cram
- (applies_to interpretTests)
  (deps
-  ./demoNO.exe
-  ./demoAO.exe
-  ./demoParse.exe
-  ../REPL.exe
-  ./demo_input.txt))
-
-(cram
- (applies_to parsingTests)
- (deps
-  ./demoParse.exe
-  ;
-  ))
+  ./demoFactorial.exe
+  ./demoObjects.exe
+  ./demoClosures.exe
+  ./demo.exe
+  ./javascriptSamples/demoArray.js))
