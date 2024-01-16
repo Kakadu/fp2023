@@ -122,7 +122,6 @@ let%expect_test "Bin-un ops2" =
   [%expect {| Result: (Init (Int_v 16)) |}]
 ;;
 
-
 let%expect_test "Scope" =
   let s =
     {| 
@@ -617,5 +616,5 @@ let%expect_test "Uninit value " =
     |}
   in
   interpret_wrap s;
-  [%expect {| Error: Using_an_uninitialized_variable |}]
+  [%expect {| Error: (Interpret_error Using_an_uninitialized_variable) |}]
 ;;

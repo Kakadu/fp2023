@@ -301,7 +301,7 @@ let%expect_test "Double definition" =
 |}
   in
   type_check_wrap s;
-  [%expect {| Type_check error: (Double_definition_of (Id "b")) |}]
+  [%expect {| Type_check error: (Type_check_error (Double_definition_of (Id "b"))) |}]
 ;;
 
 let%expect_test "Double \"Main\" definition " =
@@ -327,7 +327,7 @@ let%expect_test "Double \"Main\" definition " =
 |}
   in
   type_check_wrap s;
-  [%expect {| Type_check error: (Double_definition_of (Id "Main")) |}]
+  [%expect {| Type_check error: (Type_check_error (Double_definition_of (Id "Main"))) |}]
 ;;
 
 let%expect_test "Double method declaration" =
@@ -348,7 +348,7 @@ let%expect_test "Double method declaration" =
 |}
   in
   type_check_wrap s;
-  [%expect {| Type_check error: (Double_definition_of (Id "Fac")) |}]
+  [%expect {| Type_check error: (Type_check_error (Double_definition_of (Id "Fac"))) |}]
 ;;
 
 let%expect_test "Access check" =
@@ -376,7 +376,10 @@ let%expect_test "Access check" =
 |}
   in
   type_check_wrap s;
-  [%expect {| Type_check error: (Access_error "Attempt to get a private class member") |}]
+  [%expect
+    {|
+    Type_check error: (Type_check_error
+                         (Access "Attempt to get a private class member")) |}]
 ;;
 
 let%expect_test "Throw some class" =
@@ -398,7 +401,10 @@ let%expect_test "Throw some class" =
 |}
   in
   type_check_wrap s;
-  [%expect {| Type_check error: (Other_error "throw can be used only with exceptions") |}]
+  [%expect
+    {|
+    Type_check error: (Type_check_error
+                         (Other "throw can be used only with exceptions")) |}]
 ;;
 
 let%expect_test "Throw some class" =
@@ -430,8 +436,9 @@ let%expect_test "Throw some class" =
   type_check_wrap s;
   [%expect
     {|
-    Type_check error: (Other_error
-                         "Control cannot leave the body of a finally clause") |}]
+    Type_check error: (Type_check_error
+                         (Other
+                            "Control cannot leave the body of a finally clause")) |}]
 ;;
 
 let%expect_test "FileInfo_decl" =
@@ -454,7 +461,8 @@ let%expect_test "FileInfo_decl" =
     |}
   in
   type_check_wrap s;
-  [%expect {| Type_check error: (Double_definition_of (Id "FileInfo")) |}]
+  [%expect
+    {| Type_check error: (Type_check_error (Double_definition_of (Id "FileInfo"))) |}]
 ;;
 
 let%expect_test "Exception_decl" =
@@ -462,5 +470,6 @@ let%expect_test "Exception_decl" =
         class Exception{} 
     |} in
   type_check_wrap s;
-  [%expect {| Type_check error: (Double_definition_of (Id "Exception")) |}]
+  [%expect
+    {| Type_check error: (Type_check_error (Double_definition_of (Id "Exception"))) |}]
 ;;

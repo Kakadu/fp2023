@@ -13,19 +13,27 @@ let rec get_point_access_value e_id e1 l_env_l =
   let get_id =
     match e_id with
     | EIdentifier id -> return_n id
-    | _ -> fail (Runtime_error "Impossible before point argument in point_access")
+    | _ ->
+      fail
+        (Interpret_error
+           (Runtime_error "Impossible before point argument in point_access"))
   in
   let helper =
     match e1 with
     | EIdentifier id -> lift2 (fun ad v -> id, ad, v) read_self_ad (read_local_el id)
     | EPoint_access (e1, e2) -> get_point_access_value e1 e2 l_env_l
-    | _ -> fail (Runtime_error "Impossible after point argument in point_access")
+    | _ ->
+      fail
+        (Interpret_error (Runtime_error "Impossible after point argument in point_access"))
   in
   get_id
   >>= read_local_el
   >>= function
   | IConst (Init (Instance_v ad)) -> run_in_another_self ad l_env_l helper
-  | _ -> fail (Runtime_error "Point_access is only available with instances of a class")
+  | _ ->
+    fail
+      (Interpret_error
+         (Runtime_error "Point_access is only available with instances of a class"))
 ;;
 
 let eval_point_access e_id e1 lenv_kernel =
@@ -33,7 +41,8 @@ let eval_point_access e_id e1 lenv_kernel =
   >>= fun (_, _, v) ->
   match v with
   | IConst (Init x) -> return_n (to_const @@ to_init x)
-  | _ -> fail (Return_error "Eval of the expression hsven't implemented yet")
+  | _ ->
+    fail (Interpret_error (Return_error "Eval of the expression hsven't implemented yet"))
 ;;
 
 let eval_instrs_ f e args l_env_l e_stm e_expr =
@@ -46,7 +55,7 @@ let eval_instrs_ f e args l_env_l e_stm e_expr =
   | EPoint_access (e_id, e1) ->
     let info = get_point_access_value e_id e1 l_env_l in
     info >>= fun (_, ad, decl) -> return_n decl >>= is_env_code >>= f_new ad args
-  | _ -> fail (Runtime_error "Impossible method name")
+  | _ -> fail (Interpret_error (Runtime_error "Impossible method name"))
 ;;
 
 let m_eval_ e_stm _ l_env_l ad args = function
@@ -60,7 +69,8 @@ let m_eval_ e_stm _ l_env_l ad args = function
           | Some f -> return_n f
           | None -> return_n @@ e_stm body)
     >>= run_method sign.m_type prms args ad l_env_l
-  | IConstructor _ -> fail (Constructor_error "Trying to call a constructor without new")
+  | IConstructor _ ->
+    fail (Interpret_error (Constructor_error "Trying to call a constructor without new"))
 ;;
 
 let eval_method e l_env_l e_stm e_expr args =
@@ -68,7 +78,8 @@ let eval_method e l_env_l e_stm e_expr args =
 ;;
 
 let c_eval_ e_stm e_expr l_env_l _ args = function
-  | IMethod _ -> fail (Constructor_error "'New' can be used only with constructor")
+  | IMethod _ ->
+    fail (Interpret_error (Constructor_error "'New' can be used only with constructor"))
   | IConstructor (sign, body) ->
     let prms = get_params_id sign.con_params in
     let cl_decl =
@@ -101,7 +112,9 @@ let eval_un_op un_op res lenv_kernel e_stm e_expr =
        args
        >>= eval_constructor e lenv_kernel e_stm e_expr
        >>= fun ad -> return_n @@ create_inst ad
-     | _ -> fail (Constructor_error "'New' can be used only with constructor"))
+     | _ ->
+       fail
+         (Interpret_error (Constructor_error "'New' can be used only with constructor")))
 ;;
 
 let eval_bin_op op e1 e2 e_expr l_env_l =
@@ -116,7 +129,7 @@ let eval_bin_op op e1 e2 e_expr l_env_l =
   let bool_f op r1 r2 = return_n (op r1 r2) >>= ret_bool in
   (* --- *)
   let div_f op r1 = function
-    | 0 -> fail Division_by_zero
+    | 0 -> fail (Interpret_error Division_by_zero)
     | r2 -> return_n (op r1 r2) >>= ret_int
   in
   let eq_op op_t = op_ (fun x -> is_v x) op_t in
@@ -157,7 +170,7 @@ let eval_bin_op op e1 e2 e_expr l_env_l =
      | EPoint_access (e_id, e1) ->
        get_point_access_value e_id e1 l_env_l
        >>= fun (id, ad, _) -> update_instance_el id ad x
-     | _ -> fail Methods_cannot_be_assignable)
+     | _ -> fail (Interpret_error Methods_cannot_be_assignable))
     *> res
 ;;
 
@@ -172,7 +185,10 @@ let eval_expr eval_stm lenv_kernel expr =
       >>= eval_method e lenv_kernel eval_stm None
       >>= (function
       | Some x -> return_n x
-      | None -> fail (Return_error "Void methods can't be used with assignable types"))
+      | None ->
+        fail
+          (Interpret_error
+             (Return_error "Void methods can't be used with assignable types")))
     | EUn_op (un, e) -> eval_un_op un e lenv_kernel eval_stm helper
     | EBin_op (bin, e1, e2) -> eval_bin_op bin e1 e2 helper lenv_kernel
   in
@@ -185,10 +201,12 @@ let eval_stm_expr e_expr e_stm lenv_kernel = function
     args
     >>= eval_method e lenv_kernel e_stm None
     >>= (function
-    | Some _ -> fail (Return_error "As statement can be used only 'Void' method")
+    | Some _ ->
+      fail (Interpret_error (Return_error "As statement can be used only 'Void' method"))
     | None -> return_n ())
   | EBin_op (op, e1, e2) -> e_expr (EBin_op (op, e1, e2)) *> return_n ()
-  | _ -> fail (System_error "Trying to use an expression as a statement")
+  | _ ->
+    fail (Interpret_error (System_error "Trying to use an expression as a statement"))
 ;;
 
 let catch_eval ad e_stm l_env_l = function
@@ -227,10 +245,13 @@ let catch_eval ad e_stm l_env_l = function
               (match e_opt with
                | Some _ ->
                  fail
-                   (Runtime_error
-                      "An exception filter can only be written for a declaration in catch")
+                   (Interpret_error
+                      (Runtime_error
+                         "An exception filter can only be written for a declaration in \
+                          catch"))
                | None -> e_stm body *> return_n (Some ()))
-            | _ -> fail (Runtime_error "Using normal class as an exception"))
+            | _ ->
+              fail (Interpret_error (Runtime_error "Using normal class as an exception")))
          | _ -> return_n None)
     in
     fold_left f None catch_l
@@ -341,7 +362,7 @@ let interpret_ genv cl_id =
       List.fold_left f None cl_decl.cl_mems
       |> function
       | Some (tp, body) -> return_n (tp, body)
-      | _ -> fail (Type_check_error "The program must contain 'Main'")
+      | _ -> fail (Interpret_error (Return_error "The program must contain 'Main'"))
     in
     cl_decl_t
     >>= fun cl_decl ->
@@ -355,14 +376,15 @@ let interpret_ genv cl_id =
   let eval =
     match lenv_with_constructors with
     | Some l_env_l -> run_main l_env_l
-    | None -> fail (Type_check_error "Some class has no constructor")
+    | None -> fail (Interpret_error (Return_error "Some class has no constructor"))
   in
   run genv eval
 ;;
 
 let interpret str =
   match Parser.parse_ast str with
-  | Result.Error x -> Result.error (Interpreter_error ("Parsing error: " ^ x ^ "\n"))
+  | Result.Error x ->
+    Result.error (Interpret_error (Runtime_error ("Parsing error: " ^ x ^ "\n")))
   | Result.Ok x ->
     (match Type_check.type_check_with_main x with
      | Result.Error x -> Result.error x
@@ -372,7 +394,8 @@ let interpret str =
         | _, Error x -> Result.error x
         | (_, _, (_, mem), _), Exn x ->
           (match MemMap.find_opt x mem with
-           | Some (cl_id, _) -> Result.error (User_exception cl_id)
-           | None -> Result.error (System_error "Exception instance missing"))
-        | _, _ -> Result.error (System_error "Unrecognized signal")))
+           | Some (cl_id, _) -> Result.error (Interpret_error (User_exception cl_id))
+           | None ->
+             Result.error (Interpret_error (System_error "Exception instance missing")))
+        | _, _ -> Result.error (Interpret_error (System_error "Unrecognized signal"))))
 ;;

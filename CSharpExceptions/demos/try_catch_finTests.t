@@ -71,7 +71,7 @@ SPDX-License-Identifier: CC0-1.0
   >     }
   > HATE_TESTS_AND_DEADLINES
   Test: Checking 'finally case' correct behavior 1.0
-  Error: (User_exception (Code_ident (Id "A1")))
+  Error: (Interpret_error (User_exception (Code_ident (Id "A1"))))
   $ diff -u elusive_exception.txt ../../../../../demos/results/elusive_exception.txt
 
   $ echo "Test: Checking that 'finally case' always run 2.0 " ; ./demoInterpret.exe << HATE_TESTS_AND_DEADLINES
@@ -105,7 +105,7 @@ SPDX-License-Identifier: CC0-1.0
   >     }
   > HATE_TESTS_AND_DEADLINES
   Test: Checking that 'finally case' always run 2.0 
-  Error: (User_exception (Code_ident (Id "Exception")))
+  Error: (Interpret_error (User_exception (Code_ident (Id "Exception"))))
   $ diff -u throw_in_catch.txt ../../../../../demos/results/throw_in_catch.txt
 
 

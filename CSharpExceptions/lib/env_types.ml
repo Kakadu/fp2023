@@ -79,7 +79,6 @@ module Eval_env = struct
   (** Interpreter state *)
   type interpret_ctx = t_global_env * t_loc_env * memory * sys_memory
 
-  (* TODO: мб переписать эту штуку, встроить в signals *)
   type ('b, 'sys_err) sig_ =
     | Return of 'b option
     | Exn of code_ident * address

@@ -12,7 +12,7 @@ SPDX-License-Identifier: CC0-1.0
   >     }
   > HATE_TESTS_AND_DEADLINES
   Test: Attempt to write to a closed file
-  Error: (System_error "Bad file descriptor")
+  Error: (Interpret_error (System_error "Bad file descriptor"))
 
   $  echo "Test: Using an uninitialized variable" ; ./demoInterpret.exe << HATE_TESTS_AND_DEADLINES
   >    class Program
@@ -25,7 +25,7 @@ SPDX-License-Identifier: CC0-1.0
   >     }
   > HATE_TESTS_AND_DEADLINES
   Test: Using an uninitialized variable
-  Error: Using_an_uninitialized_variable
+  Error: (Interpret_error Using_an_uninitialized_variable)
 
   $  echo "Test: Type mismatch in operators" ; ./demoInterpret.exe << HATE_TESTS_AND_DEADLINES
   >    class Program
@@ -36,7 +36,7 @@ SPDX-License-Identifier: CC0-1.0
   >     }
   > HATE_TESTS_AND_DEADLINES
   Test: Type mismatch in operators
-  Error: (Other_error "Types are not equal...")
+  Error: (Type_check_error (Other "Types are not equal..."))
 
   $  echo "Test: The return value is of the wrong type" ; ./demoInterpret.exe << HATE_TESTS_AND_DEADLINES
   >    class Program
@@ -47,7 +47,7 @@ SPDX-License-Identifier: CC0-1.0
   >     }
   > HATE_TESTS_AND_DEADLINES
   Test: The return value is of the wrong type
-  Error: Type_mismatch
+  Error: (Type_check_error Type_mismatch)
 
   $  echo "Test: Method with return type without 'return' in the body" ; ./demoInterpret.exe << HATE_TESTS_AND_DEADLINES
   >    class Program
@@ -56,7 +56,9 @@ SPDX-License-Identifier: CC0-1.0
   >     }
   > HATE_TESTS_AND_DEADLINES
   Test: Method with return type without 'return' in the body
-  Error: (Return_error "Without return can be used only methods of 'Void' type")
+  Error: (Interpret_error
+            (Return_error
+               "Without return can be used only methods of 'Void' type"))
 
   $  echo "Test: Access to a private field" ; ./demoInterpret.exe << HATE_TESTS_AND_DEADLINES
   >   class MyClass
@@ -72,7 +74,7 @@ SPDX-License-Identifier: CC0-1.0
   >    }
   > HATE_TESTS_AND_DEADLINES
   Test: Access to a private field
-  Error: (Access_error "Attempt to get a private class member")
+  Error: (Type_check_error (Access "Attempt to get a private class member"))
 
   $  echo "Test: Double definition" ; ./demoInterpret.exe << HATE_TESTS_AND_DEADLINES
   >   class Program
@@ -84,7 +86,7 @@ SPDX-License-Identifier: CC0-1.0
   >    }
   > HATE_TESTS_AND_DEADLINES
   Test: Double definition
-  Error: (Double_definition_of (Id "a"))
+  Error: (Type_check_error (Double_definition_of (Id "a")))
 
   $  echo "Test: Inconsistency between arguments and parameters" ; ./demoInterpret.exe << HATE_TESTS_AND_DEADLINES
   >   class Program
@@ -96,4 +98,4 @@ SPDX-License-Identifier: CC0-1.0
   >    }
   > HATE_TESTS_AND_DEADLINES
   Test: Inconsistency between arguments and parameters
-  Error: Type_mismatch
+  Error: (Type_check_error Type_mismatch)

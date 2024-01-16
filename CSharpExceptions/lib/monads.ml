@@ -92,7 +92,7 @@ module Type_check_Monad = struct
   type 'a t = ctx_env -> ctx_env * ('a, error) Result.t
 
   let choice : 'a t list -> 'a t = function
-    | [] -> fail (Other_error "Empty choice\n")
+    | [] -> fail (Type_check_error (Other "Empty choice\n"))
     | h :: tl -> List.fold_left ( <|> ) h tl
   ;;
 
@@ -145,7 +145,7 @@ module Type_check_Monad = struct
     let _, local_env, _, _ = c_env in
     match IdentMap.find_opt id local_env with
     | Some x -> return x c_env
-    | None -> fail (Not_find_ident_of id) c_env
+    | None -> fail (Type_check_error (Not_find_ident_of id)) c_env
   ;;
 
   let read_local_el_opt : ident -> t_env_value option t =
@@ -161,7 +161,7 @@ module Type_check_Monad = struct
     let code, _, _, _ = c_env in
     match CodeMap.find_opt id code with
     | Some x -> return x c_env
-    | None -> fail (Not_find_ident_of id_) c_env
+    | None -> fail (Type_check_error (Not_find_ident_of id_)) c_env
   ;;
 
   let read_global_el_opt : code_ident -> code_ctx option t =
@@ -215,7 +215,10 @@ module Eval_Monad = struct
     | Exn ad -> return_e ad st1
     | Error err -> fail err st1
     | Next x -> err_g x st1
-    | Break -> fail (Break_error "Impossible using of break statement without loop") st1
+    | Break ->
+      fail
+        (Interpret_error (Break_error "Impossible using of break statement without loop"))
+        st1
   ;;
 
   let ( @!|>>= ) : ('a, 'b) t -> (('a, 'b, error) eval_t -> ('d, 'c) t) -> ('d, 'c) t =
@@ -287,7 +290,7 @@ module Eval_Monad = struct
     let code, _, _, _ = st in
     match CodeMap.find_opt id code with
     | Some x -> return_n x st
-    | None -> fail (Not_find_ident_of id_) st
+    | None -> fail (Interpret_error (Non_existent_id id_)) st
   ;;
 
   let find_cl_decl_meth id decl =
@@ -359,7 +362,7 @@ module Eval_Monad = struct
     >>= fun (_, mem) ->
     match MemMap.find_opt ad mem with
     | Some el -> return_n el
-    | None -> fail Non_existent_address
+    | None -> fail (Interpret_error Non_existent_address)
   ;;
 
   let save_instance ad mem_el =
@@ -373,7 +376,7 @@ module Eval_Monad = struct
     >>= fun (_, el) ->
     match IdentMap.find_opt id el with
     | Some x -> return_n x
-    | None -> fail (Runtime_error "Non-existent id")
+    | None -> fail (Interpret_error Non_existent_id_)
   ;;
 
   let read_inst_el id ad = read_inst_el id ad >>| fun (v, _) -> v
@@ -384,7 +387,7 @@ module Eval_Monad = struct
     read_global_method cl_id id
     >>= function
     | Some x -> return_n (to_code x)
-    | None -> fail (Not_find_ident_of id)
+    | None -> fail (Interpret_error (Non_existent_id id))
   ;;
 
   let update_instance_el id ad v =
@@ -394,7 +397,7 @@ module Eval_Monad = struct
     | Some (_, sign) ->
       let new_ = IdentMap.add id (v, sign) el in
       save_instance ad (cl_id, new_)
-    | None -> fail (Not_find_ident_of id)
+    | None -> fail (Interpret_error (Non_existent_id id))
   ;;
 
   (* ****************** Sys_memory handling ****************** *)
@@ -422,7 +425,7 @@ module Eval_Monad = struct
     List.fold_left f None l_env_l
     |> function
     | Some x -> return_n x
-    | None -> fail (Other_error "Just for skip")
+    | None -> fail (Interpret_error (Runtime_error "Just for skip"))
   ;;
 
   let find_local_split_ id l_env_l =
@@ -446,7 +449,7 @@ module Eval_Monad = struct
     |> fun (fst, lenv, tl) ->
     match lenv with
     | Some x -> List.rev fst |> fun fst -> return_n (fst, x, tl)
-    | None -> fail (Non_existent_id id)
+    | None -> fail (Interpret_error (Non_existent_id id))
   ;;
 
   let read_local_el id =
@@ -461,7 +464,7 @@ module Eval_Monad = struct
     let s_local =
       let new_l_env l_env = return_n @@ IdentMap.add id v l_env in
       let is_mutable_ = function
-        | ICode _ -> fail Methods_cannot_be_assignable
+        | ICode _ -> fail (Interpret_error Methods_cannot_be_assignable)
         | x -> return_n x
       in
       let update_l_env l_env v = is_mutable_ v *> new_l_env l_env in
@@ -481,7 +484,7 @@ module Eval_Monad = struct
     read_local
     >>= fun (ad, l_env_l) ->
     match l_env_l with
-    | [] -> fail (Runtime_error "")
+    | [] -> fail (Interpret_error (System_error "Problems with the local environment"))
     | l_env :: tl ->
       let s_local =
         let new_l_env = IdentMap.add id v l_env in
@@ -493,7 +496,7 @@ module Eval_Monad = struct
       | true -> s_local
       | false ->
         let (Id s) = id in
-        fail (Runtime_error ("The id:" ^ s ^ " already exists")))
+        fail (Interpret_error (Runtime_error ("The id:" ^ s ^ " already exists"))))
   ;;
 
   let read_self_ad = read_local >>= fun (self_ad, _) -> return_n self_ad
@@ -509,7 +512,8 @@ module Eval_Monad = struct
     let return_env =
       read_local
       >>= function
-      | _, [] -> fail (Runtime_error "--|--")
+      | _, [] ->
+        fail (Interpret_error (System_error "Problems with the local environment"))
       | ad, _ :: tl -> save_local (ad, tl)
     in
     let new_l_env_l = save_local (ad, IdentMap.empty :: l_env_l) in
@@ -570,7 +574,8 @@ module Eval_Monad = struct
       in
       restore_old_mem_and_lenvl >>= cf_new
     | Next x -> ff_new *> return_n x
-    | Break -> ff_new *> fail (Interpreter_error "Attempt to use break with try")
+    | Break ->
+      ff_new *> fail (Interpret_error (Break_error "Attempt to use break with try"))
     | Return x -> ff_new *> return_r x
     | Error err -> ff_new *> fail err
   ;;
@@ -589,7 +594,9 @@ module Eval_Monad = struct
         match return_tp with
         | Void -> return_n None
         | _ ->
-          fail (Return_error "Without return can be used only methods of 'Void' type")
+          fail
+            (Interpret_error
+               (Return_error "Without return can be used only methods of 'Void' type"))
       in
       let if_ret x = return_n x in
       add_args_in_lenv *> f |>>= (if_ret, if_no_ret)

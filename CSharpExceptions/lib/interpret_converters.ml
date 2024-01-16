@@ -9,17 +9,17 @@ open Monads.Eval_Monad
 
 let is_assignable = function
   | IConst x -> return_n (IConst x)
-  | _ -> fail (Runtime_error "There isn't a assignable value")
+  | _ -> fail (Interpret_error (Runtime_error "There isn't a assignable value"))
 ;;
 
 let is_env_const = function
   | IConst x -> return_n x
-  | _ -> fail (Runtime_error "There isn't a calculated value")
+  | _ -> fail (Interpret_error (Runtime_error "There isn't a calculated value"))
 ;;
 
 let is_init = function
   | Init x -> return_n x
-  | _ -> fail Using_an_uninitialized_variable
+  | _ -> fail (Interpret_error Using_an_uninitialized_variable)
 ;;
 
 let is_base = function
@@ -28,47 +28,47 @@ let is_base = function
   | Int_v x -> return_n (Int_v x)
   | Bool_v x -> return_n (Bool_v x)
   | Char_v x -> return_n (Char_v x)
-  | _ -> fail (Runtime_error "Not a base value")
+  | _ -> fail (Interpret_error (Runtime_error "Not a base value"))
 ;;
 
 let is_class = function
   | Instance_v x -> return_n (Instance_v x)
-  | _ -> fail (Runtime_error "Not a class instance value")
+  | _ -> fail (Interpret_error (Runtime_error "Not a class instance value"))
 ;;
 
 let is_inst = function
   | Instance_v x -> return_n x
-  | _ -> fail (Runtime_error "Not a instance value")
+  | _ -> fail (Interpret_error (Runtime_error "Not a instance value"))
 ;;
 
 let is_not_null = function
-  | Null_v -> fail Trying_to_change_Null
+  | Null_v -> fail (Interpret_error Trying_to_change_Null)
   | x -> return_n x
 ;;
 
 let is_int = function
   | Int_v x -> return_n x
-  | _ -> fail (Runtime_error "Type mismatch")
+  | _ -> fail (Interpret_error Type_mismatch)
 ;;
 
 let is_bool = function
   | Bool_v x -> return_n x
-  | _ -> fail (Runtime_error "Type mismatch")
+  | _ -> fail (Interpret_error Type_mismatch)
 ;;
 
 let is_sting = function
   | String_v x -> return_n x
-  | _ -> fail (Runtime_error "Type mismatch")
+  | _ -> fail (Interpret_error Type_mismatch)
 ;;
 
 let is_char = function
   | Char_v x -> return_n x
-  | _ -> fail (Runtime_error "Type mismatch")
+  | _ -> fail (Interpret_error Type_mismatch)
 ;;
 
 let is_env_code = function
   | ICode x -> return_n x
-  | _ -> fail (Runtime_error "There isn't method or consructor")
+  | _ -> fail (Interpret_error (Runtime_error "There isn't method or consructor"))
 ;;
 
 let get_params_id (Params x) = List.map (fun (Var_decl (_, id)) -> id) x

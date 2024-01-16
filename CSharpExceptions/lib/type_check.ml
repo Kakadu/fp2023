@@ -67,7 +67,7 @@ let compare_t_env_opt f a b =
   match f a b with
   | Result.Ok None -> return None
   | Result.Ok (Some x) -> return (Some (Value_sig (TVar x)))
-  | Result.Error msg -> fail (Other_error msg)
+  | Result.Error msg -> fail (Type_check_error (Other msg))
 ;;
 
 let ( =!= ) a b =
@@ -161,14 +161,14 @@ let is_public sign =
   | Fild_sig { f_modif = Some (FAccess MPublic); _ }
   | Method_sig { m_modif = Some (MAccess MPublic); _ }
   | Constructor_sig { con_modif = Some MPublic; _ } -> return sign
-  | _ -> fail (Access_error "Attempt to get a private class member")
+  | _ -> fail (Type_check_error (Access "Attempt to get a private class member"))
 ;;
 
 let rec find_class_member expr cl_decl =
   let find_mem id =
     match get_class_member_sign cl_decl id with
     | Some x -> return x
-    | None -> fail (Other_error "Parsing error in EPoint_access")
+    | None -> fail (Type_check_error (Other "Parsing error in EPoint_access"))
   in
   let get_next_decl_id mem_id =
     find_mem mem_id
@@ -177,13 +177,13 @@ let rec find_class_member expr cl_decl =
     | Fild_sig { f_modif = _; f_type = TVar (TNullable (TClass id)); _ } -> return id
     | Method_sig { m_modif = _; m_type = TReturn (TNullable (TClass id)); _ } -> return id
     | Constructor_sig { con_modif = _; con_id; _ } -> return con_id
-    | _ -> fail (Access_error "Magic case")
+    | _ -> fail (Type_check_error (Access "Magic case"))
   in
   match expr with
   | EIdentifier id -> find_mem id >>= is_public
   | EPoint_access (EIdentifier id, expr1) ->
     get_next_decl_id id >>= find_global >>= find_class_member expr1
-  | _ -> fail (Other_error "Parsing error in EPoint_access")
+  | _ -> fail (Type_check_error (Other "Parsing error in EPoint_access"))
 ;;
 
 let check_point_acc e1 e2 =
@@ -196,10 +196,10 @@ let check_point_acc e1 e2 =
         | Fild_sig { f_modif = _; f_type = TVar (TNullable (TClass id_)); _ } ->
           return id_
         | Value_sig (TVar (TNullable (TClass id_))) -> return id_
-        | _ -> fail (Other_error "Error during parsing in Epoint_access")
+        | _ -> fail (Type_check_error (Other "Error during parsing in Epoint_access"))
       in
       local_find >>= get_class >>= global_find >>= find_class_member e2 >>= is_public
-    | _ -> fail (Other_error "Error during parsing in Epoint_access")
+    | _ -> fail (Type_check_error (Other "Error during parsing in Epoint_access"))
   in
   helper >>| fun x -> Some x
 ;;
@@ -218,17 +218,17 @@ let check_method_ params args =
   result
   >>= function
   | true -> return ()
-  | false -> fail Type_mismatch
+  | false -> fail (Type_check_error Type_mismatch)
 ;;
 
 let check_invoke f e_expr e args =
   let is_Eident = function
     | EIdentifier x -> get_local_ident x
-    | _ -> fail (Other_error "Just for skip")
+    | _ -> fail (Type_check_error (Other "Just for skip"))
   in
   let is_EPoint_acc = function
     | EPoint_access (e1, e2) -> check_point_acc e1 e2
-    | _ -> fail Type_mismatch
+    | _ -> fail (Type_check_error Type_mismatch)
   in
   is_Eident e
   <|> is_EPoint_acc e
@@ -242,21 +242,22 @@ let inv_cond_return sign env_args =
   | Some (Method_sig { m_modif = _; m_type; m_id = _; m_params = Params params }) ->
     let tp = to_type_m m_type in
     (match tp with
-     | Result.Error _ -> fail (Other_error "-_-")
+     | Result.Error _ -> fail (Type_check_error (Other "-_-"))
      | Result.Ok tp -> check_method_ params env_args *> return (Some tp))
   | Some (Constructor_sig { con_modif = _; con_id; con_params; base_args }) ->
     let tp = Value_sig (TVar (TNullable (TClass con_id))) in
     (match con_params, base_args with
      | Params params, None -> check_method_ params env_args *> return (Some tp)
-     | _ -> fail (Other_error "Inheritance with constructors is not supported"))
-  | _ -> fail Type_mismatch
+     | _ ->
+       fail (Type_check_error (Other "Inheritance with constructors is not supported")))
+  | _ -> fail (Type_check_error Type_mismatch)
 ;;
 
 let inv_cond_void sign env_args =
   match sign with
   | Some (Method_sig { m_modif = _; m_type; m_id = _; m_params = Params params })
     when equal_meth_type m_type Void -> check_method_ params env_args *> return TP_Ok
-  | _ -> fail (Other_error "As a statement can be used only 'Void' methods")
+  | _ -> fail (Type_check_error (Other "As a statement can be used only 'Void' methods"))
 ;;
 
 let env_bool = Value_sig (TVar (TNot_Nullable TBool))
@@ -275,7 +276,7 @@ let check_operands oper1 oper2 =
 let operands_eq oper1 oper2 =
   match oper1, oper2 with
   | None, None | None, _ | _, None ->
-    fail (Other_error "Using keyword Null with math operations")
+    fail (Type_check_error (Other "Using keyword Null with math operations"))
   | _ -> check_operands oper1 oper2
 ;;
 
@@ -308,7 +309,7 @@ let check_un_op op env1 =
     | Some (Value_sig (TVar (TNullable (TClass id)))) ->
       read_global_el (Code_ident id)
       *> return (Some (Value_sig (TVar (TNullable (TClass id)))))
-    | _ -> fail Type_mismatch)
+    | _ -> fail (Type_check_error Type_mismatch))
 ;;
 
 let check_expr exp =
@@ -321,7 +322,7 @@ let check_expr exp =
     | EPoint_access (e1, e2) ->
       let is_EPoint_acc = function
         | Some (Fild_sig _) -> return ()
-        | _ -> fail Not_find_ident
+        | _ -> fail (Type_check_error Not_find_ident)
       in
       check_point_acc e1 e2 >>= fun res -> is_EPoint_acc res *> return res
     | EBin_op (op, e1, e2) ->
@@ -350,14 +351,14 @@ let return_check e_opt =
   match e_opt, tp with
   | None, Some Void -> return TP_Ok
   | Some e, Some (TReturn r) -> var_exp_check e (Value_sig (TVar r))
-  | _ -> fail Type_mismatch
+  | _ -> fail (Type_check_error Type_mismatch)
 ;;
 
 let is_exception_ con_id =
   read_global_el (Code_ident con_id)
   >>= function
   | Exception_ctx _ -> return TP_Ok
-  | _ -> fail (Other_error "throw can be used only with exceptions")
+  | _ -> fail (Type_check_error (Other "throw can be used only with exceptions"))
 ;;
 
 let throw_check env_obj =
@@ -366,7 +367,7 @@ let throw_check env_obj =
     | Some (Constructor_sig { con_modif = _; con_id; _ }) -> return con_id
     | Some (Fild_sig { f_modif = _; f_type = TVar (TNullable (TClass id)) }) -> return id
     | Some (Value_sig (TVar (TNullable (TClass id)))) -> return id
-    | _ -> fail (Other_error "throw can be used only with exceprions")
+    | _ -> fail (Type_check_error (Other "throw can be used only with exceprions"))
   in
   get_class_id >>= is_exception_
 ;;
@@ -376,7 +377,7 @@ let add_local id tp =
   is_exist
   >>= function
   | None -> save_local_el id tp
-  | Some _ -> fail (Double_definition_of id)
+  | Some _ -> fail (Type_check_error (Double_definition_of id))
 ;;
 
 let add_global id tp =
@@ -386,7 +387,7 @@ let add_global id tp =
   | None -> save_global_el id tp
   | Some _ ->
     let (Code_ident id) = id in
-    fail (Double_definition_of id)
+    fail (Type_check_error (Double_definition_of id))
 ;;
 
 let add_local_decl id tp = add_local id tp *> return TP_Ok
@@ -429,7 +430,7 @@ let catch_s_check_ h (edecl_opt, s) =
     let is_exc_ =
       match tp with
       | Value_sig (TVar (TNullable (TClass exc_id))) -> is_exception_ exc_id
-      | _ -> fail (Other_error "Parsing error in catch statement")
+      | _ -> fail (Type_check_error (Other "Parsing error in catch statement"))
     in
     (match e_opt with
      | Some e -> is_exc_ *> add *> cond_check_ e *> return TP_Ok
@@ -453,14 +454,15 @@ let try_catch_fin_check try_s catch_s finally_s h =
     let steps_wrap h x =
       match x with
       | SReturn _ ->
-        fail (Other_error "Control cannot leave the body of a finally clause")
+        fail
+          (Type_check_error (Other "Control cannot leave the body of a finally clause"))
       | _ -> h x
     in
     let new_h = h steps_wrap in
     local_scope (remove_opt_ new_h finally_s)
   in
   match catch_s, finally_s with
-  | None, None -> fail (Other_error "After try shold be catch or finally")
+  | None, None -> fail (Type_check_error (Other "After try shold be catch or finally"))
   | _ -> lift3 f try_s_res catch_s_res fin_s_res
 ;;
 
@@ -528,7 +530,7 @@ let default_cons id = create_cons_sign (Some MPublic) id (Params []) None
 let class_check cl_decl =
   let { cl_modif; cl_id; parent; cl_mems } = cl_decl in
   let is_main id msg =
-    if equal_ident id (Id "Main") then fail (Other_error msg) else return ()
+    if equal_ident id (Id "Main") then fail (Type_check_error (Other msg)) else return ()
   in
   let is_class_main = is_main cl_id "Main cann't be a class" in
   let add_class cl_decl_update =
@@ -538,21 +540,22 @@ let class_check cl_decl =
     | None -> add_global (Code_ident cl_id) (Class_ctx cl_decl_update)
     | _ ->
       fail
-        (Other_error
-           "Only rudimentary class inheritance is supported from Exception class")
+        (Type_check_error
+           (Other "Only rudimentary class inheritance is supported from Exception class"))
   in
   let f = function
     | Fild _ | Method _ -> return ()
     | Main _ ->
       read_main_ctx
       >>= (function
-      | Some _ -> fail (Double_definition_of (Id "Main"))
+      | Some _ -> fail (Type_check_error (Double_definition_of (Id "Main")))
       | None -> save_main_ctx (Some (Code_ident cl_id)))
     | Constructor (sign, _) ->
       let { con_modif = _; con_id; _ } = sign in
       (match equal_ident con_id cl_id with
        | true -> add_local con_id (Constructor_sig sign)
-       | false -> fail (Other_error "The constructor name must match the class name"))
+       | false ->
+         fail (Type_check_error (Other "The constructor name must match the class name")))
   in
   (* if Constructor in class haven't been initialized *)
   let mb_con = Constructor_sig (default_cons cl_id) in
@@ -598,7 +601,7 @@ let update_local lib =
     |> function
     | Some (Constructor (sign, _)) -> add_local sign.con_id (Constructor_sig sign)
     | None -> add_local el.cl_id (Constructor_sig (default_cons el.cl_id))
-    | _ -> fail (Other_error "Impossible case")
+    | _ -> fail (Type_check_error (Other "Impossible case"))
   in
   iter_left f lib
 ;;
@@ -609,7 +612,7 @@ let type_check ast =
   let lib_ctx =
     match Base_lib.base_lib_decl with
     | Some (Ast lib) -> type_check_ (Ast lib), lib
-    | None -> run (fail (Other_error "Base_lib Not connected")), []
+    | None -> run (fail (Type_check_error (Other "Base_lib Not connected"))), []
   in
   match lib_ctx with
   | (_, Result.Error info), _ -> run (fail info)
@@ -621,5 +624,5 @@ let type_check_with_main ast =
   match type_check ast with
   | (ctx, _, _, Some cl_decl), Result.Ok _ -> Result.ok (ctx, cl_decl)
   | _, Result.Error x -> Result.error x
-  | _, _ -> Result.error (Type_check_error "The program must contain 'Main'")
+  | _, _ -> Result.error (Type_check_error (Other "The program must contain 'Main'"))
 ;;

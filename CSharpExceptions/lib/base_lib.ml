@@ -35,7 +35,7 @@ module File_Info = struct
       >>= fun info ->
       match Sys_Map.find_opt Fl_descriptors info with
       | Some (Files (id, info)) -> return_n (id, info)
-      | _ -> fail (System_error "The file was not opened for writing!!")
+      | _ -> fail (Interpret_error (System_error "The file was not opened for writing!!"))
     ;;
 
     let save_fl_descriptors new_discrs =
@@ -48,7 +48,7 @@ module File_Info = struct
       >>= fun (_, info) ->
       match Intern_Mem.find_opt i_ad info with
       | Some (W_File x) -> return_n x
-      | _ -> fail (Runtime_error "File descriptors are not initialized")
+      | _ -> fail (Interpret_error (Runtime_error "File descriptors are not initialized"))
     ;;
 
     let append_out_channel oc =
@@ -97,7 +97,7 @@ module File_Info = struct
         msg_t
         >>= fun msg ->
         try Printf.fprintf oc "%s" msg |> fun _ -> return_n () with
-        | Sys_error msg -> fail (System_error msg)
+        | Sys_error msg -> fail (Interpret_error (System_error msg))
       ;;
     end
 
@@ -125,7 +125,8 @@ module File_Info = struct
     | x when equal_ident x Close_file.name -> Close_file.run
     | _ ->
       let (Id str) = id in
-      fail (Runtime_error ("FileInfo does not contain " ^ str ^ " method"))
+      fail
+        (Interpret_error (Runtime_error ("FileInfo does not contain " ^ str ^ " method")))
   ;;
 
   module Declaration = struct
