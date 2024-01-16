@@ -6,7 +6,7 @@ open Ast
 open Errors
 open Common_types
 open Env_types.Eval_env
-open Monads.Eval_Monad
+open Monads.Eval
 open Interpret_converters
 
 let rec get_point_access_value e_id e1 l_env_l =
@@ -390,9 +390,9 @@ let interpret str =
      | Result.Error x -> Result.error x
      | Result.Ok (genv, main_id) ->
        (match interpret_ genv main_id with
-        | _, Next x -> Result.ok x
-        | _, Error x -> Result.error x
-        | (_, _, (_, mem), _), Exn x ->
+        | _, Eval_res x -> Result.ok x
+        | _, Signal (Error x) -> Result.error x
+        | (_, _, (_, mem), _), Signal (Exn x) ->
           (match MemMap.find_opt x mem with
            | Some (cl_id, _) -> Result.error (Interpret_error (User_exception cl_id))
            | None ->

@@ -6,7 +6,7 @@ open Ast
 open Errors
 open Common_types
 
-module Base_monad = struct
+module BaseSE_monad = struct
   type ('st, 'a, 'err) t = 'st -> 'st * ('a, 'err) Result.t
 
   let return : 'a -> ('st, 'a, 'err) t = fun x st -> st, Result.ok x
@@ -86,13 +86,13 @@ end
 
 module Type_check_Monad = struct
   open Env_types.Type_check_env
-  include Base_monad
+  include BaseSE_monad
 
   type ctx_env = type_check_ctx
   type 'a t = ctx_env -> ctx_env * ('a, error) Result.t
 
   let choice : 'a t list -> 'a t = function
-    | [] -> fail (Type_check_error (Other "Empty choice\n"))
+    | [] -> fail (Type_check_error (Other "Empty choice"))
     | h :: tl -> List.fold_left ( <|> ) h tl
   ;;
 
@@ -196,11 +196,13 @@ module Eval_Monad = struct
     fun x f st ->
     let st1, x1 = x st in
     match x1 with
-    | Next x -> f x st1
-    | Return x -> return_r x st1
-    | Exn ad -> return_e ad st1
-    | Break -> return_b () st1
-    | Error err -> fail err st1
+    | Eval_res x -> f x st1
+    | Signal s ->
+      (match s with
+       | Return x -> return_r x st1
+       | Exn ad -> return_e ad st1
+       | Break -> return_b () st1
+       | Error err -> fail err st1)
   ;;
 
   let ( |>>= ) :
@@ -211,14 +213,17 @@ module Eval_Monad = struct
     let ret_f, err_g = f_tpl in
     let st1, x1 = x st in
     match x1 with
-    | Return x -> ret_f x st1
-    | Exn ad -> return_e ad st1
-    | Error err -> fail err st1
-    | Next x -> err_g x st1
-    | Break ->
-      fail
-        (Interpret_error (Break_error "Impossible using of break statement without loop"))
-        st1
+    | Eval_res x -> err_g x st1
+    | Signal s ->
+      (match s with
+       | Return x -> ret_f x st1
+       | Exn ad -> return_e ad st1
+       | Error err -> fail err st1
+       | Break ->
+         fail
+           (Interpret_error
+              (Break_error "Impossible using of break statement without loop"))
+           st1)
   ;;
 
   let ( @!|>>= ) : ('a, 'b) t -> (('a, 'b, error) eval_t -> ('d, 'c) t) -> ('d, 'c) t =
@@ -231,11 +236,13 @@ module Eval_Monad = struct
     fun a1 a2 st ->
     let st1, x1 = a1 st in
     match x1 with
-    | Next x -> return_n x st1
-    | Return x -> return_r x st1
-    | Exn ad -> return_e ad st1
-    | Break -> return_b () st1
-    | Error _ -> a2 st
+    | Eval_res x -> return_n x st1
+    | Signal s ->
+      (match s with
+       | Return x -> return_r x st1
+       | Exn ad -> return_e ad st1
+       | Break -> return_b () st1
+       | Error _ -> a2 st)
   ;;
 
   let init_sys_mem =
@@ -250,8 +257,10 @@ module Eval_Monad = struct
 
   let save : ctx_env -> (unit, 'b) t = fun new_ctx _ -> new_ctx, nsig ()
   let read : (ctx_env, 'c) t = fun st -> (return_n st) st
+end
 
-  (* ****************** Monad extention ****************** *)
+module Eval_M_Extention = struct
+  include Eval_Monad
 
   let ( >>| ) x f = x >>= fun x_res -> return_n (f x_res)
   let ( *> ) a b = a >>= fun _ -> b >>= fun b1 -> return_n b1
@@ -281,6 +290,11 @@ module Eval_Monad = struct
     let f acc a b = acc *> custom_f a b *> return_n () in
     List.fold_left2 f (return_n ()) alst blst
   ;;
+end
+
+module Eval_M_State_Extention = struct
+  include Eval_M_Extention
+  open Env_types.Eval_env
 
   (* ****************** Global handling ****************** *)
 
@@ -501,10 +515,11 @@ module Eval_Monad = struct
 
   let read_self_ad = read_local >>= fun (self_ad, _) -> return_n self_ad
   let save_self_ad ad = read_local >>= fun (_, lenv) -> save_local (ad, lenv)
+end
 
-  (* ****************** Stack trace handling ****************** *)
-
-  (* ****************** -_- ****************** *)
+module Eval = struct
+  open Env_types.Eval_env
+  include Eval_M_State_Extention
 
   let local f =
     read_local
@@ -519,11 +534,13 @@ module Eval_Monad = struct
     let new_l_env_l = save_local (ad, IdentMap.empty :: l_env_l) in
     (new_l_env_l *> f)
     @!|>>= function
-    | Next x -> return_env *> return_n x
-    | Exn ad -> return_env *> return_e ad
-    | Return x -> return_env *> return_r x
-    | Break -> return_env *> return_b ()
-    | Error x -> fail x
+    | Eval_res x -> return_env *> return_n x
+    | Signal s ->
+      (match s with
+       | Exn ad -> return_env *> return_e ad
+       | Return x -> return_env *> return_r x
+       | Break -> return_env *> return_b ()
+       | Error x -> fail x)
   ;;
 
   let in_isolation f =
@@ -532,11 +549,13 @@ module Eval_Monad = struct
     let return_env = save_local old_env in
     f
     @!|>>= function
-    | Next x -> return_env *> return_n x
-    | Exn ad -> return_env *> return_e ad
-    | Return x -> return_env *> return_r x
-    | Break -> return_env *> return_b ()
-    | Error x -> fail x
+    | Eval_res x -> return_env *> return_n x
+    | Signal s ->
+      (match s with
+       | Exn ad -> return_env *> return_e ad
+       | Return x -> return_env *> return_r x
+       | Break -> return_env *> return_b ()
+       | Error x -> fail x)
   ;;
 
   let run_in_another_self ad new_lenv f =
@@ -545,11 +564,13 @@ module Eval_Monad = struct
   ;;
 
   let further = function
-    | Exn ad -> return_e ad
-    | Next x -> return_n x
-    | Break -> return_b ()
-    | Return x -> return_r x
-    | Error err -> fail err
+    | Eval_res x -> return_n x
+    | Signal s ->
+      (match s with
+       | Exn ad -> return_e ad
+       | Break -> return_b ()
+       | Return x -> return_r x
+       | Error err -> fail err)
   ;;
 
   let run_tcf tf cf ff =
@@ -562,22 +583,24 @@ module Eval_Monad = struct
     >>= fun (old_l_env_l, old_mem) ->
     local tf
     @!|>>= function
-    | Exn ad ->
-      let restore_old_mem_and_lenvl =
-        let save_old_mem_with_exn el =
-          let ad_, mem = old_mem in
-          save_mem (incr_ ad_, mem) *> read_mem
-          >>= fun (x, mem) -> save_mem (x, MemMap.add ad_ el mem) *> return_n ad_
-        in
-        read_instance ad
-        >>= fun mem_el -> save_local old_l_env_l *> save_old_mem_with_exn mem_el
-      in
-      restore_old_mem_and_lenvl >>= cf_new
-    | Next x -> ff_new *> return_n x
-    | Break ->
-      ff_new *> fail (Interpret_error (Break_error "Attempt to use break with try"))
-    | Return x -> ff_new *> return_r x
-    | Error err -> ff_new *> fail err
+    | Eval_res x -> ff_new *> return_n x
+    | Signal s ->
+      (match s with
+       | Exn ad ->
+         let restore_old_mem_and_lenvl =
+           let save_old_mem_with_exn el =
+             let ad_, mem = old_mem in
+             save_mem (incr_ ad_, mem) *> read_mem
+             >>= fun (x, mem) -> save_mem (x, MemMap.add ad_ el mem) *> return_n ad_
+           in
+           read_instance ad
+           >>= fun mem_el -> save_local old_l_env_l *> save_old_mem_with_exn mem_el
+         in
+         restore_old_mem_and_lenvl >>= cf_new
+       | Break ->
+         ff_new *> fail (Interpret_error (Break_error "Attempt to use break with try"))
+       | Return x -> ff_new *> return_r x
+       | Error err -> ff_new *> fail err)
   ;;
 
   let run_method
@@ -614,9 +637,12 @@ module Eval_Monad = struct
     local
     @@ helper ()
     @!|>>= function
-    | Next _ | Break -> return_n ()
-    | Exn x -> return_e x
-    | Return x -> return_r x
-    | Error err -> fail err
+    | Eval_res _ -> return_n ()
+    | Signal s ->
+      (match s with
+       | Break -> return_n ()
+       | Exn x -> return_e x
+       | Return x -> return_r x
+       | Error err -> fail err)
   ;;
 end

@@ -6,7 +6,7 @@
 
 open Ast
 open Common_types
-open Monads.Eval_Monad
+open Monads.Eval
 
 module type UNIT_METHOD = sig
   val tp : meth_type

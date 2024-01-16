@@ -6,7 +6,7 @@ open Ast
 open Errors
 open Common_types
 open Interpret_converters
-open Monads.Eval_Monad
+open Monads.Eval
 
 let pars_class str =
   match Parser.parse_ast str with

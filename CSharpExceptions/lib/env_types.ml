@@ -74,28 +74,23 @@ module Eval_env = struct
 
   (*  *)
   type mem_els = code_ident * (t_env_value * fild_sign) IdentMap.t
-  (** Next available address * Map *)
   type memory = address * mem_els MemMap.t
-  (** Interpreter state *)
   type interpret_ctx = t_global_env * t_loc_env * memory * sys_memory
 
   type ('b, 'sys_err) sig_ =
-    | Return of 'b option
-    | Exn of code_ident * address
-    | Break
-    | Error of 'sys_err
-
-  type ('a, 'b, 'sys_err) eval_t =
-    | Next of 'a
-    (* | Signal of ('b, 'sys_err) sig_ *)
     | Return of 'b option
     | Exn of address
     | Break
     | Error of 'sys_err
 
-  let nsig x = Next x
-  let rsig x = Return x
-  let bsig = Break
-  let esig add = Exn add
-  let error err = Error err
+  type ('a, 'b, 'sys_err) eval_t =
+    | Eval_res of 'a
+    | Signal of ('b, 'sys_err) sig_
+
+  let to_sig x = Signal x
+  let nsig x = Eval_res x
+  let rsig x = to_sig (Return x)
+  let bsig = to_sig Break
+  let esig add = to_sig (Exn add)
+  let error err = to_sig (Error err)
 end
