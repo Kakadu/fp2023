@@ -30,6 +30,8 @@ type pattern =
   | PEmpty (** | [] -> ... *)
   | PConst of const (** | const -> ... *)
   | PVar of id (** | varname -> ... *)
+  | PTuple of pattern * pattern * pattern list
+  (** Tuple of patterns i.e. | h1 :: t1, h2 :: t2 *)
   | PCons of pattern * pattern * pattern list (** | p1 :: p2 -> ... *)
   | POr of pattern * pattern * pattern list (** | p1 | p2 | p3 -> ... *)
 [@@deriving show { with_path = false }]

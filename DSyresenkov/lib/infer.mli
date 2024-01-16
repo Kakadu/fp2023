@@ -20,4 +20,8 @@ module TypeEnv : sig
 end
 
 val run_infer : ?env:TypeEnv.t -> expr -> (ty, error) result
-val typecheck : ?env:TypeEnv.t -> program -> (TypeEnv.t, error) result
+
+val typecheck
+  :  ?env:TypeEnv.t
+  -> program
+  -> (TypeEnv.t * (expr * Typing.ty) list, error) result

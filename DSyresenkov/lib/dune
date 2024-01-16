@@ -1,7 +1,7 @@
 (library
  (name miniml_lib)
  (public_name DSyresenkov.Lib)
- (modules Ast Parser Infer Typing)
+ (modules Ast Parser Infer Typing Interpret)
  (libraries base angstrom)
  (preprocess
   (pps ppx_deriving.show))

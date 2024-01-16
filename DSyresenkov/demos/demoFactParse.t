@@ -1,4 +1,4 @@
-  $ dune exec demoFact
+  $ dune exec demoFactParse
   [(ELet (Rec, "fib",
       (EFun ("x",
          (EBranch ((EBinop (Eq, (EVar "x"), (EConst (CInt 1)))), (EVar "x"),

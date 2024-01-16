@@ -77,6 +77,69 @@ module ParserTests = struct
     pp pp_expr parse_expr "let () = () in ()";
     [%expect {| (ELet (NonRec, "()", (EConst CUnit), (Some (EConst CUnit)))) |}]
   ;;
+
+  let%expect_test _ =
+    pp
+      pp_expr
+      parse_expr
+      {|
+      let rec equal_lengths l1 l2 =
+        match l1, l2 with
+        | _ :: _, [] | [], _ :: _ -> false
+        | [], [] -> true
+        | _ :: tl1, _ :: tl2 -> equal_lengths tl1 tl2
+      |};
+    [%expect
+      {|
+        (ELet (Rec, "equal_lengths",
+           (EFun ("l1",
+              (EFun ("l2",
+                 (EMatch ((ETuple ((EVar "l1"), (EVar "l2"), [])),
+                    [((POr ((PTuple ((PCons (PWild, PWild, [])), PEmpty, [])),
+                         (PTuple (PEmpty, (PCons (PWild, PWild, [])), [])), [])),
+                      (EConst (CBool false)));
+                      ((PTuple (PEmpty, PEmpty, [])), (EConst (CBool true)));
+                      ((PTuple ((PCons (PWild, (PVar "tl1"), [])),
+                          (PCons (PWild, (PVar "tl2"), [])), [])),
+                       (EApp ((EApp ((EVar "equal_lengths"), (EVar "tl1"))),
+                          (EVar "tl2"))))
+                      ]
+                    ))
+                 ))
+              )),
+           None)) |}]
+  ;;
+
+  let%expect_test _ =
+    pp
+      pp_expr
+      parse_expr
+      {|
+      let rec zip_sum_all lst init =
+        match lst with
+        | (l, r) :: tl -> zip_sum_all tl l + r + init
+        | [] -> init
+      |};
+    [%expect
+      {|
+            (ELet (Rec, "zip_sum_all",
+               (EFun ("lst",
+                  (EFun ("init",
+                     (EMatch ((EVar "lst"),
+                        [((PCons ((PTuple ((PVar "l"), (PVar "r"), [])), (PVar "tl"),
+                             [])),
+                          (EBinop (Add,
+                             (EBinop (Add,
+                                (EApp ((EApp ((EVar "zip_sum_all"), (EVar "tl"))),
+                                   (EVar "l"))),
+                                (EVar "r"))),
+                             (EVar "init"))));
+                          (PEmpty, (EVar "init"))]
+                        ))
+                     ))
+                  )),
+               None)) |}]
+  ;;
 end
 
 module InferTests = struct
@@ -149,9 +212,9 @@ module InferTests = struct
     pp_parse_and_infer
       {|
     let rec even_length xs = match xs with 
-    | h :: h :: tl -> even_length tl
-    | h :: [] -> false
-    | _ -> true
+      | h :: h :: tl -> even_length tl
+      | h :: [] -> false
+      | _ -> true
     |};
     [%expect {| '7 list -> bool |}]
   ;;
@@ -183,6 +246,29 @@ module InferTests = struct
         | 3 :: 2 :: 1 :: [] -> true
         | _ -> false |};
     [%expect {| int list -> bool |}]
+  ;;
+
+  let%expect_test _ =
+    pp_parse_and_infer
+      {|
+    let rec equal_lengths l1 l2 =
+      match l1, l2 with
+      | _ :: _, [] | [], _ :: _ -> false
+      | [], [] -> true
+      | _ :: tl1, _ :: tl2 -> equal_lengths tl1 tl2
+    |};
+    [%expect {| '12 list -> '14 list -> bool |}]
+  ;;
+
+  let%expect_test _ =
+    pp_parse_and_infer
+      {| 
+    let rec zip_sum_all lst init =
+      match lst with
+      | (l, r) :: tl -> zip_sum_all tl l + r + init
+      | [] -> init 
+    |};
+    [%expect {| (int * int) list -> int -> int |}]
   ;;
 
   (* Errors *)

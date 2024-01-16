@@ -68,7 +68,7 @@ module Type = struct
       match l, r with
       | TBase l, TBase r -> l = r
       | TVar _, TVar _ -> true
-      | TArrow (l1, r1), TArrow (l2, r2) -> helper l1 r1 && helper r2 l2
+      | TArrow (l1, r1), TArrow (l2, r2) -> helper l1 l2 && helper r1 r2
       | TTuple (l1, l2, ls), TTuple (r1, r2, rs) ->
         helper l1 r1
         && helper l2 r2
@@ -202,7 +202,7 @@ module TypeEnv = struct
 
   let equal : t -> t -> bool = Base.Map.equal Scheme.equal
 
-  (* Returns set of variable id's which occure only in one of two enviroments *)
+  (* Returns list of variable id's which occur only in one of two enviroments *)
   let vars_diff : t -> t -> id list =
     fun env1 env2 ->
     Base.Map.fold2 env1 env2 ~init:[] ~f:(fun ~key:id ~data:v acc ->
@@ -211,12 +211,23 @@ module TypeEnv = struct
       | `Both _ -> acc)
   ;;
 
+  (* Returns list of variables with different type schemes in two enviroments *)
   let schemes_diff : t -> t -> (id * Scheme.t * Scheme.t) list =
     fun env1 env2 ->
     Base.Map.fold2 env1 env2 ~init:[] ~f:(fun ~key:id ~data:v acc ->
       match v with
       | `Both (l, r) when not (Scheme.equal l r) -> (id, l, r) :: acc
       | _ -> acc)
+  ;;
+
+  (* Returns list of variables with different types in two enviroments *)
+  let types_diff : t -> t -> (id * ty * ty) list =
+    fun env1 env2 ->
+    Base.List.fold_left
+      (schemes_diff env1 env2)
+      ~init:[]
+      ~f:(fun acc (id, S (_, ty1), S (_, ty2)) ->
+        if Type.equal ty1 ty2 then acc else (id, ty1, ty2) :: acc)
   ;;
 end
 
@@ -271,6 +282,19 @@ let infer_pattern : TypeEnv.t -> pattern -> (TypeEnv.t * ty, error) R.t =
          let env = TypeEnv.extend env (x, S (VarSet.empty, tv)) in
          return (env, tv)
        | Some (Scheme.S (_, ty)) -> return (env, ty))
+    | PTuple (p1, p2, ps) ->
+      let* env, ty1 = helper env p1 in
+      let* env, ty2 = helper env p2 in
+      let* env, tys =
+        Base.List.fold_right
+          ps
+          ~init:(return (env, []))
+          ~f:(fun p acc ->
+            let* env, tys = acc in
+            let* env, ty = helper env p in
+            return (env, ty :: tys))
+      in
+      return (env, TTuple (ty1, ty2, tys))
     | PCons (p1, p2, ps) ->
       let p1, ps, plast =
         match List.rev ps with
@@ -305,9 +329,8 @@ let infer_pattern : TypeEnv.t -> pattern -> (TypeEnv.t * ty, error) R.t =
             match TypeEnv.vars_diff env1 env2 with
             | h :: _ -> fail (OrPatternBoundsDiff h)
             | [] ->
-              (match TypeEnv.schemes_diff env1 env2 with
-               | (id, Scheme.S (_, ty1), Scheme.S (_, ty2)) :: _ ->
-                 fail (OrPatternTypeDiff (id, ty1, ty2))
+              (match TypeEnv.types_diff env1 env2 with
+               | (id, ty1, ty2) :: _ -> fail (OrPatternTypeDiff (id, ty1, ty2))
                | _ ->
                  let* subst = unify ty1 ty2 in
                  return (env1, Subst.apply subst ty1)))
@@ -450,10 +473,16 @@ let check_program env program =
       return (env, ty)
     | _ -> return (env, ty)
   in
-  Base.List.fold_left program ~init:(return env) ~f:(fun env e ->
-    let* env = env in
-    let* env, _ = check_expr env e in
-    return env)
+  let* env, tys =
+    Base.List.fold_left
+      program
+      ~init:(return (env, []))
+      ~f:(fun acc e ->
+        let* env, program = acc in
+        let* env, ty = check_expr env e in
+        return (env, (e, ty) :: program))
+  in
+  return (env, List.rev tys)
 ;;
 
 let typecheck ?(env = TypeEnv.empty) program = run (check_program env program)
