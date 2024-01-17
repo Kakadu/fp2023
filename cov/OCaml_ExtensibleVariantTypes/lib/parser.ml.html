@@ -931,7 +931,7 @@ let parse_bin_op_app parse_expr =
     and parse_app parse_expr =
       <span data-count="3">l</span>et term = chainl1 parse_expr app_binder in
       <span data-count="3">l</span>et term = choice [ parse_un_op_ap<span data-count="3">p</span> term; term ] in
-      <span data-count="3">l</span>et cons = parse_satisfy_op_and_run "::" (retur<span data-count="3">n</span> @@ elist) in
+      <span data-count="3">l</span>et cons = parse_satisfy_op_and_run "::" (retur<span data-count="3">n</span> elist) in
       <span data-count="3">c</span>hainr1 term cons
     in
     parse_bin_op (parse_ap<span data-count="3">p</span> parse_expr))
@@ -962,7 +962,7 @@ let parse_letters =
 ;;
 
 let parse_identifier =
-  parse_toke<span data-count="5">n</span> @@ parse_letters
+  parse_toke<span data-count="5">n</span> parse_letters
   &gt;&gt;<span data-count="5">=</span> fun ident -&gt; <span data-count="51771">i</span>f is_keyword ident then <span data-count="13684">f</span>ail "invalid syntax" else <span data-count="38087">r</span>eturn ident
 ;;
 
