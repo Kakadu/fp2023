@@ -3,15 +3,17 @@ type error =
   | ReadError of string
   | UnknownTable of string
   | UnknownColumn of string
+  | UnknownType of string
   | TypesMismatch of Types.item * string * Types.item
   | TypeConversionFail of Types.item * string
   | DivisionByZero
   | NotImplementedYet of string
+  | IncorrectData of string
 [@@deriving show { with_path = false }]
 
 let error_to_string = function
   | ParsingError msg -> Format.sprintf "Error '%s' occurred during parsing" msg
-  | ReadError msg -> Format.sprintf "Can't read data from database '%s'" msg
+  | ReadError msg -> Format.sprintf "Can't read data: '%s'" msg
   | UnknownTable msg -> Format.sprintf "Can't find table '%s'" msg
   | UnknownColumn msg -> Format.sprintf "Can't find column '%s'" msg
   | TypesMismatch (t1, op, t2) ->
@@ -25,6 +27,8 @@ let error_to_string = function
   | DivisionByZero -> "Division by zero encountered"
   | NotImplementedYet f ->
     Format.sprintf "You used a feature that has not yet been implemented yet (%s)" f
+  | UnknownType t -> Format.sprintf "Can't recognize column type '%s'" t
+  | IncorrectData f -> Format.sprintf "Element '%s' have incorrect structure" f
 ;;
 
 module type MONAD_FAIL = sig

@@ -48,18 +48,14 @@ module Eval (M : Utils.MONAD_FAIL) = struct
 
   (** --- Transform AST into new types --- *)
 
-  (** parse table name in column string name *)
-  let parse_table_name cname =
-    if String.contains cname '.'
-    then Some (List.nth (String.split_on_char '.' cname) 0)
-    else None
-  ;;
-
   (** filter tables by column name *)
   let find_table_by_column (base : Database.t) cname =
-    List.filter
-      (fun x -> Option.is_some (Table.find_column_i x cname))
-      (Database.tables base)
+    let index_of table cname =
+      match Table.find_column_i table cname with
+      | [ x ] -> Some x
+      | _ -> None
+    in
+    List.filter (fun x -> Option.is_some (index_of x cname)) (Database.tables base)
   ;;
 
   (** Find table by column name in database *)
@@ -69,12 +65,9 @@ module Eval (M : Utils.MONAD_FAIL) = struct
       | None -> fail (UnknownTable table)
       | Some id -> return id
     in
-    match parse_table_name name with
-    | Some table -> index_of table (* if we can parse table name from string *)
-    | None ->
-      (match find_table_by_column base name with
-       | [ x ] -> index_of (Table.name x)
-       | _ -> fail (UnknownColumn name))
+    match find_table_by_column base name with
+    | [ x ] -> index_of (Table.name x)
+    | _ -> fail (UnknownColumn name)
   ;;
 
   (** Transform column name to int_column *)
@@ -83,16 +76,22 @@ module Eval (M : Utils.MONAD_FAIL) = struct
     let get_table i = return (Database.get_table base ~index:i) in
     let get_column_i t =
       match Table.find_column_i t name with
-      | Some x -> return x
-      | None -> fail (UnknownColumn name)
+      | [ x ] -> return x
+      | _ -> fail (UnknownColumn name)
     in
     let column colid t = return (Table.get_column t ~index:colid) in
-    let meta col colid = { column_index = colid; meta = col } in
     get_table_i
     >>= fun ti ->
     get_table ti
     >>= fun t ->
-    get_column_i t >>= fun colid -> column colid t >>= fun col -> return (meta col colid)
+    get_column_i t
+    >>= fun colid ->
+    column colid t
+    >>= fun col ->
+    return
+      { column_index = colid
+      ; meta = { column_name = name; column_type = col.column_type }
+      }
   ;;
 
   (** tranform Ast.value into Interpreter.value *)
@@ -262,8 +261,8 @@ module Eval (M : Utils.MONAD_FAIL) = struct
     let run expr = update_column_indexes table expr in
     let get_id col =
       match Table.find_column_i table col.meta.column_name with
-      | Some x -> return x
-      | None -> fail (UnknownColumn col.meta.column_name)
+      | [ x ] -> return x
+      | _ -> fail (UnknownColumn col.meta.column_name)
     in
     match expr with
     | Const x -> return (Const x)
@@ -312,15 +311,16 @@ module Eval (M : Utils.MONAD_FAIL) = struct
       >>= fun gen_table ->
       return
         (Table.join
+           table1
            (Table.sub_width
               gen_table
-              (Table.row_length table1)
-              (Table.row_length gen_table))
-           table2)
+              (Table.row_length table1 - 1)
+              (Table.row_length gen_table - Table.row_length table1 - 1)))
     | Right expr ->
       run table1 table2 expr
       >>= fun gen_table ->
-      return (Table.join table1 (Table.sub_width gen_table 0 (Table.row_length table1)))
+      return
+        (Table.join (Table.sub_width gen_table 0 (Table.row_length table1 - 1)) table2)
   ;;
 
   let exec_restrict (table : Table.t) (expr : expr) =
@@ -348,8 +348,11 @@ module Eval (M : Utils.MONAD_FAIL) = struct
     in
     to_cols_list table cols
     >>= fun cols ->
-    helper (Table.empty (Table.column_length table)) (List.map (fun el -> el.column_index) cols) table
-    >>= fun res_table -> return res_table
+    helper
+      (Table.empty (Table.column_length table))
+      (List.map (fun el -> el.column_index) cols)
+      table
+    >>= fun res_table -> return (Table.change_table_name res_table "result table")
   ;;
 
   let rec execute node =
@@ -362,10 +365,11 @@ module Eval (M : Utils.MONAD_FAIL) = struct
     | Project (node, exprs) -> execute node >>= fun table -> exec_project table exprs
   ;;
 
+  open Environment.Env(M)
+
   let eval (base_folder : string) (request : Ast.request) : (Table.t, error) t =
-    let get_base folder = try return (Environment.load_database folder) with _ -> fail (ReadError base_folder) in
     let get_node base request = transform_request base request in
-    get_base base_folder
+    load_database base_folder
     >>= fun base -> get_node base request >>= fun node -> execute node
   ;;
 end

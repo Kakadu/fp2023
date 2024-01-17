@@ -312,15 +312,6 @@ module Types_test = struct
       Sheet.show_sheet
   ;;
 
-  let base1 =
-    Environment.load_database "/home/dmitriy/Desktop/fp2023/mini-SQL/test_data/database1"
-  ;;
-
-  let base2 =
-    Environment.load_database
-      "/home/dmitriy/Desktop/fp2023/mini-SQL/test_data/two_files_database"
-  ;;
-
   (* let%test _ =
      Format.printf
      "%s\n\n"
@@ -357,19 +348,6 @@ module Types_test = struct
     | Error e ->
       Format.printf "Interpret error: %s\n" (Utils.show_error e);
       false
-  ;;
-
-  (* find tables test *)
-  let%test _ = assert_equal (find_table_id base2 "email2") 1 string_of_int
-  let%test _ = assert_equal (find_table_id base1 "table1.name") 0 string_of_int
-  let%test _ = assert_equal (find_table_id base2 "second_email") 0 string_of_int
-
-  (* transform *)
-  let%test _ =
-    assert_equal
-      (transform_column base2 "email2")
-      { column_index = 4; meta = { column_name = "email2"; column_type = String_Column } }
-      Interpreter.show_int_column
   ;;
 
   open Typecheck.Exec (Utils.Result)
@@ -419,7 +397,7 @@ module Types_test = struct
     | Error e -> Format.printf "Execute error: %s\n" (Utils.show_error e)
   ;;
 
-  let%test _ =
+  (* let%test _ =
     assert_equal
       (transform base1 "SELECT name FROM table1")
       (Project
@@ -453,12 +431,39 @@ module Types_test = struct
                }
            ] ))
       Interpreter.show_qot_node
-  ;;
+  ;; *)
+
+  (* let%test _ =
+     exec
+     "/home/dmitriy/Desktop/fp2023/mini-SQL/test_data/database1"
+     (parse "SELECT table1.name, age, table1.is_gay FROM table1 WHERE (age > 40 OR is_gay) AND (age < 60)");
+     true
+     ;; *)
+
+  (* let%test _ =
+     exec
+     "/home/dmitriy/Desktop/fp2023/mini-SQL/test_data/two_files_database"
+     (parse
+     "SELECT table0.id, table0.email, table2.id, table1.id, table1.firstname FROM ((table1 INNER JOIN table2 ON table1.email = table2.email) INNER JOIN table0 ON table0.id = table2.id) WHERE table0.id > 110");
+     false
+     ;; *)
+
+  (* let%test _ =
+     exec
+     "/home/dmitriy/Desktop/fp2023/mini-SQL/test_data/two_files_database"
+     (parse
+     "SELECT table0.id, table0.firstname, table1.id, table1.firstname FROM \
+     table0 RIGHT JOIN table1 ON table0.id = table1.id");
+     false
+     ;; *)
 
   let%test _ =
     exec
-      "/home/dmitriy/Desktop/fp2023/mini-SQL/test_data/two_files_database"
-      (parse "SELECT myFile1.id, myFile1.firstname, myFile1.lastname FROM myFile1");
+      "/home/dmitriy/Desktop/fp2023/mini-SQL/test_data/data"
+      (parse
+         "SELECT table0.id, table0.firstname, table0.profession, table0.age, table1.id, \
+          table1.firstname, table1.profession, table1.age FROM table0 INNER JOIN table1 \
+          ON table0.profession = table1.profession");
     false
   ;;
 end

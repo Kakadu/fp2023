@@ -79,7 +79,7 @@ module Sheet = struct
   let column_length (sheet : t) = Array.length sheet
   let row_length (sheet : t) = Array.length (Array.get sheet 0)
   let join (a : t) (b : t) = Array.mapi (fun i el -> Row.join el (Array.get b i)) a
-  let empty length : t = Array.init length ( fun _ -> Row.empty)
+  let empty length : t = Array.init length (fun _ -> Row.empty)
 
   (* обрезать каждый ряд *)
   let sub_width (s : t) (from_id : int) (len : int) =
@@ -104,14 +104,29 @@ module Table = struct
   let columns table = table.meta.table_header
 
   let empty len =
-    { data = Sheet.empty len; meta = { table_name = "new table"; table_header = [||] } }
+    { data = Sheet.empty len; meta = { table_name = "empty table"; table_header = [||] } }
   ;;
 
   let join (a : t) (b : t) =
+    let name_checker (old : t) (joined : t) =
+      (* change column names *)
+      Array.map
+        (fun e1 ->
+          if Array.exists
+               (fun e2 -> e1.column_name = e2.column_name)
+               joined.meta.table_header
+          then
+            { column_name = String.concat "." [ old.meta.table_name; e1.column_name ]
+            ; column_type = e1.column_type
+            }
+          else e1)
+        old.meta.table_header
+    in
+    (* join *)
     { data = Sheet.join a.data b.data
     ; meta =
-        { table_name = "new table"
-        ; table_header = Array.append a.meta.table_header b.meta.table_header
+        { table_name = b.meta.table_name
+        ; table_header = Array.append (name_checker a b) b.meta.table_header
         }
     }
   ;;
@@ -128,14 +143,33 @@ module Table = struct
     }
   ;;
 
-  (** Find column index *)
+  let change_table_name (table : t) name =
+    { data = table.data
+    ; meta = { table_name = name; table_header = table.meta.table_header }
+    }
+  ;;
+
+  (** Find column indexes *)
   let find_column_i (table : t) name =
-    let rec helper acc name cs =
-      match cs with
-      | [] -> None
-      | hd :: tl -> if hd.column_name = name then Some acc else helper (acc + 1) name tl
+    let basename name =
+      (* table.name *)
+      match String.split_on_char '.' name with
+      | [ n ] -> Some n
+      | [ t; n ] when t = table.meta.table_name -> Some n
+      | [ _; _ ] -> Some name
+      | _ -> None
     in
-    helper 0 name (Array.to_list (columns table))
+    let rec helper (acc : int list) i name cs =
+      match cs with
+      | [] -> acc
+      | hd :: tl ->
+        if hd.column_name = name
+        then helper (List.append acc [ i ]) (i + 1) name tl
+        else helper acc (i + 1) name tl
+    in
+    match basename name with
+    | Some name -> helper [] 0 name (Array.to_list (columns table))
+    | None -> []
   ;;
 
   (** get column by index *)
