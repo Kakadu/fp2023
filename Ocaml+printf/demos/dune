@@ -6,5 +6,21 @@
  (instrumentation
   (backend bisect_ppx)))
 
+(executable
+ (name demoInfer)
+ (modules demoInfer)
+ (public_name demoInfer)
+ (libraries ocaml_printf_lib stdio)
+ (instrumentation
+  (backend bisect_ppx)))
+
+(executable
+ (name demoInterpreter)
+ (modules demoInterpreter)
+ (public_name demoInterpreter)
+ (libraries ocaml_printf_lib stdio)
+ (instrumentation
+  (backend bisect_ppx)))
+
 (cram
- (deps %{bin:demoParse}))
+ (deps %{bin:demoParse} %{bin:demoInfer} %{bin:demoInterpreter}))

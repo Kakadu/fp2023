@@ -6,19 +6,19 @@
 
 (license LGPL-3.0-or-later)
 
-(authors "FIXME Vasya Pupkin")
+(authors "Ksenia Melashenko")
 
-(maintainers "FIXME Vasya Pupkin")
+(maintainers "Ksenia Melashenko")
 
-(bug_reports "FIXME where to put bug reports about the code")
+(bug_reports "https://github.com/ksenmel/fp2023/issues")
 
-(homepage "FIXME Homepage")
+(homepage "https://github.com/ksenmel/fp2023")
 
 (package
- (name Lambda) ; FIXME and regenerate .opam file using 'dune build @install'
- (synopsis "FIXME An interpreter for language")
+ (name OCaml_BidirectionalRecords) ; FIXME and regenerate .opam file using 'dune build @install'
+ (synopsis "OCaml with bidirectional records")
  (description
-  "FIXME. A longer description, for example, which are the most interesing features being supported, etc.")
+  "Ocaml implementation with bidirectional records support")
  (version 0.1)
  (depends
   dune
@@ -26,9 +26,9 @@
   (ppx_inline_test :with-test)
   ppx_expect
   ppx_deriving
-  bisect_ppx
   (odoc :with-doc)
   (ocamlformat :build)
-  ; base
+  angstrom
+  base
   ; After adding dependencies to 'dune' files and the same dependecies here too
   ))

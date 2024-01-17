@@ -12,7 +12,8 @@
 
 (bug_reports "FIXME where to put bug reports about the code")
 
-(homepage "FIXME Homepage")
+(homepage
+ "https://github.com/DmitryPilyuk/fp2023/tree/master/OCamlWithEffects")
 
 (package
  (name OCamlWithEffects) ; FIXME and regenerate .opam file using 'dune build @install'

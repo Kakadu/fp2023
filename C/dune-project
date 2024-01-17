@@ -15,7 +15,7 @@
 (homepage "https://github.com/PavlushaSource")
 
 (package
- (name C) ; FIXME and regenerate .opam file using 'dune build @install'
+ (name C)
  (synopsis "Interpreter of the C language")
  (description
   "FIXME. A longer description, for example, which are the most interesing features being supported, etc.")
@@ -30,6 +30,4 @@
   bisect_ppx
   (odoc :with-doc)
   (ocamlformat :build)
-  ; base
-  ; After adding dependencies to 'dune' files and the same dependecies here too
   ))

@@ -1,0 +1,3 @@
+depexts: [
+  [ "llvm-15-dev" "clang-15" ] {os-distribution = "ubuntu"}
+]
