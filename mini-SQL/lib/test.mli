@@ -1,3 +1,7 @@
+(** Copyright 2023-2024, Zaytsev Dmitriy *)
+
+(** SPDX-License-Identifier: CC0-1.0 *)
+
 (** Tests for AST & parser *)
 module Parse_test : sig
   (** Run SQL-Parser on string *)
@@ -5,10 +9,16 @@ module Parse_test : sig
 
   (** Compare parser output with example *)
   val assert_equal : 'a Angstrom.t -> string -> 'a -> bool
+end
 
-  (** Compare parser output with example and print result in case of error *)
-  val assert_eq_output : ('a -> string) -> 'a Angstrom.t -> string -> 'a -> bool
+(** Tests for Types module *)
+module Types_test : sig
+  (** Compare parser output with example *)
+  val assert_equal : 'a -> 'a -> ('a -> string) -> bool
+end
 
-  (** Return true if parser got error *)
-  val assert_raise : 'a Angstrom.t -> string -> bool
+(** Tests for interpreter *)
+module Interpreter_test : sig
+  (** Compare parser output with example *)
+  val assert_equal : ('a, Utils.error) result -> 'a -> ('a -> string) -> bool
 end

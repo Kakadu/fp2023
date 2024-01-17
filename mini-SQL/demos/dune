@@ -1,12 +1,4 @@
 (executable
- (name demoAO)
- (modules demoAO)
- (public_name demoAO)
- (libraries Lib)
- (instrumentation
-  (backend bisect_ppx)))
-
-(executable
  (name demoInterpret)
  (modules demoInterpret)
  (public_name demoInterpret)
@@ -23,13 +15,8 @@
   (backend bisect_ppx)))
 
 ; (cram
-;  (applies_to interpretTests)
-;  (deps
-;   ./demoNO.exe
-;   ./demoAO.exe
-;   ./demoParse.exe
-;   ../REPL.exe
-;   ./demo_input.txt))
+;  (applies_to executeTest)
+;  (deps ./demoInterpret.exe ./demo_input.txt))
 
 (cram
  (applies_to parsingTests)

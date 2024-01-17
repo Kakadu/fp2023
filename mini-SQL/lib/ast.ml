@@ -1,3 +1,7 @@
+(** Copyright 2023-2024, Zaytsev Dmitriy *)
+
+(** SPDX-License-Identifier: CC0-1.0 *)
+
 type name = string [@@deriving show { with_path = false }]
 
 type value =

@@ -1,4 +1,4 @@
-(** Copyright 2021-2022, Kakadu and contributors *)
+(** Copyright 2023-2024, Zaytsev Dmitriy *)
 
 (** SPDX-License-Identifier: CC0-1.0 *)
 

@@ -1,3 +1,7 @@
+(** Copyright 2023-2024, Zaytsev Dmitriy *)
+
+(** SPDX-License-Identifier: CC0-1.0 *)
+
 (* --- PARSER --- *)
 
 module Parse_test = struct
@@ -301,40 +305,54 @@ module Types_test = struct
       Row.show_row
   ;;
 
+  let test_sheet1 =
+    Sheet.init
+      [ String_Column; Numeric_Column; Real_Column; Boolean_Column ]
+      [ [ "wow"; "123"; "10.0"; "true" ]; [ "wt"; "1000"; "15.9"; "false" ] ]
+  ;;
+
+  let test_sheet2 =
+    Sheet.init
+      [ String_Column; Numeric_Column; Real_Column; Boolean_Column ]
+      [ [ "Hello"; "123"; "10.0"; "false" ]; [ "World"; "321"; "15.9"; "false" ] ]
+  ;;
+
   let%test _ =
     assert_equal
-      (Sheet.init
-         [ String_Column; Numeric_Column; Real_Column; Boolean_Column ]
-         [ [ "wow"; "123"; "10.0"; "true" ]; [ "wt"; "1000"; "15.9"; "false" ] ])
+      test_sheet1
       [| [| String "wow"; Numeric 123; Real 10.0; Bool true |]
        ; [| String "wt"; Numeric 1000; Real 15.9; Bool false |]
       |]
       Sheet.show_sheet
   ;;
 
-  (* let%test _ =
-     Format.printf
-     "%s\n\n"
-     (Sheet.show_sheet
-     (Environment.load_table "/home/dmitriy/Desktop/test_data/database1/table1.csv")
-     .data);
-     true
-     ;; *)
+  let%test _ =
+    assert_equal
+      (Sheet.join test_sheet1 test_sheet2)
+      [| [| String "wow"
+          ; Numeric 123
+          ; Real 10.0
+          ; Bool true
+          ; String "Hello"
+          ; Numeric 123
+          ; Real 10.0
+          ; Bool false
+         |]
+       ; [| String "wt"
+          ; Numeric 1000
+          ; Real 15.9
+          ; Bool false
+          ; String "World"
+          ; Numeric 321
+          ; Real 15.9
+          ; Bool false
+         |]
+      |]
+      Sheet.show_sheet
+  ;;
+end
 
-  (* let%test _ =
-     Format.printf
-     "%s\n\n"
-     (Database.show_database base2);
-     true
-     ;; *)
-
-  (* let%test _ =
-     Format.printf
-     "%s\n\n"
-     (Database.show_database base2);
-     true
-     ;; *)
-
+module Interpreter_test = struct
   open Interpreter.Eval (Utils.Result)
 
   let assert_equal res exp show =
@@ -346,7 +364,7 @@ module Types_test = struct
          Format.printf "%s\n" (show x);
          false)
     | Error e ->
-      Format.printf "Interpret error: %s\n" (Utils.show_error e);
+      Format.printf "Interpret error: %s\n" (Utils.error_to_string e);
       false
   ;;
 
@@ -359,10 +377,31 @@ module Types_test = struct
       Types.show_item
   ;;
 
-  (* typecheck *)
+  (* arithmetic operations *)
 
   let%test _ =
     assert_equal (Types.Numeric 15) #+ (Types.Real 15.) (Types.Real 30.) Types.show_item
+  ;;
+
+  let%test _ =
+    assert_equal
+      (Types.String "Hello ") #+ (Types.String "World")
+      (Types.String "Hello World")
+      Types.show_item
+  ;;
+
+  let%test _ =
+    assert_equal
+      (Types.String "10 + 5 = ") #+ (Types.Real 15.)
+      (Types.String "10 + 5 = 15.")
+      Types.show_item
+  ;;
+
+  let%test _ =
+    assert_equal
+      (Types.String "10 + 5 = ") #+ (Types.Real 15.)
+      (Types.String "10 + 5 = 15.")
+      Types.show_item
   ;;
 
   let%test _ =
@@ -382,88 +421,13 @@ module Types_test = struct
   ;;
 
   let%test _ =
+    assert_equal (Types.Numeric 10) #% (Types.Real 2.) (Types.Real 0.) Types.show_item
+  ;;
+
+  let%test _ =
     assert_equal
       (Types.String "15") #+ (Types.Real 5.)
       (Types.String "155.")
       Types.show_item
-  ;;
-
-  let parse inp = Result.get_ok (Parser.parse inp)
-  let transform base inp = transform_request base (parse inp)
-
-  let exec base req =
-    match eval base req with
-    | Ok table -> Format.printf "Result:\n%s\n" (Types.Table.show_table table)
-    | Error e -> Format.printf "Execute error: %s\n" (Utils.show_error e)
-  ;;
-
-  (* let%test _ =
-    assert_equal
-      (transform base1 "SELECT name FROM table1")
-      (Project
-         ( Restrict
-             ( Load
-                 { data =
-                     [| [| String "Rachel Klein"; Numeric 65; Bool false |]
-                      ; [| String "Frank James"; Numeric 24; Bool false |]
-                      ; [| String "Barbara Fletcher"; Numeric 38; Bool true |]
-                      ; [| String "Polly Drake"; Numeric 33; Bool false |]
-                      ; [| String "Howard Glover"; Numeric 42; Bool false |]
-                      ; [| String "Alice Houston"; Numeric 50; Bool true |]
-                      ; [| String "Gregory Cunningham"; Numeric 62; Bool true |]
-                      ; [| String "Jim Gregory"; Numeric 27; Bool false |]
-                      ; [| String "Eleanor Johnston"; Numeric 37; Bool true |]
-                      ; [| String "Eliza Norton"; Numeric 43; Bool false |]
-                     |]
-                 ; meta =
-                     { table_name = "table1"
-                     ; table_header =
-                         [| { column_name = "name"; column_type = String_Column }
-                          ; { column_name = "age"; column_type = Numeric_Column }
-                          ; { column_name = "is_gay"; column_type = Boolean_Column }
-                         |]
-                     }
-                 }
-             , Const (Bool true) )
-         , [ Col
-               { column_index = 0
-               ; meta = { column_name = "name"; column_type = String_Column }
-               }
-           ] ))
-      Interpreter.show_qot_node
-  ;; *)
-
-  (* let%test _ =
-     exec
-     "/home/dmitriy/Desktop/fp2023/mini-SQL/test_data/database1"
-     (parse "SELECT table1.name, age, table1.is_gay FROM table1 WHERE (age > 40 OR is_gay) AND (age < 60)");
-     true
-     ;; *)
-
-  (* let%test _ =
-     exec
-     "/home/dmitriy/Desktop/fp2023/mini-SQL/test_data/two_files_database"
-     (parse
-     "SELECT table0.id, table0.email, table2.id, table1.id, table1.firstname FROM ((table1 INNER JOIN table2 ON table1.email = table2.email) INNER JOIN table0 ON table0.id = table2.id) WHERE table0.id > 110");
-     false
-     ;; *)
-
-  (* let%test _ =
-     exec
-     "/home/dmitriy/Desktop/fp2023/mini-SQL/test_data/two_files_database"
-     (parse
-     "SELECT table0.id, table0.firstname, table1.id, table1.firstname FROM \
-     table0 RIGHT JOIN table1 ON table0.id = table1.id");
-     false
-     ;; *)
-
-  let%test _ =
-    exec
-      "/home/dmitriy/Desktop/fp2023/mini-SQL/test_data/data"
-      (parse
-         "SELECT table0.id, table0.firstname, table0.profession, table0.age, table1.id, \
-          table1.firstname, table1.profession, table1.age FROM table0 INNER JOIN table1 \
-          ON table0.profession = table1.profession");
-    false
   ;;
 end

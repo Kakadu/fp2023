@@ -1,3 +1,7 @@
+(** Copyright 2023-2024, Zaytsev Dmitriy *)
+
+(** SPDX-License-Identifier: CC0-1.0 *)
+
 type error =
   | ParsingError of string
   | ReadError of string
@@ -9,7 +13,6 @@ type error =
   | DivisionByZero
   | NotImplementedYet of string
   | IncorrectData of string
-[@@deriving show { with_path = false }]
 
 let error_to_string = function
   | ParsingError msg -> Format.sprintf "Error '%s' occurred during parsing" msg

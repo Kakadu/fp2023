@@ -1,3 +1,7 @@
+(** Copyright 2023-2024, Zaytsev Dmitriy *)
+
+(** SPDX-License-Identifier: CC0-1.0 *)
+
 (* --- Types with meta-information (name + type) --- *)
 
 type column_type =
@@ -21,11 +25,6 @@ type table =
   }
 [@@deriving show { with_path = false }]
 
-(* --- Types with tables data --- *)
-
-exception Incorrect_type of string
-
-(** Represents basic element in row *)
 type item =
   | Numeric of int
   | Real of float
@@ -33,7 +32,6 @@ type item =
   | Bool of bool
 [@@deriving show { with_path = false }]
 
-(** Row in a table *)
 module Row = struct
   type t = item array [@@deriving show { with_path = false }]
 
@@ -41,15 +39,9 @@ module Row = struct
   let init ts es =
     let item_of e = function
       | String_Column -> String e
-      | Numeric_Column ->
-        (try Numeric (int_of_string e) with
-         | _ -> raise (Incorrect_type ("Value '" ^ e ^ "' should be Numeric")))
-      | Real_Column ->
-        (try Real (float_of_string e) with
-         | _ -> raise (Incorrect_type ("Value '" ^ e ^ "' should be Real")))
-      | Boolean_Column ->
-        (try Bool (bool_of_string e) with
-         | _ -> raise (Incorrect_type ("Value '" ^ e ^ "' should be Boolean")))
+      | Numeric_Column -> Numeric (int_of_string e)
+      | Real_Column -> Real (float_of_string e)
+      | Boolean_Column -> Bool (bool_of_string e)
     in
     if List.length ts = List.length es && List.length ts > 1
     then Array.init (List.length es) (fun i -> item_of (List.nth es i) (List.nth ts i))
@@ -70,7 +62,6 @@ module Row = struct
   ;;
 end
 
-(** Array of rows, contain data from csv files *)
 module Sheet = struct
   type t = Row.t array [@@deriving show { with_path = false }]
 
@@ -81,7 +72,6 @@ module Sheet = struct
   let join (a : t) (b : t) = Array.mapi (fun i el -> Row.join el (Array.get b i)) a
   let empty length : t = Array.init length (fun _ -> Row.empty)
 
-  (* обрезать каждый ряд *)
   let sub_width (s : t) (from_id : int) (len : int) =
     Array.map (fun row -> Row.sub row from_id len) s
   ;;
@@ -92,7 +82,6 @@ module Sheet = struct
   ;;
 end
 
-(** Contain meta-information and sheet with data *)
 module Table = struct
   type t =
     { data : Sheet.t
@@ -149,7 +138,6 @@ module Table = struct
     }
   ;;
 
-  (** Find column indexes *)
   let find_column_i (table : t) name =
     let basename name =
       (* table.name *)
@@ -172,7 +160,6 @@ module Table = struct
     | None -> []
   ;;
 
-  (** get column by index *)
   let get_column (table : t) ~index = Array.get (columns table) index
 
   let show_table (table : t) =
@@ -187,7 +174,6 @@ module Table = struct
   ;;
 end
 
-(** Contain meta-information and some tables *)
 module Database = struct
   type t =
     { tables : Table.t list

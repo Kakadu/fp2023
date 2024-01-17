@@ -1,0 +1,41 @@
+  $ ./demoInterpret.exe <<-EOF
+  > SELECT table0.id, table0.age, table0.firstname, table1.id, table1.age, table1.firstname FROM ((table0 INNER JOIN table1 ON table1.age = table0.age) FULL JOIN table2 ON table0.id = table2.id) WHERE table0.id > 10 AND table2.id > 5
+  +------------+
+   result table 
+  +------------+
+  columns: { column_name = "table0.id"; column_type = Numeric_Column }, { column_name = "table0.age"; column_type = Numeric_Column }, { column_name = "table0.firstname"; column_type = String_Column }, { column_name = "table1.id"; column_type = Numeric_Column }, { column_name = "table1.age"; column_type = Numeric_Column }, { column_name = "table1.firstname"; column_type = String_Column }
+  
+  (Numeric 536)|(Numeric 93)|(String "Fina")|(Numeric 536)|(Numeric 93)|(String "Dorene")
+  (Numeric 570)|(Numeric 72)|(String "Ebonee")|(Numeric 570)|(Numeric 72)|(String "Joelly")
+  (Numeric 608)|(Numeric 40)|(String "Sheree")|(Numeric 608)|(Numeric 40)|(String "Joleen")
+  (Numeric 612)|(Numeric 14)|(String "Dorice")|(Numeric 612)|(Numeric 14)|(String "Cristine")
+  (Numeric 654)|(Numeric 61)|(String "Edith")|(Numeric 654)|(Numeric 61)|(String "Gabi")
+  (Numeric 1243)|(Numeric 104)|(String "Aubrie")|(Numeric 1243)|(Numeric 104)|(String "Leona")
+  (Numeric 1474)|(Numeric 23)|(String "Dacia")|(Numeric 1474)|(Numeric 23)|(String "Elvira")
+  (Numeric 1565)|(Numeric 55)|(String "Dulcinea")|(Numeric 1565)|(Numeric 55)|(String "Ursulina")
+  (Numeric 1698)|(Numeric 99)|(String "Dale")|(Numeric 1698)|(Numeric 99)|(String "Lenna")
+  (Numeric 1700)|(Numeric 52)|(String "Hyacinthe")|(Numeric 1700)|(Numeric 52)|(String "Selma")
+  (Numeric 1736)|(Numeric 58)|(String "Justinn")|(Numeric 1736)|(Numeric 58)|(String "Lanna")
+  (Numeric 1781)|(Numeric 72)|(String "Starla")|(Numeric 1781)|(Numeric 72)|(String "Kylynn")
+  (Numeric 2024)|(Numeric 60)|(String "Lenna")|(Numeric 2024)|(Numeric 60)|(String "Arlena")
+  (Numeric 2121)|(Numeric 79)|(String "Micheline")|(Numeric 2121)|(Numeric 79)|(String "Nonnah")
+  (Numeric 2138)|(Numeric 106)|(String "Tressa")|(Numeric 2138)|(Numeric 106)|(String "Jsandye")
+  (Numeric 2530)|(Numeric 76)|(String "Patricia")|(Numeric 2530)|(Numeric 76)|(String "Codie")
+  (Numeric 2580)|(Numeric 64)|(String "Therine")|(Numeric 2580)|(Numeric 64)|(String "Maisey")
+  (Numeric 2668)|(Numeric 116)|(String "Addia")|(Numeric 2668)|(Numeric 116)|(String "Gwenneth")
+  (Numeric 2866)|(Numeric 19)|(String "Babita")|(Numeric 2866)|(Numeric 19)|(String "Cherrita")
+  (Numeric 3044)|(Numeric 74)|(String "Blake")|(Numeric 3044)|(Numeric 74)|(String "Tierney")
+  (Numeric 3305)|(Numeric 81)|(String "Margette")|(Numeric 3305)|(Numeric 81)|(String "Yetty")
+  (Numeric 3474)|(Numeric 30)|(String "Dorothy")|(Numeric 3474)|(Numeric 30)|(String "Elmira")
+  (Numeric 3697)|(Numeric 104)|(String "Isa")|(Numeric 3697)|(Numeric 104)|(String "Theodora")
+  (Numeric 3718)|(Numeric 98)|(String "Gisela")|(Numeric 3718)|(Numeric 98)|(String "Bernardine")
+  (Numeric 3734)|(Numeric 81)|(String "Albertina")|(Numeric 3734)|(Numeric 81)|(String "Zia")
+  (Numeric 3797)|(Numeric 51)|(String "Marguerite")|(Numeric 3797)|(Numeric 51)|(String "Krystle")
+  (Numeric 4049)|(Numeric 40)|(String "Marsiella")|(Numeric 4049)|(Numeric 40)|(String "Dorthy")
+  (Numeric 4099)|(Numeric 99)|(String "Mariann")|(Numeric 4099)|(Numeric 99)|(String "Zaria")
+  (Numeric 4103)|(Numeric 23)|(String "Kathy")|(Numeric 4103)|(Numeric 23)|(String "Jean")
+  (Numeric 4131)|(Numeric 55)|(String "Lory")|(Numeric 4131)|(Numeric 55)|(String "Kathi")
+  (Numeric 4197)|(Numeric 72)|(String "Olivette")|(Numeric 4197)|(Numeric 72)|(String "Roseline")
+  (Numeric 4550)|(Numeric 108)|(String "Reeba")|(Numeric 4550)|(Numeric 108)|(String "Fanny")
+  (Numeric 4625)|(Numeric 17)|(String "Ericka")|(Numeric 4625)|(Numeric 17)|(String "Riannon")
+  (Numeric 4997)|(Numeric 55)|(String "Kellen")|(Numeric 4997)|(Numeric 55)|(String "Latisha")

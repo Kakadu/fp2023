@@ -1,3 +1,4 @@
+numeric,string,string,numeric
 id,firstname,profession,age
 0,Andree,doctor,90
 1,Winny,worker,43

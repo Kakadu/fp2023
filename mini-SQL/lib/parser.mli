@@ -1,3 +1,7 @@
+(** Copyright 2023-2024, Zaytsev Dmitriy *)
+
+(** SPDX-License-Identifier: CC0-1.0 *)
+
 (** SQL-values parser *)
 val value_p : Ast.value Angstrom.t
 

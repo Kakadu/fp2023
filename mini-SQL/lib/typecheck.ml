@@ -1,3 +1,7 @@
+(** Copyright 2023-2024, Zaytsev Dmitriy *)
+
+(** SPDX-License-Identifier: CC0-1.0 *)
+
 module Exec (M : Utils.MONAD_FAIL) = struct
   open M
   open Types
@@ -256,6 +260,4 @@ module Exec (M : Utils.MONAD_FAIL) = struct
        | Some x -> return x
        | None -> fail (TypeConversionFail (a, "Bool")))
   ;;
-
-  (** Get current item from sheet *)
 end

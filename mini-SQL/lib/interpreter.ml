@@ -1,7 +1,9 @@
+(** Copyright 2023-2024, Zaytsev Dmitriy *)
+
+(** SPDX-License-Identifier: CC0-1.0 *)
+
 open Types
 open Utils
-(* --- TYPES FOR TYPECHECK & INTERPRETATION --- *)
-
 (** extended version of column type *)
 type int_column =
   { column_index : int
@@ -365,7 +367,7 @@ module Eval (M : Utils.MONAD_FAIL) = struct
     | Project (node, exprs) -> execute node >>= fun table -> exec_project table exprs
   ;;
 
-  open Environment.Env(M)
+  open Environment.Env (M)
 
   let eval (base_folder : string) (request : Ast.request) : (Table.t, error) t =
     let get_node base request = transform_request base request in
