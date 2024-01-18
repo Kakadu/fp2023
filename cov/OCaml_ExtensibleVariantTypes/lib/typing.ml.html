@@ -293,57 +293,57 @@ let tint = TGround GInt
 let tbool = TGround GBool
 let tnil = TGround GNil
 let tunit = TGround GUnit
-let tarrow left_type right_type = <span data-count="6380">T</span>Arr (left_type, right_type)
-let ttuple type_list = <span data-count="71">T</span>Tuple type_list
-let tlist typ = <span data-count="4330">T</span>List typ
-let tvar n = <span data-count="4968">T</span>Var n
+let tarrow left_type right_type = <span data-count="4475">T</span>Arr (left_type, right_type)
+let ttuple type_list = <span data-count="52">T</span>Tuple type_list
+let tlist typ = <span data-count="2455">T</span>List typ
+let tvar n = <span data-count="3339">T</span>Var n
 
 let rec pp_type fmt typ =
-  <span data-count="242">l</span>et open Format in
+  <span data-count="177">l</span>et open Format in
   let arrow = function
-    | <span data-count="8">T</span>Arr _ -&gt; format_of_string "(%a)"
-    | <span data-count="53">_</span> -&gt; format_of_string "%a"
+    | <span data-count="6">T</span>Arr _ -&gt; format_of_string "(%a)"
+    | <span data-count="39">_</span> -&gt; format_of_string "%a"
   in
   match typ with
-  | <span data-count="100">T</span>Ground x -&gt;
+  | <span data-count="77">T</span>Ground x -&gt;
     (match x with
-     | <span data-count="94">G</span>Int -&gt; fprintf fmt "int"
+     | <span data-count="71">G</span>Int -&gt; fprintf fmt "int"
      | <span data-count="6">G</span>Bool -&gt; fprintf fmt "bool"
      | <span data-count="0">G</span>Nil -&gt; fprintf fmt "nil"
      | <span data-count="0">G</span>Unit -&gt; fprintf fmt "Unit")
-  | <span data-count="37">T</span>Var var -&gt; fprintf fmt "%s" ("'" ^ Char.escape<span data-count="37">d</span> (Char.ch<span data-count="37">r</span> (var + 97)))
-  | <span data-count="8">T</span>Tuple value_list -&gt;
+  | <span data-count="27">T</span>Var var -&gt; fprintf fmt "%s" ("'" ^ Char.escape<span data-count="27">d</span> (Char.ch<span data-count="27">r</span> (var + 97)))
+  | <span data-count="6">T</span>Tuple value_list -&gt;
     let pp_tuple value_list =
-      <span data-count="8">l</span>et pp_el fmt typ =
-        <span data-count="22">l</span>et s =
+      <span data-count="6">l</span>et pp_el fmt typ =
+        <span data-count="17">l</span>et s =
           match typ with
           | <span data-count="0">T</span>Tuple _ -&gt; format_of_strin<span data-count="0">g</span> "(%a)"
-          | <span data-count="22">_</span> -&gt; format_of_strin<span data-count="22">g</span> "%a"
+          | <span data-count="17">_</span> -&gt; format_of_strin<span data-count="17">g</span> "%a"
         in
         fprintf fmt s pp_type typ
       in
       match value_list with
-      | <span data-count="8">h</span>d :: tl -&gt;
+      | <span data-count="6">h</span>d :: tl -&gt;
         fprintf fmt "%a" pp_el hd;
-        <span data-count="8">L</span>ist.fold_left (fun _ typ -&gt; <span data-count="14">f</span>printf fmt " * %a" pp_el typ) () tl
+        <span data-count="6">L</span>ist.fold_left (fun _ typ -&gt; <span data-count="11">f</span>printf fmt " * %a" pp_el typ) () tl
       | <span data-count="0">_</span> -&gt; ()
     in
     pp_tuple value_list
-  | <span data-count="36">T</span>List typ -&gt;
+  | <span data-count="22">T</span>List typ -&gt;
     fprintf
       fmt
       ((match typ with
-        | <span data-count="23">T</span>Ground _ | <span data-count="10">T</span>Var _ | <span data-count="0">T</span>List _ -&gt; "%a"
-        | <span data-count="3">_</span> -&gt; "(%a)")
-       ^<span data-count="36">^</span> " list")
+        | <span data-count="13">T</span>Ground _ | <span data-count="7">T</span>Var _ | <span data-count="0">T</span>List _ -&gt; "%a"
+        | <span data-count="2">_</span> -&gt; "(%a)")
+       ^<span data-count="22">^</span> " list")
       pp_type
       typ
-  | <span data-count="61">T</span>Arr (typ_left, typ_right) -&gt;
-    fprintf fmt (arro<span data-count="61">w</span> typ_left ^<span data-count="61">^</span> " -&gt; %a") pp_type typ_left pp_type typ_right
+  | <span data-count="45">T</span>Arr (typ_left, typ_right) -&gt;
+    fprintf fmt (arro<span data-count="45">w</span> typ_left ^<span data-count="45">^</span> " -&gt; %a") pp_type typ_left pp_type typ_right
 ;;
 
-let print_typ ?(carriage = <span data-count="44">f</span>alse) typ =
-  <span data-count="62">F</span>ormat.printf ("%s" ^<span data-count="62">^</span> if carriage then <span data-count="18">"</span>\n" else <span data-count="44">"</span>") (Format.asprint<span data-count="62">f</span> "%a" pp_type typ)
+let print_typ ?(carriage = <span data-count="30">f</span>alse) typ =
+  <span data-count="48">F</span>ormat.printf ("%s" ^<span data-count="48">^</span> if carriage then <span data-count="18">"</span>\n" else <span data-count="30">"</span>") (Format.asprint<span data-count="48">f</span> "%a" pp_type typ)
 ;;
 
 type error =
