@@ -684,7 +684,7 @@ let rec pp_value fmt =
 let print_value = print<span data-count="5">f</span> "%a" pp_value
 
 let pp_error fmt = function
-  | <span data-count="0">U</span>nboundValue name -&gt; fprintf fmt "Unbound value %s" name
+  | <span data-count="0">U</span>nboundValue id -&gt; fprintf fmt "Unbound value %s" id
   | <span data-count="0">U</span>nsupportedOperation -&gt; fprintf fmt "Unsupported operation"
   | <span data-count="0">D</span>ivision_by_zero -&gt; fprintf fmt "Division by zero"
   | <span data-count="0">N</span>onExhaustivePatternMatching -&gt; fprintf fmt "This pattern-matching is not exhaustive"
@@ -742,28 +742,28 @@ end = struct
     | <span data-count="0">_</span> -&gt; fail NonExhaustivePatternMatching
 
   and eval_decl environment = function
-    | <span data-count="74">D</span>Let (Not_recursive, name, expr) -&gt;
+    | <span data-count="74">D</span>Let (Not_recursive, id, expr) -&gt;
       let* res = eva<span data-count="74">l</span> expr environment in
-      <span data-count="74">r</span>eturn (updat<span data-count="74">e</span> environment name res)
-    | <span data-count="23">D</span>Let (Recursive, name, expr) -&gt;
+      <span data-count="74">r</span>eturn (updat<span data-count="74">e</span> environment id res)
+    | <span data-count="23">D</span>Let (Recursive, id, expr) -&gt;
       let* res = eva<span data-count="23">l</span> expr environment in
       <span data-count="23">(</span>match res with
        | <span data-count="23">V</span>Fun (pat_list, expr, _, env) -&gt;
-         let new_env = update env name res in
-         <span data-count="23">r</span>eturn (updat<span data-count="23">e</span> new_env name (VFun (pat_list, expr, Recursive, new_env)))
-       | <span data-count="0">_</span> -&gt; return (updat<span data-count="0">e</span> environment name res))
+         let new_env = update env id res in
+         <span data-count="23">r</span>eturn (updat<span data-count="23">e</span> new_env id (VFun (pat_list, expr, Recursive, new_env)))
+       | <span data-count="0">_</span> -&gt; return (updat<span data-count="0">e</span> environment id res))
 
   and eval expr environment =
     <span data-count="3707">m</span>atch expr with
-    | <span data-count="247">E</span>Const literal -&gt;
-      (match literal with
+    | <span data-count="247">E</span>Const const -&gt;
+      (match const with
        | <span data-count="197">C</span>Int x -&gt; return @@ VInt x
        | <span data-count="1">C</span>Bool x -&gt; return @@ VBool x
        | <span data-count="49">C</span>Nil -&gt; return @@ VList [])
-    | <span data-count="335">E</span>Binop (left_operand, operation, right_operand) -&gt;
-      let* left_operand = eva<span data-count="335">l</span> left_operand environment in
-      <span data-count="335">l</span>et* right_operand = eva<span data-count="335">l</span> right_operand environment in
-      <span data-count="335">(</span>match left_operand, operation, right_operand with
+    | <span data-count="335">E</span>Binop (left_expr, op, right_expr) -&gt;
+      let* left_value = eva<span data-count="335">l</span> left_expr environment in
+      <span data-count="335">l</span>et* right_value = eva<span data-count="335">l</span> right_expr environment in
+      <span data-count="335">(</span>match left_value, op, right_value with
        | <span data-count="140">V</span>Int x, Add, VInt y -&gt; return @@ VInt (x + y)
        | <span data-count="31">V</span>Int x, Sub, VInt y -&gt; return @@ VInt (x - y)
        | <span data-count="78">V</span>Int x, Mul, VInt y -&gt; return @@ VInt (x * y)
@@ -818,15 +818,15 @@ end = struct
              | <span data-count="472">_</span> -&gt; return @@ VFun (tl, expr, rec_flag, updated_env))
           | <span data-count="0">[</span>] -&gt; fail TypeError)
        | <span data-count="0">_</span> -&gt; fail TypeError)
-    | <span data-count="85">E</span>If (condition, yes, no) -&gt;
-      let* eval_conditional = eva<span data-count="85">l</span> condition environment in
-      <span data-count="85">(</span>match eval_conditional with
-       | <span data-count="62">V</span>Bool true -&gt; eval yes environment
-       | <span data-count="23">V</span>Bool false -&gt; eval no environment
+    | <span data-count="85">E</span>If (cond, thn, els) -&gt;
+      let* value = eva<span data-count="85">l</span> cond environment in
+      <span data-count="85">(</span>match value with
+       | <span data-count="62">V</span>Bool true -&gt; eval thn environment
+       | <span data-count="23">V</span>Bool false -&gt; eval els environment
        | <span data-count="0">_</span> -&gt; fail TypeError)
     | <span data-count="1">E</span>Unop (op, expr) -&gt;
-      let* operand = eva<span data-count="1">l</span> expr environment in
-      <span data-count="1">(</span>match op, operand with
+      let* value = eva<span data-count="1">l</span> expr environment in
+      <span data-count="1">(</span>match op, value with
        | <span data-count="0">P</span>lus, VInt x -&gt; return @@ VInt x
        | <span data-count="0">M</span>inus, VInt x -&gt; return @@ VInt (<span data-count="0">-</span>x)
        | <span data-count="1">N</span>ot, VBool x -&gt; return @@ VBool (not x)
