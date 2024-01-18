@@ -72,12 +72,7 @@
 <a id="L48"></a><span > </span>
 <a id="L49"></a><span > </span>
 <a id="L50"></a><span > </span>
-<a id="L51"></a><span > </span>
-<a id="L52"></a><span > </span>
-<a id="L53"></a><span > </span>
-<a id="L54"></a><span > </span>
-<a id="L55"></a><span > </span>
-<a id="L56"></a><span class="visited"> </span>
+<a id="L51"></a><span class="visited"> </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -133,11 +128,6 @@
 <a href="#L49">49</a>
 <a href="#L50">50</a>
 <a href="#L51">51</a>
-<a href="#L52">52</a>
-<a href="#L53">53</a>
-<a href="#L54">54</a>
-<a href="#L55">55</a>
-<a href="#L56">56</a>
 </pre>
 <pre><code class="ocaml">open OCaml_ExtensibleVariantTypes_lib.Interpreter
 
@@ -147,7 +137,6 @@ let s =
       match lst with
       | [] -&gt; acc
       | hd :: tl -&gt; fold_left f (f acc hd) tl
-
 
     let sum_of_squares_fold =
       let rec init n acc = if n &lt;= 10 then init (n + 1) (n :: acc) else acc in
@@ -161,12 +150,10 @@ let s =
       in
       sum_of_squares_fold 0 numbers
 
-
     let rec map f lst =
       match lst with
       | [] -&gt; []
       | hd :: tl -&gt; f hd :: map f tl
-
 
     let square x = x * x
     let rec init n acc = if n &lt;= 10 then init (n + 1) (n :: acc) else acc
@@ -179,14 +166,12 @@ let s =
         let square_hd = square hd in
         map_square (fold_left (fun x y -&gt; y :: x) acc [ square_hd ]) tl
 
-
     let squares = map_square [] numbers
     let sum_of_squares_map = fold_left (fun x y -&gt; x + y) 0 squares
     let next_number n = if n &lt; 10 then [ n, n + 1 ] else []
 
     let rec unfoldr_next_number acc n =
       if n &lt; 10 then unfoldr_next_number (n :: acc) (n + 1) else acc
-
 
     let numbers_anamorph = unfoldr_next_number [] 1
     let sum_of_squares_anamorph = fold_left (fun x y -&gt; x + (y * y)) 0 numbers_anamorph
