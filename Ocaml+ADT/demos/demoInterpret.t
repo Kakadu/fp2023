@@ -167,14 +167,14 @@ THE TEST CHECKS THE COMPILER ERROR OUTPUT
   > let helper = fun (even, odd) -> (odd 1)
   > let rezult = helper tie
   > EOF
-  "feven": '27 . '27 * int -> int -> int -> int = <fun>
+  "feven": '27 . '27 * (int -> int) -> int -> int = <fun>
   "fix": '2 '3 . (('2 -> '3) -> '2 -> '3) -> '2 -> '3 = <rec fun>
-  "fixpoly": '23 '24 . '23 -> '24 * '23 -> '24 -> '23 -> '24 * '23 -> '24 * '23 -> '24 -> '23 -> '24 -> '23 -> '24 * '23 -> '24 = <fun>
-  "fodd": '33 . int -> int * '33 -> int -> int = <fun>
-  "helper": '42 '44 . '42 * int -> '44 -> '44 = <fun>
+  "fixpoly": '23 '24 . (('23 -> '24) * ('23 -> '24) -> '23 -> '24) * (('23 -> '24) * ('23 -> '24) -> '23 -> '24) -> ('23 -> '24) * ('23 -> '24) = <fun>
+  "fodd": '33 . (int -> int) * '33 -> int -> int = <fun>
+  "helper": '42 '44 . '42 * (int -> '44) -> '44 = <fun>
   "map": '7 '9 . ('7 -> '9) -> '7 * '7 -> '9 * '9 = <fun>
   "rezult": int = 1
-  "tie": int -> int * int -> int = (<fun>, <fun>)
+  "tie": (int -> int) * (int -> int) = (<fun>, <fun>)
   $ ./demoInterpret.exe << EOF
   > let eq = fun a -> (fun b -> a = b)
   > let answ = eq (1 :: []) (1 :: [])

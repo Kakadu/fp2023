@@ -27,8 +27,14 @@ let tadt str1 = TAdt str1
 
 let rec pp_ty_tuple fmt = function
   | [] -> ()
-  | [ h ] -> fprintf fmt "%a" pp_ty h
-  | h :: tl -> fprintf fmt "%a * %a" pp_ty h pp_ty_tuple tl
+  | [ h ] ->
+    (match h with
+     | TArr (_, _) -> fprintf fmt "(%a)" pp_ty h
+     | _ -> fprintf fmt "%a" pp_ty h)
+  | h :: tl ->
+    (match h with
+     | TArr (_, _) -> fprintf fmt "(%a) * %a" pp_ty h pp_ty_tuple tl
+     | _ -> fprintf fmt "%a * %a" pp_ty h pp_ty_tuple tl)
 
 and pp_ty fmt = function
   | TVar num -> fprintf fmt "'%d" num
