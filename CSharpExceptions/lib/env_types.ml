@@ -14,7 +14,7 @@ module Type_check_env = struct
     | Fild_sig of fild_sign
   [@@deriving show { with_path = false }]
 
-  type t_loc_env = t_env_value IdentMap.t
+  type t_loc_env = t_env_value Ident_Map.t
   type type_check_ctx = text * t_loc_env * meth_type option * code_ident option
   type tp_checked = TP_Ok
 end
@@ -24,11 +24,12 @@ module Eval_env = struct
 
   type iconst =
     | Null_v
-    | String_v of string (* Операции над типом не поддерживаются *)
-    | Int_v of int (* Арифметические операции *)
-    | Char_v of char (* Операции над типом не поддерживаются *)
-    | Bool_v of bool (* Только логические операции *)
-    | Instance_v of address (* Обращение по точке + '==' и '!=' (равенство по ссылке) *)
+    | String_v of string (** Operations on type are not supported *)
+    | Int_v of int (** All arithmetic operations supported *)
+    | Char_v of char (* Operations on type are not supported *)
+    | Bool_v of bool (* All logical operations supported *)
+    | Instance_v of address
+      (* Calling by point and [==]; [!=] (equality by reference) are supported *)
   [@@deriving show { with_path = false }, eq]
 
   let val_to_iconst = function
@@ -67,14 +68,10 @@ module Eval_env = struct
   let create_val x = to_const @@ to_init x
   let create_inst x = to_const @@ to_init @@ to_inst x
 
-  type t_loc_env = address * t_env_value IdentMap.t list
-
-  (*  *)
+  type t_loc_env = address * t_env_value Ident_Map.t list
   type t_global_env = text
-
-  (*  *)
-  type mem_els = code_ident * (t_env_value * fild_sign) IdentMap.t
-  type memory = address * mem_els MemMap.t
+  type mem_els = code_ident * (t_env_value * fild_sign) Ident_Map.t
+  type memory = address * mem_els Mem_Map.t
   type interpret_ctx = t_global_env * t_loc_env * memory * sys_memory
 
   type ('b, 'sys_err) sig_ =

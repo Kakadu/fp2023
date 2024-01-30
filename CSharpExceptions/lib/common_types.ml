@@ -12,7 +12,7 @@ module Code_id = struct
   let compare = compare
 end
 
-module CodeMap = Stdlib.Map.Make (Code_id)
+module Code_Map = Stdlib.Map.Make (Code_id)
 
 module Ident = struct
   type t = ident
@@ -20,21 +20,20 @@ module Ident = struct
   let compare = compare
 end
 
-(* TODO: снэйккейс сделать *)
-module IdentMap = Stdlib.Map.Make (Ident)
+module Ident_Map = Stdlib.Map.Make (Ident)
 
 type address = Link of int [@@deriving show { with_path = false }, eq]
 
 let incr_ (Link ad) = Link (ad + 1)
 let ln x = Link x
 
-module MemAddress = struct
+module Mem_Address = struct
   type t = address
 
   let compare = compare
 end
 
-module MemMap = Stdlib.Map.Make (MemAddress)
+module Mem_Map = Stdlib.Map.Make (Mem_Address)
 
 type internal_address = ILink of int [@@deriving show { with_path = false }, eq]
 
@@ -49,7 +48,6 @@ end
 
 module Intern_Mem = Stdlib.Map.Make (Intern_Mem_Address)
 
-(** Type used as a key for Intern_Mems *)
 type base_lib_id = Fl_descriptors
 
 module Sys_id = struct
@@ -61,11 +59,7 @@ end
 module Sys_Map = Stdlib.Map.Make (Sys_id)
 
 type file_st = W_File of out_channel
-
-type sys_mem_el =
-  | Files of (internal_address * file_st Intern_Mem.t)
-      (** Next available internal_address * Map *)
-
+type sys_mem_el = Files of (internal_address * file_st Intern_Mem.t)
 type sys_memory = sys_mem_el Sys_Map.t
 
 type code_ctx =
@@ -77,4 +71,4 @@ let get_class_decl = function
   | Class_ctx cl -> cl
 ;;
 
-type text = code_ctx CodeMap.t
+type text = code_ctx Code_Map.t

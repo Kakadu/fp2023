@@ -195,7 +195,7 @@ let get_system_constr_opt cl_id =
   | None -> None
 ;;
 
-let run_sys_constructor_ornormal f cl_id =
+let run_sys_constructor_or_normal f cl_id =
   f
   >>= fun ad ->
   (get_system_constr_opt cl_id

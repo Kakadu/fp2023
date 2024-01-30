@@ -93,7 +93,7 @@ let c_eval_ e_stm e_expr l_env_l _ args = function
       let f = e_stm body in
       run_method Void prms args new_ad l_env_l f *> return_n new_ad
     in
-    Base_lib.run_sys_constructor_ornormal eval_constructor (Code_ident sign.con_id)
+    Base_lib.run_sys_constructor_or_normal eval_constructor (Code_ident sign.con_id)
 ;;
 
 let eval_constructor e l_env_l e_stm e_expr args =
@@ -334,7 +334,7 @@ let eval_expr l_env_l = eval_expr (eval_statement l_env_l) l_env_l
 
 let interpret_ genv cl_id =
   let (Code_ident main_cl_id) = cl_id in
-  let local_env = IdentMap.empty in
+  let local_env = Ident_Map.empty in
   let lenv_with_constructors =
     let f cl_id cl_decl = function
       | None -> None
@@ -345,9 +345,9 @@ let interpret_ genv cl_id =
            find_cl_meth id cl_decl
            |> (function
            | None -> None
-           | Some constr -> Some (IdentMap.add id (ICode constr) acc)))
+           | Some constr -> Some (Ident_Map.add id (ICode constr) acc)))
     in
-    CodeMap.fold f genv (Some local_env)
+    Code_Map.fold f genv (Some local_env)
   in
   let run_main l_env_l =
     let l_env_l = [ l_env_l ] in
@@ -393,7 +393,7 @@ let interpret str =
         | _, Eval_res x -> Result.ok x
         | _, Signal (Error x) -> Result.error x
         | (_, _, (_, mem), _), Signal (Exn x) ->
-          (match MemMap.find_opt x mem with
+          (match Mem_Map.find_opt x mem with
            | Some (cl_id, _) -> Result.error (Interpret_error (User_exception cl_id))
            | None ->
              Result.error (Interpret_error (System_error "Exception instance missing")))

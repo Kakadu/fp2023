@@ -97,7 +97,7 @@ module Type_check_Monad = struct
   ;;
 
   let run : 'a t -> ctx_env * ('a, error) Result.t =
-    fun f -> f (CodeMap.empty, IdentMap.empty, None, None)
+    fun f -> f (Code_Map.empty, Ident_Map.empty, None, None)
   ;;
 
   let save_local : t_loc_env -> unit t =
@@ -109,7 +109,7 @@ module Type_check_Monad = struct
   let save_local_el : ident -> t_env_value -> unit t =
     fun id t_val c_env ->
     let _, local_env, _, _ = c_env in
-    let new_l = IdentMap.add id t_val local_env in
+    let new_l = Ident_Map.add id t_val local_env in
     save_local new_l c_env
   ;;
 
@@ -122,7 +122,7 @@ module Type_check_Monad = struct
   let save_global_el : code_ident -> code_ctx -> unit t =
     fun id ctx c_env ->
     let code, _, _, _ = c_env in
-    let new_l = CodeMap.add id ctx code in
+    let new_l = Code_Map.add id ctx code in
     save_global new_l c_env
   ;;
 
@@ -143,7 +143,7 @@ module Type_check_Monad = struct
   let read_local_el : ident -> t_env_value t =
     fun id c_env ->
     let _, local_env, _, _ = c_env in
-    match IdentMap.find_opt id local_env with
+    match Ident_Map.find_opt id local_env with
     | Some x -> return x c_env
     | None -> fail (Type_check_error (Not_find_ident_of id)) c_env
   ;;
@@ -159,7 +159,7 @@ module Type_check_Monad = struct
       | Code_ident x -> x
     in
     let code, _, _, _ = c_env in
-    match CodeMap.find_opt id code with
+    match Code_Map.find_opt id code with
     | Some x -> return x c_env
     | None -> fail (Type_check_error (Not_find_ident_of id_)) c_env
   ;;
@@ -250,9 +250,9 @@ module Eval_Monad = struct
     Sys_Map.add Fl_descriptors (Files (i_ln 0, Intern_Mem.empty)) empt
   ;;
 
-  let run : 'c CodeMap.t -> ('a, 'b) t -> ctx_env * ('a, 'b, error) eval_t =
+  let run : 'c Code_Map.t -> ('a, 'b) t -> ctx_env * ('a, 'b, error) eval_t =
     fun glenv f ->
-    f (glenv, (ln (-1), [ IdentMap.empty ]), (ln 0, MemMap.empty), init_sys_mem)
+    f (glenv, (ln (-1), [ Ident_Map.empty ]), (ln 0, Mem_Map.empty), init_sys_mem)
   ;;
 
   let save : ctx_env -> (unit, 'b) t = fun new_ctx _ -> new_ctx, nsig ()
@@ -302,7 +302,7 @@ module Eval_M_State_Extention = struct
     fun id st ->
     let (Code_ident id_) = id in
     let code, _, _, _ = st in
-    match CodeMap.find_opt id code with
+    match Code_Map.find_opt id code with
     | Some x -> return_n x st
     | None -> fail (Interpret_error (Non_existent_id id_)) st
   ;;
@@ -359,14 +359,14 @@ module Eval_M_State_Extention = struct
       match cur with
       | Fild (sign, e_opt) ->
         let { f_modif = _; f_type = _; f_id } = sign in
-        eval e_opt >>| fun v -> IdentMap.add f_id (v, sign) tl
+        eval e_opt >>| fun v -> Ident_Map.add f_id (v, sign) tl
       | _ -> return_n tl
     in
-    List.fold_left g (return_n IdentMap.empty) cl_mems
+    List.fold_left g (return_n Ident_Map.empty) cl_mems
     >>= fun filds ->
     read_mem
     >>= fun (ad, mem) ->
-    let new_mem = MemMap.add ad (Code_ident cl_id, filds) mem in
+    let new_mem = Mem_Map.add ad (Code_ident cl_id, filds) mem in
     let new_ad = incr_ ad in
     save_mem (new_ad, new_mem) *> return_n ad
   ;;
@@ -374,13 +374,13 @@ module Eval_M_State_Extention = struct
   let read_instance ad =
     read_mem
     >>= fun (_, mem) ->
-    match MemMap.find_opt ad mem with
+    match Mem_Map.find_opt ad mem with
     | Some el -> return_n el
     | None -> fail (Interpret_error Non_existent_address)
   ;;
 
   let save_instance ad mem_el =
-    read_mem >>= fun (x, mem) -> save_mem (x, MemMap.add ad mem_el mem)
+    read_mem >>= fun (x, mem) -> save_mem (x, Mem_Map.add ad mem_el mem)
   ;;
 
   let read_inst_cl ad = read_instance ad >>= fun (cl_id, _) -> return_n cl_id
@@ -388,7 +388,7 @@ module Eval_M_State_Extention = struct
   let read_inst_el id ad =
     read_instance ad
     >>= fun (_, el) ->
-    match IdentMap.find_opt id el with
+    match Ident_Map.find_opt id el with
     | Some x -> return_n x
     | None -> fail (Interpret_error Non_existent_id_)
   ;;
@@ -407,9 +407,9 @@ module Eval_M_State_Extention = struct
   let update_instance_el id ad v =
     return_n () *> read_instance ad
     >>= fun (cl_id, el) ->
-    match IdentMap.find_opt id el with
+    match Ident_Map.find_opt id el with
     | Some (_, sign) ->
-      let new_ = IdentMap.add id (v, sign) el in
+      let new_ = Ident_Map.add id (v, sign) el in
       save_instance ad (cl_id, new_)
     | None -> fail (Interpret_error (Non_existent_id id))
   ;;
@@ -434,7 +434,7 @@ module Eval_M_State_Extention = struct
     let f acc x =
       match acc with
       | Some x -> Some x
-      | None -> IdentMap.find_opt id x
+      | None -> Ident_Map.find_opt id x
     in
     List.fold_left f None l_env_l
     |> function
@@ -448,12 +448,12 @@ module Eval_M_State_Extention = struct
       | fist_part, None, second_part ->
         (match second_part with
          | [] ->
-           IdentMap.find_opt id x
+           Ident_Map.find_opt id x
            |> (function
            | Some v -> fist_part, Some (x, v), []
            | None -> x :: fist_part, None, [])
          | x :: tl ->
-           IdentMap.find_opt id x
+           Ident_Map.find_opt id x
            |> (function
            | Some v -> fist_part, Some (x, v), tl
            | None -> x :: fist_part, None, tl))
@@ -476,7 +476,7 @@ module Eval_M_State_Extention = struct
     read_local
     >>= fun (ad, l_env_l) ->
     let s_local =
-      let new_l_env l_env = return_n @@ IdentMap.add id v l_env in
+      let new_l_env l_env = return_n @@ Ident_Map.add id v l_env in
       let is_mutable_ = function
         | ICode _ -> fail (Interpret_error Methods_cannot_be_assignable)
         | x -> return_n x
@@ -501,7 +501,7 @@ module Eval_M_State_Extention = struct
     | [] -> fail (Interpret_error (System_error "Problems with the local environment"))
     | l_env :: tl ->
       let s_local =
-        let new_l_env = IdentMap.add id v l_env in
+        let new_l_env = Ident_Map.add id v l_env in
         save_local (ad, new_l_env :: tl)
       in
       let cond = read_local_el id *> return_n false <|> return_n true in
@@ -531,7 +531,7 @@ module Eval = struct
         fail (Interpret_error (System_error "Problems with the local environment"))
       | ad, _ :: tl -> save_local (ad, tl)
     in
-    let new_l_env_l = save_local (ad, IdentMap.empty :: l_env_l) in
+    let new_l_env_l = save_local (ad, Ident_Map.empty :: l_env_l) in
     (new_l_env_l *> f)
     @!|>>= function
     | Eval_res x -> return_env *> return_n x
@@ -591,7 +591,7 @@ module Eval = struct
            let save_old_mem_with_exn el =
              let ad_, mem = old_mem in
              save_mem (incr_ ad_, mem) *> read_mem
-             >>= fun (x, mem) -> save_mem (x, MemMap.add ad_ el mem) *> return_n ad_
+             >>= fun (x, mem) -> save_mem (x, Mem_Map.add ad_ el mem) *> return_n ad_
            in
            read_instance ad
            >>= fun mem_el -> save_local old_l_env_l *> save_old_mem_with_exn mem_el
@@ -605,7 +605,7 @@ module Eval = struct
 
   let run_method
     :  meth_type -> ident list -> t_env_value list -> address
-    -> t_env_value IdentMap.t list -> ('a, 'c) t -> ('c option, 'd) t
+    -> t_env_value Ident_Map.t list -> ('a, 'c) t -> ('c option, 'd) t
     =
     fun return_tp params args ad base_lenv f ->
     let run_f =

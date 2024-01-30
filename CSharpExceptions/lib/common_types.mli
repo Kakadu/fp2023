@@ -14,7 +14,7 @@ module Code_id : sig
   val compare : 'a -> 'a -> int
 end
 
-module CodeMap : sig
+module Code_Map : sig
   type key = code_ident
   type 'a t = 'a Map.Make(Code_id).t
 
@@ -32,7 +32,7 @@ module Ident : sig
   val compare : 'a -> 'a -> int
 end
 
-module IdentMap : sig
+module Ident_Map : sig
   type key = Ast.ident
   type 'a t = 'a Map.Make(Ident).t
 
@@ -43,6 +43,7 @@ module IdentMap : sig
   val find_opt : key -> 'a t -> 'a option
 end
 
+(** Represents the address of an object instance *)
 type address = Link of int
 
 val pp_address : Format.formatter -> address -> unit
@@ -51,15 +52,15 @@ val equal_address : address -> address -> bool
 val incr_ : address -> address
 val ln : int -> address
 
-module MemAddress : sig
+module Mem_Address : sig
   type t = address
 
   val compare : 'a -> 'a -> int
 end
 
-module MemMap : sig
+module Mem_Map : sig
   type key = address
-  type 'a t = 'a Map.Make(MemAddress).t
+  type 'a t = 'a Map.Make(Mem_Address).t
 
   val empty : 'a t
   val is_empty : 'a t -> bool
@@ -68,6 +69,10 @@ module MemMap : sig
   val find_opt : key -> 'a t -> 'a option
 end
 
+(** Represents a reference to a description of the internal
+    fields of a system class instance from [Base_lib]
+    This is necessary because some field types are not
+    representable in the language, such as [out_channel] *)
 type internal_address = ILink of int
 
 val pp_internal_address : Format.formatter -> internal_address -> unit
@@ -92,6 +97,7 @@ module Intern_Mem : sig
   val find_opt : key -> 'a t -> 'a option
 end
 
+(** Type used as a key for Intern_Mems *)
 type base_lib_id = Fl_descriptors
 
 module Sys_id : sig
@@ -111,7 +117,11 @@ module Sys_Map : sig
 end
 
 type file_st = W_File of out_channel
-type sys_mem_el = Files of (internal_address * file_st Intern_Mem.t)
+
+type sys_mem_el =
+  | Files of (internal_address * file_st Intern_Mem.t)
+      (** Next available internal_address * Map *)
+
 type sys_memory = sys_mem_el Sys_Map.t
 
 type code_ctx =
@@ -120,4 +130,4 @@ type code_ctx =
 
 val get_class_decl : code_ctx -> Ast.class_decl
 
-type text = code_ctx CodeMap.t
+type text = code_ctx Code_Map.t

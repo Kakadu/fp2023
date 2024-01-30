@@ -585,7 +585,7 @@ let class_check cl_decl =
 let type_check_ ast =
   let (Ast ast) = ast in
   let type_checker_ = iter_left class_check ast in
-  continue type_checker_ (CodeMap.empty, IdentMap.empty, None, None)
+  continue type_checker_ (Code_Map.empty, Ident_Map.empty, None, None)
 ;;
 
 let update_local lib =
@@ -617,7 +617,7 @@ let type_check ast =
   match lib_ctx with
   | (_, Result.Error info), _ -> run (fail info)
   | ((ctx, _, _, _), Result.Ok _), lib ->
-    continue (update_local lib *> type_checker_) (ctx, IdentMap.empty, None, None)
+    continue (update_local lib *> type_checker_) (ctx, Ident_Map.empty, None, None)
 ;;
 
 let type_check_with_main ast =

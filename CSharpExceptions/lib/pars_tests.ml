@@ -5,7 +5,7 @@
 open Csharp_Exc_Lib.Parser
 open Csharp_Exc_Lib.Ast
 
-(* *******************->  tests for Parser and Ast  <-******************* *)
+(** *******************->  tests for Parser and Ast  <-******************* *)
 
 let eq_wrap ~eq ans = function
   | Some x when eq x ans -> true
@@ -25,7 +25,7 @@ let test_pp_class_member pr = print_pars pr pp_class_member
 let test_pp_class_decl = print_pars ep_class pp_class_decl
 let test_pp_tAst = print_pars ep_classes pp_tast
 
-(* ep_operation tests: *)
+(** ep_operation tests: *)
 
 let%expect_test "Operations - arithmetic" =
   test_pp_expr ep_operation {|1 + 2|};
@@ -105,7 +105,7 @@ let%expect_test "Method invocation" =
        )) |}]
 ;;
 
-(* ep_decl *)
+(** ep_decl *)
 
 let%expect_test "Declaration + assign" =
   test_pp_statement ep_decl {|a         egor    =    a (1+2,  d  , "qwe") + 100000|};
@@ -128,7 +128,7 @@ let%expect_test "Declaration only" =
     (SDecl ((Var_decl ((TVar (TNullable TString)), (Id "egor"))), None)) |}]
 ;;
 
-(* ep loops and branches *)
+(** ep loops and branches *)
 
 let%expect_test "" =
   test_pp_statement ep_try_catch_fin {|try {}|};
