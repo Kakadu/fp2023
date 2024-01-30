@@ -1,3 +1,7 @@
+(** Copyright 2021-2023, Georgy Sichkar *)
+
+(** SPDX-License-Identifier: LGPL-3.0-or-later *)
+
 module Type_check_env : sig
   type t_env_value =
     | Method_sig of Ast.method_sign
@@ -69,10 +73,10 @@ module Eval_env : sig
 
   type memory = Common_types.address * mem_els Common_types.MemMap.t
 
-    (** * Classes
-        * (A reference to an instance of the class within which calculations occur * Local env)
-        * (Next available free address * Map with class instances)
-        * System information about file descriptors, etc. *)
+  (** * Classes
+      * (A reference to an instance of the class within which calculations occur * Local env)
+      * (Next available free address * Map with class instances)
+      * System information about file descriptors, etc. *)
   type interpret_ctx = t_global_env * t_loc_env * memory * Common_types.sys_memory
 
   type ('b, 'sys_err) sig_ =
