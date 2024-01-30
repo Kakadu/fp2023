@@ -6,7 +6,7 @@ open Ast
 open Errors
 open Common_types
 
-module BaseSE_monad = struct
+module BaseSE_Monad = struct
   type ('st, 'a, 'err) t = 'st -> 'st * ('a, 'err) Result.t
 
   let return : 'a -> ('st, 'a, 'err) t = fun x st -> st, Result.ok x
@@ -86,7 +86,7 @@ end
 
 module Type_check_Monad = struct
   open Env_types.Type_check_env
-  include BaseSE_monad
+  include BaseSE_Monad
 
   type ctx_env = type_check_ctx
   type 'a t = ctx_env -> ctx_env * ('a, error) Result.t

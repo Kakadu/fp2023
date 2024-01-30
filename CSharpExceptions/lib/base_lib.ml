@@ -67,14 +67,14 @@ module File_Info = struct
     ;;
   end
 
-  module Filds = struct
+  module Fields = struct
     let internal_address_name = Id "UID"
     let path = Id "path"
     let state = Id "Opened"
   end
 
   module Methods = struct
-    open Filds
+    open Fields
     open System_mem_internal_functions
 
     module Open_file = struct

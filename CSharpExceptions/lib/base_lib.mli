@@ -26,7 +26,7 @@ module File_Info : sig
     val read_out_channel_from_self : ident -> (out_channel, 'a) t
   end
 
-  module Filds : sig
+  module Fields : sig
     val internal_address_name : ident
     val path : ident
     val state : ident
