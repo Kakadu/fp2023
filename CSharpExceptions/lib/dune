@@ -16,8 +16,7 @@
  (preprocess
   (pps ppx_deriving.show ppx_deriving.eq))
  (instrumentation
-  (backend bisect_ppx))
- (inline_tests))
+  (backend bisect_ppx)))
 
 (library
  (name ml_tests)
