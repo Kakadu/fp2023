@@ -78,7 +78,7 @@ module Eval_env = struct
     | Return of 'b option
     | Exn of address
     | Break
-    | Error of 'sys_err
+    | Err of 'sys_err
 
   type ('a, 'b, 'sys_err) eval_t =
     | Eval_res of 'a
@@ -89,5 +89,5 @@ module Eval_env = struct
   let rsig x = to_sig (Return x)
   let bsig = to_sig Break
   let esig add = to_sig (Exn add)
-  let error err = to_sig (Error err)
+  let error err = to_sig (Err err)
 end

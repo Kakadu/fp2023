@@ -135,7 +135,7 @@ module Eval_env : sig
     | Exn of Common_types.address
         (** Sent after processing the [throw]. Contains the address of the instance of the thrown exception. *)
     | Break (** Sent after processing the [break]. *)
-    | Error of 'sys_err (** Is a system error. Almost never stops. *)
+    | Err of 'sys_err (** Is a system error. Almost never stops. *)
 
   type ('a, 'b, 'sys_err) eval_t =
     | Eval_res of 'a

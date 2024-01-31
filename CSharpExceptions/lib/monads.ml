@@ -202,7 +202,7 @@ module Eval_Monad = struct
        | Return x -> return_r x st1
        | Exn ad -> return_e ad st1
        | Break -> return_b () st1
-       | Error err -> fail err st1)
+       | Err err -> fail err st1)
   ;;
 
   let ( |>>= ) :
@@ -218,7 +218,7 @@ module Eval_Monad = struct
       (match s with
        | Return x -> ret_f x st1
        | Exn ad -> return_e ad st1
-       | Error err -> fail err st1
+       | Err err -> fail err st1
        | Break ->
          fail
            (Interpret_error
@@ -242,7 +242,7 @@ module Eval_Monad = struct
        | Return x -> return_r x st1
        | Exn ad -> return_e ad st1
        | Break -> return_b () st1
-       | Error _ -> a2 st)
+       | Err _ -> a2 st)
   ;;
 
   let init_sys_mem =
@@ -540,7 +540,7 @@ module Eval = struct
        | Exn ad -> return_env *> return_e ad
        | Return x -> return_env *> return_r x
        | Break -> return_env *> return_b ()
-       | Error x -> fail x)
+       | Err x -> fail x)
   ;;
 
   let in_isolation f =
@@ -555,7 +555,7 @@ module Eval = struct
        | Exn ad -> return_env *> return_e ad
        | Return x -> return_env *> return_r x
        | Break -> return_env *> return_b ()
-       | Error x -> fail x)
+       | Err x -> fail x)
   ;;
 
   let run_in_another_self ad new_lenv f =
@@ -570,7 +570,7 @@ module Eval = struct
        | Exn ad -> return_e ad
        | Break -> return_b ()
        | Return x -> return_r x
-       | Error err -> fail err)
+       | Err err -> fail err)
   ;;
 
   let run_tcf tf cf ff =
@@ -600,7 +600,7 @@ module Eval = struct
        | Break ->
          ff_new *> fail (Interpret_error (Break_error "Attempt to use break with try"))
        | Return x -> ff_new *> return_r x
-       | Error err -> ff_new *> fail err)
+       | Err err -> ff_new *> fail err)
   ;;
 
   let run_method
@@ -643,6 +643,6 @@ module Eval = struct
        | Break -> return_n ()
        | Exn x -> return_e x
        | Return x -> return_r x
-       | Error err -> fail err)
+       | Err err -> fail err)
   ;;
 end

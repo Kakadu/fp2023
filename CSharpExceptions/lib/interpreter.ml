@@ -391,7 +391,7 @@ let interpret str =
      | Result.Ok (genv, main_id) ->
        (match interpret_ genv main_id with
         | _, Eval_res x -> Result.ok x
-        | _, Signal (Error x) -> Result.error x
+        | _, Signal (Err x) -> Result.error x
         | (_, _, (_, mem), _), Signal (Exn x) ->
           (match Mem_Map.find_opt x mem with
            | Some (cl_id, _) -> Result.error (Interpret_error (User_exception cl_id))
