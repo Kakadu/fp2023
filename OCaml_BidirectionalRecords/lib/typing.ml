@@ -2,8 +2,15 @@
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-(* increment the counter when creating a new variable *)
-type counter = int [@@deriving show { with_path = false }]
+type tyvar = int [@@deriving show { with_path = false }]
+
+type primitives =
+  | Int
+  | String
+  | Char
+  | Bool
+  | Unit
+[@@deriving show { with_path = false }]
 
 module VarSet = struct
   include Stdlib.Set.Make (Int)
@@ -14,23 +21,33 @@ module VarSet = struct
     Format.fprintf ppf "]"
   ;;
 end
-
-type counter_set = VarSet.t [@@deriving show { with_path = false }]
-
-type ty =
-  | TVar of int (* 'a, 'b type *)
-  | TPrim of string (* primitive types *)
-  | TArr of ty * ty (* 'a -> 'a *)
-  | TUnit
-  | TTuple of ty list (* (int, string) *)
-  | TList of ty (* int list *)
 [@@deriving show { with_path = false }]
 
-type scheme = Scheme of VarSet.t * ty [@@deriving show { with_path = false }]
+type typ =
+  | TVar of tyvar (* 'a *)
+  | TPrim of primitives (* int, bool, etc. *)
+  | TArr of typ * typ (* 'a -> 'a *)
+  | TTuple of typ list (* (int, string) *)
+  | TList of typ (* int list *)
+[@@deriving show { with_path = false }]
 
-(* let tvar x = TVar x
-   let tint = TPrim "int"
-   let tbool = TPrim "bool"
-   let tchar = TPrim "char"
-   let tstring = TPrim "string"
-   let tunit = TUnit *)
+type scheme = Scheme of VarSet.t * typ [@@deriving show { with_path = false }]
+
+type error =
+  [ `OccursCheck
+  | `NoVariable of string
+  | `NoConstructor of string
+  | `UnificationFailed of typ * typ
+  ]
+[@@deriving show { with_path = false }]
+
+let tvar x = TVar x
+let tint = TPrim Int
+let tbool = TPrim Bool
+let tchar = TPrim Char
+let tunit = TPrim Unit
+let tstring = TPrim String
+let tarrow l r = TArr (l, r)
+let ttuple x = TTuple x
+let tlist x = TList x
+let ( @-> ) = tarrow

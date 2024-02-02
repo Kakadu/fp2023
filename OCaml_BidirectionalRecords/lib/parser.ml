@@ -63,7 +63,7 @@ let chainr1 e op =
 let pint =
   let sign = choice [ pstoken "-"; pstoken "+"; pstoken "" ] in
   let rest = take_while1 Char.is_digit in
-  lift2 (fun sign rest -> Int.of_string (sign ^ rest)) sign rest >>| fun s -> Int s
+  lift2 (fun sign rest -> Int.of_string (sign ^ rest)) sign rest >>| fun x -> Int x
 ;;
 
 let pbool =
@@ -73,9 +73,8 @@ let pbool =
 
 let pstr = char '"' *> take_till (Char.equal '"') <* char '"' >>| fun x -> String x
 let pchr = char '\'' *> any_char <* char '\'' >>| fun x -> Char x
-let pnil = pstoken "[]" >>| fun _ -> Nil
 let punit = pstoken "()" >>| fun _ -> Unit
-let const = choice [ pint; pbool; pstr; punit; pnil ]
+let const = choice [ pint; pbool; pstr; punit ]
 
 (* varname *)
 
@@ -98,15 +97,15 @@ let ptbool = pstoken "bool" *> return TBool
 let unspecified = pstoken "" *> return Unspecified
 let pty = choice [ ptint; ptstring; ptbool; unspecified ]
 
-(* typed variable *)
+(* typed variable by user *)
 
-let tvar =
+(* let tvar =
   lift2 (fun name ty -> { name; ty }) varname (pstoken ":" *> pty <|> return Unspecified)
-;;
+;; *)
 
 (* patterns *)
 
-let pvar = tvar >>| fun x -> PVar x
+let pvar = varname >>| fun x -> PVar x
 let pconst = const >>| fun x -> PConst x
 let pany = pstoken "_" >>| fun _ -> PAny
 
@@ -131,7 +130,7 @@ let precord pexpr = pstoken "type" *> varname *> pstoken "=" *> record pexpr
 (* expressions *)
 
 let peconst = const >>| fun x -> EConst x
-let pevar = tvar >>| fun x -> EVar x
+let pevar = varname >>| fun x -> EVar x
 let peapp e = chainl1 e (return (fun e1 e2 -> EApp (e1, e2)))
 
 let petuple pexpr =
@@ -170,20 +169,30 @@ let rel =
 
 let plet pexpr =
   let rec pbody pexpr =
-    tvar >>= fun id -> pbody pexpr <|> pstoken "=" *> pexpr >>| fun e -> EFun (id, e)
+    varname >>= fun id -> pbody pexpr <|> pstoken "=" *> pexpr >>| fun e -> EFun (id, e)
   in
   pstoken "let"
   *> lift4
        (fun r id e1 e2 -> ELet (r, id, e1, e2))
        (pstoken "rec" *> return Rec <|> return NonRec)
-       (pparens tvar <|> tvar)
+       (pparens varname <|> varname)
        (pstoken "=" *> pexpr <|> pbody pexpr)
        (pstoken "in" *> pexpr <|> return EUnit)
 ;;
 
+(** TODO: refactor *)
+let pfun pexpr =
+  let rec pbody pexpr =
+    varname >>= fun id -> pbody pexpr <|> pstoken "->" *> pexpr >>| fun e -> EFun (id, e)
+  in
+  pstoken "fun" *> pbody pexpr
+;;
+
 let pexpr =
   fix (fun expr ->
-    let expr = choice [ peconst; pevar; pparens expr; plist expr; precord expr ] in
+    let expr =
+      choice [ peconst; pevar; pparens expr; plist expr; precord expr; pfun expr ]
+    in
     let expr = peapp expr <|> expr in
     let expr = chainl1 expr (mult <|> div) in
     let expr = chainl1 expr (add <|> sub) in
@@ -195,8 +204,8 @@ let pexpr =
 ;;
 
 (* TODO
-
-   - match
-   - unary operations
-   - functions
+   - patterns !!!
+   - "let" fix
+   - records
+   - type ascription
 *)
