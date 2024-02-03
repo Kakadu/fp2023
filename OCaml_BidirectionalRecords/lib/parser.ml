@@ -2,6 +2,13 @@
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
+(*
+   TODO
+   - "let" fix
+   - records
+   - type ascription
+*)
+
 open Angstrom
 open Base
 open Ast
@@ -97,20 +104,19 @@ let ptbool = pstoken "bool" *> return TBool
 let unspecified = pstoken "" *> return Unspecified
 let pty = choice [ ptint; ptstring; ptbool; unspecified ]
 
-(* typed variable by user *)
-
-(* let tvar =
-  lift2 (fun name ty -> { name; ty }) varname (pstoken ":" *> pty <|> return Unspecified)
-;; *)
-
 (* patterns *)
 
 let pvar = varname >>| fun x -> PVar x
 let pconst = const >>| fun x -> PConst x
 let pany = pstoken "_" >>| fun _ -> PAny
 
-let pptuple pexpr =
-  lift2 List.cons pexpr (many1 (pstoken "," *> pexpr)) >>| fun x -> PTuple x
+let pptuple pptr =
+  lift2 List.cons pptr (many1 (pstoken "," *> pptr)) >>| fun x -> PTuple x
+;;
+
+let ppattern =
+  choice
+    [ pconst; pvar; (pstoken "_" >>| fun _ -> PAny); (pstoken "[]" >>| fun _ -> PNil) ]
 ;;
 
 (* records *)
@@ -203,9 +209,8 @@ let pexpr =
     expr)
 ;;
 
-(* TODO
-   - patterns !!!
-   - "let" fix
-   - records
-   - type ascription
-*)
+(* type ascription *)
+
+let tvar =
+  lift2 (fun name ty -> { name; ty }) varname (pstoken ":" *> pty <|> return Unspecified)
+;;

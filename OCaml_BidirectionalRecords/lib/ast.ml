@@ -15,11 +15,11 @@ type ty =
   | UserDefined of id
 [@@deriving show { with_path = false }]
 
-(* type ty_bind =
+type ty_bind =
   { name : id
   ; ty : ty
   }
-[@@deriving show { with_path = false }] *)
+[@@deriving show { with_path = false }]
 
 type const =
   | Bool of bool
@@ -56,6 +56,8 @@ type pattern =
   | PConst of const
   | PCons of pattern * pattern list (** PCons (p1,p2) is p1::p2 *)
   | PAny (* _ *)
+  | PNil (* []*)
+  | POr (** | *)
   | PTuple of pattern list
 [@@deriving show { with_path = false }]
 
