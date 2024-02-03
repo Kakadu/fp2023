@@ -163,8 +163,8 @@ let p_keyword_type =
   | base_type ->
     s_is_nullable
     >>= (function
-    | true -> base_type_converter base_type >>| fun x -> TNullable (TBase x)
-    | false -> base_type_converter base_type >>| fun x -> TNot_Nullable x)
+     | true -> base_type_converter base_type >>| fun x -> TNullable (TBase x)
+     | false -> base_type_converter base_type >>| fun x -> TNot_Nullable x)
 ;;
 
 let ( #~> ) str tp = read_as_token str *> return tp

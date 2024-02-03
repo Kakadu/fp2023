@@ -205,9 +205,9 @@ module Eval_Monad = struct
        | Err err -> fail err st1)
   ;;
 
-  let ( |>>= ) :
-        'a 'c 'b 'd.
-        ('a, 'c) t -> ('c option -> ('b, 'd) t) * ('a -> ('b, 'd) t) -> ('b, 'd) t
+  let ( |>>= )
+    : 'a 'c 'b 'd.
+    ('a, 'c) t -> ('c option -> ('b, 'd) t) * ('a -> ('b, 'd) t) -> ('b, 'd) t
     =
     fun x f_tpl st ->
     let ret_f, err_g = f_tpl in
@@ -450,13 +450,13 @@ module Eval_M_State_Extention = struct
          | [] ->
            Ident_Map.find_opt id x
            |> (function
-           | Some v -> fist_part, Some (x, v), []
-           | None -> x :: fist_part, None, [])
+            | Some v -> fist_part, Some (x, v), []
+            | None -> x :: fist_part, None, [])
          | x :: tl ->
            Ident_Map.find_opt id x
            |> (function
-           | Some v -> fist_part, Some (x, v), tl
-           | None -> x :: fist_part, None, tl))
+            | Some v -> fist_part, Some (x, v), tl
+            | None -> x :: fist_part, None, tl))
       | fist_part, Some x, second_part -> fist_part, Some x, second_part
     in
     List.fold_left f ([], None, l_env_l) l_env_l
@@ -507,10 +507,10 @@ module Eval_M_State_Extention = struct
       let cond = read_local_el id *> return_n false <|> return_n true in
       cond
       >>= (function
-      | true -> s_local
-      | false ->
-        let (Id s) = id in
-        fail (Interpret_error (Runtime_error ("The id:" ^ s ^ " already exists"))))
+       | true -> s_local
+       | false ->
+         let (Id s) = id in
+         fail (Interpret_error (Runtime_error ("The id:" ^ s ^ " already exists"))))
   ;;
 
   let read_self_ad = read_local >>= fun (self_ad, _) -> return_n self_ad

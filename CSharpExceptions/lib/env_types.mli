@@ -131,9 +131,9 @@ module Eval_env : sig
   (** Runtime signals *)
   type ('b, 'sys_err) sig_ =
     | Return of 'b option
-        (** Sent after processing the [return]. Contains the return value. *)
+    (** Sent after processing the [return]. Contains the return value. *)
     | Exn of Common_types.address
-        (** Sent after processing the [throw]. Contains the address of the instance of the thrown exception. *)
+    (** Sent after processing the [throw]. Contains the address of the instance of the thrown exception. *)
     | Break (** Sent after processing the [break]. *)
     | Err of 'sys_err (** Is a system error. Almost never stops. *)
 

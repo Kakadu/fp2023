@@ -66,8 +66,8 @@ let m_eval_ e_stm _ l_env_l ad args = function
     let prms = get_params_id sign.m_params in
     get_sys_meth_opt
     >>= (function
-          | Some f -> return_n f
-          | None -> return_n @@ e_stm body)
+           | Some f -> return_n f
+           | None -> return_n @@ e_stm body)
     >>= run_method sign.m_type prms args ad l_env_l
   | IConstructor _ ->
     fail (Interpret_error (Constructor_error "Trying to call a constructor without new"))
@@ -184,11 +184,11 @@ let eval_expr eval_stm lenv_kernel expr =
       args
       >>= eval_method e lenv_kernel eval_stm None
       >>= (function
-      | Some x -> return_n x
-      | None ->
-        fail
-          (Interpret_error
-             (Return_error "Void methods can't be used with assignable types")))
+       | Some x -> return_n x
+       | None ->
+         fail
+           (Interpret_error
+              (Return_error "Void methods can't be used with assignable types")))
     | EUn_op (un, e) -> eval_un_op un e lenv_kernel eval_stm helper
     | EBin_op (bin, e1, e2) -> eval_bin_op bin e1 e2 helper lenv_kernel
   in
@@ -201,9 +201,9 @@ let eval_stm_expr e_expr e_stm lenv_kernel = function
     args
     >>= eval_method e lenv_kernel e_stm None
     >>= (function
-    | Some _ ->
-      fail (Interpret_error (Return_error "As statement can be used only 'Void' method"))
-    | None -> return_n ())
+     | Some _ ->
+       fail (Interpret_error (Return_error "As statement can be used only 'Void' method"))
+     | None -> return_n ())
   | EBin_op (op, e1, e2) -> e_expr (EBin_op (op, e1, e2)) *> return_n ()
   | _ ->
     fail (Interpret_error (System_error "Trying to use an expression as a statement"))
@@ -256,8 +256,8 @@ let catch_eval ad e_stm l_env_l = function
     in
     fold_left f None catch_l
     >>= (function
-    | Some _ -> return_n ()
-    | None -> return_e ad)
+     | Some _ -> return_n ()
+     | None -> return_e ad)
 ;;
 
 let eval_try_catch_fin e_stm l_env_l try_ catch_ fin_ =
@@ -314,11 +314,11 @@ let eval_statement lenv_kernel stm =
       local @@ eval_expr e
       >>= get_bool
       >>= (function
-      | true -> helper stm
-      | false ->
-        (match stm_opt with
-         | None -> return_n ()
-         | Some stm -> helper stm))
+       | true -> helper stm
+       | false ->
+         (match stm_opt with
+          | None -> return_n ()
+          | Some stm -> helper stm))
     | SBreak -> return_b ()
     | SThrow e -> eval_expr e >>= get_inst >>= return_e
     | STry_catch_fin { try_s; catch_s; finally_s } ->
@@ -344,8 +344,8 @@ let interpret_ genv cl_id =
          | Code_ident id ->
            find_cl_meth id cl_decl
            |> (function
-           | None -> None
-           | Some constr -> Some (Ident_Map.add id (ICode constr) acc)))
+            | None -> None
+            | Some constr -> Some (Ident_Map.add id (ICode constr) acc)))
     in
     Code_Map.fold f genv (Some local_env)
   in

@@ -304,12 +304,12 @@ let check_un_op op env1 =
   | New ->
     env1
     >>= (function
-    | Some (Constructor_sig { con_modif = _; con_id; _ }) ->
-      return (Some (Value_sig (TVar (TNullable (TClass con_id)))))
-    | Some (Value_sig (TVar (TNullable (TClass id)))) ->
-      read_global_el (Code_ident id)
-      *> return (Some (Value_sig (TVar (TNullable (TClass id)))))
-    | _ -> fail (Type_check_error Type_mismatch))
+     | Some (Constructor_sig { con_modif = _; con_id; _ }) ->
+       return (Some (Value_sig (TVar (TNullable (TClass con_id)))))
+     | Some (Value_sig (TVar (TNullable (TClass id)))) ->
+       read_global_el (Code_ident id)
+       *> return (Some (Value_sig (TVar (TNullable (TClass id)))))
+     | _ -> fail (Type_check_error Type_mismatch))
 ;;
 
 let check_expr exp =
@@ -548,8 +548,8 @@ let class_check cl_decl =
     | Main _ ->
       read_main_ctx
       >>= (function
-      | Some _ -> fail (Type_check_error (Double_definition_of (Id "Main")))
-      | None -> save_main_ctx (Some (Code_ident cl_id)))
+       | Some _ -> fail (Type_check_error (Double_definition_of (Id "Main")))
+       | None -> save_main_ctx (Some (Code_ident cl_id)))
     | Constructor (sign, _) ->
       let { con_modif = _; con_id; _ } = sign in
       (match equal_ident con_id cl_id with
@@ -593,8 +593,8 @@ let update_local lib =
     let get_const_opt =
       List.find_opt
         (function
-         | Constructor (_, _) -> true
-         | _ -> false)
+          | Constructor (_, _) -> true
+          | _ -> false)
         el.cl_mems
     in
     get_const_opt

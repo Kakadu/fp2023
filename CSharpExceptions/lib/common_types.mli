@@ -120,7 +120,7 @@ type file_st = W_File of out_channel
 
 type sys_mem_el =
   | Files of (internal_address * file_st Intern_Mem.t)
-      (** Next available internal_address * Map *)
+  (** Next available internal_address * Map *)
 
 type sys_memory = sys_mem_el Sys_Map.t
 
