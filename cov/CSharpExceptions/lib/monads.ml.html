@@ -1565,12 +1565,12 @@ module Eval_Monad = struct
        | <span data-count="202">R</span>eturn x -&gt; return_r x st1
        | <span data-count="126">E</span>xn ad -&gt; return_e ad st1
        | <span data-count="51">B</span>reak -&gt; return_b () st1
-       | <span data-count="287">E</span>rror err -&gt; fail err st1)
+       | <span data-count="287">E</span>rr err -&gt; fail err st1)
   ;;
 
-  let ( |&gt;&gt;= ) :
-        'a 'c 'b 'd.
-        ('a, 'c) t -&gt; ('c option -&gt; ('b, 'd) t) * ('a -&gt; ('b, 'd) t) -&gt; ('b, 'd) t
+  let ( |&gt;&gt;= )
+    : 'a 'c 'b 'd.
+    ('a, 'c) t -&gt; ('c option -&gt; ('b, 'd) t) * ('a -&gt; ('b, 'd) t) -&gt; ('b, 'd) t
     =
     fun x f_tpl st -&gt;
     <span data-count="81">l</span>et ret_f, err_g = f_tpl in
@@ -1581,7 +1581,7 @@ module Eval_Monad = struct
       (match s with
        | <span data-count="32">R</span>eturn x -&gt; ret_f x st1
        | <span data-count="2">E</span>xn ad -&gt; return_e ad st1
-       | <span data-count="4">E</span>rror err -&gt; fail err st1
+       | <span data-count="4">E</span>rr err -&gt; fail err st1
        | <span data-count="0">B</span>reak -&gt;
          fail
            (Interpret_error
@@ -1605,7 +1605,7 @@ module Eval_Monad = struct
        | <span data-count="0">R</span>eturn x -&gt; return_r x st1
        | <span data-count="0">E</span>xn ad -&gt; return_e ad st1
        | <span data-count="0">B</span>reak -&gt; return_b () st1
-       | <span data-count="443">E</span>rror _ -&gt; a2 st)
+       | <span data-count="443">E</span>rr _ -&gt; a2 st)
   ;;
 
   let init_sys_mem =
@@ -1813,13 +1813,13 @@ module Eval_M_State_Extention = struct
          | <span data-count="0">[</span>] -&gt;
            Ident_Map.find_opt id x
            |&gt; <span data-count="0">(</span>function
-           | <span data-count="0">S</span>ome v -&gt; fist_part, Some (x, v), []
-           | <span data-count="0">N</span>one -&gt; x :: fist_part, None, [])
+            | <span data-count="0">S</span>ome v -&gt; fist_part, Some (x, v), []
+            | <span data-count="0">N</span>one -&gt; x :: fist_part, None, [])
          | <span data-count="598">x</span> :: tl -&gt;
            Ident_Map.find_opt id x
            |&gt; <span data-count="598">(</span>function
-           | <span data-count="160">S</span>ome v -&gt; fist_part, Some (x, v), tl
-           | <span data-count="438">N</span>one -&gt; x :: fist_part, None, tl))
+            | <span data-count="160">S</span>ome v -&gt; fist_part, Some (x, v), tl
+            | <span data-count="438">N</span>one -&gt; x :: fist_part, None, tl))
       | <span data-count="219">f</span>ist_part, Some x, second_part -&gt; fist_part, Some x, second_part
     in
     List.fold_left f ([], None, l_env_l) l_env_l
@@ -1870,10 +1870,10 @@ module Eval_M_State_Extention = struct
       let cond = read_local_e<span data-count="95">l</span> id *<span data-count="95">&gt;</span> return_<span data-count="95">n</span> false &lt;|&gt; return_<span data-count="95">n</span> true in
       <span data-count="95">c</span>ond
       &gt;&gt;= (function
-      | <span data-count="95">t</span>rue -&gt; s_local
-      | <span data-count="0">f</span>alse -&gt;
-        let (Id s) = id in
-        fail (Interpret_error (Runtime_error ("The id:" ^ s ^ " already exists"))))
+       | <span data-count="95">t</span>rue -&gt; s_local
+       | <span data-count="0">f</span>alse -&gt;
+         let (Id s) = id in
+         fail (Interpret_error (Runtime_error ("The id:" ^ s ^ " already exists"))))
   ;;
 
   let read_self_ad = read_local &gt;&gt;<span data-count="20">=</span> fun (self_ad, _) -&gt; <span data-count="95">r</span>eturn_n self_ad
@@ -1903,7 +1903,7 @@ module Eval = struct
        | <span data-count="33">E</span>xn ad -&gt; return_env *&gt; return_<span data-count="33">e</span> ad
        | <span data-count="41">R</span>eturn x -&gt; return_env *&gt; return_<span data-count="41">r</span> x
        | <span data-count="7">B</span>reak -&gt; return_env *&gt; return_<span data-count="7">b</span> ()
-       | <span data-count="3">E</span>rror x -&gt; fail x)
+       | <span data-count="3">E</span>rr x -&gt; fail x)
   ;;
 
   let in_isolation f =
@@ -1918,7 +1918,7 @@ module Eval = struct
        | <span data-count="2">E</span>xn ad -&gt; return_env *&gt; return_<span data-count="2">e</span> ad
        | <span data-count="0">R</span>eturn x -&gt; return_env *&gt; return_<span data-count="0">r</span> x
        | <span data-count="0">B</span>reak -&gt; return_env *&gt; return_<span data-count="0">b</span> ()
-       | <span data-count="5">E</span>rror x -&gt; fail x)
+       | <span data-count="5">E</span>rr x -&gt; fail x)
   ;;
 
   let run_in_another_self ad new_lenv f =
@@ -1933,7 +1933,7 @@ module Eval = struct
        | <span data-count="3">E</span>xn ad -&gt; return_e ad
        | <span data-count="0">B</span>reak -&gt; return_b ()
        | <span data-count="0">R</span>eturn x -&gt; return_r x
-       | <span data-count="0">E</span>rror err -&gt; fail err)
+       | <span data-count="0">E</span>rr err -&gt; fail err)
   ;;
 
   let run_tcf tf cf ff =
@@ -1963,7 +1963,7 @@ module Eval = struct
        | <span data-count="0">B</span>reak -&gt;
          ff_new *&gt; fai<span data-count="0">l</span> (Interpret_error (Break_error "Attempt to use break with try"))
        | <span data-count="0">R</span>eturn x -&gt; ff_new *&gt; return_<span data-count="0">r</span> x
-       | <span data-count="0">E</span>rror err -&gt; ff_new *&gt; fai<span data-count="0">l</span> err)
+       | <span data-count="0">E</span>rr err -&gt; ff_new *&gt; fai<span data-count="0">l</span> err)
   ;;
 
   let run_method
@@ -2006,7 +2006,7 @@ module Eval = struct
        | <span data-count="4">B</span>reak -&gt; return_n ()
        | <span data-count="1">E</span>xn x -&gt; return_e x
        | <span data-count="0">R</span>eturn x -&gt; return_r x
-       | <span data-count="0">E</span>rror err -&gt; fail err)
+       | <span data-count="0">E</span>rr err -&gt; fail err)
   ;;
 end
 </code></pre>

@@ -931,8 +931,8 @@ let m_eval_ e_stm _ l_env_l ad args = function
     <span data-count="23">l</span>et prms = get_params_id sign.m_params in
     <span data-count="23">g</span>et_sys_meth_opt
     &gt;&gt;<span data-count="23">=</span> (function
-          | <span data-count="13">S</span>ome f -&gt; return_n f
-          | <span data-count="10">N</span>one -&gt; return_n @@ e_st<span data-count="10">m</span> body)
+           | <span data-count="13">S</span>ome f -&gt; return_n f
+           | <span data-count="10">N</span>one -&gt; return_n @@ e_st<span data-count="10">m</span> body)
     &gt;&gt;= run_metho<span data-count="23">d</span> sign.m_type prms args ad l_env_l
   | <span data-count="0">I</span>Constructor _ -&gt;
     fail (Interpret_error (Constructor_error "Trying to call a constructor without new"))
@@ -1049,11 +1049,11 @@ let eval_expr eval_stm lenv_kernel expr =
       <span data-count="36">a</span>rgs
       &gt;&gt;<span data-count="36">=</span> eval_metho<span data-count="36">d</span> e lenv_kernel eval_stm None
       &gt;&gt;= (function
-      | <span data-count="8">S</span>ome x -&gt; return_n x
-      | <span data-count="0">N</span>one -&gt;
-        fail
-          (Interpret_error
-             (Return_error "Void methods can't be used with assignable types")))
+       | <span data-count="8">S</span>ome x -&gt; return_n x
+       | <span data-count="0">N</span>one -&gt;
+         fail
+           (Interpret_error
+              (Return_error "Void methods can't be used with assignable types")))
     | <span data-count="38">E</span>Un_op (un, e) -&gt; eval_un_op un e lenv_kernel eval_stm helper
     | <span data-count="350">E</span>Bin_op (bin, e1, e2) -&gt; eval_bin_op bin e1 e2 helper lenv_kernel
   in
@@ -1066,9 +1066,9 @@ let eval_stm_expr e_expr e_stm lenv_kernel = function
     <span data-count="15">a</span>rgs
     &gt;&gt;<span data-count="15">=</span> eval_metho<span data-count="15">d</span> e lenv_kernel e_stm None
     &gt;&gt;= (function
-    | <span data-count="0">S</span>ome _ -&gt;
-      fail (Interpret_error (Return_error "As statement can be used only 'Void' method"))
-    | <span data-count="14">N</span>one -&gt; return_n ())
+     | <span data-count="0">S</span>ome _ -&gt;
+       fail (Interpret_error (Return_error "As statement can be used only 'Void' method"))
+     | <span data-count="14">N</span>one -&gt; return_n ())
   | <span data-count="97">E</span>Bin_op (op, e1, e2) -&gt; e_exp<span data-count="97">r</span> (EBin_op (op, e1, e2)) *&gt; return_<span data-count="97">n</span> ()
   | <span data-count="0">_</span> -&gt;
     fail (Interpret_error (System_error "Trying to use an expression as a statement"))
@@ -1121,8 +1121,8 @@ let catch_eval ad e_stm l_env_l = function
     in
     fold_lef<span data-count="9">t</span> f None catch_l
     &gt;&gt;= (function
-    | <span data-count="6">S</span>ome _ -&gt; return_n ()
-    | <span data-count="1">N</span>one -&gt; return_e ad)
+     | <span data-count="6">S</span>ome _ -&gt; return_n ()
+     | <span data-count="1">N</span>one -&gt; return_e ad)
 ;;
 
 let eval_try_catch_fin e_stm l_env_l try_ catch_ fin_ =
@@ -1179,11 +1179,11 @@ let eval_statement lenv_kernel stm =
       loca<span data-count="28">l</span> @@ eval_exp<span data-count="28">r</span> e
       &gt;&gt;<span data-count="28">=</span> get_bool
       &gt;&gt;= (function
-      | <span data-count="18">t</span>rue -&gt; helper stm
-      | <span data-count="37">f</span>alse -&gt;
-        (match stm_opt with
-         | <span data-count="29">N</span>one -&gt; return_n ()
-         | <span data-count="8">S</span>ome stm -&gt; helper stm))
+       | <span data-count="18">t</span>rue -&gt; helper stm
+       | <span data-count="37">f</span>alse -&gt;
+         (match stm_opt with
+          | <span data-count="29">N</span>one -&gt; return_n ()
+          | <span data-count="8">S</span>ome stm -&gt; helper stm))
     | <span data-count="4">S</span>Break -&gt; return_b ()
     | <span data-count="12">S</span>Throw e -&gt; eval_exp<span data-count="12">r</span> e &gt;&gt;<span data-count="12">=</span> get_inst &gt;&gt;= return_e
     | <span data-count="11">S</span>Try_catch_fin { try_s; catch_s; finally_s } -&gt;
@@ -1209,8 +1209,8 @@ let interpret_ genv cl_id =
          | <span data-count="79">C</span>ode_ident id -&gt;
            find_cl_meth id cl_decl
            |&gt; <span data-count="79">(</span>function
-           | <span data-count="0">N</span>one -&gt; None
-           | <span data-count="79">S</span>ome constr -&gt; Some (Ident_Map.ad<span data-count="79">d</span> id (ICode constr) acc)))
+            | <span data-count="0">N</span>one -&gt; None
+            | <span data-count="79">S</span>ome constr -&gt; Some (Ident_Map.ad<span data-count="79">d</span> id (ICode constr) acc)))
     in
     Code_Map.fol<span data-count="30">d</span> f genv (Some local_env)
   in
@@ -1256,7 +1256,7 @@ let interpret str =
      | <span data-count="30">R</span>esult.Ok (genv, main_id) -&gt;
        (match interpret_ genv main_id with
         | <span data-count="24">_</span>, Eval_res x -&gt; Result.ok x
-        | <span data-count="4">_</span>, Signal (Error x) -&gt; Result.error x
+        | <span data-count="4">_</span>, Signal (Err x) -&gt; Result.error x
         | <span data-count="2">(</span>_, _, (_, mem), _), Signal (Exn x) -&gt;
           (match Mem_Map.find_opt x mem with
            | <span data-count="2">S</span>ome (cl_id, _) -&gt; Result.error (Interpret_error (User_exception cl_id))

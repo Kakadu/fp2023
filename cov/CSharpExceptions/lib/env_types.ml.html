@@ -305,7 +305,7 @@ module Eval_env = struct
     | Return of 'b option
     | Exn of address
     | Break
-    | Error of 'sys_err
+    | Err of 'sys_err
 
   type ('a, 'b, 'sys_err) eval_t =
     | Eval_res of 'a
@@ -316,7 +316,7 @@ module Eval_env = struct
   let rsig x = <span data-count="275">t</span>o_sig (Return x)
   let bsig = to_si<span data-count="20">g</span> Break
   let esig add = <span data-count="180">t</span>o_sig (Exn add)
-  let error err = <span data-count="746">t</span>o_sig (Error err)
+  let error err = <span data-count="746">t</span>o_sig (Err err)
 end
 </code></pre>
       </div>
