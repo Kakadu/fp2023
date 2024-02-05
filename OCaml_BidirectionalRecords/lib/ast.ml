@@ -71,11 +71,11 @@ type expr =
   | EConst of const
   | EBinOp of binop * expr * expr (** EBinOp (op,l,r) is l op r *)
   | EUnOp of unop * expr (** EUnOp (op,e) is op e *)
-  | EFun of id * expr (** Fun x -> e *)
+  | EFun of pattern * expr (** Fun x -> e *)
   | ECons of expr * expr (** ECons (h,t) is list h::t *)
   | ETuple of expr list (** (expr1, ..., exprn) *)
   | EIfThenElse of expr * expr * expr (** IfThenElse (b,t,e) is if b then t else e *)
-  | ELet of rec_flag * id * expr * expr (** Let (x,e,e') is let x = e in e' *)
+  | ELet of decl * expr (** Let (x,e,e') is let x = e in e' *)
   | EApp of expr * expr (**  App (f,e) is application f e *)
   | EList of expr list
   | EMatch of expr * (pattern * expr)
@@ -83,7 +83,7 @@ type expr =
   | ERecord of expr list
 [@@deriving show { with_path = false }]
 
-type decl = rec_flag * id * expr [@@deriving show { with_path = false }]
+and decl = rec_flag * id * expr
 
 type record_bind =
   { name : id

@@ -4,7 +4,6 @@
 
 (*
    TODO
-   - "let" fix
    - records
    - type ascription
 *)
@@ -49,7 +48,9 @@ let is_keyword = function
 ;;
 
 let pws = take_while Char.is_whitespace
+let pws1 = take_while1 Char.is_whitespace
 let pstoken s = pws *> string s
+let pstoken1 s = pws1 *> string s
 let ptoken s = pws *> s
 let pparens p = pstoken "(" *> p <* pstoken ")"
 let pbrackets p = pstoken "{" *> p <* pstoken "}"
@@ -131,8 +132,6 @@ let precord pexpr = pstoken "type" *> varname *> pstoken "=" *> record pexpr
   lift2 (fun name field -> { name; field}) varname (precord pexpr)
 ;; *)
 
-(* TODO *)
-
 (* expressions *)
 
 let peconst = const >>| fun x -> EConst x
@@ -175,21 +174,20 @@ let rel =
 
 let plet pexpr =
   let rec pbody pexpr =
-    varname >>= fun id -> pbody pexpr <|> pstoken "=" *> pexpr >>| fun e -> EFun (id, e)
+    ppattern >>= fun id -> pbody pexpr <|> pstoken "=" *> pexpr >>| fun e -> EFun (id, e)
   in
   pstoken "let"
   *> lift4
-       (fun r id e1 e2 -> ELet (r, id, e1, e2))
+       (fun r id e1 e2 -> ELet ((r, id, e1), e2))
        (pstoken "rec" *> return Rec <|> return NonRec)
        (pparens varname <|> varname)
        (pstoken "=" *> pexpr <|> pbody pexpr)
        (pstoken "in" *> pexpr <|> return EUnit)
 ;;
 
-(** TODO: refactor *)
 let pfun pexpr =
   let rec pbody pexpr =
-    varname >>= fun id -> pbody pexpr <|> pstoken "->" *> pexpr >>| fun e -> EFun (id, e)
+    ppattern >>= fun id -> pbody pexpr <|> pstoken "->" *> pexpr >>| fun e -> EFun (id, e)
   in
   pstoken "fun" *> pbody pexpr
 ;;
