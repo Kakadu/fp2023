@@ -25,7 +25,7 @@ SPDX-License-Identifier: CC0-1.0
   >     }
   > HATE_TESTS_AND_DEADLINES
   Test: Using an uninitialized variable
-  Error: (Interpret_error Using_an_uninitialized_variable)
+  Error: (Interpret_error Uninitialized_variable)
 
   $  echo "Test: Type mismatch in operators" ; ./demoInterpret.exe << HATE_TESTS_AND_DEADLINES
   >    class Program
@@ -57,7 +57,7 @@ SPDX-License-Identifier: CC0-1.0
   > HATE_TESTS_AND_DEADLINES
   Test: Method with return type without 'return' in the body
   Error: (Interpret_error
-            (Return_error
+            (Runtime_error
                "Without return can be used only methods of 'Void' type"))
 
   $  echo "Test: Access to a private field" ; ./demoInterpret.exe << HATE_TESTS_AND_DEADLINES

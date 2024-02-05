@@ -42,7 +42,7 @@ let eval_point_access e_id e1 lenv_kernel =
   match v with
   | IConst (Init x) -> return_n (to_const @@ to_init x)
   | _ ->
-    fail (Interpret_error (Return_error "Eval of the expression hsven't implemented yet"))
+    fail (Interpret_error (Runtime_error "Eval of the expression haven't implemented yet"))
 ;;
 
 let eval_instrs_ f e args l_env_l e_stm e_expr =
@@ -70,7 +70,7 @@ let m_eval_ e_stm _ l_env_l ad args = function
            | None -> return_n @@ e_stm body)
     >>= run_method sign.m_type prms args ad l_env_l
   | IConstructor _ ->
-    fail (Interpret_error (Constructor_error "Trying to call a constructor without new"))
+    fail (Interpret_error (Syntax_error "Trying to call a constructor without new"))
 ;;
 
 let eval_method e l_env_l e_stm e_expr args =
@@ -79,7 +79,7 @@ let eval_method e l_env_l e_stm e_expr args =
 
 let c_eval_ e_stm e_expr l_env_l _ args = function
   | IMethod _ ->
-    fail (Interpret_error (Constructor_error "'New' can be used only with constructor"))
+    fail (Interpret_error (Syntax_error "'New' can be used only with constructor"))
   | IConstructor (sign, body) ->
     let prms = get_params_id sign.con_params in
     let cl_decl =
@@ -114,7 +114,7 @@ let eval_un_op un_op res lenv_kernel e_stm e_expr =
        >>= fun ad -> return_n @@ create_inst ad
      | _ ->
        fail
-         (Interpret_error (Constructor_error "'New' can be used only with constructor")))
+         (Interpret_error (Syntax_error "'New' can be used only with constructor")))
 ;;
 
 let eval_bin_op op e1 e2 e_expr l_env_l =
@@ -170,7 +170,7 @@ let eval_bin_op op e1 e2 e_expr l_env_l =
      | EPoint_access (e_id, e1) ->
        get_point_access_value e_id e1 l_env_l
        >>= fun (id, ad, _) -> update_instance_el id ad x
-     | _ -> fail (Interpret_error Methods_cannot_be_assignable))
+     | _ -> fail (Interpret_error (Syntax_error "Methods cannot be assignable")))
     *> res
 ;;
 
@@ -188,7 +188,7 @@ let eval_expr eval_stm lenv_kernel expr =
        | None ->
          fail
            (Interpret_error
-              (Return_error "Void methods can't be used with assignable types")))
+              (Runtime_error "Void methods can't be used with assignable types")))
     | EUn_op (un, e) -> eval_un_op un e lenv_kernel eval_stm helper
     | EBin_op (bin, e1, e2) -> eval_bin_op bin e1 e2 helper lenv_kernel
   in
@@ -202,7 +202,7 @@ let eval_stm_expr e_expr e_stm lenv_kernel = function
     >>= eval_method e lenv_kernel e_stm None
     >>= (function
      | Some _ ->
-       fail (Interpret_error (Return_error "As statement can be used only 'Void' method"))
+       fail (Interpret_error (Runtime_error "As statement can be used only 'Void' method"))
      | None -> return_n ())
   | EBin_op (op, e1, e2) -> e_expr (EBin_op (op, e1, e2)) *> return_n ()
   | _ ->
@@ -362,7 +362,7 @@ let interpret_ genv cl_id =
       List.fold_left f None cl_decl.cl_mems
       |> function
       | Some (tp, body) -> return_n (tp, body)
-      | _ -> fail (Interpret_error (Return_error "The program must contain 'Main'"))
+      | _ -> fail (Interpret_error (Runtime_error "The program must contain 'Main'"))
     in
     cl_decl_t
     >>= fun cl_decl ->
@@ -376,7 +376,7 @@ let interpret_ genv cl_id =
   let eval =
     match lenv_with_constructors with
     | Some l_env_l -> run_main l_env_l
-    | None -> fail (Interpret_error (Return_error "Some class has no constructor"))
+    | None -> fail (Interpret_error (Runtime_error "Some class has no constructor"))
   in
   run genv eval
 ;;

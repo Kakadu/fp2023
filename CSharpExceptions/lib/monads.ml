@@ -222,7 +222,7 @@ module Eval_Monad = struct
        | Break ->
          fail
            (Interpret_error
-              (Break_error "Impossible using of break statement without loop"))
+              (Runtime_error "Impossible using of break statement without loop"))
            st1)
   ;;
 
@@ -300,11 +300,10 @@ module Eval_M_State_Extention = struct
 
   let read_global : code_ident -> (code_ctx, 'c) t =
     fun id st ->
-    let (Code_ident id_) = id in
     let code, _, _, _ = st in
     match Code_Map.find_opt id code with
     | Some x -> return_n x st
-    | None -> fail (Interpret_error (Non_existent_id id_)) st
+    | None -> fail (Interpret_error (Runtime_error "Non existent id")) st
   ;;
 
   let find_cl_decl_meth id decl =
@@ -374,7 +373,7 @@ module Eval_M_State_Extention = struct
     >>= fun (_, mem) ->
     match Mem_Map.find_opt ad mem with
     | Some el -> return_n el
-    | None -> fail (Interpret_error Non_existent_address)
+    | None -> fail (Interpret_error (System_error "Addressing a non-existent address"))
   ;;
 
   let save_instance ad mem_el =
@@ -388,7 +387,7 @@ module Eval_M_State_Extention = struct
     >>= fun (_, el) ->
     match Ident_Map.find_opt id el with
     | Some x -> return_n x
-    | None -> fail (Interpret_error Non_existent_id_)
+    | None -> fail (Interpret_error (Runtime_error "Non existent id"))
   ;;
 
   let read_inst_el id ad = read_inst_el id ad >>| fun (v, _) -> v
@@ -399,7 +398,7 @@ module Eval_M_State_Extention = struct
     read_global_method cl_id id
     >>= function
     | Some x -> return_n (to_code x)
-    | None -> fail (Interpret_error (Non_existent_id id))
+    | None -> fail (Interpret_error (Runtime_error "Non existent id"))
   ;;
 
   let update_instance_el id ad v =
@@ -409,7 +408,7 @@ module Eval_M_State_Extention = struct
     | Some (_, sign) ->
       let new_ = Ident_Map.add id (v, sign) el in
       save_instance ad (cl_id, new_)
-    | None -> fail (Interpret_error (Non_existent_id id))
+    | None -> fail (Interpret_error (Runtime_error "Non existent id"))
   ;;
 
   (* ****************** Sys_memory handling ****************** *)
@@ -461,7 +460,7 @@ module Eval_M_State_Extention = struct
     |> fun (fst, lenv, tl) ->
     match lenv with
     | Some x -> List.rev fst |> fun fst -> return_n (fst, x, tl)
-    | None -> fail (Interpret_error (Non_existent_id id))
+    | None -> fail (Interpret_error (Runtime_error "Non existent id"))
   ;;
 
   let read_local_el id =
@@ -476,7 +475,7 @@ module Eval_M_State_Extention = struct
     let s_local =
       let new_l_env l_env = return_n @@ Ident_Map.add id v l_env in
       let is_mutable_ = function
-        | ICode _ -> fail (Interpret_error Methods_cannot_be_assignable)
+        | ICode _ -> fail (Interpret_error (Syntax_error "Methods cannot be assignable"))
         | x -> return_n x
       in
       let update_l_env l_env v = is_mutable_ v *> new_l_env l_env in
@@ -596,7 +595,7 @@ module Eval = struct
          in
          restore_old_mem_and_lenvl >>= cf_new
        | Break ->
-         ff_new *> fail (Interpret_error (Break_error "Attempt to use break with try"))
+         ff_new *> fail (Interpret_error (Runtime_error "Attempt to use break with try"))
        | Return x -> ff_new *> return_r x
        | Err err -> ff_new *> fail err)
   ;;
@@ -617,7 +616,7 @@ module Eval = struct
         | _ ->
           fail
             (Interpret_error
-               (Return_error "Without return can be used only methods of 'Void' type"))
+               (Runtime_error "Without return can be used only methods of 'Void' type"))
       in
       let if_ret x = return_n x in
       add_args_in_lenv *> f |>>= (if_ret, if_no_ret)

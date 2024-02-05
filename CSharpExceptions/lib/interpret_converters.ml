@@ -19,7 +19,7 @@ let is_env_const = function
 
 let is_init = function
   | Init x -> return_n x
-  | _ -> fail (Interpret_error Using_an_uninitialized_variable)
+  | _ -> fail (Interpret_error Uninitialized_variable)
 ;;
 
 let is_base = function
@@ -42,7 +42,7 @@ let is_inst = function
 ;;
 
 let is_not_null = function
-  | Null_v -> fail (Interpret_error Trying_to_change_Null)
+  | Null_v -> fail (Interpret_error Null_reference)
   | x -> return_n x
 ;;
 

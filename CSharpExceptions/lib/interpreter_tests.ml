@@ -616,5 +616,5 @@ let%expect_test "Uninit value " =
     |}
   in
   interpret_wrap s;
-  [%expect {| Error: (Interpret_error Using_an_uninitialized_variable) |}]
+  [%expect {| Error: (Interpret_error Uninitialized_variable) |}]
 ;;

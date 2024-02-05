@@ -4,33 +4,27 @@
 
 type type_check_error =
   | Double_definition_of of Ast.ident
-  | Access of string
-  | Other of string
-  | Not_find_ident
+  | Double_definition (** If two identical names were declared *)
   | Not_find_ident_of of Ast.ident
-  | Method_not_find
+  | Not_find_ident (** An undeclared name *)
   | Type_mismatch
-  | Double_definition
+  | Access of string
+  (** Errors related to access (for example, accessing a private field) *)
+  | Other of string
 
 val pp_type_check_error : Format.formatter -> type_check_error -> unit
 val show_type_check_error : type_check_error -> string
 
 type interpreter_error =
-  | Non_existent_address
-  | Type_mismatch
-  | Break_error of string
-  | Return_error of string
   | Runtime_error of string
-  | Trying_to_assign_a_method
-  | Trying_to_change_Null
-  | Constructor_error of string
+  | Type_mismatch
+  | Null_reference
+  | Uninitialized_variable
+  | Syntax_error of string
   | Division_by_zero
-  | Using_an_uninitialized_variable
-  | Methods_cannot_be_assignable
-  | System_error of string
-  | Non_existent_id of Ast.ident
-  | Non_existent_id_
+  | System_error of string (** Specific internal interpreter errors *)
   | User_exception of Common_types.code_ident
+  (** If the interpreter's return result is a thrown exception *)
 
 val pp_interpreter_error : Format.formatter -> interpreter_error -> unit
 val show_interpreter_error : interpreter_error -> string
