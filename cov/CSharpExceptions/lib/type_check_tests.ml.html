@@ -487,17 +487,16 @@
 <a id="L462"></a><span > </span>
 <a id="L463"></a><span > </span>
 <a id="L464"></a><span class="visited"> </span>
-<a id="L465"></a><span class="visited"> </span>
+<a id="L465"></a><span > </span>
 <a id="L466"></a><span > </span>
 <a id="L467"></a><span > </span>
-<a id="L468"></a><span > </span>
-<a id="L469"></a><span class="visited"> </span>
+<a id="L468"></a><span class="visited"> </span>
+<a id="L469"></a><span > </span>
 <a id="L470"></a><span > </span>
 <a id="L471"></a><span > </span>
-<a id="L472"></a><span > </span>
+<a id="L472"></a><span class="visited"> </span>
 <a id="L473"></a><span class="visited"> </span>
-<a id="L474"></a><span class="visited"> </span>
-<a id="L475"></a><span > </span>
+<a id="L474"></a><span > </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -976,7 +975,6 @@
 <a href="#L472">472</a>
 <a href="#L473">473</a>
 <a href="#L474">474</a>
-<a href="#L475">475</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2021-2023, Georgy Sichkar *)
 
@@ -1281,7 +1279,7 @@ let%expect_test "Double definition" =
 |}
   in
   type_check_wrap s;
-  <span data-count="1">[</span>%expect {| Type_check error: (Type_check_error (Double_definition_of (Id "b"))) |}<span data-count="9">]</span>
+  <span data-count="1">[</span>%expect {| Type_check error: (Type_check_error (Double_definition (Id "b"))) |}<span data-count="9">]</span>
 ;;
 
 let%expect_test "Double \"Main\" definition " =
@@ -1307,7 +1305,7 @@ let%expect_test "Double \"Main\" definition " =
 |}
   in
   type_check_wrap s;
-  <span data-count="1">[</span>%expect {| Type_check error: (Type_check_error (Double_definition_of (Id "Main"))) |}<span data-count="9">]</span>
+  <span data-count="1">[</span>%expect {| Type_check error: (Type_check_error (Double_definition (Id "Main"))) |}<span data-count="9">]</span>
 ;;
 
 let%expect_test "Double method declaration" =
@@ -1328,7 +1326,7 @@ let%expect_test "Double method declaration" =
 |}
   in
   type_check_wrap s;
-  <span data-count="1">[</span>%expect {| Type_check error: (Type_check_error (Double_definition_of (Id "Fac"))) |}<span data-count="9">]</span>
+  <span data-count="1">[</span>%expect {| Type_check error: (Type_check_error (Double_definition (Id "Fac"))) |}<span data-count="9">]</span>
 ;;
 
 let%expect_test "Access check" =
@@ -1441,8 +1439,7 @@ let%expect_test "FileInfo_decl" =
     |}
   in
   type_check_wrap s;
-  <span data-count="1">[</span>%expect
-    {| Type_check error: (Type_check_error (Double_definition_of (Id "FileInfo"))) |}<span data-count="9">]</span>
+  <span data-count="1">[</span>%expect {| Type_check error: (Type_check_error (Double_definition (Id "FileInfo"))) |}<span data-count="9">]</span>
 ;;
 
 let%expect_test "Exception_decl" =
@@ -1451,7 +1448,7 @@ let%expect_test "Exception_decl" =
     |} in
   type_check_wrap s;
   <span data-count="1">[</span>%expect
-    {| Type_check error: (Type_check_error (Double_definition_of (Id "Exception"))) |}<span data-count="9">]</span>
+    {| Type_check error: (Type_check_error (Double_definition (Id "Exception"))) |}<span data-count="9">]</span>
 ;;
 </code></pre>
       </div>

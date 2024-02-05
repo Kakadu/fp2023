@@ -18,7 +18,7 @@
       <h2>90.91%</h2>
     </div>
     <div id="navbar">
-      <span class="unvisited" style="bottom:29.03%"></span>
+      <span class="unvisited" style="bottom:31.03%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -33,27 +33,25 @@
 <a id="L8"></a><span > </span>
 <a id="L9"></a><span > </span>
 <a id="L10"></a><span > </span>
-<a id="L11"></a><span > </span>
-<a id="L12"></a><span > </span>
+<a id="L11"></a><span class="visited"> </span>
+<a id="L12"></a><span class="visited"> </span>
 <a id="L13"></a><span class="visited"> </span>
-<a id="L14"></a><span class="visited"> </span>
+<a id="L14"></a><span > </span>
 <a id="L15"></a><span class="visited"> </span>
-<a id="L16"></a><span > </span>
-<a id="L17"></a><span class="visited"> </span>
-<a id="L18"></a><span class="visited"> </span>
+<a id="L16"></a><span class="visited"> </span>
+<a id="L17"></a><span > </span>
+<a id="L18"></a><span > </span>
 <a id="L19"></a><span > </span>
-<a id="L20"></a><span > </span>
+<a id="L20"></a><span class="unvisited"> </span>
 <a id="L21"></a><span > </span>
-<a id="L22"></a><span class="unvisited"> </span>
+<a id="L22"></a><span class="visited"> </span>
 <a id="L23"></a><span > </span>
 <a id="L24"></a><span class="visited"> </span>
 <a id="L25"></a><span > </span>
 <a id="L26"></a><span class="visited"> </span>
 <a id="L27"></a><span > </span>
-<a id="L28"></a><span class="visited"> </span>
-<a id="L29"></a><span > </span>
-<a id="L30"></a><span > </span>
-<a id="L31"></a><span class="visited"> </span>
+<a id="L28"></a><span > </span>
+<a id="L29"></a><span class="visited"> </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -87,8 +85,6 @@
 <a href="#L27">27</a>
 <a href="#L28">28</a>
 <a href="#L29">29</a>
-<a href="#L30">30</a>
-<a href="#L31">31</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2021-2023, Georgy Sichkar *)
 
@@ -97,10 +93,8 @@
 open Ast
 
 <span data-count="41">t</span>ype type_check_error =
-  | Double_definition_of of ident
-  | Double_definition
-  | Not_find_ident_of of ident
-  | Not_find_ident
+  | Double_definition of ident
+  | Not_find_ident of ident
   | Type_mismatch
   | Access of strin<span data-count="2">g</span>
   | Other of strin<span data-count="3">g</span>

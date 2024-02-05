@@ -1650,7 +1650,7 @@ let check_expr exp =
     | <span data-count="28">E</span>Point_access (e1, e2) -&gt;
       let is_EPoint_acc = function
         | <span data-count="27">S</span>ome (Fild_sig _) -&gt; return ()
-        | <span data-count="0">_</span> -&gt; fail (Type_check_error Not_find_ident)
+        | <span data-count="0">_</span> -&gt; fail (Type_check_error (Other "Not find class member"))
       in
       check_point_ac<span data-count="28">c</span> e1 e2 &gt;&gt;= fun res -&gt; <span data-count="27">i</span>s_EPoint_ac<span data-count="27">c</span> res *&gt; retur<span data-count="27">n</span> res
     | <span data-count="357">E</span>Bin_op (op, e1, e2) -&gt;
@@ -1705,7 +1705,7 @@ let add_local id tp =
   <span data-count="945">i</span>s_exist
   &gt;&gt;= function
   | <span data-count="818">N</span>one -&gt; save_local_el id tp
-  | <span data-count="119">S</span>ome _ -&gt; fail (Type_check_error (Double_definition_of id))
+  | <span data-count="119">S</span>ome _ -&gt; fail (Type_check_error (Double_definition id))
 ;;
 
 let add_global id tp =
@@ -1715,7 +1715,7 @@ let add_global id tp =
   | <span data-count="182">N</span>one -&gt; save_global_el id tp
   | <span data-count="1">S</span>ome _ -&gt;
     let (Code_ident id) = id in
-    fail (Type_check_error (Double_definition_of id))
+    fail (Type_check_error (Double_definition id))
 ;;
 
 let add_local_decl id tp = <span data-count="76">a</span>dd_loca<span data-count="76">l</span> id tp *&gt; retur<span data-count="76">n</span> TP_Ok
@@ -1876,7 +1876,7 @@ let class_check cl_decl =
     | <span data-count="50">M</span>ain _ -&gt;
       read_main_ctx
       &gt;&gt;= (function
-       | <span data-count="1">S</span>ome _ -&gt; fail (Type_check_error (Double_definition_of (Id "Main")))
+       | <span data-count="1">S</span>ome _ -&gt; fail (Type_check_error (Double_definition (Id "Main")))
        | <span data-count="49">N</span>one -&gt; save_main_ctx (Some (Code_ident cl_id)))
     | <span data-count="115">C</span>onstructor (sign, _) -&gt;
       let { con_id } = sign in
