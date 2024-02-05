@@ -322,7 +322,7 @@ let check_expr exp =
     | EPoint_access (e1, e2) ->
       let is_EPoint_acc = function
         | Some (Fild_sig _) -> return ()
-        | _ -> fail (Type_check_error Not_find_ident)
+        | _ -> fail (Type_check_error (Other "Not find class member"))
       in
       check_point_acc e1 e2 >>= fun res -> is_EPoint_acc res *> return res
     | EBin_op (op, e1, e2) ->
@@ -377,7 +377,7 @@ let add_local id tp =
   is_exist
   >>= function
   | None -> save_local_el id tp
-  | Some _ -> fail (Type_check_error (Double_definition_of id))
+  | Some _ -> fail (Type_check_error (Double_definition id))
 ;;
 
 let add_global id tp =
@@ -387,7 +387,7 @@ let add_global id tp =
   | None -> save_global_el id tp
   | Some _ ->
     let (Code_ident id) = id in
-    fail (Type_check_error (Double_definition_of id))
+    fail (Type_check_error (Double_definition id))
 ;;
 
 let add_local_decl id tp = add_local id tp *> return TP_Ok
@@ -548,7 +548,7 @@ let class_check cl_decl =
     | Main _ ->
       read_main_ctx
       >>= (function
-       | Some _ -> fail (Type_check_error (Double_definition_of (Id "Main")))
+       | Some _ -> fail (Type_check_error (Double_definition (Id "Main")))
        | None -> save_main_ctx (Some (Code_ident cl_id)))
     | Constructor (sign, _) ->
       let { con_id } = sign in

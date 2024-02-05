@@ -42,7 +42,8 @@ let eval_point_access e_id e1 lenv_kernel =
   match v with
   | IConst (Init x) -> return_n (to_const @@ to_init x)
   | _ ->
-    fail (Interpret_error (Runtime_error "Eval of the expression haven't implemented yet"))
+    fail
+      (Interpret_error (Runtime_error "Eval of the expression haven't implemented yet"))
 ;;
 
 let eval_instrs_ f e args l_env_l e_stm e_expr =
@@ -113,8 +114,7 @@ let eval_un_op un_op res lenv_kernel e_stm e_expr =
        >>= eval_constructor e lenv_kernel e_stm e_expr
        >>= fun ad -> return_n @@ create_inst ad
      | _ ->
-       fail
-         (Interpret_error (Syntax_error "'New' can be used only with constructor")))
+       fail (Interpret_error (Syntax_error "'New' can be used only with constructor")))
 ;;
 
 let eval_bin_op op e1 e2 e_expr l_env_l =
@@ -202,7 +202,8 @@ let eval_stm_expr e_expr e_stm lenv_kernel = function
     >>= eval_method e lenv_kernel e_stm None
     >>= (function
      | Some _ ->
-       fail (Interpret_error (Runtime_error "As statement can be used only 'Void' method"))
+       fail
+         (Interpret_error (Runtime_error "As statement can be used only 'Void' method"))
      | None -> return_n ())
   | EBin_op (op, e1, e2) -> e_expr (EBin_op (op, e1, e2)) *> return_n ()
   | _ ->

@@ -3,10 +3,8 @@
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
 type type_check_error =
-  | Double_definition_of of Ast.ident
-  | Double_definition (** If two identical names were declared *)
-  | Not_find_ident_of of Ast.ident
-  | Not_find_ident (** An undeclared name *)
+  | Double_definition of Ast.ident
+  | Not_find_ident of Ast.ident
   | Type_mismatch
   | Access of string
   (** Errors related to access (for example, accessing a private field) *)

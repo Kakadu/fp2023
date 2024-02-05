@@ -5,10 +5,8 @@
 open Ast
 
 type type_check_error =
-  | Double_definition_of of ident
-  | Double_definition
-  | Not_find_ident_of of ident
-  | Not_find_ident
+  | Double_definition of ident
+  | Not_find_ident of ident
   | Type_mismatch
   | Access of string
   | Other of string

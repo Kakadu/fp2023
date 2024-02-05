@@ -145,7 +145,7 @@ module Type_check_Monad = struct
     let _, local_env, _, _ = c_env in
     match Ident_Map.find_opt id local_env with
     | Some x -> return x c_env
-    | None -> fail (Type_check_error (Not_find_ident_of id)) c_env
+    | None -> fail (Type_check_error (Not_find_ident id)) c_env
   ;;
 
   let read_local_el_opt : ident -> t_env_value option t =
@@ -161,7 +161,7 @@ module Type_check_Monad = struct
     let code, _, _, _ = c_env in
     match Code_Map.find_opt id code with
     | Some x -> return x c_env
-    | None -> fail (Type_check_error (Not_find_ident_of id_)) c_env
+    | None -> fail (Type_check_error (Not_find_ident id_)) c_env
   ;;
 
   let read_global_el_opt : code_ident -> code_ctx option t =

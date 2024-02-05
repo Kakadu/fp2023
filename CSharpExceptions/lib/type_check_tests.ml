@@ -301,7 +301,7 @@ let%expect_test "Double definition" =
 |}
   in
   type_check_wrap s;
-  [%expect {| Type_check error: (Type_check_error (Double_definition_of (Id "b"))) |}]
+  [%expect {| Type_check error: (Type_check_error (Double_definition (Id "b"))) |}]
 ;;
 
 let%expect_test "Double \"Main\" definition " =
@@ -327,7 +327,7 @@ let%expect_test "Double \"Main\" definition " =
 |}
   in
   type_check_wrap s;
-  [%expect {| Type_check error: (Type_check_error (Double_definition_of (Id "Main"))) |}]
+  [%expect {| Type_check error: (Type_check_error (Double_definition (Id "Main"))) |}]
 ;;
 
 let%expect_test "Double method declaration" =
@@ -348,7 +348,7 @@ let%expect_test "Double method declaration" =
 |}
   in
   type_check_wrap s;
-  [%expect {| Type_check error: (Type_check_error (Double_definition_of (Id "Fac"))) |}]
+  [%expect {| Type_check error: (Type_check_error (Double_definition (Id "Fac"))) |}]
 ;;
 
 let%expect_test "Access check" =
@@ -461,8 +461,7 @@ let%expect_test "FileInfo_decl" =
     |}
   in
   type_check_wrap s;
-  [%expect
-    {| Type_check error: (Type_check_error (Double_definition_of (Id "FileInfo"))) |}]
+  [%expect {| Type_check error: (Type_check_error (Double_definition (Id "FileInfo"))) |}]
 ;;
 
 let%expect_test "Exception_decl" =
@@ -471,5 +470,5 @@ let%expect_test "Exception_decl" =
     |} in
   type_check_wrap s;
   [%expect
-    {| Type_check error: (Type_check_error (Double_definition_of (Id "Exception"))) |}]
+    {| Type_check error: (Type_check_error (Double_definition (Id "Exception"))) |}]
 ;;

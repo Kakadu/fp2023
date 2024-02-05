@@ -86,7 +86,7 @@ SPDX-License-Identifier: CC0-1.0
   >    }
   > HATE_TESTS_AND_DEADLINES
   Test: Double definition
-  Error: (Type_check_error (Double_definition_of (Id "a")))
+  Error: (Type_check_error (Double_definition (Id "a")))
 
   $  echo "Test: Inconsistency between arguments and parameters" ; ./demoInterpret.exe << HATE_TESTS_AND_DEADLINES
   >   class Program
