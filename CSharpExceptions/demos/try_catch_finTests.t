@@ -38,7 +38,8 @@ SPDX-License-Identifier: CC0-1.0
   > HATE_TESTS_AND_DEADLINES
   Test: Checking the correct filter behavior
   Result: (Init (Int_v 1002))
-  $ diff -u test_try_catch_fin_save.txt ../../../../../demos/results/test_try_catch_fin_save.txt
+  $ cat test_try_catch_fin_save.txt
+  Yeeee, I am the winner!
 
   $ echo "Test: Checking 'finally case' correct behavior 1.0" ; ./demoInterpret.exe << HATE_TESTS_AND_DEADLINES
   >   class A1 : Exception
@@ -72,7 +73,8 @@ SPDX-License-Identifier: CC0-1.0
   > HATE_TESTS_AND_DEADLINES
   Test: Checking 'finally case' correct behavior 1.0
   Error: (Interpret_error (User_exception (Code_ident (Id "A1"))))
-  $ diff -u elusive_exception.txt ../../../../../demos/results/elusive_exception.txt
+  $ cat elusive_exception.txt
+  The End
 
   $ echo "Test: Checking that 'finally case' always run 2.0 " ; ./demoInterpret.exe << HATE_TESTS_AND_DEADLINES
   >   class A1 : Exception
@@ -106,7 +108,8 @@ SPDX-License-Identifier: CC0-1.0
   > HATE_TESTS_AND_DEADLINES
   Test: Checking that 'finally case' always run 2.0 
   Error: (Interpret_error (User_exception (Code_ident (Id "Exception"))))
-  $ diff -u throw_in_catch.txt ../../../../../demos/results/throw_in_catch.txt
+  $ cat throw_in_catch.txt
+  Good
 
 
   $ echo "Test: Checking rudimentary inheritance" ; ./demoInterpret.exe << HATE_TESTS_AND_DEADLINES
@@ -141,4 +144,5 @@ SPDX-License-Identifier: CC0-1.0
   > HATE_TESTS_AND_DEADLINES
   Test: Checking rudimentary inheritance
   Result: (Init (Int_v 2))
-  $ diff -u rudimental_exception.txt ../../../../../demos/results/rudimental_exception.txt
+  $ cat rudimental_exception.txt
+  hm3 && The End
