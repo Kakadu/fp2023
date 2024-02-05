@@ -1886,7 +1886,7 @@ let%expect_test "Uninit value " =
     |}
   in
   interpret_wrap s;
-  <span data-count="1">[</span>%expect {| Error: (Interpret_error Using_an_uninitialized_variable) |}<span data-count="41">]</span>
+  <span data-count="1">[</span>%expect {| Error: (Interpret_error Uninitialized_variable) |}<span data-count="41">]</span>
 ;;
 </code></pre>
       </div>

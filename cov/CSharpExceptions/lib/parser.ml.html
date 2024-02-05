@@ -1544,7 +1544,7 @@ let ep_try_block_ ep_body = <span data-count="40">e</span>p_is_ "try" ~then_:ep_
 
 let ep_catch_block_ ep_body =
   <span data-count="7">l</span>et cdecl x = <span data-count="29">r</span>eturn (CDecl x) in
-  let cident x = <span data-count="12">r</span>eturn (CIdent x) in
+  let cident x = <span data-count="12">r</span>eturn (CExn_id x) in
   let p_filter = option None (get_op<span data-count="7">t</span> @@ ep_is<span data-count="7">_</span> "when" ~then_:(ep_paren<span data-count="7">s</span> ep_operation)) in
   <span data-count="7">l</span>et p_cond =
     lift2

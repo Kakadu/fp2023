@@ -246,7 +246,7 @@ let is_env_const = function
 
 let is_init = function
   | <span data-count="1397">I</span>nit x -&gt; return_n x
-  | <span data-count="2">_</span> -&gt; fail (Interpret_error Using_an_uninitialized_variable)
+  | <span data-count="2">_</span> -&gt; fail (Interpret_error Uninitialized_variable)
 ;;
 
 let is_base = function
@@ -269,7 +269,7 @@ let is_inst = function
 ;;
 
 let is_not_null = function
-  | <span data-count="0">N</span>ull_v -&gt; fail (Interpret_error Trying_to_change_Null)
+  | <span data-count="0">N</span>ull_v -&gt; fail (Interpret_error Null_reference)
   | <span data-count="1063">x</span> -&gt; return_n x
 ;;
 

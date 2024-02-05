@@ -907,7 +907,7 @@ let eval_point_access e_id e1 lenv_kernel =
   <span data-count="23">m</span>atch v with
   | <span data-count="23">I</span>Const (Init x) -&gt; return_n (to_cons<span data-count="23">t</span> @@ to_ini<span data-count="23">t</span> x)
   | <span data-count="0">_</span> -&gt;
-    fail (Interpret_error (Return_error "Eval of the expression hsven't implemented yet"))
+    fail (Interpret_error (Runtime_error "Eval of the expression haven't implemented yet"))
 ;;
 
 let eval_instrs_ f e args l_env_l e_stm e_expr =
@@ -935,7 +935,7 @@ let m_eval_ e_stm _ l_env_l ad args = function
            | <span data-count="10">N</span>one -&gt; return_n @@ e_st<span data-count="10">m</span> body)
     &gt;&gt;= run_metho<span data-count="23">d</span> sign.m_type prms args ad l_env_l
   | <span data-count="0">I</span>Constructor _ -&gt;
-    fail (Interpret_error (Constructor_error "Trying to call a constructor without new"))
+    fail (Interpret_error (Syntax_error "Trying to call a constructor without new"))
 ;;
 
 let eval_method e l_env_l e_stm e_expr args =
@@ -944,7 +944,7 @@ let eval_method e l_env_l e_stm e_expr args =
 
 let c_eval_ e_stm e_expr l_env_l _ args = function
   | <span data-count="0">I</span>Method _ -&gt;
-    fail (Interpret_error (Constructor_error "'New' can be used only with constructor"))
+    fail (Interpret_error (Syntax_error "'New' can be used only with constructor"))
   | <span data-count="28">I</span>Constructor (sign, body) -&gt;
     let prms = get_params_id sign.con_params in
     <span data-count="28">l</span>et cl_decl =
@@ -979,7 +979,7 @@ let eval_un_op un_op res lenv_kernel e_stm e_expr =
        &gt;&gt;= fun ad -&gt; <span data-count="28">r</span>eturn_n @@ create_ins<span data-count="28">t</span> ad
      | <span data-count="0">_</span> -&gt;
        fail
-         (Interpret_error (Constructor_error "'New' can be used only with constructor")))
+         (Interpret_error (Syntax_error "'New' can be used only with constructor")))
 ;;
 
 let eval_bin_op op e1 e2 e_expr l_env_l =
@@ -1035,7 +1035,7 @@ let eval_bin_op op e1 e2 e_expr l_env_l =
      | <span data-count="8">E</span>Point_access (e_id, e1) -&gt;
        get_point_access_valu<span data-count="8">e</span> e_id e1 l_env_l
        &gt;&gt;<span data-count="8">=</span> fun (id, ad, _) -&gt; <span data-count="8">u</span>pdate_instance_el id ad x
-     | <span data-count="0">_</span> -&gt; fai<span data-count="0">l</span> (Interpret_error Methods_cannot_be_assignable))
+     | <span data-count="0">_</span> -&gt; fai<span data-count="0">l</span> (Interpret_error (Syntax_error "Methods cannot be assignable")))
     *&gt; res
 ;;
 
@@ -1053,7 +1053,7 @@ let eval_expr eval_stm lenv_kernel expr =
        | <span data-count="0">N</span>one -&gt;
          fail
            (Interpret_error
-              (Return_error "Void methods can't be used with assignable types")))
+              (Runtime_error "Void methods can't be used with assignable types")))
     | <span data-count="38">E</span>Un_op (un, e) -&gt; eval_un_op un e lenv_kernel eval_stm helper
     | <span data-count="350">E</span>Bin_op (bin, e1, e2) -&gt; eval_bin_op bin e1 e2 helper lenv_kernel
   in
@@ -1067,7 +1067,7 @@ let eval_stm_expr e_expr e_stm lenv_kernel = function
     &gt;&gt;<span data-count="15">=</span> eval_metho<span data-count="15">d</span> e lenv_kernel e_stm None
     &gt;&gt;= (function
      | <span data-count="0">S</span>ome _ -&gt;
-       fail (Interpret_error (Return_error "As statement can be used only 'Void' method"))
+       fail (Interpret_error (Runtime_error "As statement can be used only 'Void' method"))
      | <span data-count="14">N</span>one -&gt; return_n ())
   | <span data-count="97">E</span>Bin_op (op, e1, e2) -&gt; e_exp<span data-count="97">r</span> (EBin_op (op, e1, e2)) *&gt; return_<span data-count="97">n</span> ()
   | <span data-count="0">_</span> -&gt;
@@ -1106,7 +1106,7 @@ let catch_eval ad e_stm l_env_l = function
             | <span data-count="9">C</span>Decl (Var_decl (cl_tp, name)) -&gt;
               let update_env = add_local_el name (IConst (Init (Instance_v ad))) in
               <span data-count="9">i</span>s_inheritanc<span data-count="9">e</span> cl_tp cl_id update_env &gt;&gt;= eval_body
-            | <span data-count="3">C</span>Ident inh_cl_id when accept_con<span data-count="3">d</span> inh_cl_id cl_id -&gt;
+            | <span data-count="3">C</span>Exn_id inh_cl_id when accept_con<span data-count="3">d</span> inh_cl_id cl_id -&gt;
               <span data-count="3">(</span>match e_opt with
                | <span data-count="0">S</span>ome _ -&gt;
                  fail
@@ -1227,7 +1227,7 @@ let interpret_ genv cl_id =
       List.fold_left f None cl_decl.cl_mems
       |&gt; <span data-count="30">f</span>unction
       | <span data-count="30">S</span>ome (tp, body) -&gt; return_n (tp, body)
-      | <span data-count="0">_</span> -&gt; fail (Interpret_error (Return_error "The program must contain 'Main'"))
+      | <span data-count="0">_</span> -&gt; fail (Interpret_error (Runtime_error "The program must contain 'Main'"))
     in
     cl_decl_t
     &gt;&gt;= fun cl_decl -&gt;
@@ -1241,7 +1241,7 @@ let interpret_ genv cl_id =
   let eval =
     match lenv_with_constructors with
     | <span data-count="30">S</span>ome l_env_l -&gt; run_mai<span data-count="30">n</span> l_env_l
-    | <span data-count="0">N</span>one -&gt; fai<span data-count="0">l</span> (Interpret_error (Return_error "Some class has no constructor"))
+    | <span data-count="0">N</span>one -&gt; fai<span data-count="0">l</span> (Interpret_error (Runtime_error "Some class has no constructor"))
   in
   run genv eval
 ;;
