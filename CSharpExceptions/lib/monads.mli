@@ -211,7 +211,7 @@ module Eval : sig
 
   val further : ('a, 'b, Errors.error) Env_types.Eval_env.eval_t -> ('a, 'b) t
 
-  (** Used to run execution with try catch finally
+  (** Allows you to run execution with try catch finally
 
       [run_tcf try_handler catch_handler finally_handler] *)
   val run_tcf

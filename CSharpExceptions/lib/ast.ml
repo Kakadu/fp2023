@@ -47,45 +47,45 @@ type meth_type =
 type access_modifier =
   | MPublic
   | MPrivate
-  | MProtected (* UNSOPPORTED: rudimental, can be used as a MPrivate *)
+  | MProtected (** UNSOPPORTED: rudimental, can be used as a MPrivate *)
 [@@deriving show { with_path = false }]
 
 type method_modifier =
   | MAccess of access_modifier
-  | MStatic (* UNSOPPORTED: only with main *)
+  | MStatic (** UNSOPPORTED: only with main *)
 [@@deriving show { with_path = false }]
 
 type fild_modifier = FAccess of access_modifier [@@deriving show { with_path = false }]
 
 type bin_op =
-  | Asterisk (* [*] *)
-  | Plus (* [+] *)
-  | Minus (* [-] *)
-  | Division (* [/] *)
-  | Mod (* [%] *)
-  | Equal (* [==] *)
-  | NotEqual (* [!=] *)
-  | Less (* [<] *)
-  | LessOrEqual (* [<=] *)
-  | More (* [>] *)
-  | MoreOrEqual (* [>=] *)
-  | And (* [&&] *)
-  | Or (* [||] *)
-  | Assign (* [=] *)
+  | Asterisk (** [*] *)
+  | Plus (** [+] *)
+  | Minus (** [-] *)
+  | Division (** [/] *)
+  | Mod (** [%] *)
+  | Equal (** [==] *)
+  | NotEqual (** [!=] *)
+  | Less (** [<] *)
+  | LessOrEqual (** [<=] *)
+  | More (** [>] *)
+  | MoreOrEqual (** [>=] *)
+  | And (** [&&] *)
+  | Or (** [||] *)
+  | Assign (** [=] *)
 [@@deriving show { with_path = false }]
 
 type un_op =
-  | UMinus (* [-] *)
-  | UNot (* [!] *)
-  | New (* [new] *)
+  | UMinus (** [-] *)
+  | UNot (** [!] *)
+  | New (** [new] *)
 [@@deriving show { with_path = false }]
 
 type expr =
-  | EConst of value_ (* assignable values *)
+  | EConst of value_ (** assignable values *)
   (*  *)
-  | EIdentifier of ident (* id of something e.g. class name; var name; method name *)
-  | EMethod_invoke of expr * args (* method(a, b, c) | Class.method(a, b, c) *)
-  | EPoint_access of expr * expr (* access by point e.g. A.run() *)
+  | EIdentifier of ident (** id of something e.g. class name; var name; method name *)
+  | EMethod_invoke of expr * args (** method(a, b, c) | Class.method(a, b, c) *)
+  | EPoint_access of expr * expr (** access by point e.g. A.run() *)
   (*  *)
   | EBin_op of bin_op * expr * expr
   | EUn_op of un_op * expr
@@ -98,7 +98,7 @@ type params = Params of var_decl list [@@deriving show { with_path = false }]
 
 type catch_decl =
   | CDecl of var_decl
-  | CIdent of ident
+  | CExn_id of ident
 [@@deriving show { with_path = false }]
 
 type statement =
@@ -119,7 +119,6 @@ type statement =
   | STry_catch_fin of
       { try_s : statement
       ; catch_s : ((catch_decl * expr option) option * statement) list option
-          (*!!! only new decl in [catch_cond |-> (catch_cond * filter_opt)_opt * body] option *)
       ; finally_s : statement option
       }
 [@@deriving show { with_path = false }]

@@ -38,12 +38,12 @@ let to_type_m_opt = function
 
 let to_assign_t = function
   | Value_sig (TVar a_tp) -> Result.ok a_tp
-  | Method_sig { m_modif = _; m_type; _ } ->
+  | Method_sig { m_type } ->
     (match m_type with
      | Void -> Result.error "Non-assignable type"
      | TReturn a_tp -> Result.ok a_tp)
-  | Constructor_sig { con_modif = _; con_id; _ } -> Result.ok (TNullable (TClass con_id))
-  | Fild_sig { f_modif = _; f_type = TVar tp; _ } -> Result.ok tp
+  | Constructor_sig { con_id } -> Result.ok (TNullable (TClass con_id))
+  | Fild_sig { f_type = TVar tp } -> Result.ok tp
 ;;
 
 let opt_to_assign_t = function
@@ -58,9 +58,8 @@ let compare a b f =
   let a_tp_res = opt_to_assign_t a in
   let b_tp_res = opt_to_assign_t b in
   match a_tp_res, b_tp_res with
-  | Result.Error _, Result.Error _ | _, Result.Error _ | Result.Error _, _ ->
-    Result.error "Non-comparable types"
   | Result.Ok a_tp_opt, Result.Ok b_tp_opt -> f (a_tp_opt, b_tp_opt)
+  | _ -> Result.error "Non-comparable types"
 ;;
 
 let compare_t_env_opt f a b =
@@ -125,17 +124,17 @@ let map2_opt f l1 l2 =
 let get_sign id el =
   let is_fild s id =
     match s with
-    | { f_modif = _; f_type = _; f_id } when equal_ident f_id id -> Some (Fild_sig s)
+    | { f_id } when equal_ident f_id id -> Some (Fild_sig s)
     | _ -> None
   in
   let is_method s id =
     match s with
-    | { m_modif = _; m_type = _; m_id; _ } when equal_ident m_id id -> Some (Method_sig s)
+    | { m_id } when equal_ident m_id id -> Some (Method_sig s)
     | _ -> None
   in
   let is_constructor s id =
     match s with
-    | { con_modif = _; con_id; _ } when equal_ident con_id id -> Some (Constructor_sig s)
+    | { con_id } when equal_ident con_id id -> Some (Constructor_sig s)
     | _ -> None
   in
   match el with
@@ -158,9 +157,9 @@ let find_global id = read_global_el (Code_ident id) >>| fun x -> get_class_decl 
 
 let is_public sign =
   match sign with
-  | Fild_sig { f_modif = Some (FAccess MPublic); _ }
-  | Method_sig { m_modif = Some (MAccess MPublic); _ }
-  | Constructor_sig { con_modif = Some MPublic; _ } -> return sign
+  | Fild_sig { f_modif = Some (FAccess MPublic) }
+  | Method_sig { m_modif = Some (MAccess MPublic) }
+  | Constructor_sig { con_modif = Some MPublic } -> return sign
   | _ -> fail (Type_check_error (Access "Attempt to get a private class member"))
 ;;
 
@@ -174,10 +173,12 @@ let rec find_class_member expr cl_decl =
     find_mem mem_id
     >>= is_public
     >>= function
-    | Fild_sig { f_modif = _; f_type = TVar (TNullable (TClass id)); _ } -> return id
-    | Method_sig { m_modif = _; m_type = TReturn (TNullable (TClass id)); _ } -> return id
-    | Constructor_sig { con_modif = _; con_id; _ } -> return con_id
-    | _ -> fail (Type_check_error (Access "Magic case"))
+    | Fild_sig { f_type = TVar (TNullable (TClass id)) } -> return id
+    | Method_sig { m_type = TReturn (TNullable (TClass id)) } -> return id
+    | Constructor_sig { con_id } -> return con_id
+    | _ ->
+      fail (Type_check_error (Access "'Main' method cannot be called via point access"))
+    (* Impossible case because the check is duplicated inside find_mem *)
   in
   match expr with
   | EIdentifier id -> find_mem id >>= is_public
@@ -193,8 +194,7 @@ let check_point_acc e1 e2 =
       let local_find = read_local_el id in
       let global_find id_ = read_global_el (Code_ident id_) >>| get_class_decl in
       let get_class = function
-        | Fild_sig { f_modif = _; f_type = TVar (TNullable (TClass id_)); _ } ->
-          return id_
+        | Fild_sig { f_type = TVar (TNullable (TClass id_)) } -> return id_
         | Value_sig (TVar (TNullable (TClass id_))) -> return id_
         | _ -> fail (Type_check_error (Other "Error during parsing in Epoint_access"))
       in
@@ -244,7 +244,7 @@ let inv_cond_return sign env_args =
     (match tp with
      | Result.Error _ -> fail (Type_check_error (Other "-_-"))
      | Result.Ok tp -> check_method_ params env_args *> return (Some tp))
-  | Some (Constructor_sig { con_modif = _; con_id; con_params; base_args }) ->
+  | Some (Constructor_sig { con_id; con_params; base_args }) ->
     let tp = Value_sig (TVar (TNullable (TClass con_id))) in
     (match con_params, base_args with
      | Params params, None -> check_method_ params env_args *> return (Some tp)
@@ -255,7 +255,7 @@ let inv_cond_return sign env_args =
 
 let inv_cond_void sign env_args =
   match sign with
-  | Some (Method_sig { m_modif = _; m_type; m_id = _; m_params = Params params })
+  | Some (Method_sig { m_type; m_params = Params params })
     when equal_meth_type m_type Void -> check_method_ params env_args *> return TP_Ok
   | _ -> fail (Type_check_error (Other "As a statement can be used only 'Void' methods"))
 ;;
@@ -304,7 +304,7 @@ let check_un_op op env1 =
   | New ->
     env1
     >>= (function
-     | Some (Constructor_sig { con_modif = _; con_id; _ }) ->
+     | Some (Constructor_sig { con_id }) ->
        return (Some (Value_sig (TVar (TNullable (TClass con_id)))))
      | Some (Value_sig (TVar (TNullable (TClass id)))) ->
        read_global_el (Code_ident id)
@@ -364,8 +364,8 @@ let is_exception_ con_id =
 let throw_check env_obj =
   let get_class_id =
     match env_obj with
-    | Some (Constructor_sig { con_modif = _; con_id; _ }) -> return con_id
-    | Some (Fild_sig { f_modif = _; f_type = TVar (TNullable (TClass id)) }) -> return id
+    | Some (Constructor_sig { con_id }) -> return con_id
+    | Some (Fild_sig { f_type = TVar (TNullable (TClass id)) }) -> return id
     | Some (Value_sig (TVar (TNullable (TClass id)))) -> return id
     | _ -> fail (Type_check_error (Other "throw can be used only with exceprions"))
   in
@@ -423,7 +423,7 @@ let for_check init_opt e1_opt e2_opt s h =
 let catch_s_check_ h (edecl_opt, s) =
   match edecl_opt with
   | None -> h s
-  | Some (CIdent exc_id, _) -> is_exception_ exc_id *> h s
+  | Some (CExn_id exc_id, _) -> is_exception_ exc_id *> h s
   | Some (CDecl (Var_decl (tp, id)), e_opt) ->
     let tp = Value_sig tp in
     let add = add_local_decl id tp in
@@ -512,10 +512,10 @@ let memb_check = function
      | Some e -> var_exp_check e (Fild_sig sign)
      | None -> return TP_Ok)
   | Main (m_type, s) -> local_scope @@ (save_scope_tp (Some m_type) *> check_statement s)
-  | Method ({ m_modif = _; m_type; m_id = _; m_params }, s) ->
+  | Method ({ m_type; m_params }, s) ->
     local_scope
     @@ (save_scope_tp (Some m_type) *> add_params m_params *> check_statement s)
-  | Constructor ({ con_modif = _; con_id = _; con_params; _ }, s) ->
+  | Constructor ({ con_params }, s) ->
     let cons_tp = Void in
     local_scope
     @@ (save_scope_tp (Some cons_tp) *> add_params con_params *> check_statement s)
@@ -551,7 +551,7 @@ let class_check cl_decl =
        | Some _ -> fail (Type_check_error (Double_definition_of (Id "Main")))
        | None -> save_main_ctx (Some (Code_ident cl_id)))
     | Constructor (sign, _) ->
-      let { con_modif = _; con_id; _ } = sign in
+      let { con_id } = sign in
       (match equal_ident con_id cl_id with
        | true -> add_local con_id (Constructor_sig sign)
        | false ->
@@ -570,10 +570,10 @@ let class_check cl_decl =
   let g = function
     | Main _ | Constructor _ -> return ()
     | Fild (sign, _) ->
-      let { f_modif = _; f_type = _; f_id } = sign in
+      let { f_id } = sign in
       add_local f_id (Fild_sig sign)
     | Method (sign, _) ->
-      let { m_modif = _; m_type = _; m_id; _ } = sign in
+      let { m_id } = sign in
       add_local m_id (Method_sig sign)
   in
   let add_members = iter_left g cl_mems in

@@ -241,7 +241,7 @@ let catch_eval ad e_stm l_env_l = function
             | CDecl (Var_decl (cl_tp, name)) ->
               let update_env = add_local_el name (IConst (Init (Instance_v ad))) in
               is_inheritance cl_tp cl_id update_env >>= eval_body
-            | CIdent inh_cl_id when accept_cond inh_cl_id cl_id ->
+            | CExn_id inh_cl_id when accept_cond inh_cl_id cl_id ->
               (match e_opt with
                | Some _ ->
                  fail

@@ -388,7 +388,7 @@ let ep_try_block_ ep_body = ep_is_ "try" ~then_:ep_body
 
 let ep_catch_block_ ep_body =
   let cdecl x = return (CDecl x) in
-  let cident x = return (CIdent x) in
+  let cident x = return (CExn_id x) in
   let p_filter = option None (get_opt @@ ep_is_ "when" ~then_:(ep_parens ep_operation)) in
   let p_cond =
     lift2

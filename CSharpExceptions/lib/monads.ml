@@ -311,14 +311,12 @@ module Eval_M_State_Extention = struct
     let f acc el =
       let is_method (sign, body) =
         match sign with
-        | { m_modif = _; m_type = _; m_id; _ } when equal_ident m_id id ->
-          Some (to_meth sign body)
+        | { m_id } when equal_ident m_id id -> Some (to_meth sign body)
         | _ -> None
       in
       let is_cons (sign, body) =
         match sign with
-        | { con_modif = _; con_id; _ } when equal_ident con_id id ->
-          Some (to_cons sign body)
+        | { con_id } when equal_ident con_id id -> Some (to_cons sign body)
         | _ -> None
       in
       match acc, el with
@@ -348,7 +346,7 @@ module Eval_M_State_Extention = struct
   let read_mem = read >>| fun (_, _, mem, _) -> mem
 
   let alloc_instance custom_f decl =
-    let { cl_modif = _; cl_id; parent = _; cl_mems } = decl in
+    let { cl_id; cl_mems } = decl in
     let g acc cur =
       let eval = function
         | Some e -> custom_f e
@@ -358,7 +356,7 @@ module Eval_M_State_Extention = struct
       >>= fun tl ->
       match cur with
       | Fild (sign, e_opt) ->
-        let { f_modif = _; f_type = _; f_id } = sign in
+        let { f_id } = sign in
         eval e_opt >>| fun v -> Ident_Map.add f_id (v, sign) tl
       | _ -> return_n tl
     in
