@@ -13,7 +13,7 @@ let rec pp_val fmt = function
   | VList l -> fprintf fmt "[%a]" (pp_list "; ") l
   | VTuple t -> fprintf fmt "(%a)" (pp_list ", ") t
   | VFun (_, _, _) -> fprintf fmt "<fun>"
-  | VLet (_, _) -> fprintf fmt "<let>"
+  | VLet (_, b, _) -> if b then fprintf fmt "<let rec>" else fprintf fmt "<let>"
 
 and pp_list sep fmt =
   let helper fmt = pp_list sep fmt in
@@ -31,7 +31,17 @@ let pp_fail fmt = function
   | UnboundVariable str -> fprintf fmt "UnboundVariable: %S" str
   | ValueTypeError verr -> fprintf fmt "ValueTypeError: %a" pp_val verr
   | ExprTypeError eerr -> fprintf fmt "TypeError: %S" eerr
-  | DivisionByZeroError -> fprintf fmt "DivisionByZeroError"
+  | DivisionByZero -> fprintf fmt "DivisionByZero"
   | ExecError (val1, val2) -> fprintf fmt "ExecError: %a # %a" pp_val val1 pp_val val2
-  | PatternMatchingError -> fprintf fmt "PatternMatchingError"
+  | PatternError perr -> fprintf fmt "PatternError: %S" perr
+;;
+
+let pp_expected_result_item fmt item =
+  let item_name, item_value = item in
+  fprintf fmt "%S: %a" item_name pp_val item_value
+;;
+
+let rec pp_expected_result fmt = function
+  | [] -> ()
+  | h :: tl -> fprintf fmt "%a\n%a" pp_expected_result_item h pp_expected_result tl
 ;;

@@ -42,28 +42,27 @@ type decl_type =
 [@@deriving eq, show { with_path = false }]
 
 type label =
-  | NoLabel
-  | Label of name
-  | Optional of const option
+  | Label of name option
+  | Optional of expr option
 [@@deriving eq, show { with_path = false }]
 
-type pattern =
-  | PNil (* [] *)
+and pattern =
+  | PNill (* [] *)
   | PEmpty (* _ *)
-  | PArg of name * label * decl_type
+  | PArg of name * label
   | PConst of const
   | PVar of name
   | PCons of pattern * pattern
   | PTuple of pattern list
 [@@deriving eq, show { with_path = false }]
 
-type decl = LetDecl of is_rec * name * expr * decl_type
-[@@deriving eq, show { with_path = false }]
+and decl = LetDecl of is_rec * name * expr [@@deriving eq, show { with_path = false }]
 
 and expr =
   | Const of const
   | BinOp of bin_op * expr * expr
   | Var of name
+  | LabeledVar of name * expr
   | Apply of expr * expr
   | Fun of pattern * expr
   | IfThenElse of expr * expr * expr
@@ -75,5 +74,5 @@ type program = decl list [@@deriving eq, show { with_path = false }]
 
 let ematch e pl = Match (e, pl)
 let efun p e = Fun (p, e)
-let let_decl b s e t = LetDecl (b, s, e, t)
+let let_decl b s e = LetDecl (b, s, e)
 let edecl d e = EDecl (d, e)

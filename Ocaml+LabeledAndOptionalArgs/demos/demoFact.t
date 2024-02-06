@@ -1,6 +1,6 @@
   $ dune exec demoFact
   [(LetDecl (true, "fact",
-      (Fun ((PArg ("n", NoLabel, (IntType false))),
+      (Fun ((PVar "n"),
          (IfThenElse ((BinOp (Less, (Var "n"), (Const (Int 1)))),
             (Const (Int 1)),
             (BinOp (Asterisk, (Var "n"),
@@ -8,6 +8,7 @@
                   ))
                ))
             ))
-         )),
-      (IntType false)))
+         ))
+      ))
     ]
+

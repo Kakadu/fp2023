@@ -1,7 +1,14 @@
 (library
  (name LabeledOptionalArgs_lib)
  (public_name Ocaml+LabeledAndOptionalArgs.Lib)
- (modules Ast Parser Tests Interpret InterpretTypes Pprint)
+ (modules
+  Ast
+  Parser
+  ParserTests
+  InterpretTypes
+  Pprint
+  Interpret
+  InterpretTests)
  (libraries base angstrom)
  (inline_tests)
  (preprocess

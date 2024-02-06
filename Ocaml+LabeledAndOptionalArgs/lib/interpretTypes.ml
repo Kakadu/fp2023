@@ -8,12 +8,12 @@ module IdMap = Map.Make (String)
 type value =
   | VInt of int
   | VString of string
-  | VBool of bool
   | VChar of char
+  | VBool of bool
   | VList of value list
   | VTuple of value list
   | VFun of pattern * expr * enviorment
-  | VLet of string * value
+  | VLet of string * bool * value
 
 and enviorment = value IdMap.t [@@deriving eq]
 
@@ -21,7 +21,7 @@ type error =
   | UnboundVariable of string
   | ValueTypeError of value
   | ExprTypeError of string
-  | DivisionByZeroError
+  | DivisionByZero
   | ExecError of value * value
-  | PatternMatchingError
+  | PatternError of string
 [@@deriving eq]
