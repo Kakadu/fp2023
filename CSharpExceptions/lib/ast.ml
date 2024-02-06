@@ -84,8 +84,8 @@ type expr =
   | EConst of value_ (** assignable values *)
   (*  *)
   | EIdentifier of ident (** id of something e.g. class name; var name; method name *)
-  | EMethod_invoke of expr * args (** method(a, b, c) | Class.method(a, b, c) *)
-  | EPoint_access of expr * expr (** access by point e.g. A.run() *)
+  | EMethod_invoke of expr * args (** [method(a, b, c)] or [Class.method(a, b, c)] *)
+  | EPoint_access of expr * expr (** access by point e.g. [A.run()] *)
   (*  *)
   | EBin_op of bin_op * expr * expr
   | EUn_op of un_op * expr
@@ -97,8 +97,8 @@ type var_decl = Var_decl of var_type * ident [@@deriving show { with_path = fals
 type params = Params of var_decl list [@@deriving show { with_path = false }]
 
 type catch_decl =
-  | CDecl of var_decl
-  | CExn_id of ident
+  | CDecl of var_decl (** catch condition with declaration e.g. [catch(Exception a)] *)
+  | CExn_id of ident (** catch condition with exception name [catch(Exception)] *)
 [@@deriving show { with_path = false }]
 
 type statement =
@@ -107,6 +107,7 @@ type statement =
   | Steps of statement list
   | SReturn of expr option
   | SIf_else of expr * statement * statement option
+  (** if-condition * if-body * else-body *)
   | SBreak
   | SThrow of expr
   | SWhile of expr * statement

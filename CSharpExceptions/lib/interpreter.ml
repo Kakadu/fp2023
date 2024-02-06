@@ -284,7 +284,7 @@ let eval_for e_stm l_env_l init cond iter body =
     let eval_iter e = eval_expr e_stm l_env_l e in
     match cond, iter with
     | Some cond_e, Some iter_e ->
-      lift2 (fun x _ -> x) (eval_cond cond_e) (eval_iter iter_e)
+      eval_cond cond_e >>= fun res -> eval_iter iter_e *> return_n res
     | Some cond_e, None -> eval_cond cond_e
     | None, Some iter_e -> eval_iter iter_e *> return_n true
     | None, None -> return_n true
