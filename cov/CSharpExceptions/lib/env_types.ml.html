@@ -262,7 +262,7 @@ module Eval_env = struct
   let val_to_iconst = function
     | <span data-count="8">N</span>ull -&gt; Null_v
     | <span data-count="29">V</span>String x -&gt; String_v x
-    | <span data-count="138">V</span>Int x -&gt; Int_v x
+    | <span data-count="173">V</span>Int x -&gt; Int_v x
     | <span data-count="8">V</span>Char x -&gt; Char_v x
     | <span data-count="154">V</span>Bool x -&gt; Bool_v x
   ;;
@@ -282,7 +282,7 @@ module Eval_env = struct
     | Not_init
   [@@deriving show { with_path = false }<span data-count="46">]</span>
 
-  let to_init x = <span data-count="909">I</span>nit x
+  let to_init x = <span data-count="944">I</span>nit x
   let to_not_init _ = <span data-count="0">N</span>ot_init
 
   <span data-count="0">t</span>ype t_env_value =
@@ -290,7 +290,7 @@ module Eval_env = struct
     | ICode of instructions
   [@@deriving show { with_path = false }<span data-count="0">]</span>
 
-  let to_const x = <span data-count="949">I</span>Const x
+  let to_const x = <span data-count="984">I</span>Const x
   let to_code x = <span data-count="23">I</span>Code x
   let create_val x = <span data-count="521">t</span>o_const @@ to_ini<span data-count="521">t</span> x
   let create_inst x = <span data-count="28">t</span>o_const @@ to_ini<span data-count="28">t</span> @@ to_ins<span data-count="28">t</span> x
@@ -312,7 +312,7 @@ module Eval_env = struct
     | Signal of ('b, 'sys_err) sig_
 
   let to_sig x = <span data-count="1221">S</span>ignal x
-  let nsig x = <span data-count="23369">E</span>val_res x
+  let nsig x = <span data-count="23407">E</span>val_res x
   let rsig x = <span data-count="275">t</span>o_sig (Return x)
   let bsig = to_si<span data-count="20">g</span> Break
   let esig add = <span data-count="180">t</span>o_sig (Exn add)

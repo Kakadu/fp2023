@@ -1543,7 +1543,7 @@ module Eval_Monad = struct
   (* ****************** State-error monad functionality ****************** *)
 
   let return : ('a, 'b, error) eval_t -&gt; ('a, 'b) t = fun x st -&gt; <span data-count="0">s</span>t, x
-  let return_n : 'a -&gt; ('a, 'b) t = fun x st -&gt; <span data-count="22063">s</span>t, nsi<span data-count="22063">g</span> x
+  let return_n : 'a -&gt; ('a, 'b) t = fun x st -&gt; <span data-count="22101">s</span>t, nsi<span data-count="22101">g</span> x
   let return_r : 'b option -&gt; ('a, 'b) t = fun x st -&gt; <span data-count="275">s</span>t, rsi<span data-count="275">g</span> x
   let return_b : 'c -&gt; ('a, 'b) t = fun _ st -&gt; <span data-count="62">s</span>t, bsig
   let return_e : address -&gt; ('a, 'b) t = fun ad st -&gt; <span data-count="180">s</span>t, esi<span data-count="180">g</span> ad
@@ -1551,9 +1551,9 @@ module Eval_Monad = struct
 
   let ( &gt;&gt;= ) : ('a, 'c) t -&gt; ('a -&gt; ('b, 'c) t) -&gt; ('b, 'c) t =
     fun x f st -&gt;
-    <span data-count="22154">l</span>et st1, x1 = x st in
-    <span data-count="22154">m</span>atch x1 with
-    | <span data-count="21488">E</span>val_res x -&gt; f x st1
+    <span data-count="22192">l</span>et st1, x1 = x st in
+    <span data-count="22192">m</span>atch x1 with
+    | <span data-count="21526">E</span>val_res x -&gt; f x st1
     | <span data-count="666">S</span>ignal s -&gt;
       (match s with
        | <span data-count="202">R</span>eturn x -&gt; return_r x st1
@@ -1620,8 +1620,8 @@ module Eval_M_Extention = struct
   include Eval_Monad
 
   let ( &gt;&gt;| ) x f = <span data-count="1249">x</span> &gt;&gt;= fun x_res -&gt; <span data-count="2949">r</span>eturn_n (<span data-count="2949">f</span> x_res)
-  let ( *&gt; ) a b = <span data-count="2604">a</span> &gt;&gt;= fun _ -&gt; <span data-count="2511">b</span> &gt;&gt;= fun b1 -&gt; <span data-count="2210">r</span>eturn_n b1
-  let lift2 f a b = <span data-count="158">a</span> &gt;&gt;= fun a1 -&gt; <span data-count="525">b</span> &gt;&gt;= fun b1 -&gt; <span data-count="525">r</span>eturn_n (<span data-count="525">f</span> a1 b1)
+  let ( *&gt; ) a b = <span data-count="2642">a</span> &gt;&gt;= fun _ -&gt; <span data-count="2549">b</span> &gt;&gt;= fun b1 -&gt; <span data-count="2248">r</span>eturn_n b1
+  let lift2 f a b = <span data-count="190">a</span> &gt;&gt;= fun a1 -&gt; <span data-count="487">b</span> &gt;&gt;= fun b1 -&gt; <span data-count="487">r</span>eturn_n (<span data-count="487">f</span> a1 b1)
 
   let fold_left custom_f acc mlst =
     <span data-count="9">l</span>et f acc cur = <span data-count="12">a</span>cc &gt;&gt;= fun acc_ -&gt; <span data-count="12">c</span>ustom_<span data-count="12">f</span> acc_ cur &gt;&gt;= return_n in
@@ -1821,7 +1821,7 @@ module Eval_M_State_Extention = struct
   ;;
 
   let read_local_el id =
-    <span data-count="386">r</span>ead_local
+    <span data-count="421">r</span>ead_local
     &gt;&gt;= fun (ad, l_env) -&gt;
     <span data-count="738">f</span>ind_local<span data-count="738">_</span> id l_env &lt;|<span data-count="738">&gt;</span> read_inst_e<span data-count="738">l</span> id ad &lt;|&gt; read_inst_met<span data-count="738">h</span> id ad
   ;;

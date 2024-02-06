@@ -18,9 +18,9 @@
       <h2>94.85%</h2>
     </div>
     <div id="navbar">
-      <span class="unvisited" style="top:6.63%"></span>
-      <span class="unvisited" style="top:26.51%"></span>
-      <span class="unvisited" style="bottom:10.24%"></span>
+      <span class="unvisited" style="top:6.59%"></span>
+      <span class="unvisited" style="top:26.35%"></span>
+      <span class="unvisited" style="bottom:10.18%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -138,59 +138,60 @@
 <a id="L111"></a><span > </span>
 <a id="L112"></a><span > </span>
 <a id="L113"></a><span > </span>
-<a id="L114"></a><span class="visited"> </span>
+<a id="L114"></a><span > </span>
 <a id="L115"></a><span class="visited"> </span>
 <a id="L116"></a><span class="visited"> </span>
-<a id="L117"></a><span > </span>
+<a id="L117"></a><span class="visited"> </span>
 <a id="L118"></a><span > </span>
 <a id="L119"></a><span > </span>
 <a id="L120"></a><span > </span>
-<a id="L121"></a><span class="visited"> </span>
+<a id="L121"></a><span > </span>
 <a id="L122"></a><span class="visited"> </span>
-<a id="L123"></a><span > </span>
-<a id="L124"></a><span class="visited"> </span>
-<a id="L125"></a><span > </span>
-<a id="L126"></a><span class="visited"> </span>
+<a id="L123"></a><span class="visited"> </span>
+<a id="L124"></a><span > </span>
+<a id="L125"></a><span class="visited"> </span>
+<a id="L126"></a><span > </span>
 <a id="L127"></a><span class="visited"> </span>
-<a id="L128"></a><span > </span>
+<a id="L128"></a><span class="visited"> </span>
 <a id="L129"></a><span > </span>
 <a id="L130"></a><span > </span>
-<a id="L131"></a><span class="visited"> </span>
-<a id="L132"></a><span > </span>
-<a id="L133"></a><span class="visited"> </span>
+<a id="L131"></a><span > </span>
+<a id="L132"></a><span class="visited"> </span>
+<a id="L133"></a><span > </span>
 <a id="L134"></a><span class="visited"> </span>
-<a id="L135"></a><span > </span>
+<a id="L135"></a><span class="visited"> </span>
 <a id="L136"></a><span > </span>
 <a id="L137"></a><span > </span>
 <a id="L138"></a><span > </span>
-<a id="L139"></a><span class="visited"> </span>
-<a id="L140"></a><span > </span>
-<a id="L141"></a><span class="visited"> </span>
+<a id="L139"></a><span > </span>
+<a id="L140"></a><span class="visited"> </span>
+<a id="L141"></a><span > </span>
 <a id="L142"></a><span class="visited"> </span>
-<a id="L143"></a><span > </span>
+<a id="L143"></a><span class="visited"> </span>
 <a id="L144"></a><span > </span>
-<a id="L145"></a><span class="visited"> </span>
-<a id="L146"></a><span > </span>
-<a id="L147"></a><span class="visited"> </span>
-<a id="L148"></a><span > </span>
-<a id="L149"></a><span class="unvisited"> </span>
-<a id="L150"></a><span > </span>
-<a id="L151"></a><span class="visited"> </span>
+<a id="L145"></a><span > </span>
+<a id="L146"></a><span class="visited"> </span>
+<a id="L147"></a><span > </span>
+<a id="L148"></a><span class="visited"> </span>
+<a id="L149"></a><span > </span>
+<a id="L150"></a><span class="unvisited"> </span>
+<a id="L151"></a><span > </span>
 <a id="L152"></a><span class="visited"> </span>
-<a id="L153"></a><span > </span>
+<a id="L153"></a><span class="visited"> </span>
 <a id="L154"></a><span > </span>
 <a id="L155"></a><span > </span>
-<a id="L156"></a><span class="visited"> </span>
-<a id="L157"></a><span > </span>
-<a id="L158"></a><span class="visited"> </span>
+<a id="L156"></a><span > </span>
+<a id="L157"></a><span class="visited"> </span>
+<a id="L158"></a><span > </span>
 <a id="L159"></a><span class="visited"> </span>
-<a id="L160"></a><span > </span>
-<a id="L161"></a><span class="visited"> </span>
+<a id="L160"></a><span class="visited"> </span>
+<a id="L161"></a><span > </span>
 <a id="L162"></a><span class="visited"> </span>
-<a id="L163"></a><span > </span>
-<a id="L164"></a><span class="visited"> </span>
-<a id="L165"></a><span > </span>
-<a id="L166"></a><span class="visited"> </span>
+<a id="L163"></a><span class="visited"> </span>
+<a id="L164"></a><span > </span>
+<a id="L165"></a><span class="visited"> </span>
+<a id="L166"></a><span > </span>
+<a id="L167"></a><span class="visited"> </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -361,6 +362,7 @@
 <a href="#L164">164</a>
 <a href="#L165">165</a>
 <a href="#L166">166</a>
+<a href="#L167">167</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2021-2023, Georgy Sichkar *)
 
@@ -448,8 +450,8 @@
   | EConst of value_ (** assignable values *)
   (*  *)
   | EIdentifier of ident (** id of something e.g. class name; var name; method name *)
-  | EMethod_invoke of expr * args (** method(a, b, c) | Class.method(a, b, c) *)
-  | EPoint_access of expr * expr (** access by point e.g. A.run() *)
+  | EMethod_invoke of expr * args (** [method(a, b, c)] or [Class.method(a, b, c)] *)
+  | EPoint_access of expr * expr (** access by point e.g. [A.run()] *)
   (*  *)
   | EBin_op of bin_op * expr * expr
   | EUn_op of un_op * expr
@@ -461,8 +463,8 @@
 <span data-count="40">t</span>ype params = Params of <span data-count="52">v</span>ar_decl lis<span data-count="12">t</span> [@@deriving show { with_path = false }<span data-count="20">]</span>
 
 <span data-count="12">t</span>ype catch_decl =
-  | CDecl of var_decl
-  | CExn_id of ident
+  | CDecl of var_decl (** catch condition with declaration e.g. [catch(Exception a)] *)
+  | CExn_id of ident (** catch condition with exception name [catch(Exception)] *)
 [@@deriving show { with_path = false }<span data-count="6">]</span>
 
 <span data-count="596">t</span>ype statement =
@@ -471,6 +473,7 @@
   | Steps of <span data-count="218">s</span>tatement lis<span data-count="58">t</span>
   | SReturn of <span data-count="40">e</span>xpr option
   | SIf_else of expr * statement * <span data-count="40">s</span>tatement optio<span data-count="11">n</span>
+  (** if-condition * if-body * else-body *)
   | SBreak
   | SThrow of expr
   | SWhile of expr * statement

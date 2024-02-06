@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8"/>
     <title>interpreter.ml &mdash; Coverage report</title>
-    <meta name="description" content="86.09% coverage in lib/interpreter.ml">
+    <meta name="description" content="86.13% coverage in lib/interpreter.ml">
     <link rel="stylesheet" href="../coverage.css"/>
     <script src="../highlight.pack.js"></script>
     <script>hljs.initHighlightingOnLoad();</script>
@@ -15,7 +15,7 @@
           <span class="dirname">lib/</span>interpreter.ml
         </a>
       </h1>
-      <h2>86.09%</h2>
+      <h2>86.13%</h2>
     </div>
     <div id="navbar">
       <span class="unvisited" style="top:3.98%"></span>
@@ -985,12 +985,12 @@ let eval_un_op un_op res lenv_kernel e_stm e_expr =
 ;;
 
 let eval_bin_op op e1 e2 e_expr l_env_l =
-  <span data-count="350">l</span>et op_ get_ op_t =
-    <span data-count="106">l</span>et res = lift2 (fun r1 r2 -&gt; <span data-count="430">r</span>1, r2) (e_exp<span data-count="106">r</span> e1 &gt;&gt;<span data-count="106">=</span> get_) (e_exp<span data-count="106">r</span> e2 &gt;&gt;<span data-count="106">=</span> get_) in
-    <span data-count="106">r</span>es &gt;&gt;= fun (r1, r2) -&gt; <span data-count="430">o</span>p_t r1 r2
+  <span data-count="420">l</span>et op_ get_ op_t =
+    <span data-count="141">l</span>et res = lift2 (fun r1 r2 -&gt; <span data-count="430">r</span>1, r2) (e_exp<span data-count="141">r</span> e1 &gt;&gt;<span data-count="141">=</span> get_) (e_exp<span data-count="141">r</span> e2 &gt;&gt;<span data-count="141">=</span> get_) in
+    <span data-count="141">r</span>es &gt;&gt;= fun (r1, r2) -&gt; <span data-count="430">o</span>p_t r1 r2
   in
   (* int *)
-  let int_op op_t = <span data-count="73">o</span>p_ get_int op_t in
+  let int_op op_t = <span data-count="108">o</span>p_ get_int op_t in
   let int_f op r1 r2 = <span data-count="299">r</span>eturn_<span data-count="299">n</span> (o<span data-count="299">p</span> r1 r2) &gt;&gt;= ret_int in
   (* bool *)
   let bool_f op r1 r2 = <span data-count="67">r</span>eturn_<span data-count="67">n</span> (o<span data-count="67">p</span> r1 r2) &gt;&gt;= ret_bool in
@@ -1005,7 +1005,7 @@ let eval_bin_op op e1 e2 e_expr l_env_l =
   (* --- *)
   match op with
   | <span data-count="6">A</span>sterisk -&gt; int_op @@ int_<span data-count="6">f</span> ( * )
-  | <span data-count="49">P</span>lus -&gt; int_op @@ int_<span data-count="49">f</span> ( + )
+  | <span data-count="84">P</span>lus -&gt; int_op @@ int_<span data-count="84">f</span> ( + )
   | <span data-count="7">M</span>inus -&gt; int_op @@ int_<span data-count="7">f</span> ( - )
   | <span data-count="0">M</span>od -&gt; int_op (div_<span data-count="0">f</span> ( mod ))
   | <span data-count="2">D</span>ivision -&gt; int_op (div_<span data-count="2">f</span> ( / ))
@@ -1027,10 +1027,10 @@ let eval_bin_op op e1 e2 e_expr l_env_l =
   | <span data-count="0">M</span>oreOrEqual -&gt; int_op @@ bool_<span data-count="0">f</span> ( &gt;= )
   | <span data-count="1">N</span>otEqual -&gt; eq_op @@ eq_<span data-count="1">f</span> (fun r1 r2 -&gt; <span data-count="3">n</span>ot (equal_icons<span data-count="3">t</span> r1 r2)) (* != *)
   | <span data-count="32">E</span>qual -&gt; eq_op @@ eq_<span data-count="32">f</span> equal_iconst (* == *)
-  | <span data-count="104">A</span>ssign -&gt;
-    let res = e_exp<span data-count="104">r</span> e2 &gt;&gt;= is_assignable in
-    <span data-count="104">r</span>es
-    &gt;&gt;<span data-count="104">=</span> is_init_v
+  | <span data-count="139">A</span>ssign -&gt;
+    let res = e_exp<span data-count="139">r</span> e2 &gt;&gt;= is_assignable in
+    <span data-count="139">r</span>es
+    &gt;&gt;<span data-count="139">=</span> is_init_v
     &gt;&gt;= fun x -&gt;
     <span data-count="210">(</span>match e1 with
      | <span data-count="202">E</span>Identifier id -&gt; update_local_e<span data-count="202">l</span> id x
@@ -1042,9 +1042,9 @@ let eval_bin_op op e1 e2 e_expr l_env_l =
 ;;
 
 let eval_expr eval_stm lenv_kernel expr =
-  <span data-count="251">l</span>et rec helper = function
-    | <span data-count="337">E</span>Const x -&gt; to_const @@ to_ini<span data-count="337">t</span> @@ val_to_icons<span data-count="337">t</span> x |&gt; <span data-count="337">r</span>eturn_n
-    | <span data-count="147">E</span>Identifier id -&gt; read_local_el id
+  <span data-count="286">l</span>et rec helper = function
+    | <span data-count="372">E</span>Const x -&gt; to_const @@ to_ini<span data-count="372">t</span> @@ val_to_icons<span data-count="372">t</span> x |&gt; <span data-count="372">r</span>eturn_n
+    | <span data-count="182">E</span>Identifier id -&gt; read_local_el id
     | <span data-count="15">E</span>Point_access (e_id, e1) -&gt; eval_point_access e_id e1 lenv_kernel
     | <span data-count="36">E</span>Method_invoke (e, Args args) -&gt;
       let args = map_left helper args in
@@ -1057,7 +1057,7 @@ let eval_expr eval_stm lenv_kernel expr =
            (Interpret_error
               (Runtime_error "Void methods can't be used with assignable types")))
     | <span data-count="38">E</span>Un_op (un, e) -&gt; eval_un_op un e lenv_kernel eval_stm helper
-    | <span data-count="350">E</span>Bin_op (bin, e1, e2) -&gt; eval_bin_op bin e1 e2 helper lenv_kernel
+    | <span data-count="420">E</span>Bin_op (bin, e1, e2) -&gt; eval_bin_op bin e1 e2 helper lenv_kernel
   in
   helper expr
 ;;
@@ -1148,10 +1148,10 @@ let eval_while e_stm l_env_l cond_e body =
 let eval_for e_stm l_env_l init cond iter body =
   <span data-count="5">l</span>et f_cond =
     let eval_cond e = <span data-count="4">e</span>val_exp<span data-count="4">r</span> e_stm l_env_l e &gt;&gt;= get_bool in
-    let eval_iter e = <span data-count="3">e</span>val_expr e_stm l_env_l e in
+    let eval_iter e = <span data-count="38">e</span>val_expr e_stm l_env_l e in
     match cond, iter with
     | <span data-count="3">S</span>ome cond_e, Some iter_e -&gt;
-      lift<span data-count="3">2</span> (fun x _ -&gt; <span data-count="38">x</span>) (eval_con<span data-count="3">d</span> cond_e) (eval_ite<span data-count="3">r</span> iter_e)
+      eval_con<span data-count="3">d</span> cond_e &gt;&gt;<span data-count="3">=</span> fun res -&gt; <span data-count="38">e</span>val_ite<span data-count="38">r</span> iter_e *&gt; return_<span data-count="38">n</span> res
     | <span data-count="1">S</span>ome cond_e, None -&gt; eval_con<span data-count="1">d</span> cond_e
     | <span data-count="0">N</span>one, Some iter_e -&gt; eval_ite<span data-count="0">r</span> iter_e *<span data-count="0">&gt;</span> return_<span data-count="0">n</span> true
     | <span data-count="1">N</span>one, None -&gt; return_<span data-count="1">n</span> true
