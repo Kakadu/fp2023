@@ -2,7 +2,7 @@
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-type tyvar = int [@@deriving show { with_path = false }]
+type type_var = int
 
 type primitives =
   | Int
@@ -12,34 +12,24 @@ type primitives =
   | Unit
 [@@deriving show { with_path = false }]
 
-module VarSet = struct
-  include Stdlib.Set.Make (Int)
-
-  let pp ppf s =
-    Format.fprintf ppf "[ ";
-    iter (Format.fprintf ppf "%d; ") s;
-    Format.fprintf ppf "]"
-  ;;
-end
-[@@deriving show { with_path = false }]
-
 type typ =
-  | TVar of tyvar (* 'a *)
+  | TVar of type_var (* 'a *)
   | TPrim of primitives (* int, bool, etc. *)
   | TArr of typ * typ (* 'a -> 'a *)
   | TTuple of typ list (* (int, string) *)
   | TList of typ (* int list *)
-[@@deriving show { with_path = false }]
 
-type scheme = Scheme of VarSet.t * typ [@@deriving show { with_path = false }]
+module VarSet = Stdlib.Set.Make (Int)
+
+type scheme = Scheme of VarSet.t * typ
 
 type error =
   [ `OccursCheck
   | `NoVariable of string
   | `NoConstructor of string
   | `UnificationFailed of typ * typ
+  | `AddLater
   ]
-[@@deriving show { with_path = false }]
 
 let tvar x = TVar x
 let tint = TPrim Int

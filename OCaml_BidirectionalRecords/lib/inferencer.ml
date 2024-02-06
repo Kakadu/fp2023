@@ -3,6 +3,7 @@
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
 (** https://jeremymikkola.com/posts/2018_03_25_understanding_algorithm_w.html *)
+(* https://gitlab.com/Kakadu/fp2020course-materials/-/blob/master/code/miniml/inferencer.ml?ref_type=heads *)
 
 open Typing
 
@@ -36,6 +37,7 @@ module R : sig
 end = struct
   type 'a t = int -> int * ('a, error) Result.t
 
+  (** stops the computation at the first error *)
   let ( >>= ) : 'a 'b. 'a t -> ('a -> 'b t) -> 'b t =
     fun monad f state ->
     let last, result = monad state in
@@ -44,6 +46,7 @@ end = struct
     | Ok v -> f v last
   ;;
 
+  (** ignores errors and continues with the computation *)
   let ( >>| ) : 'a 'b. 'a t -> ('a -> 'b) -> 'b t =
     fun v f state ->
     match v state with
@@ -51,7 +54,9 @@ end = struct
     | state, Error err -> state, Error err
   ;;
 
+  (** either a success (Ok value) or a failure (Error err) *)
   let return v last = last, Base.Result.return v
+
   let bind v ~f = v >>= f
   let fail error state = state, Base.Result.fail error
 
@@ -78,7 +83,10 @@ end = struct
   end
 
   let fresh : int t = fun last -> last + 1, Result.Ok last
-  let run m = snd (m 0)
+
+  (** run from initial state of 0 and extract
+      the second component of the resulting tuple *)
+  let run monad = snd (monad 0)
 end
 
 module Type = struct
@@ -193,11 +201,13 @@ module Scheme = struct
     | Scheme (bind_vars, ty) -> VarSet.diff (Type.type_vars ty) bind_vars
   ;;
 
+  (** check whether a type variable occurs in a type scheme *)
   let occurs_in tvar = function
     | Scheme (bind_vars, ty) ->
       (not (VarSet.mem tvar bind_vars)) && Type.occurs_in tvar ty
   ;;
 
+  (** apply a substitution to a type scheme *)
   let apply sub = function
     | Scheme (bind_vars, ty) ->
       let sub2 = VarSet.fold (fun sub key -> Subst.remove key sub) bind_vars sub in
@@ -224,13 +234,17 @@ module TypeEnv = struct
 
   let apply : t -> Subst.t -> t = fun env sub -> Base.Map.map env ~f:(Scheme.apply sub)
   let find env key = Base.Map.find env key
+
+  (* overwrite existing *)
+  let update mp k v = Base.Map.update mp k ~f:(function _ -> v)
 end
 
 open R
 open R.Syntax
 
-let fresh_var = fresh >>| fun name -> tvar name
+let fresh_var = fresh >>| fun x -> tvar x
 
+(** a type is brought into existence *)
 let instantiate : scheme -> typ R.t =
   fun (Scheme (bind_var, ty)) ->
   VarSet.fold
@@ -249,14 +263,6 @@ let generalize env ty =
   Scheme (free, ty)
 ;;
 
-let lookup_env env var_name =
-  match TypeEnv.find env var_name with
-  | Some scheme ->
-    let* ty = instantiate scheme in
-    return (Subst.empty, ty)
-  | None -> fail (`NoVariable var_name)
-;;
-
 open Ast
 
 let infer_const = function
@@ -267,7 +273,24 @@ let infer_const = function
   | Ast.Unit -> tunit
 ;;
 
-let binary_operator_type operator =
+let rec infer_pattern env = function
+  | Ast.PAny ->
+    let* fresh = fresh_var in
+    return (Subst.empty, fresh, env)
+  | Ast.PNil ->
+    let* fresh = fresh_var in
+    return (Subst.empty, fresh, env)
+  | Ast.PConst c ->
+    let fresh = infer_const c in
+    return (Subst.empty, fresh, env)
+  | Ast.PVar x ->
+    let* fresh = fresh_var in
+    let env' = TypeEnv.extend env x (Scheme (VarSet.empty, fresh)) in
+    return (Subst.empty, fresh, env')
+  | _ -> fail `AddLater
+;;
+
+let binop_type operator =
   match operator with
   | Eq | Neq | Gt | Gtq | Lt | Ltq ->
     let* fv = fresh_var in
@@ -276,33 +299,34 @@ let binary_operator_type operator =
   | And | Or -> return (tbool, tbool)
 ;;
 
-let infer_id env id =
-  match id with
-  | "_" ->
-    let* fv = fresh_var in
-    return (Subst.empty, fv)
-  | _ -> lookup_env env id
-;;
-
 let infer_expr =
   let rec helper env = function
-    | EConst c -> return (Subst.empty, infer_const c)
-    | EVar id -> infer_id env id
+    | EConst x -> return (Subst.empty, infer_const x)
+    | EVar x ->
+      (match TypeEnv.find env x with
+       | Some scheme ->
+         let* ans = instantiate scheme in
+         return (Subst.empty, ans)
+       | None -> fail @@ `NoVariable x)
+    | EBinOp (op, e1, e2) ->
+      let* args_type, expr_type = binop_type op in
+      let* sub_left, ty1 = helper env e1 in
+      let* sub_right, ty2 = helper env e2 in
+      let* sub1 = Subst.unify ty1 args_type in
+      let* sub2 = Subst.unify (Subst.apply sub1 ty2) args_type in
+      let* sub = Subst.compose_all [ sub_left; sub_right; sub1; sub2 ] in
+      return (sub, expr_type)
+    | EFun (pattern, e) ->
+      let* sub1, t1, env' = infer_pattern env pattern in
+      let* sub2, t2 = helper env' e in
+      let ty = tarrow (Subst.apply sub2 t1) t2 in
+      return (sub2, ty)
     | _ -> return (Subst.empty, tint)
   in
   helper
 ;;
 
 let run_inference expr = Result.map snd (run (infer_expr TypeEnv.empty expr))
-
-let pp_error ppf (err : error) =
-  match err with
-  | `OccursCheck -> Format.fprintf ppf "Occurs check failed"
-  | `NoVariable s -> Format.fprintf ppf "Undefined variable: %s" s
-  | `NoConstructor s -> Format.fprintf ppf "Undefined constructor: %s" s
-  | `UnificationFailed (l, r) ->
-    Format.fprintf ppf "Unification failed on %a and %a" pp_typ l pp_typ r
-;;
 
 let rec pp_type ppf (typ : typ) =
   match typ with
@@ -330,6 +354,16 @@ let rec pp_type ppf (typ : typ) =
          ~pp_sep:(fun _ _ -> Format.fprintf ppf " * ")
          (fun ppf typ -> pp_type ppf typ))
       tup_list
+;;
+
+let pp_error ppf (err : error) =
+  match err with
+  | `OccursCheck -> Format.fprintf ppf "Occurs check failed"
+  | `NoVariable s -> Format.fprintf ppf "Undefined variable: %s" s
+  | `NoConstructor s -> Format.fprintf ppf "Undefined constructor: %s" s
+  | `UnificationFailed (l, r) ->
+    Format.fprintf ppf "Unification failed on %a and %a" pp_type l pp_type r
+  | `AddLater -> Format.fprintf ppf "Add later"
 ;;
 
 let print_typ typ =

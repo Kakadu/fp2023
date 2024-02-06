@@ -54,11 +54,9 @@ type unop =
 type pattern =
   | PVar of id
   | PConst of const
-  | PCons of pattern * pattern list (** PCons (p1,p2) is p1::p2 *)
   | PAny (* _ *)
   | PNil (* []*)
-  | POr (** | *)
-  | PTuple of pattern list
+  | PTuple of pattern * pattern list (** действительно ли так удобнее? *)
 [@@deriving show { with_path = false }]
 
 type rec_flag =
