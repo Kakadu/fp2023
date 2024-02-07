@@ -1166,8 +1166,8 @@ let rec infer env = function
        let* subst_1 = unif<span data-count="0">y</span> typ_left tbool in
        <span data-count="0">l</span>et* subst_2 = unif<span data-count="0">y</span> typ_right tbool in
        <span data-count="0">l</span>et* subst_result = Subst.compose_al<span data-count="0">l</span> [ subst_1; subst_2; subst_result ] in
-       <span data-count="0">r</span>eturn @@ (subst_result, tbool)
-     | <span data-count="0">_</span> -&gt; fail @@ ParserAvoidedError)
+       <span data-count="0">r</span>eturn (subst_result, tbool)
+     | <span data-count="0">_</span> -&gt; fail ParserAvoidedError)
   | <span data-count="322">E</span>Id ident -&gt; lookup_env ident env
   | <span data-count="4">E</span>Unop (unop, expr) -&gt;
     let* subst, typ = infe<span data-count="4">r</span> env expr in
@@ -1253,7 +1253,7 @@ and infer_decl env = function
   | <span data-count="49">D</span>Let (Not_recursive, id, expr) -&gt;
     let* subst, typ = infe<span data-count="49">r</span> env expr in
     <span data-count="49">l</span>et env = TypeEnv.extend env id (generaliz<span data-count="49">e</span> env typ) in
-    <span data-count="49">r</span>eturn @@ (subst, env)
+    <span data-count="49">r</span>eturn (subst, env)
   | <span data-count="37">D</span>Let (Recursive, id, expr) -&gt;
     let* type_variable = fresh_var in
     <span data-count="37">l</span>et env = TypeEnv.extend env id (Scheme.empty, type_variable) in
@@ -1262,7 +1262,7 @@ and infer_decl env = function
     <span data-count="37">l</span>et* subst = Subst.compos<span data-count="37">e</span> ~is_rec:true subst_2 subst in
     <span data-count="37">l</span>et type_variable = Subst.apply subst type_variable in
     <span data-count="37">l</span>et scheme = generalize env type_variable in
-    <span data-count="37">r</span>eturn @@ (subst, TypeEnv.exten<span data-count="37">d</span> env id scheme)
+    <span data-count="37">r</span>eturn (subst, TypeEnv.exten<span data-count="37">d</span> env id scheme)
 ;;
 
 let run_inference prog =
