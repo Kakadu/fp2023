@@ -18,27 +18,27 @@
       <h2>61.40%</h2>
     </div>
     <div id="navbar">
-      <span class="unvisited" style="top:8.04%"></span>
-      <span class="unvisited" style="top:8.93%"></span>
-      <span class="unvisited" style="top:9.82%"></span>
-      <span class="unvisited" style="top:10.71%"></span>
-      <span class="unvisited" style="top:36.61%"></span>
-      <span class="unvisited" style="top:44.64%"></span>
-      <span class="some-visited" style="bottom:39.29%"></span>
-      <span class="unvisited" style="bottom:20.54%"></span>
-      <span class="unvisited" style="bottom:18.75%"></span>
-      <span class="unvisited" style="bottom:17.86%"></span>
-      <span class="unvisited" style="bottom:16.07%"></span>
-      <span class="unvisited" style="bottom:15.18%"></span>
-      <span class="unvisited" style="bottom:14.29%"></span>
-      <span class="unvisited" style="bottom:13.39%"></span>
-      <span class="unvisited" style="bottom:12.50%"></span>
-      <span class="unvisited" style="bottom:10.71%"></span>
-      <span class="unvisited" style="bottom:9.82%"></span>
-      <span class="unvisited" style="bottom:8.93%"></span>
-      <span class="unvisited" style="bottom:8.04%"></span>
-      <span class="unvisited" style="bottom:1.79%"></span>
-      <span class="unvisited" style="bottom:0.89%"></span>
+      <span class="unvisited" style="top:7.96%"></span>
+      <span class="unvisited" style="top:8.85%"></span>
+      <span class="unvisited" style="top:9.73%"></span>
+      <span class="unvisited" style="top:10.62%"></span>
+      <span class="unvisited" style="top:36.28%"></span>
+      <span class="unvisited" style="top:44.25%"></span>
+      <span class="some-visited" style="bottom:39.82%"></span>
+      <span class="unvisited" style="bottom:20.35%"></span>
+      <span class="unvisited" style="bottom:18.58%"></span>
+      <span class="unvisited" style="bottom:17.70%"></span>
+      <span class="unvisited" style="bottom:15.93%"></span>
+      <span class="unvisited" style="bottom:15.04%"></span>
+      <span class="unvisited" style="bottom:14.16%"></span>
+      <span class="unvisited" style="bottom:13.27%"></span>
+      <span class="unvisited" style="bottom:12.39%"></span>
+      <span class="unvisited" style="bottom:10.62%"></span>
+      <span class="unvisited" style="bottom:9.73%"></span>
+      <span class="unvisited" style="bottom:8.85%"></span>
+      <span class="unvisited" style="bottom:7.96%"></span>
+      <span class="unvisited" style="bottom:1.77%"></span>
+      <span class="unvisited" style="bottom:0.88%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -131,30 +131,31 @@
 <a id="L86"></a><span > </span>
 <a id="L87"></a><span > </span>
 <a id="L88"></a><span > </span>
-<a id="L89"></a><span class="unvisited"> </span>
-<a id="L90"></a><span > </span>
-<a id="L91"></a><span class="unvisited"> </span>
+<a id="L89"></a><span > </span>
+<a id="L90"></a><span class="unvisited"> </span>
+<a id="L91"></a><span > </span>
 <a id="L92"></a><span class="unvisited"> </span>
-<a id="L93"></a><span > </span>
-<a id="L94"></a><span class="unvisited"> </span>
+<a id="L93"></a><span class="unvisited"> </span>
+<a id="L94"></a><span > </span>
 <a id="L95"></a><span class="unvisited"> </span>
 <a id="L96"></a><span class="unvisited"> </span>
 <a id="L97"></a><span class="unvisited"> </span>
 <a id="L98"></a><span class="unvisited"> </span>
-<a id="L99"></a><span > </span>
-<a id="L100"></a><span class="unvisited"> </span>
+<a id="L99"></a><span class="unvisited"> </span>
+<a id="L100"></a><span > </span>
 <a id="L101"></a><span class="unvisited"> </span>
 <a id="L102"></a><span class="unvisited"> </span>
 <a id="L103"></a><span class="unvisited"> </span>
-<a id="L104"></a><span > </span>
+<a id="L104"></a><span class="unvisited"> </span>
 <a id="L105"></a><span > </span>
 <a id="L106"></a><span > </span>
 <a id="L107"></a><span > </span>
 <a id="L108"></a><span > </span>
 <a id="L109"></a><span > </span>
-<a id="L110"></a><span class="unvisited"> </span>
+<a id="L110"></a><span > </span>
 <a id="L111"></a><span class="unvisited"> </span>
-<a id="L112"></a><span > </span>
+<a id="L112"></a><span class="unvisited"> </span>
+<a id="L113"></a><span > </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -271,6 +272,7 @@
 <a href="#L110">110</a>
 <a href="#L111">111</a>
 <a href="#L112">112</a>
+<a href="#L113">113</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2023-2024, David Akhmedov *)
 
@@ -358,6 +360,7 @@ type error =
   | MismatchValues of typ * typ (* For pattern matching errors *)
   | UnificationFailed of typ * typ
   | ParserAvoidedError
+(* Use the parser to get the AST: the parser does some transformations of expressions *)
 
 let pp_error fmt err =
   <span data-count="0">l</span>et open Format in
@@ -377,7 +380,7 @@ let pp_error fmt err =
   | <span data-count="0">P</span>arserAvoidedError -&gt;
     fprintf
       fmt
-      "Use the parser to get the AST: the parser does some optimizations of expressions"
+      "Use the parser to get the AST: the parser does some transformations of expressions"
 ;;
 
 let print_type_error error =
