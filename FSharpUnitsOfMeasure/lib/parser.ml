@@ -179,12 +179,16 @@ let parse_float_measure_multiple =
   (take_empty *> angle_brackets parse_measure_multiple)
 ;;
 
-let parse_measure = 
-  parse_float_measure_multiple <|> parse_float_measure_single <|> parse_init_measure_multiple <|> parse_init_measure_single
+let parse_fmeasure = 
+  parse_float_measure_multiple <|> parse_float_measure_single
+;;
+
+let parse_meassure_init =
+  parse_init_measure_multiple <|> parse_init_measure_single
 ;;
 
 let parse_types = 
-  parse_measure <|> parse_ffloat <|> parse_fint <|> parse_fbool <|> parse_fstring <|> parse_fnil <|> parse_funit 
+  parse_fmeasure <|> parse_ffloat <|> parse_fint <|> parse_fbool <|> parse_fstring <|> parse_fnil <|> parse_funit 
 ;;
 
 (** Pattern constructor *)
@@ -284,6 +288,7 @@ let ematch c pl = EMatch (c, pl)
 
 let parse_evar = parse_id >>| evar 
 let parse_econst = parse_types >>| fun x -> EConst x
+let parse_measure = parse_meassure_init >>| fun x -> EMeasure x
 let parse_arg = many @@ parens_or_not parse_pattern
 let parse_arg1 = many1 @@ parens_or_not parse_pattern
 
@@ -299,6 +304,7 @@ type edispatch =
     eapp: edispatch -> expression t;
     efun: edispatch -> expression t;
     ematch: edispatch -> expression t;
+    emeasure: edispatch -> expression t;
     expression: edispatch -> expression t
   }
 
@@ -403,7 +409,8 @@ let parse_eapp parse_expr =
 ;;
 
 let pack =
-  let econst _ = parse_econst
+  let emeasure _ = parse_measure 
+  in let econst _ = parse_econst
   in let evar _ = parse_evar 
   in let expression pack = choice 
     [
@@ -444,6 +451,7 @@ let pack =
     fix @@ fun _ -> 
       let parse_ebinaryop = choice
         [
+          pack.emeasure pack;
           pack.econst pack;
           brackets @@ pack.ematch pack;
           brackets @@ pack.eifelse pack;
@@ -479,6 +487,7 @@ let pack =
   let value pack = choice
     [ 
       pack.evar pack;
+      pack.emeasure pack;
       pack.econst pack;
       pack.etuple pack;
       pack.elist pack
@@ -489,6 +498,7 @@ let pack =
   in 
   {
     evar;
+    emeasure;
     econst;
     eifelse;
     elet;

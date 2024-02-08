@@ -16,9 +16,11 @@ type types =
   | FNil (** empty list: [] *)
   | FUnit (** () *)
   | FFloat of un_op * float (** float number: ..., 0.1, ..., 1.2, ...*)
+  | Measure_float of types * measure_type (** 5.0 <cm> *) 
+
+and measure_init = 
   | Measure_init of measure_type (** initialization [<Measure>] type sec*)
   | Measure_multiple_init of measure_type * measure_type (** initialization [<Measure>] type speed = m/sec*)
-  | Measure_float of types * measure_type (** 5.0 <cm> *) 
 
 and measure_type =
   | Measure_single of string (** single measure: <m>*)
@@ -60,5 +62,6 @@ type expression =
   | EIfElse of expression * expression * expression (* if z then v else n*)
   | ELet of string * id * expression (* let z = ... or let rec z = ...*) 
   | EFun of pattern * expression  (* fun z -> z + z *)
-  | EMatch of expression * (pattern * expression) list (* matching *)
+  | EMatch of expression * (pattern * expression) list (* match *)
+  | EMeasure of measure_init (* measure *)
 [@@deriving show { with_path = false }]
