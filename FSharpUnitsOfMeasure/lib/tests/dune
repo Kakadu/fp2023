@@ -1,6 +1,6 @@
 (library
  (name tests)
- (modules parser_tests)
+ (modules parser_tests Interpreter_tests)
  (libraries FSharpUnitsOfMeasure_lib)
  (preprocess
   (pps ppx_expect ppx_deriving.show))
