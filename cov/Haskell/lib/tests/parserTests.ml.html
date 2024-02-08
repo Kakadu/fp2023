@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8"/>
     <title>parserTests.ml &mdash; Coverage report</title>
-    <meta name="description" content="98.72% coverage in lib/tests/parserTests.ml">
+    <meta name="description" content="98.85% coverage in lib/tests/parserTests.ml">
     <link rel="stylesheet" href="../../coverage.css"/>
     <script src="../../highlight.pack.js"></script>
     <script>hljs.initHighlightingOnLoad();</script>
@@ -15,10 +15,10 @@
           <span class="dirname">lib/tests/</span>parserTests.ml
         </a>
       </h1>
-      <h2>98.72%</h2>
+      <h2>98.85%</h2>
     </div>
     <div id="navbar">
-      <span class="unvisited" style="top:2.97%"></span>
+      <span class="unvisited" style="top:2.78%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -427,6 +427,33 @@
 <a id="L402"></a><span > </span>
 <a id="L403"></a><span class="visited"> </span>
 <a id="L404"></a><span > </span>
+<a id="L405"></a><span > </span>
+<a id="L406"></a><span > </span>
+<a id="L407"></a><span class="visited"> </span>
+<a id="L408"></a><span class="visited"> </span>
+<a id="L409"></a><span > </span>
+<a id="L410"></a><span > </span>
+<a id="L411"></a><span > </span>
+<a id="L412"></a><span class="visited"> </span>
+<a id="L413"></a><span > </span>
+<a id="L414"></a><span > </span>
+<a id="L415"></a><span > </span>
+<a id="L416"></a><span class="visited"> </span>
+<a id="L417"></a><span class="visited"> </span>
+<a id="L418"></a><span class="visited"> </span>
+<a id="L419"></a><span > </span>
+<a id="L420"></a><span > </span>
+<a id="L421"></a><span > </span>
+<a id="L422"></a><span class="visited"> </span>
+<a id="L423"></a><span class="visited"> </span>
+<a id="L424"></a><span > </span>
+<a id="L425"></a><span > </span>
+<a id="L426"></a><span > </span>
+<a id="L427"></a><span > </span>
+<a id="L428"></a><span > </span>
+<a id="L429"></a><span > </span>
+<a id="L430"></a><span class="visited"> </span>
+<a id="L431"></a><span > </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -835,6 +862,33 @@
 <a href="#L402">402</a>
 <a href="#L403">403</a>
 <a href="#L404">404</a>
+<a href="#L405">405</a>
+<a href="#L406">406</a>
+<a href="#L407">407</a>
+<a href="#L408">408</a>
+<a href="#L409">409</a>
+<a href="#L410">410</a>
+<a href="#L411">411</a>
+<a href="#L412">412</a>
+<a href="#L413">413</a>
+<a href="#L414">414</a>
+<a href="#L415">415</a>
+<a href="#L416">416</a>
+<a href="#L417">417</a>
+<a href="#L418">418</a>
+<a href="#L419">419</a>
+<a href="#L420">420</a>
+<a href="#L421">421</a>
+<a href="#L422">422</a>
+<a href="#L423">423</a>
+<a href="#L424">424</a>
+<a href="#L425">425</a>
+<a href="#L426">426</a>
+<a href="#L427">427</a>
+<a href="#L428">428</a>
+<a href="#L429">429</a>
+<a href="#L430">430</a>
+<a href="#L431">431</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2023-2024, Danil P *)
 
@@ -845,8 +899,8 @@ open Ast
 open Parser
 
 let ptest parser printer s =
-  <span data-count="25">m</span>atch Angstrom.parse_string ~consume:All parser s with
-  | <span data-count="25">O</span>k a -&gt; Format.printf "%a" printer a
+  <span data-count="28">m</span>atch Angstrom.parse_string ~consume:All parser s with
+  | <span data-count="28">O</span>k a -&gt; Format.printf "%a" printer a
   | <span data-count="0">E</span>rror err -&gt; Format.printf "%s\n" err
 ;;
 
@@ -1239,6 +1293,33 @@ let%expect_test _ =
                          ))
                       ))
                    )))))))) |}<span data-count="9">]</span>
+;;
+
+let%expect_test _ =
+  <span data-count="1">p</span>test pdecl pp_decl {|x = (Node 1  Leaf Leaf)|};
+  <span data-count="1">[</span>%expect
+    {|
+    (DeclLet
+       ((PatVar "x"),
+        (ExprTree (Node ((ExprLit (LitInt 1)), (ExprTree Leaf), (ExprTree Leaf)))))) |}<span data-count="9">]</span>
+;;
+
+let%expect_test _ =
+  <span data-count="1">p</span>test pdecl pp_decl {|x = Leaf|};
+  <span data-count="1">[</span>%expect {|
+    (DeclLet ((PatVar "x"), (ExprTree Leaf))) |}<span data-count="9">]</span>
+;;
+
+let%expect_test _ =
+  <span data-count="1">p</span>test pdecl pp_decl {|f (Node x  (Node 1  Leaf Leaf) Leaf) = Leaf|};
+  <span data-count="1">[</span>%expect
+    {|
+    (DeclLet
+       ((PatVar "f"),
+        (ExprFunc
+           ((PatTree ((PatVar "x"),
+               (PatTree ((PatLit (LitInt 1)), PatLeaf, PatLeaf)), PatLeaf)),
+            (ExprTree Leaf))))) |}<span data-count="9">]</span>
 ;;
 </code></pre>
       </div>
