@@ -307,7 +307,7 @@ let infer_expr =
        | Some scheme ->
          let* ans = instantiate scheme in
          return (Subst.empty, ans)
-       | None -> fail @@ `NoVariable x)
+       | None -> fail @@ `UndeclaredVariable x)
     | EBinOp (op, e1, e2) ->
       let* args_type, expr_type = binop_type op in
       let* sub_left, ty1 = helper env e1 in
@@ -316,12 +316,37 @@ let infer_expr =
       let* sub2 = Subst.unify (Subst.apply sub1 ty2) args_type in
       let* sub = Subst.compose_all [ sub_left; sub_right; sub1; sub2 ] in
       return (sub, expr_type)
+    | EApp (e1, e2) ->
+      let* subst1, ty1 = helper env e1 in
+      let* subst2, ty2 = helper (TypeEnv.apply env subst1) e2 in
+      let* tv = fresh_var in
+      let* subst3 = Subst.unify (Subst.apply subst2 ty1) (tarrow ty2 tv) in
+      let res_ty = Subst.apply subst3 tv in
+      let* final_subst = Subst.compose_all [ subst1; subst2; subst3 ] in
+      return (final_subst, res_ty)
     | EFun (pattern, e) ->
       let* sub1, t1, env' = infer_pattern env pattern in
       let* sub2, t2 = helper env' e in
       let ty = tarrow (Subst.apply sub2 t1) t2 in
       return (sub2, ty)
-    | _ -> return (Subst.empty, tint)
+    | EIfThenElse (e1, e2, e3) ->
+      let* si, ti = helper env e1 in
+      let* st, tt = helper env e2 in
+      let* se, te = helper env e3 in
+      let* sub = Subst.unify ti tbool in
+      let* tv = fresh_var in
+      let* sub1 = Subst.unify tv tt in
+      let* sub2 = Subst.unify tv te in
+      let* final_subs = Subst.compose_all [ si; st; se; sub; sub1; sub2 ] in
+      return (final_subs, Subst.apply final_subs tt)
+    | ELet ((_, x, e1), EUnit) ->
+      let* tv = fresh_var in
+      let env = TypeEnv.extend env x (Scheme (VarSet.empty, tv)) in
+      let* subst1, ty1 = helper env e1 in
+      let* subst2 = Subst.unify (Subst.apply subst1 tv) ty1 in
+      let* final_subst = Subst.compose subst1 subst2 in
+      return (final_subst, Subst.apply final_subst tv)
+    (* | _ -> return (Subst.empty, tint) *)
   in
   helper
 ;;
@@ -359,7 +384,7 @@ let rec pp_type ppf (typ : typ) =
 let pp_error ppf (err : error) =
   match err with
   | `OccursCheck -> Format.fprintf ppf "Occurs check failed"
-  | `NoVariable s -> Format.fprintf ppf "Undefined variable: %s" s
+  | `UndeclaredVariable s -> Format.fprintf ppf "Undefined variable: %s" s
   | `NoConstructor s -> Format.fprintf ppf "Undefined constructor: %s" s
   | `UnificationFailed (l, r) ->
     Format.fprintf ppf "Unification failed on %a and %a" pp_type l pp_type r
