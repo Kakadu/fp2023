@@ -61,25 +61,6 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  parsed_result "[<Measure>] type cm" parse_types show_types;
-  [%expect {| (Measure_init (Measure_single "cm")) |}]
-;;
-
-let%expect_test _ =
-  parsed_result 
-  "[<Measure>] type m" parse_types show_types;
-  [%expect {| (Measure_init (Measure_single "m")) |}]
-;;
-
-let%expect_test _ =
-  parsed_result 
-  "[<Measure>] type spped = m/sec" parse_types show_types;
-  [%expect {|
-    (Measure_multiple_init ((Measure_single "spped"),
-       (Measure_multiple ((Measure_single "m"), Div, (Measure_single "sec"))))) |}]
-;;
-
-let%expect_test _ =
   parsed_result "7.77 <sec>" parse_types show_types;
   [%expect {| (Measure_float ((FFloat (Plus, 7.77)), (Measure_single "sec"))) |}]
 ;;
@@ -207,20 +188,20 @@ let%expect_test _ =
 
 let%expect_test _ =
   parsed_result "[<Measure>] type cm" parse_expression show_expression;
-  [%expect {| (EConst (Measure_init (Measure_single "cm"))) |}]
+  [%expect {| (EMeasure (Measure_init (Measure_single "cm"))) |}]
 ;;
 
 let%expect_test _ =
   parsed_result 
   "[<Measure>] type m" parse_expression show_expression;
-  [%expect {| (EConst (Measure_init (Measure_single "m"))) |}]
+  [%expect {| (EMeasure (Measure_init (Measure_single "m"))) |}]
 ;;
 
 let%expect_test _ =
   parsed_result 
   "[<Measure>] type spped = m/sec" parse_expression show_expression;
   [%expect {|
-    (EConst
+    (EMeasure
        (Measure_multiple_init ((Measure_single "spped"),
           (Measure_multiple ((Measure_single "m"), Div, (Measure_single "sec")))
           ))) |}]
@@ -549,44 +530,42 @@ let%expect_test _ =
 
 let%expect_test _ =
   parsed_result 
-  "(((((fun a b c d e -> a + b + c + d + e) 1) 2) 3) 4) 5" parse_expression show_expression ;
+  "(((((fun a b c d e -> a + b + c + d + e) 1) 2) 3) 4) " parse_expression show_expression ;
   [%expect {|
     (EApp (
        (EApp (
           (EApp (
              (EApp (
-                (EApp (
-                   (EFun ((PVar "a"),
-                      (EFun ((PVar "b"),
-                         (EFun ((PVar "c"),
-                            (EFun ((PVar "d"),
-                               (EFun ((PVar "e"),
-                                  (EApp ((EBinaryOp Add),
-                                     (EApp (
-                                        (EApp ((EBinaryOp Add),
-                                           (EApp (
-                                              (EApp ((EBinaryOp Add),
-                                                 (EApp (
-                                                    (EApp ((EBinaryOp Add),
-                                                       (EApp ((EVar "a"),
-                                                          (EVar "b")))
-                                                       )),
-                                                    (EVar "c")))
-                                                 )),
-                                              (EVar "d")))
-                                           )),
-                                        (EVar "e")))
-                                     ))
+                (EFun ((PVar "a"),
+                   (EFun ((PVar "b"),
+                      (EFun ((PVar "c"),
+                         (EFun ((PVar "d"),
+                            (EFun ((PVar "e"),
+                               (EApp ((EBinaryOp Add),
+                                  (EApp (
+                                     (EApp ((EBinaryOp Add),
+                                        (EApp (
+                                           (EApp ((EBinaryOp Add),
+                                              (EApp (
+                                                 (EApp ((EBinaryOp Add),
+                                                    (EApp ((EVar "a"), (EVar "b")
+                                                       ))
+                                                    )),
+                                                 (EVar "c")))
+                                              )),
+                                           (EVar "d")))
+                                        )),
+                                     (EVar "e")))
                                   ))
                                ))
                             ))
                          ))
-                      )),
-                   (EConst (FInt (Plus, 1))))),
-                (EConst (FInt (Plus, 2))))),
-             (EConst (FInt (Plus, 3))))),
-          (EConst (FInt (Plus, 4))))),
-       (EConst (FInt (Plus, 5))))) |}]
+                      ))
+                   )),
+                (EConst (FInt (Plus, 1))))),
+             (EConst (FInt (Plus, 2))))),
+          (EConst (FInt (Plus, 3))))),
+       (EConst (FInt (Plus, 4))))) |}]
 ;;
 
 (** Expressions with let test *)
@@ -642,20 +621,20 @@ let%expect_test _ =
   \ type m"
   parse_expression 
   show_expression;
-  [%expect {| (EConst (Measure_init (Measure_single "m"))) |}]
+  [%expect {| (EMeasure (Measure_init (Measure_single "m"))) |}]
 ;;
 
 let%expect_test _ =
   parsed_result 
   "[<Measure>] type sec" parse_expression show_expression;
-  [%expect {| (EConst (Measure_init (Measure_single "sec"))) |}]
+  [%expect {| (EMeasure (Measure_init (Measure_single "sec"))) |}]
 ;;
 
 let%expect_test _ =
   parsed_result 
   "[<Measure>] type speed = m/sec" parse_expression show_expression;
   [%expect {|
-    (EConst
+    (EMeasure
        (Measure_multiple_init ((Measure_single "speed"),
           (Measure_multiple ((Measure_single "m"), Div, (Measure_single "sec")))
           ))) |}]
@@ -665,7 +644,7 @@ let%expect_test _ =
   parsed_result 
   "[<Measure>] type hz = m / sec * sm * luck / unluck" parse_expression show_expression;
   [%expect {|
-    (EConst
+    (EMeasure
        (Measure_multiple_init ((Measure_single "hz"),
           (Measure_multiple ((Measure_single "m"), Div,
              (Measure_multiple ((Measure_single "sec"), Mul,
