@@ -44,13 +44,11 @@ let etyp str = error (TypeError str)
 let add_to_result elem result = result >>| fun x -> elem, x
 
 let num_to_string n =
-  if Float.is_integer n
-  then Int.to_string (Float.to_int n)
-  else if Float.is_nan n
-  then "NaN"
-  else if Float.is_infinite n
-  then if n > 0. then "Infinity" else "-Infinity"
-  else Float.to_string n
+  match Float.is_integer n, Float.is_nan n, Float.is_infinite n with
+  | true, _, _ -> Int.to_string (Float.to_int n)
+  | _, true, _ -> "NaN"
+  | _, _, true -> if n > 0. then "Infinity" else "-Infinity"
+  | _ -> Float.to_string n
 ;;
 
 let get_obj_ctx_opt ctx id = IntMap.find_opt id ctx.objs
