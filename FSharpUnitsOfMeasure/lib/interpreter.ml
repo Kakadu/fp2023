@@ -14,28 +14,12 @@ module type FailMonad = sig
   val ( let* ) : ('a, 'e) t -> ('a -> ('b, 'e) t) -> ('b, 'e) t
 end
 
-type value =
-  | VInt of int
-  | VString of string
-  | VBool of bool
-  | VNil
-  | VUnit
-  | VFloat of float 
-  | VTuple of value list
-  | VList of value list
-  | VBinOp of binary_op
-  | VFun of pattern * expression * (id * value) list
-  | VMeasure of id
-  | VMeasureList of (id * id) list
-  | VFloatMeasure of value * id  
-[@@deriving show { with_path = false }]
-
 type environment = (id, value, String.comparator_witness) Map.t
+
+let measure_list = ref []
 
 module Interpret (M : FailMonad) = struct
   open M
-
-  let measure_list = ref []
 
   let serch lst_ref element =
     let lst = !lst_ref in  (* Получаем обычный список кортежей из mutable списка *)
@@ -43,13 +27,48 @@ module Interpret (M : FailMonad) = struct
     let rec search_element list =
       match list with
       | [] -> false  (* Элемент не найден *)
-      | (m, _) :: tl -> 
-          if (m == fst element) then true
+      | (m1, _) :: tl -> 
+          if (m1 == element) then true
           else search_element tl
     in
     search_element lst
   ;;
+
+  let search_list measure_list str_list =
+    let mlist = !measure_list in 
+    let rec search_element mlist slist =
+      match slist with 
+      | [] -> true  (* Все элементы были найдены в списке *)
+      | hd :: tl ->  
+        match hd with
+        | "/"
+        | "*" -> search_element mlist tl
+        | _ ->  if List.exists ~f:(fun (m1, _) -> String.(=) m1 hd) mlist then
+            search_element mlist tl
+          else
+            false
+    in 
+    search_element mlist str_list
+  ;;
+
+  let replace_value_in_ref_list lst_ref old_value new_value =
+    let lst = !lst_ref in
+    let updated_list = List.map ~f:(fun (first, second) -> if first == old_value then (first, new_value) else (first, second)) lst in
+    lst_ref := updated_list
+  ;;
   
+  let rec process_measure_multiple measure_list measure =
+    match measure with
+    | Measure_single m -> m :: measure_list
+    | Measure_multiple (m1, op, m2) ->
+      let op_str op =
+        match op with
+        | Mul -> "*"  
+        | Div -> "/"
+      in
+      let measure_list_with_op =  (op_str op) :: process_measure_multiple measure_list m2 in
+      process_measure_multiple measure_list_with_op m1
+  ;;
 
   let link map links = 
     let linking map id value=
@@ -160,12 +179,25 @@ module Interpret (M : FailMonad) = struct
     match expr with
     | EMeasure m ->
       (match m with
-       | Measure_init (Measure_single m1) ->
-          if (serch measure_list (m1, m1)) 
-            then measure_list := !measure_list 
-          else measure_list := (m1, m1) :: !measure_list;  (* Добавляем новую пару в список measure *)
-          return @@ VMeasureList !measure_list  (* Возвращаем обновленный список VMeasureList *)
-       | _ -> fail Unreachable
+        | Measure_init (Measure_single m1) ->
+            if (serch measure_list m1) 
+              then measure_list := !measure_list 
+            else measure_list := (m1, [m1]) :: !measure_list;  (* Добавляем новую пару в список measure *)
+            return @@ VMeasureList !measure_list  (* Возвращаем обновленный список VMeasureList *)
+        | Measure_multiple_init (Measure_single m1, m2) -> 
+            let m2  = process_measure_multiple [] m2 
+            in
+            (* if (serch measure_list m1) 
+              then measure_list := !measure_list
+            else if (search_list measure_list m2) 
+              then measure_list := (m1, m2) :: !measure_list; (* Добавляем новую пару в список measure *)
+            if (!measure_list == []) then fail Unreachable (* Возвращаем обновленный список VMeasureList *)
+            else return @@ VMeasureList !measure_list *)
+            (match (serch measure_list m1, search_list measure_list m2) with
+            | (true, true) -> replace_value_in_ref_list measure_list m1 m2; return @@ VMeasureList !measure_list
+            | (_, true) -> measure_list := (m1, m2) :: !measure_list; return @@ VMeasureList !measure_list
+            | _ -> fail Unreachable)
+        | _ -> fail Unreachable
       )
     | EConst c ->
       (match c with
@@ -179,20 +211,20 @@ module Interpret (M : FailMonad) = struct
           (match s with
           | Plus -> VFloat f
           | Minus -> VFloat (-1.0 *. f))
-        | Measure_float (a, Measure_single b) ->
-          if (serch measure_list (b, b)) 
+        | Measure_float (f, Measure_single m) ->
+          if (serch measure_list m) 
             then 
-              let* f = comp_expr (EConst a) env []
+              let* f = comp_expr (EConst f) env []
               in
-              return @@ VFloatMeasure (f, b) 
-          else fail DivideByZeroException
+              return @@ VFloatMeasure (f, m) 
+          else fail (UndefinedType m)
         | FNil -> return VNil
         | FUnit -> return VUnit
         | _ -> fail Unreachable)
     | EFun (p, e) -> return @@ VFun (p, e, vmap)
     | EVar var -> 
         (match Map.find env var with
-          | None -> fail (NotDefinedValue var)
+          | None -> fail (UndefinedValue  var)
           | Some value -> return value)
     | EApp (func, arg) ->
       (match func, arg with 
@@ -248,7 +280,8 @@ module Interpret (M : FailMonad) = struct
     | _ -> return (env, value)
   ;;
 
-  let run_interpreter ?(environment = Map.empty (module String)) program =
+  let run_interpreter ?(environment = Map.empty (module String)) program = 
+    measure_list := [];
     let rec helper env = function
       | [] -> fail EmptyInput
       | hd :: [] ->
@@ -259,6 +292,7 @@ module Interpret (M : FailMonad) = struct
         helper env tl
     in helper environment program
   ;;
+  
 end
 
 module InterpretResult = Interpret 
