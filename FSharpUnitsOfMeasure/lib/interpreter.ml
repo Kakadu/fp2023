@@ -60,16 +60,16 @@ module Interpret (M : FailMonad) = struct
     let new_map = List.fold links ~init:map ~f:(fun map (id, value) -> linking map id value)
     in return new_map
   ;;
-
+  
   let binop op left right =
     match op, left, right with 
     (* Int to Int operation *)
     | Add, VInt l, VInt r -> return @@ VInt (l + r)
     | Sub, VInt l, VInt r -> return @@ VInt (l - r)
     | Mul, VInt l, VInt r -> return @@ VInt (l * r)
-    | Div, VInt _, VInt r when r = 0 -> fail `DivisionByZero
+    | Div, VInt _, VInt r when r = 0 -> fail DivideByZeroException
     | Div, VInt l, VInt r -> return @@ VInt (l / r)
-    | Mod, VInt _, VInt r when r = 0 -> fail `DivisionByZero
+    | Mod, VInt _, VInt r when r = 0 -> fail DivideByZeroException
     | Mod, VInt l, VInt r -> return @@ VInt (l % r)
     (* Boolean operation *)
     | And, VBool l, VBool r -> return @@ VBool (l && r)
@@ -90,19 +90,15 @@ module Interpret (M : FailMonad) = struct
     | Add, VFloat l, VFloat r -> return @@ VFloat (l +. r)
     | Sub, VFloat l, VFloat r -> return @@ VFloat (l -. r)
     | Mul, VFloat l, VFloat r -> return @@ VFloat (l *. r)
-    | Div, VFloat _, VFloat r when (Float.(=) r 0.) -> fail `DivisionByZero
     | Div, VFloat l, VFloat r -> return @@ VFloat (l /. r)
-    | Mod, VFloat _, VFloat r when (Float.(=) r 0.) -> fail `DivisionByZero
     | Mod, VFloat l, VFloat r -> return @@ VFloat (l %. r)
     (* Measure to Measure operation *)
     | Add, VFloatMeasure(VFloat nl, ml), VFloatMeasure(VFloat nr, mr) when (String.(=) ml mr) -> return @@ VFloatMeasure (( VFloat(nl +. nr)), ml)
     | Sub, VFloatMeasure(VFloat nl, ml), VFloatMeasure(VFloat nr, mr) when (String.(=) ml mr) -> return @@ VFloatMeasure (( VFloat(nl -. nr)), ml) 
-    | Mul, VFloatMeasure(VFloat nl, ml), VFloatMeasure(VFloat nr, mr) when (String.(=) ml mr) -> return @@ VFloatMeasure (( VFloat(nl *. nr)), ml) 
-    | Div, VFloatMeasure(VFloat _, _), VFloatMeasure(VFloat nr, _) when (Float.(=) nr 0.) -> fail `DivisionByZero
+    | Mul, VFloatMeasure(VFloat nl, ml), VFloatMeasure(VFloat nr, mr) when (String.(=) ml mr) -> return @@ VFloatMeasure (( VFloat(nl *. nr)), ml)
     | Div, VFloatMeasure(VFloat nl, ml), VFloatMeasure(VFloat nr, mr) when (ml == mr) -> return @@ VFloatMeasure (( VFloat(nl /. nr)), ml)
-    | Mod, VFloatMeasure(VFloat _, _), VFloatMeasure(VFloat nr, _) when (Float.(=) nr 0.) -> fail `DivisionByZero
     | Mod, VFloatMeasure(VFloat nl, ml), VFloatMeasure(VFloat nr, mr) when (ml == mr) -> return @@ VFloatMeasure (( VFloat(nl %. nr)), ml)
-    | _ -> fail `UnsupportedOperation
+    | _ -> fail UnsupportedOperation
   ;;
 
   let rec pattern =
@@ -128,15 +124,15 @@ module Interpret (M : FailMonad) = struct
         | FNil, VList v ->
           (match v with
             | [] -> return []
-            | _ -> fail `PatternMismatch)
-        | _ -> fail `PatternMismatch)
+            | _ -> fail UnexpectedPattern)
+        | _ -> fail UnexpectedPattern)
     | (PCons _ as pl), VList vl ->
       (match pl, vl with
         | PCons (h, t), hd :: tl ->
           let* hd = pattern (h, hd) in
           let* tl = pattern (t, VList tl) in
           return @@ hd @ tl
-        | _ -> fail `PatternMismatch)
+        | _ -> fail UnexpectedPattern)
     | PTuple ptl, VTuple vtl 
     | PList ptl, VList vtl -> 
       let create_vtl =
@@ -147,8 +143,8 @@ module Interpret (M : FailMonad) = struct
       in
       (match create_vtl with
       | Ok res -> res
-      | Unequal_lengths -> fail `PatternMismatch)
-    | _ -> fail `PatternMismatch
+      | Unequal_lengths -> fail UnexpectedPattern)
+    | _ -> fail UnexpectedPattern
   ;;
 
   let rec comp_expr expr env vmap : (value, error) t =
@@ -169,7 +165,7 @@ module Interpret (M : FailMonad) = struct
             then measure_list := !measure_list 
           else measure_list := (m1, m1) :: !measure_list;  (* Добавляем новую пару в список measure *)
           return @@ VMeasureList !measure_list  (* Возвращаем обновленный список VMeasureList *)
-       | _ -> fail `PatternMismatch
+       | _ -> fail Unreachable
       )
     | EConst c ->
       (match c with
@@ -189,14 +185,14 @@ module Interpret (M : FailMonad) = struct
               let* f = comp_expr (EConst a) env []
               in
               return @@ VFloatMeasure (f, b) 
-          else fail `DivisionByZero
+          else fail DivideByZeroException
         | FNil -> return VNil
         | FUnit -> return VUnit
-        | _ -> fail `PatternMismatch)
+        | _ -> fail Unreachable)
     | EFun (p, e) -> return @@ VFun (p, e, vmap)
     | EVar var -> 
         (match Map.find env var with
-          | None -> fail (`UnboundValue var)
+          | None -> fail (NotDefinedValue var)
           | Some value -> return value)
     | EApp (func, arg) ->
       (match func, arg with 
@@ -213,17 +209,17 @@ module Interpret (M : FailMonad) = struct
               let* link_variable = link env vmap in
               let* link_variables = link link_variable pat in
               comp_expr e link_variables (pat @ vmap)
-            | _ -> fail `Unreachable))
+            | _ -> fail Unreachable))
     | EBinaryOp op -> return @@ VBinOp op
     | EIfElse (i, t, e) ->
       let* comp_eifelse = comp_expr i env [] in
       (match comp_eifelse with
         | VBool res -> if res then comp_expr t env [] else comp_expr e env []
-        | _ -> fail `Unreachable)
+        | _ -> fail Unreachable)
     | EMatch (matched, patterns) ->
       let* comp_match = comp_expr matched env [] in
       let rec comp_match_expr = function
-        | [] -> fail `PatternMismatch
+        | [] -> fail UnexpectedPattern
         | (p, e) :: tl ->
           let res = pattern (p, comp_match) in
           run
@@ -254,7 +250,7 @@ module Interpret (M : FailMonad) = struct
 
   let run_interpreter ?(environment = Map.empty (module String)) program =
     let rec helper env = function
-      | [] -> fail `EmptyInput
+      | [] -> fail EmptyInput
       | hd :: [] ->
         let* env, value = run_expr env hd in
         return (env, value)
