@@ -836,12 +836,13 @@ let%test _ =
 
 
 (* measure test*)
+
 (* [<Measure>] type m *)
 let test = [ (EMeasure (Measure_init (Measure_single "m")))]
 
 let%test _ =
   match run_test test with
-  | Ok (VMeasureList [("m", "m")]) -> true
+  | Ok (VMeasureList [("m", ["m"])]) -> true
   | Error t ->
     Format.printf "%a\n" print_error t;
     false
@@ -871,3 +872,28 @@ let%test _ =
     Format.printf "%s" (show_value t);
     false
 ;;
+
+(* [<Measure>] type hz = m / sec * sm * luck / unluck*)
+let test = [ 
+  (EMeasure (Measure_init (Measure_single "sec")));
+  (EMeasure (Measure_init (Measure_single "m")));
+  (EMeasure (Measure_init (Measure_single "dm")));
+  (EMeasure
+       (Measure_multiple_init ((Measure_single "speed"),
+          (Measure_multiple ((Measure_single "m"), Div,
+             (Measure_multiple ((Measure_single "sec"), Mul,
+                (Measure_single "dm")))
+             ))
+          )))
+]
+
+let%test _ =
+  match run_test test with
+  | Ok (VMeasureList [("speed", ["m"; "/"; "sec"; "*"; "dm"]); ("dm", ["dm"]); ("m", ["m"]); ("sec", ["sec"])]) -> true
+  | Error t ->
+    Format.printf "%a\n" print_error t;
+    false
+  | Ok t ->
+    Format.printf "%s" (show_value t);
+    false
+;; 
