@@ -2,9 +2,6 @@
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-open Angstrom
-open Ast
-
 type error = [ `ParsingError of string ]
 
 val parse : string -> (Ast.statement, [> error ]) result
