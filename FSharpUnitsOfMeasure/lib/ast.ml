@@ -2,6 +2,8 @@
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
+(* Parser *)
+
 type id = string [@@deriving eq, show { with_path = false }]
 
 type un_op =
@@ -64,4 +66,21 @@ type expression =
   | EFun of pattern * expression  (* fun z -> z + z *)
   | EMatch of expression * (pattern * expression) list (* match *)
   | EMeasure of measure_init (* measure *)
+[@@deriving show { with_path = false }]
+
+(* interpreter *)
+
+type value =
+  | VInt of int
+  | VString of string
+  | VBool of bool
+  | VNil
+  | VUnit
+  | VFloat of float 
+  | VTuple of value list
+  | VList of value list
+  | VBinOp of binary_op
+  | VFun of pattern * expression * (id * value) list
+  | VMeasureList of (id * id list) list
+  | VFloatMeasure of value * id  
 [@@deriving show { with_path = false }]
