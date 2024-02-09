@@ -51,7 +51,7 @@ type lexical_env =
   ; scope : scope
   }
 
-and obj_type =
+type obj_type =
   | TFunPreset of (ctx -> value list -> int option -> (ctx * value option) t)
     (*functions in OCaml native code*)
   | TFunction of fun_ctx
