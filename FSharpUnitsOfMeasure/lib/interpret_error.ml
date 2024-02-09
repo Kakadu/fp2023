@@ -4,7 +4,8 @@
 
 type error =
   | DivideByZeroException
-  | NotDefinedValue of string
+  | UndefinedValue of string
+  | UndefinedType of string
   | UnsupportedOperation
   | UnexpectedPattern
   | EmptyInput
@@ -14,7 +15,8 @@ let print_error f : error -> unit =
   let open Format in
   function
   | DivideByZeroException -> fprintf f "Attempted to divide by zero"
-  | NotDefinedValue v -> fprintf f "The value or constructor %s is not defined" v
+  | UndefinedValue v -> fprintf f "The value or constructor %s is not defined" v
+  | UndefinedType z -> fprintf f "The type %s is not defined" z
   | UnsupportedOperation -> fprintf f "This type does not support this operator"
   | UnexpectedPattern -> fprintf f "Unexpected in pattern"
   | EmptyInput -> fprintf f "Empty input to interpret"
