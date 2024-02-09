@@ -7,5 +7,8 @@ type program_return =
   ; return : string
   }
 
+(**get ast and interpret it*)
 val interpret_ast : Ast.statement -> (program_return, string) result
+
+(**get Javascript code, parse and interpret it*)
 val interpret : string -> (program_return, string) result
