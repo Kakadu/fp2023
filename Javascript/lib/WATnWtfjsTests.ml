@@ -36,7 +36,7 @@ let%expect_test _ =
   Array(16).join("wat" + 1)
   Array(16).join("wat" - 1) + " Batman!"
   are missed because array constructor is not supported
-  but interpreter can recreate it by other methods*)
+  but behaviour can be recreated by other methods:*)
 
 (*Array(16)*)
 let%expect_test _ =
@@ -64,6 +64,29 @@ let%expect_test _ =
 
 (**-------------------Tests from wtfjs-------------------*)
 
+(*What's not supported:
+  - Object.is is not supported
+  - get string char by index is not supported
+    tests:
+      (![] + [])[+[]] +
+      (![] + [])[+!+[]] +
+      ([![]] + [][[]])[+!+[] + [+[]]] +
+      (![] + [])[!+[] + !+[]];
+      const c = "constructor"; c[c][c]('console.log("WTF?")')();
+  - instanceof, class, extends not supported
+    tests:
+      class Foo extends null {};return new Foo() instanceof null;
+      return null instance of Object
+  - length is not supported
+    test:
+      let a = [, , ,];\na.length;\nreturn a.toString();
+  - Some cases of array equality don't work properly and were deleted
+  - Number constructor isn't implemented now
+    tests:
+      let a = Number(); return a
+      let a = Number(undefined); return a
+*)
+
 let%expect_test _ =
   print_return "return [] == ![]";
   [%expect {| Programm return: true |}]
@@ -89,18 +112,10 @@ let%expect_test _ =
   [%expect {| Programm return: false |}]
 ;;
 
-(*Object.is is not supported*)
-
 let%expect_test _ =
   print_return "return -0 === 0";
   [%expect {| Programm return: true |}]
 ;;
-
-(*get string char by index is not supported:
-  (![] + [])[+[]] +
-  (![] + [])[+!+[]] +
-  ([![]] + [][[]])[+!+[] + [+[]]] +
-  (![] + [])[!+[] + !+[]];*)
 
 let%expect_test _ =
   print_return "return !![]";
@@ -122,16 +137,10 @@ let%expect_test _ =
   [%expect {| Programm return: false |}]
 ;;
 
-(*instanceof, class, extends not supported:
-class Foo extends null {};return new Foo() instanceof null;*)
-
 let%expect_test _ =
   print_return "return [1, 2, 3] + [4, 5, 6]";
   [%expect {| Programm return: 1,2,34,5,6 |}]
 ;;
-
-(*length is not supported:
-  let a = [, , ,];\na.length;\nreturn a.toString();*)
 
 let%expect_test _ =
   print_return "return [] == ''";
@@ -188,13 +197,6 @@ let%expect_test _ =
   [%expect {| Programm return: true |}]
 ;;
 
-(*cases there array equality work don't properly were deleted*)
-
-(*Number constructor isn't implemented now:
-  let a = Number(); return a
-  let a = Number(undefined); return a
-*)
-
 let%expect_test _ =
   print_return "return true + true";
   [%expect {| Programm return: 2 |}]
@@ -214,10 +216,6 @@ let%expect_test _ =
   print_return "return typeof null";
   [%expect {| Programm return: object |}]
 ;;
-
-(*instance isn't implemented:
-  return null instance of Object
-*)
 
 let%expect_test _ =
   print_return "return 0.1 + 0.2 === 0.3";
@@ -253,10 +251,6 @@ let%expect_test _ =
   print_return "return [4, 4] * [4, 4]";
   [%expect {| Programm return: NaN |}]
 ;;
-
-(*get char by index isn't implemented:
-  const c = "constructor"; c[c][c]('console.log("WTF?")')();
-*)
 
 let%expect_test _ =
   print_return "{}{}";
