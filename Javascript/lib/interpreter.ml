@@ -955,8 +955,7 @@ and eval_stms ctx ast =
   fold_left_s eval_stm (fun ctx -> is_some ctx.vreturn) ctx ast >>= end_of_block
 ;;
 
-let interpret_ast ast : (program_return, string) Result.t =
-  match ast with
+let interpret_ast = function
   | Programm x ->
     let* ctx = context_init in
     let* ctx, ret = eval_stms ctx x in
