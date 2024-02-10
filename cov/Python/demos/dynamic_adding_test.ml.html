@@ -18,7 +18,7 @@
       <h2>75.00%</h2>
     </div>
     <div id="navbar">
-      <span class="unvisited" style="bottom:5.26%"></span>
+      <span class="unvisited" style="bottom:5.00%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -38,10 +38,11 @@
 <a id="L13"></a><span > </span>
 <a id="L14"></a><span > </span>
 <a id="L15"></a><span > </span>
-<a id="L16"></a><span class="visited"> </span>
+<a id="L16"></a><span > </span>
 <a id="L17"></a><span class="visited"> </span>
-<a id="L18"></a><span class="unvisited"> </span>
-<a id="L19"></a><span > </span>
+<a id="L18"></a><span class="visited"> </span>
+<a id="L19"></a><span class="unvisited"> </span>
+<a id="L20"></a><span > </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -65,6 +66,7 @@
 <a href="#L17">17</a>
 <a href="#L18">18</a>
 <a href="#L19">19</a>
+<a href="#L20">20</a>
 </pre>
 <pre><code class="ocaml">open Python_Lib.Parser
 open Python_Lib.Interpreter
@@ -72,7 +74,8 @@ open Eval (Result)
 
 let result_fact_of_7 =
   let res =
-    parser{|
+    parser
+      {|
 def funcToAdd():
     return "Expected output"
 class myClass:
