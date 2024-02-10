@@ -4,7 +4,8 @@ open Eval (Result)
 
 let result_fact_of_7 =
   let res =
-    parser{|
+    parser
+      {|
 def funcToAdd():
     return "Expected output"
 class myClass:
