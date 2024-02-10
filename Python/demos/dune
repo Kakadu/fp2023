@@ -127,3 +127,16 @@
 
 (cram
  (deps %{bin:change_func_test}))
+
+(executable
+ (name dynamic_adding_test)
+ (public_name dynamic_adding_test)
+ (modules dynamic_adding_test)
+ (libraries Python.Lib)
+ (preprocess
+  (pps ppx_show))
+ (instrumentation
+  (backend bisect_ppx)))
+
+(cram
+ (deps %{bin:dynamic_adding_test}))

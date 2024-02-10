@@ -5,13 +5,13 @@ open Eval (Result)
 let result_fact_of_7 =
   let res =
     parser
-      "\n\
-       def factorial(x):\n\
-      \    if (x == 1):\n\
-      \        return 1\n\
-      \    else:\n\
-      \        return (x * factorial(x - 1))\n\
-       print(factorial(7))"
+      {|
+def factorial(x):
+    if (x == 1):
+        return 1
+    else:
+        return (x * factorial(x - 1))
+print(factorial(7))|}
   in
   match res with
   | Ok v -> interpret v

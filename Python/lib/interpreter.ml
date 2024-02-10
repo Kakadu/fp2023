@@ -296,25 +296,6 @@ module Eval (M : MONADERROR) = struct
            (match exp_list with
             | [] -> return Nil
             | _ -> print_exp_list exp_list)
-         | Identifier "setattr" when not (func_in_env (Identifier "setattr") env) ->
-           let* className = i_expr exp_or_stmt env (List.hd exp_list) in
-           let* packedToStrClass = pack_to_string className in
-           let classId = Identifier packedToStrClass in
-           let nameAndMethod = List.tl exp_list in
-           let* funcName = i_expr exp_or_stmt env (List.hd nameAndMethod) in
-           let* packedToStrFunc = pack_to_string funcName in
-           let funcId = Identifier packedToStrFunc in
-           let remaining = List.tl nameAndMethod in
-           let* methodName = i_expr exp_or_stmt env (List.hd remaining) in
-           let* packedToStrMethod = pack_to_string methodName in
-           let methodId = Identifier packedToStrMethod in
-           let fetchedClass = get_class classId env in
-           let fetchedMethod = get_func methodId env in
-           let changedClass =
-             let funcI : function_symb = { fetchedMethod with identifier = funcId } in
-             change_func funcI fetchedClass
-           in
-           i_expr exp_or_stmt (change_or_add_class changedClass env) (Const Nil)
          | _ ->
            (match func_in_env identifier env with
             | false -> error "undefined Function"
@@ -332,7 +313,7 @@ module Eval (M : MONADERROR) = struct
                 (get_func identifier env).body))
       | MethodCall (classId, methodId, e) ->
         let fetchedMethod = get_func methodId (get_class classId env) in
-        let temp_env = { env with functions = env.functions @ [ fetchedMethod ] } in
+        let temp_env = { env with functions = [ fetchedMethod ] @ env.functions } in
         i_expr exp_or_stmt temp_env (FunctionCall (methodId, e))
       | ListExp exps ->
         let* calcList = map1 (fun exp -> i_expr exp_or_stmt env exp) exps in
@@ -410,6 +391,13 @@ module Eval (M : MONADERROR) = struct
       | Function (i, some_params, some_body) ->
         let new_func_env = { identifier = i; params = some_params; body = some_body } in
         return (change_or_add_func new_func_env env)
+      | Setatter (classDest, methodName, methodItself) ->
+        let fetchedFunc = get_func methodItself env in
+        let fetchedClass = get_class classDest env in
+        let changedClass =
+          change_or_add_func { fetchedFunc with identifier = methodName } fetchedClass
+        in
+        return @@ change_or_add_class changedClass env
       | Else _ -> error "loose else statement"
     in
     { i_expr; i_stmt }

@@ -43,3 +43,6 @@
 
   $ dune exec change_func_test
   2
+
+  $ dune exec dynamic_adding_test
+  Expected output

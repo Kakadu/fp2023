@@ -19,6 +19,7 @@ type pseudo_statement =
   | While of expression * pseudo_statement list
   | Class of identifier * pseudo_statement list
   | Return of expression
+  | Setatter of identifier * identifier * identifier
   | ParsingError
 
 let rec map1 f = function
@@ -45,6 +46,8 @@ let rec convert_pseudoast_to_ast : pseudo_statement -> statement t = function
   | While (exp, body) ->
     let* newBody = map1 (fun x -> convert_pseudoast_to_ast x) body in
     return @@ Ast.While (exp, newBody)
+  | Setatter (className, methodName, methodItself) ->
+    return @@ Ast.Setatter (className, methodName, methodItself)
   | _ -> fail "parsing error"
 ;;
 
@@ -60,6 +63,7 @@ let is_banned = function
   | "while"
   | "def"
   | "class"
+  | "setatter"
   | "lambda" -> true
   | _ -> false
 ;;
@@ -179,6 +183,7 @@ let t_f = token "f"
 let t_curlyLeft = token "{"
 let t_curlyRight = token "}"
 let t_tab1 = token "\t"
+let t_setatter = token "setatter"
 
 (* Builders *)
 let exp_add e1 e2 = ArithOp (Add, e1, e2)
@@ -362,6 +367,14 @@ type dispatch =
   ; p_statement : dispatch -> pseudo_statement t
   }
 
+let p_setatter columns =
+  let* className = t_setatter *> token "(" *> p_identifier in
+  let* newMethodName = t_comma *> skip_whitespace *> p_identifier in
+  let* methodItself = t_comma *> skip_whitespace *> p_identifier <* token ")" in
+  return
+    (StatementWithColumns (columns, Setatter (className, newMethodName, methodItself)))
+;;
+
 let p_exp_or_stmt =
   let p_expression exp_or_stmt =
     fix (fun p_expression ->
@@ -401,6 +414,7 @@ let p_exp_or_stmt =
       <|> p_return (p_expression exp_or_stmt) columns
       <|> p_class columns
       <|> p_else columns
+      <|> p_setatter columns
       <|> (p_expression exp_or_stmt >>| expression_with_columns columns))
   in
   { p_expression; p_statement }
@@ -641,7 +655,7 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  parser_tester pyParser show_statement "(y == 2)";
+  parser_tester pyParser show_statement "y == 2";
   [%expect
     {|
     (Expression
@@ -797,6 +811,14 @@ let%expect_test _ =
   parser_tester pyParser show_statement "[1, 2, 3]";
   [%expect
     {| (Expression (ListExp [(Const (Int 1)); (Const (Int 2)); (Const (Int 3))])) |}]
+;;
+
+let%expect_test _ =
+  parser_tester pyParser show_statement "setatter(someClass, nickForFunc, func)";
+  [%expect
+    {|
+    (Setatter ((Identifier "someClass"), (Identifier "nickForFunc"),
+       (Identifier "func"))) |}]
 ;;
 
 let%test _ = true = is_banned "return"

@@ -83,6 +83,7 @@ type statement =
   | While of expression * statement list (** Else statemtn with a guard and its body *)
   | Class of identifier * statement list (** Class with its identifier and contents *)
   | Return of expression (** Return statement *)
+  | Setatter of identifier * identifier * identifier (** Dynamic method addition *)
 
 val pp_statement : Format.formatter -> statement -> unit
 val show_statement : statement -> string

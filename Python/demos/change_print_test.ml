@@ -15,7 +15,10 @@ let res =
          print_vars remaining_vars
        | Error _ -> print_string "Test change failed")
   in
-  let stmts = parser "\ndef print():\n    return 1\ntest = print()" in
+  let stmts = parser {|
+def print():
+    return 1
+test = print()|} in
   match stmts with
   | Ok ast ->
     let env = interpret ast in

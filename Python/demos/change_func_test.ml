@@ -3,7 +3,12 @@ open Python_Lib.Interpreter
 open Eval (Result)
 
 let result_fact_of_7 =
-  let res = parser "def w():\n    return 1\ndef w():\n    return 2\nprint(w())" in
+  let res = parser {|
+def w():
+    return 1
+def w():
+    return 2
+print(w())|} in
   match res with
   | Ok v -> interpret v
   | Error v -> Error v

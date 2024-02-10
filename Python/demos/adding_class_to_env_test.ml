@@ -12,7 +12,12 @@ let res =
   in
   let stmts =
     parser
-      "class MyClass:\n\tdef method1(x):\n\t\treturn 3\n\tdef method2():\n\t\treturn 2"
+      {|
+class MyClass:
+    def method1(x):
+        return 3
+    def method2():
+        return 2|}
   in
   match stmts with
   | Ok ast ->

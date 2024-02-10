@@ -4,10 +4,14 @@ open Eval (Result)
 
 let result_fact_of_7 =
   let res =
-    parser
-      {|
-if (1 == 1 or 1/1 == 1 and 1 != 2 and 1 < 2 and 1 <= 2 and 2 > 1 and 2 >= 1 and 1 % 1 != 3):
-    print("Passed")|}
+    parser{|
+def funcToAdd():
+    return "Expected output"
+class myClass:
+    def met1():
+        return 1
+setatter(myClass, funco, funcToAdd)        
+print(myClass.funco())|}
   in
   match res with
   | Ok v -> interpret v
