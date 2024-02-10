@@ -18,10 +18,10 @@
       <h2>85.71%</h2>
     </div>
     <div id="navbar">
-      <span class="unvisited" style="top:11.84%"></span>
-      <span class="unvisited" style="top:13.16%"></span>
-      <span class="unvisited" style="top:15.79%"></span>
-      <span class="unvisited" style="bottom:10.53%"></span>
+      <span class="unvisited" style="top:11.69%"></span>
+      <span class="unvisited" style="top:12.99%"></span>
+      <span class="unvisited" style="top:15.58%"></span>
+      <span class="unvisited" style="bottom:11.69%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -97,11 +97,12 @@
 <a id="L69"></a><span class="visited"> </span>
 <a id="L70"></a><span class="visited"> </span>
 <a id="L71"></a><span > </span>
-<a id="L72"></a><span class="visited"> </span>
-<a id="L73"></a><span > </span>
+<a id="L72"></a><span > </span>
+<a id="L73"></a><span class="visited"> </span>
 <a id="L74"></a><span > </span>
 <a id="L75"></a><span > </span>
 <a id="L76"></a><span > </span>
+<a id="L77"></a><span > </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -182,6 +183,7 @@
 <a href="#L74">74</a>
 <a href="#L75">75</a>
 <a href="#L76">76</a>
+<a href="#L77">77</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2023-2024, Averin Pavel *)
 
@@ -206,7 +208,7 @@
 [@@deriving show { with_path = false }]
 
 (*Funcions' name &amp; args' name*)
-<span data-count="153">t</span>ype identifier = Identifier of strin<span data-count="51">g</span> [@@deriving show { with_path = false }]
+<span data-count="162">t</span>ype identifier = Identifier of strin<span data-count="54">g</span> [@@deriving show { with_path = false }]
 
 <span data-count="29">t</span>ype modifier =
   | Global
@@ -245,7 +247,7 @@
 [@@deriving show { with_path = false }<span data-count="434">]</span>
 
 (*Standart statements*)
-<span data-count="221">t</span>ype statement =
+<span data-count="230">t</span>ype statement =
   | Expression of expression
   | Assign of expression * expression
   | Function of identifier * <span data-count="27">i</span>dentifier lis<span data-count="10">t</span> * <span data-count="34">s</span>tatement lis<span data-count="11">t</span>
@@ -254,7 +256,8 @@
   | While of expression * <span data-count="12">s</span>tatement lis<span data-count="4">t</span>
   | Class of identifier * <span data-count="10">s</span>tatement lis<span data-count="3">t</span>
   | Return of expression
-[@@deriving show { with_path = false }<span data-count="142">]</span>
+  | Setatter of identifier * identifier * identifier
+[@@deriving show { with_path = false }<span data-count="150">]</span>
 
 type flag =
   | No

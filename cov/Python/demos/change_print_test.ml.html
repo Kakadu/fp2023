@@ -18,9 +18,9 @@
       <h2>72.22%</h2>
     </div>
     <div id="navbar">
-      <span class="unvisited" style="bottom:38.46%"></span>
-      <span class="unvisited" style="bottom:7.69%"></span>
-      <span class="unvisited" style="bottom:3.85%"></span>
+      <span class="unvisited" style="bottom:44.83%"></span>
+      <span class="unvisited" style="bottom:6.90%"></span>
+      <span class="unvisited" style="bottom:3.45%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -43,14 +43,17 @@
 <a id="L16"></a><span class="unvisited"> </span>
 <a id="L17"></a><span > </span>
 <a id="L18"></a><span > </span>
-<a id="L19"></a><span class="visited"> </span>
-<a id="L20"></a><span class="visited"> </span>
+<a id="L19"></a><span > </span>
+<a id="L20"></a><span > </span>
 <a id="L21"></a><span > </span>
 <a id="L22"></a><span class="visited"> </span>
 <a id="L23"></a><span class="visited"> </span>
-<a id="L24"></a><span class="unvisited"> </span>
-<a id="L25"></a><span class="unvisited"> </span>
-<a id="L26"></a><span > </span>
+<a id="L24"></a><span > </span>
+<a id="L25"></a><span class="visited"> </span>
+<a id="L26"></a><span class="visited"> </span>
+<a id="L27"></a><span class="unvisited"> </span>
+<a id="L28"></a><span class="unvisited"> </span>
+<a id="L29"></a><span > </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -81,6 +84,9 @@
 <a href="#L24">24</a>
 <a href="#L25">25</a>
 <a href="#L26">26</a>
+<a href="#L27">27</a>
+<a href="#L28">28</a>
+<a href="#L29">29</a>
 </pre>
 <pre><code class="ocaml">open Python_Lib.Parser
 open Python_Lib.Interpreter
@@ -99,7 +105,10 @@ let res =
          <span data-count="1">p</span>rint_vars remaining_vars
        | <span data-count="0">E</span>rror _ -&gt; print_string "Test change failed")
   in
-  let stmts = parser "\ndef print():\n    return 1\ntest = print()" in
+  let stmts = parser {|
+def print():
+    return 1
+test = print()|} in
   <span data-count="1">m</span>atch stmts with
   | <span data-count="1">O</span>k ast -&gt;
     let env = interpret ast in

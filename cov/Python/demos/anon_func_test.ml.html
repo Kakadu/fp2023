@@ -18,7 +18,7 @@
       <h2>75.00%</h2>
     </div>
     <div id="navbar">
-      <span class="unvisited" style="bottom:10.00%"></span>
+      <span class="unvisited" style="bottom:8.33%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -29,10 +29,12 @@
 <a id="L4"></a><span > </span>
 <a id="L5"></a><span > </span>
 <a id="L6"></a><span > </span>
-<a id="L7"></a><span class="visited"> </span>
-<a id="L8"></a><span class="visited"> </span>
-<a id="L9"></a><span class="unvisited"> </span>
-<a id="L10"></a><span > </span>
+<a id="L7"></a><span > </span>
+<a id="L8"></a><span > </span>
+<a id="L9"></a><span class="visited"> </span>
+<a id="L10"></a><span class="visited"> </span>
+<a id="L11"></a><span class="unvisited"> </span>
+<a id="L12"></a><span > </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -47,13 +49,17 @@
 <a href="#L8"> 8</a>
 <a href="#L9"> 9</a>
 <a href="#L10">10</a>
+<a href="#L11">11</a>
+<a href="#L12">12</a>
 </pre>
 <pre><code class="ocaml">open Python_Lib.Parser
 open Python_Lib.Interpreter
 open Eval (Result)
 
 let anon =
-  let res = parser "Successor = lambda x : (x + 1)\nprint(Successor(0))" in
+  let res = parser {|
+Successor = lambda x : (x + 1)
+print(Successor(0))|} in
   <span data-count="1">m</span>atch res with
   | <span data-count="1">O</span>k v -&gt; interpre<span data-count="1">t</span> v
   | <span data-count="0">E</span>rror v -&gt; Error v
