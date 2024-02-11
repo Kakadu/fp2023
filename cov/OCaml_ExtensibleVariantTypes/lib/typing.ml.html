@@ -288,9 +288,9 @@ open Ast
 type type_variable_number = int
 
 <span data-count="0">t</span>ype ground =
-  <span data-count="0">|</span> GInt (* Int *)
-  <span data-count="0">|</span> GBool (* Bool *)
-  <span data-count="0">|</span> GUnit (* Unit — () *)
+  <span data-count="0">|</span> GInt (** Int *)
+  <span data-count="0">|</span> GBool (** Bool *)
+  <span data-count="0">|</span> GUnit (** Unit — () *)
 [@@deriving eq, show { with_path = false }]
 
 type typ =
@@ -362,10 +362,10 @@ let print_typ ?(carriage = <span data-count="45">f</span>alse) typ =
 type error =
   | OccursCheck
   | UnboundValue of ident
-  | MismatchValues of typ * typ (* For pattern matching errors *)
+  | MismatchValues of typ * typ (** For pattern matching errors *)
   | UnificationFailed of typ * typ
   | ParserAvoidedError
-    (* Use the parser to get the AST: the parser does some transformations of expressions *)
+  (** Use the parser to get the AST: the parser does some transformations of expressions *)
   | WildcardNotExpected
 
 let pp_error fmt err =

@@ -763,12 +763,12 @@ and value =
 type error =
   | UnboundValue of string
   | ParserAvoidedError
-    (* Use the parser to get the AST: the parser does some transformations of expressions *)
+    (*** Use the parser to get the AST: the parser does some transformations of expressions *)
   | UnsupportedOperation
   | Division_by_zero
   | NonExhaustivePatternMatching
   | TypeError
-  | UnexpectedState (* Unexpected state related to standard functions *)
+  | UnexpectedState (** Unexpected state related to standard functions *)
 
 open Format
 

@@ -239,72 +239,72 @@
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
 <span data-count="38">t</span>ype const =
-  <span data-count="60">|</span> CInt of in<span data-count="0">t</span> (* int *)
-  <span data-count="0">|</span> CBool of boo<span data-count="0">l</span> (* bool *)
-  <span data-count="8">|</span> CNil (* [] *)
-  <span data-count="0">|</span> CUnit (* () *)
+  <span data-count="60">|</span> CInt of in<span data-count="0">t</span> (** int *)
+  <span data-count="0">|</span> CBool of boo<span data-count="0">l</span> (** bool *)
+  <span data-count="8">|</span> CNil (** [] *)
+  <span data-count="0">|</span> CUnit (** () *)
 [@@deriving eq, show { with_path = false }]
 
 <span data-count="12">t</span>ype bin_op =
-  <span data-count="11">|</span> Add (* + *)
-  <span data-count="1">|</span> Sub (* - *)
-  <span data-count="0">|</span> Mul (* * *)
-  <span data-count="0">|</span> Div (* / *)
-  <span data-count="0">|</span> Leq (* &lt;= *)
-  <span data-count="0">|</span> Less (* &lt; *)
-  <span data-count="0">|</span> Geq (* &gt;= *)
-  <span data-count="0">|</span> Gre (* &gt; *)
-  <span data-count="0">|</span> Eq (* == *)
-  <span data-count="0">|</span> Neq (* != *)
-  <span data-count="0">|</span> And (* &amp;&amp; *)
-  <span data-count="0">|</span> Or (* || *)
+  <span data-count="11">|</span> Add (** + *)
+  <span data-count="1">|</span> Sub (** - *)
+  <span data-count="0">|</span> Mul (** * *)
+  <span data-count="0">|</span> Div (** / *)
+  <span data-count="0">|</span> Leq (** &lt;= *)
+  <span data-count="0">|</span> Less (** &lt; *)
+  <span data-count="0">|</span> Geq (** &gt;= *)
+  <span data-count="0">|</span> Gre (** &gt; *)
+  <span data-count="0">|</span> Eq (** == *)
+  <span data-count="0">|</span> Neq (** != *)
+  <span data-count="0">|</span> And (** &amp;&amp; *)
+  <span data-count="0">|</span> Or (** || *)
 [@@deriving eq, show { with_path = false }]
 
 <span data-count="2">t</span>ype unary_op =
-  <span data-count="0">|</span> Plus (* ~+ *)
-  <span data-count="2">|</span> Minus (* ~- *)
-  <span data-count="0">|</span> Not (* ~not *)
+  <span data-count="0">|</span> Plus (** ~+ *)
+  <span data-count="2">|</span> Minus (** ~- *)
+  <span data-count="0">|</span> Not (** ~not *)
 [@@deriving eq, show { with_path = false }]
 
 <span data-count="46">t</span>ype ident = <span data-count="0">s</span>tring [@@deriving eq, show { with_path = false }]
 
-<span data-count="0">t</span>ype capitalized_ident = <span data-count="0">C</span>apitalized_ident of strin<span data-count="0">g</span> (* Capitalized idents *)
+<span data-count="0">t</span>ype capitalized_ident = <span data-count="0">C</span>apitalized_ident of strin<span data-count="0">g</span> (** Capitalized idents *)
 [@@deriving eq, show { with_path = false }]
 
 <span data-count="16">t</span>ype rec_flag =
-  <span data-count="0">|</span> Recursive (* Recursive *)
-  <span data-count="16">|</span> Not_recursive (* Not recursive *)
+  <span data-count="0">|</span> Recursive (** Recursive *)
+  <span data-count="16">|</span> Not_recursive (** Not recursive *)
 [@@deriving eq, show { with_path = false }]
 
 <span data-count="13">t</span>ype pattern =
-  <span data-count="30">|</span> PId of iden<span data-count="10">t</span> (* x *)
-  <span data-count="14">|</span> PTuple of <span data-count="0">p</span>attern lis<span data-count="4">t</span> (* (x, y) *)
-  <span data-count="12">|</span> PList of pattern * patter<span data-count="6">n</span> (* x :: xs *)
-  <span data-count="0">|</span> PConst of cons<span data-count="0">t</span> (* 3 *)
+  <span data-count="30">|</span> PId of iden<span data-count="10">t</span> (** x *)
+  <span data-count="14">|</span> PTuple of <span data-count="0">p</span>attern lis<span data-count="4">t</span> (** (x, y) *)
+  <span data-count="12">|</span> PList of pattern * patter<span data-count="6">n</span> (** x :: xs *)
+  <span data-count="0">|</span> PConst of cons<span data-count="0">t</span> (** 3 *)
 [@@deriving eq, show { with_path = false }<span data-count="0">]</span>
 
 <span data-count="126">t</span>ype expr =
-  <span data-count="114">|</span> EConst of cons<span data-count="38">t</span> (* Const. Examples: 100; true *)
+  <span data-count="114">|</span> EConst of cons<span data-count="38">t</span> (** Const. Examples: 100; true *)
   <span data-count="108">|</span> EBinop of
-      expr * bin_op * exp<span data-count="60">r</span> (* Binary operation. Examples: 2 + 2; (234 * 234) + 234 *)
-  <span data-count="12">|</span> EUnop of unary_op * exp<span data-count="6">r</span> (* Unary operation. Examples: -(1); (+b) *)
-  <span data-count="60">|</span> EId of iden<span data-count="20">t</span> (* Identifier. Examples: a, b, c *)
-  <span data-count="30">|</span> EFun of pattern * exp<span data-count="15">r</span> (* Function. Examples: fun x -&gt; x + 1 *)
-  <span data-count="60">|</span> EApp of expr * exp<span data-count="30">r</span> (* Application. Examples: f (x - 1) *)
+      expr * bin_op * exp<span data-count="60">r</span> (** Binary operation. Examples: 2 + 2; (234 * 234) + 234 *)
+  <span data-count="12">|</span> EUnop of unary_op * exp<span data-count="6">r</span> (** Unary operation. Examples: -(1); (+b) *)
+  <span data-count="60">|</span> EId of iden<span data-count="20">t</span> (** Identifier. Examples: a, b, c *)
+  <span data-count="30">|</span> EFun of pattern * exp<span data-count="15">r</span> (** Function. Examples: fun x -&gt; x + 1 *)
+  <span data-count="60">|</span> EApp of expr * exp<span data-count="30">r</span> (** Application. Examples: f (x - 1) *)
   <span data-count="0">|</span> EIf of
-      expr * expr * exp<span data-count="0">r</span> (* If-then-else. Examples: if x &gt;= y then x - y else y - x *)
-  <span data-count="90">|</span> EList of expr * exp<span data-count="45">r</span> (* Lists. Examples: [1; 2; 3] *)
-  <span data-count="42">|</span> ETuple of <span data-count="0">e</span>xpr lis<span data-count="12">t</span> (* Tuple. Examples: (1, 2, 3) *)
-  <span data-count="24">|</span> EClsr of decl * exp<span data-count="12">r</span> (* Closure. Examples: let inc x = x + 1 in inc 5*)
+      expr * expr * exp<span data-count="0">r</span> (** If-then-else. Examples: if x &gt;= y then x - y else y - x *)
+  <span data-count="90">|</span> EList of expr * exp<span data-count="45">r</span> (** Lists. Examples: [1; 2; 3] *)
+  <span data-count="42">|</span> ETuple of <span data-count="0">e</span>xpr lis<span data-count="12">t</span> (** Tuple. Examples: (1, 2, 3) *)
+  <span data-count="24">|</span> EClsr of decl * exp<span data-count="12">r</span> (** Closure. Examples: let inc x = x + 1 in inc 5*)
   <span data-count="25">|</span> EMatch of expr * <span data-count="0">(</span><span data-count="0">p</span>attern * expr) lis<span data-count="10">t</span>
-    (* Matching. Examples: match l with | hd::tl -&gt; hd | _ -&gt; [] *)
-  <span data-count="0">|</span> EStd of iden<span data-count="0">t</span> (* Std functions (only for print) *)
+    (** Matching. Examples: match l with | hd::tl -&gt; hd | _ -&gt; [] *)
+  <span data-count="0">|</span> EStd of iden<span data-count="0">t</span> (** Std functions (only for print) *)
 [@@deriving eq, show { with_path = false }]
 
 <span data-count="0">a</span>nd decl = <span data-count="144">D</span>Let of rec_flag * ident * exp<span data-count="80">r</span>
-(* Let declarations *) [@@deriving eq, show { with_path = false }<span data-count="0">]</span>
+(** Let declarations *) [@@deriving eq, show { with_path = false }<span data-count="0">]</span>
 
-<span data-count="0">t</span>ype prog = <span data-count="0">d</span>ecl lis<span data-count="0">t</span> [@@deriving eq, show { with_path = false }<span data-count="0">]</span> (* program *)
+<span data-count="0">t</span>ype prog = <span data-count="0">d</span>ecl lis<span data-count="0">t</span> [@@deriving eq, show { with_path = false }<span data-count="0">]</span> (** program *)
 
 let pid id = <span data-count="3678">P</span>Id id
 let ptuple p_list = <span data-count="7">P</span>Tuple p_list
