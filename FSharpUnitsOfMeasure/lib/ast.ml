@@ -82,5 +82,5 @@ type value =
   | VBinOp of binary_op
   | VFun of pattern * expression * (id * value) list
   | VMeasureList of (id * id list) list
-  | VFloatMeasure of value * id  
+  | VFloatMeasure of value * id list
 [@@deriving show { with_path = false }]

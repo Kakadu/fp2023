@@ -21,9 +21,25 @@ let measure_list = ref []
 module Interpret (M : FailMonad) = struct
   open M
 
-  let serch lst_ref element =
+  let rec find_m2_from_measure_list measure_list element =
+    match measure_list with
+    | [] -> []
+    | (m1, m2) :: tl ->
+      if String.equal m1 element then
+        m2
+      else
+        find_m2_from_measure_list tl element
+  ;;
+      
+  let process_l1_with_measure_list l1 measure_list =
+    List.map ~f:(fun element -> if ((String.(<>) element "/") && (String.(<>) element "*")) then find_m2_from_measure_list measure_list element else [element]) l1
+  ;;
+
+  let flatten_string_lists lists =
+    List.concat (List.map ~f:(fun sublist -> sublist) lists)
+  ;;
+  let search lst_ref element =
     let lst = !lst_ref in  (* Получаем обычный список кортежей из mutable списка *)
-    
     let rec search_element list =
       match list with
       | [] -> false  (* Элемент не найден *)
@@ -70,6 +86,20 @@ module Interpret (M : FailMonad) = struct
       process_measure_multiple measure_list_with_op m1
   ;;
 
+  let rec mbase m1 measure_list =
+    let m3 = flatten_string_lists @@ process_l1_with_measure_list m1 !measure_list
+    in
+    if Poly.(=) m3 m1
+      then return @@ m3
+    else mbase m3 measure_list
+    ;;
+
+  let meq m1 m2 measure_list =
+    let m3 = mbase m1 measure_list
+    in let m4 = mbase m2 measure_list
+    in Poly.(=) m3 m4
+    ;;
+
   let link map links = 
     let linking map id value=
       match Map.add map ~key:id ~data:value with
@@ -112,11 +142,11 @@ module Interpret (M : FailMonad) = struct
     | Div, VFloat l, VFloat r -> return @@ VFloat (l /. r)
     | Mod, VFloat l, VFloat r -> return @@ VFloat (l %. r)
     (* Measure to Measure operation *)
-    | Add, VFloatMeasure(VFloat nl, ml), VFloatMeasure(VFloat nr, mr) when (String.(=) ml mr) -> return @@ VFloatMeasure (( VFloat(nl +. nr)), ml)
-    | Sub, VFloatMeasure(VFloat nl, ml), VFloatMeasure(VFloat nr, mr) when (String.(=) ml mr) -> return @@ VFloatMeasure (( VFloat(nl -. nr)), ml) 
-    | Mul, VFloatMeasure(VFloat nl, ml), VFloatMeasure(VFloat nr, mr) when (String.(=) ml mr) -> return @@ VFloatMeasure (( VFloat(nl *. nr)), ml)
-    | Div, VFloatMeasure(VFloat nl, ml), VFloatMeasure(VFloat nr, mr) when (ml == mr) -> return @@ VFloatMeasure (( VFloat(nl /. nr)), ml)
-    | Mod, VFloatMeasure(VFloat nl, ml), VFloatMeasure(VFloat nr, mr) when (ml == mr) -> return @@ VFloatMeasure (( VFloat(nl %. nr)), ml)
+    | Add, VFloatMeasure(VFloat vl, ml), VFloatMeasure(VFloat vr, mr) when (meq ml mr measure_list) -> return @@ VFloatMeasure (( VFloat(vl +. vr)), ml)
+    | Sub, VFloatMeasure(VFloat nl, ml), VFloatMeasure(VFloat nr, mr) when (meq ml mr measure_list) -> return @@ VFloatMeasure (( VFloat(nl -. nr)), ml) 
+    | Mul, VFloatMeasure(VFloat nl, ml), VFloatMeasure(VFloat nr, mr) when (meq ml mr measure_list) -> return @@ VFloatMeasure (( VFloat(nl *. nr)), ml)
+    | Div, VFloatMeasure(VFloat nl, ml), VFloatMeasure(VFloat nr, mr) when (meq ml mr measure_list) -> return @@ VFloatMeasure (( VFloat(nl /. nr)), ml)
+    | Mod, VFloatMeasure(VFloat nl, ml), VFloatMeasure(VFloat nr, mr) when (meq ml mr measure_list)-> return @@ VFloatMeasure (( VFloat(nl %. nr)), ml)
     | _ -> fail UnsupportedOperation
   ;;
 
@@ -138,7 +168,7 @@ module Interpret (M : FailMonad) = struct
               ((s == Plus) && (fnum == vnum)) 
               || ((s == Minus) && (fnum *. -1. == vnum))
               ) -> return []
-        | Measure_float (_, Measure_single m1), VFloatMeasure (_, m2) when (m1 == m2) -> return []
+        | Measure_float (_, Measure_single m1), VFloatMeasure (_, m2) when ([m1] == m2) -> return []
         | FUnit, VUnit -> return []
         | FNil, VList v ->
           (match v with
@@ -166,12 +196,12 @@ module Interpret (M : FailMonad) = struct
     | _ -> fail UnexpectedPattern
   ;;
 
-  let rec comp_expr expr env vmap : (value, error) t =
+  let rec eval_expr expr env vmap : (value, error) t =
     let eval_list l =
       let* list =
         List.fold l ~init:(return []) ~f:(fun l e ->
           let* l = l in
-          let* comprassion = comp_expr e env [] in
+          let* comprassion = eval_expr e env [] in
           return @@ (comprassion :: l))
       in
       return (List.rev list)
@@ -180,20 +210,14 @@ module Interpret (M : FailMonad) = struct
     | EMeasure m ->
       (match m with
         | Measure_init (Measure_single m1) ->
-            if (serch measure_list m1) 
+            if (search measure_list m1) 
               then measure_list := !measure_list 
             else measure_list := (m1, [m1]) :: !measure_list;  (* Добавляем новую пару в список measure *)
             return @@ VMeasureList !measure_list  (* Возвращаем обновленный список VMeasureList *)
         | Measure_multiple_init (Measure_single m1, m2) -> 
             let m2  = process_measure_multiple [] m2 
             in
-            (* if (serch measure_list m1) 
-              then measure_list := !measure_list
-            else if (search_list measure_list m2) 
-              then measure_list := (m1, m2) :: !measure_list; (* Добавляем новую пару в список measure *)
-            if (!measure_list == []) then fail Unreachable (* Возвращаем обновленный список VMeasureList *)
-            else return @@ VMeasureList !measure_list *)
-            (match (serch measure_list m1, search_list measure_list m2) with
+            (match (search measure_list m1, search_list measure_list m2) with
             | (true, true) -> replace_value_in_ref_list measure_list m1 m2; return @@ VMeasureList !measure_list
             | (_, true) -> measure_list := (m1, m2) :: !measure_list; return @@ VMeasureList !measure_list
             | _ -> fail Unreachable)
@@ -212,15 +236,22 @@ module Interpret (M : FailMonad) = struct
           | Plus -> VFloat f
           | Minus -> VFloat (-1.0 *. f))
         | Measure_float (f, Measure_single m) ->
-          if (serch measure_list m) 
+          if (search measure_list m) 
             then 
-              let* f = comp_expr (EConst f) env []
+              let* f = eval_expr (EConst f) env []
+              in
+              return @@ VFloatMeasure (f, [m]) 
+          else fail (UndefinedType m)
+        | Measure_float (f, m) ->
+          let m  = process_measure_multiple [] m in
+          if (search_list measure_list m) 
+            then 
+              let* f = eval_expr (EConst f) env []
               in
               return @@ VFloatMeasure (f, m) 
-          else fail (UndefinedType m)
+          else fail Unreachable
         | FNil -> return VNil
-        | FUnit -> return VUnit
-        | _ -> fail Unreachable)
+        | FUnit -> return VUnit)
     | EFun (p, e) -> return @@ VFun (p, e, vmap)
     | EVar var -> 
         (match Map.find env var with
@@ -229,27 +260,27 @@ module Interpret (M : FailMonad) = struct
     | EApp (func, arg) ->
       (match func, arg with 
         | EBinaryOp op, EApp (num1, num2) -> 
-            let* n1 = comp_expr num1 env [] in
-            let* n2 = comp_expr num2 env [] in
+            let* n1 = eval_expr num1 env [] in
+            let* n2 = eval_expr num2 env [] in
             binop op n1 n2
         | _ -> 
-          let* evaled_fun = comp_expr func env [] in
-          let* evaled_arg = comp_expr arg env [] in
+          let* evaled_fun = eval_expr func env [] in
+          let* evaled_arg = eval_expr arg env [] in
           (match evaled_fun with
             | VFun (p, e, vmap) ->
               let* pat = pattern (p, evaled_arg) in
               let* link_variable = link env vmap in
               let* link_variables = link link_variable pat in
-              comp_expr e link_variables (pat @ vmap)
+              eval_expr e link_variables (pat @ vmap)
             | _ -> fail Unreachable))
     | EBinaryOp op -> return @@ VBinOp op
     | EIfElse (i, t, e) ->
-      let* comp_eifelse = comp_expr i env [] in
+      let* comp_eifelse = eval_expr i env [] in
       (match comp_eifelse with
-        | VBool res -> if res then comp_expr t env [] else comp_expr e env []
+        | VBool res -> if res then eval_expr t env [] else eval_expr e env []
         | _ -> fail Unreachable)
     | EMatch (matched, patterns) ->
-      let* comp_match = comp_expr matched env [] in
+      let* comp_match = eval_expr matched env [] in
       let rec comp_match_expr = function
         | [] -> fail UnexpectedPattern
         | (p, e) :: tl ->
@@ -258,11 +289,11 @@ module Interpret (M : FailMonad) = struct
             res
             ~ok:(fun res ->
               let* env = link env res in
-              comp_expr e env [])
+              eval_expr e env [])
             ~err:(fun _res -> comp_match_expr tl)
       in
       comp_match_expr patterns
-    | ELet (_, _, expr) -> comp_expr expr env []
+    | ELet (_, _, expr) -> eval_expr expr env []
     | EList abs -> 
       let* vls = eval_list abs  in
       return (VList vls)
@@ -272,7 +303,7 @@ module Interpret (M : FailMonad) = struct
   ;;
 
   let run_expr env expr : (environment * value, error) t =
-    let* value = comp_expr expr env [] in
+    let* value = eval_expr expr env [] in
     match expr with
     | ELet (_, name, _) ->
       let* env = link env [ name, value ] in

@@ -864,7 +864,7 @@ let test = [
 
 let%test _ =
   match run_test test with
-  | Ok (VFloatMeasure ((VFloat 15.5), "m")) -> true
+  | Ok (VFloatMeasure ((VFloat 15.5), ["m"])) -> true
   | Error t ->
     Format.printf "%a\n" print_error t;
     false
@@ -884,12 +884,96 @@ let test = [
              (Measure_multiple ((Measure_single "sec"), Mul,
                 (Measure_single "dm")))
              ))
-          )))
+          )));
+          (EApp ((EBinaryOp Add),
+       (EApp (
+          (EConst
+             (Measure_float ((FFloat (Plus, 7.77)),
+                (Measure_multiple ((Measure_single "m"), Div,
+                   (Measure_single "dm")))
+                ))),
+          (EConst
+             (Measure_float ((FFloat (Plus, 7.73)),
+                (Measure_multiple ((Measure_single "m"), Div,
+                   (Measure_single "dm")))
+                )))
+          ))
+       ))
 ]
 
 let%test _ =
   match run_test test with
-  | Ok (VMeasureList [("speed", ["m"; "/"; "sec"; "*"; "dm"]); ("dm", ["dm"]); ("m", ["m"]); ("sec", ["sec"])]) -> true
+  | Ok (VFloatMeasure ((VFloat 15.5), ["m"; "/"; "dm"])) -> true
+  | Error t ->
+    Format.printf "%a\n" print_error t;
+    false
+  | Ok t ->
+    Format.printf "%s" (show_value t);
+    false
+;; 
+
+
+(* [<Measure>] type hz = m / sec * sm * luck / unluck*)
+let test = [ 
+  (EMeasure (Measure_init (Measure_single "sec")));
+  (EMeasure (Measure_init (Measure_single "m")));
+  (EMeasure
+       (Measure_multiple_init ((Measure_single "speed"),
+          (Measure_multiple ((Measure_single "m"), Div, (Measure_single "sec")))
+          )));
+          (EApp ((EBinaryOp Add),
+       (EApp (
+          (EConst
+             (Measure_float ((FFloat (Plus, 7.)),
+                (Measure_multiple ((Measure_single "m"), Div,
+                   (Measure_single "sec")))
+                ))),
+          (EConst (Measure_float ((FFloat (Plus, 7.)), (Measure_single "speed"))))
+          ))
+       ))
+]
+
+let%test _ =
+  match run_test test with
+  | Ok (VFloatMeasure ((VFloat 14.), ["m"; "/"; "sec"])) -> true
+  | Error t ->
+    Format.printf "%a\n" print_error t;
+    false
+  | Ok t ->
+    Format.printf "%s" (show_value t);
+    false
+;; 
+
+(* [<Measure>] type hz = m / sec * sm * luck / unluck*)
+let test = [ 
+  (EMeasure (Measure_init (Measure_single "sec")));
+  (EMeasure (Measure_init (Measure_single "m")));
+  (EMeasure (Measure_init (Measure_single "dm")));
+  (EMeasure
+    (Measure_multiple_init ((Measure_single "speed"),
+      (Measure_multiple ((Measure_single "m"), Div, (Measure_single "sec")))
+      )));
+  (EMeasure
+    (Measure_multiple_init ((Measure_single "sp"),
+        (Measure_multiple ((Measure_single "speed"), Mul, (Measure_single "dm")
+          ))
+        )));
+        (EApp ((EBinaryOp Add),
+        (EApp (
+           (EConst
+              (Measure_float ((FFloat (Plus, 7.)),
+                 (Measure_multiple ((Measure_single "m"), Div,
+                    (Measure_multiple ((Measure_single "sec"), Mul,
+                       (Measure_single "dm")))
+                    ))
+                 ))),
+           (EConst (Measure_float ((FFloat (Plus, 7.)), (Measure_single "sp"))))))
+        ))
+]
+
+let%test _ =
+  match run_test test with
+  | Ok (VFloatMeasure ((VFloat 14.), ["m"; "/"; "sec"; "*"; "dm"])) -> true
   | Error t ->
     Format.printf "%a\n" print_error t;
     false
