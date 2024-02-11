@@ -769,8 +769,8 @@ open Angstrom
 open Ast
 
 let is_space = function
-  | <span data-count="969181">'</span> ' | <span data-count="0">'</span>\t' | <span data-count="0">'</span>\r' | <span data-count="181344">'</span>\n' -&gt; true
-  | <span data-count="779324">_</span> -&gt; false
+  | <span data-count="970682">'</span> ' | <span data-count="0">'</span>\t' | <span data-count="0">'</span>\r' | <span data-count="181549">'</span>\n' -&gt; true
+  | <span data-count="780295">_</span> -&gt; false
 ;;
 
 let parse_space = take_whil<span data-count="6">e</span> is_space
@@ -785,22 +785,22 @@ let parse_parens p = <span data-count="25">p</span>arse_stoke<span data-count="2
 let spaces = skip_whil<span data-count="6">e</span> is_space
 
 let is_digit = function
-  | <span data-count="8973">'</span>0' .. '9' -&gt; true
-  | <span data-count="890828">_</span> -&gt; false
+  | <span data-count="9099">'</span>0' .. '9' -&gt; true
+  | <span data-count="891620">_</span> -&gt; false
 ;;
 
 let is_lower = function
-  | <span data-count="283137">'</span>a' .. 'z' -&gt; true
-  | <span data-count="271115">_</span> -&gt; false
+  | <span data-count="283249">'</span>a' .. 'z' -&gt; true
+  | <span data-count="271448">_</span> -&gt; false
 ;;
 
 let is_upper = function
   | <span data-count="0">'</span>A' .. 'Z' -&gt; true
-  | <span data-count="254970">_</span> -&gt; false
+  | <span data-count="255279">_</span> -&gt; false
 ;;
 
-let is_letter c = <span data-count="509648">i</span>s_lowe<span data-count="509648">r</span> <span data-count="254678">c</span> || is_upper c
-let is_ident_char c = <span data-count="509648">i</span>s_digi<span data-count="509648">t</span> <span data-count="0">c</span> || is_letter c
+let is_letter c = <span data-count="510047">i</span>s_lowe<span data-count="510047">r</span> <span data-count="254768">c</span> || is_upper c
+let is_ident_char c = <span data-count="510047">i</span>s_digi<span data-count="510047">t</span> <span data-count="0">c</span> || is_letter c
 let is_sign c = <span data-count="0">c</span> = '+<span data-count="0">'</span> || c = '-<span data-count="0">'</span>
 
 let keywords =
@@ -823,12 +823,12 @@ let keywords =
   ]
 ;;
 
-let is_keyword s = <span data-count="28520">L</span>ist.mem s keywords
+let is_keyword s = <span data-count="28547">L</span>ist.mem s keywords
 
 (****************************************************** Consts ******************************************************)
 let parse_int =
   parse_toke<span data-count="6">n</span>
-    (lif<span data-count="6">t</span> (fun hd -&gt; <span data-count="3382">C</span>Int (int_of_strin<span data-count="3382">g</span> hd)) (take_while<span data-count="6">1</span> (fun ch -&gt; <span data-count="44389">i</span>s_digit ch)))
+    (lif<span data-count="6">t</span> (fun hd -&gt; <span data-count="3394">C</span>Int (int_of_strin<span data-count="3394">g</span> hd)) (take_while<span data-count="6">1</span> (fun ch -&gt; <span data-count="44446">i</span>s_digit ch)))
 ;;
 
 let parse_bool =
@@ -837,17 +837,17 @@ let parse_bool =
 ;;
 
 let parse_const = choic<span data-count="6">e</span> [ parse_bool; parse_int ]
-let parse_const_expr = parse_const &gt;&gt;<span data-count="6">=</span> fun res -&gt; <span data-count="3426">r</span>eturn @@ EConst res
+let parse_const_expr = parse_const &gt;&gt;<span data-count="6">=</span> fun res -&gt; <span data-count="3438">r</span>eturn @@ EConst res
 
 (****************************************************** Operators ******************************************************)
 let parse_satisfy_op_and_run op parser =
-  <span data-count="5020">p</span>arse_space
+  <span data-count="5026">p</span>arse_space
   *&gt;
   let* chars =
-    take_whil<span data-count="5020">e</span> (fun c -&gt;
-      <span data-count="345764">n</span>ot (is_digi<span data-count="345764">t</span> <span data-count="4971">c</span> or is_ident_cha<span data-count="340793">r</span> <span data-count="114341">c</span> or c = '(<span data-count="2345">'</span> or is_spac<span data-count="224107">e</span> <span data-count="104474">c</span> or c = '"<span data-count="0">'</span> or c = '[<span data-count="1289">'</span>))
+    take_whil<span data-count="5026">e</span> (fun c -&gt;
+      <span data-count="346226">n</span>ot (is_digi<span data-count="346226">t</span> <span data-count="5085">c</span> or is_ident_cha<span data-count="341141">r</span> <span data-count="114407">c</span> or c = '(<span data-count="2345">'</span> or is_spac<span data-count="224389">e</span> <span data-count="104576">c</span> or c = '"<span data-count="0">'</span> or c = '[<span data-count="1289">'</span>))
   in
-  <span data-count="240121">i</span>f chars = op then <span data-count="8747">p</span>arser else <span data-count="231374">f</span>ail "The operators don't match"
+  <span data-count="240442">i</span>f chars = op then <span data-count="8756">p</span>arser else <span data-count="231686">f</span>ail "The operators don't match"
 ;;
 
 let parse_unary_op =
@@ -862,9 +862,9 @@ let parse_unary_op =
 
 let parse_tuple parser wrap =
   <span data-count="8">l</span>et* list_res = sep_by<span data-count="8">1</span> (parse_stoke<span data-count="8">n</span> ",") parser in
-  <span data-count="10826">m</span>atch list_res with
-  | <span data-count="9867">[</span> e ] -&gt; return e
-  | <span data-count="959">_</span> -&gt; return (wra<span data-count="959">p</span> list_res)
+  <span data-count="10841">m</span>atch list_res with
+  | <span data-count="9873">[</span> e ] -&gt; return e
+  | <span data-count="968">_</span> -&gt; return (wra<span data-count="968">p</span> list_res)
 ;;
 
 let parse_tuple_expr parse_expr = <span data-count="4">p</span>arse_tuple parse_expr etuple
@@ -883,7 +883,7 @@ let parse_branching parse_expr =
 (****************************************************** Application, unary, binary ops ******************************************************)
 
 let binop_binder str_op bin_op =
-  <span data-count="72">l</span>et helper bin_op x y = <span data-count="3255">e</span>binop x bin_op y in
+  <span data-count="72">l</span>et helper bin_op x y = <span data-count="3258">e</span>binop x bin_op y in
   parse_satisfy_op_and_run str_op (retur<span data-count="72">n</span> @@ helpe<span data-count="72">r</span> bin_op)
 ;;
 
@@ -901,11 +901,11 @@ let and_l = binop_binde<span data-count="6">r</span> "&amp;&amp;" And
 let or_l = binop_binde<span data-count="6">r</span> "||" Or
 
 let chainl1 parse_e op =
-  <span data-count="12">l</span>et rec go acc = <span data-count="53790">l</span>ift<span data-count="53790">2</span> (fun f x -&gt; <span data-count="9067">f</span> acc x) op parse_e &gt;&gt;<span data-count="53790">=</span> go &lt;|&gt; retur<span data-count="53790">n</span> acc in
-  parse_e &gt;&gt;= fun init -&gt; <span data-count="44723">g</span>o init
+  <span data-count="12">l</span>et rec go acc = <span data-count="53859">l</span>ift<span data-count="53859">2</span> (fun f x -&gt; <span data-count="9076">f</span> acc x) op parse_e &gt;&gt;<span data-count="53859">=</span> go &lt;|&gt; retur<span data-count="53859">n</span> acc in
+  parse_e &gt;&gt;= fun init -&gt; <span data-count="44783">g</span>o init
 ;;
 
-let rec chainr1 e op = <span data-count="1322">e</span> &gt;&gt;= fun a -&gt; <span data-count="61687">o</span>p &gt;&gt;<span data-count="61687">=</span> (fun f -&gt; <span data-count="1302">c</span>hainr<span data-count="1302">1</span> e op &gt;&gt;| <span data-count="1302">f</span> a) &lt;|&gt; retur<span data-count="61687">n</span> a
+let rec chainr1 e op = <span data-count="1322">e</span> &gt;&gt;= fun a -&gt; <span data-count="61768">o</span>p &gt;&gt;<span data-count="61768">=</span> (fun f -&gt; <span data-count="1302">c</span>hainr<span data-count="1302">1</span> e op &gt;&gt;| <span data-count="1302">f</span> a) &lt;|&gt; retur<span data-count="61768">n</span> a
 let app_binder = retur<span data-count="6">n</span> eapp
 
 let rec parse_un_op_app parse_expr =
@@ -958,14 +958,14 @@ let parse_list_pat parse_pat = <span data-count="14">p</span>arse_list parse_pat
 
 let parse_letters =
   lift<span data-count="6">2</span>
-    (fun hd tl -&gt; <span data-count="28520">S</span>tring.mak<span data-count="28520">e</span> 1 hd ^ tl)
-    (satisf<span data-count="6">y</span> (fun ch -&gt; <span data-count="44665">c</span>h = '_<span data-count="61">'</span> || is_lower ch))
-    (take_whil<span data-count="6">e</span> (fun ch -&gt; <span data-count="184597">c</span>h = '_<span data-count="15742">'</span> || is_ident_char ch))
+    (fun hd tl -&gt; <span data-count="28547">S</span>tring.mak<span data-count="28547">e</span> 1 hd ^ tl)
+    (satisf<span data-count="6">y</span> (fun ch -&gt; <span data-count="44716">c</span>h = '_<span data-count="66">'</span> || is_lower ch))
+    (take_whil<span data-count="6">e</span> (fun ch -&gt; <span data-count="184648">c</span>h = '_<span data-count="15742">'</span> || is_ident_char ch))
 ;;
 
 let parse_identifier =
   parse_toke<span data-count="6">n</span> parse_letters
-  &gt;&gt;<span data-count="6">=</span> fun ident -&gt; <span data-count="28520">i</span>f is_keyword ident then <span data-count="7718">f</span>ail "invalid syntax" else <span data-count="20802">r</span>eturn ident
+  &gt;&gt;<span data-count="6">=</span> fun ident -&gt; <span data-count="28547">i</span>f is_keyword ident then <span data-count="7721">f</span>ail "invalid syntax" else <span data-count="20826">r</span>eturn ident
 ;;
 
 let parse_identifier_expr = parse_identifier &gt;&gt;<span data-count="6">|</span> eid
@@ -1007,8 +1007,8 @@ let parse_params =
 
 let parse_fun op parse_expr =
   <span data-count="14">l</span>et* params = parse_params in
-  <span data-count="4922">l</span>et* expr = parse_satisfy_op_and_ru<span data-count="4922">n</span> op parse_expr in
-  <span data-count="4922">r</span>eturn @@ List.fold_righ<span data-count="4922">t</span> (fun parameter acc -&gt; <span data-count="3462">e</span>fun parameter acc) params expr
+  <span data-count="4928">l</span>et* expr = parse_satisfy_op_and_ru<span data-count="4928">n</span> op parse_expr in
+  <span data-count="4928">r</span>eturn @@ List.fold_righ<span data-count="4928">t</span> (fun parameter acc -&gt; <span data-count="3465">e</span>fun parameter acc) params expr
 ;;
 
 let parse_fun_decl = parse_fu<span data-count="6">n</span> "="
@@ -1069,34 +1069,34 @@ let parse_expr =
 ;;
 
 let rec postprocess_expr =
-  let postprocess_list el = <span data-count="13">L</span>ist.map postprocess_expr el in
+  let postprocess_list el = <span data-count="15">L</span>ist.map postprocess_expr el in
   function
-  | <span data-count="108">E</span>Binop (e1, bop, e2) -&gt;
+  | <span data-count="109">E</span>Binop (e1, bop, e2) -&gt;
     let e1 = postprocess_expr e1 in
-    <span data-count="108">l</span>et e2 = postprocess_expr e2 in
-    <span data-count="108">(</span>match bop with
+    <span data-count="109">l</span>et e2 = postprocess_expr e2 in
+    <span data-count="109">(</span>match bop with
      | <span data-count="0">G</span>eq -&gt; ebinop e2 Leq e1
      | <span data-count="5">G</span>re -&gt; ebinop e2 Less e1
      | <span data-count="0">N</span>eq -&gt; eunop Not (ebino<span data-count="0">p</span> e1 Eq e2)
      | <span data-count="0">O</span>r -&gt; eunop Not (ebino<span data-count="0">p</span> (euno<span data-count="0">p</span> Not e1) And (euno<span data-count="0">p</span> Not e2))
-     | <span data-count="103">_</span> -&gt; ebinop e1 bop e2)
+     | <span data-count="104">_</span> -&gt; ebinop e1 bop e2)
   | <span data-count="3">E</span>Unop (uop, e) -&gt; eunop uop (postprocess_exp<span data-count="3">r</span> e)
   | <span data-count="53">E</span>Fun (id, e) -&gt; efun id (postprocess_exp<span data-count="53">r</span> e)
   | <span data-count="3">E</span>App (EId "not", e2) -&gt; eunop Not (postprocess_exp<span data-count="3">r</span> e2)
-  | <span data-count="167">E</span>App (e1, e2) -&gt; eapp (postprocess_exp<span data-count="167">r</span> e1) (postprocess_exp<span data-count="167">r</span> e2)
+  | <span data-count="169">E</span>App (e1, e2) -&gt; eapp (postprocess_exp<span data-count="169">r</span> e1) (postprocess_exp<span data-count="169">r</span> e2)
   | <span data-count="26">E</span>If (i, t, e) -&gt; eif (postprocess_exp<span data-count="26">r</span> i) (postprocess_exp<span data-count="26">r</span> t) (postprocess_exp<span data-count="26">r</span> e)
   | <span data-count="59">E</span>List (hd, tl) -&gt; elist (postprocess_exp<span data-count="59">r</span> hd) (postprocess_exp<span data-count="59">r</span> tl)
-  | <span data-count="13">E</span>Tuple e -&gt; etuple @@ postprocess_lis<span data-count="13">t</span> e
+  | <span data-count="15">E</span>Tuple e -&gt; etuple @@ postprocess_lis<span data-count="15">t</span> e
   | <span data-count="32">E</span>Clsr (DLet (rec_flag, id, e_let), e) -&gt;
     eclsr (DLet (rec_flag, id, postprocess_exp<span data-count="32">r</span> e_let)) (postprocess_exp<span data-count="32">r</span> e)
   | <span data-count="17">E</span>Match (e1, e2) -&gt;
     ematch (postprocess_exp<span data-count="17">r</span> e1) (List.ma<span data-count="17">p</span> (fun (x, y) -&gt; <span data-count="36">x</span>, postprocess_exp<span data-count="36">r</span> y) e2)
-  | <span data-count="548">a</span> -&gt; a
+  | <span data-count="556">a</span> -&gt; a
 ;;
 
 let parse_expr =
   let* expr = parse_expr in
-  <span data-count="76">r</span>eturn @@ postprocess_exp<span data-count="76">r</span> expr
+  <span data-count="79">r</span>eturn @@ postprocess_exp<span data-count="79">r</span> expr
 ;;
 
 (****************************************************** Declaration ******************************************************)
@@ -1104,7 +1104,7 @@ let parse_expr =
 let parse_decl_let parse_expr =
   <span data-count="6">p</span>arse_stoke<span data-count="6">n</span> "let"
   *&gt; lift<span data-count="6">3</span>
-       (fun rec_flag ident expr -&gt; <span data-count="76">d</span>let rec_flag ident expr)
+       (fun rec_flag ident expr -&gt; <span data-count="79">d</span>let rec_flag ident expr)
        (parse_next_stoke<span data-count="6">n</span> "rec" *<span data-count="6">&gt;</span> retur<span data-count="6">n</span> Recursive &lt;|<span data-count="6">&gt;</span> retur<span data-count="6">n</span> Not_recursive)
        (parse_toke<span data-count="6">n</span> parse_identifier)
        (parse_fun_dec<span data-count="6">l</span> parse_expr)
@@ -1115,8 +1115,8 @@ let parse_decls =
 ;;
 
 let parse_program s =
-  <span data-count="30">m</span>atch Angstrom.parse_string ~consume:Consume.All parse_decls s with
-  | <span data-count="30">O</span>k v -&gt; Ok v
+  <span data-count="31">m</span>atch Angstrom.parse_string ~consume:Consume.All parse_decls s with
+  | <span data-count="31">O</span>k v -&gt; Ok v
   | <span data-count="0">E</span>rror msg -&gt;
     (match msg with
      | <span data-count="0">"</span>: end_of_input" -&gt; Error "Syntax error"
