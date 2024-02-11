@@ -149,11 +149,12 @@ let parse_float_measure_single =
 
 (* Parsing initialization measure double: [<Measure>] type speed = m/sec *)
 
-let parse_bin_op = take_empty *> choice
+
+let parse_bin_op = take_empty *> (choice 
   [ 
     string "*" *> return Mul;
-    string "/" *> return Div; 
-  ]
+    string "/" *> return Div
+  ]) <|> return Mul
 ;;
 
 let parse_measure_multiple =

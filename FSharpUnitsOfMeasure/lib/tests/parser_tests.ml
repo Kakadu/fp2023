@@ -632,12 +632,41 @@ let%expect_test _ =
 
 let%expect_test _ =
   parsed_result 
-  "[<Measure>] type speed = m/sec" parse_expression show_expression;
+  "[<Measure>] type sp = speed * dm" parse_expression show_expression;
   [%expect {|
     (EMeasure
-       (Measure_multiple_init ((Measure_single "speed"),
-          (Measure_multiple ((Measure_single "m"), Div, (Measure_single "sec")))
+       (Measure_multiple_init ((Measure_single "sp"),
+          (Measure_multiple ((Measure_single "speed"), Mul, (Measure_single "dm")
+             ))
           ))) |}]
+;;
+
+let%expect_test _ =
+  parsed_result 
+  "[<Measure>] type sp = speed dm" parse_expression show_expression;
+  [%expect {|
+    (EMeasure
+       (Measure_multiple_init ((Measure_single "sp"),
+          (Measure_multiple ((Measure_single "speed"), Mul, (Measure_single "dm")
+             ))
+          ))) |}]
+;;
+
+let%expect_test _ =
+  parsed_result 
+  "7.0 <m/sec*dm> + 7.0<sp>" parse_expression show_expression;
+  [%expect {|
+    (EApp ((EBinaryOp Add),
+       (EApp (
+          (EConst
+             (Measure_float ((FFloat (Plus, 7.)),
+                (Measure_multiple ((Measure_single "m"), Div,
+                   (Measure_multiple ((Measure_single "sec"), Mul,
+                      (Measure_single "dm")))
+                   ))
+                ))),
+          (EConst (Measure_float ((FFloat (Plus, 7.)), (Measure_single "sp"))))))
+       )) |}]
 ;;
 
 let%expect_test _ =
@@ -698,7 +727,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   parsed_result 
-  "7.77 <m/cm> + 7.73 <m>" parse_expression show_expression ;
+  "7.77 <m/cm> + 7.73 <m/cm>" parse_expression show_expression ;
   [%expect {|
     (EApp ((EBinaryOp Add),
        (EApp (
@@ -707,7 +736,11 @@ let%expect_test _ =
                 (Measure_multiple ((Measure_single "m"), Div,
                    (Measure_single "cm")))
                 ))),
-          (EConst (Measure_float ((FFloat (Plus, 7.73)), (Measure_single "m"))))
+          (EConst
+             (Measure_float ((FFloat (Plus, 7.73)),
+                (Measure_multiple ((Measure_single "m"), Div,
+                   (Measure_single "cm")))
+                )))
           ))
        )) |}]
 ;;
