@@ -749,7 +749,7 @@ let%expect_test _ =
         res = index (numbers_starting_at 2) 20|};
   <span data-count="1">[</span>%expect
     {|
-    index :: [p10] -&gt; Int -&gt; p10
+    index :: [p6] -&gt; Int -&gt; p6
     numbers_starting_at :: Int -&gt; [Int]
     res :: Int |}<span data-count="9">]</span>
 ;;
@@ -825,8 +825,8 @@ let%expect_test _ =
   <span data-count="1">[</span>%expect
     {|
     hamming :: [Int]
-    map :: (p34 -&gt; p37) -&gt; [p34] -&gt; [p37]
-    map1 :: (p22 -&gt; p25) -&gt; [p22] -&gt; [p25]
+    map :: (p36 -&gt; p39) -&gt; [p36] -&gt; [p39]
+    map1 :: (p24 -&gt; p27) -&gt; [p24] -&gt; [p27]
     merge :: [p7] -&gt; [p7] -&gt; [p7]
     mul :: Int -&gt; Int -&gt; Int |}<span data-count="9">]</span>
 ;;
@@ -890,7 +890,7 @@ let%expect_test _ =
 let%expect_test _ =
   <span data-count="1">p</span>arse_infer {|f (Node x  (Node 1  Leaf Leaf) Leaf) = Leaf|};
   <span data-count="1">[</span>%expect {|
-    f :: 🌳 of Int -&gt; 🌳 of p9 |}<span data-count="9">]</span>
+    f :: 🌳 of Int -&gt; 🌳 of p7 |}<span data-count="9">]</span>
 ;;
 </code></pre>
       </div>

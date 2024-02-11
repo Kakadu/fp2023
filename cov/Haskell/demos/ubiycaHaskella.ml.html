@@ -109,20 +109,20 @@ open Interpreter
 (* todo: change this abomination *)
 
 let pp_combined_output env environment =
-  <span data-count="11">l</span>et open Typedtree in
+  <span data-count="13">l</span>et open Typedtree in
   Base.Map.iteri env ~f:(fun ~key:v ~data:(S (_, ty)) -&gt;
-    <span data-count="54">m</span>atch Env.find environment v with
-    | <span data-count="54">S</span>ome value -&gt; Format.printf "%s :: %a =&gt; %a\n" v pp_type ty Env.pp_value_t value
+    <span data-count="60">m</span>atch Env.find environment v with
+    | <span data-count="60">S</span>ome value -&gt; Format.printf "%s :: %a =&gt; %a\n" v pp_type ty Env.pp_value_t value
     | <span data-count="0">N</span>one -&gt; Format.printf "%s :: %a =&gt; [No Value]\n" v pp_type ty)
 ;;
 
 let run s =
-  <span data-count="11">m</span>atch Parser.parse s with
-  | <span data-count="11">O</span>k a -&gt;
+  <span data-count="13">m</span>atch Parser.parse s with
+  | <span data-count="13">O</span>k a -&gt;
     (match Inferencer.run_prog a with
-     | <span data-count="11">O</span>k res -&gt;
+     | <span data-count="13">O</span>k res -&gt;
        (match Eval.eval_prog a with
-        | <span data-count="11">R</span>esult (Ok res') -&gt; pp_combined_output res res'
+        | <span data-count="13">R</span>esult (Ok res') -&gt; pp_combined_output res res'
         | <span data-count="0">R</span>esult (Error err) -&gt; Format.printf "%a" Env.pp_err err
         | <span data-count="0">_</span> -&gt; ())
      | <span data-count="0">E</span>rror err -&gt; Format.printf "%a" Typedtree.pp_error err)
@@ -131,7 +131,7 @@ let run s =
     <span data-count="0">e</span>xit 1
 ;;
 
-let () = In_channel.(input_al<span data-count="11">l</span> stdin) |&gt; ru<span data-count="11">n</span>
+let () = In_channel.(input_al<span data-count="13">l</span> stdin) |&gt; ru<span data-count="13">n</span>
 </code></pre>
       </div>
     </div>

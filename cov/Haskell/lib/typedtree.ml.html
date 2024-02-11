@@ -215,14 +215,14 @@ type error =
   | UnificationFailed of ty * ty
 
 let pp_type fmt ty =
-  <span data-count="106">l</span>et open Format in
+  <span data-count="112">l</span>et open Format in
   let rec helper fmt = function
-    | <span data-count="142">T</span>yVar n -&gt; fprintf fmt "p%d" n
-    | <span data-count="113">T</span>yLit s -&gt; pp_print_string fmt s
-    | <span data-count="145">T</span>yArrow (l, r) -&gt;
+    | <span data-count="145">T</span>yVar n -&gt; fprintf fmt "p%d" n
+    | <span data-count="123">T</span>yLit s -&gt; pp_print_string fmt s
+    | <span data-count="152">T</span>yArrow (l, r) -&gt;
       (match l with
-       | <span data-count="23">T</span>yArrow (_, _) -&gt; fprintf fmt "(%a) -&gt; %a" helper l helper r
-       | <span data-count="122">_</span> -&gt; fprintf fmt "%a -&gt; %a" helper l helper r)
+       | <span data-count="24">T</span>yArrow (_, _) -&gt; fprintf fmt "(%a) -&gt; %a" helper l helper r
+       | <span data-count="128">_</span> -&gt; fprintf fmt "%a -&gt; %a" helper l helper r)
     | <span data-count="61">T</span>yList t -&gt; fprintf fmt "[%a]" helper t
     | <span data-count="4">T</span>yTuple ts -&gt;
       fprintf fmt "(";
@@ -234,7 +234,7 @@ let pp_type fmt ty =
            (fun fmt t -&gt; <span data-count="8">f</span>printf fmt "%a" helper t))
         ts;
       <span data-count="4">f</span>printf fmt ")"
-    | <span data-count="10">T</span>yTree t -&gt; fprintf fmt "🌳 of %a" helper t
+    | <span data-count="12">T</span>yTree t -&gt; fprintf fmt "🌳 of %a" helper t
   in
   helper fmt ty
 ;;
