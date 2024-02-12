@@ -62,14 +62,18 @@ let%expect_test _ =
 
 let%expect_test _ =
   parsed_result "7.77 <sec>" parse_types show_types;
-  [%expect {| (Measure_float ((FFloat (Plus, 7.77)), (Measure_single "sec"))) |}]
+  [%expect {|
+    (Measure_float ((FFloat (Plus, 7.77)),
+       (Measure_single ("sec", (Pow (FInt (Plus, 1))))))) |}]
 ;;
 
 let%expect_test _ =
   parsed_result "7.77 <m/sec>" parse_types show_types;
   [%expect {|
     (Measure_float ((FFloat (Plus, 7.77)),
-       (Measure_multiple ((Measure_single "m"), Div, (Measure_single "sec"))))) |}]
+       (Measure_multiple ((Measure_single ("m", (Pow (FInt (Plus, 1))))), Div,
+          (Measure_single ("sec", (Pow (FInt (Plus, 1)))))))
+       )) |}]
 ;;
 
 let%expect_test _ =
@@ -188,28 +192,33 @@ let%expect_test _ =
 
 let%expect_test _ =
   parsed_result "[<Measure>] type cm" parse_expression show_expression;
-  [%expect {| (EMeasure (Measure_init (Measure_single "cm"))) |}]
+  [%expect {| (EMeasure (Measure_init (Measure_single ("cm", (Pow (FInt (Plus, 1))))))) |}]
 ;;
 
 let%expect_test _ =
   parsed_result 
-  "[<Measure>] type m" parse_expression show_expression;
-  [%expect {| (EMeasure (Measure_init (Measure_single "m"))) |}]
+  "[<Measure>] type m ^ -2" parse_expression show_expression;
+  [%expect {| (EMeasure (Measure_init (Measure_single ("m", (Pow (FInt (Minus, 2))))))) |}]
 ;;
 
 let%expect_test _ =
   parsed_result 
-  "[<Measure>] type spped = m/sec" parse_expression show_expression;
+  "[<Measure>] type spped = m^2/sec" parse_expression show_expression;
   [%expect {|
     (EMeasure
-       (Measure_multiple_init ((Measure_single "spped"),
-          (Measure_multiple ((Measure_single "m"), Div, (Measure_single "sec")))
+       (Measure_multiple_init (
+          (Measure_single ("spped", (Pow (FInt (Plus, 1))))),
+          (Measure_multiple ((Measure_single ("m", (Pow (FInt (Plus, 2))))), Div,
+             (Measure_single ("sec", (Pow (FInt (Plus, 1)))))))
           ))) |}]
 ;;
 
 let%expect_test _ =
   parsed_result "7.77 <sec>" parse_expression show_expression;
-  [%expect {| (EConst (Measure_float ((FFloat (Plus, 7.77)), (Measure_single "sec")))) |}]
+  [%expect {|
+    (EConst
+       (Measure_float ((FFloat (Plus, 7.77)),
+          (Measure_single ("sec", (Pow (FInt (Plus, 1)))))))) |}]
 ;;
 
 let%expect_test _ =
@@ -217,7 +226,8 @@ let%expect_test _ =
   [%expect {|
     (EConst
        (Measure_float ((FFloat (Plus, 7.77)),
-          (Measure_multiple ((Measure_single "m"), Div, (Measure_single "sec")))
+          (Measure_multiple ((Measure_single ("m", (Pow (FInt (Plus, 1))))), Div,
+             (Measure_single ("sec", (Pow (FInt (Plus, 1)))))))
           ))) |}]
 ;;
 
@@ -621,13 +631,13 @@ let%expect_test _ =
   \ type m"
   parse_expression 
   show_expression;
-  [%expect {| (EMeasure (Measure_init (Measure_single "m"))) |}]
+  [%expect {| (EMeasure (Measure_init (Measure_single ("m", (Pow (FInt (Plus, 1))))))) |}]
 ;;
 
 let%expect_test _ =
   parsed_result 
   "[<Measure>] type sec" parse_expression show_expression;
-  [%expect {| (EMeasure (Measure_init (Measure_single "sec"))) |}]
+  [%expect {| (EMeasure (Measure_init (Measure_single ("sec", (Pow (FInt (Plus, 1))))))) |}]
 ;;
 
 let%expect_test _ =
@@ -635,9 +645,9 @@ let%expect_test _ =
   "[<Measure>] type sp = speed * dm" parse_expression show_expression;
   [%expect {|
     (EMeasure
-       (Measure_multiple_init ((Measure_single "sp"),
-          (Measure_multiple ((Measure_single "speed"), Mul, (Measure_single "dm")
-             ))
+       (Measure_multiple_init ((Measure_single ("sp", (Pow (FInt (Plus, 1))))),
+          (Measure_multiple ((Measure_single ("speed", (Pow (FInt (Plus, 1))))),
+             Mul, (Measure_single ("dm", (Pow (FInt (Plus, 1)))))))
           ))) |}]
 ;;
 
@@ -646,9 +656,9 @@ let%expect_test _ =
   "[<Measure>] type sp = speed dm" parse_expression show_expression;
   [%expect {|
     (EMeasure
-       (Measure_multiple_init ((Measure_single "sp"),
-          (Measure_multiple ((Measure_single "speed"), Mul, (Measure_single "dm")
-             ))
+       (Measure_multiple_init ((Measure_single ("sp", (Pow (FInt (Plus, 1))))),
+          (Measure_multiple ((Measure_single ("speed", (Pow (FInt (Plus, 1))))),
+             Mul, (Measure_single ("dm", (Pow (FInt (Plus, 1)))))))
           ))) |}]
 ;;
 
@@ -660,12 +670,17 @@ let%expect_test _ =
        (EApp (
           (EConst
              (Measure_float ((FFloat (Plus, 7.)),
-                (Measure_multiple ((Measure_single "m"), Div,
-                   (Measure_multiple ((Measure_single "sec"), Mul,
-                      (Measure_single "dm")))
+                (Measure_multiple (
+                   (Measure_single ("m", (Pow (FInt (Plus, 1))))), Div,
+                   (Measure_multiple (
+                      (Measure_single ("sec", (Pow (FInt (Plus, 1))))), Mul,
+                      (Measure_single ("dm", (Pow (FInt (Plus, 1)))))))
                    ))
                 ))),
-          (EConst (Measure_float ((FFloat (Plus, 7.)), (Measure_single "sp"))))))
+          (EConst
+             (Measure_float ((FFloat (Plus, 7.)),
+                (Measure_single ("sp", (Pow (FInt (Plus, 1))))))))
+          ))
        )) |}]
 ;;
 
@@ -674,12 +689,15 @@ let%expect_test _ =
   "[<Measure>] type hz = m / sec * sm * luck / unluck" parse_expression show_expression;
   [%expect {|
     (EMeasure
-       (Measure_multiple_init ((Measure_single "hz"),
-          (Measure_multiple ((Measure_single "m"), Div,
-             (Measure_multiple ((Measure_single "sec"), Mul,
-                (Measure_multiple ((Measure_single "sm"), Mul,
-                   (Measure_multiple ((Measure_single "luck"), Div,
-                      (Measure_single "unluck")))
+       (Measure_multiple_init ((Measure_single ("hz", (Pow (FInt (Plus, 1))))),
+          (Measure_multiple ((Measure_single ("m", (Pow (FInt (Plus, 1))))), Div,
+             (Measure_multiple ((Measure_single ("sec", (Pow (FInt (Plus, 1))))),
+                Mul,
+                (Measure_multiple (
+                   (Measure_single ("sm", (Pow (FInt (Plus, 1))))), Mul,
+                   (Measure_multiple (
+                      (Measure_single ("luck", (Pow (FInt (Plus, 1))))), Div,
+                      (Measure_single ("unluck", (Pow (FInt (Plus, 1)))))))
                    ))
                 ))
              ))
@@ -691,7 +709,10 @@ let%expect_test _ =
   "let x = 1.0 <m>" parse_expression show_expression;
   [%expect {|
     (ELet ("NotRec", "x",
-       (EConst (Measure_float ((FFloat (Plus, 1.)), (Measure_single "m")))))) |}]
+       (EConst
+          (Measure_float ((FFloat (Plus, 1.)),
+             (Measure_single ("m", (Pow (FInt (Plus, 1))))))))
+       )) |}]
 ;;
 
 let%expect_test _ =
@@ -701,11 +722,15 @@ let%expect_test _ =
     (ELet ("NotRec", "x",
        (EConst
           (Measure_float ((FFloat (Plus, 1.)),
-             (Measure_multiple ((Measure_single "m"), Div,
-                (Measure_multiple ((Measure_single "sm"), Mul,
-                   (Measure_multiple ((Measure_single "dm"), Div,
-                      (Measure_multiple ((Measure_single "sec"), Mul,
-                         (Measure_single "damn")))
+             (Measure_multiple ((Measure_single ("m", (Pow (FInt (Plus, 1))))),
+                Div,
+                (Measure_multiple (
+                   (Measure_single ("sm", (Pow (FInt (Plus, 1))))), Mul,
+                   (Measure_multiple (
+                      (Measure_single ("dm", (Pow (FInt (Plus, 1))))), Div,
+                      (Measure_multiple (
+                         (Measure_single ("sec", (Pow (FInt (Plus, 1))))), Mul,
+                         (Measure_single ("damn", (Pow (FInt (Plus, 1)))))))
                       ))
                    ))
                 ))
@@ -719,8 +744,12 @@ let%expect_test _ =
   [%expect {|
     (EApp ((EBinaryOp Add),
        (EApp (
-          (EConst (Measure_float ((FFloat (Plus, 7.77)), (Measure_single "m")))),
-          (EConst (Measure_float ((FFloat (Plus, 7.73)), (Measure_single "m"))))
+          (EConst
+             (Measure_float ((FFloat (Plus, 7.77)),
+                (Measure_single ("m", (Pow (FInt (Plus, 1)))))))),
+          (EConst
+             (Measure_float ((FFloat (Plus, 7.73)),
+                (Measure_single ("m", (Pow (FInt (Plus, 1))))))))
           ))
        )) |}]
 ;;
@@ -733,13 +762,15 @@ let%expect_test _ =
        (EApp (
           (EConst
              (Measure_float ((FFloat (Plus, 7.77)),
-                (Measure_multiple ((Measure_single "m"), Div,
-                   (Measure_single "cm")))
+                (Measure_multiple (
+                   (Measure_single ("m", (Pow (FInt (Plus, 1))))), Div,
+                   (Measure_single ("cm", (Pow (FInt (Plus, 1)))))))
                 ))),
           (EConst
              (Measure_float ((FFloat (Plus, 7.73)),
-                (Measure_multiple ((Measure_single "m"), Div,
-                   (Measure_single "cm")))
+                (Measure_multiple (
+                   (Measure_single ("m", (Pow (FInt (Plus, 1))))), Div,
+                   (Measure_single ("cm", (Pow (FInt (Plus, 1)))))))
                 )))
           ))
        )) |}]

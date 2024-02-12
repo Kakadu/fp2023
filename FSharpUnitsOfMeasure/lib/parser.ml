@@ -127,8 +127,12 @@ let parse_funit = stoken "()" *> return funit
 
 (* Parsing initialization measure single: [<Measure>] type m*)
 
+let parse_pow = take_empty *> lift (fun n -> Pow n) (string "^" *> parse_fint <|> return (FInt (Plus, 1)))
+
 let parse_measure_single = 
-  parse_id >>| fun x -> Measure_single x
+  lift2 (fun m p -> Measure_single (m, p))
+  parse_id
+  parse_pow
 ;;
 
 let parse_measure_type = 
@@ -153,15 +157,18 @@ let parse_float_measure_single =
 let parse_bin_op = take_empty *> (choice 
   [ 
     string "*" *> return Mul;
-    string "/" *> return Div
+    string "/" *> return Div;
+    (* string "^" *> lift (fun n -> Pow n) parse_fint *)
   ]) <|> return Mul
 ;;
+(* 
+let parse_pow = take_empty *> lift (fun n -> Pow n) parse_fint *)
 
 let parse_measure_multiple =
   fix (fun p ->
     lift3 (fun m1 op m2 -> Measure_multiple (m1, op, m2))
       parse_measure_single
-      parse_bin_op
+      parse_bin_op 
       p <|> parse_measure_single
   )
 ;;

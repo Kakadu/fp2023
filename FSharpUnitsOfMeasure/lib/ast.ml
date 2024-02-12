@@ -25,8 +25,11 @@ and measure_init =
   | Measure_multiple_init of measure_type * measure_type (** initialization [<Measure>] type speed = m/sec*)
 
 and measure_type =
-  | Measure_single of string (** single measure: <m>*)
+  | Measure_single of string * pow (** single measure: <m>*)
   | Measure_multiple of measure_type * binary_op * measure_type (** double measure: <m/sec>*)
+[@@deriving eq, show { with_path = false }]
+
+and pow = Pow of types(** ^ *)
 [@@deriving eq, show { with_path = false }]
 
 and binary_op =
