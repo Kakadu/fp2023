@@ -1105,14 +1105,14 @@ module InferenceTests = struct
               | [] -&gt; acc
               | (h :: tl) -&gt; (h :: acc) 
             in helper [] l |};
-    <span data-count="1">[</span>%expect {| val reverse : 'h list -&gt; 'h list |}<span data-count="5">]</span>
+    <span data-count="1">[</span>%expect {| val reverse : 'a list -&gt; 'a list |}<span data-count="5">]</span>
   ;;
 
   let%expect_test _ =
     <span data-count="1">i</span>nfer_test {|  let rec fix f = f (fix f) 
       |};
     <span data-count="1">[</span>%expect {| 
-          val fix : ('d -&gt; 'd) -&gt; 'd
+          val fix : ('a -&gt; 'a) -&gt; 'a
     |}<span data-count="5">]</span>
   ;;
 
@@ -1120,7 +1120,7 @@ module InferenceTests = struct
     <span data-count="1">i</span>nfer_test {|  let rec fix f x = f (fix f) x 
       |};
     <span data-count="1">[</span>%expect {| 
-          val fix : (('c -&gt; 'f) -&gt; 'c -&gt; 'f) -&gt; 'c -&gt; 'f
+          val fix : (('a -&gt; 'b) -&gt; 'a -&gt; 'b) -&gt; 'a -&gt; 'b
     |}<span data-count="5">]</span>
   ;;
 
@@ -1247,7 +1247,7 @@ module InferenceTests = struct
         match lst with 
           | [] -&gt; []
           | (x::xs) -&gt; f x :: map f xs |};
-    <span data-count="1">[</span>%expect {| val map : ('e -&gt; 'f) -&gt; 'e list -&gt; 'f list |}<span data-count="5">]</span>
+    <span data-count="1">[</span>%expect {| val map : ('a -&gt; 'b) -&gt; 'a list -&gt; 'b list |}<span data-count="5">]</span>
   ;;
 end
 
@@ -1310,7 +1310,7 @@ module InterpretTests = struct
       {| 
         val a : int = 5
         val fst : 'a * 'b -&gt; 'a = &lt;fun&gt;
-        val snd : 'c * 'd -&gt; 'd = &lt;fun&gt;
+        val snd : 'a * 'b -&gt; 'b = &lt;fun&gt;
       |}<span data-count="5">]</span>
   ;;
 end
