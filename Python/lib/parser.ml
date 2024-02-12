@@ -362,11 +362,6 @@ let gp_logic_ops = choice [ p_and; p_or ]
 
 (* Main parsers *)
 
-type dispatch =
-  { p_expression : dispatch -> expression t
-  ; p_statement : dispatch -> pseudo_statement t
-  }
-
 let p_setatter columns =
   let* className = t_setatter *> token "(" *> p_identifier in
   let* newMethodName = t_comma *> skip_whitespace *> p_identifier in
@@ -375,49 +370,47 @@ let p_setatter columns =
     (StatementWithColumns (columns, Setatter (className, newMethodName, methodItself)))
 ;;
 
-let p_exp_or_stmt =
-  let p_expression exp_or_stmt =
-    fix (fun p_expression ->
-      let expression_list = sep_by t_comma p_expression in
-      let exp =
-        let* ch1 = take_while is_whitespace_or_eol *> peek_char_fail in
-        match ch1 with
-        | x when is_valid_first_char x ->
-          choice
-            [ p_class_variable
-            ; p_func_call expression_list
-            ; p_method_call p_expression
-            ; p_field
-            ; p_fString
-            ; p_global_variable
-            ; anon_func p_expression
-            ]
-        | x when is_digit x -> p_integer
-        | '\"' -> p_string
-        | '[' -> p_list p_expression
-        | '(' -> round_brackets p_expression
-        | _ -> fail "unsupported expression"
-      in
-      List.fold_left
-        chainl1
-        exp
-        [ mp_high_pr_op; mp_low_pr_op; gp_comparison_ops; gp_logic_ops ])
-  in
-  let p_statement exp_or_stmt =
-    fix (fun p_statement ->
-      let* count_columns = many (string "\t" <|> string "    ") in
-      let columns = List.length count_columns in
-      p_assign (p_expression exp_or_stmt) columns
-      <|> p_if (p_expression exp_or_stmt) columns
-      <|> p_while (p_expression exp_or_stmt) columns
-      <|> p_func columns
-      <|> p_return (p_expression exp_or_stmt) columns
-      <|> p_class columns
-      <|> p_else columns
-      <|> p_setatter columns
-      <|> (p_expression exp_or_stmt >>| expression_with_columns columns))
-  in
-  { p_expression; p_statement }
+let p_expression =
+  fix (fun p_expression ->
+    let expression_list = sep_by t_comma p_expression in
+    let exp =
+      let* ch1 = take_while is_whitespace_or_eol *> peek_char_fail in
+      match ch1 with
+      | x when is_valid_first_char x ->
+        choice
+          [ p_class_variable
+          ; p_func_call expression_list
+          ; p_method_call p_expression
+          ; p_field
+          ; p_fString
+          ; p_global_variable
+          ; anon_func p_expression
+          ]
+      | x when is_digit x -> p_integer
+      | '\"' -> p_string
+      | '[' -> p_list p_expression
+      | '(' -> round_brackets p_expression
+      | _ -> fail "unsupported expression"
+    in
+    List.fold_left
+      chainl1
+      exp
+      [ mp_high_pr_op; mp_low_pr_op; gp_comparison_ops; gp_logic_ops ])
+;;
+
+let p_statement =
+  fix (fun _ ->
+    let* count_columns = many (string "\t" <|> string "    ") in
+    let columns = List.length count_columns in
+    p_assign p_expression columns
+    <|> p_if p_expression columns
+    <|> p_while p_expression columns
+    <|> p_func columns
+    <|> p_return p_expression columns
+    <|> p_class columns
+    <|> p_else columns
+    <|> p_setatter columns
+    <|> (p_expression >>| expression_with_columns columns))
 ;;
 
 let extract_body = function
@@ -472,7 +465,7 @@ let align_pseudo_statement pseudo_statement =
          (match h with
           | StatementWithColumns (columns2, _) when columns2 < columns1 ->
             fail "unsupported order of statemtns"
-          | StatementWithColumns (columns2, _) ->
+          | StatementWithColumns (_, _) ->
             helper (SpecialStatementWithColumns (columns1, body1) :: acc) tail
           | SpecialStatementWithColumns (columns2, body2) when columns2 > columns1 ->
             (match empty_body (extract_body body2) with
@@ -537,10 +530,7 @@ let remove_columns_and_join_elses list =
 let parse p s = parse_string ~consume:All p s
 
 let pyParser =
-  let* pseudo_statement =
-    take_while (fun c -> is_eol c)
-    *> sep_by t_eol (p_exp_or_stmt.p_statement p_exp_or_stmt)
-  in
+  let* pseudo_statement = take_while (fun c -> is_eol c) *> sep_by t_eol p_statement in
   let* intermediate_ast = align_pseudo_statement pseudo_statement in
   remove_columns_and_join_elses intermediate_ast
 ;;
@@ -551,7 +541,7 @@ let test_parse_res parser input =
   Angstrom.parse_string ~consume:Consume.Prefix parser input
 ;;
 
-let parser_tester parser show input =
+let parser_tester parser _ input =
   match test_parse_res parser input with
   | Result.Error _ -> Format.printf "Error"
   | Result.Ok statements ->
