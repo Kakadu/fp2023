@@ -793,6 +793,7 @@ let%test _ =
     false
 ;; 
  
+
 (* 
   let rec fib n = 
     if n <= 1 
@@ -838,7 +839,7 @@ let%test _ =
 (* measure test*)
 
 (* [<Measure>] type m *)
-let test = [ (EMeasure (Measure_init (Measure_single "m")))]
+let test = [ (EMeasure (Measure_init (Measure_single ("m", (Pow (FInt (Plus, 1)))))))]
 
 let%test _ =
   match run_test test with
@@ -856,15 +857,15 @@ let%test _ =
   7.77 <m> + 7.73 <m> 
 *)
 let test = [  
-  (EMeasure (Measure_init (Measure_single "m"))); 
+  (EMeasure (Measure_init (Measure_single ("m", (Pow (FInt (Plus, 1))))))); 
   (EApp ((EBinaryOp Add),
-    (EApp ((EConst (Measure_float ((FFloat (Plus, 7.77)), (Measure_single "m")))),
-      (EConst (Measure_float ((FFloat (Plus, 7.73)), (Measure_single "m"))))))
+    (EApp ((EConst (Measure_float ((FFloat (Plus, 7.77)), (Measure_single ("m", (Pow (FInt (Plus, 3)))))))),
+      (EConst (Measure_float ((FFloat (Plus, 7.73)), (Measure_single ("m", (Pow (FInt (Plus, 3))))))))))
 )) ]
 
 let%test _ =
   match run_test test with
-  | Ok (VFloatMeasure ((VFloat 15.5), ["m"])) -> true
+  | Ok (VFloatMeasure ((VFloat 15.5), ["m^3"])) -> true
   | Error t ->
     Format.printf "%a\n" print_error t;
     false
@@ -875,27 +876,27 @@ let%test _ =
 
 (* [<Measure>] type hz = m / sec * sm * luck / unluck*)
 let test = [ 
-  (EMeasure (Measure_init (Measure_single "sec")));
-  (EMeasure (Measure_init (Measure_single "m")));
-  (EMeasure (Measure_init (Measure_single "dm")));
+  (EMeasure (Measure_init (Measure_single ("sec", (Pow (FInt (Plus, 1)))))));
+  (EMeasure (Measure_init (Measure_single ("m", (Pow (FInt (Plus, 1)))))));
+  (EMeasure (Measure_init (Measure_single ("dm", (Pow (FInt (Plus, 1)))))));
   (EMeasure
-       (Measure_multiple_init ((Measure_single "speed"),
-          (Measure_multiple ((Measure_single "m"), Div,
-             (Measure_multiple ((Measure_single "sec"), Mul,
-                (Measure_single "dm")))
+       (Measure_multiple_init ((Measure_single( "speed", (Pow (FInt (Plus, 1))))),
+          (Measure_multiple ((Measure_single ("m", (Pow (FInt (Plus, 1))))), Div,
+             (Measure_multiple ((Measure_single ("sec", (Pow (FInt (Plus, 1))))), Mul,
+                (Measure_single ("dm", (Pow (FInt (Plus, 1)))))))
              ))
           )));
           (EApp ((EBinaryOp Add),
        (EApp (
           (EConst
              (Measure_float ((FFloat (Plus, 7.77)),
-                (Measure_multiple ((Measure_single "m"), Div,
-                   (Measure_single "dm")))
+                (Measure_multiple ((Measure_single ("m", (Pow (FInt (Plus, 1))))), Div,
+                   (Measure_single ("dm", (Pow (FInt (Plus, 1)))))))
                 ))),
           (EConst
              (Measure_float ((FFloat (Plus, 7.73)),
-                (Measure_multiple ((Measure_single "m"), Div,
-                   (Measure_single "dm")))
+                (Measure_multiple ((Measure_single ("m", (Pow (FInt (Plus, 1))))), Div,
+                   (Measure_single ("dm", (Pow (FInt (Plus, 1)))))))
                 )))
           ))
        ))
@@ -915,27 +916,17 @@ let%test _ =
 
 (* [<Measure>] type hz = m / sec * sm * luck / unluck*)
 let test = [ 
-  (EMeasure (Measure_init (Measure_single "sec")));
-  (EMeasure (Measure_init (Measure_single "m")));
+  (EMeasure (Measure_init (Measure_single ("sec", (Pow (FInt (Plus, 1)))))));
+  (EMeasure (Measure_init (Measure_single ("m", (Pow (FInt (Plus, 1)))))));
   (EMeasure
-       (Measure_multiple_init ((Measure_single "speed"),
-          (Measure_multiple ((Measure_single "m"), Div, (Measure_single "sec")))
-          )));
-          (EApp ((EBinaryOp Add),
-       (EApp (
-          (EConst
-             (Measure_float ((FFloat (Plus, 7.)),
-                (Measure_multiple ((Measure_single "m"), Div,
-                   (Measure_single "sec")))
-                ))),
-          (EConst (Measure_float ((FFloat (Plus, 7.)), (Measure_single "speed"))))
-          ))
-       ))
+       (Measure_multiple_init ((Measure_single ("speed", (Pow (FInt (Plus, 1))))),
+          (Measure_multiple ((Measure_single ("m", (Pow (FInt (Plus, 3))))), Div, (Measure_single ("sec", (Pow (FInt (Minus, 1)))))))
+          )))
 ]
 
 let%test _ =
   match run_test test with
-  | Ok (VFloatMeasure ((VFloat 14.), ["m"; "/"; "sec"])) -> true
+  | Ok (VMeasureList [("speed", ["m^3"; "/"; "sec^-1"]); ("m", ["m"]); ("sec", ["sec"])]) -> true
   | Error t ->
     Format.printf "%a\n" print_error t;
     false
@@ -946,28 +937,28 @@ let%test _ =
 
 (* [<Measure>] type hz = m / sec * sm * luck / unluck*)
 let test = [ 
-  (EMeasure (Measure_init (Measure_single "sec")));
-  (EMeasure (Measure_init (Measure_single "m")));
-  (EMeasure (Measure_init (Measure_single "dm")));
+  (EMeasure (Measure_init (Measure_single ("sec", (Pow (FInt (Plus, 1)))))));
+  (EMeasure (Measure_init (Measure_single ("m", (Pow (FInt (Plus, 1)))))));
+  (EMeasure (Measure_init (Measure_single ("dm", (Pow (FInt (Plus, 1)))))));
   (EMeasure
-    (Measure_multiple_init ((Measure_single "speed"),
-      (Measure_multiple ((Measure_single "m"), Div, (Measure_single "sec")))
+    (Measure_multiple_init ((Measure_single ("speed", (Pow (FInt (Plus, 1))))),
+      (Measure_multiple ((Measure_single ("m", (Pow (FInt (Plus, 1))))), Div, (Measure_single ("sec", (Pow (FInt (Plus, 1)))))))
       )));
   (EMeasure
-    (Measure_multiple_init ((Measure_single "sp"),
-        (Measure_multiple ((Measure_single "speed"), Mul, (Measure_single "dm")
+    (Measure_multiple_init ((Measure_single ("sp", (Pow (FInt (Plus, 1))))),
+        (Measure_multiple ((Measure_single ("speed", (Pow (FInt (Plus, 1))))), Mul, (Measure_single ("dm", (Pow (FInt (Plus, 1)))))
           ))
         )));
         (EApp ((EBinaryOp Add),
         (EApp (
            (EConst
               (Measure_float ((FFloat (Plus, 7.)),
-                 (Measure_multiple ((Measure_single "m"), Div,
-                    (Measure_multiple ((Measure_single "sec"), Mul,
-                       (Measure_single "dm")))
+                 (Measure_multiple ((Measure_single ("m", (Pow (FInt (Plus, 1))))), Div,
+                    (Measure_multiple ((Measure_single ("sec", (Pow (FInt (Plus, 1))))), Mul,
+                       (Measure_single ("dm", (Pow (FInt (Plus, 1)))))))
                     ))
                  ))),
-           (EConst (Measure_float ((FFloat (Plus, 7.)), (Measure_single "sp"))))))
+           (EConst (Measure_float ((FFloat (Plus, 7.)), (Measure_single ("sp", (Pow (FInt (Plus, 1))))))))))
         ))
 ]
 

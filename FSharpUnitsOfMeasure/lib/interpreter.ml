@@ -21,23 +21,6 @@ let measure_list = ref []
 module Interpret (M : FailMonad) = struct
   open M
 
-  let rec find_m2_from_measure_list measure_list element =
-    match measure_list with
-    | [] -> []
-    | (m1, m2) :: tl ->
-      if String.equal m1 element then
-        m2
-      else
-        find_m2_from_measure_list tl element
-  ;;
-      
-  let process_l1_with_measure_list l1 measure_list =
-    List.map ~f:(fun element -> if ((String.(<>) element "/") && (String.(<>) element "*")) then find_m2_from_measure_list measure_list element else [element]) l1
-  ;;
-
-  let flatten_string_lists lists =
-    List.concat (List.map ~f:(fun sublist -> sublist) lists)
-  ;;
   let search lst_ref element =
     let lst = !lst_ref in  (* Получаем обычный список кортежей из mutable списка *)
     let rec search_element list =
@@ -50,8 +33,17 @@ module Interpret (M : FailMonad) = struct
     search_element lst
   ;;
 
+  let remove_suffix_with_caret list =
+    List.map ~f:(fun str ->
+      match String.rindex str '^' with
+      | Some idx -> String.sub ~pos: 0 ~len: idx str
+      | None -> str
+    ) list
+  ;;
+
   let search_list measure_list str_list =
     let mlist = !measure_list in 
+    let str_listic = remove_suffix_with_caret str_list in
     let rec search_element mlist slist =
       match slist with 
       | [] -> true  (* Все элементы были найдены в списке *)
@@ -64,7 +56,7 @@ module Interpret (M : FailMonad) = struct
           else
             false
     in 
-    search_element mlist str_list
+    search_element mlist str_listic
   ;;
 
   let replace_value_in_ref_list lst_ref old_value new_value =
@@ -73,9 +65,9 @@ module Interpret (M : FailMonad) = struct
     lst_ref := updated_list
   ;;
   
-  let rec process_measure_multiple measure_list measure =
+  (* let rec process_measure_multiple measure_list measure =
     match measure with
-    | Measure_single m -> m :: measure_list
+    | Measure_single (m, _) -> m :: measure_list
     | Measure_multiple (m1, op, m2) ->
       let op_str op =
         match op with
@@ -84,21 +76,95 @@ module Interpret (M : FailMonad) = struct
       in
       let measure_list_with_op =  (op_str op) :: process_measure_multiple measure_list m2 in
       process_measure_multiple measure_list_with_op m1
+  ;; *)
+
+  let znak z = if z == Plus then 1 else -1
+
+  let rec process_measure_multiple list measure =
+    match measure with
+    | Measure_single (m, p) -> 
+      (match p with 
+        | Pow (FInt (Plus, 1)) -> m :: list
+        | Pow (FInt (z, n)) -> (m ^ "^" ^ Int.to_string (znak z * n)) :: list
+        | _ -> failwith "This type does not support this operator")
+    | Measure_multiple (m1, op, m2) ->
+      let op_str op =
+        (match op with
+        | Mul -> "*"  
+        | Div -> "/"
+        | _ -> failwith "This type does not support this operator")
+      in
+      let measure_list_with_op = (op_str op) :: process_measure_multiple list m2 in
+      process_measure_multiple measure_list_with_op m1
   ;;
 
+  (* Декомпозирует тип element *)
+  (* let rec find_m2_from_measure_list measure_list element =
+    match measure_list with
+    | [] -> []
+    | (m1, m2) :: tl ->
+      if String.equal m1 element then
+        m2
+      else
+        find_m2_from_measure_list tl element *)
+let rec find_m2_from_measure_list measure_list element =
+  let strip_caret str =
+    let caret_index = String.rindex str '^' in
+    match caret_index with
+    | Some idx -> String.sub ~pos: 0 ~len: idx str (* Убираем ^n из строки, если присутствует *)
+    | None -> str
+  in
+  let add_caret_to_list l n =
+    let caret_n = "^" ^ n in
+    List.map ~f: (fun elem -> elem ^ caret_n) l
+  in
+  let remove_prefix_before_caret str =
+    match String.rindex str '^' with
+    | Some caret_index ->
+      String.sub ~pos: (caret_index + 1) ~len: (String.length str - caret_index - 1) str
+    | None -> "" (* Возвращаем исходную строку, если символа ^ нет *)
+  in
+  match measure_list with
+  | [] -> []
+  | (m1, m2) :: tl ->
+    if String.equal m1 (strip_caret element) then 
+      let n = remove_prefix_before_caret element (* Пример числа n, можно прочитать его из строки element *)
+      in
+      if (String.(=) n "") then m2
+      else add_caret_to_list m2 n
+    else 
+      find_m2_from_measure_list tl element
+  ;;
+
+  (* Принимает список списков строк и объединяет их в один список строк *)
+  let flatten_string_lists lists =
+    List.concat (List.map ~f:(fun sublist -> sublist) lists)
+  ;;
+      
+  (* Декомпозирует все значения из списка *)
+  let process_l1_with_measure_list l1 measure_list =
+    List.map 
+      ~f:(fun element -> 
+        if ((String.(<>) element "/") && (String.(<>) element "*")) 
+          then find_m2_from_measure_list measure_list element 
+        else [element]) l1
+  ;;
+
+  (* Декомпозирует список до самого основания*)
   let rec mbase m1 measure_list =
-    let m3 = flatten_string_lists @@ process_l1_with_measure_list m1 !measure_list
+    let m3 = flatten_string_lists @@ process_l1_with_measure_list m1 measure_list
     in
     if Poly.(=) m3 m1
       then return @@ m3
     else mbase m3 measure_list
-    ;;
+  ;;
 
+  (* Сравнивает, равны ли списки декомпозированные до основания*)
   let meq m1 m2 measure_list =
     let m3 = mbase m1 measure_list
     in let m4 = mbase m2 measure_list
     in Poly.(=) m3 m4
-    ;;
+  ;;
 
   let link map links = 
     let linking map id value=
@@ -142,11 +208,11 @@ module Interpret (M : FailMonad) = struct
     | Div, VFloat l, VFloat r -> return @@ VFloat (l /. r)
     | Mod, VFloat l, VFloat r -> return @@ VFloat (l %. r)
     (* Measure to Measure operation *)
-    | Add, VFloatMeasure(VFloat vl, ml), VFloatMeasure(VFloat vr, mr) when (meq ml mr measure_list) -> return @@ VFloatMeasure (( VFloat(vl +. vr)), ml)
-    | Sub, VFloatMeasure(VFloat nl, ml), VFloatMeasure(VFloat nr, mr) when (meq ml mr measure_list) -> return @@ VFloatMeasure (( VFloat(nl -. nr)), ml) 
-    | Mul, VFloatMeasure(VFloat nl, ml), VFloatMeasure(VFloat nr, mr) when (meq ml mr measure_list) -> return @@ VFloatMeasure (( VFloat(nl *. nr)), ml)
-    | Div, VFloatMeasure(VFloat nl, ml), VFloatMeasure(VFloat nr, mr) when (meq ml mr measure_list) -> return @@ VFloatMeasure (( VFloat(nl /. nr)), ml)
-    | Mod, VFloatMeasure(VFloat nl, ml), VFloatMeasure(VFloat nr, mr) when (meq ml mr measure_list)-> return @@ VFloatMeasure (( VFloat(nl %. nr)), ml)
+    | Add, VFloatMeasure(VFloat vl, ml), VFloatMeasure(VFloat vr, mr) when (meq ml mr !measure_list) -> return @@ VFloatMeasure (( VFloat(vl +. vr)), ml)
+    | Sub, VFloatMeasure(VFloat nl, ml), VFloatMeasure(VFloat nr, mr) when (meq ml mr !measure_list) -> return @@ VFloatMeasure (( VFloat(nl -. nr)), ml) 
+    | Mul, VFloatMeasure(VFloat nl, ml), VFloatMeasure(VFloat nr, mr) when (meq ml mr !measure_list) -> return @@ VFloatMeasure (( VFloat(nl *. nr)), ml)
+    | Div, VFloatMeasure(VFloat nl, ml), VFloatMeasure(VFloat nr, mr) when (meq ml mr !measure_list) -> return @@ VFloatMeasure (( VFloat(nl /. nr)), ml)
+    | Mod, VFloatMeasure(VFloat nl, ml), VFloatMeasure(VFloat nr, mr) when (meq ml mr !measure_list)-> return @@ VFloatMeasure (( VFloat(nl %. nr)), ml)
     | _ -> fail UnsupportedOperation
   ;;
 
@@ -168,7 +234,11 @@ module Interpret (M : FailMonad) = struct
               ((s == Plus) && (fnum == vnum)) 
               || ((s == Minus) && (fnum *. -1. == vnum))
               ) -> return []
-        | Measure_float (_, Measure_single m1), VFloatMeasure (_, m2) when ([m1] == m2) -> return []
+        | Measure_float (_, Measure_single (m1, p)), VFloatMeasure (_, m2) ->
+        (match p with 
+          | (Pow (FInt (Plus, n))) when ([m1 ^ "^" ^ Int.to_string n] == m2)-> return []
+          | (Pow (FInt (Minus, n))) when ([m1 ^ "^" ^ Int.to_string (-1 * n)] == m2)-> return []
+          | _ -> fail UnexpectedPattern)
         | FUnit, VUnit -> return []
         | FNil, VList v ->
           (match v with
@@ -209,17 +279,17 @@ module Interpret (M : FailMonad) = struct
     match expr with
     | EMeasure m ->
       (match m with
-        | Measure_init (Measure_single m1) ->
-            if (search measure_list m1) 
-              then measure_list := !measure_list 
-            else measure_list := (m1, [m1]) :: !measure_list;  (* Добавляем новую пару в список measure *)
-            return @@ VMeasureList !measure_list  (* Возвращаем обновленный список VMeasureList *)
-        | Measure_multiple_init (Measure_single m1, m2) -> 
+        | Measure_init (Measure_single (m1, p)) ->
+            (match (search measure_list m1, p) with
+            | (true, Pow (FInt (Plus, 1))) -> measure_list := !measure_list ; return @@ VMeasureList !measure_list
+            | (false, Pow (FInt (Plus, 1))) ->  measure_list := (m1, [m1]) :: !measure_list; return @@ VMeasureList !measure_list
+            | _ -> fail Unreachable)
+        | Measure_multiple_init (Measure_single (m1, p), m2) -> 
             let m2  = process_measure_multiple [] m2 
             in
-            (match (search measure_list m1, search_list measure_list m2) with
-            | (true, true) -> replace_value_in_ref_list measure_list m1 m2; return @@ VMeasureList !measure_list
-            | (_, true) -> measure_list := (m1, m2) :: !measure_list; return @@ VMeasureList !measure_list
+            (match (search measure_list m1, search_list measure_list m2, p) with
+            | (true, true, Pow (FInt (Plus, 1))) -> replace_value_in_ref_list measure_list m1 m2; return @@ VMeasureList !measure_list
+            | (_, true, Pow (FInt (Plus, 1))) -> measure_list := (m1, m2) :: !measure_list; return @@ VMeasureList !measure_list
             | _ -> fail Unreachable)
         | _ -> fail Unreachable
       )
@@ -235,13 +305,17 @@ module Interpret (M : FailMonad) = struct
           (match s with
           | Plus -> VFloat f
           | Minus -> VFloat (-1.0 *. f))
-        | Measure_float (f, Measure_single m) ->
-          if (search measure_list m) 
-            then 
+        | Measure_float (f, Measure_single (m, p)) ->
+          (match (search measure_list m, p) with
+            | (true, Pow (FInt (Plus, 1))) -> 
+                let* f = eval_expr (EConst f) env []
+                in return @@ VFloatMeasure (f, [m])
+            | (true, Pow (FInt (z, n))) ->
               let* f = eval_expr (EConst f) env []
-              in
-              return @@ VFloatMeasure (f, [m]) 
-          else fail (UndefinedType m)
+                in
+                return @@ VFloatMeasure (f, [m ^ "^" ^ Int.to_string (znak z * n)])
+            |_ -> fail (UndefinedType m)
+          )
         | Measure_float (f, m) ->
           let m  = process_measure_multiple [] m in
           if (search_list measure_list m) 
