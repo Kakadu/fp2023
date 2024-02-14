@@ -505,15 +505,7 @@ let is_main_ = function
 ;;
 
 let ep_method_member =
-  ep_method_sign
-  >>= fun mt ->
-  lift2 (fun mt bd -> Method (mt, bd)) (return mt) ep_steps
-  >>= function
-  | Method (m, body) when maybe_main_ m ->
-    (match is_main_ m, m with
-     | true, { m_modif = _; m_type; _ } -> return (Main (m_type, body))
-     | false, _ -> fail "")
-  | m -> return m
+  ep_method_sign >>= fun mt -> lift2 (fun mt bd -> Method (mt, bd)) (return mt) ep_steps
 ;;
 
 let ep_constructor_member_ =

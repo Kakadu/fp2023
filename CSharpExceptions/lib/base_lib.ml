@@ -8,6 +8,8 @@ open Common_types
 open Interpret_converters
 open Monads.Eval
 
+let main_method = Id "Main"
+
 let pars_class str =
   match Parser.parse_ast str with
   | Result.Ok (Ast (x :: _)) -> Some x

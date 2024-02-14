@@ -141,7 +141,6 @@ let get_sign id el =
   | Fild (sign, _) -> is_fild sign id
   | Method (sign, _) -> is_method sign id
   | Constructor (sign, _) -> is_constructor sign id
-  | Main _ -> None
 ;;
 
 let get_class_member_sign cl_d el_id =
@@ -511,7 +510,10 @@ let memb_check = function
     (match e_opt with
      | Some e -> var_exp_check e (Fild_sig sign)
      | None -> return TP_Ok)
-  | Main (m_type, s) -> local_scope @@ (save_scope_tp (Some m_type) *> check_statement s)
+  | Method ({ m_modif; m_type; m_id }, s) when equal_ident Base_lib.main_method m_id ->
+    (match m_modif with
+     | Some MStatic -> local_scope @@ (save_scope_tp (Some m_type) *> check_statement s)
+     | _ -> fail (Type_check_error (Other "Main method can be used only with 'static'")))
   | Method ({ m_type; m_params }, s) ->
     local_scope
     @@ (save_scope_tp (Some m_type) *> add_params m_params *> check_statement s)
@@ -530,7 +532,9 @@ let default_cons id = create_cons_sign (Some MPublic) id (Params []) None
 let class_check cl_decl =
   let { cl_modif; cl_id; parent; cl_mems } = cl_decl in
   let is_main id msg =
-    if equal_ident id (Id "Main") then fail (Type_check_error (Other msg)) else return ()
+    if equal_ident id Base_lib.main_method
+    then fail (Type_check_error (Other msg))
+    else return ()
   in
   let is_class_main = is_main cl_id "Main cann't be a class" in
   let add_class cl_decl_update =
@@ -544,12 +548,13 @@ let class_check cl_decl =
            (Other "Only rudimentary class inheritance is supported from Exception class"))
   in
   let f = function
-    | Fild _ | Method _ -> return ()
-    | Main _ ->
+    | Fild _ -> return ()
+    | Method ({ m_id }, _) when equal_ident Base_lib.main_method m_id ->
       read_main_ctx
       >>= (function
-       | Some _ -> fail (Type_check_error (Double_definition (Id "Main")))
+       | Some _ -> fail (Type_check_error (Double_definition Base_lib.main_method))
        | None -> save_main_ctx (Some (Code_ident cl_id)))
+    | Method _ -> return ()
     | Constructor (sign, _) ->
       let { con_id } = sign in
       (match equal_ident con_id cl_id with
@@ -561,14 +566,14 @@ let class_check cl_decl =
   let mb_con = Constructor_sig (default_cons cl_id) in
   let cons = Constructor (default_cons cl_id, Steps []) in
   let cl_mems_new = cons :: cl_mems in
-  let add_constructor_and_main =
+  let add_constructor_and_find_main =
     iter_left f cl_mems
     *> (add_local cl_id mb_con
         *> return { cl_modif; cl_id; parent; cl_mems = cl_mems_new }
         <|> return cl_decl)
   in
   let g = function
-    | Main _ | Constructor _ -> return ()
+    | Constructor _ -> return ()
     | Fild (sign, _) ->
       let { f_id } = sign in
       add_local f_id (Fild_sig sign)
@@ -578,7 +583,7 @@ let class_check cl_decl =
   in
   let add_members = iter_left g cl_mems in
   let helper el = memb_check el *> return () in
-  is_class_main *> add_constructor_and_main
+  is_class_main *> add_constructor_and_find_main
   >>= fun x -> add_class x *> (local_scope @@ (add_members *> iter_left helper cl_mems))
 ;;
 

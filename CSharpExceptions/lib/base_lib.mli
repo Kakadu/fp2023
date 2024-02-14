@@ -67,5 +67,8 @@ val get_system_method_opt : code_ident -> ident -> (unit, 'a) t option
 val get_system_constr_opt : code_ident -> (address -> (unit, 'a) t) option
 val run_sys_constructor_or_normal : (address, 'a) t -> code_ident -> (address, 'a) t
 
+(* Main name *)
+val main_method : ident
+
 (** Get Ast of base lib *)
 val base_lib_decl : tast option

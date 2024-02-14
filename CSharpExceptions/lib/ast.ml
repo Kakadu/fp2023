@@ -151,7 +151,6 @@ type main_sign = meth_type [@@deriving show { with_path = false }]
 
 type class_member =
   | Fild of fild_sign * expr option
-  | Main of main_sign * statement
   | Method of method_sign * statement
   | Constructor of constructor_sign * statement
 [@@deriving show { with_path = false }]

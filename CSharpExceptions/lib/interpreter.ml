@@ -357,7 +357,8 @@ let interpret_ genv cl_id =
       let f res_opt el =
         match res_opt, el with
         | Some x, _ -> Some x
-        | None, Main (tp, body) -> Some (tp, body)
+        | None, Method (sign, body) when equal_ident Base_lib.main_method sign.m_id ->
+          Some (sign.m_type, body)
         | _ -> None
       in
       List.fold_left f None cl_decl.cl_mems
