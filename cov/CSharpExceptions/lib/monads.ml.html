@@ -1367,14 +1367,14 @@ module BaseSE_Monad = struct
   type ('st, 'a, 'err) t = 'st -&gt; 'st * ('a, 'err) Result.t
 
   let return : 'a -&gt; ('st, 'a, 'err) t = fun x st -&gt; <span data-count="24384">s</span>t, Result.o<span data-count="24384">k</span> x
-  let fail : 'err -&gt; ('st, 'a, 'err) t = fun er st -&gt; <span data-count="1161">s</span>t, Result.erro<span data-count="1161">r</span> er
+  let fail : 'err -&gt; ('st, 'a, 'err) t = fun er st -&gt; <span data-count="1209">s</span>t, Result.erro<span data-count="1209">r</span> er
 
   let ( &gt;&gt;= ) : ('st, 'a, 'err) t -&gt; ('a -&gt; ('st, 'b, 'err) t) -&gt; ('st, 'b, 'err) t =
     fun x f st -&gt;
-    <span data-count="28248">l</span>et st1, x1 = x st in
-    <span data-count="28248">m</span>atch x1 with
-    | <span data-count="26915">R</span>esult.Ok x -&gt; f x st1
-    | <span data-count="1333">R</span>esult.Error s -&gt; st1, Result.erro<span data-count="1333">r</span> s
+    <span data-count="28344">l</span>et st1, x1 = x st in
+    <span data-count="28344">m</span>atch x1 with
+    | <span data-count="26963">R</span>esult.Ok x -&gt; f x st1
+    | <span data-count="1381">R</span>esult.Error s -&gt; st1, Result.erro<span data-count="1381">r</span> s
   ;;
 
   let save : 'st -&gt; ('st, unit, 'err) t = fun new_ctx _ -&gt; <span data-count="923">n</span>ew_ctx, Result.o<span data-count="923">k</span> ()
@@ -1386,10 +1386,10 @@ module BaseSE_Monad = struct
 
   let ( &lt;|&gt; ) : ('st, 'a, 'err) t -&gt; ('st, 'a, 'err) t -&gt; ('st, 'a, 'err) t =
     fun a1 a2 st -&gt;
-    <span data-count="1705">l</span>et st, x = a1 st in
-    <span data-count="1705">m</span>atch x with
+    <span data-count="1753">l</span>et st, x = a1 st in
+    <span data-count="1753">m</span>atch x with
     | <span data-count="557">R</span>esult.Ok x -&gt; return x st
-    | <span data-count="1148">R</span>esult.Error _ -&gt; a2 st
+    | <span data-count="1196">R</span>esult.Error _ -&gt; a2 st
   ;;
 
   let lift2
@@ -1425,7 +1425,7 @@ module BaseSE_Monad = struct
   ;;
 
   let ( &gt;&gt;| ) : ('st, 'a, 'err) t -&gt; ('a -&gt; 'b) -&gt; ('st, 'b, 'err) t =
-    fun x f -&gt; <span data-count="1790">x</span> &gt;&gt;= fun x_res -&gt; <span data-count="788">r</span>eturn (<span data-count="788">f</span> x_res)
+    fun x f -&gt; <span data-count="1838">x</span> &gt;&gt;= fun x_res -&gt; <span data-count="788">r</span>eturn (<span data-count="788">f</span> x_res)
   ;;
 
   let map_left : ('a -&gt; ('st, 'b, 'err) t) -&gt; 'a list -&gt; ('st, 'b list, 'err) t =
@@ -1459,15 +1459,15 @@ module Type_check_Monad = struct
 
   let save_local : t_loc_env -&gt; unit t =
     fun l_env c_env -&gt;
-    <span data-count="818">l</span>et code, _, tp, main = c_env in
-    (code, l_env, tp, main), Result.o<span data-count="818">k</span> ()
+    <span data-count="866">l</span>et code, _, tp, main = c_env in
+    (code, l_env, tp, main), Result.o<span data-count="866">k</span> ()
   ;;
 
   let save_local_el : ident -&gt; t_env_value -&gt; unit t =
     fun id t_val c_env -&gt;
-    <span data-count="818">l</span>et _, local_env, _, _ = c_env in
+    <span data-count="866">l</span>et _, local_env, _, _ = c_env in
     let new_l = Ident_Map.add id t_val local_env in
-    <span data-count="818">s</span>ave_local new_l c_env
+    <span data-count="866">s</span>ave_local new_l c_env
   ;;
 
   let save_global : text -&gt; unit t =
@@ -1499,14 +1499,14 @@ module Type_check_Monad = struct
 
   let read_local_el : ident -&gt; t_env_value t =
     fun id c_env -&gt;
-    <span data-count="1429">l</span>et _, local_env, _, _ = c_env in
+    <span data-count="1477">l</span>et _, local_env, _, _ = c_env in
     match Ident_Map.find_opt id local_env with
     | <span data-count="611">S</span>ome x -&gt; return x c_env
-    | <span data-count="818">N</span>one -&gt; fail (Type_check_error (Not_find_ident id)) c_env
+    | <span data-count="866">N</span>one -&gt; fail (Type_check_error (Not_find_ident id)) c_env
   ;;
 
   let read_local_el_opt : ident -&gt; t_env_value option t =
-    fun id c_env -&gt; <span data-count="937">(</span>read_local_e<span data-count="937">l</span> id &gt;&gt;<span data-count="937">|</span> (fun x -&gt; <span data-count="119">S</span>ome x) &lt;|<span data-count="937">&gt;</span> retur<span data-count="937">n</span> None) c_env
+    fun id c_env -&gt; <span data-count="985">(</span>read_local_e<span data-count="985">l</span> id &gt;&gt;<span data-count="985">|</span> (fun x -&gt; <span data-count="119">S</span>ome x) &lt;|<span data-count="985">&gt;</span> retur<span data-count="985">n</span> None) c_env
   ;;
 
   let read_global_el : code_ident -&gt; code_ctx t =
@@ -1666,9 +1666,9 @@ module Eval_M_State_Extention = struct
   let find_cl_decl_meth id decl =
     <span data-count="197">l</span>et f acc el =
       <span data-count="690">l</span>et is_method (sign, body) =
-        <span data-count="69">m</span>atch sign with
-        | <span data-count="69">{</span> m_id } when equal_iden<span data-count="69">t</span> m_id id -&gt; <span data-count="23">S</span>ome (to_met<span data-count="23">h</span> sign body)
-        | <span data-count="46">_</span> -&gt; None
+        <span data-count="133">m</span>atch sign with
+        | <span data-count="133">{</span> m_id } when equal_iden<span data-count="133">t</span> m_id id -&gt; <span data-count="23">S</span>ome (to_met<span data-count="23">h</span> sign body)
+        | <span data-count="110">_</span> -&gt; None
       in
       let is_cons (sign, body) =
         <span data-count="197">m</span>atch sign with
@@ -1677,9 +1677,9 @@ module Eval_M_State_Extention = struct
       in
       match acc, el with
       | <span data-count="85">S</span>ome x, _ -&gt; Some x
-      | <span data-count="69">N</span>one, Method (sign, b) -&gt; is_method (sign, b)
+      | <span data-count="133">N</span>one, Method (sign, b) -&gt; is_method (sign, b)
       | <span data-count="197">N</span>one, Constructor (sign, b) -&gt; is_cons (sign, b)
-      | <span data-count="339">_</span> -&gt; None
+      | <span data-count="275">_</span> -&gt; None
     in
     List.fold_left f None decl.cl_mems
   ;;

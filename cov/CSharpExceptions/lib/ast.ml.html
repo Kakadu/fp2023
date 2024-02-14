@@ -18,9 +18,9 @@
       <h2>94.85%</h2>
     </div>
     <div id="navbar">
-      <span class="unvisited" style="top:6.59%"></span>
-      <span class="unvisited" style="top:26.35%"></span>
-      <span class="unvisited" style="bottom:10.18%"></span>
+      <span class="unvisited" style="top:6.63%"></span>
+      <span class="unvisited" style="top:26.51%"></span>
+      <span class="unvisited" style="bottom:9.64%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -180,18 +180,17 @@
 <a id="L153"></a><span class="visited"> </span>
 <a id="L154"></a><span > </span>
 <a id="L155"></a><span > </span>
-<a id="L156"></a><span > </span>
-<a id="L157"></a><span class="visited"> </span>
-<a id="L158"></a><span > </span>
+<a id="L156"></a><span class="visited"> </span>
+<a id="L157"></a><span > </span>
+<a id="L158"></a><span class="visited"> </span>
 <a id="L159"></a><span class="visited"> </span>
-<a id="L160"></a><span class="visited"> </span>
-<a id="L161"></a><span > </span>
+<a id="L160"></a><span > </span>
+<a id="L161"></a><span class="visited"> </span>
 <a id="L162"></a><span class="visited"> </span>
-<a id="L163"></a><span class="visited"> </span>
-<a id="L164"></a><span > </span>
-<a id="L165"></a><span class="visited"> </span>
-<a id="L166"></a><span > </span>
-<a id="L167"></a><span class="visited"> </span>
+<a id="L163"></a><span > </span>
+<a id="L164"></a><span class="visited"> </span>
+<a id="L165"></a><span > </span>
+<a id="L166"></a><span class="visited"> </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -362,7 +361,6 @@
 <a href="#L164">164</a>
 <a href="#L165">165</a>
 <a href="#L166">166</a>
-<a href="#L167">167</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2021-2023, Georgy Sichkar *)
 
@@ -378,7 +376,7 @@
   | VBool of boo<span data-count="8">l</span> (** Only logical operations are supported *)
 [@@deriving show { with_path = false }]
 
-<span data-count="1481">t</span>ype ident = <span data-count="2086">I</span>d of strin<span data-count="146">g</span> [@@deriving show { with_path = false }, eq]
+<span data-count="1926">t</span>ype ident = <span data-count="2976">I</span>d of strin<span data-count="146">g</span> [@@deriving show { with_path = false }, eq]
 
 (** {2 Declarations types} *)
 
@@ -517,7 +515,6 @@
 
 <span data-count="105">t</span>ype class_member =
   | Fild of fild_sign * <span data-count="30">e</span>xpr optio<span data-count="10">n</span>
-  | Main of main_sign * statement
   | Method of method_sign * statement
   | Constructor of constructor_sign * statement
 [@@deriving show { with_path = false }<span data-count="80">]</span>
