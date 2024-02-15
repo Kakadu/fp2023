@@ -4,7 +4,6 @@
 
 (** Interpretation error *)
 type error =
-  | ParsingError of string
   | ReadError of string
   | UnknownTable of string
   | UnknownColumn of string

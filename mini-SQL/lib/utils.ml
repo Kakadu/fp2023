@@ -3,7 +3,6 @@
 (** SPDX-License-Identifier: CC0-1.0 *)
 
 type error =
-  | ParsingError of string
   | ReadError of string
   | UnknownTable of string
   | UnknownColumn of string
@@ -15,7 +14,6 @@ type error =
   | IncorrectData of string
 
 let error_to_string = function
-  | ParsingError msg -> Format.sprintf "Error '%s' occurred during parsing" msg
   | ReadError msg -> Format.sprintf "Can't read data: '%s'" msg
   | UnknownTable msg -> Format.sprintf "Can't find table '%s'" msg
   | UnknownColumn msg -> Format.sprintf "Can't find column '%s'" msg

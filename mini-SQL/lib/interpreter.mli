@@ -41,7 +41,7 @@ type qot_node =
   | Project of qot_node * expr list
 
 module Eval : functor (M : Utils.MONAD_FAIL) -> sig
-    (** Runs evaluation of AST.request on a specific database *)
+  (** Runs evaluation of AST.request on a specific database *)
   val eval : string -> Ast.request -> (Types.Table.t, Utils.error) M.t
 end
 
