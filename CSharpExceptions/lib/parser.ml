@@ -2,8 +2,6 @@
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-(* TODO: implement parser here *)
-
 open Base
 open Angstrom
 open Ast
@@ -53,6 +51,7 @@ let is_keyword = function
   | "catch"
   | "finally"
   | "when"
+  | "throw"
   (*  *)
   | "null"
   | "void"
@@ -125,6 +124,13 @@ let p_bool =
   | false -> fail "Not a bool"
 ;;
 
+let p_null =
+  s_token
+  >>= function
+  | "null" -> return Null
+  | _ -> fail "Not a null"
+;;
+
 let p_ident =
   s_token
   >>= fun str ->
@@ -180,23 +186,31 @@ let p_kvar_type = p_keyword_type >>= fun x -> return (TVar x)
 
 let p_method_type =
   choice
-    ?failure_msg:(Some "Not a method_type")
-    [ (p_keyword_type >>= fun x -> return (TReturn x)); "void" #~> Void ]
+    [ (p_keyword_type >>= fun x -> return (TReturn x))
+    ; "void" #~> Void
+    ; (p_ident >>| fun x -> TReturn (TNullable (TClass x)))
+    ]
 ;;
 
 let ep_spaces prs = skip_spaces *> prs
 let ep_parens prs = ep_spaces @@ (char '(' *> prs) <* ep_spaces @@ char ')'
 let val_to_expr prs = ep_spaces prs >>| fun x -> EConst x
-let expr_to_statment expr = expr >>| fun x -> SExpr x
+let get_opt prs = prs >>| fun x -> Some x
+let expr_to_st expr = expr >>| fun x -> SExpr x
+let expr_to_opt_st expr = get_opt @@ expr_to_st expr
 let ep_figure_parens prs = ep_spaces @@ (char '{' *> prs) <* ep_spaces @@ char '}'
 let ep_number = val_to_expr p_number
 let ep_char = val_to_expr p_char
 let ep_string = val_to_expr p_string
 let ep_bool = val_to_expr p_bool
-let ep_identifier = ep_spaces p_ident >>= fun x -> return (EIdentifier x)
+let ep_null = val_to_expr p_null
+let ep_ident = ep_spaces p_ident
+let ep_identifier = ep_ident >>= fun x -> return (EIdentifier x)
 
 let ep_value =
-  choice ?failure_msg:(Some "Not a value") [ ep_bool; ep_char; ep_number; ep_string ]
+  choice
+    ?failure_msg:(Some "Not a value")
+    [ ep_bool; ep_char; ep_number; ep_string; ep_null ]
 ;;
 
 let ep_dot = ep_spaces @@ (char '.' *> return (fun e1 e2 -> EPoint_access (e1, e2)))
@@ -209,7 +223,7 @@ let ep_list_from_ ep_arg =
 
 let ep_invoke_ meth_ident ep_arg =
   ep_list_from_ ep_arg
-  >>= (fun exp -> return (Params exp))
+  >>= (fun exp -> return (Args exp))
   >>| fun args -> EMethod_invoke (meth_ident, args)
 ;;
 
@@ -219,7 +233,7 @@ let ep_method_fild_ ep_arg =
   ep_member_ident >>= fun id -> ep_invoke_ id ep_arg <|> return id
 ;;
 
-let ep_var_decl_ tp = skip_spaces1 *> p_ident >>| fun id -> Var_decl (TVariable tp, id)
+let ep_var_decl_ tp = skip_spaces1 *> p_ident >>| fun id -> Var_decl (tp, id)
 
 let ep_var_type_ =
   ep_spaces
@@ -235,6 +249,8 @@ let ep_var_decl =
        [ p_kvar_type; (p_ident >>| fun cl -> TVar (TNullable (TClass cl))) ]
   >>= ep_var_decl_
 ;;
+
+(* Bin_op & un_op parsing *)
 
 let ( |-> ) op tp = ep_spaces @@ (string op *> return tp)
 let ( =>| ) op tp = op |-> tp >>| fun tp a -> EUn_op (tp, a)
@@ -262,9 +278,7 @@ let ( -<< ) lvl ps_list = chainr1 lvl (choice ps_list)
 
 let ep_operation =
   fix (fun expr ->
-    let lvl1 =
-      choice [ (* TODO: ep_cast expr ;*) ep_parens expr; ep_value; ep_method_fild_ expr ]
-    in
+    let lvl1 = choice [ ep_parens expr; ep_value; ep_method_fild_ expr ] in
     let lvl2 = lvl1 >- [ ep_un_minus; ep_new; ep_not ] in
     let lvl3 = lvl2 >>- [ ( *^ ); ( /^ ); ( %^ ) ] in
     let lvl4 = lvl3 >>- [ ( +^ ); ( -^ ) ] in
@@ -275,8 +289,16 @@ let ep_operation =
     lvl8 -<< [ ( =^ ) ])
 ;;
 
-let ep_assign = lift3 (fun ident eq ex -> eq ident ex) ep_identifier ( =^ ) ep_operation
+let ep_assign =
+  lift3
+    (fun ident eq ex -> eq ident ex)
+    (ep_member_ident <|> ep_identifier)
+    ( =^ )
+    ep_operation
+;;
+
 let ep_method_invoke = ep_method_invoke_ ep_operation
+let ep_st_operation = expr_to_st @@ choice [ ep_assign; ep_method_invoke ]
 
 let ep_decl =
   lift2
@@ -295,30 +317,11 @@ let ep_return =
     (ep_operation >>= (fun x -> return (Some x)) <|> return None)
 ;;
 
-let ep_is_ kw ~then_:ps = ep_keyword_ kw *> ps
-
-let ep_if_cond_ =
-  let p_cond = ep_parens ep_operation in
-  ep_is_ "if" ~then_:p_cond
+let ep_throw =
+  lift2 (fun _ ex -> SThrow ex) (ep_keyword_ "throw") (ep_operation >>= fun x -> return x)
 ;;
 
-let ep_else_cond_ ep_body ep_ifls =
-  choice
-    ?failure_msg:(Some "It isn't ELSE or ELSE IF")
-    [ ep_is_ "else" ~then_:ep_ifls; ep_is_ "else" ~then_:ep_body ]
-  >>= (fun else_ -> return (Some else_))
-  <|> return None
-;;
-
-let ep_if_else_ ep_body =
-  fix (fun if_else ->
-    let else_ = ep_else_cond_ ep_body if_else in
-    lift3 (fun cond body else_ -> SIf_else (cond, body, else_)) ep_if_cond_ ep_body else_)
-;;
-
-let ep_brunch_loop_ ep_body =
-  choice ?failure_msg:(Some "It isn't IF or ...") [ ep_if_else_ ep_body ]
-;;
+(* Loops and brunches parsing *)
 
 let ep_skip_semicolon_ = ep_spaces @@ char ';'
 
@@ -327,6 +330,93 @@ let ep_semicolon1_ ps =
 ;;
 
 let ep_semicolon_ ps = ep_semicolon1_ ps <|> ps
+let ep_is_ kw ~then_:ps = ep_keyword_ kw *> ps
+
+let ep_if_cond_ =
+  let p_cond = ep_parens ep_operation in
+  ep_is_ "if" ~then_:p_cond
+;;
+
+let ep_else_cond_ ep_body ep_ifls =
+  get_opt
+    (choice
+       ?failure_msg:(Some "It isn't ELSE or ELSE IF")
+       [ ep_is_ "else" ~then_:ep_ifls; ep_is_ "else" ~then_:ep_body ])
+  <|> return None
+;;
+
+let ep_if_else ep_body =
+  fix (fun if_else ->
+    let p_body = ep_body <|> ep_semicolon1_ ep_st_operation in
+    let else_ = ep_else_cond_ p_body if_else in
+    lift3 (fun cond body else_ -> SIf_else (cond, body, else_)) ep_if_cond_ p_body else_)
+;;
+
+let ep_while ep_body =
+  let p_body = ep_body <|> ep_semicolon1_ ep_st_operation in
+  let p_cond = ep_parens ep_operation in
+  let p_while = ep_is_ "while" ~then_:p_cond in
+  lift2 (fun cond body -> SWhile (cond, body)) p_while p_body
+;;
+
+let ep_for ep_body =
+  let p_body = ep_body <|> ep_semicolon1_ ep_st_operation in
+  let p_init = option None (get_opt ep_decl <|> expr_to_opt_st ep_assign) in
+  let p_expr = option None (get_opt ep_operation) in
+  let p_for =
+    lift2
+      (fun (f_init_p, f_cond_p, f_iter_p) f_body ->
+        SFor { f_init_p; f_cond_p; f_iter_p; f_body })
+      (ep_parens
+       @@ lift3
+            (fun init cond incr -> init, cond, incr)
+            (p_init <* ep_spaces (char ';'))
+            (p_expr <* ep_spaces (char ';'))
+            p_expr)
+      p_body
+  in
+  ep_is_ "for" ~then_:p_for
+;;
+
+let ep_brunch_loop_ ep_body =
+  choice
+    ?failure_msg:(Some "It isn't LOOP or BRANCH or ...")
+    [ ep_if_else ep_body; ep_while ep_body; ep_for ep_body ]
+;;
+
+let ep_try_block_ ep_body = ep_is_ "try" ~then_:ep_body
+
+let ep_catch_block_ ep_body =
+  let cdecl x = return (CDecl x) in
+  let cident x = return (CExn_id x) in
+  let p_filter = option None (get_opt @@ ep_is_ "when" ~then_:(ep_parens ep_operation)) in
+  let p_cond =
+    lift2
+      (fun decl filter -> Some (decl, filter))
+      (ep_parens @@ (ep_var_decl >>= cdecl <|> (ep_ident >>= cident)))
+      p_filter
+  in
+  let p_catch = p_cond <|> ep_parens (return None) <|> return None in
+  lift2 (fun cond body -> cond, body) (ep_is_ "catch" ~then_:p_catch) ep_body
+;;
+
+let ep_catch_blocks_ ep_body =
+  fix (fun ep_block ->
+    ep_catch_block_ ep_body
+    >>= fun x -> ep_block <|> return [] >>= fun tl -> return (x :: tl))
+;;
+
+let ep_fin_block_ ep_body = ep_is_ "finally" ~then_:ep_body
+
+let ep_try_catch_fin_ ep_body =
+  lift3
+    (fun try_s catch_s finally_s -> STry_catch_fin { try_s; catch_s; finally_s })
+    (ep_try_block_ ep_body)
+    (option None (get_opt @@ ep_catch_blocks_ ep_body))
+    (option None (get_opt @@ ep_fin_block_ ep_body))
+;;
+
+(* Steps parsing (steps - is a sequence of actions inside {...}) *)
 
 let ep_steps =
   fix (fun steps ->
@@ -335,23 +425,28 @@ let ep_steps =
     let body_step =
       choice
         [ step ep_decl
-        ; step @@ expr_to_statment ep_method_invoke
-        ; step @@ expr_to_statment ep_assign
         ; step ep_break
         ; step ep_return
+        ; step ep_throw
+        ; step ep_st_operation
         ; op_step @@ ep_brunch_loop_ steps
+        ; op_step @@ ep_try_catch_fin_ steps
         ]
     in
     ep_figure_parens @@ many body_step >>| fun bd -> Steps bd)
 ;;
 
 let ep_brunch_loop = ep_brunch_loop_ ep_steps
-let ep_args_ = ep_list_from_ ep_var_decl >>= fun exp -> return (Args exp)
-let ep_modifier_ p_mod = option None (ep_spaces p_mod >>= fun x -> return (Some x))
+let ep_try_catch_fin = ep_try_catch_fin_ ep_steps
+
+(* Class members parsing *)
+
+let ep_args_ = ep_list_from_ ep_var_decl >>= fun exp -> return (Params exp)
+let ep_modifier_ p_mod = option None (ep_spaces @@ get_opt p_mod)
 
 let ep_method_sign =
   lift4
-    (fun m_modif m_type m_id m_args -> { m_modif; m_type; m_id; m_args })
+    (fun m_modif m_type m_id m_params -> { m_modif; m_type; m_id; m_params })
     (ep_modifier_ p_method_modifier)
     (ep_spaces p_method_type)
     (ep_spaces p_ident)
@@ -361,11 +456,11 @@ let ep_method_sign =
 let ep_constructor_sign =
   let ep_base_cons =
     ep_spaces @@ (char ':' *> ep_is_ "base" ~then_:(ep_list_from_ ep_operation))
-    >>| fun x -> Some (Params x)
+    >>| fun x -> Some (Args x)
   in
   lift4
-    (fun con_modif con_id con_args base_params ->
-      { con_modif; con_id; con_args; base_params })
+    (fun con_modif con_id con_params base_args ->
+      { con_modif; con_id; con_params; base_args })
     (ep_modifier_ p_access_modifier)
     (ep_spaces p_ident)
     ep_args_
@@ -373,9 +468,9 @@ let ep_constructor_sign =
 ;;
 
 let ep_fild_sign =
-  let f_value = ep_spaces (char '=') *> ep_operation >>| fun x -> Some x in
+  let f_value = ep_spaces (char '=') *> get_opt ep_operation in
   lift4
-    (fun f_modif f_type f_id f_val -> { f_modif; f_type; f_id; f_val })
+    (fun f_modif f_type f_id f_val -> { f_modif; f_type; f_id }, f_val)
     (ep_modifier_ p_fild_modifier)
     (ep_spaces ep_var_type_)
     (ep_spaces p_ident)
@@ -400,32 +495,24 @@ let is_main_mod_ = function
 ;;
 
 let is_main_args_ = function
-  | Args x -> List.is_empty x
+  | Params x -> List.is_empty x
 ;;
 
 let is_main_ = function
-  | { m_modif; m_type; m_args; _ }
-    when is_main_mod_ m_modif && is_main_type_ m_type && is_main_args_ m_args -> true
+  | { m_modif; m_type; m_params; _ }
+    when is_main_mod_ m_modif && is_main_type_ m_type && is_main_args_ m_params -> true
   | _ -> false
 ;;
 
 let ep_method_member =
-  ep_method_sign
-  >>= fun mt ->
-  lift2 (fun mt bd -> Method (mt, bd)) (return mt) ep_steps
-  >>= function
-  | Method (m, body) when maybe_main_ m ->
-    (match is_main_ m with
-     | true -> return (Main body)
-     | false -> fail "")
-  | m -> return m
+  ep_method_sign >>= fun mt -> lift2 (fun mt bd -> Method (mt, bd)) (return mt) ep_steps
 ;;
 
 let ep_constructor_member_ =
   lift2 (fun con_sign body_ -> Constructor (con_sign, body_)) ep_constructor_sign ep_steps
 ;;
 
-let ep_fild_member_ = ep_fild_sign >>| fun x -> Fild x
+let ep_fild_member_ = ep_fild_sign >>| fun (x, e_opt) -> Fild (x, e_opt)
 
 let ep_class_members =
   let member = choice [ ep_method_member; ep_fild_member_; ep_constructor_member_ ] in
@@ -433,7 +520,7 @@ let ep_class_members =
 ;;
 
 let ep_class =
-  let p_parent = ep_spaces @@ (char ':' *> skip_spaces *> p_ident) >>| fun x -> Some x in
+  let p_parent = ep_spaces @@ get_opt (char ':' *> skip_spaces *> p_ident) in
   let class_id = ep_spaces @@ ep_is_ "class" ~then_:(ep_spaces p_ident) in
   lift4
     (fun cl_modif cl_id parent cl_mems -> { cl_modif; cl_id; parent; cl_mems })
