@@ -1,10 +1,35 @@
 (executable
- (name demoFact)
- (modules demoFact)
- (public_name demoFact)
- (libraries ocamladt_lib)
+ (name demoParse)
+ (modules demoParse)
+ (public_name demoParse)
+ (libraries ocamladt_lib stdio)
+ (instrumentation
+  (backend bisect_ppx)))
+
+(executable
+ (name demoInterpret)
+ (modules demoInterpret)
+ (public_name demoInterpret)
+ (libraries ocamladt_lib stdio)
+ (instrumentation
+  (backend bisect_ppx)))
+
+(executable
+ (name demoInference)
+ (modules demoInference)
+ (public_name demoInference)
+ (libraries ocamladt_lib stdio)
  (instrumentation
   (backend bisect_ppx)))
 
 (cram
- (deps %{bin:demoFact}))
+ (applies_to demoParse)
+ (deps ./demoParse.exe))
+
+(cram
+ (applies_to demoInference)
+ (deps ./demoInference.exe))
+
+(cram
+ (applies_to demoInterpret)
+ (deps ./demoInterpret.exe))
