@@ -4,11 +4,10 @@
 
 open Lib.Interpreter.Eval (Lib.Utils.Result)
 
-let base = "path_to_testdata";;
-
 let () =
+  let base = Sys.argv.(1) in
   let inp = Stdio.In_channel.input_all Caml.stdin in
-  Format.printf "%s\n" (Sys.getcwd ()); match Lib.Parser.parse inp with
+  match Lib.Parser.parse inp with
   | Result.Ok x ->
     (match eval base x with
      | Ok table -> Format.printf "%s\n" (Lib.Types.Table.show_table table)

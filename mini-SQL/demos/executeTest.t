@@ -1,4 +1,4 @@
-  $ ./demoInterpret.exe <<-EOF
+  $ ./demoInterpret.exe ../../../../../test_data/data <<-EOF
   > SELECT table0.id, table0.age, table0.firstname, table1.id, table1.age, table1.firstname FROM ((table0 INNER JOIN table1 ON table1.age = table0.age) FULL JOIN table2 ON table0.id = table2.id) WHERE table0.id > 10 AND table2.id > 5
   +------------+
    result table 
