@@ -45,4 +45,4 @@ and fun_rec =
   | Rec
   | NoRec
 
-type program = expression list [@@deriving show { with_path = false }]
+type expr_list = expression list [@@deriving show { with_path = false }]
