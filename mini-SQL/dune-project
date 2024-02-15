@@ -21,6 +21,7 @@
   "Mini-SQL interpreter. Language includes keywords: SELECT, JOIN, WHERE.")
  (version 1)
  (depends
+  csv
   dune
   angstrom
   (ppx_inline_test :with-test)
