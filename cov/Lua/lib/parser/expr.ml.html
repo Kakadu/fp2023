@@ -214,50 +214,50 @@ open Angstrom
 open Ast
 open Common
 
-let parse_true = strin<span data-count="4">g</span> "true" *<span data-count="4">&gt;</span> retur<span data-count="4">n</span> Exp_true
-let parse_false = strin<span data-count="4">g</span> "false" *<span data-count="4">&gt;</span> retur<span data-count="4">n</span> Exp_false
-let parse_nil = strin<span data-count="4">g</span> "nil" *<span data-count="4">&gt;</span> retur<span data-count="4">n</span> Exp_nil
+let parse_true = strin<span data-count="5">g</span> "true" *<span data-count="5">&gt;</span> retur<span data-count="5">n</span> Exp_true
+let parse_false = strin<span data-count="5">g</span> "false" *<span data-count="5">&gt;</span> retur<span data-count="5">n</span> Exp_false
+let parse_nil = strin<span data-count="5">g</span> "nil" *<span data-count="5">&gt;</span> retur<span data-count="5">n</span> Exp_nil
 
 let parse_string =
-  strin<span data-count="4">g</span> "\"" *<span data-count="4">&gt;</span> many_til<span data-count="4">l</span> any_char (strin<span data-count="4">g</span> "\"")
-  &gt;&gt;<span data-count="4">=</span> fun str -&gt; <span data-count="4">r</span>eturn (Exp_string (Base.String.of_char_lis<span data-count="4">t</span> str))
+  strin<span data-count="5">g</span> "\"" *<span data-count="5">&gt;</span> many_til<span data-count="5">l</span> any_char (strin<span data-count="5">g</span> "\"")
+  &gt;&gt;<span data-count="5">=</span> fun str -&gt; <span data-count="4">r</span>eturn (Exp_string (Base.String.of_char_lis<span data-count="4">t</span> str))
 ;;
 
 let parse_number =
-  take_whil<span data-count="4">e</span> (function
-    | <span data-count="80">'</span>0' .. '9' | <span data-count="0">'</span>.' | <span data-count="0">'</span>-' -&gt; true
-    | <span data-count="85">_</span> -&gt; false)
-  &gt;&gt;<span data-count="4">=</span> fun s -&gt;
-  <span data-count="89">t</span>ry retur<span data-count="55">n</span> (Exp_number (Float.of_strin<span data-count="55">g</span> s)) with
-  | <span data-count="34">I</span>nvalid_argument _ -&gt; fail "not a number"
+  take_whil<span data-count="5">e</span> (function
+    | <span data-count="85">'</span>0' .. '9' | <span data-count="0">'</span>.' | <span data-count="0">'</span>-' -&gt; true
+    | <span data-count="94">_</span> -&gt; false)
+  &gt;&gt;<span data-count="5">=</span> fun s -&gt;
+  <span data-count="98">t</span>ry retur<span data-count="59">n</span> (Exp_number (Float.of_strin<span data-count="59">g</span> s)) with
+  | <span data-count="39">I</span>nvalid_argument _ -&gt; fail "not a number"
 ;;
 
-let parse_explhs = parse_ident &gt;&gt;<span data-count="4">|</span> fun lhs -&gt; <span data-count="65">E</span>xp_lhs lhs
+let parse_explhs = parse_ident &gt;&gt;<span data-count="5">|</span> fun lhs -&gt; <span data-count="75">E</span>xp_lhs lhs
 
 let parse_function parse_block =
-  <span data-count="18">l</span>et parse_idents =
-    strin<span data-count="18">g</span> "(" *<span data-count="18">&gt;</span> sep_b<span data-count="18">y</span> (ws *<span data-count="18">&gt;</span> strin<span data-count="18">g</span> "," *<span data-count="18">&gt;</span> ws) parse_ident &lt;* strin<span data-count="18">g</span> ")"
+  <span data-count="20">l</span>et parse_idents =
+    strin<span data-count="20">g</span> "(" *<span data-count="20">&gt;</span> sep_b<span data-count="20">y</span> (ws *<span data-count="20">&gt;</span> strin<span data-count="20">g</span> "," *<span data-count="20">&gt;</span> ws) parse_ident &lt;* strin<span data-count="20">g</span> ")"
   in
-  <span data-count="18">l</span>ift2
+  <span data-count="20">l</span>ift2
     (fun idents bl -&gt; <span data-count="1">E</span>xp_function (idents, bl))
-    (ws *<span data-count="18">&gt;</span> strin<span data-count="18">g</span> "function" *<span data-count="18">&gt;</span> ws *<span data-count="18">&gt;</span> parse_idents)
-    (parse_block &lt;<span data-count="18">*</span> strin<span data-count="18">g</span> "end")
+    (ws *<span data-count="20">&gt;</span> strin<span data-count="20">g</span> "function" *<span data-count="20">&gt;</span> ws *<span data-count="20">&gt;</span> parse_idents)
+    (parse_block &lt;<span data-count="20">*</span> strin<span data-count="20">g</span> "end")
 ;;
 
 let parse_apply pexpr =
-  <span data-count="19">l</span>ift2
+  <span data-count="22">l</span>ift2
     (fun e1 e2 -&gt; <span data-count="5">C</span>all (e1, e2))
-    (ws *<span data-count="19">&gt;</span> parse_explhs &lt;<span data-count="19">*</span> ws &lt;<span data-count="19">*</span> strin<span data-count="19">g</span> "(")
-    (sep_b<span data-count="19">y</span> (strin<span data-count="19">g</span> ",") (ws *<span data-count="19">&gt;</span> pexpr) &lt;<span data-count="19">*</span> strin<span data-count="19">g</span> ")")
+    (ws *<span data-count="22">&gt;</span> parse_explhs &lt;<span data-count="22">*</span> ws &lt;<span data-count="22">*</span> strin<span data-count="22">g</span> "(")
+    (sep_b<span data-count="22">y</span> (strin<span data-count="22">g</span> ",") (ws *<span data-count="22">&gt;</span> pexpr) &lt;<span data-count="22">*</span> strin<span data-count="22">g</span> ")")
 ;;
 
-let parse_expcall pexpr = <span data-count="17">p</span>arse_appl<span data-count="17">y</span> pexpr &gt;&gt;| fun e1 -&gt; <span data-count="4">E</span>xp_call e1
+let parse_expcall pexpr = <span data-count="19">p</span>arse_appl<span data-count="19">y</span> pexpr &gt;&gt;| fun e1 -&gt; <span data-count="4">E</span>xp_call e1
 
 let parse_single_expr pblock pexpr =
-  <span data-count="17">w</span>s
-  *&gt; choic<span data-count="17">e</span>
-       [ parse_functio<span data-count="17">n</span> pblock
-       ; parse_expcal<span data-count="17">l</span> pexpr
+  <span data-count="19">w</span>s
+  *&gt; choic<span data-count="19">e</span>
+       [ parse_functio<span data-count="19">n</span> pblock
+       ; parse_expcal<span data-count="19">l</span> pexpr
        ; parse_false
        ; parse_true
        ; parse_nil
@@ -267,31 +267,31 @@ let parse_single_expr pblock pexpr =
        ]
 ;;
 
-let pmul = strin<span data-count="4">g</span> "*" *<span data-count="4">&gt;</span> retur<span data-count="4">n</span> (fun x y -&gt; <span data-count="5">E</span>xp_op (Op_mul, x, y))
-let pdiv = strin<span data-count="4">g</span> "/" *<span data-count="4">&gt;</span> retur<span data-count="4">n</span> (fun x y -&gt; <span data-count="1">E</span>xp_op (Op_div, x, y))
-let padd = strin<span data-count="4">g</span> "+" *<span data-count="4">&gt;</span> retur<span data-count="4">n</span> (fun x y -&gt; <span data-count="3">E</span>xp_op (Op_add, x, y))
-let psub = strin<span data-count="4">g</span> "-" *<span data-count="4">&gt;</span> retur<span data-count="4">n</span> (fun x y -&gt; <span data-count="7">E</span>xp_op (Op_sub, x, y))
-let pmod = strin<span data-count="4">g</span> "%" *<span data-count="4">&gt;</span> retur<span data-count="4">n</span> (fun x y -&gt; <span data-count="1">E</span>xp_op (Op_mod, x, y))
-let pcon = strin<span data-count="4">g</span> ".." *<span data-count="4">&gt;</span> retur<span data-count="4">n</span> (fun x y -&gt; <span data-count="0">E</span>xp_op (Op_concat, x, y))
-let peq = strin<span data-count="4">g</span> "==" *<span data-count="4">&gt;</span> retur<span data-count="4">n</span> (fun x y -&gt; <span data-count="4">E</span>xp_op (Op_eq, x, y))
-let pneq = strin<span data-count="4">g</span> "~=" *<span data-count="4">&gt;</span> retur<span data-count="4">n</span> (fun x y -&gt; <span data-count="2">E</span>xp_op (Op_neq, x, y))
-let plt = strin<span data-count="4">g</span> "&lt;" *<span data-count="4">&gt;</span> retur<span data-count="4">n</span> (fun x y -&gt; <span data-count="1">E</span>xp_op (Op_lt, x, y))
-let pgt = strin<span data-count="4">g</span> "&gt;" *<span data-count="4">&gt;</span> retur<span data-count="4">n</span> (fun x y -&gt; <span data-count="2">E</span>xp_op (Op_lt, y, x))
-let ple = strin<span data-count="4">g</span> "&lt;=" *<span data-count="4">&gt;</span> retur<span data-count="4">n</span> (fun x y -&gt; <span data-count="2">E</span>xp_op (Op_le, x, y))
-let pge = strin<span data-count="4">g</span> "&gt;=" *<span data-count="4">&gt;</span> retur<span data-count="4">n</span> (fun x y -&gt; <span data-count="1">E</span>xp_op (Op_le, y, x))
-let pand = strin<span data-count="4">g</span> "and" *<span data-count="4">&gt;</span> retur<span data-count="4">n</span> (fun x y -&gt; <span data-count="1">E</span>xp_op (Op_and, x, y))
-let por = strin<span data-count="4">g</span> "or" *<span data-count="4">&gt;</span> retur<span data-count="4">n</span> (fun x y -&gt; <span data-count="1">E</span>xp_op (Op_or, x, y))
+let pmul = strin<span data-count="5">g</span> "*" *<span data-count="5">&gt;</span> retur<span data-count="5">n</span> (fun x y -&gt; <span data-count="6">E</span>xp_op (Op_mul, x, y))
+let pdiv = strin<span data-count="5">g</span> "/" *<span data-count="5">&gt;</span> retur<span data-count="5">n</span> (fun x y -&gt; <span data-count="1">E</span>xp_op (Op_div, x, y))
+let padd = strin<span data-count="5">g</span> "+" *<span data-count="5">&gt;</span> retur<span data-count="5">n</span> (fun x y -&gt; <span data-count="4">E</span>xp_op (Op_add, x, y))
+let psub = strin<span data-count="5">g</span> "-" *<span data-count="5">&gt;</span> retur<span data-count="5">n</span> (fun x y -&gt; <span data-count="7">E</span>xp_op (Op_sub, x, y))
+let pmod = strin<span data-count="5">g</span> "%" *<span data-count="5">&gt;</span> retur<span data-count="5">n</span> (fun x y -&gt; <span data-count="1">E</span>xp_op (Op_mod, x, y))
+let pcon = strin<span data-count="5">g</span> ".." *<span data-count="5">&gt;</span> retur<span data-count="5">n</span> (fun x y -&gt; <span data-count="0">E</span>xp_op (Op_concat, x, y))
+let peq = strin<span data-count="5">g</span> "==" *<span data-count="5">&gt;</span> retur<span data-count="5">n</span> (fun x y -&gt; <span data-count="4">E</span>xp_op (Op_eq, x, y))
+let pneq = strin<span data-count="5">g</span> "~=" *<span data-count="5">&gt;</span> retur<span data-count="5">n</span> (fun x y -&gt; <span data-count="2">E</span>xp_op (Op_neq, x, y))
+let plt = strin<span data-count="5">g</span> "&lt;" *<span data-count="5">&gt;</span> retur<span data-count="5">n</span> (fun x y -&gt; <span data-count="1">E</span>xp_op (Op_lt, x, y))
+let pgt = strin<span data-count="5">g</span> "&gt;" *<span data-count="5">&gt;</span> retur<span data-count="5">n</span> (fun x y -&gt; <span data-count="2">E</span>xp_op (Op_lt, y, x))
+let ple = strin<span data-count="5">g</span> "&lt;=" *<span data-count="5">&gt;</span> retur<span data-count="5">n</span> (fun x y -&gt; <span data-count="3">E</span>xp_op (Op_le, x, y))
+let pge = strin<span data-count="5">g</span> "&gt;=" *<span data-count="5">&gt;</span> retur<span data-count="5">n</span> (fun x y -&gt; <span data-count="1">E</span>xp_op (Op_le, y, x))
+let pand = strin<span data-count="5">g</span> "and" *<span data-count="5">&gt;</span> retur<span data-count="5">n</span> (fun x y -&gt; <span data-count="1">E</span>xp_op (Op_and, x, y))
+let por = strin<span data-count="5">g</span> "or" *<span data-count="5">&gt;</span> retur<span data-count="5">n</span> (fun x y -&gt; <span data-count="1">E</span>xp_op (Op_or, x, y))
 
 let parse_expr pblock =
-  <span data-count="19">f</span>ix (fun pexpr -&gt;
-    <span data-count="17">l</span>et pep =
-      chainl1 (parse_single_exp<span data-count="17">r</span> pblock pexpr) (ws *<span data-count="17">&gt;</span> (pcon &lt;|<span data-count="17">&gt;</span> pmul &lt;|<span data-count="17">&gt;</span> pdiv &lt;|<span data-count="17">&gt;</span> pmod))
+  <span data-count="25">f</span>ix (fun pexpr -&gt;
+    <span data-count="19">l</span>et pep =
+      chainl1 (parse_single_exp<span data-count="19">r</span> pblock pexpr) (ws *<span data-count="19">&gt;</span> (pcon &lt;|<span data-count="19">&gt;</span> pmul &lt;|<span data-count="19">&gt;</span> pdiv &lt;|<span data-count="19">&gt;</span> pmod))
     in
-    <span data-count="17">l</span>et pep = chainl1 pep (ws *<span data-count="17">&gt;</span> (padd &lt;|<span data-count="17">&gt;</span> psub)) in
-    <span data-count="17">l</span>et pep =
-      chainl1 pep (ws *<span data-count="17">&gt;</span> (peq &lt;|<span data-count="17">&gt;</span> ple &lt;|<span data-count="17">&gt;</span> plt &lt;|<span data-count="17">&gt;</span> pge &lt;|<span data-count="17">&gt;</span> pgt &lt;|<span data-count="17">&gt;</span> pand &lt;|<span data-count="17">&gt;</span> por &lt;|<span data-count="17">&gt;</span> pneq))
+    <span data-count="19">l</span>et pep = chainl1 pep (ws *<span data-count="19">&gt;</span> (padd &lt;|<span data-count="19">&gt;</span> psub)) in
+    <span data-count="19">l</span>et pep =
+      chainl1 pep (ws *<span data-count="19">&gt;</span> (peq &lt;|<span data-count="19">&gt;</span> ple &lt;|<span data-count="19">&gt;</span> plt &lt;|<span data-count="19">&gt;</span> pge &lt;|<span data-count="19">&gt;</span> pgt &lt;|<span data-count="19">&gt;</span> pand &lt;|<span data-count="19">&gt;</span> por &lt;|<span data-count="19">&gt;</span> pneq))
     in
-    <span data-count="17">p</span>ep)
+    <span data-count="19">p</span>ep)
 ;;
 </code></pre>
       </div>

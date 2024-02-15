@@ -187,15 +187,15 @@ let pp printer parser str =
   @@ Angstrom.parse_strin<span data-count="21">g</span> ~consume:Angstrom.Consume.All parser str
 ;;
 
-let skip_whitespaces = skip_whil<span data-count="4">e</span> Char.is_whitespace
-let parse_line_comment = strin<span data-count="4">g</span> "--" *<span data-count="4">&gt;</span> many_til<span data-count="4">l</span> any_char (strin<span data-count="4">g</span> "\n") *<span data-count="4">&gt;</span> retur<span data-count="4">n</span> ()
-let parse_block_comment = strin<span data-count="4">g</span> "--[[" *<span data-count="4">&gt;</span> many_til<span data-count="4">l</span> any_char (strin<span data-count="4">g</span> "--]]") *<span data-count="4">&gt;</span> retur<span data-count="4">n</span> ()
-let parse_comment = skip_whitespaces *<span data-count="4">&gt;</span> (parse_block_comment &lt;|<span data-count="4">&gt;</span> parse_line_comment)
-let ws = man<span data-count="4">y</span> parse_comment *<span data-count="4">&gt;</span> skip_whitespaces
+let skip_whitespaces = skip_whil<span data-count="5">e</span> Char.is_whitespace
+let parse_line_comment = strin<span data-count="5">g</span> "--" *<span data-count="5">&gt;</span> many_til<span data-count="5">l</span> any_char (strin<span data-count="5">g</span> "\n") *<span data-count="5">&gt;</span> retur<span data-count="5">n</span> ()
+let parse_block_comment = strin<span data-count="5">g</span> "--[[" *<span data-count="5">&gt;</span> many_til<span data-count="5">l</span> any_char (strin<span data-count="5">g</span> "--]]") *<span data-count="5">&gt;</span> retur<span data-count="5">n</span> ()
+let parse_comment = skip_whitespaces *<span data-count="5">&gt;</span> (parse_block_comment &lt;|<span data-count="5">&gt;</span> parse_line_comment)
+let ws = man<span data-count="5">y</span> parse_comment *<span data-count="5">&gt;</span> skip_whitespaces
 
 let chainl1 e op =
-  <span data-count="51">l</span>et rec go acc = <span data-count="285">l</span>ift<span data-count="285">2</span> (fun f x -&gt; <span data-count="31">f</span> acc x) op e &gt;&gt;<span data-count="285">=</span> go &lt;|&gt; retur<span data-count="285">n</span> acc in
-  e &gt;&gt;= fun init -&gt; <span data-count="254">g</span>o init
+  <span data-count="57">l</span>et rec go acc = <span data-count="309">l</span>ift<span data-count="309">2</span> (fun f x -&gt; <span data-count="34">f</span> acc x) op e &gt;&gt;<span data-count="309">=</span> go &lt;|&gt; retur<span data-count="309">n</span> acc in
+  e &gt;&gt;= fun init -&gt; <span data-count="275">g</span>o init
 ;;
 
 (* ======= Ident ======= *)
@@ -206,7 +206,7 @@ let is_keyword = function
   | <span data-count="1">"</span>do"
   | <span data-count="8">"</span>else"
   | <span data-count="6">"</span>elseif"
-  | <span data-count="38">"</span>end"
+  | <span data-count="40">"</span>end"
   | <span data-count="3">"</span>false"
   | <span data-count="0">"</span>for"
   | <span data-count="3">"</span>function"
@@ -222,24 +222,24 @@ let is_keyword = function
   | <span data-count="0">"</span>then"
   | <span data-count="5">"</span>true"
   | <span data-count="0">"</span>until"
-  | <span data-count="5">"</span>while" -&gt; true
-  | <span data-count="110">_</span> -&gt; false
+  | <span data-count="6">"</span>while" -&gt; true
+  | <span data-count="125">_</span> -&gt; false
 ;;
 
 let parse_ident =
   let parse_first =
-    satisf<span data-count="4">y</span> (function
-      | <span data-count="197">'</span>a' .. 'z' | <span data-count="0">'</span>A' .. 'Z' | <span data-count="0">'</span>_' -&gt; true
-      | <span data-count="59">_</span> -&gt; false)
+    satisf<span data-count="5">y</span> (function
+      | <span data-count="215">'</span>a' .. 'z' | <span data-count="0">'</span>A' .. 'Z' | <span data-count="0">'</span>_' -&gt; true
+      | <span data-count="63">_</span> -&gt; false)
     &gt;&gt;| String.of_char
   in
-  <span data-count="4">l</span>et parse_rest =
+  <span data-count="5">l</span>et parse_rest =
     take_while (function
-      | <span data-count="0">'</span>0' .. '9' | <span data-count="285">'</span>a' .. 'z' | <span data-count="0">'</span>A' .. 'Z' | <span data-count="0">'</span>_' -&gt; true
-      | <span data-count="167">_</span> -&gt; false)
+      | <span data-count="0">'</span>0' .. '9' | <span data-count="293">'</span>a' .. 'z' | <span data-count="0">'</span>A' .. 'Z' | <span data-count="0">'</span>_' -&gt; true
+      | <span data-count="185">_</span> -&gt; false)
   in
-  <span data-count="4">l</span>et* ident = lift<span data-count="4">2</span> String.( ^ ) parse_first parse_rest in
-  <span data-count="197">i</span>f is_keyword ident then <span data-count="87">f</span>ail "ident can't be a keyword" else <span data-count="110">r</span>eturn ident
+  <span data-count="5">l</span>et* ident = lift<span data-count="5">2</span> String.( ^ ) parse_first parse_rest in
+  <span data-count="215">i</span>f is_keyword ident then <span data-count="90">f</span>ail "ident can't be a keyword" else <span data-count="125">r</span>eturn ident
 ;;
 </code></pre>
       </div>
