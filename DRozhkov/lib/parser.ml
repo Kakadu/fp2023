@@ -225,4 +225,3 @@ let pexpr =
 ;;
 
 let parse_expr = parse_string ~consume:Consume.All (pexpr <* spaces)
-let parser = parse_string ~consume:Consume.All (many1 (let_pars pexpr) <* spaces)
