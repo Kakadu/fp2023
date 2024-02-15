@@ -4,7 +4,7 @@
 
 open Types
 open Utils
-(** extended version of column type *)
+
 type int_column =
   { column_index : int
   ; meta : column (* meta from Types.Column *)
