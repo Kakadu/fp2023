@@ -6,19 +6,19 @@
 
 (license LGPL-3.0-or-later)
 
-(authors "FIXME Vasya Pupkin")
+(authors "Nikita Nemakin")
 
-(maintainers "FIXME Vasya Pupkin")
+(maintainers "Nikita Nemakin")
 
-(bug_reports "FIXME where to put bug reports about the code")
+(bug_reports "nikita.nemakin@yandex.ru")
 
-(homepage "FIXME Homepage")
+(homepage "")
 
 (package
- (name Lambda) ; FIXME and regenerate .opam file using 'dune build @install'
- (synopsis "FIXME An interpreter for language")
+ (name OCaml+PolymorphicVariants)
+ (synopsis "An interpreter for OCaml with polymorphic variants")
  (description
-  "FIXME. A longer description, for example, which are the most interesing features being supported, etc.")
+  "A longer description, for example, which are the most interesing features being supported, etc.")
  (version 0.1)
  (depends
   dune
@@ -29,6 +29,4 @@
   bisect_ppx
   (odoc :with-doc)
   (ocamlformat :build)
-  ; base
-  ; After adding dependencies to 'dune' files and the same dependecies here too
-  ))
+  base))

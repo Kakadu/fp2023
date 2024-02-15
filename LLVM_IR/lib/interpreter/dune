@@ -1,0 +1,21 @@
+(library
+ (name ihelp)
+ (public_name LLVM_IR.Ihelp)
+ (modules state memory serialisation)
+ (libraries ast common parser base ppx_show.runtime)
+ (inline_tests)
+ (preprocess
+  (pps ppx_deriving.show ppx_deriving.eq ppx_deriving.ord ppx_expect))
+ (instrumentation
+  (backend bisect_ppx)))
+
+(library
+ (name interpreter)
+ (public_name LLVM_IR.Interpreter)
+ (modules interpreting)
+ (libraries ast instructions common ihelp parser base ppx_show.runtime)
+ (inline_tests)
+ (preprocess
+  (pps ppx_deriving.show ppx_deriving.eq ppx_deriving.ord ppx_expect))
+ (instrumentation
+  (backend bisect_ppx)))

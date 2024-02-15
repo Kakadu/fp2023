@@ -4,9 +4,9 @@
 
 (license LGPL-3.0-or-later)
 
-(authors "Vadim Yakshigulov")
+(authors "Vadim Yakshigulov <vadim.iakshigulov@gmail.com>")
 
-(maintainers "https://github.com/toadharvard")
+(maintainers "Vadim Yakshigulov <vadim.iakshigulov@gmail.com>")
 
 (bug_reports "https://github.com/toadharvard/asm-interpreter/issues")
 
@@ -15,9 +15,8 @@
 (package
  (name asm)
  (synopsis "NASM assembly interpeter")
- (description
-  "Something is supported... but in december...")
- (version 0.1)
+ (description "With some SSE instructions")
+ (version 0.3.0)
  (depends
   dune
   angstrom
@@ -28,5 +27,4 @@
   bisect_ppx
   (odoc :with-doc)
   (ocamlformat :build)
-  base
- ))
+  base))
