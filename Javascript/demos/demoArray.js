@@ -18,4 +18,3 @@ console.log(array2 + "")
 array2.__proto__ = [1, 2, 3, 4, 5, 6, 7]
 
 console.log(array2 + "")
-

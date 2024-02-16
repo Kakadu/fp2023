@@ -5,29 +5,20 @@
    (-short-paths))))
 
 (executable
- (name demoFactorial)
- (modules demoFactorial)
+ (name demoString)
+ (modules demoString)
  (libraries javascript_lib stdio))
 
 (executable
- (name demoObjects)
- (modules demoObjects)
- (libraries javascript_lib stdio))
-
-(executable
- (name demoClosures)
- (modules demoClosures)
- (libraries javascript_lib stdio))
-
-(executable
- (name demo)
- (modules demo)
+ (name demoFile)
+ (modules demoFile)
  (libraries javascript_lib stdio))
 
 (cram
  (deps
-  ./demoFactorial.exe
-  ./demoObjects.exe
-  ./demoClosures.exe
-  ./demo.exe
-  ./javascriptSamples/demoArray.js))
+  ./demoString.exe
+  ./demoFile.exe
+  ./demoFactorial.js
+  ./demoObjects.js
+  ./demoClosures.js
+  ./demoArray.js))
