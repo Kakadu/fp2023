@@ -20,16 +20,12 @@ type types =
   | FFloat of un_op * float (** float number: ..., 0.1, ..., 1.2, ...*)
   | Measure_float of types * measure_type (** 5.0 <cm> *) 
 
-and measure_init = 
-  | Measure_init of measure_type (** initialization [<Measure>] type sec*)
-  | Measure_multiple_init of measure_type * measure_type (** initialization [<Measure>] type speed = m/sec*)
-
 and measure_type =
-  | Measure_single of string * pow (** single measure: <m>*)
-  | Measure_multiple of measure_type * binary_op * measure_type (** double measure: <m/sec>*)
+  | SMeasure of string * pow (** single measure: <m>*)
+  | MMeasure of measure_type * binary_op * measure_type (** multiple measure: <m / sec * h ... >*)
 [@@deriving eq, show { with_path = false }]
 
-and pow = Pow of types(** ^ *)
+and pow = Pow of types (** ^ *)
 [@@deriving eq, show { with_path = false }]
 
 and binary_op =
@@ -57,18 +53,23 @@ type pattern =
   | PCons of pattern * pattern (** hd::tl pattern*)
 [@@deriving eq, show { with_path = false }]
 
+type measure_init = 
+  | SMeasure_init of measure_type (** initialization [<Measure>] type sec*)
+  | MMeasure_init of measure_type * measure_type (** initialization [<Measure>] type speed = m/sec*)
+[@@deriving show { with_path = false }]
+
 type expression = 
-  | EConst of types  (* constant *)
-  | EVar of id (* variable *)
-  | EBinaryOp of binary_op (* binary operation *)
-  | EList of expression list (* list *)
-  | ETuple of expression list  (* tuple *)
-  | EApp of expression * expression (* application *) 
-  | EIfElse of expression * expression * expression (* if z then v else n*)
-  | ELet of string * id * expression (* let z = ... or let rec z = ...*) 
-  | EFun of pattern * expression  (* fun z -> z + z *)
-  | EMatch of expression * (pattern * expression) list (* match *)
-  | EMeasure of measure_init (* measure *)
+  | EConst of types  (** constant *)
+  | EVar of id (** variable *)
+  | EBinaryOp of binary_op (** binary operation *)
+  | EList of expression list (** list *)
+  | ETuple of expression list  (** tuple *)
+  | EApp of expression * expression (** application *) 
+  | EIfElse of expression * expression * expression (** if z then v else n*)
+  | ELet of string * id * expression (** let z = ... or let rec z = ...*) 
+  | EFun of pattern * expression  (** fun z -> z + z *)
+  | EMatch of expression * (pattern * expression) list (** match *)
+  | EMeasure of measure_init (** measure *)
 [@@deriving show { with_path = false }]
 
 (* interpreter *)

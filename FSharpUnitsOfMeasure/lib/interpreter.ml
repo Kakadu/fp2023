@@ -21,32 +21,50 @@ let measure_list = ref []
 module Interpret (M : FailMonad) = struct
   open M
 
-  let search lst_ref element =
-    let lst = !lst_ref in  (* Получаем обычный список кортежей из mutable списка *)
+  (* Ищет element в measure_list *)
+  let search mlist_ref element =
+    let mlist = !mlist_ref in  (* Получаем обычный список кортежей из mutable списка *)
     let rec search_element list =
       match list with
       | [] -> false  (* Элемент не найден *)
       | (m1, _) :: tl -> 
-          if (m1 == element) then true
+          if (m1 == element) 
+            then true
           else search_element tl
     in
-    search_element lst
+    search_element mlist
   ;;
 
-  let remove_suffix_with_caret list =
-    List.map ~f:(fun str ->
-      match String.rindex str '^' with
-      | Some idx -> String.sub ~pos: 0 ~len: idx str
+  (* возвращает значение до ^ из элемента measure*)
+  let remove_degree str =
+    match String.index str '^' with
+      | Some i -> String.sub ~pos: 0 ~len: i str
       | None -> str
-    ) list
   ;;
 
-  let search_list measure_list str_list =
-    let mlist = !measure_list in 
-    let str_listic = remove_suffix_with_caret str_list in
+  (* Возвращает значения до ^ из measure*)
+  let remove_degree_list list =
+    List.map ~f:(fun str -> remove_degree str) list
+  ;;
+
+  (* Возвращает значение после ^ из measure*)
+  let before_degree str =
+    match String.index str '^' with
+    | Some caret_index -> 
+        String.sub 
+          ~pos: (caret_index + 1) 
+            ~len: (String.length str - caret_index - 1) 
+              str
+    | None -> ""
+  ;;
+
+  (* Проверяет, что типы из какого-то measure(str_list) были инициализированы*)
+  let search_list mlist_ref str_list =
+    let mlist = !mlist_ref in 
+    let new_str_list = remove_degree_list str_list in
     let rec search_element mlist slist =
       match slist with 
-      | [] -> true  (* Все элементы были найдены в списке *)
+      | [] -> true 
       | hd :: tl ->  
         match hd with
         | "/"
@@ -56,89 +74,63 @@ module Interpret (M : FailMonad) = struct
           else
             false
     in 
-    search_element mlist str_listic
+    search_element mlist new_str_list
   ;;
 
-  let replace_value_in_ref_list lst_ref old_value new_value =
-    let lst = !lst_ref in
-    let updated_list = List.map ~f:(fun (first, second) -> if first == old_value then (first, new_value) else (first, second)) lst in
-    lst_ref := updated_list
+  (* Обновляет значения в measure_list*)
+  let update_mlist mlist_ref m1 m2=
+    let mlist = !mlist_ref in
+    let updated_mlist = 
+      List.map ~f:(fun (first, second) -> 
+        if first == m1
+          then (first, m2) 
+        else (first, second)) mlist 
+    in mlist_ref := updated_mlist
   ;;
-  
-  (* let rec process_measure_multiple measure_list measure =
-    match measure with
-    | Measure_single (m, _) -> m :: measure_list
-    | Measure_multiple (m1, op, m2) ->
-      let op_str op =
-        match op with
-        | Mul -> "*"  
-        | Div -> "/"
-      in
-      let measure_list_with_op =  (op_str op) :: process_measure_multiple measure_list m2 in
-      process_measure_multiple measure_list_with_op m1
-  ;; *)
 
   let znak z = if z == Plus then 1 else -1
 
+  (* Создаем string list из какого-то measure *)
   let rec process_measure_multiple list measure =
     match measure with
-    | Measure_single (m, p) -> 
+    | SMeasure (m, p) -> 
       (match p with 
         | Pow (FInt (Plus, 1)) -> m :: list
         | Pow (FInt (z, n)) -> (m ^ "^" ^ Int.to_string (znak z * n)) :: list
         | _ -> failwith "This type does not support this operator")
-    | Measure_multiple (m1, op, m2) ->
+    | MMeasure (m1, op, m2) ->
       let op_str op =
         (match op with
         | Mul -> "*"  
         | Div -> "/"
         | _ -> failwith "This type does not support this operator")
+      in 
+      let measure_list_with_op = (op_str op) :: process_measure_multiple list m2 
       in
-      let measure_list_with_op = (op_str op) :: process_measure_multiple list m2 in
       process_measure_multiple measure_list_with_op m1
   ;;
 
   (* Декомпозирует тип element *)
-  (* let rec find_m2_from_measure_list measure_list element =
+  let rec find_m2_from_measure_list measure_list element =
+    let add_degree_in_list l n =
+      let caret_n = "^" ^ n in
+      List.map ~f: (fun elem -> elem ^ caret_n) l
+    in
     match measure_list with
     | [] -> []
     | (m1, m2) :: tl ->
-      if String.equal m1 element then
-        m2
-      else
-        find_m2_from_measure_list tl element *)
-let rec find_m2_from_measure_list measure_list element =
-  let strip_caret str =
-    let caret_index = String.rindex str '^' in
-    match caret_index with
-    | Some idx -> String.sub ~pos: 0 ~len: idx str (* Убираем ^n из строки, если присутствует *)
-    | None -> str
-  in
-  let add_caret_to_list l n =
-    let caret_n = "^" ^ n in
-    List.map ~f: (fun elem -> elem ^ caret_n) l
-  in
-  let remove_prefix_before_caret str =
-    match String.rindex str '^' with
-    | Some caret_index ->
-      String.sub ~pos: (caret_index + 1) ~len: (String.length str - caret_index - 1) str
-    | None -> "" (* Возвращаем исходную строку, если символа ^ нет *)
-  in
-  match measure_list with
-  | [] -> []
-  | (m1, m2) :: tl ->
-    if String.equal m1 (strip_caret element) then 
-      let n = remove_prefix_before_caret element (* Пример числа n, можно прочитать его из строки element *)
-      in
-      if (String.(=) n "") then m2
-      else add_caret_to_list m2 n
-    else 
-      find_m2_from_measure_list tl element
+      if String.equal m1 (remove_degree element) then 
+        let n = before_degree element (* Пример числа n, можно прочитать его из строки element *)
+        in
+        if (String.(=) n "") then m2
+        else add_degree_in_list m2 n
+      else 
+        find_m2_from_measure_list tl element
   ;;
 
   (* Принимает список списков строк и объединяет их в один список строк *)
-  let flatten_string_lists lists =
-    List.concat (List.map ~f:(fun sublist -> sublist) lists)
+  let strlist_to_str slist =
+    List.concat (List.map ~f:(fun sublist -> sublist) slist)
   ;;
       
   (* Декомпозирует все значения из списка *)
@@ -152,7 +144,7 @@ let rec find_m2_from_measure_list measure_list element =
 
   (* Декомпозирует список до самого основания*)
   let rec mbase m1 measure_list =
-    let m3 = flatten_string_lists @@ process_l1_with_measure_list m1 measure_list
+    let m3 = strlist_to_str @@ process_l1_with_measure_list m1 measure_list
     in
     if Poly.(=) m3 m1
       then return @@ m3
@@ -234,7 +226,7 @@ let rec find_m2_from_measure_list measure_list element =
               ((s == Plus) && (fnum == vnum)) 
               || ((s == Minus) && (fnum *. -1. == vnum))
               ) -> return []
-        | Measure_float (_, Measure_single (m1, p)), VFloatMeasure (_, m2) ->
+        | Measure_float (_, SMeasure (m1, p)), VFloatMeasure (_, m2) ->
         (match p with 
           | (Pow (FInt (Plus, n))) when ([m1 ^ "^" ^ Int.to_string n] == m2)-> return []
           | (Pow (FInt (Minus, n))) when ([m1 ^ "^" ^ Int.to_string (-1 * n)] == m2)-> return []
@@ -279,16 +271,16 @@ let rec find_m2_from_measure_list measure_list element =
     match expr with
     | EMeasure m ->
       (match m with
-        | Measure_init (Measure_single (m1, p)) ->
+        | SMeasure_init (SMeasure (m1, p)) ->
             (match (search measure_list m1, p) with
             | (true, Pow (FInt (Plus, 1))) -> measure_list := !measure_list ; return @@ VMeasureList !measure_list
             | (false, Pow (FInt (Plus, 1))) ->  measure_list := (m1, [m1]) :: !measure_list; return @@ VMeasureList !measure_list
             | _ -> fail Unreachable)
-        | Measure_multiple_init (Measure_single (m1, p), m2) -> 
+        | MMeasure_init (SMeasure (m1, p), m2) -> 
             let m2  = process_measure_multiple [] m2 
             in
             (match (search measure_list m1, search_list measure_list m2, p) with
-            | (true, true, Pow (FInt (Plus, 1))) -> replace_value_in_ref_list measure_list m1 m2; return @@ VMeasureList !measure_list
+            | (true, true, Pow (FInt (Plus, 1))) -> update_mlist measure_list m1 m2; return @@ VMeasureList !measure_list
             | (_, true, Pow (FInt (Plus, 1))) -> measure_list := (m1, m2) :: !measure_list; return @@ VMeasureList !measure_list
             | _ -> fail Unreachable)
         | _ -> fail Unreachable
@@ -305,7 +297,7 @@ let rec find_m2_from_measure_list measure_list element =
           (match s with
           | Plus -> VFloat f
           | Minus -> VFloat (-1.0 *. f))
-        | Measure_float (f, Measure_single (m, p)) ->
+        | Measure_float (f, SMeasure (m, p)) ->
           (match (search measure_list m, p) with
             | (true, Pow (FInt (Plus, 1))) -> 
                 let* f = eval_expr (EConst f) env []

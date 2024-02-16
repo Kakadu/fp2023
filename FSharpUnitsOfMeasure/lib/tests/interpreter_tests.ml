@@ -839,7 +839,7 @@ let%test _ =
 (* measure test*)
 
 (* [<Measure>] type m *)
-let test = [ (EMeasure (Measure_init (Measure_single ("m", (Pow (FInt (Plus, 1)))))))]
+let test = [ (EMeasure (SMeasure_init (SMeasure ("m", (Pow (FInt (Plus, 1)))))))]
 
 let%test _ =
   match run_test test with
@@ -857,10 +857,10 @@ let%test _ =
   7.77 <m> + 7.73 <m> 
 *)
 let test = [  
-  (EMeasure (Measure_init (Measure_single ("m", (Pow (FInt (Plus, 1))))))); 
+  (EMeasure (SMeasure_init (SMeasure ("m", (Pow (FInt (Plus, 1))))))); 
   (EApp ((EBinaryOp Add),
-    (EApp ((EConst (Measure_float ((FFloat (Plus, 7.77)), (Measure_single ("m", (Pow (FInt (Plus, 3)))))))),
-      (EConst (Measure_float ((FFloat (Plus, 7.73)), (Measure_single ("m", (Pow (FInt (Plus, 3))))))))))
+    (EApp ((EConst (Measure_float ((FFloat (Plus, 7.77)), (SMeasure ("m", (Pow (FInt (Plus, 3)))))))),
+      (EConst (Measure_float ((FFloat (Plus, 7.73)), (SMeasure ("m", (Pow (FInt (Plus, 3))))))))))
 )) ]
 
 let%test _ =
@@ -876,27 +876,27 @@ let%test _ =
 
 (* [<Measure>] type hz = m / sec * sm * luck / unluck*)
 let test = [ 
-  (EMeasure (Measure_init (Measure_single ("sec", (Pow (FInt (Plus, 1)))))));
-  (EMeasure (Measure_init (Measure_single ("m", (Pow (FInt (Plus, 1)))))));
-  (EMeasure (Measure_init (Measure_single ("dm", (Pow (FInt (Plus, 1)))))));
+  (EMeasure (SMeasure_init (SMeasure ("sec", (Pow (FInt (Plus, 1)))))));
+  (EMeasure (SMeasure_init (SMeasure ("m", (Pow (FInt (Plus, 1)))))));
+  (EMeasure (SMeasure_init (SMeasure ("dm", (Pow (FInt (Plus, 1)))))));
   (EMeasure
-       (Measure_multiple_init ((Measure_single( "speed", (Pow (FInt (Plus, 1))))),
-          (Measure_multiple ((Measure_single ("m", (Pow (FInt (Plus, 1))))), Div,
-             (Measure_multiple ((Measure_single ("sec", (Pow (FInt (Plus, 1))))), Mul,
-                (Measure_single ("dm", (Pow (FInt (Plus, 1)))))))
+       (MMeasure_init ((SMeasure( "speed", (Pow (FInt (Plus, 1))))),
+          (MMeasure ((SMeasure ("m", (Pow (FInt (Plus, 1))))), Div,
+             (MMeasure ((SMeasure ("sec", (Pow (FInt (Plus, 1))))), Mul,
+                (SMeasure ("dm", (Pow (FInt (Plus, 1)))))))
              ))
           )));
           (EApp ((EBinaryOp Add),
        (EApp (
           (EConst
              (Measure_float ((FFloat (Plus, 7.77)),
-                (Measure_multiple ((Measure_single ("m", (Pow (FInt (Plus, 1))))), Div,
-                   (Measure_single ("dm", (Pow (FInt (Plus, 1)))))))
+                (MMeasure ((SMeasure ("m", (Pow (FInt (Plus, 1))))), Div,
+                   (SMeasure ("dm", (Pow (FInt (Plus, 1)))))))
                 ))),
           (EConst
              (Measure_float ((FFloat (Plus, 7.73)),
-                (Measure_multiple ((Measure_single ("m", (Pow (FInt (Plus, 1))))), Div,
-                   (Measure_single ("dm", (Pow (FInt (Plus, 1)))))))
+                (MMeasure ((SMeasure ("m", (Pow (FInt (Plus, 1))))), Div,
+                   (SMeasure ("dm", (Pow (FInt (Plus, 1)))))))
                 )))
           ))
        ))
@@ -916,11 +916,11 @@ let%test _ =
 
 (* [<Measure>] type hz = m / sec * sm * luck / unluck*)
 let test = [ 
-  (EMeasure (Measure_init (Measure_single ("sec", (Pow (FInt (Plus, 1)))))));
-  (EMeasure (Measure_init (Measure_single ("m", (Pow (FInt (Plus, 1)))))));
+  (EMeasure (SMeasure_init (SMeasure ("sec", (Pow (FInt (Plus, 1)))))));
+  (EMeasure (SMeasure_init (SMeasure ("m", (Pow (FInt (Plus, 1)))))));
   (EMeasure
-       (Measure_multiple_init ((Measure_single ("speed", (Pow (FInt (Plus, 1))))),
-          (Measure_multiple ((Measure_single ("m", (Pow (FInt (Plus, 3))))), Div, (Measure_single ("sec", (Pow (FInt (Minus, 1)))))))
+       (MMeasure_init ((SMeasure ("speed", (Pow (FInt (Plus, 1))))),
+          (MMeasure ((SMeasure ("m", (Pow (FInt (Plus, 3))))), Div, (SMeasure ("sec", (Pow (FInt (Minus, 1)))))))
           )))
 ]
 
@@ -937,28 +937,28 @@ let%test _ =
 
 (* [<Measure>] type hz = m / sec * sm * luck / unluck*)
 let test = [ 
-  (EMeasure (Measure_init (Measure_single ("sec", (Pow (FInt (Plus, 1)))))));
-  (EMeasure (Measure_init (Measure_single ("m", (Pow (FInt (Plus, 1)))))));
-  (EMeasure (Measure_init (Measure_single ("dm", (Pow (FInt (Plus, 1)))))));
+  (EMeasure (SMeasure_init (SMeasure ("sec", (Pow (FInt (Plus, 1)))))));
+  (EMeasure (SMeasure_init (SMeasure ("m", (Pow (FInt (Plus, 1)))))));
+  (EMeasure (SMeasure_init (SMeasure ("dm", (Pow (FInt (Plus, 1)))))));
   (EMeasure
-    (Measure_multiple_init ((Measure_single ("speed", (Pow (FInt (Plus, 1))))),
-      (Measure_multiple ((Measure_single ("m", (Pow (FInt (Plus, 1))))), Div, (Measure_single ("sec", (Pow (FInt (Plus, 1)))))))
+    (MMeasure_init ((SMeasure ("speed", (Pow (FInt (Plus, 1))))),
+      (MMeasure ((SMeasure ("m", (Pow (FInt (Plus, 1))))), Div, (SMeasure ("sec", (Pow (FInt (Plus, 1)))))))
       )));
   (EMeasure
-    (Measure_multiple_init ((Measure_single ("sp", (Pow (FInt (Plus, 1))))),
-        (Measure_multiple ((Measure_single ("speed", (Pow (FInt (Plus, 1))))), Mul, (Measure_single ("dm", (Pow (FInt (Plus, 1)))))
+    (MMeasure_init ((SMeasure ("sp", (Pow (FInt (Plus, 1))))),
+        (MMeasure ((SMeasure ("speed", (Pow (FInt (Plus, 1))))), Mul, (SMeasure ("dm", (Pow (FInt (Plus, 1)))))
           ))
         )));
         (EApp ((EBinaryOp Add),
         (EApp (
            (EConst
               (Measure_float ((FFloat (Plus, 7.)),
-                 (Measure_multiple ((Measure_single ("m", (Pow (FInt (Plus, 1))))), Div,
-                    (Measure_multiple ((Measure_single ("sec", (Pow (FInt (Plus, 1))))), Mul,
-                       (Measure_single ("dm", (Pow (FInt (Plus, 1)))))))
+                 (MMeasure ((SMeasure ("m", (Pow (FInt (Plus, 1))))), Div,
+                    (MMeasure ((SMeasure ("sec", (Pow (FInt (Plus, 1))))), Mul,
+                       (SMeasure ("dm", (Pow (FInt (Plus, 1)))))))
                     ))
                  ))),
-           (EConst (Measure_float ((FFloat (Plus, 7.)), (Measure_single ("sp", (Pow (FInt (Plus, 1))))))))))
+           (EConst (Measure_float ((FFloat (Plus, 7.)), (SMeasure ("sp", (Pow (FInt (Plus, 1))))))))))
         ))
 ]
 

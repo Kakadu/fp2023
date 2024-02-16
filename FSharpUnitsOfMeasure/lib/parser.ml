@@ -58,7 +58,7 @@ let brackets p = stoken "(" *> p <* stoken ")"
 let square_brackets p = stoken "[" *> p <* stoken "]"
 let angle_brackets p = stoken "<" *> p <* stoken ">"
 let quotes p = stoken "\"" *> p <* stoken "\""
-let parens_or_not p = p <|> brackets p
+let brackets_or_not p = p <|> brackets p
 let chainl1 e op =
   let rec go acc = lift2 (fun f x -> f acc x) op e >>= go <|> return acc 
   in e >>= fun init -> go init
@@ -88,13 +88,13 @@ let fbool x = FBool x
 let fstring x = FString x
 let fnil = FNil
 let funit = FUnit
-let measure_type s = Measure_init s
+let measure_type s = SMeasure_init s
 let measure_float f m = Measure_float (f, m)
 
 (** Types parse *)
 
 let parse_fint =
-  let parse_sign = choice [ stoken "+" *> return Plus; stoken "-" *> return Minus; stoken "" *> return Plus ] <* take_empty
+  let parse_sign = choice [ stoken "+" *> return Plus; stoken "-" *> return Minus; stoken "" *> return Plus ]
   in let parse_digit = take_while1 digit 
   in lift2 (fun s v -> fint s (Int.of_string v)) parse_sign parse_digit
 ;;
@@ -112,7 +112,7 @@ let parse_fstring =
 
 let parse_ffloat = 
   let parse_sign_float = choice [ stoken "+" *> return Plus; stoken "-" *> return Minus; stoken "" *> return Plus ]
-  in let parse_digit = take_empty *> take_while digit
+  in let parse_digit =  take_while1 digit
   in let parse_decimal = stoken "." *> take_while digit 
   in lift3 (fun s int_part fraction_part ->
     let float_value = float_of_string (int_part ^ "." ^ fraction_part)
@@ -129,70 +129,67 @@ let parse_funit = stoken "()" *> return funit
 
 let parse_pow = take_empty *> lift (fun n -> Pow n) (string "^" *> parse_fint <|> return (FInt (Plus, 1)))
 
-let parse_measure_single = 
-  lift2 (fun m p -> Measure_single (m, p))
+let parse_smeasure = 
+  lift2 (fun m p -> SMeasure (m, p))
   parse_id
   parse_pow
 ;;
 
 let parse_measure_type = 
-  square_brackets (angle_brackets (stoken "Measure")) *> stoken "type" *> parse_measure_single
+  square_brackets (angle_brackets (stoken "Measure")) *> stoken "type" *> parse_smeasure
 ;;
 
-let parse_init_measure_single = parse_measure_type >>| fun a -> Measure_init a
+let parse_init_smeasure = parse_measure_type >>| fun a -> SMeasure_init a
 
 (* Parsing float + measure single: 7.77 <m>*)
 
-let construct_float_measure = take_empty *> (angle_brackets @@ parse_measure_single)
+let construct_float_measure = take_empty *> (angle_brackets @@ parse_smeasure)
 
-let parse_float_measure_single = 
+let parse_float_smeasure = 
   lift2 (fun f m -> (measure_float f m))
   parse_ffloat
   construct_float_measure
 ;;
 
-(* Parsing initialization measure double: [<Measure>] type speed = m/sec *)
+(* Parsing initialization measure multiple: [<Measure>] type speed = m/sec *)
 
 
-let parse_bin_op = take_empty *> (choice 
+let parse_mbin_op = take_empty *> (choice 
   [ 
     string "*" *> return Mul;
     string "/" *> return Div;
-    (* string "^" *> lift (fun n -> Pow n) parse_fint *)
   ]) <|> return Mul
 ;;
-(* 
-let parse_pow = take_empty *> lift (fun n -> Pow n) parse_fint *)
 
-let parse_measure_multiple =
+let parse_mmeasure =
   fix (fun p ->
-    lift3 (fun m1 op m2 -> Measure_multiple (m1, op, m2))
-      parse_measure_single
-      parse_bin_op 
-      p <|> parse_measure_single
+    lift3 (fun m1 op m2 -> MMeasure (m1, op, m2))
+      parse_smeasure
+      parse_mbin_op 
+      p <|> parse_smeasure
   )
 ;;
 
-let parse_init_measure_multiple = 
-  lift2 (fun typ meaning -> Measure_multiple_init (typ, meaning)) 
+let parse_init_mmeasure = 
+  lift2 (fun typ meaning -> MMeasure_init (typ, meaning)) 
   (parse_measure_type <* stoken "=")
-  parse_measure_multiple
+  parse_mmeasure
 ;;
 
 (* Parsing float + measure multiple: 7.77 <sec/meters>*)
 
-let parse_float_measure_multiple = 
+let parse_float_mmeasure = 
   lift2 (fun f m -> (Measure_float (f, m)))
   parse_ffloat
-  (take_empty *> angle_brackets parse_measure_multiple)
+  (take_empty *> angle_brackets parse_mmeasure)
 ;;
 
 let parse_fmeasure = 
-  parse_float_measure_multiple <|> parse_float_measure_single
+  parse_float_mmeasure <|> parse_float_smeasure
 ;;
 
-let parse_meassure_init =
-  parse_init_measure_multiple <|> parse_init_measure_single
+let parse_init_meassure =
+  parse_init_mmeasure <|> parse_init_smeasure
 ;;
 
 let parse_types = 
@@ -296,9 +293,9 @@ let ematch c pl = EMatch (c, pl)
 
 let parse_evar = parse_id >>| evar 
 let parse_econst = parse_types >>| fun x -> EConst x
-let parse_measure = parse_meassure_init >>| fun x -> EMeasure x
-let parse_arg = many @@ parens_or_not parse_pattern
-let parse_arg1 = many1 @@ parens_or_not parse_pattern
+let parse_measure = parse_init_meassure >>| fun x -> EMeasure x
+let parse_arg = many @@ brackets_or_not parse_pattern
+let parse_arg1 = many1 @@ brackets_or_not parse_pattern
 
 type edispatch =
   {
@@ -377,41 +374,27 @@ let eor = ebinop @@ EBinaryOp Or
 let eeq = ebinop @@ EBinaryOp Eq
 let eneq = ebinop @@ EBinaryOp Neq
 
-let parse_binaryop expr =
-  let lvl1 = take_empty *> choice
-    [ 
-      string "*" *> return emul;
-      string "/" *> return ediv; 
-      string "%" *> return emod
-    ]
-  in let lvl2 =
-    take_empty *> choice 
-      [ 
-        string "+" *> return eadd; 
-        string "-" *> return esub
-      ]
-  in let lvl3 =
-    take_empty *> choice
-      [ 
-        string ">=" *> return egreq;
-        string ">" *> return egre; 
-        string "<=" *> return eleq; 
-        string "<" *> return eless
-      ]
-  in let lvl4 = take_empty *> choice [string "=" *> return eeq; string "<>" *> return eneq] 
-  in let lvl5 = take_empty *> string "&&" *> return eand 
-  in let lvl6 = take_empty *> string "||" *> return eor  
-  in let expr = chainl1 expr lvl1
-  in let expr = chainl1 expr lvl2
-  in let expr = chainl1 expr lvl3
-  in let expr = chainl1 expr lvl4
-  in let expr = chainl1 expr lvl5 
-  in chainl1 expr lvl6 <* take_empty
+let parse_binop = take_empty *> choice
+  [ 
+    string "*" *> return emul;
+    string "/" *> return ediv; 
+    string "%" *> return emod;
+    string "+" *> return eadd; 
+    string "-" *> return esub;
+    string ">=" *> return egreq;
+    string ">" *> return egre; 
+    string "<=" *> return eleq; 
+    string "<" *> return eless;
+    string "=" *> return eeq; 
+    string "<>" *> return eneq;
+    string "&&" *> return eand ;
+    string "||" *> return eor  
+  ] <* take_empty
 ;;
 
 let parse_eapp parse_expr =
   take_empty *> lift2
-    (fun expr l -> let res = List.fold_left ~f:eapp ~init:expr l 
+    (fun expr l -> let res = List.fold ~f:eapp ~init:expr l 
     in res)
     parse_expr (many (token parse_expr))
 ;;
@@ -428,13 +411,13 @@ let pack =
       pack.etuple pack;
       pack.elist pack;
       pack.efun pack;
-      pack.ematch pack
+      pack.ematch pack;
     ]
   in
   let eifelse pack = 
     fix @@ fun _ ->
       let parse_eifelse =
-        parens_or_not @@ choice
+        brackets_or_not @@ choice
           [
             pack.eifelse pack;
             pack.eapp pack;
@@ -442,37 +425,36 @@ let pack =
             pack.ematch pack;
           ]
       in eifelse parse_eifelse (pack.expression pack)
-  in let efun pack = parens_or_not @@ fix @@ fun _ -> parse_efun @@ pack.expression pack
+  in let efun pack = brackets_or_not @@ fix @@ fun _ -> parse_efun @@ pack.expression pack
   in let ematch pack =
     fix @@ fun _ ->
       let ematch_parse =
-        parens_or_not @@ choice 
+        brackets_or_not @@ choice 
           [ 
             pack.eapp pack; 
             pack.eifelse pack; 
             pack.ematch pack 
           ]
       in
-      parens_or_not @@ ematch ematch_parse (pack.expression pack)
+      brackets_or_not @@ ematch ematch_parse (pack.expression pack)
   in 
   let ebinaryop pack =
     fix @@ fun _ -> 
-      let parse_ebinaryop = choice
+      let exp = choice
         [
           pack.emeasure pack;
           pack.econst pack;
+          brackets @@ pack.ebinaryop pack;
           brackets @@ pack.ematch pack;
           brackets @@ pack.eifelse pack;
-          brackets @@ pack.ebinaryop pack;
           brackets @@ pack.eapp pack;
           pack.evar pack
         ]
-      in parens_or_not @@ parse_binaryop parse_ebinaryop
+      in chainl1 (parse_eapp exp) parse_binop <* take_empty
   in let eapp pack =
     fix @@ fun _ -> 
       let parse_eapp_pack = choice
         [
-
           pack.etuple pack;
           pack.ebinaryop pack;
           pack.efun pack; 
@@ -480,7 +462,7 @@ let pack =
           brackets @@ pack.eapp pack;
           brackets @@ pack.ematch pack
         ]
-      in parse_eapp parse_eapp_pack 
+      in parse_eapp parse_eapp_pack
   in 
   let parse_lets pack = choice
     [
@@ -505,6 +487,7 @@ let pack =
   in let elist pack = fix @@ fun _ -> elist <$> parse_plist @@ pack.expression pack <|> brackets @@ pack.elist pack
   in 
   {
+    expression;
     evar;
     emeasure;
     econst;
@@ -515,8 +498,7 @@ let pack =
     ebinaryop;
     eapp;
     efun;
-    ematch;
-    expression
+    ematch
   }
 ;;
 
