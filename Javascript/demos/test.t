@@ -19,6 +19,7 @@ Use `dune promote` after you change things that should runned
   > ./demoObjects.js
   { prop1: 4, prop2: 'Hi!', getProp1: [Function: getProp1] } 
   Hi! 10 10 
+  { name: 'Alex', age: 34 } 
 
   $ ./demoFile.exe <<-EOF
   > ./demoClosures.js

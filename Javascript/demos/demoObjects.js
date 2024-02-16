@@ -4,3 +4,10 @@ let obj1 = {
 console.log(obj1)
 let obj2 = { prop1: 10, __proto__: obj1 }
 console.log(obj2.prop2, obj2.getProp1(), obj2.prop1)
+
+function Person(name, age) {
+  this.name = name
+  this.age = age
+}
+
+console.log(new Person("Alex", 34))
