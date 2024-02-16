@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8"/>
     <title>common.ml &mdash; Coverage report</title>
-    <meta name="description" content="75.76% coverage in lib/parser/common.ml">
+    <meta name="description" content="78.79% coverage in lib/parser/common.ml">
     <link rel="stylesheet" href="../../coverage.css"/>
     <script src="../../highlight.pack.js"></script>
     <script>hljs.initHighlightingOnLoad();</script>
@@ -15,7 +15,7 @@
           <span class="dirname">lib/parser/</span>common.ml
         </a>
       </h1>
-      <h2>75.76%</h2>
+      <h2>78.79%</h2>
     </div>
     <div id="navbar">
       <span class="unvisited" style="top:41.79%"></span>
@@ -187,18 +187,18 @@ let pp printer parser str =
   @@ Angstrom.parse_strin<span data-count="21">g</span> ~consume:Angstrom.Consume.All parser str
 ;;
 
-let skip_whitespaces = skip_whil<span data-count="5">e</span> Char.is_whitespace
-let parse_line_comment = strin<span data-count="5">g</span> "--" *<span data-count="5">&gt;</span> many_til<span data-count="5">l</span> any_char (strin<span data-count="5">g</span> "\n") *<span data-count="5">&gt;</span> retur<span data-count="5">n</span> ()
-let parse_block_comment = strin<span data-count="5">g</span> "--[[" *<span data-count="5">&gt;</span> many_til<span data-count="5">l</span> any_char (strin<span data-count="5">g</span> "--]]") *<span data-count="5">&gt;</span> retur<span data-count="5">n</span> ()
-let parse_comment = skip_whitespaces *<span data-count="5">&gt;</span> (parse_block_comment &lt;|<span data-count="5">&gt;</span> parse_line_comment)
-let ws = man<span data-count="5">y</span> parse_comment *<span data-count="5">&gt;</span> skip_whitespaces
+let skip_whitespaces = skip_whil<span data-count="7">e</span> Char.is_whitespace
+let parse_line_comment = strin<span data-count="7">g</span> "--" *<span data-count="7">&gt;</span> many_til<span data-count="7">l</span> any_char (strin<span data-count="7">g</span> "\n") *<span data-count="7">&gt;</span> retur<span data-count="7">n</span> ()
+let parse_block_comment = strin<span data-count="7">g</span> "--[[" *<span data-count="7">&gt;</span> many_til<span data-count="7">l</span> any_char (strin<span data-count="7">g</span> "--]]") *<span data-count="7">&gt;</span> retur<span data-count="7">n</span> ()
+let parse_comment = skip_whitespaces *<span data-count="7">&gt;</span> (parse_block_comment &lt;|<span data-count="7">&gt;</span> parse_line_comment)
+let ws = man<span data-count="7">y</span> parse_comment *<span data-count="7">&gt;</span> skip_whitespaces
 
 let chainl1 e op =
-  <span data-count="57">l</span>et rec go acc = <span data-count="309">l</span>ift<span data-count="309">2</span> (fun f x -&gt; <span data-count="34">f</span> acc x) op e &gt;&gt;<span data-count="309">=</span> go &lt;|&gt; retur<span data-count="309">n</span> acc in
-  e &gt;&gt;= fun init -&gt; <span data-count="275">g</span>o init
+  <span data-count="69">l</span>et rec go acc = <span data-count="361">l</span>ift<span data-count="361">2</span> (fun f x -&gt; <span data-count="41">f</span> acc x) op e &gt;&gt;<span data-count="361">=</span> go &lt;|&gt; retur<span data-count="361">n</span> acc in
+  e &gt;&gt;= fun init -&gt; <span data-count="320">g</span>o init
 ;;
 
-(* ======= Ident ======= *)
+(** ======= Ident parser ======= *)
 
 let is_keyword = function
   | <span data-count="0">"</span>and"
@@ -206,7 +206,7 @@ let is_keyword = function
   | <span data-count="1">"</span>do"
   | <span data-count="8">"</span>else"
   | <span data-count="6">"</span>elseif"
-  | <span data-count="40">"</span>end"
+  | <span data-count="44">"</span>end"
   | <span data-count="3">"</span>false"
   | <span data-count="0">"</span>for"
   | <span data-count="3">"</span>function"
@@ -222,24 +222,24 @@ let is_keyword = function
   | <span data-count="0">"</span>then"
   | <span data-count="5">"</span>true"
   | <span data-count="0">"</span>until"
-  | <span data-count="6">"</span>while" -&gt; true
-  | <span data-count="125">_</span> -&gt; false
+  | <span data-count="8">"</span>while" -&gt; true
+  | <span data-count="153">_</span> -&gt; false
 ;;
 
 let parse_ident =
   let parse_first =
-    satisf<span data-count="5">y</span> (function
-      | <span data-count="215">'</span>a' .. 'z' | <span data-count="0">'</span>A' .. 'Z' | <span data-count="0">'</span>_' -&gt; true
-      | <span data-count="63">_</span> -&gt; false)
+    satisf<span data-count="7">y</span> (function
+      | <span data-count="249">'</span>a' .. 'z' | <span data-count="0">'</span>A' .. 'Z' | <span data-count="0">'</span>_' -&gt; true
+      | <span data-count="73">_</span> -&gt; false)
     &gt;&gt;| String.of_char
   in
-  <span data-count="5">l</span>et parse_rest =
+  <span data-count="7">l</span>et parse_rest =
     take_while (function
-      | <span data-count="0">'</span>0' .. '9' | <span data-count="293">'</span>a' .. 'z' | <span data-count="0">'</span>A' .. 'Z' | <span data-count="0">'</span>_' -&gt; true
-      | <span data-count="185">_</span> -&gt; false)
+      | <span data-count="12">'</span>0' .. '9' | <span data-count="409">'</span>a' .. 'z' | <span data-count="0">'</span>A' .. 'Z' | <span data-count="6">'</span>_' -&gt; true
+      | <span data-count="219">_</span> -&gt; false)
   in
-  <span data-count="5">l</span>et* ident = lift<span data-count="5">2</span> String.( ^ ) parse_first parse_rest in
-  <span data-count="215">i</span>f is_keyword ident then <span data-count="90">f</span>ail "ident can't be a keyword" else <span data-count="125">r</span>eturn ident
+  <span data-count="7">l</span>et* ident = lift<span data-count="7">2</span> String.( ^ ) parse_first parse_rest in
+  <span data-count="249">i</span>f is_keyword ident then <span data-count="96">f</span>ail "ident can't be a keyword" else <span data-count="153">r</span>eturn ident
 ;;
 </code></pre>
       </div>
