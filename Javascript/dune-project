@@ -6,23 +6,20 @@
 
 (license LGPL-3.0-or-later)
 
-(authors "Kuarni <kuarni22@gmail.com>" , "AlexShmak <lexnder9@gmail.com>")
+(authors "Kuarni <kuarni22@gmail.com>" "AlexShmak <lexnder9@gmail.com>")
 
-(maintainers
- "Kuarni <kuarni22@gmail.com>"
- ,
- "AlexShmak <lexnder9@gmail.com>")
+(maintainers "Kuarni <kuarni22@gmail.com>" "AlexShmak <lexnder9@gmail.com>")
 
-(bug_reports "https://github.com/AlexShmak/fp2023/issues")
+(bug_reports https://github.com/AlexShmak/fp2023/issues)
 
-(homepage "https://github.com/AlexShmak/fp2023")
+(homepage https://github.com/AlexShmak/fp2023)
 
 (package
  (name Javascript)
  (synopsis "Interpreter for Javascript")
  (description
   "An interpreter and parser for Javascript. It can work with arrays, functions, let statement,\n  for, while loops, objects (class isn't supported). \nThe interpreter work in string mode by default. \n  You can print values with alert, console.log and return from main body.")
- (version 0.2)
+ (version 0.21)
  (depends
   dune
   angstrom
