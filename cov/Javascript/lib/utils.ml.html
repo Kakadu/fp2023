@@ -132,42 +132,42 @@ type 'a t = ('a, string) Result.t
 let ( &gt;&gt;= ) = Result.bind
 let return = Result.ok
 let uerror = Result.error
-let ( &gt;&gt;| ) x f = <span data-count="6669">x</span> &gt;&gt;= fun r -&gt; <span data-count="6648">r</span>eturn @@ <span data-count="6648">f</span> r
+let ( &gt;&gt;| ) x f = <span data-count="7120">x</span> &gt;&gt;= fun r -&gt; <span data-count="7099">r</span>eturn @@ <span data-count="7099">f</span> r
 let ( let* ) = ( &gt;&gt;= )
 let ( let+ ) = ( &gt;&gt;| )
 
 let ( &lt;?&gt; ) x str =
-  <span data-count="2617">m</span>atch x with
-  | <span data-count="2575">R</span>esult.Ok _ -&gt; x
+  <span data-count="2784">m</span>atch x with
+  | <span data-count="2742">R</span>esult.Ok _ -&gt; x
   | <span data-count="42">R</span>esult.Error a -&gt; Result.Error (str ^ " &gt; " ^ a)
 ;;
 
 let rec map f = function
-  | <span data-count="40">[</span>] -&gt; return []
-  | <span data-count="75">h</span> :: tl -&gt; <span data-count="75">f</span> h &gt;&gt;= fun c -&gt; <span data-count="75">m</span>a<span data-count="75">p</span> f tl &gt;&gt;| fun lst -&gt; <span data-count="75">c</span> :: lst
+  | <span data-count="41">[</span>] -&gt; return []
+  | <span data-count="77">h</span> :: tl -&gt; <span data-count="77">f</span> h &gt;&gt;= fun c -&gt; <span data-count="77">m</span>a<span data-count="77">p</span> f tl &gt;&gt;| fun lst -&gt; <span data-count="77">c</span> :: lst
 ;;
 
 let rec fold_left f acc = function
-  | <span data-count="571">[</span>] -&gt; return acc
-  | <span data-count="933">h</span> :: tl -&gt; <span data-count="933">f</span> acc h &gt;&gt;= fun acc -&gt; <span data-count="933">f</span>old_left f acc tl
+  | <span data-count="616">[</span>] -&gt; return acc
+  | <span data-count="997">h</span> :: tl -&gt; <span data-count="997">f</span> acc h &gt;&gt;= fun acc -&gt; <span data-count="997">f</span>old_left f acc tl
 ;;
 
 let rec fold_left_map f acc = function
-  | <span data-count="686">[</span>] -&gt; return (acc, [])
-  | <span data-count="500">h</span> :: tl -&gt;
-    <span data-count="500">f</span> acc h &gt;&gt;= fun (acc, c) -&gt; <span data-count="499">f</span>old_left_ma<span data-count="499">p</span> f acc tl &gt;&gt;| fun (acc, lst) -&gt; <span data-count="498">a</span>cc, c :: lst
+  | <span data-count="717">[</span>] -&gt; return (acc, [])
+  | <span data-count="540">h</span> :: tl -&gt;
+    <span data-count="540">f</span> acc h &gt;&gt;= fun (acc, c) -&gt; <span data-count="539">f</span>old_left_ma<span data-count="539">p</span> f acc tl &gt;&gt;| fun (acc, lst) -&gt; <span data-count="538">a</span>cc, c :: lst
 ;;
 
 let rec fold_left_s f stop acc = function
-  | <span data-count="88">[</span>] -&gt; return acc
-  | <span data-count="784">h</span> :: tl -&gt;
-    <span data-count="784">f</span> acc h &gt;&gt;= fun acc -&gt; <span data-count="770">i</span>f stop acc then <span data-count="406">r</span>eturn acc else <span data-count="364">f</span>old_left_s f stop acc tl
+  | <span data-count="93">[</span>] -&gt; return acc
+  | <span data-count="829">h</span> :: tl -&gt;
+    <span data-count="829">f</span> acc h &gt;&gt;= fun acc -&gt; <span data-count="815">i</span>f stop acc then <span data-count="439">r</span>eturn acc else <span data-count="376">f</span>old_left_s f stop acc tl
 ;;
 
-let both f a b = <span data-count="1288">f</span> a &gt;&gt;= fun x -&gt; <span data-count="1288">f</span> b &gt;&gt;= fun y -&gt; <span data-count="644">r</span>eturn (x, y)
+let both f a b = <span data-count="1398">f</span> a &gt;&gt;= fun x -&gt; <span data-count="1398">f</span> b &gt;&gt;= fun y -&gt; <span data-count="699">r</span>eturn (x, y)
 
 let both_ext f acc a b =
-  <span data-count="886">f</span> acc a &gt;&gt;= fun (acc, x) -&gt; <span data-count="886">f</span> acc b &gt;&gt;= fun (acc, y) -&gt; <span data-count="443">r</span>eturn (acc, (x, y))
+  <span data-count="950">f</span> acc a &gt;&gt;= fun (acc, x) -&gt; <span data-count="950">f</span> acc b &gt;&gt;= fun (acc, y) -&gt; <span data-count="475">r</span>eturn (acc, (x, y))
 ;;
 
 module IntMap = Map.Make (Int)

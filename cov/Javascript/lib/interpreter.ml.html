@@ -2034,14 +2034,14 @@ type program_return =
   }
 
 let is_empty = function
-  | <span data-count="25">_</span> :: _ -&gt; false
+  | <span data-count="26">_</span> :: _ -&gt; false
   | <span data-count="13">_</span> -&gt; true
 ;;
 
-let vbool x = <span data-count="96">V</span>Bool x
-let vnumber x = <span data-count="250">V</span>Number x
-let vstring x = <span data-count="65">V</span>String x
-let vobject x = <span data-count="1400">V</span>Object x
+let vbool x = <span data-count="101">V</span>Bool x
+let vnumber x = <span data-count="278">V</span>Number x
+let vstring x = <span data-count="66">V</span>String x
+let vobject x = <span data-count="1438">V</span>Object x
 
 let error err =
   <span data-count="14">u</span>error
@@ -2059,34 +2059,34 @@ let error err =
 
 let ensup str = <span data-count="0">e</span>rror (NotSupported str)
 let etyp str = <span data-count="5">e</span>rror (TypeError str)
-let add_to_result elem result = <span data-count="671">r</span>esult &gt;&gt;| fun x -&gt; <span data-count="671">e</span>lem, x
+let add_to_result elem result = <span data-count="703">r</span>esult &gt;&gt;| fun x -&gt; <span data-count="703">e</span>lem, x
 
 let num_to_string n =
-  <span data-count="400">m</span>atch Float.is_intege<span data-count="400">r</span> n, Float.is_na<span data-count="400">n</span> n, Float.is_infinit<span data-count="400">e</span> n with
-  | <span data-count="382">t</span>rue, _, _ -&gt; Int.to_string (Float.to_in<span data-count="382">t</span> n)
+  <span data-count="404">m</span>atch Float.is_intege<span data-count="404">r</span> n, Float.is_na<span data-count="404">n</span> n, Float.is_infinit<span data-count="404">e</span> n with
+  | <span data-count="386">t</span>rue, _, _ -&gt; Int.to_string (Float.to_in<span data-count="386">t</span> n)
   | <span data-count="12">_</span>, true, _ -&gt; "NaN"
   | <span data-count="3">_</span>, _, true -&gt; if n &gt; 0. then <span data-count="2">"</span>Infinity" else <span data-count="1">"</span>-Infinity"
   | <span data-count="3">_</span> -&gt; Float.to_string n
 ;;
 
-let get_obj_ctx_opt ctx id = <span data-count="2844">I</span>ntMap.find_opt id ctx.objs
+let get_obj_ctx_opt ctx id = <span data-count="2887">I</span>ntMap.find_opt id ctx.objs
 
 let get_obj_ctx ctx id =
-  <span data-count="2642">m</span>atch get_obj_ctx_opt ctx id with
-  | <span data-count="2642">S</span>ome x -&gt; return x
+  <span data-count="2685">m</span>atch get_obj_ctx_opt ctx id with
+  | <span data-count="2685">S</span>ome x -&gt; return x
   | <span data-count="0">_</span> -&gt; error @@ ReferenceError (asprint<span data-count="0">f</span> "cannot find object with id = %i" id)
 ;;
 
 let is_func x =
-  <span data-count="946">m</span>atch x.obj_type with
-  | <span data-count="293">T</span>FunPreset _ | <span data-count="76">T</span>Function _ | <span data-count="25">T</span>ArrowFunction _ -&gt; true
-  | <span data-count="552">_</span> -&gt; false
+  <span data-count="979">m</span>atch x.obj_type with
+  | <span data-count="297">T</span>FunPreset _ | <span data-count="82">T</span>Function _ | <span data-count="43">T</span>ArrowFunction _ -&gt; true
+  | <span data-count="557">_</span> -&gt; false
 ;;
 
 let is_array x =
-  <span data-count="762">m</span>atch x.obj_type with
+  <span data-count="769">m</span>atch x.obj_type with
   | <span data-count="611">T</span>Array _ -&gt; true
-  | <span data-count="151">_</span> -&gt; false
+  | <span data-count="158">_</span> -&gt; false
 ;;
 
 let is_obj_by_id ctx cond id =
@@ -2111,26 +2111,26 @@ let print_type ctx = function
 ;;
 
 let find_proto fields =
-  <span data-count="280">L</span>ist.partition (fun field -&gt; <span data-count="346">f</span>ield.var_id = "__proto__") fields
-  |&gt; <span data-count="280">f</span>un (protos, others) -&gt;
-  <span data-count="280">m</span>atch protos with
+  <span data-count="323">L</span>ist.partition (fun field -&gt; <span data-count="418">f</span>ield.var_id = "__proto__") fields
+  |&gt; <span data-count="323">f</span>un (protos, others) -&gt;
+  <span data-count="323">m</span>atch protos with
   | <span data-count="7">a</span> :: [] -&gt; return (a.value, others)
   | <span data-count="1">_</span> :: _ -&gt;
     error @@ SyntaxError "Duplicate __proto__ fields are not allowed in object literals"
-  | <span data-count="272">_</span> -&gt; return (VUndefined, others)
+  | <span data-count="315">_</span> -&gt; return (VUndefined, others)
 ;;
 
 let add_obj ctx fields obj_type =
-  <span data-count="280">f</span>ind_prot<span data-count="280">o</span> fields
+  <span data-count="323">f</span>ind_prot<span data-count="323">o</span> fields
   &gt;&gt;| fun (proto, fields) -&gt;
-  <span data-count="279">l</span>et obj = { proto; fields; obj_type } in
+  <span data-count="322">l</span>et obj = { proto; fields; obj_type } in
   let id = ctx.obj_count in
-  { ctx with obj_count = id + 1; objs = IntMap.ad<span data-count="279">d</span> id obj ctx.objs }, id
+  { ctx with obj_count = id + 1; objs = IntMap.ad<span data-count="322">d</span> id obj ctx.objs }, id
 ;;
 
 let rec find_in_vars_opt id = function
-  | <span data-count="5113">a</span> :: b -&gt; if a.var_id = id then <span data-count="1232">S</span>ome a else <span data-count="3881">f</span>ind_in_vars_opt id b
-  | <span data-count="1737">_</span> -&gt; None
+  | <span data-count="5402">a</span> :: b -&gt; if a.var_id = id then <span data-count="1324">S</span>ome a else <span data-count="4078">f</span>ind_in_vars_opt id b
+  | <span data-count="1858">_</span> -&gt; None
 ;;
 
 let get_field id fields =
@@ -2141,28 +2141,28 @@ let get_field id fields =
 
 (*JS uses diffrent conversion to string in .toString and in print.
   It's the reason why vvalues_to_str and to_vstring are diffrent functions*)
-let rec print_vvalues ctx ?(str_quote = <span data-count="447">f</span>alse) = function
-  | <span data-count="274">V</span>Number x -&gt; return @@ num_to_strin<span data-count="274">g</span> x
+let rec print_vvalues ctx ?(str_quote = <span data-count="454">f</span>alse) = function
+  | <span data-count="277">V</span>Number x -&gt; return @@ num_to_strin<span data-count="277">g</span> x
   | <span data-count="39">V</span>Bool true -&gt; return "true"
   | <span data-count="36">V</span>Bool false -&gt; return "false"
   | <span data-count="1">V</span>Null -&gt; return "null"
-  | <span data-count="49">V</span>Undefined -&gt; return "undefined"
-  | <span data-count="69">V</span>String x -&gt; return @@ if str_quote then <span data-count="5">"</span>'" ^ x ^ "'" else <span data-count="64">x</span>
-  | <span data-count="41">V</span>Object x -&gt;
-    get_obj_ct<span data-count="41">x</span> ctx x
+  | <span data-count="52">V</span>Undefined -&gt; return "undefined"
+  | <span data-count="71">V</span>String x -&gt; return @@ if str_quote then <span data-count="6">"</span>'" ^ x ^ "'" else <span data-count="65">x</span>
+  | <span data-count="42">V</span>Object x -&gt;
+    get_obj_ct<span data-count="42">x</span> ctx x
     &gt;&gt;= fun obj -&gt;
-    <span data-count="41">i</span>f is_func obj
+    <span data-count="42">i</span>f is_func obj
     then <span data-count="14">p</span>rint_vvalues ct<span data-count="14">x</span> @@ get_fiel<span data-count="14">d</span> "name" obj.fields &gt;&gt;| asprint<span data-count="14">f</span> "[Function: %s]"
-    else <span data-count="27">(</span>
+    else <span data-count="28">(</span>
       let concat = String.concat "," in
-      <span data-count="27">l</span>et* fields =
-        ma<span data-count="27">p</span>
+      <span data-count="28">l</span>et* fields =
+        ma<span data-count="28">p</span>
           (fun x -&gt;
-            <span data-count="24">p</span>rint_vvalue<span data-count="24">s</span> ctx x.value ~str_quote:true &gt;&gt;| ( ^ ) (" " ^ x.var_id ^ ": "))
+            <span data-count="26">p</span>rint_vvalue<span data-count="26">s</span> ctx x.value ~str_quote:true &gt;&gt;| ( ^ ) (" " ^ x.var_id ^ ": "))
           obj.fields
       in
-      <span data-count="27">l</span>et fields_empty = is_empty fields in
-      <span data-count="27">i</span>f is_array obj
+      <span data-count="28">l</span>et fields_empty = is_empty fields in
+      <span data-count="28">i</span>f is_array obj
       then
         <span data-count="11">l</span>et+ array =
           get_array_lis<span data-count="11">t</span> obj
@@ -2177,82 +2177,82 @@ let rec print_vvalues ctx ?(str_quote = <span data-count="447">f</span>alse) = f
             "[%s%s ]"
             (conca<span data-count="11">t</span> array)
             (if fields_empty then <span data-count="10">"</span>" else <span data-count="1">"</span>," ^ conca<span data-count="1">t</span> fields)
-      else <span data-count="16">i</span>f fields_empty
+      else <span data-count="17">i</span>f fields_empty
       then <span data-count="3">r</span>eturn "{}"
-      else <span data-count="13">r</span>eturn @@ asprint<span data-count="13">f</span> "{%s }" (conca<span data-count="13">t</span> fields))
+      else <span data-count="14">r</span>eturn @@ asprint<span data-count="14">f</span> "{%s }" (conca<span data-count="14">t</span> fields))
 ;;
 
 let get_vreturn = function
-  | <span data-count="615">S</span>ome x -&gt; x
-  | <span data-count="96">N</span>one -&gt; VUndefined
+  | <span data-count="637">S</span>ome x -&gt; x
+  | <span data-count="105">N</span>one -&gt; VUndefined
 ;;
 
 let get_lex_env ctx id =
-  <span data-count="1997">l</span>et get_lex_env_opt ctx id = <span data-count="1997">I</span>ntMap.find_opt id ctx.lex_envs in
+  <span data-count="2239">l</span>et get_lex_env_opt ctx id = <span data-count="2239">I</span>ntMap.find_opt id ctx.lex_envs in
   match get_lex_env_opt ctx id with
-  | <span data-count="1997">S</span>ome x -&gt; return x
+  | <span data-count="2239">S</span>ome x -&gt; return x
   | <span data-count="0">_</span> -&gt; error @@ ReferenceError (asprint<span data-count="0">f</span> "cannot find lexical env with id = %i" id)
 ;;
 
 let rec add_or_replace var = function
-  | <span data-count="1002">a</span> :: b -&gt; if a.var_id = var.var_id then <span data-count="101">v</span>ar :: b else <span data-count="901">a</span> :: add_or_replac<span data-count="901">e</span> var b
-  | <span data-count="254">_</span> -&gt; [ var ]
+  | <span data-count="1051">a</span> :: b -&gt; if a.var_id = var.var_id then <span data-count="101">v</span>ar :: b else <span data-count="950">a</span> :: add_or_replac<span data-count="950">e</span> var b
+  | <span data-count="297">_</span> -&gt; [ var ]
 ;;
 
 let print ctx values _ =
-  <span data-count="55">l</span>et+ ctx =
-    fold_lef<span data-count="55">t</span>
+  <span data-count="59">l</span>et+ ctx =
+    fold_lef<span data-count="59">t</span>
       (fun ctx value -&gt;
-        <span data-count="100">p</span>rint_vvalue<span data-count="100">s</span> ctx value
-        &gt;&gt;| fun str -&gt; <span data-count="100">{</span> ctx with stdout = ctx.stdout ^ str ^ " " })
+        <span data-count="104">p</span>rint_vvalue<span data-count="104">s</span> ctx value
+        &gt;&gt;| fun str -&gt; <span data-count="104">{</span> ctx with stdout = ctx.stdout ^ str ^ " " })
       ctx
       values
   in
-  <span data-count="55">{</span> ctx with stdout = ctx.stdout ^ "\n" }, None
+  <span data-count="59">{</span> ctx with stdout = ctx.stdout ^ "\n" }, None
 ;;
 
-let tfunction x = <span data-count="51">T</span>Function x
-let tarrowfun x = <span data-count="20">T</span>ArrowFunction x
+let tfunction x = <span data-count="53">T</span>Function x
+let tarrowfun x = <span data-count="33">T</span>ArrowFunction x
 let tfunpreset x = <span data-count="0">T</span>FunPreset x
 
 let create_func ctx name args obj_type =
-  <span data-count="111">l</span>et length = Float.of_int @@ List.lengt<span data-count="111">h</span> args in
-  <span data-count="111">a</span>dd_ob<span data-count="111">j</span>
+  <span data-count="141">l</span>et length = Float.of_int @@ List.lengt<span data-count="141">h</span> args in
+  <span data-count="141">a</span>dd_ob<span data-count="141">j</span>
     ctx
     [ { var_id = "name"; is_const = true; value = VString name }
     ; { var_id = "length"; is_const = true; value = VNumber length }
     ]
     obj_type
-  &gt;&gt;| fun (ctx, id) -&gt; <span data-count="111">c</span>tx, vobjec<span data-count="111">t</span> id
+  &gt;&gt;| fun (ctx, id) -&gt; <span data-count="141">c</span>tx, vobjec<span data-count="141">t</span> id
 ;;
 
 let create_arrowfunc ctx name args body =
-  <span data-count="20">c</span>reate_func ctx name args (tarrowfu<span data-count="20">n</span> { parent_lex_env = ctx.cur_lex_env; args; body })
+  <span data-count="33">c</span>reate_func ctx name args (tarrowfu<span data-count="33">n</span> { parent_lex_env = ctx.cur_lex_env; args; body })
 ;;
 
 let create_function ctx name args body =
-  <span data-count="51">c</span>reate_func ctx name args (tfunctio<span data-count="51">n</span> { parent_lex_env = ctx.cur_lex_env; args; body })
+  <span data-count="53">c</span>reate_func ctx name args (tfunctio<span data-count="53">n</span> { parent_lex_env = ctx.cur_lex_env; args; body })
 ;;
 
 (*init number of lexical envs counter*)
 let first_lex_env = 0
 
-let lex_add ctx ?(replace = <span data-count="246">f</span>alse) lex_env_id var =
-  <span data-count="346">g</span>et_lex_en<span data-count="346">v</span> ctx lex_env_id
+let lex_add ctx ?(replace = <span data-count="287">f</span>alse) lex_env_id var =
+  <span data-count="387">g</span>et_lex_en<span data-count="387">v</span> ctx lex_env_id
   &gt;&gt;= fun lex_env -&gt;
-  <span data-count="346">m</span>atch find_in_vars_opt var.var_id lex_env.vars with
+  <span data-count="387">m</span>atch find_in_vars_opt var.var_id lex_env.vars with
   | <span data-count="101">S</span>ome _ when not replace -&gt;
     <span data-count="1">e</span>rror
     @@ SyntaxError (asprint<span data-count="1">f</span> "Identifier \'%s\' has already been declared" var.var_id)
   | <span data-count="100">S</span>ome var when var.is_const -&gt; <span data-count="1">e</span>typ "Assignment to constant variable."
-  | <span data-count="245">N</span>one when replace -&gt; <span data-count="0">e</span>rror @@ ReferenceError (asprint<span data-count="0">f</span> "%s is not defined" var.var_id)
-  | <span data-count="344">_</span> -&gt;
+  | <span data-count="286">N</span>one when replace -&gt; <span data-count="0">e</span>rror @@ ReferenceError (asprint<span data-count="0">f</span> "%s is not defined" var.var_id)
+  | <span data-count="385">_</span> -&gt;
     return
       { ctx with
         lex_envs =
-          IntMap.ad<span data-count="344">d</span>
+          IntMap.ad<span data-count="385">d</span>
             lex_env_id
-            { lex_env with vars = add_or_replac<span data-count="344">e</span> var lex_env.vars }
+            { lex_env with vars = add_or_replac<span data-count="385">e</span> var lex_env.vars }
             ctx.lex_envs
       }
 ;;
@@ -2266,40 +2266,40 @@ let context_init =
   let ctx =
     { lex_env_count = id + 1
     ; cur_lex_env = id
-    ; lex_envs = IntMap.singleto<span data-count="8">n</span> id lex_env
+    ; lex_envs = IntMap.singleto<span data-count="11">n</span> id lex_env
     ; obj_count = global_obj_id + 1
-    ; objs = IntMap.singleto<span data-count="8">n</span> global_obj_id global_obj
+    ; objs = IntMap.singleto<span data-count="11">n</span> global_obj_id global_obj
     ; proto_objs = { proto_obj = 0; proto_fun = 0; proto_array = 0 }
     ; vreturn = None
     ; stdout = ""
     }
   in
   let fun_pres ctx name f =
-    <span data-count="40">l</span>et+ ctx, value = create_fun<span data-count="40">c</span> ctx name [] (TFunPreset f) in
-    <span data-count="40">c</span>tx, { var_id = name; is_const = true; value }
+    <span data-count="55">l</span>et+ ctx, value = create_fun<span data-count="55">c</span> ctx name [] (TFunPreset f) in
+    <span data-count="55">c</span>tx, { var_id = name; is_const = true; value }
   in
   let get_this_val = function
     | <span data-count="236">S</span>ome x -&gt; return x
     | <span data-count="0">N</span>one -&gt; error @@ InternalError "Cannot find this"
   in
   let add_proto_objs new_val ctx vals =
-    <span data-count="24">l</span>et+ ctx, value = add_ob<span data-count="24">j</span> ctx vals TObject in
-    <span data-count="24">{</span> ctx with proto_objs = new_va<span data-count="24">l</span> value }
+    <span data-count="33">l</span>et+ ctx, value = add_ob<span data-count="33">j</span> ctx vals TObject in
+    <span data-count="33">{</span> ctx with proto_objs = new_va<span data-count="33">l</span> value }
   in
   let proto_obj ctx =
-    <span data-count="8">l</span>et valueOf ctx =
-      <span data-count="8">f</span>un_pres ctx "valueOf" (fun ctx _ this -&gt;
+    <span data-count="11">l</span>et valueOf ctx =
+      <span data-count="11">f</span>un_pres ctx "valueOf" (fun ctx _ this -&gt;
         <span data-count="233">g</span>et_this_va<span data-count="233">l</span> this &gt;&gt;| fun x -&gt; <span data-count="233">c</span>tx, Some (vobjec<span data-count="233">t</span> x))
     in
-    let* ctx, v = valueO<span data-count="8">f</span> ctx in
-    <span data-count="8">a</span>dd_proto_objs (fun v -&gt; <span data-count="8">{</span> ctx.proto_objs with proto_obj = v }) ctx [ v ]
+    let* ctx, v = valueO<span data-count="11">f</span> ctx in
+    <span data-count="11">a</span>dd_proto_objs (fun v -&gt; <span data-count="11">{</span> ctx.proto_objs with proto_obj = v }) ctx [ v ]
   in
   let proto_fun ctx =
-    <span data-count="8">a</span>dd_proto_objs (fun v -&gt; <span data-count="8">{</span> ctx.proto_objs with proto_fun = v }) ctx []
+    <span data-count="11">a</span>dd_proto_objs (fun v -&gt; <span data-count="11">{</span> ctx.proto_objs with proto_fun = v }) ctx []
   in
   let proto_array ctx =
-    <span data-count="8">l</span>et shift ctx =
-      <span data-count="8">f</span>un_pres ctx "shift" (fun ctx _ this -&gt;
+    <span data-count="11">l</span>et shift ctx =
+      <span data-count="11">f</span>un_pres ctx "shift" (fun ctx _ this -&gt;
         <span data-count="1">l</span>et* id = get_this_va<span data-count="1">l</span> this in
         <span data-count="1">l</span>et* obj = get_obj_ct<span data-count="1">x</span> ctx id in
         <span data-count="1">g</span>et_array_lis<span data-count="1">t</span> obj
@@ -2309,7 +2309,7 @@ let context_init =
         &gt;&gt;| fun (obj, ret) -&gt; <span data-count="1">{</span> ctx with objs = IntMap.ad<span data-count="1">d</span> id obj ctx.objs }, Some ret)
     in
     let unshift ctx =
-      <span data-count="8">f</span>un_pres ctx "unshift" (fun ctx args this -&gt;
+      <span data-count="11">f</span>un_pres ctx "unshift" (fun ctx args this -&gt;
         <span data-count="2">l</span>et* id = get_this_va<span data-count="2">l</span> this in
         <span data-count="2">l</span>et* obj = get_obj_ct<span data-count="2">x</span> ctx id in
         <span data-count="2">l</span>et* tl = get_array_lis<span data-count="2">t</span> obj in
@@ -2319,32 +2319,32 @@ let context_init =
         let ret = vnumber (float_of_in<span data-count="2">t</span> @@ List.lengt<span data-count="2">h</span> new_arr) in
         <span data-count="2">{</span> ctx with objs = IntMap.ad<span data-count="2">d</span> id obj ctx.objs }, Some ret)
     in
-    let* ctx, v = fold_left_ma<span data-count="8">p</span> (fun ctx f -&gt; <span data-count="16">f</span> ctx) ctx [ shift; unshift ] in
-    <span data-count="8">a</span>dd_proto_objs (fun v -&gt; <span data-count="8">{</span> ctx.proto_objs with proto_array = v }) ctx v
+    let* ctx, v = fold_left_ma<span data-count="11">p</span> (fun ctx f -&gt; <span data-count="22">f</span> ctx) ctx [ shift; unshift ] in
+    <span data-count="11">a</span>dd_proto_objs (fun v -&gt; <span data-count="11">{</span> ctx.proto_objs with proto_array = v }) ctx v
   in
   let console ctx =
-    <span data-count="8">l</span>et* ctx, f = fun_pre<span data-count="8">s</span> ctx "log" print in
-    <span data-count="8">l</span>et* ctx, value = add_ob<span data-count="8">j</span> ctx [ f ] TObject in
-    <span data-count="8">l</span>ex_add
+    <span data-count="11">l</span>et* ctx, f = fun_pre<span data-count="11">s</span> ctx "log" print in
+    <span data-count="11">l</span>et* ctx, value = add_ob<span data-count="11">j</span> ctx [ f ] TObject in
+    <span data-count="11">l</span>ex_add
       ctx
       first_lex_env
-      { var_id = "console"; is_const = false; value = vobjec<span data-count="8">t</span> value }
+      { var_id = "console"; is_const = false; value = vobjec<span data-count="11">t</span> value }
   in
   let alert ctx =
-    <span data-count="8">f</span>un_pre<span data-count="8">s</span> ctx "alert" print &gt;&gt;= fun (ctx, f) -&gt; <span data-count="8">l</span>ex_add ctx first_lex_env f
+    <span data-count="11">f</span>un_pre<span data-count="11">s</span> ctx "alert" print &gt;&gt;= fun (ctx, f) -&gt; <span data-count="11">l</span>ex_add ctx first_lex_env f
   in
-  fold_lef<span data-count="8">t</span> (fun ctx f -&gt; <span data-count="40">f</span> ctx) ctx [ proto_obj; proto_fun; proto_array; console; alert ]
+  fold_lef<span data-count="11">t</span> (fun ctx f -&gt; <span data-count="55">f</span> ctx) ctx [ proto_obj; proto_fun; proto_array; console; alert ]
 ;;
 
 let create_local_ctx ctx parent scope this =
-  <span data-count="171">l</span>et* cur_lex_env = get_lex_en<span data-count="171">v</span> ctx ctx.cur_lex_env in
-  <span data-count="171">l</span>et vars =
+  <span data-count="206">l</span>et* cur_lex_env = get_lex_en<span data-count="206">v</span> ctx ctx.cur_lex_env in
+  <span data-count="206">l</span>et vars =
     match this with
-    | <span data-count="29">S</span>ome int -&gt; [ { var_id = "this"; is_const = true; value = VObject int } ]
-    | <span data-count="142">N</span>one -&gt;
-      (match scope, find_in_vars_op<span data-count="142">t</span> "this" cur_lex_env.vars with
-       | <span data-count="46">F</span>unction, _ | <span data-count="16">_</span>, None -&gt; []
-       | <span data-count="80">_</span>, Some x -&gt; [ x ])
+    | <span data-count="30">S</span>ome int -&gt; [ { var_id = "this"; is_const = true; value = VObject int } ]
+    | <span data-count="176">N</span>one -&gt;
+      (match scope, find_in_vars_op<span data-count="176">t</span> "this" cur_lex_env.vars with
+       | <span data-count="51">F</span>unction, _ | <span data-count="26">_</span>, None -&gt; []
+       | <span data-count="99">_</span>, Some x -&gt; [ x ])
   in
   let new_lex_env =
     { parent = Some parent; creater = Some ctx.cur_lex_env; vars; scope }
@@ -2353,30 +2353,30 @@ let create_local_ctx ctx parent scope this =
   if id = Int.max_int
   then <span data-count="0">e</span>rror @@ InternalError "Max amount of lexical envs was created"
   else
-    <span data-count="171">r</span>eturn
+    <span data-count="206">r</span>eturn
       { ctx with
         lex_env_count = id + 1
       ; cur_lex_env = id
-      ; lex_envs = IntMap.ad<span data-count="171">d</span> id new_lex_env ctx.lex_envs
+      ; lex_envs = IntMap.ad<span data-count="206">d</span> id new_lex_env ctx.lex_envs
       }
 ;;
 
 let end_of_block ctx =
-  <span data-count="497">l</span>et ret = ctx.vreturn in
-  let* lex_env = get_lex_en<span data-count="497">v</span> ctx ctx.cur_lex_env in
-  <span data-count="497">m</span>atch lex_env.creater with
-  | <span data-count="171">S</span>ome x -&gt; return ({ ctx with cur_lex_env = x; vreturn = None }, ret)
-  | <span data-count="326">_</span> when ctx.cur_lex_env = first_lex_env -&gt; <span data-count="326">r</span>eturn (ctx, ret)
+  <span data-count="535">l</span>et ret = ctx.vreturn in
+  let* lex_env = get_lex_en<span data-count="535">v</span> ctx ctx.cur_lex_env in
+  <span data-count="535">m</span>atch lex_env.creater with
+  | <span data-count="206">S</span>ome x -&gt; return ({ ctx with cur_lex_env = x; vreturn = None }, ret)
+  | <span data-count="329">_</span> when ctx.cur_lex_env = first_lex_env -&gt; <span data-count="329">r</span>eturn (ctx, ret)
   | <span data-count="0">_</span> -&gt; error @@ InternalError "Cannot find the lexical environment creater"
 ;;
 
 let prefind_funcs ctx ast =
-  <span data-count="508">l</span>et ctx_add_if_func ctx = function
-    | <span data-count="33">F</span>unInit x -&gt;
-      let* f = create_functio<span data-count="33">n</span> ctx x.fun_identifier x.arguments x.body in
-      <span data-count="33">l</span>et ctx, value = f in
+  <span data-count="546">l</span>et ctx_add_if_func ctx = function
+    | <span data-count="35">F</span>unInit x -&gt;
+      let* f = create_functio<span data-count="35">n</span> ctx x.fun_identifier x.arguments x.body in
+      <span data-count="35">l</span>et ctx, value = f in
       lex_add ctx ctx.cur_lex_env { var_id = x.fun_identifier; is_const = false; value }
-    | <span data-count="760">_</span> -&gt; return ctx
+    | <span data-count="803">_</span> -&gt; return ctx
   in
   fold_left ctx_add_if_func ctx ast
 ;;
@@ -2388,60 +2388,60 @@ let array_find_by_index id array =
 ;;
 
 let if_none a f =
-  <span data-count="1469">a</span>
+  <span data-count="1477">a</span>
   &gt;&gt;= function
-  | <span data-count="384">S</span>ome _ as x -&gt; return x
-  | <span data-count="1085">N</span>one -&gt; f
+  | <span data-count="388">S</span>ome _ as x -&gt; return x
+  | <span data-count="1089">N</span>one -&gt; f
 ;;
 
 let rec find_obj_in_protos ctx obj_fun array_fun = function
-  | <span data-count="1482">V</span>Object x -&gt;
-    let* obj = get_obj_ct<span data-count="1482">x</span> ctx x in
-    <span data-count="1482">l</span>et find_in_vars () =
-      <span data-count="1482">m</span>atch obj_fun obj with
-      | <span data-count="343">S</span>ome _ as x -&gt; return x
-      | <span data-count="1139">N</span>one -&gt; find_obj_in_protos ctx obj_fun array_fun obj.proto
+  | <span data-count="1490">V</span>Object x -&gt;
+    let* obj = get_obj_ct<span data-count="1490">x</span> ctx x in
+    <span data-count="1490">l</span>et find_in_vars () =
+      <span data-count="1490">m</span>atch obj_fun obj with
+      | <span data-count="347">S</span>ome _ as x -&gt; return x
+      | <span data-count="1143">N</span>one -&gt; find_obj_in_protos ctx obj_fun array_fun obj.proto
     in
     (match obj.obj_type with
      | <span data-count="441">T</span>Array arr -&gt; if_none (retur<span data-count="441">n</span> @@ array_fu<span data-count="441">n</span> arr) @@ find_in_var<span data-count="441">s</span> ()
-     | <span data-count="1041">_</span> -&gt; find_in_vars ())
-  | <span data-count="1092">_</span> -&gt; return None
+     | <span data-count="1049">_</span> -&gt; find_in_vars ())
+  | <span data-count="1096">_</span> -&gt; return None
 ;;
 
 let get_obj_property_opt ctx obj key =
-  <span data-count="514">l</span>et go obj =
-    <span data-count="1426">f</span>ind_obj_in_protos
+  <span data-count="518">l</span>et go obj =
+    <span data-count="1434">f</span>ind_obj_in_protos
       ctx
-      (fun obj -&gt; <span data-count="1473">O</span>ption.map (fun x -&gt; <span data-count="342">x</span>.value) (find_in_vars_op<span data-count="1473">t</span> key obj.fields))
+      (fun obj -&gt; <span data-count="1481">O</span>ption.map (fun x -&gt; <span data-count="346">x</span>.value) (find_in_vars_op<span data-count="1481">t</span> key obj.fields))
       (fun arr -&gt; <span data-count="436">a</span>rray_find_by_index key arr)
       obj
   in
   match obj with
-  | <span data-count="514">V</span>Object id as obj_val -&gt;
-    let* obj = get_obj_ct<span data-count="514">x</span> ctx id in
-    <span data-count="514">l</span>et spec_proto =
+  | <span data-count="518">V</span>Object id as obj_val -&gt;
+    let* obj = get_obj_ct<span data-count="518">x</span> ctx id in
+    <span data-count="518">l</span>et spec_proto =
       if is_func obj
       then <span data-count="0">g</span><span data-count="0">o</span> (vobjec<span data-count="0">t</span> ctx.proto_objs.proto_fun)
-      else <span data-count="514">i</span>f is_array obj
+      else <span data-count="518">i</span>f is_array obj
       then <span data-count="398">g</span><span data-count="398">o</span> (vobjec<span data-count="398">t</span> ctx.proto_objs.proto_array)
-      else <span data-count="116">r</span>etur<span data-count="116">n</span> None
+      else <span data-count="120">r</span>etur<span data-count="120">n</span> None
     in
-    if_none (g<span data-count="514">o</span> obj_val) @@ if_none spec_prot<span data-count="514">o</span> @@ g<span data-count="514">o</span> (vobjec<span data-count="514">t</span> ctx.proto_objs.proto_obj)
+    if_none (g<span data-count="518">o</span> obj_val) @@ if_none spec_prot<span data-count="518">o</span> @@ g<span data-count="518">o</span> (vobjec<span data-count="518">t</span> ctx.proto_objs.proto_obj)
   | <span data-count="0">_</span> -&gt; ensup "reading from not object"
 ;;
 
 let get_obj_property ctx obj key =
-  <span data-count="353">g</span>et_obj_property_op<span data-count="353">t</span> ctx obj key
+  <span data-count="357">g</span>et_obj_property_op<span data-count="357">t</span> ctx obj key
   &gt;&gt;| function
-  | <span data-count="348">S</span>ome x -&gt; x
+  | <span data-count="352">S</span>ome x -&gt; x
   | <span data-count="5">N</span>one -&gt; VUndefined
 ;;
 
 (**---------------Expression interpreter---------------*)
 
 let const_to_val = function
-  | <span data-count="659">N</span>umber x -&gt; VNumber x
-  | <span data-count="326">S</span>tring x -&gt; VString x
+  | <span data-count="685">N</span>umber x -&gt; VNumber x
+  | <span data-count="334">S</span>tring x -&gt; VString x
   | <span data-count="39">B</span>ool x -&gt; VBool x
   | <span data-count="11">U</span>ndefined -&gt; VUndefined
   | <span data-count="21">N</span>ull -&gt; VNull
@@ -2458,17 +2458,17 @@ let get_int ctx bit = function
 ;;
 
 let ctx_get_var ctx id =
-  <span data-count="664">l</span>et rec go lex_id =
-    <span data-count="983">l</span>et* lex_env = get_lex_en<span data-count="983">v</span> ctx lex_id in
-    <span data-count="983">m</span>atch find_in_vars_opt id lex_env.vars with
-    | <span data-count="659">S</span>ome a -&gt; return (a, lex_id)
-    | <span data-count="324">N</span>one -&gt;
+  <span data-count="732">l</span>et rec go lex_id =
+    <span data-count="1111">l</span>et* lex_env = get_lex_en<span data-count="1111">v</span> ctx lex_id in
+    <span data-count="1111">m</span>atch find_in_vars_opt id lex_env.vars with
+    | <span data-count="727">S</span>ome a -&gt; return (a, lex_id)
+    | <span data-count="384">N</span>one -&gt;
       (*function mustn't see 'this' in parent lex envs*)
       if id = "this" &amp;&amp; <span data-count="3">l</span>ex_env.scope = Function
       then <span data-count="3">r</span>eturn ({ var_id = id; is_const = true; value = VUndefined }, lex_id)
-      else <span data-count="321">(</span>
+      else <span data-count="381">(</span>
         match lex_env.parent with
-        | <span data-count="319">S</span>ome parent -&gt; go parent
+        | <span data-count="379">S</span>ome parent -&gt; go parent
         | <span data-count="2">N</span>one -&gt;
           error (ReferenceError (asprint<span data-count="2">f</span> "Cannot access '%s' before initialization" id)))
   in
@@ -2480,13 +2480,13 @@ let rec get_primitive ctx = function
   | <span data-count="237">V</span>Object id as x -&gt;
     let* f = get_obj_propert<span data-count="237">y</span> ctx x "valueOf" in
     <span data-count="237">e</span>val_fu<span data-count="237">n</span> ctx f [] (Some id) &gt;&gt;| fun (_, value) -&gt; <span data-count="237">v</span>alue
-  | <span data-count="1695">_</span> as t -&gt; return t
+  | <span data-count="1822">_</span> as t -&gt; return t
 
 and to_string ctx v =
-  <span data-count="588">g</span>et_primitiv<span data-count="588">e</span> ctx v
+  <span data-count="596">g</span>et_primitiv<span data-count="596">e</span> ctx v
   &gt;&gt;= function
-  | <span data-count="283">V</span>String x -&gt; return x
-  | <span data-count="126">V</span>Number x -&gt; return (num_to_strin<span data-count="126">g</span> x)
+  | <span data-count="290">V</span>String x -&gt; return x
+  | <span data-count="127">V</span>Number x -&gt; return (num_to_strin<span data-count="127">g</span> x)
   | <span data-count="1">V</span>Bool true -&gt; return "true"
   | <span data-count="0">V</span>Bool false -&gt; return "false"
   | <span data-count="3">V</span>Null -&gt; return "null"
@@ -2511,18 +2511,18 @@ and to_string ctx v =
   | <span data-count="9">V</span>Object _ -&gt; return "[object Object]"
 
 and to_bool ctx v =
-  <span data-count="272">g</span>et_primitiv<span data-count="272">e</span> ctx v
+  <span data-count="303">g</span>et_primitiv<span data-count="303">e</span> ctx v
   &gt;&gt;| function
   | <span data-count="3">V</span>Null | <span data-count="2">V</span>Undefined -&gt; false
-  | <span data-count="238">V</span>Bool x -&gt; x
+  | <span data-count="269">V</span>Bool x -&gt; x
   | <span data-count="19">V</span>Number x when Float.is_na<span data-count="19">n</span> <span data-count="1">x</span> || x = 0<span data-count="4">.</span> -&gt; <span data-count="5">f</span>alse
   | <span data-count="7">V</span>String x when String.tri<span data-count="7">m</span> x = "" -&gt; <span data-count="2">f</span>alse
   | <span data-count="22">_</span> -&gt; true
 
 and to_number ctx v =
-  <span data-count="566">g</span>et_primitiv<span data-count="566">e</span> ctx v
+  <span data-count="622">g</span>et_primitiv<span data-count="622">e</span> ctx v
   &gt;&gt;= function
-  | <span data-count="491">V</span>Number x -&gt; return x
+  | <span data-count="547">V</span>Number x -&gt; return x
   | <span data-count="27">V</span>String x -&gt;
     return
       (match String.trim x with
@@ -2543,17 +2543,17 @@ and to_number ctx v =
   | <span data-count="2">_</span> -&gt; return nan
 
 and ctx_not_change_bop ctx op a b =
-  <span data-count="705">l</span>et bop_with_num op =
-    <span data-count="144">l</span>et+ a, b = bot<span data-count="144">h</span> (to_numbe<span data-count="144">r</span> ctx) a b in
-    <span data-count="144">v</span>number @@ o<span data-count="144">p</span> a b
+  <span data-count="769">l</span>et bop_with_num op =
+    <span data-count="162">l</span>et+ a, b = bot<span data-count="162">h</span> (to_numbe<span data-count="162">r</span> ctx) a b in
+    <span data-count="162">v</span>number @@ o<span data-count="162">p</span> a b
   in
   let bop_logical_with_num op =
-    <span data-count="64">l</span>et+ a, b = bot<span data-count="64">h</span> (to_numbe<span data-count="64">r</span> ctx) a b in
-    <span data-count="64">v</span>bool @@ o<span data-count="64">p</span> a b
+    <span data-count="69">l</span>et+ a, b = bot<span data-count="69">h</span> (to_numbe<span data-count="69">r</span> ctx) a b in
+    <span data-count="69">v</span>bool @@ o<span data-count="69">p</span> a b
   in
   let bop_with_string op =
-    <span data-count="40">l</span>et+ a, b = bot<span data-count="40">h</span> (to_strin<span data-count="40">g</span> ctx) a b in
-    <span data-count="40">v</span>string @@ o<span data-count="40">p</span> a b
+    <span data-count="41">l</span>et+ a, b = bot<span data-count="41">h</span> (to_strin<span data-count="41">g</span> ctx) a b in
+    <span data-count="41">v</span>string @@ o<span data-count="41">p</span> a b
   in
   let bop_logical_with_string op =
     <span data-count="2">l</span>et+ a, b = bot<span data-count="2">h</span> (to_strin<span data-count="2">g</span> ctx) a b in
@@ -2568,15 +2568,15 @@ and ctx_not_change_bop ctx op a b =
     <span data-count="18">v</span>number (float_of_in<span data-count="18">t</span> (o<span data-count="18">p</span> (int_of_floa<span data-count="18">t</span> a) (int_of_floa<span data-count="18">t</span> b)))
   in
   let is_to_string v =
-    <span data-count="372">g</span>et_primitiv<span data-count="372">e</span> ctx v
+    <span data-count="394">g</span>et_primitiv<span data-count="394">e</span> ctx v
     &gt;&gt;| function
-    | <span data-count="54">V</span>String _ | <span data-count="26">V</span>Object _ -&gt; true
-    | <span data-count="292">_</span> -&gt; false
+    | <span data-count="55">V</span>String _ | <span data-count="26">V</span>Object _ -&gt; true
+    | <span data-count="313">_</span> -&gt; false
   in
   let negotiate res = <span data-count="26">r</span>es &gt;&gt;= fun x -&gt; <span data-count="26">g</span>et_vboo<span data-count="26">l</span> ctx x &gt;&gt;| fun res -&gt; <span data-count="26">V</span>Bool (not res) in
   let add () =
-    <span data-count="119">l</span>et* l, r = bot<span data-count="119">h</span> is_to_string a b in
-    <span data-count="119">i</span>f <span data-count="39">l</span> || <span data-count="1">r</span> then <span data-count="40">b</span>op_with_string ( ^ ) else <span data-count="79">b</span>op_with_num ( +. )
+    <span data-count="120">l</span>et* l, r = bot<span data-count="120">h</span> is_to_string a b in
+    <span data-count="120">i</span>f <span data-count="40">l</span> || <span data-count="1">r</span> then <span data-count="41">b</span>op_with_string ( ^ ) else <span data-count="79">b</span>op_with_num ( +. )
   in
   let logical_and () =
     <span data-count="11">l</span>et a_preserved = a in
@@ -2587,42 +2587,42 @@ and ctx_not_change_bop ctx op a b =
     | <span data-count="7">_</span> -&gt; a_preserved
   in
   let logical_or () =
-    <span data-count="84">l</span>et a_preserved = a in
+    <span data-count="94">l</span>et a_preserved = a in
     let b_preserved = b in
-    bot<span data-count="84">h</span> (to_boo<span data-count="84">l</span> ctx) a b
+    bot<span data-count="94">h</span> (to_boo<span data-count="94">l</span> ctx) a b
     &gt;&gt;| function
-    | <span data-count="21">t</span>rue, _ -&gt; a_preserved
-    | <span data-count="63">_</span> -&gt; b_preserved
+    | <span data-count="22">t</span>rue, _ -&gt; a_preserved
+    | <span data-count="72">_</span> -&gt; b_preserved
   in
-  let strict_equal () = <span data-count="136">r</span>eturn (VBool (a = b)) in
+  let strict_equal () = <span data-count="152">r</span>eturn (VBool (a = b)) in
   let equal () =
-    <span data-count="67">l</span>et is_obj = function
+    <span data-count="72">l</span>et is_obj = function
       | <span data-count="14">V</span>Object _ -&gt; true
-      | <span data-count="120">_</span> -&gt; false
+      | <span data-count="130">_</span> -&gt; false
     in
-    let* res1 = ctx_not_change_bo<span data-count="67">p</span> ctx StrictEqual a b in
-    <span data-count="67">l</span>et* a, b =
-      bot<span data-count="67">h</span>
+    let* res1 = ctx_not_change_bo<span data-count="72">p</span> ctx StrictEqual a b in
+    <span data-count="72">l</span>et* a, b =
+      bot<span data-count="72">h</span>
         (fun x -&gt;
-          <span data-count="134">g</span>et_primitiv<span data-count="134">e</span> ctx x
-          &gt;&gt;= fun x -&gt; <span data-count="134">i</span>f is_obj x then <span data-count="14">t</span>o_strin<span data-count="14">g</span> ctx x &gt;&gt;| vstring else <span data-count="120">r</span>eturn x)
+          <span data-count="144">g</span>et_primitiv<span data-count="144">e</span> ctx x
+          &gt;&gt;= fun x -&gt; <span data-count="144">i</span>f is_obj x then <span data-count="14">t</span>o_strin<span data-count="14">g</span> ctx x &gt;&gt;| vstring else <span data-count="130">r</span>eturn x)
         a
         b
     in
-    <span data-count="67">l</span>et* res2 =
+    <span data-count="72">l</span>et* res2 =
       match a, b with
       | <span data-count="1">V</span>Null, (<span data-count="0">V</span>Null | <span data-count="1">V</span>Undefined) | <span data-count="0">V</span>Undefined, (<span data-count="0">V</span>Null | <span data-count="0">V</span>Undefined) -&gt;
         retur<span data-count="1">n</span> @@ vboo<span data-count="1">l</span> true
       | <span data-count="7">V</span>Bool x, y | <span data-count="3">y</span>, VBool x -&gt;
         to_numbe<span data-count="10">r</span> ctx (vboo<span data-count="10">l</span> x) &gt;&gt;<span data-count="10">|</span> vnumber &gt;&gt;<span data-count="10">=</span> ctx_not_change_bo<span data-count="10">p</span> ctx Equal y
       | <span data-count="1">V</span>Number _, VString _ | <span data-count="9">V</span>String _, VNumber _ -&gt; bop_logical_with_nu<span data-count="10">m</span> ( = )
-      | <span data-count="46">_</span> -&gt; ctx_not_change_bo<span data-count="46">p</span> ctx StrictEqual a b
+      | <span data-count="51">_</span> -&gt; ctx_not_change_bo<span data-count="51">p</span> ctx StrictEqual a b
     in
-    <span data-count="67">c</span>tx_not_change_bop ctx LogicalOr res1 res2
+    <span data-count="72">c</span>tx_not_change_bop ctx LogicalOr res1 res2
   in
   let less_than () =
-    <span data-count="56">l</span>et* l, r = bot<span data-count="56">h</span> is_to_string a b in
-    <span data-count="56">i</span>f l &amp;&amp; <span data-count="4">r</span> then <span data-count="2">b</span>op_logical_with_string ( &lt; ) else <span data-count="54">b</span>op_logical_with_num ( &lt; )
+    <span data-count="61">l</span>et* l, r = bot<span data-count="61">h</span> is_to_string a b in
+    <span data-count="61">i</span>f l &amp;&amp; <span data-count="4">r</span> then <span data-count="2">b</span>op_logical_with_string ( &lt; ) else <span data-count="59">b</span>op_logical_with_num ( &lt; )
   in
   let shift op =
     <span data-count="17">l</span>et get_int = function
@@ -2634,32 +2634,32 @@ and ctx_not_change_bop ctx op a b =
     | <span data-count="2">_</span> -&gt; bop_bitwise_shift op (VNumber (float_of_in<span data-count="2">t</span> (32 + Option.ge<span data-count="2">t</span> (get_in<span data-count="2">t</span> b))))
   in
   let less_eq () =
-    <span data-count="11">l</span>et bop cast a b =
-      <span data-count="11">l</span>et* x, y = bot<span data-count="11">h</span> cast a b in
-      <span data-count="11">l</span>et* res1 = ctx_not_change_bo<span data-count="11">p</span> ctx LessThan x y in
-      <span data-count="11">l</span>et* res2 = ctx_not_change_bo<span data-count="11">p</span> ctx Equal x y in
-      <span data-count="11">c</span>tx_not_change_bop ctx LogicalOr res1 res2
+    <span data-count="16">l</span>et bop cast a b =
+      <span data-count="16">l</span>et* x, y = bot<span data-count="16">h</span> cast a b in
+      <span data-count="16">l</span>et* res1 = ctx_not_change_bo<span data-count="16">p</span> ctx LessThan x y in
+      <span data-count="16">l</span>et* res2 = ctx_not_change_bo<span data-count="16">p</span> ctx Equal x y in
+      <span data-count="16">c</span>tx_not_change_bop ctx LogicalOr res1 res2
     in
-    bot<span data-count="11">h</span> is_to_string a b
+    bot<span data-count="16">h</span> is_to_string a b
     &gt;&gt;= fun (l, r) -&gt;
-    <span data-count="11">i</span>f l &amp;&amp; <span data-count="1">r</span>
+    <span data-count="16">i</span>f l &amp;&amp; <span data-count="1">r</span>
     then <span data-count="1">b</span>op (fun x -&gt; <span data-count="2">t</span>o_strin<span data-count="2">g</span> ctx x &gt;&gt;| vstring) a b
-    else <span data-count="10">b</span>op (fun x -&gt; <span data-count="20">t</span>o_numbe<span data-count="20">r</span> ctx x &gt;&gt;| vnumber) a b
+    else <span data-count="15">b</span>op (fun x -&gt; <span data-count="30">t</span>o_numbe<span data-count="30">r</span> ctx x &gt;&gt;| vnumber) a b
   in
-  let prop_accs () = <span data-count="116">t</span>o_strin<span data-count="116">g</span> ctx b &gt;&gt;= get_obj_propert<span data-count="116">y</span> ctx a in
+  let prop_accs () = <span data-count="120">t</span>o_strin<span data-count="120">g</span> ctx b &gt;&gt;= get_obj_propert<span data-count="120">y</span> ctx a in
   let nullish_coal () =
     <span data-count="3">m</span>atch a with
     | <span data-count="1">V</span>Null | <span data-count="1">V</span>Undefined -&gt; return b
     | <span data-count="1">_</span> -&gt; return a
   in
   match op with
-  | <span data-count="119">A</span>dd -&gt; ad<span data-count="119">d</span> () &lt;?&gt; "error in add operator"
-  | <span data-count="25">S</span>ub -&gt; bop_with_nu<span data-count="25">m</span> ( -. ) &lt;?&gt; "error in sub operator"
-  | <span data-count="25">M</span>ul -&gt; bop_with_nu<span data-count="25">m</span> ( *. ) &lt;?&gt; "error in mul operator"
+  | <span data-count="120">A</span>dd -&gt; ad<span data-count="120">d</span> () &lt;?&gt; "error in add operator"
+  | <span data-count="34">S</span>ub -&gt; bop_with_nu<span data-count="34">m</span> ( -. ) &lt;?&gt; "error in sub operator"
+  | <span data-count="34">M</span>ul -&gt; bop_with_nu<span data-count="34">m</span> ( *. ) &lt;?&gt; "error in mul operator"
   | <span data-count="6">D</span>iv -&gt; bop_with_nu<span data-count="6">m</span> ( /. ) &lt;?&gt; "error in div operator"
-  | <span data-count="56">E</span>qual -&gt; equa<span data-count="56">l</span> () &lt;?&gt; "error in equal operator"
+  | <span data-count="61">E</span>qual -&gt; equa<span data-count="61">l</span> () &lt;?&gt; "error in equal operator"
   | <span data-count="11">N</span>otEqual -&gt; negotiat<span data-count="11">e</span> @@ equa<span data-count="11">l</span> () &lt;?&gt; "error in not_equal operator"
-  | <span data-count="121">S</span>trictEqual -&gt; strict_equa<span data-count="121">l</span> () &lt;?&gt; "error in strict equal operator"
+  | <span data-count="137">S</span>trictEqual -&gt; strict_equa<span data-count="137">l</span> () &lt;?&gt; "error in strict equal operator"
   | <span data-count="15">S</span>trictNotEqual -&gt;
     negotiat<span data-count="15">e</span> @@ strict_equa<span data-count="15">l</span> () &lt;?&gt; "error in strict not_equal operator"
   | <span data-count="4">R</span>em -&gt; bop_with_nu<span data-count="4">m</span> mod_float &lt;?&gt; "error in rem operator"
@@ -2670,18 +2670,18 @@ and ctx_not_change_bop ctx op a b =
     shif<span data-count="7">t</span> Int32.shift_right_logical &lt;?&gt; "error in unsigned_shift_right operator"
   | <span data-count="0">G</span>reaterEqual -&gt;
     ctx_not_change_bo<span data-count="0">p</span> ctx LessEqual b a &lt;?&gt; "error in greater_equal operator"
-  | <span data-count="11">L</span>essEqual -&gt; less_e<span data-count="11">q</span> () &lt;?&gt; "error in less_equal operator"
+  | <span data-count="16">L</span>essEqual -&gt; less_e<span data-count="16">q</span> () &lt;?&gt; "error in less_equal operator"
   | <span data-count="2">G</span>reaterThan -&gt;
     ctx_not_change_bo<span data-count="2">p</span> ctx LessThan b a &lt;?&gt; "error in greater_than operator"
-  | <span data-count="56">L</span>essThan -&gt; less_tha<span data-count="56">n</span> () &lt;?&gt; "error in less_than operator"
+  | <span data-count="61">L</span>essThan -&gt; less_tha<span data-count="61">n</span> () &lt;?&gt; "error in less_than operator"
   | <span data-count="6">B</span>itwiseAnd -&gt; bop_with_in<span data-count="6">t</span> ( land ) &lt;?&gt; "error in bitwise and"
   | <span data-count="6">B</span>itwiseOr -&gt; bop_with_in<span data-count="6">t</span> ( lor ) &lt;?&gt; "error in bitwise or"
   | <span data-count="11">L</span>ogicalAnd -&gt; logical_an<span data-count="11">d</span> () &lt;?&gt; "error in logical_and operator"
-  | <span data-count="84">L</span>ogicalOr -&gt; logical_o<span data-count="84">r</span> () &lt;?&gt; "error in logical_or operator"
+  | <span data-count="94">L</span>ogicalOr -&gt; logical_o<span data-count="94">r</span> () &lt;?&gt; "error in logical_or operator"
   | <span data-count="3">N</span>ullishCoal -&gt; nullish_coa<span data-count="3">l</span> () &lt;?&gt; "error in nullish_coalescing operator"
   | <span data-count="6">X</span>or -&gt; bop_with_in<span data-count="6">t</span> ( lxor ) &lt;?&gt; "error in xor operator"
   | <span data-count="5">E</span>xp -&gt; bop_with_nu<span data-count="5">m</span> ( ** ) &lt;?&gt; "error in exp operator"
-  | <span data-count="116">P</span>ropAccs -&gt; prop_acc<span data-count="116">s</span> () &lt;?&gt; "error in property accession"
+  | <span data-count="120">P</span>ropAccs -&gt; prop_acc<span data-count="120">s</span> () &lt;?&gt; "error in property accession"
   | <span data-count="0">_</span> as a -&gt; ensup @@ asprint<span data-count="0">f</span> "operator %a not supported yet" pp_bin_op a
 
 and ctx_not_change_unop ctx op a =
@@ -2697,53 +2697,53 @@ and ctx_not_change_unop ctx op a =
   | <span data-count="0">_</span> as a -&gt; ensup @@ asprint<span data-count="0">f</span> "operator %a not supported yet" pp_un_op a
 
 and eval_fun ctx f args this =
-  <span data-count="380">l</span>et* ctx, args = fold_left_ma<span data-count="380">p</span> eval_exp ctx args &lt;?<span data-count="380">&gt;</span> "error in function arguments" in
-  <span data-count="379">l</span>et get_fun =
+  <span data-count="408">l</span>et* ctx, args = fold_left_ma<span data-count="408">p</span> eval_exp ctx args &lt;?<span data-count="408">&gt;</span> "error in function arguments" in
+  <span data-count="407">l</span>et get_fun =
     match f with
-    | <span data-count="379">V</span>Object id -&gt;
-      let* obj = get_obj_ct<span data-count="379">x</span> ctx id in
-      <span data-count="379">i</span>f is_func obj then <span data-count="379">r</span>eturn (ctx, obj.obj_type) else <span data-count="0">e</span>typ "object is not a function"
+    | <span data-count="407">V</span>Object id -&gt;
+      let* obj = get_obj_ct<span data-count="407">x</span> ctx id in
+      <span data-count="407">i</span>f is_func obj then <span data-count="407">r</span>eturn (ctx, obj.obj_type) else <span data-count="0">e</span>typ "object is not a function"
     | <span data-count="0">_</span> -&gt; ety<span data-count="0">p</span> @@ asprint<span data-count="0">f</span> "'%s' is not a function" (print_typ<span data-count="0">e</span> ctx f)
   in
   let valid_and_run ctx scope f =
-    <span data-count="88">l</span>et rec val_to_args ctx = function
-      | <span data-count="24">a</span>1 :: atl, v1 :: vtl -&gt;
+    <span data-count="112">l</span>et rec val_to_args ctx = function
+      | <span data-count="54">a</span>1 :: atl, v1 :: vtl -&gt;
         let var = { var_id = a1; is_const = false; value = v1 } in
-        let* ctx = lex_ad<span data-count="24">d</span> ctx ctx.cur_lex_env var in
-        <span data-count="24">v</span>al_to_args ctx (atl, vtl)
+        let* ctx = lex_ad<span data-count="54">d</span> ctx ctx.cur_lex_env var in
+        <span data-count="54">v</span>al_to_args ctx (atl, vtl)
       | <span data-count="2">a</span>1 :: atl, _ -&gt;
         let var = { var_id = a1; is_const = false; value = VUndefined } in
         let* ctx = lex_ad<span data-count="2">d</span> ctx ctx.cur_lex_env var in
         <span data-count="2">v</span>al_to_args ctx (atl, [])
-      | <span data-count="88">_</span>, _ -&gt; return ctx
+      | <span data-count="112">_</span>, _ -&gt; return ctx
     in
-    create_local_ct<span data-count="88">x</span> ctx f.parent_lex_env scope this
+    create_local_ct<span data-count="112">x</span> ctx f.parent_lex_env scope this
     &gt;&gt;= fun ctx -&gt;
-    <span data-count="88">m</span>atch f.body with
-    | <span data-count="88">B</span>lock x -&gt;
-      let* ctx = val_to_arg<span data-count="88">s</span> ctx (f.args, args) in
-      <span data-count="88">l</span>et+ ctx, ret = eval_stm<span data-count="88">s</span> ctx x in
-      <span data-count="88">c</span>tx, get_vretur<span data-count="88">n</span> ret
+    <span data-count="112">m</span>atch f.body with
+    | <span data-count="112">B</span>lock x -&gt;
+      let* ctx = val_to_arg<span data-count="112">s</span> ctx (f.args, args) in
+      <span data-count="112">l</span>et+ ctx, ret = eval_stm<span data-count="112">s</span> ctx x in
+      <span data-count="112">c</span>tx, get_vretur<span data-count="112">n</span> ret
     | <span data-count="0">_</span> -&gt;
       error (AstError "in top of fun body expected Block, but something else was given")
   in
   get_fun
   &gt;&gt;= fun (ctx, obj_t) -&gt;
-  <span data-count="379">m</span>atch obj_t with
-  | <span data-count="65">T</span>Function f -&gt; valid_and_run ctx Function f
-  | <span data-count="23">T</span>ArrowFunction f -&gt; valid_and_run ctx ArrowFunction f
-  | <span data-count="291">T</span>FunPreset f -&gt; <span data-count="291">f</span> ctx args this &gt;&gt;| fun (ctx, ret) -&gt; <span data-count="291">c</span>tx, get_vretur<span data-count="291">n</span> ret
+  <span data-count="407">m</span>atch obj_t with
+  | <span data-count="71">T</span>Function f -&gt; valid_and_run ctx Function f
+  | <span data-count="41">T</span>ArrowFunction f -&gt; valid_and_run ctx ArrowFunction f
+  | <span data-count="295">T</span>FunPreset f -&gt; <span data-count="295">f</span> ctx args this &gt;&gt;| fun (ctx, ret) -&gt; <span data-count="295">c</span>tx, get_vretur<span data-count="295">n</span> ret
   | <span data-count="0">_</span> -&gt;
     error @@ InternalError "get unexpected object type, expect function, but get TObject"
 
 and ctx_change_unop ctx op a =
-  <span data-count="120">l</span>et op_new () =
-    <span data-count="2">m</span>atch a with
-    | <span data-count="1">F</span>unctionCall (f, args) -&gt;
-      let* ctx, id = add_ob<span data-count="1">j</span> ctx [] TObject in
-      <span data-count="1">l</span>et* ctx, f = eval_ex<span data-count="1">p</span> ctx f in
-      <span data-count="1">l</span>et+ ctx, _ = eval_fu<span data-count="1">n</span> ctx f args (Some id) in
-      <span data-count="1">c</span>tx, vobjec<span data-count="1">t</span> id
+  <span data-count="121">l</span>et op_new () =
+    <span data-count="3">m</span>atch a with
+    | <span data-count="2">F</span>unctionCall (f, args) -&gt;
+      let* ctx, id = add_ob<span data-count="2">j</span> ctx [] TObject in
+      <span data-count="2">l</span>et* ctx, f = eval_ex<span data-count="2">p</span> ctx f in
+      <span data-count="2">l</span>et+ ctx, _ = eval_fu<span data-count="2">n</span> ctx f args (Some id) in
+      <span data-count="2">c</span>tx, vobjec<span data-count="2">t</span> id
     | <span data-count="1">_</span> as v -&gt;
       let* ctx, v = eval_ex<span data-count="1">p</span> ctx v in
       <span data-count="1">p</span>rint_vvalue<span data-count="1">s</span> ctx v &gt;&gt;= fun v -&gt; <span data-count="1">e</span>typ (v ^ " is not a constructor")
@@ -2763,22 +2763,22 @@ and ctx_change_unop ctx op a =
     let* _, res = eval_ex<span data-count="1">p</span> ctx a in
     <span data-count="1">l</span>et* ctx, _ = ctx_change_bo<span data-count="1">p</span> ctx SubAssign a (Const (Number 1.)) in
     <span data-count="1">r</span>etur<span data-count="1">n</span> (ctx, res) &lt;?&gt; "error in prefix decrement operator"
-  | <span data-count="2">N</span>ew -&gt; op_new ()
+  | <span data-count="3">N</span>ew -&gt; op_new ()
   | <span data-count="67">_</span> -&gt;
     eval_ex<span data-count="67">p</span> ctx a &gt;&gt;= fun (ctx, a) -&gt; <span data-count="67">a</span>dd_to_result ctx @@ ctx_not_change_uno<span data-count="67">p</span> ctx op a
 
 and ctx_change_bop ctx op a b : (ctx * value) t =
-  <span data-count="618">l</span>et assign () =
-    <span data-count="147">l</span>et obj_assign obj prop =
-      <span data-count="42">l</span>et* ctx, (obj_val, prop) = both_ex<span data-count="42">t</span> eval_exp ctx obj prop in
-      <span data-count="42">l</span>et* ctx, new_val = eval_ex<span data-count="42">p</span> ctx b in
-      <span data-count="42">l</span>et* id, obj =
+  <span data-count="650">l</span>et assign () =
+    <span data-count="149">l</span>et obj_assign obj prop =
+      <span data-count="44">l</span>et* ctx, (obj_val, prop) = both_ex<span data-count="44">t</span> eval_exp ctx obj prop in
+      <span data-count="44">l</span>et* ctx, new_val = eval_ex<span data-count="44">p</span> ctx b in
+      <span data-count="44">l</span>et* id, obj =
         match obj_val with
-        | <span data-count="42">V</span>Object x -&gt; add_to_result <span data-count="42">x</span> @@ get_obj_ct<span data-count="42">x</span> ctx x
+        | <span data-count="44">V</span>Object x -&gt; add_to_result <span data-count="44">x</span> @@ get_obj_ct<span data-count="44">x</span> ctx x
         | <span data-count="0">_</span> -&gt; erro<span data-count="0">r</span> @@ SyntaxError "Invalid or unexpected token"
       in
-      <span data-count="42">l</span>et* prop = to_strin<span data-count="42">g</span> ctx prop in
-      <span data-count="42">l</span>et+ new_obj =
+      <span data-count="44">l</span>et* prop = to_strin<span data-count="44">g</span> ctx prop in
+      <span data-count="44">l</span>et+ new_obj =
         match prop with
         | <span data-count="11">"</span>__proto__" -&gt;
           let* find_proto_cyclic =
@@ -2794,13 +2794,13 @@ and ctx_change_bop ctx op a b : (ctx * value) t =
           <span data-count="11">i</span>f Option.is_some find_proto_cyclic
           then <span data-count="3">e</span>typ "Cyclic __proto__ value"
           else <span data-count="8">r</span>eturn { obj with proto = new_val }
-        | <span data-count="31">_</span> -&gt;
+        | <span data-count="33">_</span> -&gt;
           let get_array_index =
             match int_of_string_opt prop with
             | <span data-count="22">S</span>ome x when x &gt;= 0 -&gt; <span data-count="22">S</span>ome x
-            | <span data-count="9">_</span> -&gt; None
+            | <span data-count="11">_</span> -&gt; None
           in
-          if is_arra<span data-count="31">y</span> obj &amp;&amp; <span data-count="21">O</span>ption.is_som<span data-count="21">e</span> get_array_index
+          if is_arra<span data-count="33">y</span> obj &amp;&amp; <span data-count="21">O</span>ption.is_som<span data-count="21">e</span> get_array_index
           then
             <span data-count="20">l</span>et* id = Option.to_resul<span data-count="20">t</span> ~none:"" get_array_index in
             <span data-count="20">l</span>et+ array = get_array_lis<span data-count="20">t</span> obj in
@@ -2815,21 +2815,21 @@ and ctx_change_bop ctx op a b : (ctx * value) t =
                 else <span data-count="47">N</span>one :: add_to_arra<span data-count="47">y</span> (counter + 1) []
             in
             { obj with obj_type = TArray (add_to_arra<span data-count="20">y</span> 0 array) }
-          else <span data-count="11">(</span>
+          else <span data-count="13">(</span>
             match find_in_vars_opt prop obj.fields with
             | <span data-count="2">S</span>ome x when x.is_const -&gt;
               <span data-count="0">l</span>et* str = print_vvalue<span data-count="0">s</span> ctx obj_val in
               <span data-count="0">e</span>typ
               @@ asprint<span data-count="0">f</span> "Cannot assign to read only property '%s' of %s" x.var_id str
-            | <span data-count="11">_</span> -&gt;
+            | <span data-count="13">_</span> -&gt;
               let fields =
                 add_or_replace
                   { var_id = prop; is_const = false; value = new_val }
                   obj.fields
               in
-              <span data-count="11">r</span>etur<span data-count="11">n</span> { obj with fields })
+              <span data-count="13">r</span>etur<span data-count="13">n</span> { obj with fields })
       in
-      <span data-count="39">{</span> ctx with objs = IntMap.ad<span data-count="39">d</span> id new_obj ctx.objs }, new_val
+      <span data-count="41">{</span> ctx with objs = IntMap.ad<span data-count="41">d</span> id new_obj ctx.objs }, new_val
     in
     match a with
     | <span data-count="100">V</span>ar id -&gt;
@@ -2839,11 +2839,11 @@ and ctx_change_bop ctx op a b : (ctx * value) t =
         lex_ad<span data-count="100">d</span> ctx ~replace:true lex_id { var_id = id; is_const = false; value = res }
       in
       <span data-count="99">c</span>tx, res
-    | <span data-count="42">B</span>inOp (PropAccs, obj, prop) -&gt; obj_assign obj prop
+    | <span data-count="44">B</span>inOp (PropAccs, obj, prop) -&gt; obj_assign obj prop
     | <span data-count="5">_</span> -&gt; error @@ SyntaxError "Invalid left-hand side in assignment"
   in
   match op with
-  | <span data-count="147">A</span>ssign -&gt; assig<span data-count="147">n</span> () &lt;?&gt; "error in assignment"
+  | <span data-count="149">A</span>ssign -&gt; assig<span data-count="149">n</span> () &lt;?&gt; "error in assignment"
   | <span data-count="48">A</span>ddAssign -&gt; ctx_change_bop ctx Assign a (BinOp (Add, a, b))
   | <span data-count="6">S</span>ubAssign -&gt; ctx_change_bop ctx Assign a (BinOp (Sub, a, b))
   | <span data-count="1">M</span>ulAssign -&gt; ctx_change_bop ctx Assign a (BinOp (Mul, a, b))
@@ -2859,40 +2859,40 @@ and ctx_change_bop ctx op a b : (ctx * value) t =
   | <span data-count="1">L</span>ogAndAssign -&gt; ctx_change_bop ctx Assign a (BinOp (LogicalAnd, a, b))
   | <span data-count="1">L</span>ogOrAssign -&gt; ctx_change_bop ctx Assign a (BinOp (LogicalOr, a, b))
   | <span data-count="3">N</span>ullAssign -&gt; ctx_change_bop ctx Assign a (BinOp (NullishCoal, a, b))
-  | <span data-count="401">_</span> -&gt;
-    both_ex<span data-count="401">t</span> eval_exp ctx a b
-    &gt;&gt;= fun (ctx, (x, y)) -&gt; <span data-count="401">a</span>dd_to_result ctx (ctx_not_change_bo<span data-count="401">p</span> ctx op x y)
+  | <span data-count="431">_</span> -&gt;
+    both_ex<span data-count="431">t</span> eval_exp ctx a b
+    &gt;&gt;= fun (ctx, (x, y)) -&gt; <span data-count="431">a</span>dd_to_result ctx (ctx_not_change_bo<span data-count="431">p</span> ctx op x y)
 
 and eval_for_top_val ctx name = function
   | <span data-count="15">A</span>nonFunction (args, vals) -&gt; create_function ctx name args vals
-  | <span data-count="5">A</span>rrowFunction (args, vals) -&gt; create_arrowfunc ctx name args vals
-  | <span data-count="244">_</span> as ast -&gt; eval_exp ctx ast
+  | <span data-count="6">A</span>rrowFunction (args, vals) -&gt; create_arrowfunc ctx name args vals
+  | <span data-count="246">_</span> as ast -&gt; eval_exp ctx ast
 
 (**main expression interpreter*)
 and eval_exp ctx = function
-  | <span data-count="1056">C</span>onst x -&gt; return (ctx, const_to_va<span data-count="1056">l</span> x)
-  | <span data-count="497">B</span>inOp (op, a, b) -&gt; ctx_change_bop ctx op a b
-  | <span data-count="120">U</span>nOp (op, a) -&gt; ctx_change_unop ctx op a
-  | <span data-count="564">V</span>ar id -&gt; ctx_get_va<span data-count="564">r</span> ctx id &gt;&gt;| fun (var, _) -&gt; <span data-count="562">c</span>tx, var.value
-  | <span data-count="142">F</span>unctionCall (var, args) -&gt;
+  | <span data-count="1090">C</span>onst x -&gt; return (ctx, const_to_va<span data-count="1090">l</span> x)
+  | <span data-count="529">B</span>inOp (op, a, b) -&gt; ctx_change_bop ctx op a b
+  | <span data-count="121">U</span>nOp (op, a) -&gt; ctx_change_unop ctx op a
+  | <span data-count="632">V</span>ar id -&gt; ctx_get_va<span data-count="632">r</span> ctx id &gt;&gt;| fun (var, _) -&gt; <span data-count="630">c</span>tx, var.value
+  | <span data-count="169">F</span>unctionCall (var, args) -&gt;
     let find_this =
       match var with
-      | <span data-count="79">B</span>inOp (PropAccs, x, y) -&gt;
-        let* ctx, obj = eval_ex<span data-count="79">p</span> ctx x in
-        <span data-count="79">l</span>et this =
+      | <span data-count="83">B</span>inOp (PropAccs, x, y) -&gt;
+        let* ctx, obj = eval_ex<span data-count="83">p</span> ctx x in
+        <span data-count="83">l</span>et this =
           match obj with
-          | <span data-count="79">V</span>Object id -&gt; Some id
+          | <span data-count="83">V</span>Object id -&gt; Some id
           | <span data-count="0">_</span> -&gt; None
         in
-        let* ctx, y = eval_ex<span data-count="79">p</span> ctx y in
-        <span data-count="79">c</span>tx_not_change_bo<span data-count="79">p</span> ctx PropAccs obj y &gt;&gt;| fun res -&gt; <span data-count="79">(</span>ctx, res), this
-      | <span data-count="63">_</span> -&gt; eval_ex<span data-count="63">p</span> ctx var &gt;&gt;<span data-count="63">|</span> fun res -&gt; <span data-count="63">r</span>es, None
+        let* ctx, y = eval_ex<span data-count="83">p</span> ctx y in
+        <span data-count="83">c</span>tx_not_change_bo<span data-count="83">p</span> ctx PropAccs obj y &gt;&gt;| fun res -&gt; <span data-count="83">(</span>ctx, res), this
+      | <span data-count="86">_</span> -&gt; eval_ex<span data-count="86">p</span> ctx var &gt;&gt;<span data-count="86">|</span> fun res -&gt; <span data-count="86">r</span>es, None
     in
     find_this
-    &lt;?<span data-count="142">&gt;</span> "error while try get function"
-    &gt;&gt;= fun ((ctx, f), this) -&gt; <span data-count="142">e</span>val_fun ctx f args this
+    &lt;?<span data-count="169">&gt;</span> "error while try get function"
+    &gt;&gt;= fun ((ctx, f), this) -&gt; <span data-count="169">e</span>val_fun ctx f args this
   | <span data-count="3">A</span>nonFunction (args, vals) -&gt; create_function ctx "" args vals
-  | <span data-count="15">A</span>rrowFunction (args, vals) -&gt; create_arrowfunc ctx "" args vals
+  | <span data-count="27">A</span>rrowFunction (args, vals) -&gt; create_arrowfunc ctx "" args vals
   | <span data-count="65">O</span>bjectDef x -&gt;
     fold_left_ma<span data-count="65">p</span>
       (fun ctx (key, value) -&gt;
@@ -2918,30 +2918,30 @@ and eval_exp ctx = function
 (**---------------Statement interpreter---------------*)
 
 and eval_stm ctx = function
-  | <span data-count="386">R</span>eturn x -&gt;
-    let+ ctx, ret = eval_ex<span data-count="386">p</span> ctx x &lt;?<span data-count="386">&gt;</span> "error in return expression" in
-    <span data-count="379">{</span> ctx with vreturn = Some ret }
-  | <span data-count="172">V</span>arInit x -&gt;
+  | <span data-count="408">R</span>eturn x -&gt;
+    let+ ctx, ret = eval_ex<span data-count="408">p</span> ctx x &lt;?<span data-count="408">&gt;</span> "error in return expression" in
+    <span data-count="401">{</span> ctx with vreturn = Some ret }
+  | <span data-count="175">V</span>arInit x -&gt;
     let* ctx, v =
-      eval_for_top_va<span data-count="172">l</span> ctx x.var_identifier x.value
-      &lt;?<span data-count="172">&gt;</span> "error in var declaration expression"
+      eval_for_top_va<span data-count="175">l</span> ctx x.var_identifier x.value
+      &lt;?<span data-count="175">&gt;</span> "error in var declaration expression"
     in
-    <span data-count="171">l</span>et var = { var_id = x.var_identifier; is_const = x.is_const; value = v } in
+    <span data-count="174">l</span>et var = { var_id = x.var_identifier; is_const = x.is_const; value = v } in
     lex_add ctx ctx.cur_lex_env var
-  | <span data-count="26">I</span>f (condition, then_stm, else_stm) -&gt;
-    let* ctx, res = eval_ex<span data-count="26">p</span> ctx condition in
-    <span data-count="26">t</span>o_boo<span data-count="26">l</span> ctx res
+  | <span data-count="37">I</span>f (condition, then_stm, else_stm) -&gt;
+    let* ctx, res = eval_ex<span data-count="37">p</span> ctx condition in
+    <span data-count="37">t</span>o_boo<span data-count="37">l</span> ctx res
     &gt;&gt;= (function
-     | <span data-count="18">t</span>rue -&gt; eval_stm ctx then_stm
-     | <span data-count="8">f</span>alse -&gt; eval_stm ctx else_stm)
-  | <span data-count="74">B</span>lock ast -&gt;
-    let* ctx = create_local_ct<span data-count="74">x</span> ctx ctx.cur_lex_env Block None in
-    <span data-count="74">l</span>et+ ctx, ret = eval_stm<span data-count="74">s</span> ctx ast &lt;?<span data-count="74">&gt;</span> "error while interpret block" in
-    <span data-count="74">(</span>match ret with
-     | <span data-count="27">S</span>ome _ as x -&gt; { ctx with vreturn = x }
+     | <span data-count="20">t</span>rue -&gt; eval_stm ctx then_stm
+     | <span data-count="17">f</span>alse -&gt; eval_stm ctx else_stm)
+  | <span data-count="85">B</span>lock ast -&gt;
+    let* ctx = create_local_ct<span data-count="85">x</span> ctx ctx.cur_lex_env Block None in
+    <span data-count="85">l</span>et+ ctx, ret = eval_stm<span data-count="85">s</span> ctx ast &lt;?<span data-count="85">&gt;</span> "error while interpret block" in
+    <span data-count="85">(</span>match ret with
+     | <span data-count="38">S</span>ome _ as x -&gt; { ctx with vreturn = x }
      | <span data-count="47">_</span> -&gt; ctx)
-  | <span data-count="31">F</span>unInit _ -&gt; return ctx
-  | <span data-count="147">E</span>xpression e -&gt; eval_ex<span data-count="147">p</span> ctx e &gt;&gt;<span data-count="147">|</span> fst &lt;?&gt; "error in expression statement"
+  | <span data-count="33">F</span>unInit _ -&gt; return ctx
+  | <span data-count="154">E</span>xpression e -&gt; eval_ex<span data-count="154">p</span> ctx e &gt;&gt;<span data-count="154">|</span> fst &lt;?&gt; "error in expression statement"
   | <span data-count="9">L</span>oop loop -&gt;
     let* ctx = create_local_ct<span data-count="9">x</span> ctx ctx.cur_lex_env Block None in
     <span data-count="9">l</span>et* ctx = Option.fol<span data-count="9">d</span> ~none:(retur<span data-count="9">n</span> ctx) ~some:(eval_st<span data-count="9">m</span> ctx) loop.loop_init in
@@ -2969,23 +2969,23 @@ and eval_stm ctx = function
   | <span data-count="0">_</span> -&gt; error @@ InternalError "unexpected statement"
 
 and eval_stms ctx ast =
-  <span data-count="508">l</span>et* ctx = prefind_func<span data-count="508">s</span> ctx ast in
-  <span data-count="508">f</span>old_left_<span data-count="508">s</span> eval_stm (fun ctx -&gt; <span data-count="770">i</span>s_some ctx.vreturn) ctx ast &gt;&gt;= end_of_block
+  <span data-count="546">l</span>et* ctx = prefind_func<span data-count="546">s</span> ctx ast in
+  <span data-count="546">f</span>old_left_<span data-count="546">s</span> eval_stm (fun ctx -&gt; <span data-count="815">i</span>s_some ctx.vreturn) ctx ast &gt;&gt;= end_of_block
 ;;
 
 let interpret_ast = function
-  | <span data-count="346">P</span>rogramm x -&gt;
+  | <span data-count="349">P</span>rogramm x -&gt;
     let* ctx = context_init in
-    <span data-count="346">l</span>et* ctx, ret = eval_stm<span data-count="346">s</span> ctx x in
-    <span data-count="332">l</span>et+ ret = print_vvalues ct<span data-count="332">x</span> @@ get_vretur<span data-count="332">n</span> ret in
-    <span data-count="332">{</span> stdout = ctx.stdout; return = ret }
+    <span data-count="349">l</span>et* ctx, ret = eval_stm<span data-count="349">s</span> ctx x in
+    <span data-count="335">l</span>et+ ret = print_vvalues ct<span data-count="335">x</span> @@ get_vretur<span data-count="335">n</span> ret in
+    <span data-count="335">{</span> stdout = ctx.stdout; return = ret }
   | <span data-count="0">_</span> -&gt;
     error @@ AstError "expect Programm in start of programm, but something else was given"
 ;;
 
 let interpret input : (program_return, string) Result.t =
-  <span data-count="346">m</span>atch parse input with
-  | <span data-count="346">R</span>esult.Ok ast -&gt; interpret_as<span data-count="346">t</span> ast &lt;?&gt; "Interpreter error"
+  <span data-count="349">m</span>atch parse input with
+  | <span data-count="349">R</span>esult.Ok ast -&gt; interpret_as<span data-count="349">t</span> ast &lt;?&gt; "Interpreter error"
   | <span data-count="0">R</span>esult.Error (`ParsingError str) -&gt; erro<span data-count="0">r</span> (SyntaxError str) &lt;?&gt; "Parser error"
 ;;
 </code></pre>
