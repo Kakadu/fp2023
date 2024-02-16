@@ -16,6 +16,14 @@ Use `dune promote` after you change things that should runned
   40320 
 
   $ ./demoFile.exe <<-EOF
+  > ./demoCPSFactorial.js
+  120 
+
+  $ ./demoFile.exe <<-EOF
+  > ./demoFixFactorial.js
+  120 
+
+  $ ./demoFile.exe <<-EOF
   > ./demoObjects.js
   { prop1: 4, prop2: 'Hi!', getProp1: [Function: getProp1] } 
   Hi! 10 10 

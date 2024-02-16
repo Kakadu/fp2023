@@ -19,6 +19,8 @@
   ./demoString.exe
   ./demoFile.exe
   ./demoFactorial.js
+  ./demoCPSFactorial.js
+  ./demoFixFactorial.js
   ./demoObjects.js
   ./demoClosures.js
   ./demoArray.js))
