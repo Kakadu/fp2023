@@ -6,15 +6,9 @@ type binder = int [@@deriving show { with_path = false }]
 
 module VarSet = struct
   include Set.Make (Int)
-
-  let pp ppf s =
-    Format.fprintf ppf "[ ";
-    iter (Format.fprintf ppf "%d; ") s;
-    Format.fprintf ppf "]"
-  ;;
 end
 
-type binder_set = VarSet.t [@@deriving show { with_path = false }]
+type binder_set = VarSet.t
 
 type ty =
   | TPrim of string (** int, string *)
@@ -39,12 +33,20 @@ let rec pp_typ ppf =
   function
   | TVar n -> fprintf ppf "'_%d" n
   | TPrim s -> fprintf ppf "%s" s
-  | TArrow (l, r) -> fprintf ppf "(%a -> %a)" pp_typ l pp_typ r
+  | TArrow (l, r) ->
+    (match l with
+     | TArrow _ -> fprintf ppf "(%a) -> %a" pp_typ l pp_typ r
+     | _ -> fprintf ppf "%a -> %a" pp_typ l pp_typ r)
   | TTuple tl ->
     fprintf
       ppf
-      "%a"
-      (pp_print_list ~pp_sep:(fun _ _ -> fprintf ppf " * ") (fun ppf ty -> pp_typ ppf ty))
+      "(%a)"
+      (pp_print_list
+         ~pp_sep:(fun _ _ -> fprintf ppf " * ")
+         (fun ppf ty ->
+           match ty with
+           | TArrow _ -> fprintf ppf "(%a)" pp_typ ty
+           | _ -> fprintf ppf "%a" pp_typ ty))
       tl
   | TList t -> fprintf ppf "%a list" pp_typ t
 ;;
