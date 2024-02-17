@@ -1,4 +1,4 @@
-(** Copyright 2021-2023, Kakadu and contributors *)
+(** Copyright 2021-2023, Kakadu, RozhkovAleksandr *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
@@ -29,6 +29,11 @@ type bin_op =
   | Geq (** [>=] *)
 [@@deriving show { with_path = false }]
 
+type fun_rec =
+  | Rec
+  | NoRec
+[@@deriving show { with_path = false }]
+
 type expression =
   | Var of id
   | Const of const
@@ -40,9 +45,5 @@ type expression =
   | App of expression * expression
   | Let of fun_rec * id * expression * expression option
 [@@deriving show { with_path = false }]
-
-and fun_rec =
-  | Rec
-  | NoRec
 
 type expr_list = expression list [@@deriving show { with_path = false }]

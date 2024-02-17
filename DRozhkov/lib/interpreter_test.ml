@@ -1,4 +1,4 @@
-(** Copyright 2021-2023, Kakadu and contributors *)
+(** Copyright 2021-2023, Kakadu, RozhkovAleksandr *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
@@ -20,24 +20,28 @@ let rec pp_value_list fmt = function
 let process_program input =
   match Parser.parse input with
   | Result.Ok tree ->
-    (match Inferencer.infer_program tree with
-     | Result.Ok (_, program) ->
-       (match Interpreter.interpret (extract_expressions program) with
-        | Result.Ok (_, rs) ->
-          List.iter
-            (fun result ->
-              match result with
-              | VInt x -> printf "Integer result: %d\n" x
-              | VBool b -> printf "Boolean result: %b\n" b
-              | VUnit -> printf "Unit result\n"
-              | VList lst ->
-                printf "List result: ";
-                pp_value_list Format.std_formatter lst;
-                printf "\n"
-              | VFun _ -> printf "Function result\n")
-            rs
-        | _ -> printf "Interpretation error\n")
-     | _ -> printf "Typecheck error\n")
+    let infer_result = Inferencer.infer_program tree in
+    if Result.is_ok infer_result
+    then (
+      let _, program = Result.get_ok infer_result in
+      let interpret_result = Interpreter.interpret (extract_expressions program) in
+      if Result.is_ok interpret_result
+      then (
+        let _, vl = Result.get_ok interpret_result in
+        List.iter
+          (fun result ->
+            match result with
+            | VInt x -> printf "Integer result: %d\n" x
+            | VBool b -> printf "Boolean result: %b\n" b
+            | VUnit -> printf "Unit result\n"
+            | VList lst ->
+              printf "List result: ";
+              pp_value_list Format.std_formatter lst;
+              printf "\n"
+            | VFun _ -> printf "Function result\n")
+          vl)
+      else printf "Interpretation error\n")
+    else printf "Typecheck error\n"
   | _ -> printf "Parsing error\n"
 ;;
 
