@@ -18,13 +18,13 @@
       <h2>0.00%</h2>
     </div>
     <div id="navbar">
-      <span class="unvisited" style="top:10.42%"></span>
-      <span class="unvisited" style="top:14.58%"></span>
-      <span class="unvisited" style="top:27.08%"></span>
-      <span class="unvisited" style="top:39.58%"></span>
-      <span class="unvisited" style="bottom:33.33%"></span>
-      <span class="unvisited" style="bottom:12.50%"></span>
-      <span class="unvisited" style="bottom:8.33%"></span>
+      <span class="unvisited" style="top:10.20%"></span>
+      <span class="unvisited" style="top:14.29%"></span>
+      <span class="unvisited" style="top:26.53%"></span>
+      <span class="unvisited" style="top:38.78%"></span>
+      <span class="unvisited" style="bottom:34.69%"></span>
+      <span class="unvisited" style="bottom:24.49%"></span>
+      <span class="unvisited" style="bottom:4.08%"></span>
       <span class="unvisited" style="bottom:0.00%"></span>
     </div>
     <div id="report">
@@ -66,18 +66,19 @@
 <a id="L34"></a><span > </span>
 <a id="L35"></a><span > </span>
 <a id="L36"></a><span > </span>
-<a id="L37"></a><span > </span>
+<a id="L37"></a><span class="unvisited"> </span>
 <a id="L38"></a><span > </span>
 <a id="L39"></a><span > </span>
 <a id="L40"></a><span > </span>
 <a id="L41"></a><span > </span>
-<a id="L42"></a><span class="unvisited"> </span>
+<a id="L42"></a><span > </span>
 <a id="L43"></a><span > </span>
-<a id="L44"></a><span class="unvisited"> </span>
+<a id="L44"></a><span > </span>
 <a id="L45"></a><span > </span>
 <a id="L46"></a><span > </span>
-<a id="L47"></a><span > </span>
-<a id="L48"></a><span class="unvisited"> </span>
+<a id="L47"></a><span class="unvisited"> </span>
+<a id="L48"></a><span > </span>
+<a id="L49"></a><span class="unvisited"> </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -130,8 +131,9 @@
 <a href="#L46">46</a>
 <a href="#L47">47</a>
 <a href="#L48">48</a>
+<a href="#L49">49</a>
 </pre>
-<pre><code class="ocaml">(** Copyright 2021-2023, Kakadu and contributors *)
+<pre><code class="ocaml">(** Copyright 2021-2023, Kakadu, RozhkovAleksandr *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
@@ -162,6 +164,11 @@
   | Geq (** [&gt;=] *)
 [@@deriving show { with_path = false }]
 
+<span data-count="0">t</span>ype fun_rec =
+  | Rec
+  | NoRec
+[@@deriving show { with_path = false }]
+
 <span data-count="0">t</span>ype expression =
   | Var of id
   | Const of const
@@ -173,10 +180,6 @@
   | App of expression * expression
   | Let of fun_rec * id * expression * expression option
 [@@deriving show { with_path = false }<span data-count="0">]</span>
-
-<span data-count="0">a</span>nd fun_rec =
-  | Rec
-  | NoRec
 
 <span data-count="0">t</span>ype expr_list = <span data-count="0">e</span>xpression list [@@deriving show { with_path = false }]
 </code></pre>
