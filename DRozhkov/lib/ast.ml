@@ -12,8 +12,8 @@ type const =
 
 type pattern = 
   | PAny (** _ *)
-  | PConst of const (** | const -> ... *)
-  | PVar of id (** | varname -> ... *)
+  | PConst of const
+  | PVar of id
 [@@deriving show { with_path = false }]
 
 type bin_op =

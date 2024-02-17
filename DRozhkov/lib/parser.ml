@@ -224,4 +224,4 @@ let pexpr =
     choice [ letParser; ifParser; equalNotEqual; matchParser ])
 ;;
 
-let parse_expr = parse_string ~consume:Consume.All (pexpr <* spaces)
+let parse = parse_string ~consume:Consume.All (many1 (let_pars pexpr) <* spaces)
