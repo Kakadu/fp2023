@@ -1,0 +1,11 @@
+(executable
+ (name demoInterpret)
+ (modules demoInterpret)
+ (public_name demoInterpret)
+ (libraries ml_tests stdio)
+ (instrumentation
+  (backend bisect_ppx)))
+
+(cram
+ (applies_to interpreterTests try_catch_finTests failTests)
+ (deps ./demoInterpret.exe))

@@ -1,20 +1,27 @@
+(include_subdirs unqualified)
+
 (library
- (name lambda_lib)
- (public_name Lambda.Lib)
- (modules Ast Lambda Interpret Parser Printast Pprintast utils)
- (modules_without_implementation ast)
- (libraries base angstrom)
+ (name ocaml_printf_lib)
+ (public_name Ocaml+printf.Lib)
+ (modules Ast Parser Typedtree Inferencer Interpreter Pprint)
+ (libraries base stdlib angstrom)
+ (inline_tests)
  (preprocess
-  (pps ppx_deriving.show))
+  (pps ppx_expect ppx_deriving.show))
  (instrumentation
   (backend bisect_ppx)))
 
 (library
  (name tests)
- (modules tests)
- (libraries lambda_lib)
+ (modules Parser_tests Infer_tests Interpret_tests)
+ (libraries ocaml_printf_lib)
+ (inline_tests)
  (preprocess
   (pps ppx_expect ppx_deriving.show))
  (instrumentation
-  (backend bisect_ppx))
- (inline_tests))
+  (backend bisect_ppx)))
+
+(env
+ (dev
+  (flags
+   (:standard -w -32))))
