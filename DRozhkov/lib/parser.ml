@@ -122,7 +122,7 @@ let number =
   >>= fun whole ->
   dot
   >>= function
-  | false -> return (Const (Int (Int.of_string(sign ^ whole))))
+  | false -> return (Const (Int (Int.of_string (sign ^ whole))))
   | true -> fail "Not int"
 ;;
 
