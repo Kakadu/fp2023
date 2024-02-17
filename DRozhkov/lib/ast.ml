@@ -10,7 +10,7 @@ type const =
   | Empty
 [@@deriving show { with_path = false }]
 
-type pattern =
+type pattern = 
   | PAny (** _ *)
   | PConst of const
   | PVar of id

@@ -1,3 +1,7 @@
+(** Copyright 2021-2023, Kakadu, RozhkovAleksandr *)
+
+(** SPDX-License-Identifier: LGPL-3.0-or-later *)
+
 module R : sig
   type ('a, 'e) t = int -> int * ('a, 'e) result
 

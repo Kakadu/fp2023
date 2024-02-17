@@ -1,3 +1,7 @@
+(** Copyright 2021-2023, Kakadu, RozhkovAleksandr *)
+
+(** SPDX-License-Identifier: LGPL-3.0-or-later *)
+
 val is_space : char -> bool
 val is_whitespace : char -> bool
 val is_digit : char -> bool
