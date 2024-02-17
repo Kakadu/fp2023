@@ -1,18 +1,22 @@
-(** Copyright 2021-2023, Kakadu and contributors *)
+(** Copyright 2023-2024, Danil P *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-type error = [ `ParsingError of string ]
+(** [plit] is a parser for literals. *)
+val plit : Ast.lit Angstrom.t
 
-val pp_error : Format.formatter -> [< `ParsingError of string ] -> unit
+(** [ppat] is a parser for patterns. *)
+val ppat : Ast.pat Angstrom.t
 
-(** Main entry of parser *)
-val parse : string -> (Ast.name Ast.t, [> error ]) result
+(** [pexpr] is a parser for expressions. *)
+val pexpr : Ast.expr Angstrom.t
 
-type dispatch =
-  { apps : dispatch -> Ast.name Ast.t Angstrom.t
-  ; single : dispatch -> Ast.name Ast.t Angstrom.t
-  }
+(** [pdecl] is a parser for declarations. *)
+val pdecl : Ast.decl Angstrom.t
 
-(* A collection of miniparsers *)
-val parse_lam : dispatch
+(** [pprog] is a parser for complete programs. *)
+val pprog : Ast.prog Angstrom.t
+
+(** [parse source] attempts to parse the [source] string into an AST.
+    Returns [Ok prog] on success, [Error msg] on failure. *)
+val parse : string -> (Ast.prog, string) result

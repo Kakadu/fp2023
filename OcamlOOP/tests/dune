@@ -1,0 +1,8 @@
+(library
+ (name tests)
+ (libraries ocamlOOP_lib)
+ (preprocess
+  (pps ppx_expect))
+ (inline_tests)
+ (instrumentation
+  (backend bisect_ppx)))

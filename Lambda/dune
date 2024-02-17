@@ -4,7 +4,12 @@
    (:standard -warn-error -A -w -3-9-32-34-58)))
  (release
   (flags
-   (:standard -warn-error -A -w -58))))
+   (:standard
+    ;-warn-error -A
+    -warn-error
+    +A
+    -w
+    +A-4-40-42-44-70))))
 
 (executable
  (name REPL)

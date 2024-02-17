@@ -6,19 +6,20 @@
 
 (license LGPL-3.0-or-later)
 
-(authors "FIXME Vasya Pupkin")
+(authors "Ilya Pogorelov")
 
-(maintainers "FIXME Vasya Pupkin")
+(maintainers "Ilya Pogorelov")
 
-(bug_reports "FIXME where to put bug reports about the code")
+(bug_reports
+ "You can report about bugs in the code to this email: ilya_pogorelov_04@mail.ru")
 
-(homepage "FIXME Homepage")
+(homepage "https://github.com/twotwozeronine/fp2023")
 
 (package
- (name Lambda) ; FIXME and regenerate .opam file using 'dune build @install'
- (synopsis "FIXME An interpreter for language")
+ (name PrologDatalog) ; FIXME and regenerate .opam file using 'dune build @install'
+ (synopsis "An interpreter for language Prolog")
  (description
-  "FIXME. A longer description, for example, which are the most interesing features being supported, etc.")
+  "Prolog interpreter on Ocaml language. Implementation of base Prolog functionality")
  (version 0.1)
  (depends
   dune

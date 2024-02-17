@@ -1,4 +1,4 @@
-Copyright 2021-2022, Kakadu and contributors
+Copyright 2021-2023, Kakadu and contributors
 SPDX-License-Identifier: CC0-1.0
 
 Cram tests here. They run and compare program output to the expected output
@@ -44,6 +44,9 @@ in the dune file
   Result:     (λ z x -> (z (z (z (z (z (z x)))))))
   (λ z x -> (z (z (z (z (z (z x)))))))
   $ ./demoNO.exe
+  Evaluating: ⊥
+  Result:     ⊥
+  ⊥
   Evaluating: (((λ f -> ((λ x -> (f (x x))) (λ x -> (f (x x))))) (λ self N -> ((((λ n -> ((n (λ _ _ y -> y)) ⊤)) N) 1) (((λ x y z -> (x (y z))) (self ((λ n f x -> (((n (λ g h -> (h (g f)))) (λ _ -> x)) (λ u -> u))) N))) N)))) (((λ m n f x -> ((m f) ((n f) x))) 2) (λ f x -> (f (f (f x))))))
   Result:     (λ z x -> (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z x)))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
   (λ z x -> (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z x)))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
