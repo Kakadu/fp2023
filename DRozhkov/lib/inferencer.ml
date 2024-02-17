@@ -22,11 +22,10 @@ module R = struct
   ;;
 
   let ( let* ) = ( >>= )
-  end
+end
 
-  let fresh st = st + 1, Ok st
-  let run m = snd (m 0)
-
+let fresh st = st + 1, Ok st
+let run m = snd (m 0)
 
 module VarSet = struct
   include Set
@@ -121,7 +120,7 @@ end
 module Scheme = struct
   type t = S of VarSet.t * typ
 
-  let free_vars = fun (S (s, typ)) -> VarSet.diff (Type.free_vars typ) s
+  let free_vars (S (s, typ)) = VarSet.diff (Type.free_vars typ) s
 
   let apply (S (s, typ)) subst =
     let subst2 = VarSet.fold s ~init:subst ~f:(fun acc k -> Map.remove acc k) in
@@ -130,28 +129,23 @@ module Scheme = struct
 end
 
 module TypeEnv = struct
-
   type t = (id, Scheme.t, String.comparator_witness) Map.t
 
   let empty = Map.empty (module String)
 
-  let free_vars =
-    fun env ->
+  let free_vars env =
     Map.fold env ~init:VarSet.empty ~f:(fun ~key:_ ~data:sch acc ->
       VarSet.union acc (Scheme.free_vars sch))
   ;;
 
-  let extend =
-    fun env (id, sch) -> Map.set env ~key:id ~data:sch
-  ;;
+  let extend env (id, sch) = Map.set env ~key:id ~data:sch
 end
 
 open R
 
 let varf = fresh >>= fun x -> return (TVar x)
 
-let generalize =
-  fun env typ ->
+let generalize env typ =
   let free = VarSet.diff (Type.free_vars typ) (TypeEnv.free_vars env) in
   Scheme.S (free, typ)
 ;;
@@ -178,17 +172,17 @@ let infer_pattern =
 let lookup_env env id =
   match Map.find env id with
   | Some sch ->
-    let* typ = 
-      let Scheme.S (s, typ) = sch in
+    let* typ =
+      let (Scheme.S (s, typ)) = sch in
       VarSet.fold s ~init:(return typ) ~f:(fun typ name ->
         let* typ = typ in
         let* fv = varf in
         let* subst = Subst.singleton (name, fv) in
-        return (Subst.apply subst typ)
-      )
+        return (Subst.apply subst typ))
     in
     return (Subst.empty, typ)
   | None -> fail (Unbound_value id)
+;;
 
 let inferencer =
   let rec helper env = function
@@ -272,29 +266,29 @@ let inferencer =
           list
           ~init:(return (c_subst, tv))
           ~f:(fun acc (pat, e) ->
-            let* (subst, typ) = acc in
-            let* (pat_env, pat_typ) = infer_pattern env pat in 
+            let* subst, typ = acc in
+            let* pat_env, pat_typ = infer_pattern env pat in
             let* subst2 = Subst.unify c_typ pat_typ in
-            let* (subst3, e_typ) = helper pat_env e in
+            let* subst3, e_typ = helper pat_env e in
             let* subst4 = Subst.unify typ e_typ in
             let* final_subst = Subst.compose_all [ subst; subst2; subst3; subst4 ] in
             return (final_subst, Subst.apply final_subst typ))
       in
-        let* final_subst = Subst.compose c_subst e_subst in
-        return (final_subst, Subst.apply final_subst e_typ)
-    and infer_binop env op l r =
-      let* l_subst, l_typ = helper env l in
-      let* r_subst, r_typ = helper env r in
-      match op with
-        | Les | Leq | Gre | Geq | Eq | Neq  ->
-          let* subst = Subst.unify l_typ r_typ in
-          let* final_subst = Subst.compose_all [l_subst; r_subst; subst] in
-          return (final_subst, TBool)
-        | _ ->
-          let* subst1 = Subst.unify l_typ TInt in
-          let* subst2 = Subst.unify r_typ TInt in
-          let* final_subst = Subst.compose_all [l_subst; r_subst; subst1; subst2] in
-        return (final_subst, TInt)
+      let* final_subst = Subst.compose c_subst e_subst in
+      return (final_subst, Subst.apply final_subst e_typ)
+  and infer_binop env op l r =
+    let* l_subst, l_typ = helper env l in
+    let* r_subst, r_typ = helper env r in
+    match op with
+    | Les | Leq | Gre | Geq | Eq | Neq ->
+      let* subst = Subst.unify l_typ r_typ in
+      let* final_subst = Subst.compose_all [ l_subst; r_subst; subst ] in
+      return (final_subst, TBool)
+    | _ ->
+      let* subst1 = Subst.unify l_typ TInt in
+      let* subst2 = Subst.unify r_typ TInt in
+      let* final_subst = Subst.compose_all [ l_subst; r_subst; subst1; subst2 ] in
+      return (final_subst, TInt)
   in
   helper
 ;;

@@ -1,7 +1,14 @@
 (library
  (name DRozhkov_lib)
  (public_name DRozhkov.Lib)
- (modules Parser Ast Typedtree Inferencer Errors Interpreter Interpreter_test)
+ (modules
+  Parser
+  Ast
+  Typedtree
+  Inferencer
+  Errors
+  Interpreter
+  Interpreter_test)
  (inline_tests)
  (preprocess
   (pps ppx_show ppx_expect ppx_deriving.eq))

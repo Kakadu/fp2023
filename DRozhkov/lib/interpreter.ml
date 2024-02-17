@@ -33,9 +33,7 @@ type value =
 
 and bundle = (id, value, Base.String.comparator_witness) Base.Map.t
 
-let rec pp_value fmt =
-
-  function
+let rec pp_value fmt = function
   | VInt x -> fprintf fmt "%d" x
   | VBool x -> fprintf fmt "%b" x
   | VUnit -> fprintf fmt "()"
@@ -63,7 +61,6 @@ module Interpret (M : MONADERROR) = struct
     | Pattern_matching_error
     | Unbound_value of id
     | Incorrect_type of value
-    
 
   let pp_error fmt = function
     | Division_by_zero -> fprintf fmt "Division by zero"

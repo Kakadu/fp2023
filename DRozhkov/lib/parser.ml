@@ -65,7 +65,6 @@ let leq = token "<=" *> return Leq
 let gre = token ">" *> return Gre
 let geq = token ">=" *> return Geq
 let comparison = skip_whitespace *> les <|> leq <|> gre <|> geq <* skip_whitespace
-
 let high_pr_op = skip_whitespace *> mul <|> div <* skip_whitespace
 let low_pr_op = skip_whitespace *> add <|> sub <* skip_whitespace
 let peq = token "=" *> return Eq
@@ -116,16 +115,16 @@ let dot =
   | _ -> return false
 ;;
 
-  let number =
-    skip_whitespace *> sign
-    >>= fun sign ->
-    take_while1 is_digit
-    >>= fun whole ->
-    dot
-    >>= function
-    | false -> return (Const (Int (int_of_string (sign ^ whole))))
-    | true -> fail "Not int"
-  ;;
+let number =
+  skip_whitespace *> sign
+  >>= fun sign ->
+  take_while1 is_digit
+  >>= fun whole ->
+  dot
+  >>= function
+  | false -> return (Const (Int (Int.of_string(sign ^ whole))))
+  | true -> fail "Not int"
+;;
 
 let bool_pars =
   ptoken
@@ -170,28 +169,22 @@ let pebinop chain1 e pbinop = chain1 e (pbinop >>| fun op l r -> Binop (op, l, r
 let plbinop = pebinop chainl1
 let var_pars = ident >>= fun x -> return (Ast.Var x)
 let const_pars = choice [ bool_pars; number ]
+let pnumber = ptoken @@ take_while1 is_digit >>| fun x -> PConst (Int (Int.of_string x))
 
-let pnumber = ptoken @@ take_while1 is_digit >>| fun x -> (PConst ( Int (int_of_string x)))
 let pbool_pars =
   ptoken
   @@ choice
        [ token "true" *> return true; token "false" *> return false; fail "Not boolean" ]
   >>| fun x -> PConst (Bool x)
 ;;
+
 let ppconst = choice [ pnumber; pbool_pars ]
 let ppvar = ident >>| fun x -> PVar x
 
 let ppattern =
   fix
   @@ fun ppattern ->
-  let pat =
-    choice
-      [ parens ppattern
-      ; ppconst
-      ; (token "_" >>| fun _ -> PAny)
-      ; ppvar
-      ]
-  in
+  let pat = choice [ parens ppattern; ppconst; (token "_" >>| fun _ -> PAny); ppvar ] in
   pat
 ;;
 
@@ -207,7 +200,9 @@ let ematch pexpr =
 
 let pexpr =
   fix (fun parseExpression ->
-    let atom = choice [ parens parseExpression; const_pars; var_pars; list_pars parseExpression ] in
+    let atom =
+      choice [ parens parseExpression; const_pars; var_pars; list_pars parseExpression ]
+    in
     let apply =
       lift2
         (fun f args -> List.fold_left ~f:(fun f arg -> App (f, arg)) ~init:f args)

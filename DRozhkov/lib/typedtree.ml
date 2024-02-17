@@ -10,7 +10,7 @@ type typ =
   | TEmpty
   | TVar of int
   | TList of typ
-  | TArrow of typ * typ 
+  | TArrow of typ * typ
 [@@deriving eq, show { with_path = false }]
 
 let rec pp_typ fmt = function
@@ -24,4 +24,3 @@ let rec pp_typ fmt = function
      | TArrow (_, _), _ -> fprintf fmt "(%a) -> %a" pp_typ l pp_typ r
      | _, _ -> fprintf fmt "%a -> %a" pp_typ l pp_typ r)
 ;;
-

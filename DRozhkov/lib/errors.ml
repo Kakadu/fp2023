@@ -17,5 +17,3 @@ let pp_error fmt = function
   | Ivalid_format_concat (l, r) ->
     fprintf fmt "Failed to unify types %a and %a" pp_typ l pp_typ r
 ;;
-
-
