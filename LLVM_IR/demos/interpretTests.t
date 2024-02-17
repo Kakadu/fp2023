@@ -1,49 +1,87 @@
-Copyright 2021-2022, Kakadu and contributors
+Copyright 2023-2024, Efremov Alexey 
 SPDX-License-Identifier: CC0-1.0
 
-Cram tests here. They run and compare program output to the expected output
-https://dune.readthedocs.io/en/stable/tests.html#cram-tests
-Use `dune promote` after you change things that should runned
+  $ ./demoInterpret.exe < ./attachments/simple_ssa_fail.ll
+  SSA check failed: 
+  	Variable arg already was assigned
 
-If you need to put sample program and use it both in your interpreter and preinstalled one,
-you could put it into separate file. Thise will need stanza `(cram (deps demo_input.txt))`
-in the dune file
-  $ cat demo_input.txt
-  Dummy text, it doesn't affect execution of ./demoAO.exe
-  $ ./demoAO.exe < demo_input.txt
-  Evaluating: ⊥
-  Result:     ⊥
-  ⊥
-  Evaluating: 1
-  Result:     1
+  $ ./demoInterpret.exe < ./attachments/fac.ll
+  Programm return: 
+  	 (CInteger (32, 120L))
+
+  $ ./demoInterpret.exe 2000 20 4 < ./attachments/sum_args.ll
+  Programm return: 
+  	 (CInteger (32, 2024L))
+
+  $ ./sum_args.elf 2000 20 4
+  2024
+
+  $ ./demoInterpret.exe 2000 -1000 30337 1 1 1 1 1 < ./attachments/sum_args.ll
+  Programm return: 
+  	 (CInteger (32, 31342L))
+
+  $ ./sum_args.elf 2000 -1000 30337 1 1 1 1 1
+  31342
+
+
+  $ ./demoInterpret.exe  12.0 0.0   0. 0.   0. 12.  < ./attachments/triangle_square.ll
+  Programm return: 
+  	 (CFloat 72.)
+
+  $ ./triangle_square.elf 12.0 0.0   0.0 0.0   0.0 12.0
+  72.000000
+  [10]
+
+  $ ./demoInterpret.exe  0.012 0.    0. 0.   0. 0.012  < ./attachments/triangle_square.ll
+  Programm return: 
+  	 (CFloat 7.2e-05)
+
+  $ ./triangle_square.elf  0.012 0.    0. 0.   0. 0.012
+  0.000072
+  [9]
+
+  $ ./demoInterpret.exe 1 < ./attachments/fac_arg.ll 
+  Programm return: 
+  	 (CInteger (32, 1L))
+
+  $ ./fac_arg.elf  1
   1
-  Evaluating: ((λ m n f x -> (m (f (n (f x))))) (1 1))
-  Result:     (λ n f x _x -> ((f (n (f x))) _x))
-  (λ n f x _x -> ((f (n (f x))) _x))
-  Evaluating: ((λ n -> ((n (λ _ _ y -> y)) ⊤)) (1 (2 (λ f x -> (f (f (f x)))))))
-  Result:     ⊥
-  ⊥
-  Evaluating: (((λ x y z -> (x (y z))) 1) 2)
-   -- ((λ y z -> (1 (y z))) 2)
-   -- ((λ y z x -> ((y z) x)) 2)
-   -- (λ z x -> ((2 z) x))
-   -- (λ z x -> ((λ x -> (z (z x))) x))
-   -- 2
-  Result:     2
-  2
-  Evaluating: (((λ x y z -> (x (y z))) (λ f x -> (f (f (f x))))) 2)
-   -- ((λ y z -> ((λ f x -> (f (f (f x)))) (y z))) 2)
-   -- ((λ y z x -> ((y z) ((y z) ((y z) x)))) 2)
-   -- (λ z x -> ((2 z) ((2 z) ((2 z) x))))
-   -- (λ z x -> ((λ x -> (z (z x))) ((2 z) ((2 z) x))))
-   -- (λ z x -> ((λ x -> (z (z x))) ((λ x -> (z (z x))) ((2 z) x))))
-   -- (λ z x -> ((λ x -> (z (z x))) ((λ x -> (z (z x))) ((λ x -> (z (z x))) x))))
-   -- (λ z x -> ((λ x -> (z (z x))) ((λ x -> (z (z x))) (z (z x)))))
-   -- (λ z x -> ((λ x -> (z (z x))) (z (z (z (z x))))))
-   -- (λ z x -> (z (z (z (z (z (z x)))))))
-  Result:     (λ z x -> (z (z (z (z (z (z x)))))))
-  (λ z x -> (z (z (z (z (z (z x)))))))
-  $ ./demoNO.exe
-  Evaluating: (((λ f -> ((λ x -> (f (x x))) (λ x -> (f (x x))))) (λ self N -> ((((λ n -> ((n (λ _ _ y -> y)) ⊤)) N) 1) (((λ x y z -> (x (y z))) (self ((λ n f x -> (((n (λ g h -> (h (g f)))) (λ _ -> x)) (λ u -> u))) N))) N)))) (((λ m n f x -> ((m f) ((n f) x))) 2) (λ f x -> (f (f (f x))))))
-  Result:     (λ z x -> (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z x)))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
-  (λ z x -> (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z (z x)))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+
+  $ ./demoInterpret.exe 2 < ./attachments/fac_arg.ll 
+  Programm return: 
+  	 (CInteger (32, 2L))
+
+  $ ./fac_arg.elf  1
+  1
+
+  $ ./demoInterpret.exe 6 < ./attachments/fac_arg.ll 
+  Programm return: 
+  	 (CInteger (32, 720L))
+
+  $ ./fac_arg.elf  6
+  720
+
+  $ ./demoInterpret.exe 10 < ./attachments/fac_arg.ll 
+  Programm return: 
+  	 (CInteger (32, 3628800L))
+
+  $ ./fac_arg.elf  10
+  3628800
+
+  $ ./demoInterpret.exe 111 222 333 888 666 777 < ./attachments/vec_sum_args.ll
+  Programm return: 
+  	 (CVector
+     [(CInteger (32, 999L)); (CInteger (32, 888L)); (CInteger (32, 1110L))])
+
+  $ ./vec_sum_args.elf 111 222 333 888 666 777 
+  999 888 1110 
+  [14]
+
+  $ ./demoInterpret.exe 1 2 3   4 5 6   7 8 9 < ./attachments/vec_sum_args.ll
+  Programm return: 
+  	 (CVector [(CInteger (32, 12L)); (CInteger (32, 15L)); (CInteger (32, 18L))])
+
+  $ ./vec_sum_args.elf  1 2 3   4 5 6   7 8 9
+  12 15 18 
+  [10]
+

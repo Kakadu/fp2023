@@ -1,18 +1,9 @@
-(** Copyright 2021-2023, Kakadu and contributors *)
+(** Copyright 2023, aartdem *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-type error = [ `ParsingError of string ]
+(** creates AST from text of program *)
+val run_parser_program : string -> (Ast.program, string) result
 
-val pp_error : Format.formatter -> [< `ParsingError of string ] -> unit
-
-(** Main entry of parser *)
-val parse : string -> (Ast.name Ast.t, [> error ]) result
-
-type dispatch =
-  { apps : dispatch -> Ast.name Ast.t Angstrom.t
-  ; single : dispatch -> Ast.name Ast.t Angstrom.t
-  }
-
-(* A collection of miniparsers *)
-val parse_lam : dispatch
+(** creates AST from expression represented by a string *)
+val run_parser_expr : string -> (Ast.expr, string) result

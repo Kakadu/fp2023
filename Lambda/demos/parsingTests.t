@@ -1,4 +1,4 @@
-Copyright 2021-2022, Kakadu and contributors
+Copyright 2021-2023, Kakadu and contributors
 SPDX-License-Identifier: CC0-1.0
 
 Tests about parsing go here. It's expected that programs parse something and

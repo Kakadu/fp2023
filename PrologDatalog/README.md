@@ -1,22 +1,20 @@
-### An implementaion of Lambda mini-language
+### An implementaion of Prolog
 
 This is a homework for functional programming course.
 
 License: LGPL for implementation code + WTFPL for test examles in miniLanguage
 
-Author: Vasy Pupkin, vasya@pupkin.com
+Author: Pogorelov Ilya, ilya_pogorelov_04@mail.ru
 
 Features done (append only):
 
-- Parser  (for example)
-- interpreter of non-recursive functions (for example)
-- ...
+- Parser
 
 Features in progress (and TODOs):
 
-- Interpreter of recursive functions is not yet ready  (for example)
-- TODO: make pretty-printing less memory consuming (for example)
-- ...
+- interpreter of non-recursive functions 
+- Interpreter of recursive functions 
+
 
 
 ##### Замечания по стилю кодирования
