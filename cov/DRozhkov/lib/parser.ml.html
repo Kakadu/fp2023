@@ -620,7 +620,7 @@ let number =
   &gt;&gt;= fun whole -&gt;
   <span data-count="200">d</span>ot
   &gt;&gt;= function
-  | <span data-count="200">f</span>alse -&gt; return (Const (Int (Int.of_strin<span data-count="200">g</span>(sign ^ whole))))
+  | <span data-count="200">f</span>alse -&gt; return (Const (Int (Int.of_strin<span data-count="200">g</span> (sign ^ whole))))
   | <span data-count="0">t</span>rue -&gt; fail "Not int"
 ;;
 
