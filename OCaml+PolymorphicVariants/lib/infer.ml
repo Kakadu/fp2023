@@ -20,7 +20,7 @@ type error =
 
 let pp_error ppf : error -> _ = function
   | `Occurs_check -> Format.fprintf ppf "Occurs check failed"
-  | `No_variable s -> Format.fprintf ppf "Undefined variable '%s'" s
+  | `No_variable s -> Format.fprintf ppf "Unbound variable '%s'" s
   | `Unification_failed (l, r) ->
     Format.fprintf ppf "Unification failed on %a and %a" pp_typ l pp_typ r
   | `Unexpected_pattern -> Format.fprintf ppf "Unexpected pattern"
@@ -444,19 +444,4 @@ let infer_structure (structure : structure) =
     structure
 ;;
 
-let infer s =
-  match Parser.parse s with
-  | Ok parsed ->
-    (match run (infer_structure parsed) with
-     | Ok env ->
-       Map.iteri env ~f:(fun ~key:_ ~data:(S (_, ty)) -> Format.printf "%a\n" pp_typ ty)
-     | Error e -> Format.printf "%a" pp_error e)
-  | Error e -> Format.printf "Parsing error: %s\n" e
-;;
-
-let%expect_test _ =
-  let _ = infer {| 
-      let f x = x + 1;;
-     |} in
-  [%expect {| x |}]
-;;
+let run_infer s = run (infer_structure s)
