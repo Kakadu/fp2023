@@ -29,16 +29,15 @@ let process_program input =
       then (
         let _, vl = Result.get_ok interpret_result in
         List.iter
-          (fun result ->
-            match result with
-            | VInt x -> printf "Integer result: %d\n" x
-            | VBool b -> printf "Boolean result: %b\n" b
-            | VUnit -> printf "Unit result\n"
+          (function
+            | VInt x -> Printf.printf "Integer result: %d\n" x
+            | VBool b -> Printf.printf "Boolean result: %b\n" b
+            | VUnit -> Printf.printf "Unit result\n"
             | VList lst ->
-              printf "List result: ";
+              Printf.printf "List result: ";
               pp_value_list Format.std_formatter lst;
-              printf "\n"
-            | VFun _ -> printf "Function result\n")
+              Printf.printf "\n"
+            | VFun _ -> Printf.printf "Function result\n")
           vl)
       else printf "Interpretation error\n")
     else printf "Typecheck error\n"
