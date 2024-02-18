@@ -18,8 +18,8 @@
       <h2>95.12%</h2>
     </div>
     <div id="navbar">
-      <span class="unvisited" style="top:9.09%"></span>
-      <span class="unvisited" style="top:26.52%"></span>
+      <span class="unvisited" style="top:8.89%"></span>
+      <span class="unvisited" style="top:25.93%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -132,10 +132,10 @@
 <a id="L106"></a><span > </span>
 <a id="L107"></a><span > </span>
 <a id="L108"></a><span > </span>
-<a id="L109"></a><span class="visited"> </span>
+<a id="L109"></a><span > </span>
 <a id="L110"></a><span > </span>
 <a id="L111"></a><span > </span>
-<a id="L112"></a><span > </span>
+<a id="L112"></a><span class="visited"> </span>
 <a id="L113"></a><span > </span>
 <a id="L114"></a><span > </span>
 <a id="L115"></a><span > </span>
@@ -143,19 +143,22 @@
 <a id="L117"></a><span > </span>
 <a id="L118"></a><span > </span>
 <a id="L119"></a><span > </span>
-<a id="L120"></a><span class="visited"> </span>
+<a id="L120"></a><span > </span>
 <a id="L121"></a><span > </span>
 <a id="L122"></a><span > </span>
-<a id="L123"></a><span > </span>
-<a id="L124"></a><span class="visited"> </span>
+<a id="L123"></a><span class="visited"> </span>
+<a id="L124"></a><span > </span>
 <a id="L125"></a><span > </span>
 <a id="L126"></a><span > </span>
-<a id="L127"></a><span > </span>
-<a id="L128"></a><span class="visited"> </span>
+<a id="L127"></a><span class="visited"> </span>
+<a id="L128"></a><span > </span>
 <a id="L129"></a><span > </span>
 <a id="L130"></a><span > </span>
 <a id="L131"></a><span class="visited"> </span>
 <a id="L132"></a><span > </span>
+<a id="L133"></a><span > </span>
+<a id="L134"></a><span class="visited"> </span>
+<a id="L135"></a><span > </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -292,6 +295,9 @@
 <a href="#L130">130</a>
 <a href="#L131">131</a>
 <a href="#L132">132</a>
+<a href="#L133">133</a>
+<a href="#L134">134</a>
+<a href="#L135">135</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2021-2023, Kakadu, RozhkovAleksandr *)
 
@@ -301,42 +307,42 @@ open Format
 open Interpreter
 
 let interpret = Interpreter.interpret
-let extract_expressions program = <span data-count="242">L</span>ist.map (fun (expr, _) -&gt; <span data-count="374">e</span>xpr) program
+let extract_expressions program = <span data-count="253">L</span>ist.map (fun (expr, _) -&gt; <span data-count="414">e</span>xpr) program
 
 let rec pp_value_list fmt = function
   | <span data-count="0">[</span>] -&gt; ()
-  | <span data-count="22">[</span> v ] -&gt; pp_value fmt v
-  | <span data-count="88">v</span> :: vs -&gt;
+  | <span data-count="23">[</span> v ] -&gt; pp_value fmt v
+  | <span data-count="92">v</span> :: vs -&gt;
     pp_value fmt v;
-    <span data-count="88">F</span>ormat.fprintf fmt "; ";
-    <span data-count="88">p</span>p_value_list fmt vs
+    <span data-count="92">F</span>ormat.fprintf fmt "; ";
+    <span data-count="92">p</span>p_value_list fmt vs
 ;;
 
 let process_program input =
-  <span data-count="330">m</span>atch Parser.parse input with
-  | <span data-count="264">R</span>esult.Ok tree -&gt;
+  <span data-count="345">m</span>atch Parser.parse input with
+  | <span data-count="276">R</span>esult.Ok tree -&gt;
     let infer_result = Inferencer.infer_program tree in
-    <span data-count="264">i</span>f Result.is_ok infer_result
-    then <span data-count="242">(</span>
+    <span data-count="276">i</span>f Result.is_ok infer_result
+    then <span data-count="253">(</span>
       let _, program = Result.get_ok infer_result in
-      <span data-count="242">l</span>et interpret_result = Interpreter.interpret (extract_expression<span data-count="242">s</span> program) in
-      <span data-count="242">i</span>f Result.is_ok interpret_result
-      then <span data-count="220">(</span>
+      <span data-count="253">l</span>et interpret_result = Interpreter.interpret (extract_expression<span data-count="253">s</span> program) in
+      <span data-count="253">i</span>f Result.is_ok interpret_result
+      then <span data-count="230">(</span>
         let _, vl = Result.get_ok interpret_result in
-        <span data-count="220">L</span>ist.iter
+        <span data-count="230">L</span>ist.iter
           (function
-            | <span data-count="132">V</span>Int x -&gt; Printf.printf "Integer result: %d\n" x
-            | <span data-count="88">V</span>Bool b -&gt; Printf.printf "Boolean result: %b\n" b
+            | <span data-count="138">V</span>Int x -&gt; Printf.printf "Integer result: %d\n" x
+            | <span data-count="115">V</span>Bool b -&gt; Printf.printf "Boolean result: %b\n" b
             | <span data-count="0">V</span>Unit -&gt; Printf.printf "Unit result\n"
-            | <span data-count="22">V</span>List lst -&gt;
+            | <span data-count="23">V</span>List lst -&gt;
               Printf.printf "List result: ";
-              <span data-count="22">p</span>p_value_list Format.std_formatter lst;
-              <span data-count="22">P</span>rintf.printf "\n"
-            | <span data-count="110">V</span>Fun _ -&gt; Printf.printf "Function result\n")
+              <span data-count="23">p</span>p_value_list Format.std_formatter lst;
+              <span data-count="23">P</span>rintf.printf "\n"
+            | <span data-count="115">V</span>Fun _ -&gt; Printf.printf "Function result\n")
           vl)
-      else <span data-count="22">p</span>rintf "Interpretation error\n")
-    else <span data-count="22">p</span>rintf "Typecheck error\n"
-  | <span data-count="66">_</span> -&gt; printf "Parsing error\n"
+      else <span data-count="23">p</span>rintf "Interpretation error\n")
+    else <span data-count="23">p</span>rintf "Typecheck error\n"
+  | <span data-count="69">_</span> -&gt; printf "Parsing error\n"
 ;;
 
 let () =
@@ -353,55 +359,58 @@ let () =
     |}
   in
   process_program input1;
-  <span data-count="22">l</span>et factorial =
+  <span data-count="23">l</span>et factorial =
     {|
       let rec fact n = if n = 1 then n else n * fact (n - 1)
       let x = fact 3
     |}
   in
   process_program factorial;
-  <span data-count="22">l</span>et input2 =
+  <span data-count="23">l</span>et input2 =
     {|
       let add_two_numbers x = x + 2
       let result = add_two_numbers 5
     |}
   in
   process_program input2;
-  <span data-count="22">l</span>et input3 = {|
+  <span data-count="23">l</span>et input3 = {|
   let numbers = match 
   |} in
   process_program input3;
-  <span data-count="22">l</span>et input4 = {|
+  <span data-count="23">l</span>et input4 = {|
   let numbers = [1; 2; 3; 4; 5]
   |} in
   process_program input4;
-  <span data-count="22">l</span>et input5 = {|
+  <span data-count="23">l</span>et input5 = {|
   let x = 10
   |} in
   process_program input5;
-  <span data-count="22">l</span>et input6 = {|
+  <span data-count="23">l</span>et input6 = {|
   let x = true
   |} in
   process_program input6;
-  <span data-count="22">l</span>et input7 = {|
+  <span data-count="23">l</span>et input7 = {|
   let x = false
   |} in
   process_program input7;
-  <span data-count="22">l</span>et input8 = {|
+  <span data-count="23">l</span>et input8 = {|
   let x = ()
   |} in
   process_program input8;
-  <span data-count="22">l</span>et input9 = {|
+  <span data-count="23">l</span>et input9 = {|
   let f x = x + 5
   |} in
   process_program input9;
-  <span data-count="22">l</span>et input10 = {|
+  <span data-count="23">l</span>et input10 =
+    {|
   let b = 5 &lt; 4
   let c = 5 &gt; 4
   let f = 5 / 4
-  |} in
+  let q = true = true
+  |}
+  in
   process_program input10;
-  <span data-count="22">l</span>et input11 =
+  <span data-count="23">l</span>et input11 =
     {|
       let number_to_word n =
         match n with
@@ -412,18 +421,18 @@ let () =
     |}
   in
   process_program input11;
-  <span data-count="22">l</span>et error1 = {|
+  <span data-count="23">l</span>et error1 = {|
   let a = 0 in let b = 1 in b / a
   |} in
   process_program error1;
-  <span data-count="22">l</span>et error2 = {|
+  <span data-count="23">l</span>et error2 = {|
   let x n = if 5 then 5 else 4
   |} in
   process_program error2;
-  <span data-count="22">l</span>et error3 = {|
+  <span data-count="23">l</span>et error3 = {|
   let _ = 5 . 4
   |} in
-  process_progra<span data-count="22">m</span> error3
+  process_progra<span data-count="23">m</span> error3
 ;;
 </code></pre>
       </div>
