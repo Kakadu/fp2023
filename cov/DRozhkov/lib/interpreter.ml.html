@@ -481,7 +481,7 @@ end
 module MONAD_ADAPTER = struct
   include Base.Result
 
-  let ( let* ) m f = <span data-count="1320">m</span> &gt;&gt;= fun x -&gt; <span data-count="1260">f</span> x
+  let ( let* ) m f = <span data-count="1989">m</span> &gt;&gt;= fun x -&gt; <span data-count="1904">f</span> x
 end
 
 type value =
@@ -494,7 +494,7 @@ type value =
 and bundle = (id, value, Base.String.comparator_witness) Base.Map.t
 
 let rec pp_value fmt = function
-  | <span data-count="60">V</span>Int x -&gt; fprintf fmt "%d" x
+  | <span data-count="85">V</span>Int x -&gt; fprintf fmt "%d" x
   | <span data-count="0">V</span>Bool x -&gt; fprintf fmt "%b" x
   | <span data-count="0">V</span>Unit -&gt; fprintf fmt "()"
   | <span data-count="0">V</span>List vs -&gt;
@@ -507,9 +507,9 @@ module EnvValues = struct
 
   type 'a t
 
-  let empty = Map.empt<span data-count="12">y</span> (module String)
-  let extend env (id, value) = <span data-count="180">M</span>ap.set env ~key:id ~data:value
-  let update mp key data = <span data-count="84">M</span>ap.update mp key ~f:(function <span data-count="84">_</span> -&gt; data)
+  let empty = Map.empt<span data-count="17">y</span> (module String)
+  let extend env (id, value) = <span data-count="204">M</span>ap.set env ~key:id ~data:value
+  let update mp key data = <span data-count="187">M</span>ap.update mp key ~f:(function <span data-count="187">_</span> -&gt; data)
   let singleton (id, value) = <span data-count="0">e</span>xtend empty (id, value)
 end
 
@@ -536,57 +536,57 @@ module Interpret (M : MONADERROR) = struct
 
   let match_pattern env = function
     | <span data-count="0">P</span>Any, _ -&gt; Some env
-    | <span data-count="24">P</span>Const (Int x), VInt v when x = v -&gt; <span data-count="12">S</span>ome env
+    | <span data-count="34">P</span>Const (Int x), VInt v when x = v -&gt; <span data-count="17">S</span>ome env
     | <span data-count="0">P</span>Const (Bool x), VBool v when x = v -&gt; <span data-count="0">S</span>ome env
     | <span data-count="0">P</span>Const Empty, VUnit -&gt; Some env
     | <span data-count="0">P</span>Var id, v -&gt; Some (EnvValues.singleto<span data-count="0">n</span> (id, v))
-    | <span data-count="12">_</span> -&gt; None
+    | <span data-count="17">_</span> -&gt; None
   ;;
 
   open M
 
   let lookup_env env id =
-    <span data-count="228">m</span>atch Base.Map.find env id with
+    <span data-count="289">m</span>atch Base.Map.find env id with
     | <span data-count="0">N</span>one -&gt; fail (Unbound_value id)
-    | <span data-count="228">S</span>ome v -&gt; return v
+    | <span data-count="289">S</span>ome v -&gt; return v
   ;;
 
   let eval =
     let rec helper env = function
-      | <span data-count="276">C</span>onst c -&gt;
+      | <span data-count="340">C</span>onst c -&gt;
         (match c with
-         | <span data-count="252">I</span>nt x -&gt; return (VInt x)
-         | <span data-count="24">B</span>ool x -&gt; return (VBool x)
+         | <span data-count="306">I</span>nt x -&gt; return (VInt x)
+         | <span data-count="34">B</span>ool x -&gt; return (VBool x)
          | <span data-count="0">E</span>mpty -&gt; return VUnit)
-      | <span data-count="228">V</span>ar id -&gt;
-        let* v = lookup_en<span data-count="228">v</span> env id in
-        <span data-count="228">r</span>eturn v
-      | <span data-count="12">L</span>ist es -&gt;
+      | <span data-count="289">V</span>ar id -&gt;
+        let* v = lookup_en<span data-count="289">v</span> env id in
+        <span data-count="289">r</span>eturn v
+      | <span data-count="17">L</span>ist es -&gt;
         let* vs =
-          Base.List.fold_righ<span data-count="12">t</span> es ~init:(retur<span data-count="12">n</span> []) ~f:(fun e acc -&gt;
-            <span data-count="60">l</span>et* v = helpe<span data-count="60">r</span> env e in
-            <span data-count="60">l</span>et* acc = acc in
-            <span data-count="60">r</span>eturn (v :: acc))
+          Base.List.fold_righ<span data-count="17">t</span> es ~init:(retur<span data-count="17">n</span> []) ~f:(fun e acc -&gt;
+            <span data-count="85">l</span>et* v = helpe<span data-count="85">r</span> env e in
+            <span data-count="85">l</span>et* acc = acc in
+            <span data-count="85">r</span>eturn (v :: acc))
         in
-        <span data-count="12">r</span>eturn (VList vs)
-      | <span data-count="48">I</span>fThenElse (c, t, f) -&gt;
-        let* cv = helpe<span data-count="48">r</span> env c in
-        <span data-count="48">(</span>match cv with
-         | <span data-count="24">V</span>Bool true -&gt;
-           let* tv = helpe<span data-count="24">r</span> env t in
-           <span data-count="24">r</span>eturn tv
-         | <span data-count="24">V</span>Bool false -&gt;
-           let* fv = helpe<span data-count="24">r</span> env f in
-           <span data-count="24">r</span>eturn fv
+        <span data-count="17">r</span>eturn (VList vs)
+      | <span data-count="51">I</span>fThenElse (c, t, f) -&gt;
+        let* cv = helpe<span data-count="51">r</span> env c in
+        <span data-count="51">(</span>match cv with
+         | <span data-count="17">V</span>Bool true -&gt;
+           let* tv = helpe<span data-count="17">r</span> env t in
+           <span data-count="17">r</span>eturn tv
+         | <span data-count="34">V</span>Bool false -&gt;
+           let* fv = helpe<span data-count="34">r</span> env f in
+           <span data-count="34">r</span>eturn fv
          | <span data-count="0">_</span> -&gt; fail (Incorrect_type cv))
-      | <span data-count="48">F</span>un (id, e) -&gt; return (VFun (id, e, env))
-      | <span data-count="120">B</span>inop (op, l, r) -&gt;
-        let* lv = helpe<span data-count="120">r</span> env l in
-        <span data-count="120">l</span>et* rv = helpe<span data-count="120">r</span> env r in
-        <span data-count="120">(</span>match op, lv, rv with
-         | <span data-count="24">A</span>dd, VInt l, VInt r -&gt; return (VInt (l + r))
-         | <span data-count="24">S</span>ub, VInt l, VInt r -&gt; return (VInt (l - r))
-         | <span data-count="36">E</span>q, VInt l, VInt r -&gt; return (VBool (l = r))
+      | <span data-count="68">F</span>un (id, e) -&gt; return (VFun (id, e, env))
+      | <span data-count="153">B</span>inop (op, l, r) -&gt;
+        let* lv = helpe<span data-count="153">r</span> env l in
+        <span data-count="153">l</span>et* rv = helpe<span data-count="153">r</span> env r in
+        <span data-count="153">(</span>match op, lv, rv with
+         | <span data-count="17">A</span>dd, VInt l, VInt r -&gt; return (VInt (l + r))
+         | <span data-count="34">S</span>ub, VInt l, VInt r -&gt; return (VInt (l - r))
+         | <span data-count="51">E</span>q, VInt l, VInt r -&gt; return (VBool (l = r))
          | <span data-count="0">E</span>q, VBool l, VBool r -&gt; return (VBool (l &lt;&gt; r))
          | <span data-count="0">N</span>eq, VInt l, VInt r -&gt; return (VBool (l = r))
          | <span data-count="0">N</span>eq, VBool l, VBool r -&gt; return (VBool (l &lt;&gt; r))
@@ -594,65 +594,65 @@ module Interpret (M : MONADERROR) = struct
          | <span data-count="0">L</span>eq, VInt l, VInt r -&gt; return (VBool (l &lt;= r))
          | <span data-count="0">G</span>re, VInt l, VInt r -&gt; return (VBool (l &gt; r))
          | <span data-count="0">G</span>eq, VInt l, VInt r -&gt; return (VBool (l &gt;= r))
-         | <span data-count="24">M</span>ul, VInt l, VInt r -&gt; return (VInt (l * r))
-         | <span data-count="12">D</span>iv, VInt _, VInt 0 -&gt; fail Division_by_zero
+         | <span data-count="34">M</span>ul, VInt l, VInt r -&gt; return (VInt (l * r))
+         | <span data-count="17">D</span>iv, VInt _, VInt 0 -&gt; fail Division_by_zero
          | <span data-count="0">D</span>iv, VInt l, VInt r -&gt; return (VInt (l / r))
          | <span data-count="0">_</span> -&gt; fail (Incorrect_type rv))
-      | <span data-count="12">M</span>atch (e, list) -&gt;
-        let* v = helpe<span data-count="12">r</span> env e in
-        <span data-count="12">e</span>val_match env v list
-      | <span data-count="72">A</span>pp (f, e) -&gt;
-        let* fv = helpe<span data-count="72">r</span> env f in
-        <span data-count="72">l</span>et* ev = helpe<span data-count="72">r</span> env e in
-        <span data-count="72">(</span>match fv with
-         | <span data-count="72">V</span>Fun (id, e, fenv) -&gt;
+      | <span data-count="17">M</span>atch (e, list) -&gt;
+        let* v = helpe<span data-count="17">r</span> env e in
+        <span data-count="17">e</span>val_match env v list
+      | <span data-count="85">A</span>pp (f, e) -&gt;
+        let* fv = helpe<span data-count="85">r</span> env f in
+        <span data-count="85">l</span>et* ev = helpe<span data-count="85">r</span> env e in
+        <span data-count="85">(</span>match fv with
+         | <span data-count="85">V</span>Fun (id, e, fenv) -&gt;
            let fenv = EnvValues.extend fenv (id, ev) in
-           <span data-count="72">l</span>et updated_env =
+           <span data-count="85">l</span>et updated_env =
              Base.Map.fold fenv ~init:env ~f:(fun ~key ~data acc_env -&gt;
-               <span data-count="72">E</span>nvValues.extend acc_env (key, data))
+               <span data-count="85">E</span>nvValues.extend acc_env (key, data))
            in
-           <span data-count="72">l</span>et* v = helpe<span data-count="72">r</span> updated_env e in
-           <span data-count="72">r</span>eturn v
+           <span data-count="85">l</span>et* v = helpe<span data-count="85">r</span> updated_env e in
+           <span data-count="85">r</span>eturn v
          | <span data-count="0">_</span> -&gt; fail (Incorrect_type fv))
-      | <span data-count="24">L</span>et (_, name, e1, maybe_e2) -&gt;
+      | <span data-count="34">L</span>et (_, name, e1, maybe_e2) -&gt;
         (match maybe_e2 with
          | <span data-count="0">N</span>one -&gt; fail Let_bundle
-         | <span data-count="24">S</span>ome e2 -&gt;
-           let* v1 = helpe<span data-count="24">r</span> env e1 in
-           <span data-count="24">l</span>et env = EnvValues.extend env (name, v1) in
-           <span data-count="24">l</span>et* v2 = helpe<span data-count="24">r</span> env e2 in
+         | <span data-count="34">S</span>ome e2 -&gt;
+           let* v1 = helpe<span data-count="34">r</span> env e1 in
+           <span data-count="34">l</span>et env = EnvValues.extend env (name, v1) in
+           <span data-count="34">l</span>et* v2 = helpe<span data-count="34">r</span> env e2 in
            <span data-count="0">r</span>eturn v2)
     and eval_match env v = function
       | <span data-count="0">[</span>] -&gt; fail Pattern_matching_error
-      | <span data-count="24">(</span>pat, expr) :: tl -&gt;
+      | <span data-count="34">(</span>pat, expr) :: tl -&gt;
         let new_env = match_pattern env (pat, v) in
-        <span data-count="24">(</span>match new_env with
-         | <span data-count="12">S</span>ome env -&gt; helper env expr
-         | <span data-count="12">N</span>one -&gt; eval_match env v tl)
+        <span data-count="34">(</span>match new_env with
+         | <span data-count="17">S</span>ome env -&gt; helper env expr
+         | <span data-count="17">N</span>one -&gt; eval_match env v tl)
     in
     helper
   ;;
 
   let interpret p =
-    <span data-count="60">l</span>et eval_let env = function
-      | <span data-count="84">L</span>et (_, id, e, None) -&gt;
-        let* v = eva<span data-count="84">l</span> env e in
-        <span data-count="84">l</span>et env = EnvValues.update env id v in
-        <span data-count="84">r</span>eturn (env, v)
-      | <span data-count="12">e</span>xpression -&gt;
-        let* v = eva<span data-count="12">l</span> env expression in
+    <span data-count="153">l</span>et eval_let env = function
+      | <span data-count="187">L</span>et (_, id, e, None) -&gt;
+        let* v = eva<span data-count="187">l</span> env e in
+        <span data-count="187">l</span>et env = EnvValues.update env id v in
+        <span data-count="187">r</span>eturn (env, v)
+      | <span data-count="17">e</span>xpression -&gt;
+        let* v = eva<span data-count="17">l</span> env expression in
         <span data-count="0">r</span>eturn (env, v)
     in
     let* env, rs =
-      Base.List.fold_lef<span data-count="60">t</span>
+      Base.List.fold_lef<span data-count="153">t</span>
         p
-        ~init:(retur<span data-count="60">n</span> (EnvValues.empty, []))
+        ~init:(retur<span data-count="153">n</span> (EnvValues.empty, []))
         ~f:(fun acc e -&gt;
-          <span data-count="96">l</span>et* env, rs = acc in
-          <span data-count="96">l</span>et* env, res = eval_le<span data-count="96">t</span> env e in
-          <span data-count="84">r</span>eturn (env, res :: rs))
+          <span data-count="204">l</span>et* env, rs = acc in
+          <span data-count="204">l</span>et* env, res = eval_le<span data-count="204">t</span> env e in
+          <span data-count="187">r</span>eturn (env, res :: rs))
     in
-    <span data-count="48">r</span>eturn (env, List.re<span data-count="48">v</span> rs)
+    <span data-count="136">r</span>eturn (env, List.re<span data-count="136">v</span> rs)
   ;;
 end
 
