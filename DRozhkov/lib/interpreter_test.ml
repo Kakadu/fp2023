@@ -100,6 +100,28 @@ let () =
   let f x = x + 5
   |} in
   process_program input9;
+  let input10 =
+    {|
+  let _ = 5 <> 4
+  let _ = 5 < 4
+  let _ = 5 > 4
+  let _ = 5 <= 4
+  let _ = 5 >= 4
+  let _ = 5 / 4
+  |}
+  in
+  process_program input10;
+  let input11 =
+    {|
+      let number_to_word n =
+        match n with
+        | true -> 11
+        | _ -> 14
+
+      let x = number_to_word true
+    |}
+  in
+  process_program input11;
   let error1 = {|
   let a = 0 in let b = 1 in b / a
   |} in
@@ -109,7 +131,7 @@ let () =
   |} in
   process_program error2;
   let error3 = {|
-  let x n = if 5 then 5 else 4
+  let _ = 5 . 4
   |} in
   process_program error3
 ;;
