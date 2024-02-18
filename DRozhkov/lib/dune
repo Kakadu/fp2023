@@ -12,6 +12,6 @@
  (inline_tests)
  (preprocess
   (pps ppx_expect ppx_deriving.show))
- (libraries  base angstrom)
+ (libraries base angstrom)
  (instrumentation
   (backend bisect_ppx)))
