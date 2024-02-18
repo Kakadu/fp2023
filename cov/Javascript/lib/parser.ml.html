@@ -1077,37 +1077,37 @@ open Ast
 type error = [ `ParsingError of string ]
 
 let is_space = function
-  | <span data-count="8620">'</span> ' | <span data-count="0">'</span>\t' -&gt; true
-  | <span data-count="52688">_</span> -&gt; false
+  | <span data-count="8387">'</span> ' | <span data-count="0">'</span>\t' -&gt; true
+  | <span data-count="52140">_</span> -&gt; false
 ;;
 
 let is_line_break = function
-  | <span data-count="698">'</span>\n' | <span data-count="68">'</span>\r' -&gt; true
-  | <span data-count="51629">_</span> -&gt; false
+  | <span data-count="647">'</span>\n' | <span data-count="68">'</span>\r' -&gt; true
+  | <span data-count="51135">_</span> -&gt; false
 ;;
 
-let is_empty ch = <span data-count="58620">i</span>s_spac<span data-count="58620">e</span> c<span data-count="7774">h</span> || is_line_break ch
+let is_empty ch = <span data-count="57869">i</span>s_spac<span data-count="57869">e</span> c<span data-count="7557">h</span> || is_line_break ch
 
 let is_lower = function
-  | <span data-count="9387">'</span>a' .. 'z' -&gt; true
-  | <span data-count="3695">_</span> -&gt; false
+  | <span data-count="9345">'</span>a' .. 'z' -&gt; true
+  | <span data-count="3679">_</span> -&gt; false
 ;;
 
 let is_upper = function
   | <span data-count="49">'</span>A' .. 'Z' -&gt; true
-  | <span data-count="3646">_</span> -&gt; false
+  | <span data-count="3630">_</span> -&gt; false
 ;;
 
-let is_letter ch = <span data-count="13082">i</span>s_lowe<span data-count="13082">r</span> c<span data-count="9387">h</span> || is_upper ch
+let is_letter ch = <span data-count="13024">i</span>s_lowe<span data-count="13024">r</span> c<span data-count="9345">h</span> || is_upper ch
 
 let is_digit = function
-  | <span data-count="1865">'</span>0' .. '9' -&gt; true
-  | <span data-count="7339">_</span> -&gt; false
+  | <span data-count="1828">'</span>0' .. '9' -&gt; true
+  | <span data-count="7276">_</span> -&gt; false
 ;;
 
 let is_end = function
-  | <span data-count="293">'</span>;' -&gt; true
-  | <span data-count="1549">_</span> -&gt; false
+  | <span data-count="290">'</span>;' -&gt; true
+  | <span data-count="1538">_</span> -&gt; false
 ;;
 
 let keywords =
@@ -1132,11 +1132,11 @@ let keywords =
 ;;
 
 let is_string_sign = function
-  | <span data-count="258">'</span>\"' | <span data-count="150">'</span>\'' -&gt; true
-  | <span data-count="1899">_</span> -&gt; false
+  | <span data-count="249">'</span>\"' | <span data-count="150">'</span>\'' -&gt; true
+  | <span data-count="1880">_</span> -&gt; false
 ;;
 
-let is_keyword ch = <span data-count="1546">L</span>ist.mem ch keywords
+let is_keyword ch = <span data-count="1536">L</span>ist.mem ch keywords
 
 let rec return_eq_element el_for_comp trans = function
   | <span data-count="0">a</span> :: tail -&gt;
@@ -1145,49 +1145,49 @@ let rec return_eq_element el_for_comp trans = function
 ;;
 
 let is_spec_symbol = function
-  | <span data-count="0">'</span>$' | <span data-count="99">'</span>_' -&gt; true
-  | <span data-count="3547">_</span> -&gt; false
+  | <span data-count="0">'</span>$' | <span data-count="115">'</span>_' -&gt; true
+  | <span data-count="3515">_</span> -&gt; false
 ;;
 
-let is_valid_first_identifier_ch ch = <span data-count="13082">i</span>s_lette<span data-count="13082">r</span> c<span data-count="9436">h</span> || is_spec_symbol ch
-let is_valid_identifier_ch ch = <span data-count="11231">i</span>s_valid_first_identifier_c<span data-count="11231">h</span> c<span data-count="7989">h</span> || is_digit ch
+let is_valid_first_identifier_ch ch = <span data-count="13024">i</span>s_lette<span data-count="13024">r</span> c<span data-count="9394">h</span> || is_spec_symbol ch
+let is_valid_identifier_ch ch = <span data-count="11183">i</span>s_valid_first_identifier_c<span data-count="11183">h</span> c<span data-count="7973">h</span> || is_digit ch
 let read_word = take_whil<span data-count="11">e</span> is_valid_identifier_ch
 
 let end_of_word =
   peek_char
   &gt;&gt;<span data-count="11">=</span> function
-  | <span data-count="625">S</span>ome ch -&gt;
-    if is_valid_identifier_ch ch then <span data-count="3">f</span>ail "it isn't end of word" else <span data-count="622">r</span>eturn ()
+  | <span data-count="615">S</span>ome ch -&gt;
+    if is_valid_identifier_ch ch then <span data-count="3">f</span>ail "it isn't end of word" else <span data-count="612">r</span>eturn ()
   | <span data-count="169">_</span> -&gt; return ()
 ;;
 
 let empty = skip_whil<span data-count="11">e</span> is_empty
 let empty1 = take_while<span data-count="11">1</span> is_empty *<span data-count="11">&gt;</span> retur<span data-count="11">n</span> ()
 let spaces = skip_whil<span data-count="11">e</span> is_space
-let token p = <span data-count="6495">e</span>mpty *&gt; p
-let token1 p = <span data-count="667">e</span>mpty1 *&gt; p
-let token_btw p = <span data-count="33014">e</span>mpty *<span data-count="33014">&gt;</span> p &lt;* empty
-let token_ch ch = <span data-count="11719">t</span>oken_btw (cha<span data-count="11719">r</span> ch)
-let token_str s = <span data-count="1408">t</span>oken @@ strin<span data-count="1408">g</span> s
-let between p l r = <span data-count="8818">l</span> *<span data-count="8818">&gt;</span> p &lt;* r
+let token p = <span data-count="6449">e</span>mpty *&gt; p
+let token1 p = <span data-count="663">e</span>mpty1 *&gt; p
+let token_btw p = <span data-count="32684">e</span>mpty *<span data-count="32684">&gt;</span> p &lt;* empty
+let token_ch ch = <span data-count="11614">t</span>oken_btw (cha<span data-count="11614">r</span> ch)
+let token_str s = <span data-count="1398">t</span>oken @@ strin<span data-count="1398">g</span> s
+let between p l r = <span data-count="8742">l</span> *<span data-count="8742">&gt;</span> p &lt;* r
 let lp = token_c<span data-count="11">h</span> '('
 let rp = token_c<span data-count="11">h</span> ')'
 let lc = token_c<span data-count="11">h</span> '{'
 let rc = token_c<span data-count="11">h</span> '}'
 let ls = token_c<span data-count="11">h</span> '['
 let rs = token_c<span data-count="11">h</span> ']'
-let parens p = <span data-count="3145">b</span>etween p lp rp
-let cur_parens p = <span data-count="1407">b</span>etween p lc rc
-let sq_parens p = <span data-count="4266">b</span>etween p ls rs
+let parens p = <span data-count="3116">b</span>etween p lp rp
+let cur_parens p = <span data-count="1398">b</span>etween p lc rc
+let sq_parens p = <span data-count="4228">b</span>etween p ls rs
 let empty_stm = spaces *<span data-count="11">&gt;</span> (end_of_input &lt;|<span data-count="11">&gt;</span> ski<span data-count="11">p</span> is_end &lt;|<span data-count="11">&gt;</span> ski<span data-count="11">p</span> is_line_break)
 let to_end_of_stm = empty_stm &lt;|<span data-count="11">&gt;</span> empty
 let some n = <span data-count="0">S</span>ome n
-let number n = <span data-count="697">N</span>umber n
+let number n = <span data-count="687">N</span>umber n
 let bool b = <span data-count="43">B</span>ool b
-let const c = <span data-count="1411">C</span>onst c
-let var v = <span data-count="519">V</span>ar v
-let expression e = <span data-count="147">E</span>xpression e
-let bop f acc x = <span data-count="565">B</span>inOp (f, acc, x)
+let const c = <span data-count="1394">C</span>onst c
+let var v = <span data-count="515">V</span>ar v
+let expression e = <span data-count="146">E</span>xpression e
+let bop f acc x = <span data-count="556">B</span>inOp (f, acc, x)
 let array a = <span data-count="72">A</span>rrayList a
 
 let parse_number =
@@ -1197,8 +1197,8 @@ let parse_number =
   &lt;<span data-count="11">*</span> end_of_word
   &gt;&gt;<span data-count="11">=</span> (function
          | <span data-count="1">"</span>." -&gt; fail "incorrect number"
-         | <span data-count="697">_</span> as num -&gt; return num)
-  &gt;&gt;<span data-count="11">|</span> fun n -&gt; <span data-count="697">n</span>umber @@ float_of_strin<span data-count="697">g</span> n
+         | <span data-count="687">_</span> as num -&gt; return num)
+  &gt;&gt;<span data-count="11">|</span> fun n -&gt; <span data-count="687">n</span>umber @@ float_of_strin<span data-count="687">g</span> n
 ;;
 
 let parse_bool =
@@ -1208,15 +1208,15 @@ let parse_bool =
 let parse_str =
   satisf<span data-count="11">y</span> is_string_sign
   *<span data-count="11">&gt;</span> scan_strin<span data-count="11">g</span> false (fun state ch -&gt;
-    <span data-count="500">i</span>f state
+    <span data-count="487">i</span>f state
     then <span data-count="0">S</span>ome false
-    else <span data-count="500">i</span>f is_string_sign ch
-    then <span data-count="136">N</span>one
-    else <span data-count="364">(</span>
+    else <span data-count="487">i</span>f is_string_sign ch
+    then <span data-count="133">N</span>one
+    else <span data-count="354">(</span>
       match ch with
       | <span data-count="0">'</span>\\' -&gt; Some true
-      | <span data-count="364">_</span> -&gt; Some false))
-  &gt;&gt;<span data-count="11">|</span> (fun s -&gt; <span data-count="136">S</span>tring s)
+      | <span data-count="354">_</span> -&gt; Some false))
+  &gt;&gt;<span data-count="11">|</span> (fun s -&gt; <span data-count="133">S</span>tring s)
   &lt;<span data-count="11">*</span> satisf<span data-count="11">y</span> is_string_sign
 ;;
 
@@ -1231,9 +1231,9 @@ let valid_identifier =
           <span data-count="10">l</span>ift<span data-count="10">2</span> ( ^ ) (satisf<span data-count="10">y</span> is_valid_identifier_ch &gt;&gt;<span data-count="10">|</span> Char.escaped) self &lt;|&gt; retur<span data-count="10">n</span> "")
         &lt;?<span data-count="11">&gt;</span> "invalid chars of var name")
   &gt;&gt;<span data-count="11">=</span> fun name -&gt;
-  <span data-count="1546">i</span>f is_keyword name
-  then <span data-count="657">f</span>ail "name of identifier shouldn't be a keyword"
-  else <span data-count="889">r</span>eturn name
+  <span data-count="1536">i</span>f is_keyword name
+  then <span data-count="653">f</span>ail "name of identifier shouldn't be a keyword"
+  else <span data-count="883">r</span>eturn name
 ;;
 
 let parse_empty_stms = man<span data-count="11">y</span> empty_stm
@@ -1242,22 +1242,22 @@ let parse_args_names =
   paren<span data-count="11">s</span> (sep_b<span data-count="11">y</span> (token_st<span data-count="11">r</span> ",") valid_identifier) &lt;?<span data-count="11">&gt;</span> "incorrect function arguments"
 ;;
 
-let parse_comma parser = <span data-count="4266">s</span>ep_b<span data-count="4266">y</span> (token_c<span data-count="4266">h</span> ',') parser &lt;* (token_c<span data-count="4266">h</span> ',' &lt;|<span data-count="4266">&gt;</span> retur<span data-count="4266">n</span> ' ')
+let parse_comma parser = <span data-count="4228">s</span>ep_b<span data-count="4228">y</span> (token_c<span data-count="4228">h</span> ',') parser &lt;* (token_c<span data-count="4228">h</span> ',' &lt;|<span data-count="4228">&gt;</span> retur<span data-count="4228">n</span> ' ')
 
 let parse_op ops =
-  <span data-count="20709">l</span>et is_long_op_symbol_fail = function
+  <span data-count="20493">l</span>et is_long_op_symbol_fail = function
     | <span data-count="12">'</span>&amp;' | <span data-count="6">'</span>|' | <span data-count="19">'</span>=' | <span data-count="2">'</span>*' | <span data-count="1">'</span>&lt;' | <span data-count="3">'</span>&gt;' -&gt; fail ""
-    | <span data-count="511">_</span> -&gt; return ()
+    | <span data-count="505">_</span> -&gt; return ()
   in
   choice
-    (List.ma<span data-count="20709">p</span>
+    (List.ma<span data-count="20493">p</span>
        (fun (js_op, op) -&gt;
-         <span data-count="66392">s</span>trin<span data-count="66392">g</span> js_op
-         *<span data-count="66392">&gt;</span> (peek_char
-             &gt;&gt;<span data-count="66392">=</span> function
-             | <span data-count="554">S</span>ome x -&gt; is_long_op_symbol_fail x
+         <span data-count="65699">s</span>trin<span data-count="65699">g</span> js_op
+         *<span data-count="65699">&gt;</span> (peek_char
+             &gt;&gt;<span data-count="65699">=</span> function
+             | <span data-count="548">S</span>ome x -&gt; is_long_op_symbol_fail x
              | <span data-count="3">N</span>one -&gt; return ())
-         *&gt; retur<span data-count="66392">n</span> op)
+         *&gt; retur<span data-count="65699">n</span> op)
        ops)
 ;;
 
@@ -1327,32 +1327,32 @@ let list_of_unops =
 ;;
 
 let chainl1 parser op =
-  <span data-count="11590">l</span>et rec go acc =
-    <span data-count="14274">t</span>oken_bt<span data-count="14274">w</span> (parse_o<span data-count="14274">p</span> op)
-    &gt;&gt;<span data-count="14274">|</span> (fun op -&gt; <span data-count="305">S</span>ome op)
-    &lt;|<span data-count="14274">&gt;</span> retur<span data-count="14274">n</span> None
+  <span data-count="11500">l</span>et rec go acc =
+    <span data-count="14118">t</span>oken_bt<span data-count="14118">w</span> (parse_o<span data-count="14118">p</span> op)
+    &gt;&gt;<span data-count="14118">|</span> (fun op -&gt; <span data-count="302">S</span>ome op)
+    &lt;|<span data-count="14118">&gt;</span> retur<span data-count="14118">n</span> None
     &gt;&gt;= function
-    | <span data-count="305">S</span>ome f -&gt; parser &gt;&gt;<span data-count="305">|</span> (fun x -&gt; <span data-count="303">b</span>op f acc x) &gt;&gt;= go
-    | <span data-count="13969">_</span> -&gt; return acc
+    | <span data-count="302">S</span>ome f -&gt; parser &gt;&gt;<span data-count="302">|</span> (fun x -&gt; <span data-count="300">b</span>op f acc x) &gt;&gt;= go
+    | <span data-count="13816">_</span> -&gt; return acc
   in
-  parser &gt;&gt;= fun init -&gt; <span data-count="13971">g</span>o init
+  parser &gt;&gt;= fun init -&gt; <span data-count="13818">g</span>o init
 ;;
 
 let rec chainr1 parser op =
-  <span data-count="2415">p</span>arser
+  <span data-count="2394">p</span>arser
   &gt;&gt;= fun acc -&gt;
-  <span data-count="2958">t</span>oken_bt<span data-count="2958">w</span> (parse_o<span data-count="2958">p</span> op)
-  &gt;&gt;<span data-count="2958">|</span> (fun op -&gt; <span data-count="97">S</span>ome op)
-  &lt;|<span data-count="2958">&gt;</span> retur<span data-count="2958">n</span> None
+  <span data-count="2925">t</span>oken_bt<span data-count="2925">w</span> (parse_o<span data-count="2925">p</span> op)
+  &gt;&gt;<span data-count="2925">|</span> (fun op -&gt; <span data-count="94">S</span>ome op)
+  &lt;|<span data-count="2925">&gt;</span> retur<span data-count="2925">n</span> None
   &gt;&gt;= function
-  | <span data-count="97">S</span>ome f -&gt; chainr<span data-count="97">1</span> parser op &gt;&gt;| bo<span data-count="97">p</span> f acc
-  | <span data-count="2861">_</span> -&gt; return acc
+  | <span data-count="94">S</span>ome f -&gt; chainr<span data-count="94">1</span> parser op &gt;&gt;| bo<span data-count="94">p</span> f acc
+  | <span data-count="2831">_</span> -&gt; return acc
 ;;
 
 (*----------expression parsers----------*)
 
 let rec parse_arrow_func () =
-  <span data-count="1159">t</span>oke<span data-count="1159">n</span> parse_args_names
+  <span data-count="1150">t</span>oke<span data-count="1150">n</span> parse_args_names
   &gt;&gt;= fun args -&gt;
   <span data-count="25">t</span>oken_st<span data-count="25">r</span> "=&gt;"
   *<span data-count="25">&gt;</span> toke<span data-count="25">n</span>
@@ -1361,112 +1361,112 @@ let rec parse_arrow_func () =
         &lt;|<span data-count="25">&gt;</span> (parse_expressio<span data-count="25">n</span> () &gt;&gt;<span data-count="25">|</span> fun exp -&gt; <span data-count="12">B</span>lock [ Return exp ]))
   &gt;&gt;| fun body -&gt; <span data-count="25">A</span>rrowFunction (args, body)
 
-and parse_array () = <span data-count="1159">t</span>oken (sq_paren<span data-count="1159">s</span> (parse_comm<span data-count="1159">a</span> (parse_expressio<span data-count="1159">n</span> ())))
+and parse_array () = <span data-count="1150">t</span>oken (sq_paren<span data-count="1150">s</span> (parse_comm<span data-count="1150">a</span> (parse_expressio<span data-count="1150">n</span> ())))
 
 and parse_anon_func () =
-  <span data-count="1159">t</span>oken_st<span data-count="1159">r</span> "function" *<span data-count="1159">&gt;</span> toke<span data-count="1159">n</span> parse_args_names
+  <span data-count="1150">t</span>oken_st<span data-count="1150">r</span> "function" *<span data-count="1150">&gt;</span> toke<span data-count="1150">n</span> parse_args_names
   &gt;&gt;= fun args -&gt; <span data-count="9">p</span>arse_block_or_st<span data-count="9">m</span> () &gt;&gt;| fun body -&gt; <span data-count="9">A</span>nonFunction (args, body)
 
 and parse_object_deck () =
-  <span data-count="1159">c</span>ur_paren<span data-count="1159">s</span>
-  @@ parse_comm<span data-count="1159">a</span>
-  @@ choic<span data-count="1159">e</span>
-       [ bot<span data-count="1159">h</span>
-           (choic<span data-count="1159">e</span>
-              [ sq_paren<span data-count="1159">s</span> @@ parse_expressio<span data-count="1159">n</span> ()
-              ; parse_str &gt;&gt;<span data-count="1159">|</span> const
-              ; (valid_identifier &gt;&gt;<span data-count="1159">|</span> fun x -&gt; <span data-count="101">c</span>onst (String x))
+  <span data-count="1150">c</span>ur_paren<span data-count="1150">s</span>
+  @@ parse_comm<span data-count="1150">a</span>
+  @@ choic<span data-count="1150">e</span>
+       [ bot<span data-count="1150">h</span>
+           (choic<span data-count="1150">e</span>
+              [ sq_paren<span data-count="1150">s</span> @@ parse_expressio<span data-count="1150">n</span> ()
+              ; parse_str &gt;&gt;<span data-count="1150">|</span> const
+              ; (valid_identifier &gt;&gt;<span data-count="1150">|</span> fun x -&gt; <span data-count="100">c</span>onst (String x))
               ])
-           (token_c<span data-count="1159">h</span> ':' *<span data-count="1159">&gt;</span> parse_expressio<span data-count="1159">n</span> ())
+           (token_c<span data-count="1150">h</span> ':' *<span data-count="1150">&gt;</span> parse_expressio<span data-count="1150">n</span> ())
        ; (*method parser*)
          (valid_identifier
-          &gt;&gt;<span data-count="1159">=</span> fun name -&gt;
+          &gt;&gt;<span data-count="1150">=</span> fun name -&gt;
           <span data-count="15">t</span>oke<span data-count="15">n</span> parse_args_names
           &gt;&gt;= fun arguments -&gt;
           <span data-count="13">p</span>arse_block_or_st<span data-count="13">m</span> ()
           &gt;&gt;| fun body -&gt; <span data-count="13">c</span>ons<span data-count="13">t</span> (String name), AnonFunction (arguments, body))
        ; (*var syntax sugar parser*)
-         (valid_identifier &gt;&gt;<span data-count="1159">|</span> fun name -&gt; <span data-count="2">c</span>ons<span data-count="2">t</span> (String name), va<span data-count="2">r</span> name)
+         (valid_identifier &gt;&gt;<span data-count="1150">|</span> fun name -&gt; <span data-count="2">c</span>ons<span data-count="2">t</span> (String name), va<span data-count="2">r</span> name)
        ]
-  &gt;&gt;| fun properties -&gt; <span data-count="74">O</span>bjectDef properties
+  &gt;&gt;| fun properties -&gt; <span data-count="73">O</span>bjectDef properties
 
 and parse_mini_expression () =
-  <span data-count="1159">t</span>oke<span data-count="1159">n</span>
-    (choic<span data-count="1159">e</span>
-       [ parse_object_dec<span data-count="1159">k</span> ()
-       ; parse_arrow_fun<span data-count="1159">c</span> ()
-       ; paren<span data-count="1159">s</span> @@ parse_expressio<span data-count="1159">n</span> ()
-       ; parse_anon_fun<span data-count="1159">c</span> ()
-       ; strin<span data-count="1159">g</span> "this" &lt;<span data-count="1159">*</span> end_of_word &gt;&gt;<span data-count="1159">|</span> var
-       ; (strin<span data-count="1159">g</span> "null" &lt;<span data-count="1159">*</span> end_of_word &gt;&gt;<span data-count="1159">|</span> fun _ -&gt; <span data-count="22">c</span>onst Null)
-       ; (strin<span data-count="1159">g</span> "undefined" &lt;<span data-count="1159">*</span> end_of_word &gt;&gt;<span data-count="1159">|</span> fun _ -&gt; <span data-count="10">c</span>onst Undefined)
-       ; parse_number &gt;&gt;<span data-count="1159">|</span> const
-       ; parse_bool &gt;&gt;<span data-count="1159">|</span> const
-       ; parse_str &gt;&gt;<span data-count="1159">|</span> const
-       ; parse_arra<span data-count="1159">y</span> () &gt;&gt;<span data-count="1159">|</span> array
-       ; valid_identifier &gt;&gt;<span data-count="1159">|</span> var
+  <span data-count="1150">t</span>oke<span data-count="1150">n</span>
+    (choic<span data-count="1150">e</span>
+       [ parse_object_dec<span data-count="1150">k</span> ()
+       ; parse_arrow_fun<span data-count="1150">c</span> ()
+       ; paren<span data-count="1150">s</span> @@ parse_expressio<span data-count="1150">n</span> ()
+       ; parse_anon_fun<span data-count="1150">c</span> ()
+       ; strin<span data-count="1150">g</span> "this" &lt;<span data-count="1150">*</span> end_of_word &gt;&gt;<span data-count="1150">|</span> var
+       ; (strin<span data-count="1150">g</span> "null" &lt;<span data-count="1150">*</span> end_of_word &gt;&gt;<span data-count="1150">|</span> fun _ -&gt; <span data-count="22">c</span>onst Null)
+       ; (strin<span data-count="1150">g</span> "undefined" &lt;<span data-count="1150">*</span> end_of_word &gt;&gt;<span data-count="1150">|</span> fun _ -&gt; <span data-count="10">c</span>onst Undefined)
+       ; parse_number &gt;&gt;<span data-count="1150">|</span> const
+       ; parse_bool &gt;&gt;<span data-count="1150">|</span> const
+       ; parse_str &gt;&gt;<span data-count="1150">|</span> const
+       ; parse_arra<span data-count="1150">y</span> () &gt;&gt;<span data-count="1150">|</span> array
+       ; valid_identifier &gt;&gt;<span data-count="1150">|</span> var
        ])
   &lt;?&gt; "invalid part of expression"
 
 and parse_spec_bop () =
   (*precedence 17*)
-  <span data-count="1159">l</span>et rec go acc =
-    <span data-count="1948">c</span>hoic<span data-count="1948">e</span>
+  <span data-count="1150">l</span>et rec go acc =
+    <span data-count="1928">c</span>hoic<span data-count="1928">e</span>
       [ (*Property call parser*)
-        (token_c<span data-count="1948">h</span> '.' *<span data-count="1948">&gt;</span> read_word &gt;&gt;<span data-count="1948">|</span> fun prop -&gt; <span data-count="124">b</span>op PropAccs acc (Const (String prop)))
+        (token_c<span data-count="1928">h</span> '.' *<span data-count="1928">&gt;</span> read_word &gt;&gt;<span data-count="1928">|</span> fun prop -&gt; <span data-count="125">b</span>op PropAccs acc (Const (String prop)))
       ; (*Bracket property call parser*)
-        (sq_paren<span data-count="1948">s</span> @@ parse_expressio<span data-count="1948">n</span> () &gt;&gt;<span data-count="1948">|</span> fun x -&gt; <span data-count="41">b</span>op PropAccs acc x)
+        (sq_paren<span data-count="1928">s</span> @@ parse_expressio<span data-count="1928">n</span> () &gt;&gt;<span data-count="1928">|</span> fun x -&gt; <span data-count="37">b</span>op PropAccs acc x)
       ; (*Fun call parser*)
-        (paren<span data-count="1948">s</span> @@ parse_comm<span data-count="1948">a</span> @@ parse_expressio<span data-count="1948">n</span> ()
-         &gt;&gt;<span data-count="1948">|</span> fun arg -&gt; <span data-count="150">F</span>unctionCall (acc, arg))
+        (paren<span data-count="1928">s</span> @@ parse_comm<span data-count="1928">a</span> @@ parse_expressio<span data-count="1928">n</span> ()
+         &gt;&gt;<span data-count="1928">|</span> fun arg -&gt; <span data-count="151">F</span>unctionCall (acc, arg))
       ]
-    &gt;&gt;<span data-count="1948">=</span> go
-    &lt;|&gt; retur<span data-count="1948">n</span> acc
+    &gt;&gt;<span data-count="1928">=</span> go
+    &lt;|&gt; retur<span data-count="1928">n</span> acc
   in
-  parse_mini_expressio<span data-count="1159">n</span> () &gt;&gt;= fun init -&gt; <span data-count="1633">g</span>o init
+  parse_mini_expressio<span data-count="1150">n</span> () &gt;&gt;= fun init -&gt; <span data-count="1615">g</span>o init
 
 and parse_uop =
   (*precedence 14-16*)
   let rec pre next op_parser =
-    <span data-count="2414">t</span>oken_bt<span data-count="2414">w</span> op_parser
-    &gt;&gt;<span data-count="2414">|</span> (fun op -&gt; <span data-count="96">S</span>ome op)
-    &lt;|<span data-count="2414">&gt;</span> retur<span data-count="2414">n</span> None
+    <span data-count="2396">t</span>oken_bt<span data-count="2396">w</span> op_parser
+    &gt;&gt;<span data-count="2396">|</span> (fun op -&gt; <span data-count="96">S</span>ome op)
+    &lt;|<span data-count="2396">&gt;</span> retur<span data-count="2396">n</span> None
     &gt;&gt;= function
     | <span data-count="96">S</span>ome op -&gt; pr<span data-count="96">e</span> next op_parser &gt;&gt;| fun ex -&gt; <span data-count="94">U</span>nOp (op, ex)
-    | <span data-count="4978">_</span> -&gt; next
+    | <span data-count="4934">_</span> -&gt; next
   in
   let post next op_parser =
-    <span data-count="1159">l</span>et rec go acc =
-      <span data-count="1649">t</span>oken_bt<span data-count="1649">w</span> op_parser
-      &gt;&gt;<span data-count="1649">|</span> (fun op -&gt; <span data-count="16">S</span>ome op)
-      &lt;|<span data-count="1649">&gt;</span> retur<span data-count="1649">n</span> None
+    <span data-count="1150">l</span>et rec go acc =
+      <span data-count="1631">t</span>oken_bt<span data-count="1631">w</span> op_parser
+      &gt;&gt;<span data-count="1631">|</span> (fun op -&gt; <span data-count="16">S</span>ome op)
+      &lt;|<span data-count="1631">&gt;</span> retur<span data-count="1631">n</span> None
       &gt;&gt;= function
       | <span data-count="16">S</span>ome op -&gt; go @@ UnOp (op, acc)
-      | <span data-count="1633">_</span> -&gt; return acc
+      | <span data-count="1615">_</span> -&gt; return acc
     in
     next &gt;&gt;= go
   in
   function
-  | <span data-count="3477">a</span> :: b -&gt;
+  | <span data-count="3450">a</span> :: b -&gt;
     (match a with
-     | <span data-count="2318">u</span>nops, Pre -&gt; pre (parse_uo<span data-count="2318">p</span> b) (parse_o<span data-count="2318">p</span> unops)
-     | <span data-count="1159">u</span>nops, Post -&gt; post (parse_uo<span data-count="1159">p</span> b) (parse_o<span data-count="1159">p</span> unops))
-  | <span data-count="1159">_</span> -&gt; parse_spec_bop ()
+     | <span data-count="2300">u</span>nops, Pre -&gt; pre (parse_uo<span data-count="2300">p</span> b) (parse_o<span data-count="2300">p</span> unops)
+     | <span data-count="1150">u</span>nops, Post -&gt; post (parse_uo<span data-count="1150">p</span> b) (parse_o<span data-count="1150">p</span> unops))
+  | <span data-count="1150">_</span> -&gt; parse_spec_bop ()
 
 and parse_bop = function
   (*precedence 2-13*)
-  | <span data-count="13908">a</span> :: b -&gt;
+  | <span data-count="13800">a</span> :: b -&gt;
     (match a with
-     | <span data-count="11590">b</span>ops, Left -&gt; chainl1 (parse_bo<span data-count="11590">p</span> b) bops
-     | <span data-count="2318">b</span>ops, Right -&gt; chainr1 (parse_bo<span data-count="2318">p</span> b) bops)
-  | <span data-count="1159">_</span> -&gt; parse_uop list_of_unops
+     | <span data-count="11500">b</span>ops, Left -&gt; chainl1 (parse_bo<span data-count="11500">p</span> b) bops
+     | <span data-count="2300">b</span>ops, Right -&gt; chainr1 (parse_bo<span data-count="2300">p</span> b) bops)
+  | <span data-count="1150">_</span> -&gt; parse_uop list_of_unops
 
 and parse_expression () =
-  <span data-count="9595">f</span>i<span data-count="9595">x</span> (fun _ -&gt; <span data-count="1159">p</span>arse_bo<span data-count="1159">p</span> list_of_bops &lt;* empty) &lt;?&gt; "incorrect expression"
+  <span data-count="9515">f</span>i<span data-count="9515">x</span> (fun _ -&gt; <span data-count="1150">p</span>arse_bo<span data-count="1150">p</span> list_of_bops &lt;* empty) &lt;?&gt; "incorrect expression"
 
 (*----------statement parsers----------*)
 
-and parse_return () = <span data-count="388">p</span>arse_expressio<span data-count="388">n</span> () &gt;&gt;| fun c -&gt; <span data-count="386">R</span>eturn c
+and parse_return () = <span data-count="385">p</span>arse_expressio<span data-count="385">n</span> () &gt;&gt;| fun c -&gt; <span data-count="383">R</span>eturn c
 
 and parse_func () =
   <span data-count="38">v</span>alid_identifier
@@ -1476,14 +1476,14 @@ and parse_func () =
   <span data-count="38">p</span>arse_block_or_st<span data-count="38">m</span> () &gt;&gt;| fun body -&gt; <span data-count="38">F</span>unInit { fun_identifier = name; arguments; body }
 
 and parse_var (init_word : string) =
-  <span data-count="198">v</span>alid_identifier
+  <span data-count="197">v</span>alid_identifier
   &gt;&gt;= fun identifier -&gt;
-  <span data-count="197">o</span>ptio<span data-count="197">n</span> false (token_st<span data-count="197">r</span> "=" *<span data-count="197">&gt;</span> retur<span data-count="197">n</span> true)
-  &gt;&gt;<span data-count="197">=</span> (function
-         | <span data-count="192">t</span>rue -&gt; parse_expression ()
+  <span data-count="196">o</span>ptio<span data-count="196">n</span> false (token_st<span data-count="196">r</span> "=" *<span data-count="196">&gt;</span> retur<span data-count="196">n</span> true)
+  &gt;&gt;<span data-count="196">=</span> (function
+         | <span data-count="191">t</span>rue -&gt; parse_expression ()
          | <span data-count="5">_</span> -&gt; return (Const Undefined))
   &gt;&gt;| fun expr -&gt;
-  <span data-count="197">V</span>arInit { var_identifier = identifier; is_const = init_word = "const"; value = expr }
+  <span data-count="196">V</span>arInit { var_identifier = identifier; is_const = init_word = "const"; value = expr }
 
 and parse_block () =
   <span data-count="465">f</span>ix (fun _ -&gt; <span data-count="223">c</span>ur_paren<span data-count="223">s</span> (man<span data-count="223">y</span> @@ parse_st<span data-count="223">m</span> ()) &gt;&gt;| fun stms -&gt; <span data-count="95">B</span>lock stms)
@@ -1547,16 +1547,16 @@ and parse_stm () =
         &lt;|<span data-count="362">&gt;</span> (parse_expressio<span data-count="362">n</span> () &gt;&gt;<span data-count="362">|</span> expression)
         &lt;|<span data-count="362">&gt;</span> (read_word
              &gt;&gt;<span data-count="362">=</span> fun word -&gt;
-             <span data-count="756">m</span>atch word with
-             | <span data-count="186">"</span>let" | <span data-count="3">"</span>const" | <span data-count="4">"</span>var" -&gt;
-               token<span data-count="193">1</span> @@ parse_va<span data-count="193">r</span> word &lt;?&gt; "wrong var statement"
+             <span data-count="752">m</span>atch word with
+             | <span data-count="185">"</span>let" | <span data-count="3">"</span>const" | <span data-count="4">"</span>var" -&gt;
+               token<span data-count="192">1</span> @@ parse_va<span data-count="192">r</span> word &lt;?&gt; "wrong var statement"
              | <span data-count="38">"</span>function" -&gt; token<span data-count="38">1</span> @@ parse_fun<span data-count="38">c</span> () &lt;?&gt; "wrong function statement"
              | <span data-count="16">"</span>if" -&gt; token<span data-count="16">1</span> @@ parse_i<span data-count="16">f</span> () &lt;?&gt; "wrong if statement"
              | <span data-count="4">"</span>while" -&gt; token<span data-count="4">1</span> @@ parse_loo<span data-count="4">p</span> true &lt;?&gt; "wrong while statement"
              | <span data-count="7">"</span>for" -&gt; token<span data-count="7">1</span> @@ parse_loo<span data-count="7">p</span> false &lt;?&gt; "wrong for statement"
-             | <span data-count="388">"</span>return" -&gt;
-               empty_stm *<span data-count="388">&gt;</span> retur<span data-count="388">n</span> (Return (cons<span data-count="388">t</span> Undefined))
-               &lt;|<span data-count="388">&gt;</span> token<span data-count="388">1</span> @@ parse_retur<span data-count="388">n</span> ()
+             | <span data-count="385">"</span>return" -&gt;
+               empty_stm *<span data-count="385">&gt;</span> retur<span data-count="385">n</span> (Return (cons<span data-count="385">t</span> Undefined))
+               &lt;|<span data-count="385">&gt;</span> token<span data-count="385">1</span> @@ parse_retur<span data-count="385">n</span> ()
                &lt;?&gt; "wrong return statement"
              | <span data-count="110">"</span>" -&gt;
                peek_char_fail
@@ -1568,15 +1568,15 @@ and parse_stm () =
 
 and parse_statements stopper = <span data-count="11">m</span>any_till (parse_st<span data-count="11">m</span> ()) stopper
 
-let parse_programm = parse_statement<span data-count="11">s</span> end_of_input &gt;&gt;<span data-count="11">|</span> fun c -&gt; <span data-count="380">P</span>rogramm c
+let parse_programm = parse_statement<span data-count="11">s</span> end_of_input &gt;&gt;<span data-count="11">|</span> fun c -&gt; <span data-count="378">P</span>rogramm c
 
 let parse_str ?(parser = <span data-count="0">p</span>arse_programm) str =
-  <span data-count="437">m</span>atch Angstrom.parse_string parser ~consume:Angstrom.Consume.All str with
-  | <span data-count="431">R</span>esult.Ok x -&gt; Result.Ok x
+  <span data-count="435">m</span>atch Angstrom.parse_string parser ~consume:Angstrom.Consume.All str with
+  | <span data-count="429">R</span>esult.Ok x -&gt; Result.Ok x
   | <span data-count="6">E</span>rror er -&gt; Result.Error (`ParsingError er)
 ;;
 
-let parse str = <span data-count="382">p</span>arse_str ~parser:parse_programm str
+let parse str = <span data-count="380">p</span>arse_str ~parser:parse_programm str
 
 let parse_expression str =
   <span data-count="55">p</span>arse_str ~parser:(parse_expressio<span data-count="55">n</span> () &gt;&gt;<span data-count="55">|</span> fun e -&gt; <span data-count="51">E</span>xpression e) str
