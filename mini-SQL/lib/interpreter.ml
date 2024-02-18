@@ -89,11 +89,7 @@ module Eval (M : Utils.MONAD_FAIL) = struct
     get_column_i t
     >>= fun colid ->
     column colid t
-    >>= fun col ->
-    return
-      { column_index = colid
-      ; meta = { column_name = name; column_type = col.column_type }
-      }
+    >>= fun col -> return { column_index = colid; meta = { col with column_name = name } }
   ;;
 
   (** tranform Ast.value into Interpreter.value *)
@@ -268,8 +264,7 @@ module Eval (M : Utils.MONAD_FAIL) = struct
     in
     match expr with
     | Const x -> return (Const x)
-    | Col col ->
-      get_id col >>= fun id -> return (Col { column_index = id; meta = col.meta })
+    | Col col -> get_id col >>= fun id -> return (Col { col with column_index = id })
     | Plus (e1, e2) -> run e1 >>= fun r1 -> run e2 >>= fun r2 -> return (Plus (r1, r2))
     | Minus (e1, e2) -> run e1 >>= fun r1 -> run e2 >>= fun r2 -> return (Minus (r1, r2))
     | Mul (e1, e2) -> run e1 >>= fun r1 -> run e2 >>= fun r2 -> return (Mul (r1, r2))

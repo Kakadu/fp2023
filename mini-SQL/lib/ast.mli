@@ -4,53 +4,54 @@
 
 type name = string
 
+(** SQL basic values *)
 type value =
-  | Name of name
-  | String of name
-  | Digit of int
-  | Float_Digit of float
-  | Bool of bool
+  | Name of name (** Name of column/table/base *)
+  | String of name (** String in SQL *)
+  | Digit of int (** Integer in SQL *)
+  | Float_Digit of float (** Float in SQL *)
+  | Bool of bool (** Boolean in SQL *)
 
 (** Binary operators *)
 type bin_op =
-  | Add
-  | Substract
-  | Multiply
-  | Divide
-  | Modulo
-  | And
-  | Or
-  | Equal
-  | Not_Equal
-  | Greater_Than
-  | Less_Than
-  | Less_Than_Or_Equal
-  | Greater_Than_Or_Equal
+  | Add (** x + y *)
+  | Substract (** x - y *)
+  | Multiply (** x * y *)
+  | Divide (** x / y *)
+  | Modulo (** x % y *)
+  | And (** x AND y *)
+  | Or (** x OR y *)
+  | Equal (** x = y *)
+  | Not_Equal (** x !=(<>) y *)
+  | Greater_Than (** x > y *)
+  | Less_Than (** x < y *)
+  | Less_Than_Or_Equal (** x >= y *)
+  | Greater_Than_Or_Equal (** x <= y *)
 
 (** Unary operators *)
-type unary_op = Not (** ( NOT ) *)
+type unary_op = Not (** NOT x *)
 
 (** Expression *)
 type expr =
-  | Const of value
-  | Unary_operation of unary_op * expr
-  | Binary_operation of bin_op * expr * expr
+  | Const of value (** Const value *)
+  | Unary_operation of unary_op * expr (** unary_op *)
+  | Binary_operation of bin_op * expr * expr (** bin_op *)
 
 (** SELECT <expr> *)
 type select_statement =
-  | Asterisk
-  | Expression of expr
+  | Asterisk (** "*" *)
+  | Expression of expr (** Expr *)
 
 (** JOIN type *)
 type join_type =
-  | Inner
-  | Left
-  | Right
-  | Full
+  | Inner (** INNER JOIN *)
+  | Left (** LEFT JOIN *)
+  | Right (** RIGHT JOIN *)
+  | Full (** FULL JOIN *)
 
 (** FROM *)
 type from_statement =
-  | Table of name
+  | Table of name (** Table name *)
   | Join of
       { jtype : join_type
       ; left : from_statement

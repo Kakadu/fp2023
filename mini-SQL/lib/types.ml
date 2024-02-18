@@ -105,8 +105,8 @@ module Table = struct
                (fun e2 -> e1.column_name = e2.column_name)
                joined.meta.table_header
           then
-            { column_name = String.concat "." [ old.meta.table_name; e1.column_name ]
-            ; column_type = e1.column_type
+            { e1 with
+              column_name = String.concat "." [ old.meta.table_name; e1.column_name ]
             }
           else e1)
         old.meta.table_header
@@ -133,9 +133,7 @@ module Table = struct
   ;;
 
   let change_table_name (table : t) name =
-    { data = table.data
-    ; meta = { table_name = name; table_header = table.meta.table_header }
-    }
+    { table with meta = { table_header = table.meta.table_header; table_name = name } }
   ;;
 
   let find_column_i (table : t) name =
@@ -147,8 +145,7 @@ module Table = struct
       | [ _; _ ] -> Some name
       | _ -> None
     in
-    let rec helper (acc : int list) i name cs =
-      match cs with
+    let rec helper (acc : int list) i name = function
       | [] -> acc
       | hd :: tl ->
         if hd.column_name = name
@@ -163,12 +160,12 @@ module Table = struct
   let get_column (table : t) ~index = Array.get (columns table) index
 
   let show_table (table : t) =
-    let sep = ref ("+" ^ String.make (String.length (name table)) '-' ^ "+") in
+    let sep = "+" ^ String.make (String.length (name table)) '-' ^ "+" in
     Format.sprintf
       "%s\n%s\n%s\ncolumns: %s\n\n%s"
-      sep.contents
+      sep
       (" " ^ name table ^ " ")
-      sep.contents
+      sep
       (String.concat ", " (Array.to_list (Array.map show_column (columns table))))
       (Sheet.show_sheet table.data)
   ;;

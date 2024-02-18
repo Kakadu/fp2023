@@ -76,15 +76,15 @@ module Env (M : Utils.MONAD_FAIL) = struct
   let load_database folder =
     if Sys.is_directory folder
     then (
-      let files = ref (Sys.readdir folder) in
-      if Array.length files.contents > 0
+      let get_files = return (Sys.readdir folder) in
+      get_files
+      >>= fun files ->
+      if Array.length files > 0
       then (
-        let rec helper acc list =
-          match list with
-          | [] -> acc
-          | hd :: tl -> helper (acc @ [ load_table (folder ^ "/" ^ hd) ]) tl
+        let helper =
+          List.fold_left (fun acc hd -> acc @ [ load_table (folder ^ "/" ^ hd) ]) []
         in
-        M.all (helper [] (Array.to_list files.contents))
+        M.all (helper (Array.to_list files))
         >>= fun tables -> return { Database.tables; name = Filename.basename folder })
       else fail (IncorrectData folder))
     else fail (IncorrectData folder)

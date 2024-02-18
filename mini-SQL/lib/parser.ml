@@ -252,8 +252,7 @@ let select_p =
     choice
       [ (* "*" Parse *)
         (bspace peek_char
-         >>= fun c ->
-         match c with
+         >>= function
          | Some '*' -> advance 1 *> return Asterisk
          | Some _ | None -> fail "Can't parse (*)")
       ; (expr_p >>| fun r -> Expression r)

@@ -10,10 +10,10 @@ license: "LGPL-3.0-or-later"
 homepage: "https://github.com/d-zaytsev/fp2023"
 bug-reports: "https://github.com/d-zaytsev/fp2023"
 depends: [
+  "csv"
   "dune" {>= "3.7"}
   "angstrom"
   "ppx_inline_test" {with-test}
-  "csv"
   "ppx_expect"
   "ppx_deriving"
   "bisect_ppx"
