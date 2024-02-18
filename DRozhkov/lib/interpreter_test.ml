@@ -100,11 +100,14 @@ let () =
   let f x = x + 5
   |} in
   process_program input9;
-  let input10 = {|
+  let input10 =
+    {|
   let b = 5 < 4
   let c = 5 > 4
   let f = 5 / 4
-  |} in
+  let q = true = true
+  |}
+  in
   process_program input10;
   let input11 =
     {|

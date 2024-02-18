@@ -21,31 +21,8 @@ let is_digit = function
   | _ -> false
 ;;
 
-let digit_c =
-  let is_digit = function
-    | '0' .. '9' -> true
-    | _ -> false
-  in
-  satisfy is_digit
-;;
-
 let l_low = function
   | 'a' .. 'z' | '_' -> true
-  | _ -> false
-;;
-
-let l_up = function
-  | 'A' .. 'Z' | '_' -> true
-  | _ -> false
-;;
-
-let variable = function
-  | 'a' .. 'z' | '_' -> true
-  | _ -> false
-;;
-
-let letter = function
-  | 'A' .. 'Z' | 'a' .. 'z' -> true
   | _ -> false
 ;;
 
@@ -84,9 +61,7 @@ let is_syntax = function
   | "true"
   | "false"
   | "match"
-  | "with"
-  | "object"
-  | "end" -> true
+  | "with" -> true
   | _ -> false
 ;;
 

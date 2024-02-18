@@ -5,11 +5,7 @@
 val is_space : char -> bool
 val is_whitespace : char -> bool
 val is_digit : char -> bool
-val digit_c : char Angstrom.t
 val l_low : char -> bool
-val l_up : char -> bool
-val variable : char -> bool
-val letter : char -> bool
 val spaces : unit Angstrom.t
 val skip_whitespace : string Angstrom.t
 val skip_whitespace1 : string Angstrom.t
