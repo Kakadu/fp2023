@@ -11,7 +11,6 @@ type typ =
   | TVar of int
   | TList of typ
   | TArrow of typ * typ
-[@@deriving eq, show { with_path = false }]
 
 let rec pp_typ fmt = function
   | TInt -> fprintf fmt "int"
