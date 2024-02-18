@@ -1462,7 +1462,8 @@ let%expect_test _ =
     \    let obj3 = {__proto__ : obj2}\n\
     \    obj3.__proto__.prop2 = \"asdf\";\n\
     \    console.log (obj3.__proto__.prop2, obj2)";
-  [%expect {|
+  [%expect
+    {|
     Programm output:
     asdf { prop2: 'asdf' }
 
