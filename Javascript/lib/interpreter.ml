@@ -401,14 +401,24 @@ let get_obj_property_opt ctx obj key =
   match obj with
   | VObject id as obj_val ->
     let* obj = get_obj_ctx ctx id in
-    let spec_proto =
+    let choose_proto =
+      vobject
+      @@
       if is_func obj
-      then go (vobject ctx.proto_objs.proto_fun)
+      then ctx.proto_objs.proto_fun
       else if is_array obj
-      then go (vobject ctx.proto_objs.proto_array)
-      else return None
+      then ctx.proto_objs.proto_array
+      else ctx.proto_objs.proto_obj
     in
-    if_none (go obj_val) @@ if_none spec_proto @@ go (vobject ctx.proto_objs.proto_obj)
+    (match key with
+     | "__proto__" ->
+       (match obj.proto with
+        | VObject _ as proto -> return @@ Some proto
+        | _ -> return @@ Some choose_proto)
+     | _ ->
+       if_none (go obj_val)
+       @@ if_none (go choose_proto)
+       @@ go (vobject ctx.proto_objs.proto_obj))
   | _ -> ensup "reading from not object"
 ;;
 

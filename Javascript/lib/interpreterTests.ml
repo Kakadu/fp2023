@@ -1191,61 +1191,6 @@ let%expect_test _ =
   [%expect {| Programm return: 17 |}]
 ;;
 
-(*Object field assign*)
-
-let%expect_test _ =
-  print_return
-    "let a1 = {field1 : 10}; \n\
-    \    let a2 = {field2 : 4}; \n\
-    \    a2.__proto__ = a1\n\
-    \    return a2.field1";
-  [%expect {|
-    Programm return: 10 |}]
-;;
-
-let%expect_test _ =
-  print_return
-    "let a2 = {field2 : 4}; \n    a2[\"__proto\"+\"__\"] = a2\n    return a2.field1";
-  [%expect
-    {|
-    Error: Interpreter error > error in expression statement > error in assignment > TypeError: Cyclic __proto__ value |}]
-;;
-
-let%expect_test _ =
-  print_return
-    "let a1 = {field2 : 4}; \n\
-    \  let a2 = {field2 : 4, __proto__ : a1};\n\
-    \    a1.__proto__ = a2\n\
-    \    return a2.field2";
-  [%expect
-    {|
-    Error: Interpreter error > error in expression statement > error in assignment > TypeError: Cyclic __proto__ value |}]
-;;
-
-let%expect_test _ =
-  print_return "let a2 = {field2 : 4}; \n    a2[\"field\"+2] = 10\n    return a2.field2";
-  [%expect {|
-    Programm return: 10 |}]
-;;
-
-let%expect_test _ =
-  print_return "let a2 = {field2 : 4}; \n    a2[4] = 10\n    return a2[4]";
-  [%expect {|
-    Programm return: 10 |}]
-;;
-
-let%expect_test _ =
-  print_output
-    "let a1 = {field1 : 5}\n\
-    \  let a2 = {field2 : 4, [\"__proto__\"+\"\"] : a1};\n\
-    \  console.log(a2.field1, a2.field1 = 10, a1.field1, a2.field1)";
-  [%expect {|
-    Programm output:
-    5 10 5 10
-
-    Programm return: undefined |}]
-;;
-
 (**---------------Lexical env---------------*)
 
 let%expect_test _ =
@@ -1407,6 +1352,13 @@ let%expect_test _ =
 
 let%expect_test _ =
   print_return
+    "let a1 = {field1 : 10}; \n    let a2 = {__proto__ : a1}; \n    return a2.__proto__";
+  [%expect {|
+    Programm return: { field1: 10 } |}]
+;;
+
+let%expect_test _ =
+  print_return
     "let a1 = {field1 : 10}; let b1 = {field1 : 10};\n\
     \    let a2 = {__proto__ : a1, field2 : 6, __proto__ : b1}; \n\
     \    return a2.field1";
@@ -1475,6 +1427,44 @@ let%expect_test _ =
   [%expect {|
     Programm output:
     5 10 5 10
+
+    Programm return: undefined |}]
+;;
+
+let%expect_test _ =
+  print_return
+    "let a1 = {field2 : 4}; \n\
+    \  let a2 = {field2 : 4, __proto__ : a1};\n\
+    \    a1.__proto__ = a2\n\
+    \    return a2.field2";
+  [%expect
+    {|
+    Error: Interpreter error > error in expression statement > error in assignment > TypeError: Cyclic __proto__ value |}]
+;;
+
+let%expect_test _ =
+  print_output
+    "let a1 = {prop1 : 1}\n\
+    \    let a2 = {obj1 : a1}\n\
+    \    a2.obj1.prop1 = 5\n\
+    \    console.log(a2.obj1, a1)";
+  [%expect
+    {|
+    Programm output:
+    { prop1: 5 } { prop1: 5 }
+
+    Programm return: undefined |}]
+;;
+
+let%expect_test _ =
+  print_output
+    "let obj2 = {prop2 : \"something\"}\n\
+    \    let obj3 = {__proto__ : obj2}\n\
+    \    obj3.__proto__.prop2 = \"asdf\";\n\
+    \    console.log (obj3.__proto__.prop2, obj2)";
+  [%expect {|
+    Programm output:
+    asdf { prop2: 'asdf' }
 
     Programm return: undefined |}]
 ;;
