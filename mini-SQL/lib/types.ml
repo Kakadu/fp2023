@@ -149,7 +149,7 @@ module Table = struct
       | [] -> acc
       | hd :: tl ->
         if hd.column_name = name
-        then helper (List.append acc [ i ]) (i + 1) name tl
+        then helper (List.append [ i ] acc) (i + 1) name tl
         else helper acc (i + 1) name tl
     in
     match basename name with

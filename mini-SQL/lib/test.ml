@@ -30,13 +30,9 @@ module Parse_test = struct
   ;;
 
   let assert_raise parser input =
-    let tryRun p i =
-      match run p i with
-      | Ok _ -> true
-      | _ -> false
-    in
-    try not (tryRun parser input) with
-    | _ -> true
+    match run parser input with
+    | Error _ -> true
+    | Ok _ -> false
   ;;
 
   (* String *)

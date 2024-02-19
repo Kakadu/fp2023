@@ -327,10 +327,7 @@ module Eval (M : Utils.MONAD_FAIL) = struct
       | x -> fail (UnknownColumn (show_expr x))
     in
     let to_cols_list table cols =
-      M.all
-        (List.map
-           (fun el -> update_column_indexes table el >>= fun expr -> expr_to_col expr)
-           cols)
+      M.all (List.map (fun el -> update_column_indexes table el >>= expr_to_col) cols)
     in
     let rec helper (acc_table : Table.t) cols table =
       match cols with

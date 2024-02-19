@@ -120,10 +120,7 @@ module Exec (M : Utils.MONAD_FAIL) = struct
        | Real y -> is_zero_float y >>= fun y -> return (Real (x /. y))
        | String _ -> fail (TypesMismatch (a, "/", b))
        | Bool _ -> fail (TypesMismatch (a, "/", b)))
-    (* STRING * ... *)
-    | String _ -> fail (TypesMismatch (a, "/", b))
-    (* BOOL * ... *)
-    | Bool _ -> fail (TypesMismatch (a, "/", b))
+    | _ -> fail (TypesMismatch (a, "/", b))
   ;;
 
   let ( #% ) (a : item) (b : item) =
@@ -144,10 +141,7 @@ module Exec (M : Utils.MONAD_FAIL) = struct
        | Real y -> is_zero_float y >>= fun y -> return (Real (mod_float x y))
        | String _ -> fail (TypesMismatch (a, "%", b))
        | Bool _ -> fail (TypesMismatch (a, "%", b)))
-    (* STRING * ... *)
-    | String _ -> fail (TypesMismatch (a, "%", b))
-    (* BOOL * ... *)
-    | Bool _ -> fail (TypesMismatch (a, "%", b))
+    | _ -> fail (TypesMismatch (a, "%", b))
   ;;
 
   let ( #= ) (x : item) (y : item) =
