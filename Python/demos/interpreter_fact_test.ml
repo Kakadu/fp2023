@@ -1,6 +1,5 @@
 open Python_Lib.Interpreter
 open Eval (Result)
-open Python_Lib.Parser
 
 let result_fact_of_10 =
   interpret
