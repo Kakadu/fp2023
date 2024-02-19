@@ -14,14 +14,14 @@
  (instrumentation
   (backend bisect_ppx)))
 
-; (cram
-;  (applies_to executeTest)
-;  (deps ./demoInterpret.exe ./demo_input.txt))
-
 (cram
  (applies_to parsingTests)
  (deps ./demoParse.exe))
 
 (cram
  (applies_to executeTest)
- (deps ./demoInterpret.exe))
+ (deps
+  ./demoInterpret.exe
+  ../test_data/data/table0.csv
+  ../test_data/data/table1.csv
+  ../test_data/data/table2.csv))
