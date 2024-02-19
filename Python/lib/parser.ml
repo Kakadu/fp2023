@@ -340,7 +340,7 @@ let p_interpolationStrElemLast =
 let p_fString =
   let* elems =
     t_f
-    *> t_quote
+    *> char '"'
     *> many
          (p_interpolationStrElemEndingWithCurly
           <|> p_interpolationVarElem
