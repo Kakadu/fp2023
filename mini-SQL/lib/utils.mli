@@ -52,6 +52,10 @@ module type MONAD_FAIL = sig
   val all : ('a, 'e) t list -> ('a list, 'e) t
   val all_unit : (unit, 'e) t list -> (unit, 'e) t
   val fail : 'e -> ('a, 'e) t
+
+  module Syntax : sig
+    val ( let* ) : ('a, 'e) t -> ('a -> ('b, 'e) t) -> ('b, 'e) t
+  end
 end
 
 module Result : sig

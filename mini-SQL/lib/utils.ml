@@ -36,6 +36,10 @@ module type MONAD_FAIL = sig
   include Base.Monad.S2
 
   val fail : 'e -> ('a, 'e) t
+
+  module Syntax : sig
+    val ( let* ) : ('a, 'e) t -> ('a -> ('b, 'e) t) -> ('b, 'e) t
+  end
 end
 
 (* RESULT MONADE *)
@@ -43,10 +47,6 @@ module Result : sig
   type ('a, 'e) t = ('a, 'e) Result.t
 
   include MONAD_FAIL with type ('a, 'e) t := ('a, 'e) t
-
-  module Syntax : sig
-    val ( let* ) : ('a, 'e) t -> ('a -> ('b, 'e) t) -> ('b, 'e) t
-  end
 end = struct
   include Base.Result
 
