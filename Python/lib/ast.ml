@@ -20,7 +20,7 @@ type arith_op =
   | Mod
 [@@deriving show { with_path = false }]
 
-(* Funcions' names & args' names *)
+(* Functions' names & args' names *)
 type identifier = Identifier of string [@@deriving show { with_path = false }]
 
 type modifier =
