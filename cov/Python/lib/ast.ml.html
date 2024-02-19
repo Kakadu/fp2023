@@ -189,7 +189,7 @@
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-(*Standart data types: integers, strings, lists*)
+(* Standard data types: integers, strings, lists*)
 <span data-count="108">t</span>ype value =
   | Int of in<span data-count="33">t</span>
   | String of strin<span data-count="3">g</span>
@@ -198,7 +198,7 @@
   | Nil
 [@@deriving show { with_path = false }<span data-count="0">]</span>
 
-(*Standart arithmetic operations *)
+(* Standard arithmetic operations *)
 <span data-count="7">t</span>ype arith_op =
   | Add
   | Sub
@@ -207,7 +207,7 @@
   | Mod
 [@@deriving show { with_path = false }]
 
-(*Funcions' name &amp; args' name*)
+(* Functions' names &amp; args' names *)
 <span data-count="162">t</span>ype identifier = Identifier of strin<span data-count="54">g</span> [@@deriving show { with_path = false }]
 
 <span data-count="29">t</span>ype modifier =
@@ -215,7 +215,7 @@
   | Class
 [@@deriving show { with_path = false }]
 
-(*Standart boolean operators*)
+(* Standard boolean operators *)
 <span data-count="14">t</span>ype bool_op =
   | And
   | Or
@@ -232,7 +232,7 @@
   | Var of identifier
 [@@deriving show { with_path = false }<span data-count="6">]</span>
 
-(*Standart expressions*)
+(* Standard expressions *)
 <span data-count="536">t</span>ype expression =
   | Const of value
   | Variable of modifier * identifier
@@ -246,7 +246,7 @@
   | FString of <span data-count="13">f</span>_string_type lis<span data-count="3">t</span>
 [@@deriving show { with_path = false }<span data-count="434">]</span>
 
-(*Standart statements*)
+(* Standard statements *)
 <span data-count="230">t</span>ype statement =
   | Expression of expression
   | Assign of expression * expression
