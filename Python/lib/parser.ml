@@ -119,13 +119,15 @@ let is_whitespace_or_eol = function
   | _ -> false
 ;;
 
-let is_curlyLeft = function
+let is_curlyLeftOrQuotes = function
   | '{' -> true
+  | '"' -> true
   | _ -> false
 ;;
 
-let is_curlyRight = function
+let is_curlyRightOrQuotes = function
   | '}' -> true
+  | '"' -> true
   | _ -> false
 ;;
 
@@ -147,8 +149,8 @@ let take_string = take_till is_quotes
 let take_variable = take_while is_variable
 let take_sign = take_while is_sign
 let token t = skip_whitespace *> string t
-let take_interpolString = take_till is_curlyLeft
-let take_interpolIdentifier = take_till is_curlyRight
+let take_interpolString = take_till is_curlyLeftOrQuotes
+let take_interpolIdentifier = take_till is_curlyRightOrQuotes
 let t_return = token "return"
 let t_def = token "def"
 let t_mul = token "*"
