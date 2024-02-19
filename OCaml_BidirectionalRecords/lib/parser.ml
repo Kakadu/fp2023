@@ -1,11 +1,10 @@
-(** Copyright 2021-2023, ksenmel *)
+(** Copyright 2021-2024, ksenmel *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
 (*
    TODO
-   - records
-   - type ascription
+   - match
 *)
 
 open Angstrom
@@ -211,3 +210,5 @@ let pexpr =
 let tvar =
   lift2 (fun name ty -> { name; ty }) varname (pstoken ":" *> pty <|> return Unspecified)
 ;;
+
+let parse_expr = parse_string ~consume:Consume.All (pexpr <* skip_while Char.is_whitespace)

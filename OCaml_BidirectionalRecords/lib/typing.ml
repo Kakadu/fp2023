@@ -1,4 +1,4 @@
-(** Copyright 2021-2023, ksenmel *)
+(** Copyright 2021-2024, ksenmel *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
@@ -25,7 +25,7 @@ type scheme = Scheme of VarSet.t * typ
 
 type error =
   [ `OccursCheck
-  | `NoVariable of string
+  | `UndeclaredVariable of string
   | `NoConstructor of string
   | `UnificationFailed of typ * typ
   | `AddLater

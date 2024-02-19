@@ -1,9 +1,20 @@
-(** Copyright 2021-2023, ksenmel *)
+(** Copyright 2021-2024, ksenmel *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
 (** https://jeremymikkola.com/posts/2018_03_25_understanding_algorithm_w.html *)
 (* https://gitlab.com/Kakadu/fp2020course-materials/-/blob/master/code/miniml/inferencer.ml?ref_type=heads *)
+
+(** 
+    TODO:
+    - write full miniML task
+          - tuples
+          - list
+          - cons
+    - Rec & NonRec let 
+    - !! refactor
+    - pp module
+*)
 
 open Typing
 
@@ -84,8 +95,7 @@ end = struct
 
   let fresh : int t = fun last -> last + 1, Result.Ok last
 
-  (** run from initial state of 0 and extract
-      the second component of the resulting tuple *)
+  (** run from initial state of 0 and extract the second component of the resulting tuple *)
   let run monad = snd (monad 0)
 end
 
@@ -346,7 +356,7 @@ let infer_expr =
       let* subst2 = Subst.unify (Subst.apply subst1 tv) ty1 in
       let* final_subst = Subst.compose subst1 subst2 in
       return (final_subst, Subst.apply final_subst tv)
-    (* | _ -> return (Subst.empty, tint) *)
+    | _ -> return (Subst.empty, tint)
   in
   helper
 ;;
@@ -362,7 +372,7 @@ let rec pp_type ppf (typ : typ) =
      | Unit -> Format.fprintf ppf "unit"
      | Char -> Format.fprintf ppf "char"
      | String -> Format.fprintf ppf "string")
-  | TVar x -> Format.fprintf ppf "%s" @@ Char.escaped (Char.chr (x + 97)) (* ! *)
+  | TVar x -> Format.fprintf ppf "%s" @@ Char.escaped (Char.chr (x + 97))  (** 97 is an ASCII code of letter "a" *)
   | TArr (l, r) ->
     (match l, r with
      | TArr _, _ -> Format.fprintf ppf "(%a) -> %a" pp_type l pp_type r

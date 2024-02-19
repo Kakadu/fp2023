@@ -1,4 +1,4 @@
-(** Copyright 2021-2023, ksenmel *)
+(** Copyright 2021-2024, ksenmel *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
@@ -82,6 +82,8 @@ type expr =
 [@@deriving show { with_path = false }]
 
 and decl = rec_flag * id * expr
+
+type top_decl = LetDecl of decl
 
 type record_bind =
   { name : id
