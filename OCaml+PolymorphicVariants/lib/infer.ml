@@ -221,6 +221,7 @@ module TypeEnv = struct
   type t = (id, scheme, String.comparator_witness) Map.t
 
   let extend e k v = Map.update e k ~f:(fun _ -> v)
+  let remove e k = Map.remove e k
   let empty = Map.empty (module String)
 
   let free_vars : t -> VarSet.t =
@@ -249,8 +250,13 @@ let instantiate : scheme -> ty R.t =
     (return ty)
 ;;
 
-let generalize : TypeEnv.t -> Type.t -> Scheme.t =
-  fun env ty ->
+let generalize env ty =
+  let free = VarSet.diff (Type.free_vars ty) (TypeEnv.free_vars env) in
+  S (free, ty)
+;;
+
+let generalize_rec env ty x =
+  let env = TypeEnv.remove env x in
   let free = VarSet.diff (Type.free_vars ty) (TypeEnv.free_vars env) in
   S (free, ty)
 ;;
@@ -355,23 +361,24 @@ let infer_exp =
       in
       return (sub, t)
     | ELet (Nonrec, (PVar x, e1), e2) ->
-      let* sub1, t1 = helper env e1 in
-      let env = TypeEnv.apply sub1 env in
+      let* s1, t1 = helper env e1 in
+      let env = TypeEnv.apply s1 env in
       let s = generalize env t1 in
-      let* sub2, t2 = helper (TypeEnv.extend env x s) e2 in
-      let* sub = Subst.compose sub1 sub2 in
-      return (sub, t2)
+      let* s2, t2 = helper (TypeEnv.extend env x s) e2 in
+      let* s = Subst.compose s1 s2 in
+      return (s, t2)
     | ELet (Rec, (PVar x, e1), e2) ->
       let* fresh = fresh_var in
       let env1 = TypeEnv.extend env x (S (VarSet.empty, fresh)) in
-      let* sub, t = helper env1 e1 in
-      let* sub1 = Subst.unify t fresh in
-      let* sub2 = Subst.compose sub sub1 in
-      let t = Subst.apply sub2 t in
-      let env2 = TypeEnv.apply sub2 env1 in
-      let s = generalize (TypeEnv.apply sub2 env) t in
-      let env3 = TypeEnv.extend env2 x s in
-      let* sub, t = helper env3 e2 in
+      let* s, t = helper env1 e1 in
+      let* s1 = Subst.unify t fresh in
+      let* s2 = Subst.compose s s1 in
+      let env = TypeEnv.apply s2 env in
+      let t = Subst.apply s2 t in
+      let s = generalize_rec env t x in
+      let env = TypeEnv.extend env x s in
+      let* sub, t = helper env e2 in
+      let* sub = Subst.compose s2 sub in
       return (sub, t)
     | EFun (p, e) ->
       let* env, t = infer_pat env p in
@@ -417,9 +424,9 @@ let infer_str_item env = function
     let* s1, t1 = infer_exp env e in
     let* s2 = Subst.unify t1 fresh in
     let* s3 = Subst.compose s1 s2 in
-    let t2 = Subst.apply s3 t1 in
     let env = TypeEnv.apply s3 env in
-    let sc = generalize (TypeEnv.apply s3 env) t2 in
+    let t2 = Subst.apply s3 t1 in
+    let sc = generalize_rec env t2 x in
     let env = TypeEnv.extend env x sc in
     return env
   | SValue (Nonrec, (PVar x, e)) ->
