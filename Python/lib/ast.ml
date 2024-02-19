@@ -2,7 +2,7 @@
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-(*Standart data types: integers, strings, lists*)
+(* Standard data types: integers, strings, lists*)
 type value =
   | Int of int
   | String of string
@@ -11,7 +11,7 @@ type value =
   | Nil
 [@@deriving show { with_path = false }]
 
-(*Standart arithmetic operations *)
+(* Standard arithmetic operations *)
 type arith_op =
   | Add
   | Sub
@@ -20,7 +20,7 @@ type arith_op =
   | Mod
 [@@deriving show { with_path = false }]
 
-(*Funcions' name & args' name*)
+(* Funcions' name & args' name *)
 type identifier = Identifier of string [@@deriving show { with_path = false }]
 
 type modifier =
@@ -28,7 +28,7 @@ type modifier =
   | Class
 [@@deriving show { with_path = false }]
 
-(*Standart boolean operators*)
+(* Standard boolean operators *)
 type bool_op =
   | And
   | Or
@@ -45,7 +45,7 @@ type f_string_type =
   | Var of identifier
 [@@deriving show { with_path = false }]
 
-(*Standart expressions*)
+(* Standard expressions *)
 type expression =
   | Const of value
   | Variable of modifier * identifier
@@ -59,7 +59,7 @@ type expression =
   | FString of f_string_type list
 [@@deriving show { with_path = false }]
 
-(*Standart statements*)
+(* Standard statements *)
 type statement =
   | Expression of expression
   | Assign of expression * expression
