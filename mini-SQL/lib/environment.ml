@@ -16,6 +16,7 @@ open Utils
 
 module Env (M : Utils.MONAD_FAIL) = struct
   open M
+  open M.Syntax
 
   (* Just check & open *)
   let open_file file =
@@ -47,23 +48,14 @@ module Env (M : Utils.MONAD_FAIL) = struct
 
   (* loads table from file.csv *)
   let load_table file =
-    let csv_rows csv_channel = return (Csv.input_all csv_channel) in
-    open_file file
-    >>= fun file_channel ->
-    get_csv_channel file_channel
-    >>= fun csv_channel ->
-    csv_rows csv_channel
-    >>= fun data ->
-    row data 0
-    >>= fun row1 ->
-    row data 1
-    >>= fun row2 ->
-    rows_after data 2
-    >>= fun data_rows ->
-    to_column_types_list row1
-    >>= fun ctypes ->
-    to_columns_list row2 ctypes
-    >>= fun cols ->
+    let* file_channel = open_file file in
+    let* csv_channel = get_csv_channel file_channel in
+    let* all_data = return (Csv.input_all csv_channel) in
+    let* row1 = row all_data 0 in
+    let* row2 = row all_data 1 in
+    let* data_rows = rows_after all_data 2 in
+    let* ctypes = to_column_types_list row1 in
+    let* cols = to_columns_list row2 ctypes in
     return
       { Table.data = Sheet.init ctypes data_rows
       ; Table.meta =
@@ -75,18 +67,16 @@ module Env (M : Utils.MONAD_FAIL) = struct
 
   let load_database folder =
     if Sys.is_directory folder
-    then (
-      let get_files = return (Sys.readdir folder) in
-      get_files
-      >>= fun files ->
+    then
+      let* files = return (Sys.readdir folder) in
       if Array.length files > 0
       then (
         let helper =
           List.fold_left (fun acc hd -> acc @ [ load_table (folder ^ "/" ^ hd) ]) []
         in
-        M.all (helper (Array.to_list files))
-        >>= fun tables -> return { Database.tables; name = Filename.basename folder })
-      else fail (IncorrectData folder))
+        let* tables = M.all (helper (Array.to_list files)) in
+        return { Database.tables; name = Filename.basename folder })
+      else fail (IncorrectData folder)
     else fail (IncorrectData folder)
   ;;
 end

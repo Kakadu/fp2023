@@ -31,6 +31,9 @@ type expr =
   | LThanEq of expr * expr (* <= *)
 [@@deriving show { with_path = false }]
 
+(* We need the second type because we are going to process it differently
+   (Ast.join_type doesn't store expr) *)
+
 type join_type =
   | Inner of expr (** ( INNER JOIN ) *)
   | Left of expr (** ( LEFT JOIN ) *)
@@ -39,14 +42,15 @@ type join_type =
 [@@deriving show { with_path = false }]
 
 type qot_node =
-  | Load of Table.t (* load tables from database *)
-  | Join of qot_node * qot_node * join_type (* JOIN, combines several nodes *)
-  | Restrict of qot_node * expr (* WHERE ( node + condition ) *)
-  | Project of qot_node * expr list (* SELECT ( node + columns ) *)
+  | Load of Table.t (** load tables from database *)
+  | Join of qot_node * qot_node * join_type (** JOIN, combines several nodes *)
+  | Restrict of qot_node * expr (** WHERE ( node + condition ) *)
+  | Project of qot_node * expr list (** SELECT ( node + columns ) *)
 [@@deriving show { with_path = false }]
 
 module Eval (M : Utils.MONAD_FAIL) = struct
   open M
+  open M.Syntax
 
   (** --- Transform AST into new types --- *)
 
@@ -74,28 +78,24 @@ module Eval (M : Utils.MONAD_FAIL) = struct
 
   (** Transform column name to int_column *)
   let transform_column (base : Database.t) name =
-    let get_table_i = find_table_id base name in
-    let get_table i = return (Database.get_table base ~index:i) in
-    let get_column_i t =
-      match Table.find_column_i t name with
+    let* table_i = find_table_id base name in
+    let* table = return (Database.get_table base ~index:table_i) in
+    let* column_id =
+      match Table.find_column_i table name with
       | [ x ] -> return x
       | _ -> fail (UnknownColumn name)
     in
-    let column colid t = return (Table.get_column t ~index:colid) in
-    get_table_i
-    >>= fun ti ->
-    get_table ti
-    >>= fun t ->
-    get_column_i t
-    >>= fun colid ->
-    column colid t
-    >>= fun col -> return { column_index = colid; meta = { col with column_name = name } }
+    let* column = return (Table.get_column table ~index:column_id) in
+    return { column_index = column_id; meta = { column with column_name = name } }
   ;;
 
   (** tranform Ast.value into Interpreter.value *)
   let transform_value (base : Database.t) = function
     (* column *)
-    | Ast.Name x -> transform_column base x >>= fun r -> return (Col r) (* TODO *)
+    | Ast.Name x ->
+      let* column_name = transform_column base x in
+      return (Col column_name)
+    (* TODO *)
     (* values *)
     | Ast.String x -> return (Const (String x))
     | Ast.Digit x -> return (Const (Numeric x))
@@ -129,12 +129,12 @@ module Eval (M : Utils.MONAD_FAIL) = struct
   let rec transform_ast_expression (base : Database.t) = function
     | Ast.Const v -> transform_value base v
     | Ast.Binary_operation (op, e1, e2) ->
-      transform_ast_expression base e1
-      >>= fun r1 ->
-      transform_ast_expression base e2
-      >>= fun r2 -> return (transform_binary_operation r1 r2 op)
+      let* e1 = transform_ast_expression base e1 in
+      let* e2 = transform_ast_expression base e2 in
+      return (transform_binary_operation e1 e2 op)
     | Ast.Unary_operation (op, e) ->
-      transform_ast_expression base e >>= fun r -> return (transform_unary_operation r op)
+      let* e1 = transform_ast_expression base e in
+      return (transform_unary_operation e1 op)
   ;;
 
   let transform_select_statement (base : Database.t) = function
@@ -153,27 +153,26 @@ module Eval (M : Utils.MONAD_FAIL) = struct
   (* ----- SQL Query Operator Tree ----- *)
 
   let load_table (base : Database.t) tname =
-    let get_id t =
-      match Database.find_table_i base t with
+    let* table_id =
+      match Database.find_table_i base tname with
       | Some x -> return x
       | None -> fail (UnknownTable tname)
     in
-    get_id tname >>= fun id -> return (Database.get_table base ~index:id)
+    return (Database.get_table base ~index:table_id)
   ;;
 
   (* Join & Load *)
   (** Transform from Ast.from_statement to qot_node *)
   let rec transform_from_statement (base : Database.t) = function
-    | Ast.Table name -> load_table base name >>= fun res -> return (Load res)
+    | Ast.Table name ->
+      let* table = load_table base name in
+      return (Load table)
     | Ast.Join st ->
-      transform_from_statement base st.left
-      >>= fun left_node ->
-      load_table base st.table
-      >>= fun table ->
-      transform_ast_expression base st.on
-      >>= fun ex ->
-      transform_join_type ex st.jtype
-      >>= fun t -> return (Join (left_node, Load table, t))
+      let* left_node = transform_from_statement base st.left in
+      let* table = load_table base st.table in
+      let* ex = transform_ast_expression base st.on in
+      let* j_type = transform_join_type ex st.jtype in
+      return (Join (left_node, Load table, j_type))
   ;;
 
   (** Transform request to qot_node (now we can execute request) *)
@@ -184,20 +183,29 @@ module Eval (M : Utils.MONAD_FAIL) = struct
       | None -> return (Const (Bool true))
       (* just default value (in case we haven't WHERE) *)
     in
-    transform_from_statement base req.from
-    >>= fun join_node ->
-    transform_where req.where
-    >>= fun where_expr ->
-    return (Restrict (join_node, where_expr))
-    >>= fun restrict_node ->
-    return (List.map (transform_select_statement base) req.select)
-    >>= fun select_exprs ->
-    M.all select_exprs >>= fun exprs -> return (Project (restrict_node, exprs))
+    let* join_node = transform_from_statement base req.from in
+    let* where_expr = transform_where req.where in
+    let* restrict_node = return (Restrict (join_node, where_expr)) in
+    let* select_exprs = return (List.map (transform_select_statement base) req.select) in
+    let* exprs = M.all select_exprs in
+    return (Project (restrict_node, exprs))
   ;;
 
   (** --- Expressions computation --- *)
 
   open Typecheck.Exec (M)
+
+  (** Converts item to bool or fail *)
+  let bool_of_item a =
+    match a with
+    | Bool x -> return x
+    | Numeric x -> if x > 0 then return true else return false
+    | Real x -> if x > 0. then return true else return false
+    | String x ->
+      (match bool_of_string_opt x with
+       | Some x -> return x
+       | None -> fail (TypeConversionFail (a, "Bool")))
+  ;;
 
   (* Execute expr for cur row *)
   let rec row_expr_exec (sheet : Sheet.t) (i : int) expr =
@@ -224,30 +232,23 @@ module Eval (M : Utils.MONAD_FAIL) = struct
       run x >>= fun x -> run y >>= fun y -> x #<= y >>= fun res -> return (Bool res)
     | And (x, y) ->
       run x
-      >>= fun x ->
-      run y
-      >>= fun y ->
-      bool_of_item x >>= fun x -> bool_of_item y >>= fun y -> return (Bool (x && y))
+      >>= bool_of_item
+      >>= fun x -> run y >>= bool_of_item >>= fun y -> return (Bool (x && y))
     | Or (x, y) ->
-      run x
-      >>= fun x ->
-      run y
-      >>= fun y ->
-      bool_of_item x >>= fun x -> bool_of_item y >>= fun y -> return (Bool (x || y))
-    | Not x -> run x >>= fun x -> bool_of_item x >>= fun x -> return (Bool (not x))
+      let* x = run x >>= bool_of_item in
+      let* y = run y >>= bool_of_item in
+      return (Bool (x || y))
+    | Not x -> run x >>= bool_of_item >>= fun x -> return (Bool (not x))
   ;;
 
-  (* run expr for all rows and return new sheet with true exprs *)
+  (** run expr for all rows and return new sheet with true exprs *)
   let exec_expr (sheet : Sheet.t) (ex : expr) =
     let rec rows_runner (acc : Row.t list) (max_i : int) (i : int) =
       match i with
       | i when i > max_i -> return acc (* end of column *)
       | i ->
-        row_expr_exec sheet i ex
-        >>= fun res ->
-        bool_of_item res
-        >>= fun res ->
-        if res
+        let* row_fits = row_expr_exec sheet i ex >>= bool_of_item in
+        if row_fits
         then rows_runner (List.append acc [ Sheet.get_row sheet i ]) max_i (i + 1)
         else rows_runner acc max_i (i + 1)
     in
@@ -264,7 +265,8 @@ module Eval (M : Utils.MONAD_FAIL) = struct
     in
     match expr with
     | Const x -> return (Const x)
-    | Col col -> get_id col >>= fun id -> return (Col { col with column_index = id })
+    | Col col ->
+      get_id col >>= fun col_id -> return (Col { col with column_index = col_id })
     | Plus (e1, e2) -> run e1 >>= fun r1 -> run e2 >>= fun r2 -> return (Plus (r1, r2))
     | Minus (e1, e2) -> run e1 >>= fun r1 -> run e2 >>= fun r2 -> return (Minus (r1, r2))
     | Mul (e1, e2) -> run e1 >>= fun r1 -> run e2 >>= fun r2 -> return (Mul (r1, r2))
@@ -288,24 +290,18 @@ module Eval (M : Utils.MONAD_FAIL) = struct
     let filter (sheet : Sheet.t) (ex : expr) =
       exec_expr sheet ex >>= fun list -> return (Array.of_list list)
     in
-    let replace_sheet (sheet : Sheet.t) (table : Table.t) =
-      { Table.data = sheet; Table.meta = table.meta }
-    in
-    let join t1 t2 = return (Table.join t1 t2) in
     let update new_table expr = update_column_indexes new_table expr in
-    let run t1 t2 ex =
-      join t1 t2
-      >>= fun new_table ->
-      update new_table ex
-      >>= fun expr ->
-      filter new_table.data expr >>= fun res -> return (replace_sheet res new_table)
+    let join t1 t2 ex =
+      let jtable = Table.join t1 t2 in
+      let* condition = update jtable ex in
+      let* ftable = filter jtable.data condition in
+      return { jtable with Table.data = ftable }
     in
     match jtype with
-    | Full _ -> join table1 table2 >>= fun new_table -> return new_table
-    | Inner expr -> run table1 table2 expr >>= fun res -> return res
+    | Full _ -> return (Table.join table1 table2)
+    | Inner expr -> join table1 table2 expr >>= fun res -> return res
     | Left expr ->
-      run table1 table2 expr
-      >>= fun gen_table ->
+      let* gen_table = join table1 table2 expr in
       return
         (Table.join
            table1
@@ -314,17 +310,15 @@ module Eval (M : Utils.MONAD_FAIL) = struct
               (Table.row_length table1 - 1)
               (Table.row_length gen_table - Table.row_length table1 - 1)))
     | Right expr ->
-      run table1 table2 expr
-      >>= fun gen_table ->
+      let* gen_table = join table1 table2 expr in
       return
         (Table.join (Table.sub_width gen_table 0 (Table.row_length table1 - 1)) table2)
   ;;
 
   let exec_restrict (table : Table.t) (expr : expr) =
-    update_column_indexes table expr
-    >>= fun expr ->
-    exec_expr table.data expr
-    >>= fun res -> return { Table.data = Array.of_list res; Table.meta = table.meta }
+    let* expr = update_column_indexes table expr in
+    let* res = exec_expr table.data expr in
+    return { table with Table.data = Array.of_list res }
   ;;
 
   let exec_project (table : Table.t) (cols : expr list) =
@@ -343,21 +337,23 @@ module Eval (M : Utils.MONAD_FAIL) = struct
       | [] -> return acc_table
       | hd :: tl -> helper (Table.join acc_table (Table.sub_width table hd 1)) tl table
     in
-    to_cols_list table cols
-    >>= fun cols ->
-    helper
-      (Table.empty (Table.column_length table))
-      (List.map (fun el -> el.column_index) cols)
-      table
-    >>= fun res_table -> return (Table.change_table_name res_table "result table")
+    let* cols = to_cols_list table cols in
+    let* res_table =
+      helper
+        (Table.empty (Table.column_length table))
+        (List.map (fun el -> el.column_index) cols)
+        table
+    in
+    return (Table.change_table_name res_table "result table")
   ;;
 
   let rec execute node =
     match node with
     | Load table -> return table
     | Join (left, right, jtype) ->
-      execute left
-      >>= fun left -> execute right >>= fun right -> exec_join left right jtype
+      let* left = execute left in
+      let* right = execute right in
+      exec_join left right jtype
     | Restrict (node, expr) -> execute node >>= fun table -> exec_restrict table expr
     | Project (node, exprs) -> execute node >>= fun table -> exec_project table exprs
   ;;
@@ -365,8 +361,8 @@ module Eval (M : Utils.MONAD_FAIL) = struct
   open Environment.Env (M)
 
   let eval (base_folder : string) (request : Ast.request) : (Table.t, error) t =
-    let get_node base request = transform_request base request in
-    load_database base_folder
-    >>= fun base -> get_node base request >>= fun node -> execute node
+    let* base = load_database base_folder in
+    let* node = transform_request base request in
+    execute node
   ;;
 end

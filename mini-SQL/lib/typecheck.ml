@@ -249,15 +249,4 @@ module Exec (M : Utils.MONAD_FAIL) = struct
   let ( #!= ) (x : item) (y : item) = x #= y >>= fun res -> return (not res)
   let ( #>= ) (x : item) (y : item) = x #< y >>= fun res -> return (not res)
   let ( #<= ) (x : item) (y : item) = x #> y >>= fun res -> return (not res)
-
-  let bool_of_item a =
-    match a with
-    | Bool x -> return x
-    | Numeric x -> if x > 0 then return true else return false
-    | Real x -> if x > 0. then return true else return false
-    | String x ->
-      (match bool_of_string_opt x with
-       | Some x -> return x
-       | None -> fail (TypeConversionFail (a, "Bool")))
-  ;;
 end

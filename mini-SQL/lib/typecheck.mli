@@ -14,7 +14,4 @@ module Exec : functor (M : Utils.MONAD_FAIL) -> sig
   val ( #!= ) : Types.item -> Types.item -> (bool, 'a) M.t
   val ( #>= ) : Types.item -> Types.item -> (bool, 'a) M.t
   val ( #<= ) : Types.item -> Types.item -> (bool, 'a) M.t
-
-  (** Converts item to bool or fail *)
-  val bool_of_item : Types.item -> (bool, Utils.error) M.t
 end
