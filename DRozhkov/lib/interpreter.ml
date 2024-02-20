@@ -42,14 +42,11 @@ let rec pp_value fmt = function
   | VFun _ -> fprintf fmt "<fun>"
 ;;
 
-module EnvValues = struct
+module Env = struct
   open Base
-
-  type 'a t
 
   let empty = Map.empty (module String)
   let extend env (id, value) = Map.set env ~key:id ~data:value
-  let update mp key data = Map.update mp key ~f:(function _ -> data)
   let singleton (id, value) = extend empty (id, value)
 end
 
@@ -72,15 +69,6 @@ module Interpret (M : MONADERROR) = struct
       Stdlib.print_endline "The expression is not implemented in the expression"
     | Pattern_matching_error ->
       fprintf fmt "Value can't be match with any case in this expression"
-  ;;
-
-  let match_pattern env = function
-    | PAny, _ -> Some env
-    | PConst (Int x), VInt v when x = v -> Some env
-    | PConst (Bool x), VBool v when x = v -> Some env
-    | PConst Empty, VUnit -> Some env
-    | PVar id, v -> Some (EnvValues.singleton (id, v))
-    | _ -> None
   ;;
 
   open M
@@ -138,18 +126,33 @@ module Interpret (M : MONADERROR) = struct
          | Div, VInt _, VInt 0 -> fail Division_by_zero
          | Div, VInt l, VInt r -> return (VInt (l / r))
          | _ -> fail (Incorrect_type rv))
-      | Match (e, list) ->
+      | Match (e, cases) ->
         let* v = helper env e in
-        eval_match env v list
+        let rec match_cases env v = function
+          | (pat, expression) :: tl ->
+            (match pat, v with
+             | PAny, _ -> helper env expression
+             | PVar id, v' ->
+               let env' = Env.extend env (id, v') in
+               helper env' expression
+             | PConst const, cvalue ->
+               (match const, cvalue with
+                | Bool e1, VBool e2 when e1 = e2 -> helper env expression
+                | Int e1, VInt e2 when e1 = e2 -> helper env expression
+                | Empty, VUnit -> helper env expression
+                | _ -> match_cases env v tl))
+          | [] -> fail Pattern_matching_error
+        in
+        match_cases env v cases
       | App (f, e) ->
         let* fv = helper env f in
         let* ev = helper env e in
         (match fv with
          | VFun (id, e, fenv) ->
-           let fenv = EnvValues.extend fenv (id, ev) in
+           let fenv = Env.extend fenv (id, ev) in
            let updated_env =
              Base.Map.fold fenv ~init:env ~f:(fun ~key ~data acc_env ->
-               EnvValues.extend acc_env (key, data))
+               Env.extend acc_env (key, data))
            in
            let* v = helper updated_env e in
            return v
@@ -159,16 +162,9 @@ module Interpret (M : MONADERROR) = struct
          | None -> fail Let_bundle
          | Some e2 ->
            let* v1 = helper env e1 in
-           let env = EnvValues.extend env (name, v1) in
+           let env = Env.extend env (name, v1) in
            let* v2 = helper env e2 in
            return v2)
-    and eval_match env v = function
-      | [] -> fail Pattern_matching_error
-      | (pat, expr) :: tl ->
-        let new_env = match_pattern env (pat, v) in
-        (match new_env with
-         | Some env -> helper env expr
-         | None -> eval_match env v tl)
     in
     helper
   ;;
@@ -177,8 +173,8 @@ module Interpret (M : MONADERROR) = struct
     let eval_let env = function
       | Let (_, id, e, None) ->
         let* v = eval env e in
-        let env = EnvValues.update env id v in
-        return (env, v)
+        let env' = Base.Map.update env id ~f:(function _ -> v) in
+        return (env', v)
       | expression ->
         let* v = eval env expression in
         return (env, v)
@@ -186,7 +182,7 @@ module Interpret (M : MONADERROR) = struct
     let* env, rs =
       Base.List.fold_left
         p
-        ~init:(return (EnvValues.empty, []))
+        ~init:(return (Env.empty, []))
         ~f:(fun acc e ->
           let* env, rs = acc in
           let* env, res = eval_let env e in

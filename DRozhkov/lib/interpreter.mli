@@ -121,12 +121,9 @@ and bundle = (string, value, Base.String.comparator_witness) Base.Map.t
 
 val pp_value : Format.formatter -> value -> unit
 
-module EnvValues : sig
-  type 'a t
-
+module Env : sig
   val empty : (string, 'a, Base.String.comparator_witness) Base.Map.t
   val extend : ('a, 'b, 'c) Base.Map.t -> 'a * 'b -> ('a, 'b, 'c) Base.Map.t
-  val update : ('a, 'b, 'c) Base.Map.t -> 'a -> 'b -> ('a, 'b, 'c) Base.Map.t
   val singleton : string * 'a -> (string, 'a, Base.String.comparator_witness) Base.Map.t
 end
 
@@ -140,12 +137,6 @@ module Interpret : functor (M : MONADERROR) -> sig
     | Incorrect_type of value
 
   val pp_error : Format.formatter -> error -> unit
-
-  val match_pattern
-    :  (string, value, Base.String.comparator_witness) Base.Map.t
-    -> Ast.pattern * value
-    -> (string, value, Base.String.comparator_witness) Base.Map.t option
-
   val lookup_env : (string, 'a, 'b) Base.Map.t -> string -> ('a, error) M.t
 
   val eval
@@ -170,12 +161,6 @@ module Interpreter : sig
     | Incorrect_type of value
 
   val pp_error : Format.formatter -> error -> unit
-
-  val match_pattern
-    :  (string, value, Base.String.comparator_witness) Base.Map.t
-    -> Ast.pattern * value
-    -> (string, value, Base.String.comparator_witness) Base.Map.t option
-
   val lookup_env : (string, 'a, 'b) Base.Map.t -> string -> ('a, error) result
 
   val eval
