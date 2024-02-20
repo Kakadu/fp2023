@@ -149,31 +149,31 @@ module Exec (M : Utils.MONAD_FAIL) = struct
     (* INT == ... *)
     | Numeric x ->
       (match y with
-       | Numeric y -> return (x = y)
-       | Real y -> return (float_of_int x = y)
-       | String y -> return (string_of_int x = y)
-       | Bool y -> return (x = int_of_bool y))
+       | Numeric y -> return (Bool (x = y))
+       | Real y -> return (Bool (float_of_int x = y))
+       | String y -> return (Bool (string_of_int x = y))
+       | Bool y -> return (Bool (x = int_of_bool y)))
     (* FLOAT == ... *)
     | Real x ->
       (match y with
-       | Numeric y -> return (x = float_of_int y)
-       | Real y -> return (x = y)
-       | String y -> return (string_of_float x = y)
-       | Bool y -> return (x = float_of_bool y))
+       | Numeric y -> return (Bool (x = float_of_int y))
+       | Real y -> return (Bool (x = y))
+       | String y -> return (Bool (string_of_float x = y))
+       | Bool y -> return (Bool (x = float_of_bool y)))
     (* STRING == ... *)
     | String x ->
       (match y with
-       | Numeric y -> return (x = string_of_int y)
-       | Real y -> return (x = string_of_float y)
-       | String y -> return (x = y)
-       | Bool y -> return (x = string_of_bool y))
+       | Numeric y -> return (Bool (x = string_of_int y))
+       | Real y -> return (Bool (x = string_of_float y))
+       | String y -> return (Bool (x = y))
+       | Bool y -> return (Bool (x = string_of_bool y)))
     (* BOOL == ... *)
     | Bool x ->
       (match y with
-       | Numeric y -> return (int_of_bool x = y)
-       | Real y -> return (float_of_bool x = y)
-       | String y -> return (string_of_bool x = y)
-       | Bool y -> return (int_of_bool x = int_of_bool y))
+       | Numeric y -> return (Bool (int_of_bool x = y))
+       | Real y -> return (Bool (float_of_bool x = y))
+       | String y -> return (Bool (string_of_bool x = y))
+       | Bool y -> return (Bool (int_of_bool x = int_of_bool y)))
   ;;
 
   let ( #> ) (x : item) (y : item) =
@@ -181,31 +181,31 @@ module Exec (M : Utils.MONAD_FAIL) = struct
     (* INT == ... *)
     | Numeric x ->
       (match y with
-       | Numeric y -> return (x > y)
-       | Real y -> return (float_of_int x > y)
-       | String y -> return (string_of_int x > y)
-       | Bool y -> return (x > int_of_bool y))
+       | Numeric y -> return (Bool (x > y))
+       | Real y -> return (Bool (float_of_int x > y))
+       | String y -> return (Bool (string_of_int x > y))
+       | Bool y -> return (Bool (x > int_of_bool y)))
     (* FLOAT == ... *)
     | Real x ->
       (match y with
-       | Numeric y -> return (x > float_of_int y)
-       | Real y -> return (x > y)
-       | String y -> return (string_of_float x > y)
-       | Bool y -> return (x > float_of_bool y))
+       | Numeric y -> return (Bool (x > float_of_int y))
+       | Real y -> return (Bool (x > y))
+       | String y -> return (Bool (string_of_float x > y))
+       | Bool y -> return (Bool (x > float_of_bool y)))
     (* STRING == ... *)
     | String x ->
       (match y with
-       | Numeric y -> return (x > string_of_int y)
-       | Real y -> return (x > string_of_float y)
-       | String y -> return (x > y)
-       | Bool y -> return (x > string_of_bool y))
+       | Numeric y -> return (Bool (x > string_of_int y))
+       | Real y -> return (Bool (x > string_of_float y))
+       | String y -> return (Bool (x > y))
+       | Bool y -> return (Bool (x > string_of_bool y)))
     (* BOOL == ... *)
     | Bool x ->
       (match y with
-       | Numeric y -> return (int_of_bool x > y)
-       | Real y -> return (float_of_bool x > y)
-       | String y -> return (string_of_bool x > y)
-       | Bool y -> return (int_of_bool x > int_of_bool y))
+       | Numeric y -> return (Bool (int_of_bool x > y))
+       | Real y -> return (Bool (float_of_bool x > y))
+       | String y -> return (Bool (string_of_bool x > y))
+       | Bool y -> return (Bool (int_of_bool x > int_of_bool y)))
   ;;
 
   let ( #< ) (x : item) (y : item) =
@@ -213,34 +213,54 @@ module Exec (M : Utils.MONAD_FAIL) = struct
     (* INT == ... *)
     | Numeric x ->
       (match y with
-       | Numeric y -> return (x < y)
-       | Real y -> return (float_of_int x < y)
-       | String y -> return (string_of_int x < y)
-       | Bool y -> return (x < int_of_bool y))
+       | Numeric y -> return (Bool (x < y))
+       | Real y -> return (Bool (float_of_int x < y))
+       | String y -> return (Bool (string_of_int x < y))
+       | Bool y -> return (Bool (x < int_of_bool y)))
     (* FLOAT == ... *)
     | Real x ->
       (match y with
-       | Numeric y -> return (x < float_of_int y)
-       | Real y -> return (x < y)
-       | String y -> return (string_of_float x < y)
-       | Bool y -> return (x < float_of_bool y))
+       | Numeric y -> return (Bool (x < float_of_int y))
+       | Real y -> return (Bool (x < y))
+       | String y -> return (Bool (string_of_float x < y))
+       | Bool y -> return (Bool (x < float_of_bool y)))
     (* STRING == ... *)
     | String x ->
       (match y with
-       | Numeric y -> return (x < string_of_int y)
-       | Real y -> return (x < string_of_float y)
-       | String y -> return (x < y)
-       | Bool y -> return (x < string_of_bool y))
+       | Numeric y -> return (Bool (x < string_of_int y))
+       | Real y -> return (Bool (x < string_of_float y))
+       | String y -> return (Bool (x < y))
+       | Bool y -> return (Bool (x < string_of_bool y)))
     (* BOOL == ... *)
     | Bool x ->
       (match y with
-       | Numeric y -> return (int_of_bool x < y)
-       | Real y -> return (float_of_bool x < y)
-       | String y -> return (string_of_bool x < y)
-       | Bool y -> return (int_of_bool x < int_of_bool y))
+       | Numeric y -> return (Bool (int_of_bool x < y))
+       | Real y -> return (Bool (float_of_bool x < y))
+       | String y -> return (Bool (string_of_bool x < y))
+       | Bool y -> return (Bool (int_of_bool x < int_of_bool y)))
   ;;
 
-  let ( #!= ) (x : item) (y : item) = x #= y >>= fun res -> return (not res)
-  let ( #>= ) (x : item) (y : item) = x #< y >>= fun res -> return (not res)
-  let ( #<= ) (x : item) (y : item) = x #> y >>= fun res -> return (not res)
+  let bool_of_item a =
+    match a with
+    | Bool x -> return x
+    | Numeric x -> if x > 0 then return true else return false
+    | Real x -> if x > 0. then return true else return false
+    | String x ->
+      (match bool_of_string_opt x with
+       | Some x -> return x
+       | None -> fail (TypeConversionFail (a, "Bool")))
+  ;;
+
+  let not (x : item) = bool_of_item x >>= fun r -> return (Bool (not r))
+  let ( #!= ) (x : item) (y : item) = x #= y >>= not
+  let ( #>= ) (x : item) (y : item) = x #< y >>= not
+  let ( #<= ) (x : item) (y : item) = x #> y >>= not
+
+  let ( #&& ) (x : item) (y : item) =
+    bool_of_item x >>= fun x -> bool_of_item y >>= fun y -> return (Bool (x && y))
+  ;;
+
+  let ( #|| ) (x : item) (y : item) =
+    bool_of_item x >>= fun x -> bool_of_item y >>= fun y -> return (Bool (x || y))
+  ;;
 end

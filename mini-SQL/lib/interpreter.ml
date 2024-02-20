@@ -195,18 +195,6 @@ module Eval (M : Utils.MONAD_FAIL) = struct
 
   open Typecheck.Exec (M)
 
-  (** Converts item to bool or fail *)
-  let bool_of_item a =
-    match a with
-    | Bool x -> return x
-    | Numeric x -> if x > 0 then return true else return false
-    | Real x -> if x > 0. then return true else return false
-    | String x ->
-      (match bool_of_string_opt x with
-       | Some x -> return x
-       | None -> fail (TypeConversionFail (a, "Bool")))
-  ;;
-
   (* Execute expr for cur row *)
   let rec row_expr_exec (sheet : Sheet.t) (i : int) expr =
     let run expr = row_expr_exec sheet i expr in
@@ -218,27 +206,15 @@ module Eval (M : Utils.MONAD_FAIL) = struct
     | Mul (x, y) -> run x >>= fun x -> run y >>= fun y -> x #* y
     | Div (x, y) -> run x >>= fun x -> run y >>= fun y -> x #/ y
     | Mod (x, y) -> run x >>= fun x -> run y >>= fun y -> x #% y
-    | Equal (x, y) ->
-      run x >>= fun x -> run y >>= fun y -> x #= y >>= fun res -> return (Bool res)
-    | NEqual (x, y) ->
-      run x >>= fun x -> run y >>= fun y -> x #!= y >>= fun res -> return (Bool res)
-    | GThan (x, y) ->
-      run x >>= fun x -> run y >>= fun y -> x #> y >>= fun res -> return (Bool res)
-    | GThanEq (x, y) ->
-      run x >>= fun x -> run y >>= fun y -> x #>= y >>= fun res -> return (Bool res)
-    | LThan (x, y) ->
-      run x >>= fun x -> run y >>= fun y -> x #< y >>= fun res -> return (Bool res)
-    | LThanEq (x, y) ->
-      run x >>= fun x -> run y >>= fun y -> x #<= y >>= fun res -> return (Bool res)
-    | And (x, y) ->
-      run x
-      >>= bool_of_item
-      >>= fun x -> run y >>= bool_of_item >>= fun y -> return (Bool (x && y))
-    | Or (x, y) ->
-      let* x = run x >>= bool_of_item in
-      let* y = run y >>= bool_of_item in
-      return (Bool (x || y))
-    | Not x -> run x >>= bool_of_item >>= fun x -> return (Bool (not x))
+    | Equal (x, y) -> run x >>= fun x -> run y >>= fun y -> x #= y
+    | NEqual (x, y) -> run x >>= fun x -> run y >>= fun y -> x #!= y
+    | GThan (x, y) -> run x >>= fun x -> run y >>= fun y -> x #> y
+    | GThanEq (x, y) -> run x >>= fun x -> run y >>= fun y -> x #>= y
+    | LThan (x, y) -> run x >>= fun x -> run y >>= fun y -> x #< y
+    | LThanEq (x, y) -> run x >>= fun x -> run y >>= fun y -> x #<= y
+    | And (x, y) -> run x >>= fun x -> run y >>= fun y -> x #&& y
+    | Or (x, y) -> run x >>= fun x -> run y >>= fun y -> x #|| y
+    | Not x -> run x >>= fun x -> not x
   ;;
 
   (** run expr for all rows and return new sheet with true exprs *)
