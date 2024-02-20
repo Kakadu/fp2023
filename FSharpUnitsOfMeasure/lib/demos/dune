@@ -1,0 +1,8 @@
+(executable
+ (name demo)
+ (modules demo)
+ (public_name demo)
+ (libraries FSharpUnitsOfMeasure.Lib stdio))
+
+(cram
+ (deps ./demo.exe))
