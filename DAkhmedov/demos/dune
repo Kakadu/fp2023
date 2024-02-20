@@ -1,0 +1,40 @@
+(executable
+ (name demo)
+ (modules demo)
+ (public_name demo)
+ (libraries OCaml_ExtensibleVariantTypes_lib stdio)
+ (instrumentation
+  (backend bisect_ppx)))
+
+(executable
+ (name fact_demo)
+ (modules fact_demo)
+ (public_name fact_demo)
+ (libraries OCaml_ExtensibleVariantTypes_lib)
+ (instrumentation
+  (backend bisect_ppx)))
+
+(executable
+ (name lists_demo)
+ (modules lists_demo)
+ (public_name lists_demo)
+ (libraries OCaml_ExtensibleVariantTypes_lib)
+ (instrumentation
+  (backend bisect_ppx)))
+
+(executable
+ (name cps_demo)
+ (modules cps_demo)
+ (public_name cps_demo)
+ (libraries OCaml_ExtensibleVariantTypes_lib)
+ (instrumentation
+  (backend bisect_ppx)))
+
+(cram
+ (deps %{bin:fact_demo}))
+
+(cram
+ (deps %{bin:lists_demo}))
+
+(cram
+ (deps %{bin:cps_demo}))
