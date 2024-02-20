@@ -14,11 +14,11 @@ type error =
   ]
 
 let pp_error ppf : error -> _ =
-  let open Format in
+  let open Stdlib.Format in
   function
   | `Division_by_zero -> fprintf ppf "Division by zero"
   | `Unbound_variable id -> fprintf ppf "Unbound variable '%s'" id
-  | `Wrong_type -> fprintf ppf "Wrong type of expression"
+  | `Wrong_type -> fprintf ppf "Incorrect type of expression"
   | `Pattern_mathing_failed -> fprintf ppf "Pattern-matching failed"
   | `Not_implemented -> fprintf ppf "Not implemented"
 ;;
@@ -42,7 +42,7 @@ type value =
 and environment = (id, value, String.comparator_witness) Map.t
 
 let rec pp_value ppf =
-  let open Format in
+  let open Stdlib.Format in
   function
   | VInt x -> fprintf ppf "%d" x
   | VBool b -> fprintf ppf "%b" b
@@ -91,7 +91,7 @@ end = struct
   open M
   open Env (M)
 
-  let rec check_case env = function
+  let rec check_match env = function
     | PAny, _ -> Some env
     | PConst (CInt i1), VInt i2 when i1 = i2 -> Some env
     | PConst (CBool b1), VBool b2 when Bool.equal b1 b2 -> Some env
@@ -105,7 +105,7 @@ end = struct
           vl
           ~f:(fun env p v ->
             match env with
-            | Some e -> check_case e (p, v)
+            | Some e -> check_match e (p, v)
             | None -> None)
           ~init:(Some env)
       in
@@ -113,9 +113,9 @@ end = struct
        | Ok env -> env
        | _ -> None)
     | PCons (p1, p2), VList (v :: vl) ->
-      let env = check_case env (p2, VList vl) in
+      let env = check_match env (p2, VList vl) in
       (match env with
-       | Some env -> check_case env (p1, v)
+       | Some env -> check_match env (p1, v)
        | None -> None)
     | _ -> None
   ;;
@@ -148,10 +148,12 @@ end = struct
          | CUnit -> return vunit)
       | EVar x ->
         let* v = find env x in
-        return
-          (match v with
-           | VFun (p, Rec, e, env) -> VFun (p, Rec, e, extend env x v)
-           | _ -> v)
+        let v =
+          match v with
+          | VFun (p, Rec, e, env) -> VFun (p, Rec, e, extend env x v)
+          | _ -> v
+        in
+        return v
       | EBin_op (op, e1, e2) ->
         let* v1 = helper env e1 in
         let* v2 = helper env e2 in
@@ -166,7 +168,7 @@ end = struct
         let* v = helper env e in
         let rec match_helper env v = function
           | (p, e) :: tl ->
-            let env' = check_case env (p, v) in
+            let env' = check_match env (p, v) in
             (match env' with
              | Some env -> helper env e
              | None -> match_helper env v tl)
@@ -186,8 +188,7 @@ end = struct
       | ELet (Nonrec, (PVar x, e1), e2) ->
         let* v = helper env e1 in
         let env = extend env x v in
-        let* v2 = helper env e2 in
-        return v2
+        helper env e2
       | EFun (p, e) -> return (vfun p Nonrec e env)
       | ETuple el ->
         let* vl =
@@ -212,7 +213,7 @@ end = struct
         (match v1 with
          | VFun (p, _, e, env) ->
            let* env' =
-             match check_case env (p, v2) with
+             match check_match env (p, v2) with
              | Some env -> return env
              | None -> fail `Pattern_mathing_failed
            in
@@ -225,12 +226,12 @@ end = struct
 
   let eval_str_item env = function
     | SEval e ->
-      let* v = eval_expr env e in
-      return (env, v)
+      let* _ = eval_expr env e in
+      return env
     | SValue (Nonrec, (PVar x, e)) ->
       let* v = eval_expr env e in
       let env = extend env x v in
-      return (env, v)
+      return env
     | SValue (Rec, (PVar x, e)) ->
       let* v = eval_expr env e in
       let env1 = extend env x v in
@@ -240,7 +241,7 @@ end = struct
         | _ -> v
       in
       let env = extend env x v in
-      return (env, v)
+      return env
     | _ -> fail `Not_implemented
   ;;
 
@@ -248,7 +249,7 @@ end = struct
     List.fold_left
       ~f:(fun env item ->
         let* env = env in
-        let* env, _ = eval_str_item env item in
+        let* env = eval_str_item env item in
         return env)
       ~init:(return empty)
       s
@@ -260,3 +261,27 @@ module Inter = Eval (struct
 
     let ( let* ) m f = bind m ~f
   end)
+
+let pp_env env_t env_v =
+  let open Stdlib.Format in
+  let open Typedtree in
+  Base.Map.iteri
+    ~f:(fun ~key ~data ->
+      match Base.Map.find env_t key with
+      | Some (S (_, ty)) -> printf "val %s : %a = %a\n" key pp_typ ty pp_value data
+      | None -> printf "val %s = %a\n" key pp_value data)
+    env_v
+;;
+
+let test_interpret s =
+  let open Stdlib.Format in
+  match Parser.parse s with
+  | Ok parsed ->
+    (match Infer.run_infer parsed with
+     | Ok env_inf ->
+       (match Inter.eval_structure parsed with
+        | Ok env_int -> pp_env env_inf env_int
+        | Error e -> printf "Interpreter error: %a\n" pp_error e)
+     | Error e -> printf "Infer error: %a\n" Infer.pp_error e)
+  | Error e -> printf "Parsing error: %s\n" e
+;;

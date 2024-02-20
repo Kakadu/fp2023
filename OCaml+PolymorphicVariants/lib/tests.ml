@@ -3,25 +3,20 @@
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
 open Ocaml_pv
-open Ast
+open Parser
+open Infer
+open Interpreter
 
-module ParserTests = struct
-  open Parser
+(*----------------------------- Parser ---------------------------------------*)
 
-  let test_parse input =
-    match parse input with
-    | Ok ast -> Format.printf "%a\n" pp_structure ast
-    | Error s -> Format.printf "%s\n" s
-  ;;
-
-  let%expect_test _ =
-    test_parse
-      {|
+let%expect_test _ =
+  test_parse
+    {|
         let rec fix f x = f (fix f) x;;
         let fac_ fac n = if n = 1 then 1 else n * fac (n - 1);;
       |};
-    [%expect
-      {|
+  [%expect
+    {|
     [(SValue (Rec,
         ((PVar "fix"),
          (EFun ((PVar "f"),
@@ -47,14 +42,14 @@ module ParserTests = struct
              )))
          ))
       ] |}]
-  ;;
+;;
 
-  let%expect_test _ =
-    test_parse {| 
+let%expect_test _ =
+  test_parse {| 
       let n = fun y -> if y > 0 then 1 else 2
     |};
-    [%expect
-      {|
+  [%expect
+    {|
       [(SValue (Nonrec,
           ((PVar "n"),
            (EFun ((PVar "y"),
@@ -63,14 +58,14 @@ module ParserTests = struct
               )))
           ))
         ] |}]
-  ;;
+;;
 
-  let%expect_test _ =
-    test_parse {| 
+let%expect_test _ =
+  test_parse {| 
     let rec fac n = if n < 2 then 1 else n * fac(n - 1);; 
     |};
-    [%expect
-      {|
+  [%expect
+    {|
     [(SValue (Rec,
         ((PVar "fac"),
          (EFun ((PVar "n"),
@@ -84,11 +79,11 @@ module ParserTests = struct
             )))
         ))
       ] |}]
-  ;;
+;;
 
-  let%expect_test _ =
-    test_parse
-      {| 
+let%expect_test _ =
+  test_parse
+    {| 
     let f = let g x = x + 1 in g;;
     let rec len l = 
       match l with
@@ -96,8 +91,8 @@ module ParserTests = struct
       | _ :: xs -> 1 + len xs
     ;; 
     |};
-    [%expect
-      {|
+  [%expect
+    {|
       [(SValue (Nonrec,
           ((PVar "f"),
            (ELet (Nonrec,
@@ -118,18 +113,18 @@ module ParserTests = struct
                )))
            ))
         ] |}]
-  ;;
+;;
 
-  let%expect_test _ =
-    test_parse
-      {| 
+let%expect_test _ =
+  test_parse
+    {| 
 
     let f = (fun x -> x + 1) 123 in f;;
     let x, y, z = (1, 2, 3);; 
 
     |};
-    [%expect
-      {|
+  [%expect
+    {|
       [(SEval
           (ELet (Nonrec,
              ((PVar "f"),
@@ -143,86 +138,71 @@ module ParserTests = struct
             (ETuple [(EConst (CInt 1)); (EConst (CInt 2)); (EConst (CInt 3))]))
            ))
         ] |}]
-  ;;
-end
+;;
 
-module InferTests = struct
-  open Infer
+(*------------------------------ Inferencer _---------------------------------*)
 
-  let test_infer s =
-    let open Format in
-    match Parser.parse s with
-    | Ok parsed ->
-      (match run_infer parsed with
-       | Ok env ->
-         Base.Map.iteri env ~f:(fun ~key ~data:(S (_, ty)) ->
-           printf "val %s : %a\n" key Typedtree.pp_typ ty)
-       | Error e -> Format.printf "%a" pp_error e)
-    | Error e -> Format.printf "Parsing error: %s\n" e
-  ;;
-
-  let%expect_test _ =
-    test_infer {| 
+let%expect_test _ =
+  test_infer {| 
       let rec fix f x = f (fix f) x ;;
      |};
-    [%expect {| val fix : (('_2 -> '_3) -> '_2 -> '_3) -> '_2 -> '_3 |}]
-  ;;
+  [%expect {| val fix : (('_2 -> '_3) -> '_2 -> '_3) -> '_2 -> '_3 |}]
+;;
 
-  let%expect_test _ =
-    test_infer
-      {| 
+let%expect_test _ =
+  test_infer
+    {| 
    let rec fold_left f acc l =
       match l with
       | [] -> acc
       | h :: tl -> fold_left f (f acc h) tl
    ;;
      |};
-    [%expect {| val fold_left : ('_11 -> '_5 -> '_11) -> '_11 -> '_5 list -> '_11 |}]
-  ;;
+  [%expect {| val fold_left : ('_11 -> '_5 -> '_11) -> '_11 -> '_5 list -> '_11 |}]
+;;
 
-  let%expect_test _ =
-    test_infer {| 
+let%expect_test _ =
+  test_infer {| 
     let f x y = (x + y, [x; y])]
      |};
-    [%expect {| val f : int -> int -> (int * int list) |}]
-  ;;
+  [%expect {| val f : int -> int -> (int * int list) |}]
+;;
 
-  let%expect_test _ =
-    test_infer {| 
+let%expect_test _ =
+  test_infer {| 
       let fs = ((fun x -> x), (fun x y -> x + y))
      |};
-    [%expect {| val fs : (('_0 -> '_0) * (int -> int -> int)) |}]
-  ;;
+  [%expect {| val fs : (('_0 -> '_0) * (int -> int -> int)) |}]
+;;
 
-  let%expect_test _ =
-    test_infer {| 
+let%expect_test _ =
+  test_infer {| 
       let f x = x + y;;
       let y = 3;;
      |};
-    [%expect {| Unbound variable 'y' |}]
-  ;;
+  [%expect {| Infer error: Unbound variable 'y' |}]
+;;
 
-  let%expect_test _ =
-    test_infer {| 
+let%expect_test _ =
+  test_infer {| 
       let f x = 
          let y = 3 in
          x + y;;
      |};
-    [%expect {| val f : int -> int |}]
-  ;;
+  [%expect {| val f : int -> int |}]
+;;
 
-  let%expect_test _ =
-    test_infer {| 
+let%expect_test _ =
+  test_infer {| 
     let f a b c d e = a b c d e;;
      |};
-    [%expect
-      {| val f : ('_1 -> '_2 -> '_3 -> '_4 -> '_5) -> '_1 -> '_2 -> '_3 -> '_4 -> '_5 |}]
-  ;;
+  [%expect
+    {| val f : ('_1 -> '_2 -> '_3 -> '_4 -> '_5) -> '_1 -> '_2 -> '_3 -> '_4 -> '_5 |}]
+;;
 
-  let%expect_test _ =
-    test_infer
-      {| 
-
+let%expect_test _ =
+  test_infer
+    {| 
       let map_cps f l = 
         let rec helper k xs =
           match xs with
@@ -232,7 +212,123 @@ module InferTests = struct
         helper (fun x -> x) l
       ;;
      |};
-    [%expect
-      {| val map_cps : '_0 -> '_6 list -> '_8 list |}]
+  [%expect {| val map_cps : ('_6 -> '_8) -> '_6 list -> '_8 list |}]
+;;
+
+(*------------------------------ Interpreter ---------------------------------*)
+
+let%expect_test _ =
+  test_interpret
+    {|
+      let rec fac n = if n < 1 then 1 else n * fac (n - 1);;
+      let x = fac 5;; 
+    |};
+  [%expect {|
+    val fac : int -> int = <fun>
+    val x : int = 120 |}]
+;;
+
+let%expect_test _ =
+  test_interpret
+    {|
+    let rec fix f x = f (fix f) x;;
+    let fac fac_ n = if n < 1 then 1 else n * fac_ (n - 1);;
+    let f = fix fac 5;;
+    |};
+  [%expect
+    {|
+    val f : int = 120
+    val fac : (int -> int) -> int -> int = <fun>
+    val fix : (('_2 -> '_3) -> '_2 -> '_3) -> '_2 -> '_3 = <fun> |}]
+;;
+
+let%expect_test _ =
+  test_interpret
+    {|
+    let x = 
+      let y = 
+        let z = 
+          let w = 1
+          in w
+        in z
+      in y
+    |};
+  [%expect {|
+    val x : int = 1 |}]
+;;
+
+let%expect_test _ =
+  test_interpret
+    {|
+    let a =
+      let b = 
+        let rec f = (let x = 3 in x) + 1 
+        in f
+      in ();;
+    let s = "string";;
+    |};
+  [%expect {|
+    val a : unit = ()
+    val s : string = string |}]
+;;
+
+let%expect_test _ =
+  test_interpret
+    {|
+    let x =
+      let rec fac n = if n = 1 then 1 else n * fac (n - 1) in
+      fac 5
+    ;;
+    |};
+  [%expect {|
+    val x : int = 120 |}]
+;;
+
+let%expect_test _ =
+  test_interpret
+    {|
+    let rev l = 
+      let rec helper acc xs =
+        match xs with
+        | [] -> acc
+        | h :: tl -> helper (h :: acc) tl
+      in
+      helper [] l
+    ;;
+
+    let reversed = rev [1;2;3;4;5];;
+    |};
+  [%expect
+    {|
+    val rev : '_12 list -> '_12 list = <fun>
+    val reversed : int list = [5; 4; 3; 2; 1] |}]
+;;
+
+let%expect_test _ =
+  test_interpret
+    {|
+    let f a b c d e = a b c d e;;
+    let id x = x;;
+
+    let cmp = f id id id id (fun x -> x + 1);;
+    |};
+  [%expect
+    {|
+    val cmp : int -> int = <fun>
+    val f : ('_1 -> '_2 -> '_3 -> '_4 -> '_5) -> '_1 -> '_2 -> '_3 -> '_4 -> '_5 = <fun>
+    val id : '_9 -> '_9 = <fun> |}]
+;;
+
+let%expect_test _ =
+  test_interpret
+    {|
+  let arith x y = (x * y, x / y, x + y, x - y);;
+  let prod x y = 
+    let fst (a, _, _, _) = a in
+    fst (arith x y)
   ;;
-end
+  let p = prod 3 0;;
+    |};
+  [%expect {|
+    Interpreter error: Division by zero |}]
+;;
