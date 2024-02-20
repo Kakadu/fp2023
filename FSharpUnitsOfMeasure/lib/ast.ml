@@ -6,19 +6,14 @@
 
 type id = string [@@deriving eq, show { with_path = false }]
 
-type un_op =
-  | Plus (* unary operator +, example: +1 or 1*)
-  | Minus (* unary operator -, example: -1*)
-[@@deriving eq, show { with_path = false }]
-
 type types = 
-  | FInt of un_op * int (** integer number: ..., 0, 1, 2, ...*)
+  | FInt of int (** integer number: ..., 0, 1, 2, ...*)
   | FString of string (** string values: "Ocaml" *)
   | FBool of bool (** boolean values: true and false *)
   | FNil (** empty list: [] *)
   | FUnit (** () *)
-  | FFloat of un_op * float (** float number: ..., 0.1, ..., 1.2, ...*)
-  | Measure_float of types * measure_type (** 5.0 <cm> *) 
+  | FFloat of float (** float number: ..., 0.1, ..., 1.2, ...*)
+  | Measure_float of types * measure_type (** 5.0<cm> *) 
 
 and measure_type =
   | SMeasure of string * pow (** single measure: <m>*)
@@ -75,16 +70,16 @@ type expression =
 (* interpreter *)
 
 type value =
-  | VInt of int
-  | VString of string
-  | VBool of bool
-  | VNil
-  | VUnit
-  | VFloat of float 
-  | VTuple of value list
-  | VList of value list
-  | VBinOp of binary_op
-  | VFun of pattern * expression * (id * value) list
-  | VMeasureList of (id * id list) list
-  | VFloatMeasure of value * id list
+  | VInt of int (** int *)
+  | VString of string (** string*)
+  | VBool of bool (** bool *)
+  | VNil (** empty list: [] *)
+  | VUnit (** () *)
+  | VFloat of float (** float *)
+  | VTuple of value list (** tuple *)
+  | VList of value list (** list *)
+  | VBinOp of binary_op (** binary operation *)
+  | VFun of pattern * expression * (id * value) list (** fun *)
+  | VMeasureList of (id * id list) list (** measure list*)
+  | VFloatMeasure of value * id list (** float + measure*)
 [@@deriving show { with_path = false }]
