@@ -363,67 +363,474 @@ module Interpreter_test = struct
       Format.printf "Interpret error: %s\n" (Utils.error_to_string e);
       false
   ;;
+end
 
+module Typecheck_test = struct
   open Typecheck.Exec (Utils.Result)
 
-  let%test _ =
-    assert_equal
-      (Types.Numeric 15) #+ (Types.Numeric 15)
-      (Types.Numeric 30)
-      Types.show_item
+  let assert_equal t1 op t2 exp =
+    match op t1 t2 with
+    | Ok x ->
+      (match exp = x with
+       | true -> true
+       | false ->
+         Format.printf "%s\n" (Types.show_item x);
+         false)
+    | Error e ->
+      Format.printf "Interpret error: %s\n" (Utils.error_to_string e);
+      false
   ;;
 
-  (* arithmetic operations *)
+  let assert_raise t1 op t2 =
+    match op t1 t2 with
+    | Ok _ -> false
+    | Error _ -> true
+  ;;
+
+  (* below there will be a lot of similar checks (for every arithm op), you don’t have to look at it *)
+
+  (* + *)
 
   let%test _ =
-    assert_equal (Types.Numeric 15) #+ (Types.Real 15.) (Types.Real 30.) Types.show_item
+    (* int + int *)
+    assert_equal (Types.Numeric 15) ( #+ ) (Types.Numeric 15) (Types.Numeric 30)
   ;;
 
   let%test _ =
+    (* int + real *)
+    assert_equal (Types.Numeric 15) ( #+ ) (Types.Real 15.) (Types.Real 30.)
+  ;;
+
+  let%test _ =
+    (* real + int *)
+    assert_equal (Types.Real 15.) ( #+ ) (Types.Numeric 15) (Types.Real 30.)
+  ;;
+
+  let%test _ =
+    (* real + real *)
+    assert_equal (Types.Real 15.) ( #+ ) (Types.Real 15.) (Types.Real 30.)
+  ;;
+
+  let%test _ =
+    (* string + string *)
     assert_equal
-      (Types.String "Hello ") #+ (Types.String "World")
+      (Types.String "Hello ")
+      ( #+ )
+      (Types.String "World")
       (Types.String "Hello World")
-      Types.show_item
   ;;
 
   let%test _ =
+    (* string + real *)
     assert_equal
-      (Types.String "10 + 5 = ") #+ (Types.Real 15.)
+      (Types.String "10 + 5 = ")
+      ( #+ )
+      (Types.Real 15.)
       (Types.String "10 + 5 = 15.")
-      Types.show_item
   ;;
 
   let%test _ =
+    (* real + string *)
     assert_equal
-      (Types.String "10 + 5 = ") #+ (Types.Real 15.)
-      (Types.String "10 + 5 = 15.")
-      Types.show_item
+      (Types.Real 10.)
+      ( #+ )
+      (Types.String " = 10.")
+      (Types.String "10. = 10.")
   ;;
 
   let%test _ =
-    assert_equal (Types.Numeric 15) #- (Types.Real 15.) (Types.Real 0.) Types.show_item
-  ;;
-
-  let%test _ =
-    assert_equal (Types.Bool true) #* (Types.Real 5.) (Types.Real 5.) Types.show_item
-  ;;
-
-  let%test _ =
-    assert_equal (Types.Bool true) #* (Types.Real 5.) (Types.Real 5.) Types.show_item
-  ;;
-
-  let%test _ =
-    assert_equal (Types.Numeric 10) #/ (Types.Real 5.) (Types.Real 2.) Types.show_item
-  ;;
-
-  let%test _ =
-    assert_equal (Types.Numeric 10) #% (Types.Real 2.) (Types.Real 0.) Types.show_item
-  ;;
-
-  let%test _ =
+    (* string + int *)
     assert_equal
-      (Types.String "15") #+ (Types.Real 5.)
-      (Types.String "155.")
-      Types.show_item
+      (Types.String "10 + 5 = ")
+      ( #+ )
+      (Types.Numeric 15)
+      (Types.String "10 + 5 = 15")
+  ;;
+
+  let%test _ =
+    (* int + string *)
+    assert_equal (Types.Numeric 10) ( #+ ) (Types.String " = 10") (Types.String "10 = 10")
+  ;;
+
+  let%test _ =
+    (* bool + string *)
+    assert_equal (Types.Bool true) ( #+ ) (Types.String " = 1") (Types.String "true = 1")
+  ;;
+
+  let%test _ =
+    (* bool + string *)
+    assert_equal
+      (Types.String "0 = ")
+      ( #+ )
+      (Types.Bool false)
+      (Types.String "0 = false")
+  ;;
+
+  let%test _ =
+    (* bool + int *)
+    assert_equal (Types.Bool false) ( #+ ) (Types.Numeric 10) (Types.Numeric 10)
+  ;;
+
+  let%test _ =
+    (* int + bool *)
+    assert_equal (Types.Numeric 10) ( #+ ) (Types.Bool false) (Types.Numeric 10)
+  ;;
+
+  let%test _ =
+    (* bool + real *)
+    assert_equal (Types.Bool true) ( #+ ) (Types.Real 1.) (Types.Real 2.)
+  ;;
+
+  let%test _ =
+    (* real + bool *)
+    assert_equal (Types.Real 1.) ( #+ ) (Types.Bool true) (Types.Real 2.)
+  ;;
+
+  (* - *)
+
+  let%test _ =
+    (* int - int *)
+    assert_equal (Types.Numeric 15) ( #- ) (Types.Numeric 15) (Types.Numeric 0)
+  ;;
+
+  let%test _ =
+    (* int - real *)
+    assert_equal (Types.Numeric 15) ( #- ) (Types.Real 15.) (Types.Real 0.)
+  ;;
+
+  let%test _ =
+    (* real - int *)
+    assert_equal (Types.Real 15.) ( #- ) (Types.Numeric 15) (Types.Real 0.)
+  ;;
+
+  let%test _ =
+    (* real - real *)
+    assert_equal (Types.Real 15.) ( #- ) (Types.Real 15.) (Types.Real 0.)
+  ;;
+
+  let%test _ =
+    (* string - string *)
+    assert_raise (Types.String "10") ( #- ) (Types.String "9")
+  ;;
+
+  let%test _ =
+    (* string - real *)
+    assert_raise (Types.String "15") ( #- ) (Types.Real 15.)
+  ;;
+
+  let%test _ =
+    (* real - string *)
+    assert_raise (Types.Real 10.) ( #- ) (Types.String "1")
+  ;;
+
+  let%test _ =
+    (* string - int *)
+    assert_raise (Types.String "15") ( #- ) (Types.Numeric 15)
+  ;;
+
+  let%test _ =
+    (* int - string *)
+    assert_raise (Types.Numeric 10) ( #- ) (Types.String "3")
+  ;;
+
+  let%test _ =
+    (* bool + string *)
+    assert_raise (Types.Bool true) ( #- ) (Types.String "4")
+  ;;
+
+  let%test _ =
+    (* bool - string *)
+    assert_raise (Types.String "10") ( #- ) (Types.Bool false)
+  ;;
+
+  let%test _ =
+    (* bool - int *)
+    assert_equal (Types.Bool false) ( #- ) (Types.Numeric 10) (Types.Numeric (-10))
+  ;;
+
+  let%test _ =
+    (* int - bool *)
+    assert_equal (Types.Numeric 10) ( #- ) (Types.Bool true) (Types.Numeric 9)
+  ;;
+
+  let%test _ =
+    (* bool - real *)
+    assert_equal (Types.Bool true) ( #- ) (Types.Real 1.) (Types.Real 0.)
+  ;;
+
+  let%test _ =
+    (* real + bool *)
+    assert_equal (Types.Real 1.) ( #- ) (Types.Bool false) (Types.Real 1.)
+  ;;
+
+  (* * *)
+
+  let%test _ =
+    (* int * int *)
+    assert_equal (Types.Numeric 2) ( #* ) (Types.Numeric 2) (Types.Numeric 4)
+  ;;
+
+  let%test _ =
+    (* int * real *)
+    assert_equal (Types.Numeric 2) ( #* ) (Types.Real 2.) (Types.Real 4.)
+  ;;
+
+  let%test _ =
+    (* real * int *)
+    assert_equal (Types.Real 2.) ( #* ) (Types.Numeric 2) (Types.Real 4.)
+  ;;
+
+  let%test _ =
+    (* real * real *)
+    assert_equal (Types.Real 2.) ( #* ) (Types.Real 2.) (Types.Real 4.)
+  ;;
+
+  let%test _ =
+    (* string * string *)
+    assert_raise (Types.String "1") ( #* ) (Types.String "2")
+  ;;
+
+  let%test _ =
+    (* string * real *)
+    assert_raise (Types.String "15") ( #* ) (Types.Real 15.)
+  ;;
+
+  let%test _ =
+    (* real * string *)
+    assert_raise (Types.Real 10.) ( #* ) (Types.String "a")
+  ;;
+
+  let%test _ =
+    (* string * int *)
+    assert_raise (Types.String "a") ( #* ) (Types.Numeric 15)
+  ;;
+
+  let%test _ =
+    (* int * string *)
+    assert_raise (Types.Numeric 10) ( #* ) (Types.String "a")
+  ;;
+
+  let%test _ =
+    (* bool + string *)
+    assert_raise (Types.Bool true) ( #* ) (Types.String "a")
+  ;;
+
+  let%test _ =
+    (* bool * string *)
+    assert_raise (Types.String "a") ( #* ) (Types.Bool false)
+  ;;
+
+  let%test _ =
+    (* bool * int *)
+    assert_equal (Types.Bool false) ( #* ) (Types.Numeric 10) (Types.Numeric 0)
+  ;;
+
+  let%test _ =
+    (* int * bool *)
+    assert_equal (Types.Numeric 10) ( #* ) (Types.Bool true) (Types.Numeric 10)
+  ;;
+
+  let%test _ =
+    (* bool * real *)
+    assert_equal (Types.Bool true) ( #* ) (Types.Real 1.) (Types.Real 1.)
+  ;;
+
+  let%test _ =
+    (* real * bool *)
+    assert_equal (Types.Real 1.) ( #* ) (Types.Bool false) (Types.Real 0.)
+  ;;
+
+  (* / *)
+
+  let%test _ =
+    (* int / int *)
+    assert_equal (Types.Numeric 2) ( #/ ) (Types.Numeric 2) (Types.Numeric 1)
+  ;;
+
+  let%test _ =
+    (* int / real *)
+    assert_equal (Types.Numeric 2) ( #/ ) (Types.Real 2.) (Types.Real 1.)
+  ;;
+
+  let%test _ =
+    (* real / int *)
+    assert_equal (Types.Real 2.) ( #/ ) (Types.Numeric 2) (Types.Real 1.)
+  ;;
+
+  let%test _ =
+    (* real / real *)
+    assert_equal (Types.Real 2.) ( #/ ) (Types.Real 2.) (Types.Real 1.)
+  ;;
+
+  let%test _ =
+    (* int / int=0 *)
+    assert_raise (Types.Numeric 10) ( #/ ) (Types.Numeric 0)
+  ;;
+
+  let%test _ =
+    (* int / real=0 *)
+    assert_raise (Types.Numeric 10) ( #/ ) (Types.Real 0.)
+  ;;
+
+  let%test _ =
+    (* real / int=0 *)
+    assert_raise (Types.Real 10.) ( #/ ) (Types.Numeric 0)
+  ;;
+
+  let%test _ =
+    (* real / real=0 *)
+    assert_raise (Types.Real 10.) ( #/ ) (Types.Bool false)
+  ;;
+
+  let%test _ =
+    (* string / string *)
+    assert_raise (Types.String "1") ( #/ ) (Types.String "1")
+  ;;
+
+  let%test _ =
+    (* string / real *)
+    assert_raise (Types.String "a") ( #/ ) (Types.Real 15.)
+  ;;
+
+  let%test _ =
+    (* real / string *)
+    assert_raise (Types.Real 10.) ( #/ ) (Types.String "2")
+  ;;
+
+  let%test _ =
+    (* string / int *)
+    assert_raise (Types.String "15") ( #/ ) (Types.Numeric 15)
+  ;;
+
+  let%test _ =
+    (* int / string *)
+    assert_raise (Types.Numeric 10) ( #/ ) (Types.String "2")
+  ;;
+
+  let%test _ =
+    (* bool / string *)
+    assert_raise (Types.Bool true) ( #/ ) (Types.String "1")
+  ;;
+
+  let%test _ =
+    (* bool / string *)
+    assert_raise (Types.String "15") ( #/ ) (Types.Bool false)
+  ;;
+
+  let%test _ =
+    (* bool / int *)
+    assert_raise (Types.Bool false) ( #/ ) (Types.Numeric 10)
+  ;;
+
+  let%test _ =
+    (* int / bool *)
+    assert_raise (Types.Numeric 10) ( #/ ) (Types.Bool true)
+  ;;
+
+  let%test _ =
+    (* bool / real *)
+    assert_raise (Types.Bool true) ( #/ ) (Types.Real 1.)
+  ;;
+
+  let%test _ =
+    (* real / bool *)
+    assert_raise (Types.Real 1.) ( #/ ) (Types.Bool true)
+  ;;
+
+  (* % *)
+
+  let%test _ =
+    (* int % int *)
+    assert_equal (Types.Numeric 10) ( #% ) (Types.Numeric 2) (Types.Numeric 0)
+  ;;
+
+  let%test _ =
+    (* int % real *)
+    assert_equal (Types.Numeric 10) ( #% ) (Types.Real 3.) (Types.Real 1.)
+  ;;
+
+  let%test _ =
+    (* real % int *)
+    assert_equal (Types.Real 10.) ( #% ) (Types.Numeric 2) (Types.Real 0.)
+  ;;
+
+  let%test _ =
+    (* real % real *)
+    assert_equal (Types.Real 10.) ( #% ) (Types.Real 2.) (Types.Real 0.)
+  ;;
+
+  let%test _ =
+    (* int % int=0 *)
+    assert_raise (Types.Numeric 10) ( #% ) (Types.Numeric 0)
+  ;;
+
+  let%test _ =
+    (* int % real=0 *)
+    assert_raise (Types.Numeric 10) ( #% ) (Types.Real 0.)
+  ;;
+
+  let%test _ =
+    (* real % int=0 *)
+    assert_raise (Types.Real 10.) ( #% ) (Types.Numeric 0)
+  ;;
+
+  let%test _ =
+    (* real % real=0 *)
+    assert_raise (Types.Real 10.) ( #% ) (Types.Bool false)
+  ;;
+
+  let%test _ =
+    (* string % string *)
+    assert_raise (Types.String "1") ( #% ) (Types.String "1")
+  ;;
+
+  let%test _ =
+    (* string % real *)
+    assert_raise (Types.String "a") ( #% ) (Types.Real 15.)
+  ;;
+
+  let%test _ =
+    (* real % string *)
+    assert_raise (Types.Real 10.) ( #% ) (Types.String "2")
+  ;;
+
+  let%test _ =
+    (* string % int *)
+    assert_raise (Types.String "15") ( #% ) (Types.Numeric 15)
+  ;;
+
+  let%test _ =
+    (* int % string *)
+    assert_raise (Types.Numeric 10) ( #% ) (Types.String "2")
+  ;;
+
+  let%test _ =
+    (* bool % string *)
+    assert_raise (Types.Bool true) ( #% ) (Types.String "1")
+  ;;
+
+  let%test _ =
+    (* bool % string *)
+    assert_raise (Types.String "15") ( #% ) (Types.Bool false)
+  ;;
+
+  let%test _ =
+    (* bool % int *)
+    assert_raise (Types.Bool false) ( #% ) (Types.Numeric 10)
+  ;;
+
+  let%test _ =
+    (* int % bool *)
+    assert_raise (Types.Numeric 10) ( #% ) (Types.Bool true)
+  ;;
+
+  let%test _ =
+    (* bool % real *)
+    assert_raise (Types.Bool true) ( #% ) (Types.Real 1.)
+  ;;
+
+  let%test _ =
+    (* real % bool *)
+    assert_raise (Types.Real 1.) ( #% ) (Types.Bool true)
   ;;
 end
