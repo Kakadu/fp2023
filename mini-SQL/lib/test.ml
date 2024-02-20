@@ -348,7 +348,9 @@ module Types_test = struct
   ;;
 end
 
-module Interpreter_test = struct
+(* ### I'll keep it here in case I come up with tests for the interpreter other than cram ###
+
+ module Interpreter_test = struct
   open Interpreter.Eval (Utils.Result)
 
   let assert_equal res exp show =
@@ -363,7 +365,9 @@ module Interpreter_test = struct
       Format.printf "Interpret error: %s\n" (Utils.error_to_string e);
       false
   ;;
-end
+
+
+end *)
 
 module Typecheck_test = struct
   open Typecheck.Exec (Utils.Result)
@@ -387,7 +391,7 @@ module Typecheck_test = struct
     | Error _ -> true
   ;;
 
-  (* below there will be a lot of similar checks (for every arithm op), you don’t have to look at it *)
+  (* ### below there will be a lot of similar checks (for every arithm op), you don’t have to look at it ### *)
 
   (* + *)
 

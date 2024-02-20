@@ -17,12 +17,6 @@ module Types_test : sig
   val assert_equal : 'a -> 'a -> ('a -> string) -> bool
 end
 
-(** Tests for interpreter *)
-module Interpreter_test : sig
-  (** Compare interpret output with example *)
-  val assert_equal : ('a, Utils.error) result -> 'a -> ('a -> string) -> bool
-end
-
 module Typecheck_test : sig
   (** Compare op result with example *)
   val assert_equal
