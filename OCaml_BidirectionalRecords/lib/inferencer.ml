@@ -13,7 +13,6 @@
           - cons
     - Rec & NonRec let 
     - !! refactor
-    - pp module
 *)
 
 open Typing
@@ -283,7 +282,7 @@ let infer_const = function
   | Ast.Unit -> tunit
 ;;
 
-let rec infer_pattern env = function
+let infer_pattern env = function
   | Ast.PAny ->
     let* fresh = fresh_var in
     return (Subst.empty, fresh, env)
@@ -335,7 +334,7 @@ let infer_expr =
       let* final_subst = Subst.compose_all [ subst1; subst2; subst3 ] in
       return (final_subst, res_ty)
     | EFun (pattern, e) ->
-      let* sub1, t1, env' = infer_pattern env pattern in
+      let* _, t1, env' = infer_pattern env pattern in
       let* sub2, t2 = helper env' e in
       let ty = tarrow (Subst.apply sub2 t1) t2 in
       return (sub2, ty)
@@ -349,7 +348,8 @@ let infer_expr =
       let* sub2 = Subst.unify tv te in
       let* final_subs = Subst.compose_all [ si; st; se; sub; sub1; sub2 ] in
       return (final_subs, Subst.apply final_subs tt)
-    | ELet ((_, x, e1), EUnit) ->
+    | ELet ((NonRec, _, e1), EUnit) -> helper env e1
+    | ELet ((Rec, x, e1), EUnit) ->
       let* tv = fresh_var in
       let env = TypeEnv.extend env x (Scheme (VarSet.empty, tv)) in
       let* subst1, ty1 = helper env e1 in
@@ -363,6 +363,7 @@ let infer_expr =
 
 let run_inference expr = Result.map snd (run (infer_expr TypeEnv.empty expr))
 
+module PP = struct 
 let rec pp_type ppf (typ : typ) =
   match typ with
   | TPrim x ->
@@ -416,3 +417,4 @@ let print_result expr =
   | Ok typ -> print_typ typ
   | Error x -> print_type_error x
 ;;
+end

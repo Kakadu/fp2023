@@ -45,18 +45,12 @@ type binop =
   | Gtq (*  >= *)
 [@@deriving show { with_path = false }]
 
-type unop =
-  | UNot (** not a *)
-  | UMinus (*  -5 *)
-  | UPlus
-[@@deriving show { with_path = false }]
-
 type pattern =
   | PVar of id
   | PConst of const
   | PAny (* _ *)
   | PNil (* []*)
-  | PTuple of pattern * pattern list (** действительно ли так удобнее? *)
+  | PTuple of pattern list (** ! *)
 [@@deriving show { with_path = false }]
 
 type rec_flag =
@@ -68,7 +62,6 @@ type expr =
   | EVar of id
   | EConst of const
   | EBinOp of binop * expr * expr (** EBinOp (op,l,r) is l op r *)
-  | EUnOp of unop * expr (** EUnOp (op,e) is op e *)
   | EFun of pattern * expr (** Fun x -> e *)
   | ECons of expr * expr (** ECons (h,t) is list h::t *)
   | ETuple of expr list (** (expr1, ..., exprn) *)
@@ -82,8 +75,6 @@ type expr =
 [@@deriving show { with_path = false }]
 
 and decl = rec_flag * id * expr
-
-type top_decl = LetDecl of decl
 
 type record_bind =
   { name : id

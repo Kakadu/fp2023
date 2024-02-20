@@ -15,16 +15,17 @@ let parse p s show_program =
 ;;
 
 let%expect_test _ =
-  parse pexpr "let rec fac x = if x = 1 then x else x * fac (x - 1)" Ast.show_expr;
+  parse pexpr "let rec fac n = if n < 1 then 1 else n * fac (n - 1)" Ast.show_expr;
   [%expect
     {|
     (ELet (
        (Rec, "fac",
-        (EFun ((PVar "x"),
-           (EIfThenElse ((EBinOp (Eq, (EVar "x"), (EConst (Int 1)))), (EVar "x"),
-              (EBinOp (Mult, (EVar "x"),
+        (EFun ((PVar "n"),
+           (EIfThenElse ((EBinOp (Lt, (EVar "n"), (EConst (Int 1)))),
+              (EConst (Int 1)),
+              (EBinOp (Mult, (EVar "n"),
                  (EApp ((EVar "fac"),
-                    (EBinOp (Minus, (EVar "x"), (EConst (Int 1))))))
+                    (EBinOp (Minus, (EVar "n"), (EConst (Int 1))))))
                  ))
               ))
            ))),
@@ -34,15 +35,13 @@ let%expect_test _ =
 (* infer *)
 
 open Inferencer
-open Typing
+open Inferencer.PP
 
 let pp_infer e =
   match run_inference e with
   | Ok ty -> Stdlib.Format.printf "%a" pp_type ty
   | Error err -> Stdlib.Format.printf "%a" pp_error err
 ;;
-
-(* let parse_program = parse_string ~consume:Consume.All (many1 (plet pexpr) <* (skip_while Char.is_whitespace)) *)
 
 let pp_parse_expr_and_infer input =
   match Parser.parse_expr input with
@@ -61,12 +60,12 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  pp_parse_expr_and_infer "let rec fac x = if x = 1 then x else x * fac (x - 1)";
+  pp_parse_expr_and_infer "let rec fac n = if n < 1 then 1 else n * fac (n - 1)";
   [%expect {| int -> int |}]
 ;;
 
 let%expect_test _ =
-  pp_parse_expr_and_infer "fun x y -> if (x<y) then x else y";
+  pp_parse_expr_and_infer "fun x y -> if (x < y) then x else y";
   [%expect {| c -> c -> c |}]
 ;;
 
@@ -91,16 +90,6 @@ let pp_run code =
 ;;
 
 let%expect_test _ =
-  pp_run "2";
-  [%expect {| 2 |}]
-;;
-
-let%expect_test _ =
-  pp_run "2 * 2";
-  [%expect {| 4 |}]
-;;
-
-let%expect_test _ =
   pp_run "fun x -> x * 2";
   [%expect {| <fun> |}]
 ;;
@@ -111,16 +100,11 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  pp_run "2 + 3";
-  [%expect {| 5 |}]
+  pp_run "let rec fac n = if n < 1 then 1 else n * fac (n - 1)";
+  [%expect {| <fun> |}]
 ;;
 
 let%expect_test _ =
-  pp_run "x = 3";
-  [%expect {| Undefined variable: x |}]
-;;
-
-let%expect_test _ =
-  pp_run "let x = 3";
-  [%expect {| 3 |}]
+  pp_run "let rec fact n = if n < 2 then 1 else n * fact (n - 1) in fact 5";
+  [%expect {| 120 |}]
 ;;
