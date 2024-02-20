@@ -8,15 +8,18 @@ open Interpreter
 open Interpret_error
 
 let run_test t =
-  match run t with
+  match interpreter t with
   | Ok (_, ty) -> Ok ty
   | Error e -> Error e
 ;;
 
-(* тесты из парсера *)
+(* let%expect_test _ =
+  let _ = parsing_and_inerpretation {| 777;; |} in
+  [%expect {| (VInt 777) |}]
+;; *)
 
 (* 777 *)
-let test = [(EConst (FInt (Plus, 777)))]
+let test = [(EConst (FInt ( 777)))]
 
 let%test _ =
   match run_test test with
@@ -30,7 +33,7 @@ let%test _ =
 ;;
 
 (* -777 *)
-let test = [(EConst (FInt (Minus, 777)))]
+let test = [(EConst (FInt ( -777)))]
 
 let%test _ =
   match run_test test with
@@ -45,7 +48,7 @@ let%test _ =
 
 (* 777.777 *)
 
-let test = [(EConst (FFloat (Plus, 777.777)))]
+let test = [(EConst (FFloat ( 777.777)))]
 
 let%test _ =
   match run_test test with
@@ -60,7 +63,7 @@ let%test _ =
 
 (* -777.777 *)
 
-let test = [(EConst (FFloat (Minus, 777.777)))]
+let test = [(EConst (FFloat (-777.777)))]
 
 let%test _ =
   match run_test test with
@@ -152,7 +155,7 @@ let%test _ =
 
 (* 1 + 5 *)
 
-let test = [ (EApp ((EBinaryOp Add), (EApp ((EConst (FInt (Plus, 1))), (EConst (FInt (Plus, 5))))))) ]
+let test = [ (EApp ((EBinaryOp Add), (EApp ((EConst (FInt 1)), (EConst (FInt 5)))))) ]
 
 let%test _ =
   match run_test test with
@@ -167,7 +170,7 @@ let%test _ =
 
 (* 1 - 2 *)
 
-let test = [(EApp ((EBinaryOp Sub), (EApp ((EConst (FInt (Plus, 1)), (EConst (FInt (Plus, 2))))))))]
+let test = [(EApp ((EBinaryOp Sub), (EApp ((EConst (FInt 1), (EConst (FInt 2)))))))]
 
 let%test _ =
   match run_test test with
@@ -188,12 +191,12 @@ let test = [
            (EApp ((EBinaryOp Mul),
               (EApp (
                  (EApp ((EBinaryOp Add),
-                    (EApp ((EConst (FInt (Plus, 3))), (EConst (FInt (Plus, 1))))))),
+                    (EApp ((EConst (FInt 3)), (EConst (FInt 1)))))),
                  (EApp ((EBinaryOp Sub),
-                    (EApp ((EConst (FInt (Plus, 4))), (EConst (FInt (Plus, 2)))))))
+                    (EApp ((EConst (FInt 4)), (EConst (FInt 2))))))
                  ))
               )),
-           (EApp ((EBinaryOp Div), (EApp ((EConst (FInt (Plus, 9))), (EConst (FInt (Plus, 3)))))))
+           (EApp ((EBinaryOp Div), (EApp ((EConst (FInt 9)), (EConst (FInt 3))))))
            ))
         ))
 ]
@@ -212,7 +215,7 @@ let%test _ =
 (* 7.77 + 7.73*)
 let test = [     
   (EApp ((EBinaryOp Add),
-    (EApp ((EConst (FFloat (Plus, 7.77))), (EConst (FFloat (Plus, 7.73))))))) 
+    (EApp ((EConst (FFloat 7.77)), (EConst (FFloat 7.73)))))) 
 ]
 
 let%test _ =
@@ -237,8 +240,8 @@ let test =
         (EFun ((PVar "v"),
            (EApp ((EBinaryOp Mul), (EApp ((EVar "z"), (EVar "v")))))))
         )),
-     (EConst (FInt (Plus, 4))))),
-  (EConst (FInt (Plus, 5)))))]
+     (EConst (FInt 4)))),
+  (EConst (FInt 5))))]
 ;;
 
 let%test _ =
@@ -261,8 +264,8 @@ let test =
           (EFun ((PVar "v"),
              (EApp ((EBinaryOp Div), (EApp ((EVar "z"), (EVar "v")))))))
           )),
-       (EConst (FInt (Plus, 4))))),
-    (EConst (FInt (Plus, 5)))))]
+       (EConst (FInt 4)))),
+    (EConst (FInt 5))))]
   
 let%test _ =
   match run_test test with
@@ -284,12 +287,12 @@ let test =
           (EFun ((PVar "v"),
              (EApp ((EBinaryOp Div), (EApp ((EVar "z"), (EVar "v")))))))
           )),
-       (EConst (FInt (Plus, 4))))),
-    (EConst (FInt (Plus, 5)))))]
+       (EConst (FFloat 5.0)))),
+    (EConst (FFloat 2.0))))]
   
 let%test _ =
   match run_test test with
-  | Ok (VInt 0) -> true
+  | Ok (VFloat 2.5) -> true
   | Error t ->
     Format.printf "%a\n" print_error t;
     false
@@ -307,8 +310,8 @@ let test =
           (EFun ((PVar "v"),
              (EApp ((EBinaryOp Mod), (EApp ((EVar "z"), (EVar "v")))))))
           )),
-       (EConst (FInt (Plus, 4))))),
-    (EConst (FInt (Plus, 5)))))]
+       (EConst (FInt 4)))),
+    (EConst (FInt 5))))]
 
   
 let%test _ =
@@ -322,7 +325,7 @@ let%test _ =
     false
 ;;
 
-(* ((fun z v -> z && v)4 )5 *)
+(* ((fun z v -> z && v)true )true *)
 
 let test = 
   [(EApp (
@@ -346,7 +349,7 @@ let%test _ =
     false
 ;;
   
-(* ((fun z v -> z || v)4 )5 *)
+(* ((fun z v -> z || v)true )false *)
 
 let test = 
   [(EApp (
@@ -379,8 +382,8 @@ let test =
           (EFun ((PVar "v"),
              (EApp ((EBinaryOp Eq), (EApp ((EVar "z"), (EVar "v")))))))
           )),
-       (EConst (FInt (Plus, 4))))),
-    (EConst (FInt (Plus, 5)))))]
+       (EConst (FInt ( 4))))),
+    (EConst (FInt ( 5)))))]
 
   
 let%test _ =
@@ -403,8 +406,8 @@ let test =
           (EFun ((PVar "v"),
              (EApp ((EBinaryOp Less), (EApp ((EVar "z"), (EVar "v")))))))
           )),
-       (EConst (FInt (Plus, 4))))),
-    (EConst (FInt (Plus, 5)))))]
+       (EConst (FInt ( 4))))),
+    (EConst (FInt ( 5)))))]
 
   
 let%test _ =
@@ -427,8 +430,8 @@ let test =
           (EFun ((PVar "v"),
              (EApp ((EBinaryOp Gre), (EApp ((EVar "z"), (EVar "v")))))))
           )),
-       (EConst (FInt (Plus, 4))))),
-    (EConst (FInt (Plus, 5)))))]
+       (EConst (FInt ( 4))))),
+    (EConst (FInt ( 5)))))]
 
   
 let%test _ =
@@ -451,8 +454,8 @@ let test =
           (EFun ((PVar "v"),
              (EApp ((EBinaryOp Leq), (EApp ((EVar "z"), (EVar "v")))))))
           )),
-       (EConst (FInt (Plus, 4))))),
-    (EConst (FInt (Plus, 5)))))]
+       (EConst (FInt ( 4))))),
+    (EConst (FInt ( 5)))))]
 
   
 let%test _ =
@@ -475,8 +478,8 @@ let test =
           (EFun ((PVar "v"),
              (EApp ((EBinaryOp Greq), (EApp ((EVar "z"), (EVar "v")))))))
           )),
-       (EConst (FInt (Plus, 4))))),
-    (EConst (FInt (Plus, 5)))))]
+       (EConst (FInt ( 4))))),
+    (EConst (FInt ( 5)))))]
 
   
 let%test _ =
@@ -524,11 +527,11 @@ let test =
                          ))
                       ))
                    )),
-                (EConst (FInt (Plus, 1))))),
-             (EConst (FInt (Plus, 2))))),
-          (EConst (FInt (Plus, 3))))),
-       (EConst (FInt (Plus, 4))))),
-    (EConst (FInt (Plus, 5)))))]
+                (EConst (FInt ( 1))))),
+             (EConst (FInt ( 2))))),
+          (EConst (FInt ( 3))))),
+       (EConst (FInt ( 4))))),
+    (EConst (FInt ( 5)))))]
 
   
 let%test _ =
@@ -543,7 +546,7 @@ let%test _ =
 ;;
 
 (* (1, 5) *)
-let test = [ (ETuple [(EConst (FInt (Plus, 1))); (EConst (FInt (Plus, 5)))]) ]
+let test = [ (ETuple [(EConst (FInt ( 1))); (EConst (FInt ( 5)))]) ]
 
 let%test _ =
   match run_test test with
@@ -557,10 +560,10 @@ let%test _ =
 ;;
 
 (*
-  let myf x = x
-  myf 5 
+  let num x = x
+  num 5 
 *)
-let test = [  (ELet ("NotRec", "myf", (EFun ((PVar "x"), (EVar "x"))))); (EApp ((EVar "myf"), (EConst (FInt (Plus,5)))))  ]
+let test = [  (ELet ("NotRec", "num", (EFun ((PVar "x"), (EVar "x"))))); (EApp ((EVar "num"), (EConst (FInt (5)))))  ]
 
 let%test _ =
   match run_test test with
@@ -581,11 +584,11 @@ let test = [
           (EApp (
              (EFun ((PVar "v"),
                 (EApp ((EBinaryOp Add), (EApp ((EVar "z"), (EVar "v"))))))),
-             (EConst (FInt (Plus, 5)))))
+             (EConst (FInt ( 5)))))
           ))
        ));
        
-  (EApp ((EVar "increase_by_five"), (EConst (FInt (Plus, 10)))))]
+  (EApp ((EVar "increase_by_five"), (EConst (FInt ( 10)))))]
 
 let%test _ =
   match run_test test with
@@ -599,7 +602,7 @@ let%test _ =
 ;; 
 
 (* if true then 2 else 1 *)
-let test = [ (EIfElse ((EConst (FBool true)), (EConst (FInt (Plus, 2))), (EConst (FInt (Plus, 1)))))  ]
+let test = [ (EIfElse ((EConst (FBool true)), (EConst (FInt ( 2))), (EConst (FInt ( 1)))))  ]
 
 let%test _ =
   match run_test test with
@@ -613,20 +616,20 @@ let%test _ =
 ;;
 
 (* 
-  let myf x = 
+  let num x = 
     match x with 
       | 1 -> 1
       | _ -> 2  
-  myf 10 
+  num 10 
 *)
-let test = [     (ELet ("NotRec", "myf",
+let test = [     (ELet ("NotRec", "num",
 (EFun ((PVar "x"),
    (EMatch ((EVar "x"),
-      [((PConst (FInt (Plus, 1))), (EConst (FInt (Plus, 1)))); (PWild, (EConst (FInt (Plus, 2))))]
+      [((PConst (FInt ( 1))), (EConst (FInt ( 1)))); (PWild, (EConst (FInt ( 2))))]
       ))
    ))
 )); 
-(EApp ((EVar "myf"), (EConst (FInt (Plus, 10))))) 
+(EApp ((EVar "num"), (EConst (FInt ( 10))))) 
 ]
 
 let%test _ =
@@ -641,21 +644,21 @@ let%test _ =
 ;; 
 
 (* 
-  let myf x = 
+  let num x = 
     match x with 
       | 1 -> 1
       | _ -> 2
-  myf 1
+  num 1
 *)
 let test = [     
-(ELet ("NotRec", "myf",
+(ELet ("NotRec", "num",
 (EFun ((PVar "x"),
    (EMatch ((EVar "x"),
-      [((PConst (FInt (Plus, 1))), (EConst (FInt (Plus, 1)))); (PWild, (EConst (FInt (Plus, 2))))]
+      [((PConst (FInt ( 1))), (EConst (FInt ( 1)))); (PWild, (EConst (FInt ( 2))))]
       ))
    ))
 )); 
-(EApp ((EVar "myf"), (EConst (FInt (Plus, 1))))) 
+(EApp ((EVar "num"), (EConst (FInt ( 1))))) 
 ]
 
 let%test _ =
@@ -670,7 +673,7 @@ let%test _ =
 ;; 
 
 (* (fun x -> x) 5 *)
-let test = [  (EApp ((EFun ((PVar "x"), (EVar "x"))), (EConst (FInt (Plus, 5))))) ]
+let test = [  (EApp ((EFun ((PVar "x"), (EVar "x"))), (EConst (FInt ( 5))))) ]
 
 let%test _ =
   match run_test test with
@@ -684,7 +687,7 @@ let%test _ =
 ;;
 
 (* [1; 5] *)
-let test = [  (EList [(EConst (FInt (Plus, 1))); (EConst (FInt (Plus, 5)))])  ]
+let test = [  (EList [(EConst (FInt ( 1))); (EConst (FInt ( 5)))])  ]
 
 let%test _ =
   match run_test test with
@@ -697,8 +700,8 @@ let%test _ =
     false
 ;;
 
-(* [1; 5] *)
-let test = [(ETuple [(EConst (FInt (Plus, 1))); (EConst (FInt (Plus, 5)))])]
+(* (1, 5) *)
+let test = [(ETuple [(EConst (FInt ( 1))); (EConst (FInt ( 5)))])]
 
 let%test _ =
   match run_test test with
@@ -712,39 +715,11 @@ let%test _ =
 ;;
 
 (* let x = 5 *)
-let test = [ (ELet ("NotRec", "x", (EConst (FInt (Plus, 5)))))  ]
+let test = [ (ELet ("NotRec", "x", (EConst (FInt ( 5)))))  ]
 
 let%test _ =
   match run_test test with
   | Ok (VInt 5) -> true
-  | Error t ->
-    Format.printf "%a\n" print_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
-;; 
-
-(* 
-  let increase_by_five z = (fun v -> z + v) 5
-  increase_by_five 10
-*)
-
-let test = [
-  (ELet ("NotRec", "increase_by_five",
-       (EFun ((PVar "z"),
-          (EApp (
-             (EFun ((PVar "v"),
-                (EApp ((EBinaryOp Add), (EApp ((EVar "z"), (EVar "v"))))))),
-             (EConst (FInt (Plus, 5)))))
-          ))
-       ));
-  (EApp ((EVar "increase_by_five"), (EConst (FInt (Plus, 10)))))
-]
-
-let%test _ =
-  match run_test test with
-  | Ok (VInt 15) -> true
   | Error t ->
     Format.printf "%a\n" print_error t;
     false
@@ -763,23 +738,24 @@ let%test _ =
 
 let test = [   
   (ELet ("Rec", "fact",
-    (EFun ((PVar "n"),
-      (EIfElse (
-          (EApp ((EBinaryOp Eq), (EApp ((EVar "n"), (EConst (FInt (Plus, 1))))))),
-          (EConst (FInt (Plus, 1))),
-          (EApp ((EBinaryOp Mul),
-            (EApp ((EVar "n"),
-                (EApp ((EVar "fact"),
-                  (EApp ((EBinaryOp Sub),
-                      (EApp ((EVar "n"), (EConst (FInt (Plus, 1)))))))
-                  ))
-                ))
-            ))
-          ))
-      ))
-    )) ;
+     (EFun ((PVar "n"),
+        (EIfElse (
+           (EApp ((EBinaryOp Eq),
+              (EApp ((EVar "n"), (EConst (FInt ( 1))))))),
+           (EConst (FInt ( 1))),
+           (EApp ((EBinaryOp Mul),
+              (EApp ((EVar "n"),
+                 (EApp ((EVar "fact"),
+                    (EApp ((EBinaryOp Sub),
+                       (EApp ((EVar "n"), (EConst (FInt ( 1)))))))
+                    ))
+                 ))
+              ))
+           ))
+        ))
+     )) ;
 
-(EApp ((EVar "fact"), (EConst (FInt (Plus, 6))))) 
+(EApp ((EVar "fact"), (EConst (FInt ( 6))))) 
  ]
 
 let%test _ =
@@ -805,24 +781,24 @@ let test = [
   (ELet ("Rec", "fib",
        (EFun ((PVar "n"),
           (EIfElse (
-             (EApp ((EBinaryOp Leq), (EApp ((EVar "n"), (EConst (FInt (Plus, 1))))))),
+             (EApp ((EBinaryOp Leq), (EApp ((EVar "n"), (EConst (FInt ( 1))))))),
              (EVar "n"),
              (EApp ((EBinaryOp Add),
                 (EApp (
                    (EApp ((EVar "fib"),
                       (EApp ((EBinaryOp Sub),
-                         (EApp ((EVar "n"), (EConst (FInt (Plus, 1)))))))
+                         (EApp ((EVar "n"), (EConst (FInt ( 1)))))))
                       )),
                    (EApp ((EVar "fib"),
                       (EApp ((EBinaryOp Sub),
-                         (EApp ((EVar "n"), (EConst (FInt (Plus, 2)))))))
+                         (EApp ((EVar "n"), (EConst (FInt ( 2)))))))
                       ))
                    ))
                 ))
              ))
           ))
        ));
-  (EApp ((EVar "fib"), (EConst (FInt (Plus, 9)))))]
+  (EApp ((EVar "fib"), (EConst (FInt ( 9)))))]
 
 let%test _ =
   match run_test test with
@@ -839,7 +815,7 @@ let%test _ =
 (* measure test*)
 
 (* [<Measure>] type m *)
-let test = [ (EMeasure (SMeasure_init (SMeasure ("m", (Pow (FInt (Plus, 1)))))))]
+let test = [ (EMeasure (SMeasure_init (SMeasure ("m", (Pow (FInt ( 1)))))))]
 
 let%test _ =
   match run_test test with
@@ -857,10 +833,10 @@ let%test _ =
   7.77 <m> + 7.73 <m> 
 *)
 let test = [  
-  (EMeasure (SMeasure_init (SMeasure ("m", (Pow (FInt (Plus, 1))))))); 
+  (EMeasure (SMeasure_init (SMeasure ("m", (Pow (FInt ( 1))))))); 
   (EApp ((EBinaryOp Add),
-    (EApp ((EConst (Measure_float ((FFloat (Plus, 7.77)), (SMeasure ("m", (Pow (FInt (Plus, 3)))))))),
-      (EConst (Measure_float ((FFloat (Plus, 7.73)), (SMeasure ("m", (Pow (FInt (Plus, 3))))))))))
+    (EApp ((EConst (Measure_float ((FFloat ( 7.77)), (SMeasure ("m", (Pow (FInt ( 3)))))))),
+      (EConst (Measure_float ((FFloat ( 7.73)), (SMeasure ("m", (Pow (FInt ( 3))))))))))
 )) ]
 
 let%test _ =
@@ -874,32 +850,30 @@ let%test _ =
     false
 ;;
 
-(* [<Measure>] type hz = m / sec * sm * luck / unluck*)
+(* 
+  [<Measure>] type sec
+  [<Measure>] type m
+  [<Measure>] type dm
+  7.77<m/dm> + 7.73<m/dm>
+*)
 let test = [ 
-  (EMeasure (SMeasure_init (SMeasure ("sec", (Pow (FInt (Plus, 1)))))));
-  (EMeasure (SMeasure_init (SMeasure ("m", (Pow (FInt (Plus, 1)))))));
-  (EMeasure (SMeasure_init (SMeasure ("dm", (Pow (FInt (Plus, 1)))))));
-  (EMeasure
-       (MMeasure_init ((SMeasure( "speed", (Pow (FInt (Plus, 1))))),
-          (MMeasure ((SMeasure ("m", (Pow (FInt (Plus, 1))))), Div,
-             (MMeasure ((SMeasure ("sec", (Pow (FInt (Plus, 1))))), Mul,
-                (SMeasure ("dm", (Pow (FInt (Plus, 1)))))))
-             ))
-          )));
-          (EApp ((EBinaryOp Add),
-       (EApp (
-          (EConst
-             (Measure_float ((FFloat (Plus, 7.77)),
-                (MMeasure ((SMeasure ("m", (Pow (FInt (Plus, 1))))), Div,
-                   (SMeasure ("dm", (Pow (FInt (Plus, 1)))))))
-                ))),
-          (EConst
-             (Measure_float ((FFloat (Plus, 7.73)),
-                (MMeasure ((SMeasure ("m", (Pow (FInt (Plus, 1))))), Div,
-                   (SMeasure ("dm", (Pow (FInt (Plus, 1)))))))
-                )))
-          ))
-       ))
+  (EMeasure (SMeasure_init (SMeasure ("sec", (Pow (FInt ( 1)))))));
+  (EMeasure (SMeasure_init (SMeasure ("m", (Pow (FInt ( 1)))))));
+  (EMeasure (SMeasure_init (SMeasure ("dm", (Pow (FInt ( 1)))))));
+  (EApp ((EBinaryOp Add),
+    (EApp (
+      (EConst
+          (Measure_float ((FFloat ( 7.77)),
+            (MMeasure ((SMeasure ("m", (Pow (FInt ( 1))))), Div,
+                (SMeasure ("dm", (Pow (FInt ( 1)))))))
+            ))),
+      (EConst
+          (Measure_float ((FFloat ( 7.73)),
+            (MMeasure ((SMeasure ("m", (Pow (FInt ( 1))))), Div,
+                (SMeasure ("dm", (Pow (FInt ( 1)))))))
+            )))
+      ))
+    ))
 ]
 
 let%test _ =
@@ -914,13 +888,17 @@ let%test _ =
 ;; 
 
 
-(* [<Measure>] type hz = m / sec * sm * luck / unluck*)
+(* 
+  [<Measure>] type sec
+  [<Measure>] type m
+  [<Measure>] type speed = m^3 / sec^-1 
+*)
 let test = [ 
-  (EMeasure (SMeasure_init (SMeasure ("sec", (Pow (FInt (Plus, 1)))))));
-  (EMeasure (SMeasure_init (SMeasure ("m", (Pow (FInt (Plus, 1)))))));
+  (EMeasure (SMeasure_init (SMeasure ("sec", (Pow (FInt ( 1)))))));
+  (EMeasure (SMeasure_init (SMeasure ("m", (Pow (FInt ( 1)))))));
   (EMeasure
-       (MMeasure_init ((SMeasure ("speed", (Pow (FInt (Plus, 1))))),
-          (MMeasure ((SMeasure ("m", (Pow (FInt (Plus, 3))))), Div, (SMeasure ("sec", (Pow (FInt (Minus, 1)))))))
+       (MMeasure_init ((SMeasure ("speed", (Pow (FInt ( 1))))),
+          (MMeasure ((SMeasure ("m", (Pow (FInt ( 3))))), Div, (SMeasure ("sec", (Pow (FInt ( -1)))))))
           )))
 ]
 
@@ -935,30 +913,37 @@ let%test _ =
     false
 ;; 
 
-(* [<Measure>] type hz = m / sec * sm * luck / unluck*)
+(* 
+  [<Measure>] type sec
+  [<Measure>] type m
+  [<Measure>] type dm
+  [<Measure>] type speed = m / sec 
+  [<Measure>] type sp = speed * dm
+  7.0<m/sec*dm> + 7.0<sp>
+  *)
 let test = [ 
-  (EMeasure (SMeasure_init (SMeasure ("sec", (Pow (FInt (Plus, 1)))))));
-  (EMeasure (SMeasure_init (SMeasure ("m", (Pow (FInt (Plus, 1)))))));
-  (EMeasure (SMeasure_init (SMeasure ("dm", (Pow (FInt (Plus, 1)))))));
+  (EMeasure (SMeasure_init (SMeasure ("sec", (Pow (FInt ( 1)))))));
+  (EMeasure (SMeasure_init (SMeasure ("m", (Pow (FInt ( 1)))))));
+  (EMeasure (SMeasure_init (SMeasure ("dm", (Pow (FInt ( 1)))))));
   (EMeasure
-    (MMeasure_init ((SMeasure ("speed", (Pow (FInt (Plus, 1))))),
-      (MMeasure ((SMeasure ("m", (Pow (FInt (Plus, 1))))), Div, (SMeasure ("sec", (Pow (FInt (Plus, 1)))))))
+    (MMeasure_init ((SMeasure ("speed", (Pow (FInt ( 1))))),
+      (MMeasure ((SMeasure ("m", (Pow (FInt ( 1))))), Div, (SMeasure ("sec", (Pow (FInt ( 1)))))))
       )));
   (EMeasure
-    (MMeasure_init ((SMeasure ("sp", (Pow (FInt (Plus, 1))))),
-        (MMeasure ((SMeasure ("speed", (Pow (FInt (Plus, 1))))), Mul, (SMeasure ("dm", (Pow (FInt (Plus, 1)))))
+    (MMeasure_init ((SMeasure ("sp", (Pow (FInt ( 1))))),
+        (MMeasure ((SMeasure ("speed", (Pow (FInt ( 1))))), Mul, (SMeasure ("dm", (Pow (FInt ( 1)))))
           ))
         )));
         (EApp ((EBinaryOp Add),
         (EApp (
            (EConst
-              (Measure_float ((FFloat (Plus, 7.)),
-                 (MMeasure ((SMeasure ("m", (Pow (FInt (Plus, 1))))), Div,
-                    (MMeasure ((SMeasure ("sec", (Pow (FInt (Plus, 1))))), Mul,
-                       (SMeasure ("dm", (Pow (FInt (Plus, 1)))))))
+              (Measure_float ((FFloat ( 7.)),
+                 (MMeasure ((SMeasure ("m", (Pow (FInt ( 1))))), Div,
+                    (MMeasure ((SMeasure ("sec", (Pow (FInt ( 1))))), Mul,
+                       (SMeasure ("dm", (Pow (FInt ( 1)))))))
                     ))
                  ))),
-           (EConst (Measure_float ((FFloat (Plus, 7.)), (SMeasure ("sp", (Pow (FInt (Plus, 1))))))))))
+           (EConst (Measure_float ((FFloat ( 7.)), (SMeasure ("sp", (Pow (FInt ( 1))))))))))
         ))
 ]
 

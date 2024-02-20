@@ -15,24 +15,23 @@ module type FailMonad = sig
 end
 
 type environment = (id, value, String.comparator_witness) Map.t
-
 let measure_list = ref []
 
 module Interpret (M : FailMonad) = struct
   open M
 
   (* Ищет element в measure_list *)
-  let search mlist_ref element =
-    let mlist = !mlist_ref in  (* Получаем обычный список кортежей из mutable списка *)
-    let rec search_element list =
+  let find mlist element =
+    let mlist = !mlist in  (* Получаем обычный список кортежей из mutable списка *)
+    let rec find_element list =
       match list with
       | [] -> false  (* Элемент не найден *)
-      | (m1, _) :: tl -> 
-          if (m1 == element) 
-            then true
-          else search_element tl
+      | (m1, _) :: tl ->
+          if (String.(=) m1 element) then
+            true
+          else find_element tl
     in
-    search_element mlist
+    find_element mlist
   ;;
 
   (* возвращает значение до ^ из элемента measure*)
@@ -47,8 +46,8 @@ module Interpret (M : FailMonad) = struct
     List.map ~f:(fun str -> remove_degree str) list
   ;;
 
-  (* Возвращает значение после ^ из measure*)
-  let before_degree str =
+  (* Возвращает значение после ^ из элемента measure*)
+  let return_degree str =
     match String.index str '^' with
     | Some caret_index -> 
         String.sub 
@@ -59,22 +58,41 @@ module Interpret (M : FailMonad) = struct
   ;;
 
   (* Проверяет, что типы из какого-то measure(str_list) были инициализированы*)
-  let search_list mlist_ref str_list =
+  let find_list mlist_ref str_list =
     let mlist = !mlist_ref in 
     let new_str_list = remove_degree_list str_list in
-    let rec search_element mlist slist =
+    let rec find_element mlist slist =
       match slist with 
       | [] -> true 
       | hd :: tl ->  
         match hd with
         | "/"
-        | "*" -> search_element mlist tl
+        | "*" -> find_element mlist tl
         | _ ->  if List.exists ~f:(fun (m1, _) -> String.(=) m1 hd) mlist then
-            search_element mlist tl
+            find_element mlist tl
           else
             false
     in 
-    search_element mlist new_str_list
+    find_element mlist new_str_list
+  ;;
+
+  (* ищет не инициаоизированный тип*)
+  let search_list mlist_ref str_list =
+    let mlist = !mlist_ref in 
+    let new_str_list = remove_degree_list str_list in
+    let rec find_element mlist slist =
+      match slist with 
+      | [] -> ""
+      | hd :: tl ->  
+        match hd with
+        | "/"
+        | "*" -> find_element mlist tl
+        | _ ->  if List.exists ~f:(fun (m1, _) -> String.(=) m1 hd) mlist then
+            find_element mlist tl
+          else
+            hd
+    in 
+    find_element mlist new_str_list
   ;;
 
   (* Обновляет значения в measure_list*)
@@ -82,21 +100,19 @@ module Interpret (M : FailMonad) = struct
     let mlist = !mlist_ref in
     let updated_mlist = 
       List.map ~f:(fun (first, second) -> 
-        if first == m1
+        if (String.(=) first m1)
           then (first, m2) 
         else (first, second)) mlist 
-    in mlist_ref := updated_mlist
+    in updated_mlist
   ;;
 
-  let znak z = if z == Plus then 1 else -1
-
   (* Создаем string list из какого-то measure *)
-  let rec process_measure_multiple list measure =
+  let rec measure_to_strlist list measure =
     match measure with
     | SMeasure (m, p) -> 
       (match p with 
-        | Pow (FInt (Plus, 1)) -> m :: list
-        | Pow (FInt (z, n)) -> (m ^ "^" ^ Int.to_string (znak z * n)) :: list
+        | Pow (FInt (1)) -> m :: list
+        | Pow (FInt (n)) -> (m ^ "^" ^ Int.to_string ( n)) :: list
         | _ -> failwith "This type does not support this operator")
     | MMeasure (m1, op, m2) ->
       let op_str op =
@@ -105,27 +121,27 @@ module Interpret (M : FailMonad) = struct
         | Div -> "/"
         | _ -> failwith "This type does not support this operator")
       in 
-      let measure_list_with_op = (op_str op) :: process_measure_multiple list m2 
+      let measure_list_with_op = (op_str op) :: measure_to_strlist list m2 
       in
-      process_measure_multiple measure_list_with_op m1
+      measure_to_strlist measure_list_with_op m1
   ;;
 
   (* Декомпозирует тип element *)
-  let rec find_m2_from_measure_list measure_list element =
-    let add_degree_in_list l n =
-      let caret_n = "^" ^ n in
-      List.map ~f: (fun elem -> elem ^ caret_n) l
+  let rec dec_element measure_list element =
+    let add_degree l n =
+      List.map ~f: (fun elem -> elem ^ "^" ^ n) l
     in
     match measure_list with
     | [] -> []
     | (m1, m2) :: tl ->
       if String.equal m1 (remove_degree element) then 
-        let n = before_degree element (* Пример числа n, можно прочитать его из строки element *)
+        let n = return_degree element
         in
-        if (String.(=) n "") then m2
-        else add_degree_in_list m2 n
+        if (String.(=) n "") 
+          then m2
+        else add_degree m2 n
       else 
-        find_m2_from_measure_list tl element
+        dec_element tl element
   ;;
 
   (* Принимает список списков строк и объединяет их в один список строк *)
@@ -134,17 +150,17 @@ module Interpret (M : FailMonad) = struct
   ;;
       
   (* Декомпозирует все значения из списка *)
-  let process_l1_with_measure_list l1 measure_list =
+  let dec_list list measure_list =
     List.map 
       ~f:(fun element -> 
         if ((String.(<>) element "/") && (String.(<>) element "*")) 
-          then find_m2_from_measure_list measure_list element 
-        else [element]) l1
+          then dec_element measure_list element 
+        else [element]) list
   ;;
 
   (* Декомпозирует список до самого основания*)
   let rec mbase m1 measure_list =
-    let m3 = strlist_to_str @@ process_l1_with_measure_list m1 measure_list
+    let m3 = strlist_to_str @@ dec_list m1 measure_list
     in
     if Poly.(=) m3 m1
       then return @@ m3
@@ -156,6 +172,104 @@ module Interpret (M : FailMonad) = struct
     let m3 = mbase m1 measure_list
     in let m4 = mbase m2 measure_list
     in Poly.(=) m3 m4
+  ;;
+
+  (* Произведение VFloatMeasure *)
+  let multiplication_measure m1 m2 =
+    let rec m1_el_with_m2 z elem m2 =
+        match m2 with
+        | [] -> z :: [elem]
+        | _ :: [] -> []
+        | z1 :: hd :: tl-> 
+            let p1 = return_degree elem
+            in let p2 = return_degree hd
+            in let hd_eq_elem = String.(=) (remove_degree hd) (remove_degree elem)
+            in let eq_op = if String.(=) z1 z then true else false
+            in let p1_empty = String.(=) p1 ""
+            in let p2_empty = String.(=) p2 ""
+            in
+            if hd_eq_elem 
+              then
+                (match (z, eq_op, p1_empty, p2_empty) with
+                | ("/", true, true, true) | ("*", true, true, true) -> 
+                    z :: [remove_degree elem ^ "^2"]
+
+                | ("/", false, true, true) | ("*", false, true, true) -> 
+                    z :: [remove_degree elem ^ "^0"]
+
+                | ("/", true, false, true) | ("*", true, false, true) -> 
+                    z :: [remove_degree elem ^ "^" ^ Int.to_string ((Int.of_string p1) + 1)]
+
+                | ("/", false, false, true) | ("*", false, false, true) -> 
+                    z :: [remove_degree elem ^ "^" ^ Int.to_string ((Int.of_string p1) - 1)]
+
+                | ("/", true, true, false) | ("*", true, true, false) -> 
+                    z :: [remove_degree elem ^ "^" ^ Int.to_string ((Int.of_string p2) + 1)]
+
+                | ("/", false, true, false) -> z :: [remove_degree elem ^ "^" ^ Int.to_string (1 - (Int.of_string p2))]
+                | ("*", false, true, false) -> z :: [remove_degree elem ^ "^" ^ Int.to_string ((Int.of_string p2) - 1)]
+
+                | ("/", true, false, false) | ("*", true, false, false) -> 
+                    z :: [remove_degree elem ^ "^" ^ Int.to_string ((Int.of_string p1) + (Int.of_string p2))]
+
+                | ("/", false, false, false)| ("*", false, false, false) -> 
+                    z :: [remove_degree elem ^ "^" ^ Int.to_string ((Int.of_string p1) - (Int.of_string p2))]
+                    
+                | _ -> m1_el_with_m2 z elem tl)
+          else m1_el_with_m2 z elem tl
+    in
+    let rec mult_m1_with_m2 m1 m2 =
+        match m1 with
+        | [] -> []
+        | _ :: [] -> []
+        | z :: hd :: tl -> m1_el_with_m2 z hd m2 :: mult_m1_with_m2 tl m2
+    in
+    let rec not_uniq_in_m1 elem m1 =
+        match m1 with
+        | [] -> false
+        | hd :: tl -> if String.(=) (remove_degree hd) (remove_degree elem) then true else not_uniq_in_m1 elem tl
+    in
+    let mult_m2_with_m1 m1 m2 =
+        match m2 with
+        | [] -> m1
+        | hd :: tl -> 
+            let rec merge_uniq_el m1 tl = 
+              match tl with
+              | [] -> m1
+              | hd :: [] -> 
+                if not_uniq_in_m1 hd m1 
+                  then merge_uniq_el m1 []
+                else
+                  hd :: "*" :: m1
+              | hd :: bo :: tl ->
+                  if not_uniq_in_m1 bo m1 then
+                    merge_uniq_el m1 tl
+                  else
+                    merge_uniq_el (m1 @ [hd] @ [bo]) tl
+            in
+            if not_uniq_in_m1 hd m1 
+              then merge_uniq_el m1 tl
+            else 
+              merge_uniq_el m1 tl @ ["*"] @ [hd]       
+    in
+    let remove_first_element lst =
+      match lst with
+      | [] -> []
+      | _::tl -> tl
+    in
+    remove_first_element @@ mult_m2_with_m1 (strlist_to_str (mult_m1_with_m2 ("*" :: m1) ("*" :: m2))) m2
+  ;;
+
+  let list_to_string s = String.concat s
+
+  let eval_list expr env l =
+    let* list =
+      List.fold l ~init:(return []) ~f:(fun l e ->
+        let* l = l in
+        let* eval = expr e env [] in
+        return @@ (eval :: l))
+    in
+    return (List.rev list)
   ;;
 
   let link map links = 
@@ -170,7 +284,9 @@ module Interpret (M : FailMonad) = struct
   
   let binop op left right =
     match op, left, right with 
+    
     (* Int to Int operation *)
+    
     | Add, VInt l, VInt r -> return @@ VInt (l + r)
     | Sub, VInt l, VInt r -> return @@ VInt (l - r)
     | Mul, VInt l, VInt r -> return @@ VInt (l * r)
@@ -178,33 +294,89 @@ module Interpret (M : FailMonad) = struct
     | Div, VInt l, VInt r -> return @@ VInt (l / r)
     | Mod, VInt _, VInt r when r = 0 -> fail DivideByZeroException
     | Mod, VInt l, VInt r -> return @@ VInt (l % r)
+    
+    (* Float to Float operation *)
+
+    | Add, VFloat l, VFloat r -> return @@ VFloat (l +. r)
+    | Sub, VFloat l, VFloat r -> return @@ VFloat (l -. r)
+    | Mul, VFloat l, VFloat r -> return @@ VFloat (l *. r)
+    | Div, VFloat l, VFloat r -> return @@ VFloat (l /. r)
+    | Mod, VFloat l, VFloat r -> return @@ VFloat (l %. r)
+
+    (* Measure to Measure operation *)
+    
+    | Add, VFloatMeasure(VFloat fl, ml), VFloatMeasure(VFloat fr, mr) ->
+        if (meq ml mr !measure_list) 
+          then return @@ VFloatMeasure (( VFloat(fl +. fr)), ml)
+        else 
+          fail @@ DifferentMeasure (list_to_string ml, list_to_string mr)
+    | Sub, VFloatMeasure(VFloat fl, ml), VFloatMeasure(VFloat fr, mr) ->
+        if (meq ml mr !measure_list) 
+          then return @@ VFloatMeasure (( VFloat(fl -. fr)), ml)
+        else 
+          fail @@ DifferentMeasure (list_to_string ml, list_to_string mr)
+    | Mul, VFloatMeasure(VFloat fl, ml), VFloatMeasure(VFloat fr, mr) ->
+        return @@ VFloatMeasure (( VFloat(fl *. fr)), multiplication_measure ml mr)
+    (* | Div, VFloatMeasure(VFloat fl, ml), VFloatMeasure(VFloat fr, mr) ->
+        if (meq ml mr !measure_list) 
+          then return @@ VFloatMeasure (( VFloat(fl /. fr)), ml)
+        else 
+          fail @@ DifferentMeasure (list_to_string ml, list_to_string mr)
+    | Mod, VFloatMeasure(VFloat fl, ml), VFloatMeasure(VFloat fr, mr) ->
+        if (meq ml mr !measure_list) 
+          then return @@ VFloatMeasure (( VFloat(fl %. fr)), ml)
+        else 
+          fail @@ DifferentMeasure (list_to_string ml, list_to_string mr) *)
+
     (* Boolean operation *)
+
     | And, VBool l, VBool r -> return @@ VBool (l && r)
     | Or, VBool l, VBool r -> return @@ VBool (l || r)
+
+    (* Boolean operation to int*)
+
     | Eq, VInt l, VInt r -> return @@ VBool (l = r)
     | Neq, VInt l, VInt r -> return @@ VBool (l <> r)
     | Less, VInt l, VInt r -> return @@ VBool (l < r)
     | Gre, VInt l, VInt r -> return @@ VBool (l > r)
     | Leq, VInt l, VInt r -> return @@ VBool (l <= r)
     | Greq, VInt l, VInt r -> return @@ VBool (l > r)
+
+    (* Boolean operation to float*)
+
     | Eq, VFloat l, VFloat r -> return @@ VBool (Float.(=) l r)
     | Neq, VFloat l, VFloat r -> return @@ VBool (Float.(<>) l r)
     | Less, VFloat l, VFloat r -> return @@ VBool (Float.(<) l r)
-    | Gre, VFloat l, VFloat r -> return @@ VBool (Float.(<=) l r)
-    | Leq, VFloat l, VFloat r -> return @@ VBool (Float.(>=) l r)
-    | Greq, VFloat l, VFloat r -> return @@ VBool (Float.(>) l r)
-    (* Float to Float operation *)
-    | Add, VFloat l, VFloat r -> return @@ VFloat (l +. r)
-    | Sub, VFloat l, VFloat r -> return @@ VFloat (l -. r)
-    | Mul, VFloat l, VFloat r -> return @@ VFloat (l *. r)
-    | Div, VFloat l, VFloat r -> return @@ VFloat (l /. r)
-    | Mod, VFloat l, VFloat r -> return @@ VFloat (l %. r)
-    (* Measure to Measure operation *)
-    | Add, VFloatMeasure(VFloat vl, ml), VFloatMeasure(VFloat vr, mr) when (meq ml mr !measure_list) -> return @@ VFloatMeasure (( VFloat(vl +. vr)), ml)
-    | Sub, VFloatMeasure(VFloat nl, ml), VFloatMeasure(VFloat nr, mr) when (meq ml mr !measure_list) -> return @@ VFloatMeasure (( VFloat(nl -. nr)), ml) 
-    | Mul, VFloatMeasure(VFloat nl, ml), VFloatMeasure(VFloat nr, mr) when (meq ml mr !measure_list) -> return @@ VFloatMeasure (( VFloat(nl *. nr)), ml)
-    | Div, VFloatMeasure(VFloat nl, ml), VFloatMeasure(VFloat nr, mr) when (meq ml mr !measure_list) -> return @@ VFloatMeasure (( VFloat(nl /. nr)), ml)
-    | Mod, VFloatMeasure(VFloat nl, ml), VFloatMeasure(VFloat nr, mr) when (meq ml mr !measure_list)-> return @@ VFloatMeasure (( VFloat(nl %. nr)), ml)
+    | Gre, VFloat l, VFloat r -> return @@ VBool (Float.(>) l r)
+    | Leq, VFloat l, VFloat r -> return @@ VBool (Float.(<=) l r)
+    | Greq, VFloat l, VFloat r -> return @@ VBool (Float.(>=) l r)
+
+    (* Boolean operation to string*)
+
+    | Eq, VString l, VString r -> return @@ VBool (String.(=) l r)
+    | Neq, VString  l, VString  r -> return @@ VBool (String.(<>) l r)
+    | Less, VString  l, VString  r -> return @@ VBool (String.(<) l r)
+    | Gre, VString  l, VString  r -> return @@ VBool (String.(>) l r)
+    | Leq, VString  l, VString  r -> return @@ VBool (String.(<=) l r)
+    | Greq, VString  l, VString  r -> return @@ VBool (String.(>=) l r)
+
+    (* Boolean operation to tuple*)
+
+    | Eq, VTuple l, VTuple r -> return @@ VBool (Poly.(=) l r)
+    | Neq, VTuple l, VTuple r -> return @@ VBool (Poly.(<>) l r)
+    | Less, VTuple l, VTuple r -> return @@ VBool (Poly.(<) l r)
+    | Gre, VTuple l, VTuple r -> return @@ VBool (Poly.(>) l r)
+    | Leq, VTuple l, VTuple r -> return @@ VBool (Poly.(<=) l r)
+    | Greq, VTuple l, VTuple r -> return @@ VBool (Poly.(>=) l r)
+
+    (* Boolean operation to list*)
+
+    | Eq, VList l, VList r -> return @@ VBool (Poly.(=) l r)
+    | Neq, VList l, VList r -> return @@ VBool (Poly.(<>) l r)
+    | Less, VList l, VList r -> return @@ VBool (Poly.(<) l r)
+    | Gre, VList l, VList r -> return @@ VBool (Poly.(>) l r)
+    | Leq, VList l, VList r -> return @@ VBool (Poly.(<=) l r)
+    | Greq, VList l, VList r -> return @@ VBool (Poly.(>=) l r)
     | _ -> fail UnsupportedOperation
   ;;
 
@@ -214,23 +386,14 @@ module Interpret (M : FailMonad) = struct
     | PVar name, value -> return [ name, value ]
     | PConst const, cvalue ->
       (match const, cvalue with
-        | FBool fb, VBool vb when fb == vb -> return []
-        | FInt (s, fnum), VInt vnum 
-            when (
-              ((s == Plus) && (fnum == vnum)) 
-              || ((s == Minus) && (fnum * -1 == vnum))
-              ) -> return []
-        | FString fs, VString vs when fs == vs -> return []
-        | FFloat (s, fnum), VFloat vnum
-            when (
-              ((s == Plus) && (fnum == vnum)) 
-              || ((s == Minus) && (fnum *. -1. == vnum))
-              ) -> return []
+        | FBool fb, VBool vb when Bool.(=) fb vb -> return []
+        | FInt (fnum), VInt vnum when (fnum = vnum) -> return []
+        | FString fs, VString vs when String.(=) fs vs -> return []
+        | FFloat (fnum), VFloat vnum when (Float.(=) fnum vnum) -> return []
         | Measure_float (_, SMeasure (m1, p)), VFloatMeasure (_, m2) ->
-        (match p with 
-          | (Pow (FInt (Plus, n))) when ([m1 ^ "^" ^ Int.to_string n] == m2)-> return []
-          | (Pow (FInt (Minus, n))) when ([m1 ^ "^" ^ Int.to_string (-1 * n)] == m2)-> return []
-          | _ -> fail UnexpectedPattern)
+          (match p with 
+            | (Pow (FInt n)) when (Poly.(=) [m1 ^ "^" ^ Int.to_string n] m2) -> return []
+            | _ -> fail UnexpectedPattern)
         | FUnit, VUnit -> return []
         | FNil, VList v ->
           (match v with
@@ -238,12 +401,12 @@ module Interpret (M : FailMonad) = struct
             | _ -> fail UnexpectedPattern)
         | _ -> fail UnexpectedPattern)
     | (PCons _ as pl), VList vl ->
-      (match pl, vl with
-        | PCons (h, t), hd :: tl ->
-          let* hd = pattern (h, hd) in
-          let* tl = pattern (t, VList tl) in
-          return @@ hd @ tl
-        | _ -> fail UnexpectedPattern)
+        (match pl, vl with
+          | PCons (h, t), hd :: tl ->
+            let* hd = pattern (h, hd) in
+            let* tl = pattern (t, VList tl) in
+            return @@ hd @ tl
+          | _ -> fail UnexpectedPattern)
     | PTuple ptl, VTuple vtl 
     | PList ptl, VList vtl -> 
       let create_vtl =
@@ -259,63 +422,57 @@ module Interpret (M : FailMonad) = struct
   ;;
 
   let rec eval_expr expr env vmap : (value, error) t =
-    let eval_list l =
-      let* list =
-        List.fold l ~init:(return []) ~f:(fun l e ->
-          let* l = l in
-          let* comprassion = eval_expr e env [] in
-          return @@ (comprassion :: l))
-      in
-      return (List.rev list)
-    in
     match expr with
     | EMeasure m ->
       (match m with
         | SMeasure_init (SMeasure (m1, p)) ->
-            (match (search measure_list m1, p) with
-            | (true, Pow (FInt (Plus, 1))) -> measure_list := !measure_list ; return @@ VMeasureList !measure_list
-            | (false, Pow (FInt (Plus, 1))) ->  measure_list := (m1, [m1]) :: !measure_list; return @@ VMeasureList !measure_list
-            | _ -> fail Unreachable)
+            (match (find measure_list m1, p) with
+            | (true, Pow (FInt (1))) -> return @@ VMeasureList !measure_list
+            | (false, Pow (FInt (1))) ->  
+                measure_list := (m1, [m1]) :: !measure_list; 
+                return @@ VMeasureList !measure_list
+            | _ -> fail UnexpectedInfix)
         | MMeasure_init (SMeasure (m1, p), m2) -> 
-            let m2  = process_measure_multiple [] m2 
+            let m2  = measure_to_strlist [] m2 
+            in let search_m1 = find measure_list m1 
+            in let search_m2 = find_list measure_list m2
             in
-            (match (search measure_list m1, search_list measure_list m2, p) with
-            | (true, true, Pow (FInt (Plus, 1))) -> update_mlist measure_list m1 m2; return @@ VMeasureList !measure_list
-            | (_, true, Pow (FInt (Plus, 1))) -> measure_list := (m1, m2) :: !measure_list; return @@ VMeasureList !measure_list
+            (match (search_m1, search_m2, p) with
+            | (true, true, Pow (FInt 1)) -> 
+                measure_list := update_mlist measure_list m1 m2; 
+                return @@ VMeasureList !measure_list
+            | (false, true, Pow (FInt 1)) -> 
+                measure_list := (m1, m2) :: !measure_list; 
+                return @@ VMeasureList !measure_list
+            | (_, false, Pow (FInt 1)) -> fail @@ UndefinedType (search_list measure_list m2)
+            | (_, _, Pow (FInt _)) -> fail UnexpectedInfix
             | _ -> fail Unreachable)
         | _ -> fail Unreachable
       )
     | EConst c ->
       (match c with
-        | FInt (s, i) ->
-            (match s with
-              | Plus -> return @@ VInt i
-              | Minus -> return @@ VInt (-1 * i))
+        | FInt i -> return @@ VInt i
         | FBool b -> return @@ VBool b
         | FString s -> return @@ VString s
-        | FFloat (s, f) -> return @@
-          (match s with
-          | Plus -> VFloat f
-          | Minus -> VFloat (-1.0 *. f))
+        | FFloat f -> return @@ VFloat f
         | Measure_float (f, SMeasure (m, p)) ->
-          (match (search measure_list m, p) with
-            | (true, Pow (FInt (Plus, 1))) -> 
+          (match (find measure_list m, p) with
+            | (true, Pow (FInt (1))) -> 
                 let* f = eval_expr (EConst f) env []
                 in return @@ VFloatMeasure (f, [m])
-            | (true, Pow (FInt (z, n))) ->
+            | (true, Pow (FInt (n))) ->
               let* f = eval_expr (EConst f) env []
                 in
-                return @@ VFloatMeasure (f, [m ^ "^" ^ Int.to_string (znak z * n)])
-            |_ -> fail (UndefinedType m)
+                return @@ VFloatMeasure (f, [m ^ "^" ^ Int.to_string n])
+            |_ -> fail @@ UndefinedType m
           )
         | Measure_float (f, m) ->
-          let m  = process_measure_multiple [] m in
-          if (search_list measure_list m) 
+          let m  = measure_to_strlist [] m in
+          if (find_list measure_list m) 
             then 
               let* f = eval_expr (EConst f) env []
-              in
-              return @@ VFloatMeasure (f, m) 
-          else fail Unreachable
+              in return @@ VFloatMeasure (f, m) 
+          else fail @@ UndefinedType (search_list measure_list m)
         | FNil -> return VNil
         | FUnit -> return VUnit)
     | EFun (p, e) -> return @@ VFun (p, e, vmap)
@@ -347,7 +504,7 @@ module Interpret (M : FailMonad) = struct
         | _ -> fail Unreachable)
     | EMatch (matched, patterns) ->
       let* comp_match = eval_expr matched env [] in
-      let rec comp_match_expr = function
+      let rec eval_match_expr = function
         | [] -> fail UnexpectedPattern
         | (p, e) :: tl ->
           let res = pattern (p, comp_match) in
@@ -356,19 +513,19 @@ module Interpret (M : FailMonad) = struct
             ~ok:(fun res ->
               let* env = link env res in
               eval_expr e env [])
-            ~err:(fun _res -> comp_match_expr tl)
+            ~err:(fun _res -> eval_match_expr tl)
       in
-      comp_match_expr patterns
+      eval_match_expr patterns
     | ELet (_, _, expr) -> eval_expr expr env []
-    | EList abs -> 
-      let* vls = eval_list abs  in
-      return (VList vls)
-    | ETuple els ->
-      let* vls = eval_list els in
-      return (VTuple vls)
+    | EList l -> 
+      let* vl = eval_list eval_expr env l  in
+      return (VList vl)
+    | ETuple t ->
+      let* vt = eval_list eval_expr env t in
+      return (VTuple vt)
   ;;
 
-  let run_expr env expr : (environment * value, error) t =
+  let exp env expr : (environment * value, error) t =
     let* value = eval_expr expr env [] in
     match expr with
     | ELet (_, name, _) ->
@@ -377,24 +534,24 @@ module Interpret (M : FailMonad) = struct
     | _ -> return (env, value)
   ;;
 
-  let run_interpreter ?(environment = Map.empty (module String)) program = 
+  let interpreter ?(environment = Map.empty (module String)) program = 
     measure_list := [];
     let rec helper env = function
       | [] -> fail EmptyInput
       | hd :: [] ->
-        let* env, value = run_expr env hd in
+        let* env, value = exp env hd in
         return (env, value)
       | hd :: tl ->
-        let* env, _ = run_expr env hd in
+        let* env, _ = exp env hd in
         helper env tl
     in helper environment program
   ;;
-  
+
 end
 
-module InterpretResult = Interpret 
+module Interpreter = Interpret 
 (struct
-  include Base.Result
+  include Result
 
   let run x ~ok ~err =
     match x with
@@ -405,4 +562,4 @@ module InterpretResult = Interpret
   let ( let* ) monad f = bind monad ~f
 end)
 
-let run = InterpretResult.run_interpreter
+let interpreter = Interpreter.interpreter
