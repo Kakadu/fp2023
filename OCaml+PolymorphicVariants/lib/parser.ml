@@ -125,7 +125,7 @@ let pppoly (p : pattern t) =
 
 let pattern =
   fix (fun pat ->
-    let term = choice [ ppconst; ppvar; ppany; pplist pat; parens @@ pat ] in
+    let term = choice [ ppconst; ppvar; ppany; pplist pat; parens pat ] in
     let poly = pppoly term <|> term in
     let cons = chainr1 poly (dcol *> return pcons) in
     let tuple = pptuple cons <|> cons in
@@ -222,3 +222,10 @@ let str_item =
 
 let structure : structure t = sep_by dsemi str_item
 let parse s = parse_string ~consume:Prefix structure s
+
+let test_parse input =
+  let open Stdlib.Format in
+  match parse input with
+  | Ok ast -> printf "%a\n" pp_structure ast
+  | Error s -> printf "Parsing error: %s\n" s
+;;

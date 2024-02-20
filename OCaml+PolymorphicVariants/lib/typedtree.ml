@@ -2,7 +2,7 @@
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-type binder = int [@@deriving show { with_path = false }]
+type binder = int
 
 module VarSet = struct
   include Set.Make (Int)
@@ -27,7 +27,6 @@ let unit_typ = TPrim "unit"
 let tuple_typ t = TTuple t
 let list_typ t = TList t
 
-(* TODO: fix func printing*)
 let rec pp_typ ppf =
   let open Format in
   function

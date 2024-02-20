@@ -12,20 +12,24 @@ open Base
 
 type error =
   [ `Occurs_check
-  | `No_variable of string
+  | `No_variable of id
   | `Unification_failed of ty * ty
   | `Unexpected_pattern
   | `Unexpected_expression
   ]
 
-let pp_error ppf : error -> _ = function
-  | `Occurs_check -> Format.fprintf ppf "Occurs check failed"
-  | `No_variable s -> Format.fprintf ppf "Unbound variable '%s'" s
+let pp_error ppf : error -> _ =
+  let open Stdlib.Format in
+  function
+  | `Occurs_check -> fprintf ppf "Occurs check failed"
+  | `No_variable s -> fprintf ppf "Unbound variable '%s'" s
   | `Unification_failed (l, r) ->
-    Format.fprintf ppf "Unification failed on %a and %a" pp_typ l pp_typ r
-  | `Unexpected_pattern -> Format.fprintf ppf "Unexpected pattern"
-  | `Unexpected_expression -> Format.fprintf ppf "Unexpected expression"
+    fprintf ppf "Unification failed on %a and %a" pp_typ l pp_typ r
+  | `Unexpected_pattern -> fprintf ppf "Unexpected pattern"
+  | `Unexpected_expression -> fprintf ppf "Unexpected expression"
 ;;
+
+type id = string
 
 module R : sig
   type 'a t
@@ -215,8 +219,6 @@ module Scheme = struct
   ;;
 end
 
-type id = string
-
 module TypeEnv = struct
   type t = (id, scheme, String.comparator_witness) Map.t
 
@@ -257,8 +259,7 @@ let generalize env ty =
 
 let generalize_rec env ty x =
   let env = TypeEnv.remove env x in
-  let free = VarSet.diff (Type.free_vars ty) (TypeEnv.free_vars env) in
-  S (free, ty)
+  generalize env ty
 ;;
 
 let infer_pat =
@@ -397,18 +398,18 @@ let infer_exp =
       in
       return (sub, tuple_typ (List.rev_map ~f:(Subst.apply sub) t))
     | ECons (e1, e2) ->
-      let* sub1, t1 = helper env e1 in
-      let* sub2, t2 = helper env e2 in
+      let* s1, t1 = helper env e1 in
+      let* s2, t2 = helper env e2 in
       let* sub = Subst.unify (list_typ t1) t2 in
       let t = Subst.apply sub t2 in
-      let* sub = Subst.compose_all [ sub1; sub2; sub ] in
+      let* sub = Subst.compose_all [ s1; s2; sub ] in
       return (sub, t)
     | EApply (e1, e2) ->
       let* fresh = fresh_var in
-      let* sub1, t1 = helper env e1 in
-      let* sub2, t2 = helper (TypeEnv.apply sub1 env) e2 in
-      let* sub3 = Subst.unify (arrow t2 fresh) (Subst.apply sub2 t1) in
-      let* sub = Subst.compose_all [ sub1; sub2; sub3 ] in
+      let* s1, t1 = helper env e1 in
+      let* s2, t2 = helper (TypeEnv.apply s1 env) e2 in
+      let* s3 = Subst.unify (arrow t2 fresh) (Subst.apply s2 t1) in
+      let* sub = Subst.compose_all [ s1; s2; s3 ] in
       let t = Subst.apply sub fresh in
       return (sub, t)
     | _ -> fail `Unexpected_expression
@@ -445,10 +446,22 @@ let infer_structure (structure : structure) =
   List.fold_left
     ~f:(fun acc item ->
       let* env = acc in
-      let* env' = infer_str_item env item in
-      return env')
+      let* env = infer_str_item env item in
+      return env)
     ~init:(return TypeEnv.empty)
     structure
 ;;
 
 let run_infer s = run (infer_structure s)
+
+let test_infer s =
+  let open Stdlib.Format in
+  match Parser.parse s with
+  | Ok parsed ->
+    (match run_infer parsed with
+     | Ok env ->
+       Base.Map.iteri env ~f:(fun ~key ~data:(S (_, ty)) ->
+         printf "val %s : %a\n" key pp_typ ty)
+     | Error e -> printf "Infer error: %a\n" pp_error e)
+  | Error e -> printf "Parsing error: %s\n" e
+;;
