@@ -57,7 +57,7 @@ type from_statement =
       ; left : from_statement
       ; table : name
       ; on : expr
-      }
+      } (** Join table *)
 
 (** Full statement *)
 type request =
