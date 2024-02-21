@@ -146,7 +146,7 @@ let%expect_test _ =
   test_infer {| 
       let rec fix f x = f (fix f) x ;;
      |};
-  [%expect {| val fix : (('_2 -> '_3) -> '_2 -> '_3) -> '_2 -> '_3 |}]
+  [%expect {| val fix : (('2 -> '3) -> '2 -> '3) -> '2 -> '3 |}]
 ;;
 
 let%expect_test _ =
@@ -158,7 +158,7 @@ let%expect_test _ =
       | h :: tl -> fold_left f (f acc h) tl
    ;;
      |};
-  [%expect {| val fold_left : ('_11 -> '_5 -> '_11) -> '_11 -> '_5 list -> '_11 |}]
+  [%expect {| val fold_left : ('11 -> '5 -> '11) -> '11 -> '5 list -> '11 |}]
 ;;
 
 let%expect_test _ =
@@ -172,7 +172,7 @@ let%expect_test _ =
   test_infer {| 
       let fs = ((fun x -> x), (fun x y -> x + y))
      |};
-  [%expect {| val fs : (('_0 -> '_0) * (int -> int -> int)) |}]
+  [%expect {| val fs : (('0 -> '0) * (int -> int -> int)) |}]
 ;;
 
 let%expect_test _ =
@@ -197,7 +197,7 @@ let%expect_test _ =
     let f a b c d e = a b c d e;;
      |};
   [%expect
-    {| val f : ('_1 -> '_2 -> '_3 -> '_4 -> '_5) -> '_1 -> '_2 -> '_3 -> '_4 -> '_5 |}]
+    {| val f : ('1 -> '2 -> '3 -> '4 -> '5) -> '1 -> '2 -> '3 -> '4 -> '5 |}]
 ;;
 
 let%expect_test _ =
@@ -212,7 +212,7 @@ let%expect_test _ =
         helper (fun x -> x) l
       ;;
      |};
-  [%expect {| val map_cps : ('_6 -> '_8) -> '_6 list -> '_8 list |}]
+  [%expect {| val map_cps : ('6 -> '8) -> '6 list -> '8 list |}]
 ;;
 
 (*------------------------------ Interpreter ---------------------------------*)
@@ -239,7 +239,7 @@ let%expect_test _ =
     {|
     val f : int = 120
     val fac : (int -> int) -> int -> int = <fun>
-    val fix : (('_2 -> '_3) -> '_2 -> '_3) -> '_2 -> '_3 = <fun> |}]
+    val fix : (('2 -> '3) -> '2 -> '3) -> '2 -> '3 = <fun> |}]
 ;;
 
 let%expect_test _ =
@@ -300,7 +300,7 @@ let%expect_test _ =
     |};
   [%expect
     {|
-    val rev : '_12 list -> '_12 list = <fun>
+    val rev : '12 list -> '12 list = <fun>
     val reversed : int list = [5; 4; 3; 2; 1] |}]
 ;;
 
@@ -315,8 +315,8 @@ let%expect_test _ =
   [%expect
     {|
     val cmp : int -> int = <fun>
-    val f : ('_1 -> '_2 -> '_3 -> '_4 -> '_5) -> '_1 -> '_2 -> '_3 -> '_4 -> '_5 = <fun>
-    val id : '_9 -> '_9 = <fun> |}]
+    val f : ('1 -> '2 -> '3 -> '4 -> '5) -> '1 -> '2 -> '3 -> '4 -> '5 = <fun>
+    val id : '9 -> '9 = <fun> |}]
 ;;
 
 let%expect_test _ =

@@ -4,20 +4,12 @@
 
 type binder = int
 
-module VarSet = struct
-  include Set.Make (Int)
-end
-
-type binder_set = VarSet.t
-
 type ty =
   | TPrim of string (** int, string *)
   | TVar of binder (** Type variable *)
   | TArrow of ty * ty (** Function type *)
   | TTuple of ty list (** Tuple type *)
   | TList of ty (** List type *)
-
-type scheme = S of VarSet.t * ty (** \forall a1 a2 ... an . ty *)
 
 let arrow l r = TArrow (l, r)
 let int_typ = TPrim "int"
@@ -30,7 +22,7 @@ let list_typ t = TList t
 let rec pp_typ ppf =
   let open Format in
   function
-  | TVar n -> fprintf ppf "'_%d" n
+  | TVar n -> fprintf ppf "'%d" n
   | TPrim s -> fprintf ppf "%s" s
   | TArrow (l, r) ->
     (match l with

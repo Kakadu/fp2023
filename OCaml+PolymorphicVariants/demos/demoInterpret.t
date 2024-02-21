@@ -12,14 +12,14 @@
   >   helper (fun x -> x) l
   > ;;
   > EOF
-  val map_cps : ('_6 -> '_8) -> '_6 list -> '_8 list = <fun>
+  val map_cps : ('6 -> '8) -> '6 list -> '8 list = <fun>
   $ dune exec demoInterpret << EOF
   >   let rec fix f x = f (fix f) x;;
   >   let fac fac_ n = if n = 1 then 1 else n * fac_ (n - 1);;
   >   let x = fix fac 5;;
   > EOF
   val fac : (int -> int) -> int -> int = <fun>
-  val fix : (('_2 -> '_3) -> '_2 -> '_3) -> '_2 -> '_3 = <fun>
+  val fix : (('2 -> '3) -> '2 -> '3) -> '2 -> '3 = <fun>
   val x : int = 120
   $ dune exec demoInterpret << EOF
   > let rec merge l1 l2 = 
@@ -33,13 +33,13 @@
   > ;;
   > let merged = merge [1; 3; 6] [2; 4; 5];;
   > EOF
-  val merge : '_7 list -> '_7 list -> '_7 list = <fun>
+  val merge : '7 list -> '7 list -> '7 list = <fun>
   val merged : int list = [1; 2; 3; 4; 5; 6]
   $ dune exec demoInterpret << EOF
   > let rec fac_cps n k = if n = 0 then k 1 else fac_cps (n - 1) (fun r -> k (n * r));;
   > let x = fac_cps 5 (fun x -> x);;
   > EOF
-  val fac_cps : int -> (int -> '_5) -> '_5 = <fun>
+  val fac_cps : int -> (int -> '5) -> '5 = <fun>
   val x : int = 120
   $ dune exec demoInterpret << EOF
   > let rec fib n = if n <= 1 then 1 else fib (n - 1) + fib (n - 2);;
@@ -55,7 +55,7 @@
   > EOF
   val fib : int -> int = <fun>
   val first_n_fibs : int -> int list = <fun>
-  val init : (int -> '_26) -> int -> '_26 list = <fun>
+  val init : (int -> '26) -> int -> '26 list = <fun>
   val l : int list = [1; 1; 2; 3; 5; 8; 13; 21; 34; 55]
   $ dune exec demoInterpret << EOF
   > let rec lcmp l1 l2 = 
@@ -68,4 +68,4 @@
   > let equally_long = lcmp [1; 2; 3; 4; 5] [5;4;3;2;1];;
   > EOF
   val equally_long : int = 0
-  val lcmp : '_4 list -> '_5 list -> int = <fun>
+  val lcmp : '4 list -> '5 list -> int = <fun>
