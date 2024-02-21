@@ -2,7 +2,7 @@
 
 (library
  (name infer_test)
- (libraries base parse infer types builtin)
+ (libraries base stdio parse infer types builtin)
  (preprocess
   (pps ppx_expect))
  (inline_tests)

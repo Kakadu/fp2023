@@ -3,10 +3,11 @@
 (** SPDX-License-Identifier: MIT *)
 
 open! Base
+open Stdio
 open Types
 
 let run_env ppf init_env code =
-  let open Stdlib.Format in
+  let open Format in
   match Parse.parse code with
   | Some program ->
       List.fold program ~init:init_env ~f:(fun env_acc str_item ->
@@ -23,11 +24,13 @@ let run_env ppf init_env code =
               fprintf ppf "%a\n" Infer.TyError.pp err ;
               env_acc )
   | None ->
-      Stdlib.print_endline "syntax error" ;
+      print_endline "syntax error" ;
       init_env
 
 let std_env =
   let prelude = {| exception Exc1;; exception Exc2;; |} ^ Builtin.prelude in
   run_env Format.str_formatter Builtin.ty_env prelude
 
-let run code = run_env Format.std_formatter std_env code |> ignore
+let run code =
+  let _ : Env.t = run_env Format.std_formatter std_env code in
+  ()

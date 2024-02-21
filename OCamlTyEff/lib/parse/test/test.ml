@@ -3,15 +3,16 @@
 (** SPDX-License-Identifier: MIT *)
 
 open! Base
+open Stdio
 open Ast
 
 (** Parse string and pretty print the output *)
 let run string =
   match Parse.parse string with
   | Some str ->
-      pp_structure Stdlib.Format.std_formatter str
+      pp_structure Format.std_formatter str
   | None ->
-      Stdlib.print_endline "syntax error"
+      print_endline "syntax error"
 
 let%expect_test "parse_let_binding_pattern1" =
   run "let ft::sc::tr = sc" ;

@@ -8,7 +8,7 @@ module Var = struct
   module T = struct
     type t = Var of string | Var_weak of string [@@deriving eq, ord, sexp_of]
 
-    let pp ppf (Var name | Var_weak name) = Stdlib.Format.fprintf ppf "'%s" name
+    let pp ppf (Var name | Var_weak name) = Format.fprintf ppf "'%s" name
   end
 
   include T
@@ -31,7 +31,7 @@ module VarSet = struct
   type t = (Elt.t, Elt.comparator_witness) Set.t
 
   let pp ppf set =
-    let open Stdlib.Format in
+    let open Format in
     let vars = Set.to_list set in
     pp_print_list ~pp_sep:(fun out () -> fprintf out " ") Elt.pp ppf vars
 

@@ -15,6 +15,7 @@ depends: [
   "ocaml"
   "dune" {>= "3.7"}
   "base"
+  "stdio"
   "angstrom"
   "monads" {= "dev"}
   "ppx_deriving"

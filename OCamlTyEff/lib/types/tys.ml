@@ -44,7 +44,7 @@ end = struct
     type t = Label of Ident.t * Ty.t option [@@deriving eq, ord, sexp_of]
 
     let pp ppf (Label (Ident name, arg)) =
-      let open Stdlib.Format in
+      let open Format in
       match arg with
       | None ->
           fprintf ppf "%s" name
@@ -60,7 +60,7 @@ end = struct
   [@@deriving eq, ord, sexp_of]
 
   let pp ppf =
-    let open Stdlib.Format in
+    let open Format in
     let rec helper ppf = function
       | Eff_row (lbl, eff_rest) ->
           fprintf ppf ", %a%a" Label.pp lbl helper eff_rest
@@ -140,7 +140,7 @@ end = struct
   [@@deriving eq, ord, sexp_of]
 
   let rec pp ppf =
-    let open Stdlib.Format in
+    let open Format in
     let pp_raw = pp in
     let pp ppf ty =
       match ty with
@@ -206,7 +206,7 @@ end = struct
   type t = Forall of VarSet.t * Ty.t [@@deriving ord, sexp_of]
 
   let pp ppf (Forall (quantified, ty)) =
-    let open Stdlib.Format in
+    let open Format in
     if VarSet.is_empty quantified then fprintf ppf "%a" Ty.pp ty
     else fprintf ppf "%a. %a" VarSet.pp quantified Ty.pp ty
 

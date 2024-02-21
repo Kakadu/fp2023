@@ -24,6 +24,7 @@
   ocaml
   dune
   base
+  stdio
   angstrom
   (monads
    (= dev))

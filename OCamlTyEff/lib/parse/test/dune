@@ -2,7 +2,7 @@
 
 (library
  (name parse_test)
- (libraries base ast parse)
+ (libraries base stdio ast parse)
  (preprocess
   (pps ppx_expect))
  (inline_tests)
