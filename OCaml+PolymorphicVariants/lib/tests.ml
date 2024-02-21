@@ -233,6 +233,28 @@ let%expect_test _ =
   [%expect {| Infer error: Pattern matching error |}]
 ;;
 
+let%expect_test _ =
+  test_infer {|
+    let l = [`A; `B; `C];;
+    ;;
+    |};
+  [%expect {|
+    Infer error: Not implemented |}]
+;;
+
+let%expect_test _ =
+  test_infer
+    {|
+    let f x =
+      match x with
+      | `A x -> x + 1
+      | `B _ -> 0
+    ;;
+    |};
+  [%expect {|
+    Infer error: Pattern matching error |}]
+;;
+
 (*------------------------------ Interpreter ---------------------------------*)
 
 let%expect_test _ =
@@ -349,4 +371,33 @@ let%expect_test _ =
     |};
   [%expect {|
     Interpreter error: Division by zero |}]
+;;
+
+let%expect_test _ =
+  test_interpret
+    {|
+    let f l = match l with
+      | x :: y :: tl -> x + y
+      | x :: y :: z :: tl -> x + y + z
+    ;;
+    let x = f [1];;
+    |};
+  [%expect {|
+    Interpreter error: Pattern-matching failed |}]
+;;
+
+let%expect_test _ =
+  test_interpret {|
+    let `A x = `A 3;;
+    |};
+  [%expect {|
+    Infer error: Not implemented |}]
+;;
+
+let%expect_test _ =
+  test_interpret {|
+    let (x, y, z) = (1, 2, 3, 4);;
+    |};
+  [%expect {|
+    Infer error: Not implemented |}]
 ;;

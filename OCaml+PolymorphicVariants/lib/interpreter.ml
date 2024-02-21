@@ -5,31 +5,6 @@
 open Ast
 open Base
 
-type error =
-  [ `Division_by_zero
-  | `Unbound_variable of id
-  | `Wrong_type
-  | `Pattern_mathing_failed
-  | `Not_implemented
-  ]
-
-let pp_error ppf : error -> _ =
-  let open Stdlib.Format in
-  function
-  | `Division_by_zero -> fprintf ppf "Division by zero"
-  | `Unbound_variable id -> fprintf ppf "Unbound variable '%s'" id
-  | `Wrong_type -> fprintf ppf "Incorrect type of expression"
-  | `Pattern_mathing_failed -> fprintf ppf "Pattern-matching failed"
-  | `Not_implemented -> fprintf ppf "Not implemented"
-;;
-
-module type MONAD_FAIL = sig
-  include Monad.S2
-
-  val fail : error -> ('a, error) t
-  val ( let* ) : ('a, 'e) t -> ('a -> ('b, 'e) t) -> ('b, 'e) t
-end
-
 type value =
   | VInt of int
   | VBool of bool
@@ -62,6 +37,31 @@ let rec pp_value ppf =
       vl
   | VFun _ -> fprintf ppf "<fun>"
 ;;
+
+type error =
+  [ `Division_by_zero
+  | `Unbound_variable of id
+  | `Wrong_type of value
+  | `Pattern_mathing_failed
+  | `Not_implemented (** for polyvariants or let-patterns, caught in infer *)
+  ]
+
+let pp_error ppf : error -> _ =
+  let open Stdlib.Format in
+  function
+  | `Division_by_zero -> fprintf ppf "Division by zero"
+  | `Unbound_variable id -> fprintf ppf "Unbound variable '%s'" id
+  | `Wrong_type v -> fprintf ppf "Incorrect type of expression: %a" pp_value v
+  | `Pattern_mathing_failed -> fprintf ppf "Pattern-matching failed"
+  | `Not_implemented -> fprintf ppf "Not implemented"
+;;
+
+module type MONAD_FAIL = sig
+  include Monad.S2
+
+  val fail : error -> ('a, error) t
+  val ( let* ) : ('a, 'e) t -> ('a -> ('b, 'e) t) -> ('b, 'e) t
+end
 
 let vint x = VInt x
 let vbool b = VBool b
@@ -120,7 +120,8 @@ end = struct
     | _ -> None
   ;;
 
-  let eval_binop = function
+  let eval_binop (bop, v1, v2) =
+    match bop, v1, v2 with
     | Mul, VInt x, VInt y -> return (vint (x * y))
     | Div, VInt _, VInt y when y = 0 -> fail `Division_by_zero
     | Div, VInt x, VInt y -> return (vint (x / y))
@@ -134,7 +135,7 @@ end = struct
     | Gte, VInt x, VInt y -> return (vbool (x >= y))
     | And, VBool x, VBool y -> return (vbool (x && y))
     | Or, VBool x, VBool y -> return (vbool (x || y))
-    | _ -> fail `Wrong_type
+    | _ -> fail (`Wrong_type v1)
   ;;
 
   let eval_expr =
@@ -163,7 +164,7 @@ end = struct
         (match cv with
          | VBool true -> helper env t
          | VBool false -> helper env f
-         | _ -> fail `Wrong_type)
+         | _ -> fail (`Wrong_type cv))
       | EMatch (e, cl) ->
         let* v = helper env e in
         let rec match_helper env v = function
@@ -206,7 +207,7 @@ end = struct
         let* tlv = helper env tl in
         (match tlv with
          | VList vl -> return (vlist (hv :: vl))
-         | _ -> fail `Wrong_type)
+         | _ -> fail (`Wrong_type tlv))
       | EApply (e1, e2) ->
         let* v1 = helper env e1 in
         let* v2 = helper env e2 in
@@ -218,7 +219,7 @@ end = struct
              | None -> fail `Pattern_mathing_failed
            in
            helper env' e
-         | _ -> fail `Wrong_type)
+         | _ -> fail (`Wrong_type v1))
       | _ -> fail `Not_implemented
     in
     helper
