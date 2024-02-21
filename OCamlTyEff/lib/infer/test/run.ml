@@ -27,9 +27,7 @@ let run_env ppf init_env code =
       init_env
 
 let std_env =
-  let prelude =
-    {| exception Exc1;; exception Exc2;; |} ^ Builtin.Prelude.prelude
-  in
+  let prelude = {| exception Exc1;; exception Exc2;; |} ^ Builtin.prelude in
   run_env Format.str_formatter Builtin.ty_env prelude
 
 let run code = run_env Format.std_formatter std_env code |> ignore

@@ -19,9 +19,9 @@ let set_types_arity env types_arity = {env with types_arity}
 let get_weak_counter env = env.weak_counter
 let set_weak_counter env weak_counter = {env with weak_counter}
 
-let of_alist_exn list =
+let empty =
   { weak_counter= 1
-  ; map= Map.of_alist_exn (module Ident) list
+  ; map= Map.empty (module Ident)
   ; types_arity= Map.empty (module Ident) }
 
 let set env ~key ~data = {env with map= Map.set env.map ~key ~data}

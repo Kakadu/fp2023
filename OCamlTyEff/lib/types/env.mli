@@ -18,7 +18,7 @@ val set_types_arity : t -> types_arity -> t
 val get_weak_counter : t -> int
 val set_weak_counter : t -> int -> t
 
-val of_alist_exn : (Ident.t * Scheme.t) list -> t
+val empty : t
 
 val set : t -> key:Ident.t -> data:Scheme.t -> t
 val map : t -> f:(Scheme.t -> Scheme.t) -> t

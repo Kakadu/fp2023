@@ -3,8 +3,11 @@
 (** SPDX-License-Identifier: MIT *)
 
 open! Base
-open Types
 
-module Prelude : module type of Prelude
+val ty_env : Types.Env.t
+(** Type environment containing bindings for built-ins *)
 
-val ty_env : Env.t
+val eval_env : Eval.Env.t
+(** Eval environment containing bindings for built-ins *)
+
+val prelude : string
