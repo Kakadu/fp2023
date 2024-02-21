@@ -5,14 +5,10 @@
 (** https://jeremymikkola.com/posts/2018_03_25_understanding_algorithm_w.html *)
 (* https://gitlab.com/Kakadu/fp2020course-materials/-/blob/master/code/miniml/inferencer.ml?ref_type=heads *)
 
-(** 
+(**
     TODO:
-    - write full miniML task
-          - tuples
-          - list
-          - cons
-    - Rec & NonRec let 
-    - !! refactor
+    - rename variables
+    - infer_expr refactor
 *)
 
 open Typing
@@ -21,7 +17,6 @@ module R : sig
   type 'a t
 
   val return : 'a -> 'a t
-  val bind : 'a t -> f:('a -> 'b t) -> 'b t
   val fail : error -> 'a t
 
   include Base.Monad.Infix with type 'a t := 'a t
@@ -50,11 +45,12 @@ end = struct
   (** stops the computation at the first error *)
   let ( >>= ) : 'a 'b. 'a t -> ('a -> 'b t) -> 'b t =
     fun monad f state ->
-    let last, result = monad state in
+    let final_state, result = monad state in
     match result with
-    | Error err -> last, Error err
-    | Ok v -> f v last
+    | Error err -> final_state, Error err
+    | Ok v -> f v final_state
   ;;
+
 
   (** ignores errors and continues with the computation *)
   let ( >>| ) : 'a 'b. 'a t -> ('a -> 'b) -> 'b t =
@@ -74,9 +70,10 @@ end = struct
     let ( let* ) v f = bind v ~f
   end
 
+  open Syntax
+
   module RMap = struct
     let fold_left map ~init ~f =
-      let open Syntax in
       Base.Map.fold map ~init ~f:(fun ~key ~data acc ->
         let* acc = acc in
         f key data acc)
@@ -85,7 +82,6 @@ end = struct
 
   module RList = struct
     let fold_left lt ~init ~f =
-      let open Syntax in
       Base.List.fold_left lt ~init ~f:(fun acc item ->
         let* acc = acc in
         f acc item)
@@ -110,7 +106,7 @@ module Type = struct
     | TPrim _ -> false
   ;;
 
-  let type_vars =
+  let type_vars_acc =
     let rec helper acc = function
       | TVar b -> VarSet.add b acc
       | TArr (l, r) -> helper (helper acc l) r
@@ -127,7 +123,6 @@ module Subst : sig
 
   val empty : t
   val singleton : int -> typ -> t R.t
-  val find : t -> int -> typ option
   val remove : t -> int -> t
   val apply : t -> typ -> typ
   val unify : typ -> typ -> t R.t
@@ -169,20 +164,10 @@ end = struct
     | TPrim l, TPrim r when l = r -> return empty
     | TVar a, TVar b when a = b -> return empty
     | TVar a, t | t, TVar a -> singleton a t
-    | TList typ1, TList typ2 -> unify typ1 typ2
     | TArr (l1, r1), TArr (l2, r2) ->
       let* sub1 = unify l1 l2 in
       let* sub2 = unify (apply sub1 r1) (apply sub1 r2) in
       compose sub1 sub2
-    | TTuple t_list1, TTuple t_list2 ->
-      (match
-         Base.List.fold2 t_list1 t_list2 ~init:(return empty) ~f:(fun acc it1 it2 ->
-           let* sub1 = acc in
-           let* sub2 = unify (apply sub1 it1) (apply sub1 it2) in
-           compose sub1 sub2)
-       with
-       | Ok r -> r
-       | _ -> fail (`UnificationFailed (l, r)))
     | _ -> fail (`UnificationFailed (l, r))
 
   and extend k v sub =
@@ -207,7 +192,7 @@ end
 
 module Scheme = struct
   let free_vars = function
-    | Scheme (bind_vars, ty) -> VarSet.diff (Type.type_vars ty) bind_vars
+    | Scheme (bind_vars, ty) -> VarSet.diff (Type.type_vars_acc ty) bind_vars
   ;;
 
   (** check whether a type variable occurs in a type scheme *)
@@ -268,7 +253,7 @@ let instantiate : scheme -> typ R.t =
 
 (* creating a scheme out of a type *)
 let generalize env ty =
-  let free = VarSet.diff (Type.type_vars ty) (TypeEnv.free_vars env) in
+  let free = VarSet.diff (Type.type_vars_acc ty) (TypeEnv.free_vars env) in
   Scheme (free, ty)
 ;;
 
@@ -296,7 +281,7 @@ let infer_pattern env = function
     let* fresh = fresh_var in
     let env' = TypeEnv.extend env x (Scheme (VarSet.empty, fresh)) in
     return (Subst.empty, fresh, env')
-  | _ -> fail `AddLater
+  | _ -> fail `NotImplemented
 ;;
 
 let binop_type operator =
@@ -363,6 +348,7 @@ let infer_expr =
 
 let run_inference expr = Result.map snd (run (infer_expr TypeEnv.empty expr))
 
+(** module for test typing *)
 module PP = struct 
 let rec pp_type ppf (typ : typ) =
   match typ with
@@ -378,28 +364,16 @@ let rec pp_type ppf (typ : typ) =
     (match l, r with
      | TArr _, _ -> Format.fprintf ppf "(%a) -> %a" pp_type l pp_type r
      | _, _ -> Format.fprintf ppf "%a -> %a" pp_type l pp_type r)
-  | TList x ->
-    (match x with
-     | TArr _ -> Format.fprintf ppf "(%a) list" pp_type x
-     | _ -> Format.fprintf ppf "%a list" pp_type x)
-  | TTuple tup_list ->
-    Format.fprintf
-      ppf
-      "%a"
-      (Format.pp_print_list
-         ~pp_sep:(fun _ _ -> Format.fprintf ppf " * ")
-         (fun ppf typ -> pp_type ppf typ))
-      tup_list
+  | _ -> Format.fprintf ppf "not implemented"
 ;;
 
 let pp_error ppf (err : error) =
   match err with
   | `OccursCheck -> Format.fprintf ppf "Occurs check failed"
   | `UndeclaredVariable s -> Format.fprintf ppf "Undefined variable: %s" s
-  | `NoConstructor s -> Format.fprintf ppf "Undefined constructor: %s" s
   | `UnificationFailed (l, r) ->
     Format.fprintf ppf "Unification failed on %a and %a" pp_type l pp_type r
-  | `AddLater -> Format.fprintf ppf "Add later"
+  | `NotImplemented -> Format.fprintf ppf "NotImplemented"
 ;;
 
 let print_typ typ =

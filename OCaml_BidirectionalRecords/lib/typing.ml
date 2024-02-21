@@ -26,9 +26,8 @@ type scheme = Scheme of VarSet.t * typ
 type error =
   [ `OccursCheck
   | `UndeclaredVariable of string
-  | `NoConstructor of string
   | `UnificationFailed of typ * typ
-  | `AddLater
+  | `NotImplemented
   ]
 
 let tvar x = TVar x
