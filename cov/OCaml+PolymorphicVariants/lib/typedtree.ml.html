@@ -35,44 +35,36 @@
 <a id="L11"></a><span > </span>
 <a id="L12"></a><span > </span>
 <a id="L13"></a><span > </span>
-<a id="L14"></a><span > </span>
+<a id="L14"></a><span class="visited"> </span>
 <a id="L15"></a><span > </span>
 <a id="L16"></a><span > </span>
 <a id="L17"></a><span > </span>
 <a id="L18"></a><span > </span>
-<a id="L19"></a><span > </span>
-<a id="L20"></a><span > </span>
+<a id="L19"></a><span class="visited"> </span>
+<a id="L20"></a><span class="visited"> </span>
 <a id="L21"></a><span > </span>
-<a id="L22"></a><span class="visited"> </span>
-<a id="L23"></a><span > </span>
+<a id="L22"></a><span > </span>
+<a id="L23"></a><span class="visited"> </span>
 <a id="L24"></a><span > </span>
-<a id="L25"></a><span > </span>
-<a id="L26"></a><span > </span>
+<a id="L25"></a><span class="visited"> </span>
+<a id="L26"></a><span class="visited"> </span>
 <a id="L27"></a><span class="visited"> </span>
-<a id="L28"></a><span class="visited"> </span>
-<a id="L29"></a><span > </span>
-<a id="L30"></a><span > </span>
+<a id="L28"></a><span > </span>
+<a id="L29"></a><span class="visited"> </span>
+<a id="L30"></a><span class="visited"> </span>
 <a id="L31"></a><span class="visited"> </span>
 <a id="L32"></a><span > </span>
-<a id="L33"></a><span class="visited"> </span>
-<a id="L34"></a><span class="visited"> </span>
+<a id="L33"></a><span > </span>
+<a id="L34"></a><span > </span>
 <a id="L35"></a><span class="visited"> </span>
-<a id="L36"></a><span > </span>
-<a id="L37"></a><span class="visited"> </span>
+<a id="L36"></a><span class="visited"> </span>
+<a id="L37"></a><span > </span>
 <a id="L38"></a><span class="visited"> </span>
 <a id="L39"></a><span class="visited"> </span>
-<a id="L40"></a><span > </span>
+<a id="L40"></a><span class="visited"> </span>
 <a id="L41"></a><span > </span>
-<a id="L42"></a><span > </span>
-<a id="L43"></a><span class="visited"> </span>
-<a id="L44"></a><span class="visited"> </span>
-<a id="L45"></a><span > </span>
-<a id="L46"></a><span class="visited"> </span>
-<a id="L47"></a><span class="visited"> </span>
-<a id="L48"></a><span class="visited"> </span>
-<a id="L49"></a><span > </span>
-<a id="L50"></a><span class="visited"> </span>
-<a id="L51"></a><span > </span>
+<a id="L42"></a><span class="visited"> </span>
+<a id="L43"></a><span > </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -120,26 +112,12 @@
 <a href="#L41">41</a>
 <a href="#L42">42</a>
 <a href="#L43">43</a>
-<a href="#L44">44</a>
-<a href="#L45">45</a>
-<a href="#L46">46</a>
-<a href="#L47">47</a>
-<a href="#L48">48</a>
-<a href="#L49">49</a>
-<a href="#L50">50</a>
-<a href="#L51">51</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2023-2024, Nikita Nemakin *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
 type binder = int
-
-module VarSet = struct
-  include Set.Make (Int)
-end
-
-type binder_set = VarSet.t
 
 type ty =
   | TPrim of string (** int, string *)
@@ -148,20 +126,18 @@ type ty =
   | TTuple of ty list (** Tuple type *)
   | TList of ty (** List type *)
 
-type scheme = S of VarSet.t * ty (** \forall a1 a2 ... an . ty *)
-
-let arrow l r = <span data-count="4104">T</span>Arrow (l, r)
+let arrow l r = <span data-count="4110">T</span>Arrow (l, r)
 let int_typ = TPrim "int"
 let bool_typ = TPrim "bool"
 let string_typ = TPrim "string"
 let unit_typ = TPrim "unit"
 let tuple_typ t = <span data-count="80">T</span>Tuple t
-let list_typ t = <span data-count="1301">T</span>List t
+let list_typ t = <span data-count="1333">T</span>List t
 
 let rec pp_typ ppf =
   <span data-count="289">l</span>et open Format in
   function
-  | <span data-count="105">T</span>Var n -&gt; fprintf ppf "'_%d" n
+  | <span data-count="105">T</span>Var n -&gt; fprintf ppf "'%d" n
   | <span data-count="56">T</span>Prim s -&gt; fprintf ppf "%s" s
   | <span data-count="101">T</span>Arrow (l, r) -&gt;
     (match l with

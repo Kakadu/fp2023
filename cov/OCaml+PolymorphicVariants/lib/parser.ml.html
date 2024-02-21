@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8"/>
     <title>parser.ml &mdash; Coverage report</title>
-    <meta name="description" content="94.16% coverage in lib/parser.ml">
+    <meta name="description" content="97.40% coverage in lib/parser.ml">
     <link rel="stylesheet" href="../coverage.css"/>
     <script src="../highlight.pack.js"></script>
     <script>hljs.initHighlightingOnLoad();</script>
@@ -15,7 +15,7 @@
           <span class="dirname">lib/</span>parser.ml
         </a>
       </h1>
-      <h2>94.16%</h2>
+      <h2>97.40%</h2>
     </div>
     <div id="navbar">
       <span class="unvisited" style="top:5.63%"></span>
@@ -24,15 +24,7 @@
       <span class="unvisited" style="top:7.79%"></span>
       <span class="unvisited" style="top:32.90%"></span>
       <span class="unvisited" style="top:34.20%"></span>
-      <span class="unvisited" style="top:42.86%"></span>
-      <span class="unvisited" style="top:43.29%"></span>
-      <span class="some-visited" style="bottom:48.92%"></span>
-      <span class="unvisited" style="bottom:48.05%"></span>
-      <span class="unvisited" style="bottom:47.62%"></span>
       <span class="unvisited" style="bottom:47.19%"></span>
-      <span class="unvisited" style="bottom:46.75%"></span>
-      <span class="unvisited" style="bottom:36.80%"></span>
-      <span class="some-visited" style="bottom:28.57%"></span>
       <span class="unvisited" style="bottom:0.43%"></span>
     </div>
     <div id="report">
@@ -136,8 +128,8 @@
 <a id="L96"></a><span > </span>
 <a id="L97"></a><span > </span>
 <a id="L98"></a><span class="visited"> </span>
-<a id="L99"></a><span class="unvisited"> </span>
-<a id="L100"></a><span class="unvisited"> </span>
+<a id="L99"></a><span class="visited"> </span>
+<a id="L100"></a><span class="visited"> </span>
 <a id="L101"></a><span > </span>
 <a id="L102"></a><span > </span>
 <a id="L103"></a><span class="visited"> </span>
@@ -155,12 +147,12 @@
 <a id="L115"></a><span > </span>
 <a id="L116"></a><span > </span>
 <a id="L117"></a><span > </span>
-<a id="L118"></a><span class="some-visited"> </span>
+<a id="L118"></a><span class="visited"> </span>
 <a id="L119"></a><span > </span>
-<a id="L120"></a><span class="unvisited"> </span>
-<a id="L121"></a><span class="unvisited"> </span>
+<a id="L120"></a><span class="visited"> </span>
+<a id="L121"></a><span class="visited"> </span>
 <a id="L122"></a><span class="unvisited"> </span>
-<a id="L123"></a><span class="unvisited"> </span>
+<a id="L123"></a><span class="visited"> </span>
 <a id="L124"></a><span > </span>
 <a id="L125"></a><span > </span>
 <a id="L126"></a><span > </span>
@@ -183,7 +175,7 @@
 <a id="L143"></a><span class="visited"> </span>
 <a id="L144"></a><span class="visited"> </span>
 <a id="L145"></a><span class="visited"> </span>
-<a id="L146"></a><span class="unvisited"> </span>
+<a id="L146"></a><span class="visited"> </span>
 <a id="L147"></a><span class="visited"> </span>
 <a id="L148"></a><span class="visited"> </span>
 <a id="L149"></a><span > </span>
@@ -202,7 +194,7 @@
 <a id="L162"></a><span class="visited"> </span>
 <a id="L163"></a><span > </span>
 <a id="L164"></a><span > </span>
-<a id="L165"></a><span class="some-visited"> </span>
+<a id="L165"></a><span class="visited"> </span>
 <a id="L166"></a><span class="visited"> </span>
 <a id="L167"></a><span class="visited"> </span>
 <a id="L168"></a><span class="visited"> </span>
@@ -513,21 +505,21 @@ open Ast
 open Base
 open Angstrom
 
-let is_idc c = <span data-count="5406">C</span>har.is_alphanu<span data-count="5406">m</span> <span data-count="2622">c</span> || Char.equal c '_'
+let is_idc c = <span data-count="5714">C</span>har.is_alphanu<span data-count="5714">m</span> <span data-count="2698">c</span> || Char.equal c '_'
 
 let is_keyword = function
-  | <span data-count="120">"</span>let"
+  | <span data-count="136">"</span>let"
   | <span data-count="0">"</span>rec"
   | <span data-count="62">"</span>in"
   | <span data-count="0">"</span>fun"
   | <span data-count="0">"</span>match"
-  | <span data-count="24">"</span>with"
+  | <span data-count="36">"</span>with"
   | <span data-count="0">"</span>if"
   | <span data-count="60">"</span>then"
   | <span data-count="60">"</span>else"
   | <span data-count="8">"</span>true"
   | <span data-count="4">"</span>false" -&gt; true
-  | <span data-count="2298">_</span> -&gt; false
+  | <span data-count="2422">_</span> -&gt; false
 ;;
 
 let ws = take_whil<span data-count="15">e</span> Char.is_whitespace
@@ -547,14 +539,14 @@ let brackets p = <span data-count="26">l</span>sb *<span data-count="26">&gt;</s
 
 (*--------------------------------- Constants --------------------------------*)
 
-let cint i = <span data-count="554">C</span>Int i
+let cint i = <span data-count="626">C</span>Int i
 let cbool b = <span data-count="30">C</span>Bool b
 let cstring s = <span data-count="4">C</span>String s
 
 let pcint =
   let* sign = choic<span data-count="15">e</span> [ toke<span data-count="15">n</span> "-"; toke<span data-count="15">n</span> "+"; toke<span data-count="15">n</span> "" ] in
-  <span data-count="4120">l</span>et* num = take_while<span data-count="4120">1</span> Char.is_digit in
-  <span data-count="554">r</span>etur<span data-count="554">n</span> @@ Int.of_strin<span data-count="554">g</span> (sign ^ num) &gt;&gt;| cint
+  <span data-count="4510">l</span>et* num = take_while<span data-count="4510">1</span> Char.is_digit in
+  <span data-count="626">r</span>etur<span data-count="626">n</span> @@ Int.of_strin<span data-count="626">g</span> (sign ^ num) &gt;&gt;| cint
 ;;
 
 let pcbool =
@@ -578,11 +570,11 @@ let const = choic<span data-count="15">e</span> [ pcint; pcbool; pcstring; pcuni
 
 (*------------------------------ Patterns ------------------------------------*)
 
-let pconst c = <span data-count="45">P</span>Const c
-let pvar x = <span data-count="836">P</span>Var x
+let pconst c = <span data-count="49">P</span>Const c
+let pvar x = <span data-count="920">P</span>Var x
 let ppoly t p = <span data-count="0">P</span>Poly (t, p)
-let pcons p1 p2 = <span data-count="28">P</span>Cons (p1, p2)
-let ptuple ps = <span data-count="20">P</span>Tuple ps
+let pcons p1 p2 = <span data-count="48">P</span>Cons (p1, p2)
+let ptuple ps = <span data-count="24">P</span>Tuple ps
 let ppoly t p = <span data-count="0">P</span>Poly (t, p)
 let ppconst = const &gt;&gt;<span data-count="15">|</span> pconst
 let ppany = toke<span data-count="15">n</span> "_" *<span data-count="15">&gt;</span> retur<span data-count="15">n</span> PAny
@@ -591,20 +583,20 @@ let varname =
   let* fst =
     ws
     *<span data-count="15">&gt;</span> satisf<span data-count="15">y</span> (function
-      | <span data-count="2636">'</span>a' .. 'z' | <span data-count="24">'</span>_' -&gt; true
-      | <span data-count="2820">_</span> -&gt; false)
+      | <span data-count="2788">'</span>a' .. 'z' | <span data-count="32">'</span>_' -&gt; true
+      | <span data-count="3074">_</span> -&gt; false)
   in
-  <span data-count="2660">l</span>et* rest = take_whil<span data-count="2660">e</span> is_idc in
-  <span data-count="2660">m</span>atch String.of_cha<span data-count="2660">r</span> fst ^ rest with
-  | <span data-count="24">"</span>_" -&gt; fail "Wildcard can't be used as indetifier"
-  | <span data-count="2636">s</span> when is_keywor<span data-count="2636">d</span> s -&gt; <span data-count="338">f</span>ail "Keyword can't be used as identifier"
-  | <span data-count="2298">_</span> as name -&gt; return name
+  <span data-count="2820">l</span>et* rest = take_whil<span data-count="2820">e</span> is_idc in
+  <span data-count="2820">m</span>atch String.of_cha<span data-count="2820">r</span> fst ^ rest with
+  | <span data-count="32">"</span>_" -&gt; fail "Wildcard can't be used as indetifier"
+  | <span data-count="2788">s</span> when is_keywor<span data-count="2788">d</span> s -&gt; <span data-count="366">f</span>ail "Keyword can't be used as identifier"
+  | <span data-count="2422">_</span> as name -&gt; return name
 ;;
 
 let tagname =
   let* fst = toke<span data-count="15">n</span> "`" *<span data-count="15">&gt;</span> satisf<span data-count="15">y</span> Char.is_uppercase in
-  <span data-count="0">l</span>et* rest = take_whil<span data-count="0">e</span> is_idc in
-  <span data-count="0">r</span>eturn @@ String.of_cha<span data-count="0">r</span> fst ^ rest
+  <span data-count="72">l</span>et* rest = take_whil<span data-count="72">e</span> is_idc in
+  <span data-count="72">r</span>eturn @@ String.of_cha<span data-count="72">r</span> fst ^ rest
 ;;
 
 let ppvar = varname &gt;&gt;<span data-count="15">|</span> pvar
@@ -612,22 +604,22 @@ let pptuple p = <span data-count="13">l</span>ift<span data-count="13">2</span> 
 let pplist p = <span data-count="13">b</span>racket<span data-count="13">s</span> @@ sep_by<span data-count="13">1</span> semi p &gt;&gt;| List.fold_right ~f:pcons ~init:(pcons<span data-count="13">t</span> CNil)
 
 let chainl1 e op =
-  <span data-count="65">l</span>et rec go acc = <span data-count="8350">l</span>ift<span data-count="8350">2</span> (fun f x -&gt; <span data-count="1006">f</span> acc x) op e &gt;&gt;<span data-count="8350">=</span> go &lt;|&gt; retur<span data-count="8350">n</span> acc in
+  <span data-count="65">l</span>et rec go acc = <span data-count="9018">l</span>ift<span data-count="9018">2</span> (fun f x -&gt; <span data-count="1026">f</span> acc x) op e &gt;&gt;<span data-count="9018">=</span> go &lt;|&gt; retur<span data-count="9018">n</span> acc in
   e &gt;&gt;= go
 ;;
 
 let chainr1 e op =
-  <span data-count="52">l</span>et rec go acc = <span data-count="4888">l</span>ift<span data-count="4888">2</span> (fun f x -&gt; <span data-count="100">f</span> acc x) op (e &gt;&gt;<span data-count="4888">=</span> go) &lt;|&gt; retur<span data-count="4888">n</span> acc in
+  <span data-count="52">l</span>et rec go acc = <span data-count="5372">l</span>ift<span data-count="5372">2</span> (fun f x -&gt; <span data-count="120">f</span> acc x) op (e &gt;&gt;<span data-count="5372">=</span> go) &lt;|&gt; retur<span data-count="5372">n</span> acc in
   e &gt;&gt;= go
 ;;
 
 let pppoly (p : pattern t) =
-  <span data-count="13">b</span>ot<span data-count="13">h</span> (many<span data-count="13">1</span> tagname) (optio<span data-count="13">n</span> None (p &gt;&gt;<span data-count="13">|</span> fun p -&gt; <span data-count="0">S</span>ome p))
+  <span data-count="13">b</span>ot<span data-count="13">h</span> (many<span data-count="13">1</span> tagname) (optio<span data-count="13">n</span> None (p &gt;&gt;<span data-count="13">|</span> fun p -&gt; <span data-count="20">S</span>ome p))
   &gt;&gt;| fun (tags, pat) -&gt;
-  <span data-count="0">L</span>ist.fold_right
-    (List.drop_last_ex<span data-count="0">n</span> tags)
+  <span data-count="20">L</span>ist.fold_right
+    (List.drop_last_ex<span data-count="20">n</span> tags)
     ~f:(fun tag pat -&gt; <span data-count="0">p</span>poly tag (Some pat))
-    ~init:(PPoly (List.last_ex<span data-count="0">n</span> tags, pat))
+    ~init:(PPoly (List.last_ex<span data-count="20">n</span> tags, pat))
 ;;
 
 let pattern =
@@ -640,17 +632,17 @@ let pattern =
 ;;
 
 (*----------------------------- Expressions ----------------------------------*)
-let econst c = <span data-count="603">E</span>Const c
-let evar x = <span data-count="1462">E</span>Var x
-let ebinop op e1 e2 = <span data-count="352">E</span>Bin_op (op, e1, e2)
+let econst c = <span data-count="671">E</span>Const c
+let evar x = <span data-count="1502">E</span>Var x
+let ebinop op e1 e2 = <span data-count="368">E</span>Bin_op (op, e1, e2)
 let eif e1 e2 e3 = <span data-count="30">E</span>If (e1, e2, e3)
-let ematch e cl = <span data-count="14">E</span>Match (e, cl)
+let ematch e cl = <span data-count="20">E</span>Match (e, cl)
 let elet f b e = <span data-count="31">E</span>Let (f, b, e)
-let efun p e = <span data-count="240">E</span>Fun (p, e)
-let etuple el = <span data-count="32">E</span>Tuple el
-let econs e1 e2 = <span data-count="168">E</span>Cons (e1, e2)
-let eapply e1 e2 = <span data-count="662">E</span>Apply (e1, e2)
-let epoly t e = <span data-count="0">E</span>Poly (t, e)
+let efun p e = <span data-count="246">E</span>Fun (p, e)
+let etuple el = <span data-count="36">E</span>Tuple el
+let econs e1 e2 = <span data-count="196">E</span>Cons (e1, e2)
+let eapply e1 e2 = <span data-count="666">E</span>Apply (e1, e2)
+let epoly t e = <span data-count="52">E</span>Poly (t, e)
 let peconst = const &gt;&gt;<span data-count="15">|</span> econst
 let pevar = varname &gt;&gt;<span data-count="15">|</span> evar
 
@@ -665,14 +657,14 @@ let peif pe =
 
 let pematch pe =
   <span data-count="13">l</span>et pexpr = toke<span data-count="13">n</span> "match" *<span data-count="13">&gt;</span> pe &lt;<span data-count="13">*</span> toke<span data-count="13">n</span> "with" &lt;* optio<span data-count="13">n</span> "" grd in
-  <span data-count="13">l</span>et pcase = lift2 (fun p e -&gt; <span data-count="34">p</span>, e) (pattern &lt;<span data-count="13">*</span> arr) pe in
+  <span data-count="13">l</span>et pcase = lift2 (fun p e -&gt; <span data-count="46">p</span>, e) (pattern &lt;<span data-count="13">*</span> arr) pe in
   <span data-count="13">l</span>ift2 ematch pexpr (sep_by<span data-count="13">1</span> grd pcase)
 ;;
 
-let pepoly p = <span data-count="13">l</span>ift2 epoly tagname (optio<span data-count="13">n</span> None (p &gt;&gt;<span data-count="13">|</span> fun e -&gt; <span data-count="0">S</span>ome e))
+let pepoly p = <span data-count="13">l</span>ift2 epoly tagname (optio<span data-count="13">n</span> None (p &gt;&gt;<span data-count="13">|</span> fun e -&gt; <span data-count="28">S</span>ome e))
 let petuple p = <span data-count="13">l</span>ift<span data-count="13">2</span> List.cons p (many<span data-count="13">1</span> (comma *<span data-count="13">&gt;</span> p)) &gt;&gt;| etuple
 let pelist p = <span data-count="13">b</span>racket<span data-count="13">s</span> @@ sep_by<span data-count="13">1</span> semi p &gt;&gt;| List.fold_right ~f:econs ~init:(econs<span data-count="13">t</span> CNil)
-let efunf ps e = <span data-count="223">L</span>ist.fold_right ps ~f:efun ~init:e
+let efunf ps e = <span data-count="239">L</span>ist.fold_right ps ~f:efun ~init:e
 let pefun pe = <span data-count="13">l</span>ift2 efun (toke<span data-count="13">n</span> "fun" *<span data-count="13">&gt;</span> pattern) (lift<span data-count="13">2</span> efunf (man<span data-count="13">y</span> pattern &lt;<span data-count="13">*</span> arr) pe)
 
 let pelet pe =
@@ -717,7 +709,7 @@ let expr =
 
 let str_item =
   let pseval = expr &gt;&gt;| fun e -&gt; <span data-count="1">S</span>Eval e in
-  <span data-count="15">l</span>et svalue f b = <span data-count="60">S</span>Value (f, b) in
+  <span data-count="15">l</span>et svalue f b = <span data-count="68">S</span>Value (f, b) in
   let psvalue =
     lift2
       svalue
@@ -728,7 +720,7 @@ let str_item =
 ;;
 
 let structure : structure t = sep_b<span data-count="15">y</span> dsemi str_item
-let parse s = <span data-count="33">p</span>arse_string ~consume:Prefix structure s
+let parse s = <span data-count="40">p</span>arse_string ~consume:Prefix structure s
 
 let test_parse input =
   <span data-count="6">l</span>et open Stdlib.Format in
