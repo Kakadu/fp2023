@@ -10,7 +10,7 @@ type constant =
   | Const_char of char  (** Character such as ['c'] *)
   | Const_string of string
       (** Constant string such as ["constant"] or [{|other constant|}] *)
-[@@deriving show {with_path= false}]
+[@@deriving eq, show {with_path= false}]
 
 (* ======= Patterns ======= *)
 and pattern =
