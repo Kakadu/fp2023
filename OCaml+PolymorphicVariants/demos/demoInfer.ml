@@ -1,6 +1,6 @@
-(** Coptyright 2021-2022, Nikita Nemakin *)
+(** Copyright 2023-2024, Nikita Nemakin *)
 
-(** SPDX-License-Identifier: CC0-1.0 *)
+(** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
 open Ocaml_pv.Infer
 

@@ -1,6 +1,6 @@
 (** Copyright 2021-2022, Nikita Nemakin *)
 
-(** SPDX-License-Identifier: CC0-1.0 *)
+(** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
 open Ocaml_pv.Parser
 
