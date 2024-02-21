@@ -22,7 +22,7 @@ module SolveMonad : sig
     val fail : TyError.t -> 'a t
   end
 end = struct
-  include MakeSEMonad (Int) (TyError)
+  include MakeESMonad (TyError) (Int)
 
   let run m = run m 0 |> Result.map ~f:fst
 
@@ -81,7 +81,7 @@ module Unify = struct
 
         match eff_tail eff1_rest with
         | Some tail when Sub.mem sub1 tail ->
-            fail @@ RecursiveEffRows
+            fail RecursiveEffRows
         | None | Some _ ->
             let* sub2 =
               unify_eff

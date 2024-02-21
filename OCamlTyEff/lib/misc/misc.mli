@@ -43,18 +43,19 @@ module MakeRWSEMonad : functor
   end
 end
 
-(** Makes State-Error monad *)
-module MakeSEMonad : functor (StateT : T) (ErrorT : T) -> sig
+(** Makes Error-State monad *)
+module MakeESMonad : functor (ErrorT : T) (StateT : T) -> sig
   include Monad.S
 
   val run : 'a t -> StateT.t -> ('a * StateT.t, ErrorT.t) result
 
+  module Error : sig
+    val fail : ErrorT.t -> 'a t
+    val catch : 'a t -> (ErrorT.t -> 'a t) -> 'a t
+  end
+
   module State : sig
     val get : StateT.t t
     val put : StateT.t -> unit t
-  end
-
-  module Error : sig
-    val fail : ErrorT.t -> 'a t
   end
 end

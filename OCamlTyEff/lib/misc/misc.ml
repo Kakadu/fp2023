@@ -61,25 +61,27 @@ struct
            (ret, writer_state, state) )
 end
 
-module MakeSEMonad (StateT : T) (ErrorT : T) = struct
-  module ErrorM = struct
-    include Monad.Result.T1 (ErrorT) (Monad.Ident)
-    include Monad.Result.Make (ErrorT) (Monad.Ident)
+module MakeESMonad (ErrorT : T) (StateT : T) = struct
+  module StateM = struct
+    include Monad.State.T1 (StateT) (Monad.Ident)
+    include Monad.State.Make (StateT) (Monad.Ident)
   end
 
-  include Monad.State.T1 (StateT) (ErrorM)
-  include Monad.State.Make (StateT) (ErrorM)
-
-  module State = struct
-    let get = get ()
-    let put = put
-  end
+  include Monad.Result.T1 (ErrorT) (StateM)
+  include Monad.Result.Make (ErrorT) (StateM)
 
   module Error = struct
-    let fail err = lift @@ ErrorM.fail err
+    let fail = fail
+    let catch = catch
+  end
+
+  module State = struct
+    let get = lift @@ StateM.get ()
+    let put x = lift @@ StateM.put x
   end
 
   let run m init_state =
-    let r = run m init_state in
-    ErrorM.run r
+    let r = run m in
+    let r, st = StateM.run r init_state in
+    Result.map r ~f:(fun ret -> (ret, st))
 end
