@@ -234,3 +234,39 @@ let%expect_test _ =
 let%expect_test _ =
   run {| let rec y = 1 in let rec x = y in x |} ;
   [%expect {| int |}]
+
+let%expect_test _ =
+  run
+    {|
+      type 'a list = Nil | Cons of 'a * 'a list
+      type unit = ()
+      type foo = Foo
+
+      exception My_exc of string
+    |} ;
+  [%expect
+    {|
+    Cons: 'a. ('a * 'a list) -> 'a list
+    Nil: 'a. 'a list
+    (): unit
+    Foo: foo
+    My_exc: string -> _My_exc exception |}]
+
+let%expect_test _ =
+  run {| type foo = Foo of 'a list |} ;
+  [%expect {| (UnboundTypeVariable "a") |}]
+
+let%expect_test _ =
+  run {| type foo = Foo of list |} ;
+  [%expect {| (TypeArityMismatch (Ident "list")) |}]
+
+let%expect_test _ =
+  run {| type foo = Foo of bar |} ;
+  [%expect {| (UnboundType (Ident "bar")) |}]
+
+let%expect_test _ =
+  run {| type foo = Foo
+         type 'a foo = Foo of foo |} ;
+  [%expect {|
+    Foo: foo
+    (TypeArityMismatch (Ident "foo")) |}]
