@@ -1,8 +1,8 @@
 type error =
   [ `No_variable of string
   | `Occurs_check
-  | `Unexpected_expression
-  | `Unexpected_pattern
+  | `Pattern_matching_error
+  | `Not_implemented
   | `Unification_failed of Typedtree.ty * Typedtree.ty
   ]
 

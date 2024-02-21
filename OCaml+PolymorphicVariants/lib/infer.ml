@@ -14,8 +14,8 @@ type error =
   [ `Occurs_check
   | `No_variable of id
   | `Unification_failed of ty * ty
-  | `Unexpected_pattern
-  | `Unexpected_expression
+  | `Pattern_matching_error
+  | `Not_implemented (** polymorphic variants are not supported *)
   ]
 
 let pp_error ppf : error -> _ =
@@ -25,8 +25,8 @@ let pp_error ppf : error -> _ =
   | `No_variable s -> fprintf ppf "Unbound variable '%s'" s
   | `Unification_failed (l, r) ->
     fprintf ppf "Unification failed on %a and %a" pp_typ l pp_typ r
-  | `Unexpected_pattern -> fprintf ppf "Unexpected pattern"
-  | `Unexpected_expression -> fprintf ppf "Unexpected expression"
+  | `Pattern_matching_error -> fprintf ppf "Pattern matching error"
+  | `Not_implemented -> fprintf ppf "Not implemented"
 ;;
 
 type id = string
@@ -303,7 +303,7 @@ let infer_pat =
           pl
       in
       return (env, tuple_typ (List.rev tl))
-    | _ -> fail `Unexpected_pattern
+    | _ -> fail `Pattern_matching_error
   in
   helper
 ;;
@@ -418,7 +418,7 @@ let infer_exp =
       let* sub = Subst.compose_all [ s1; s2; s3 ] in
       let t = Subst.apply sub fresh in
       return (sub, t)
-    | _ -> fail `Unexpected_expression
+    | _ -> fail `Not_implemented
   in
   helper
 ;;
@@ -445,7 +445,7 @@ let infer_str_item env = function
   | SEval e ->
     let* _, _ = infer_exp env e in
     return env
-  | _ -> fail `Unexpected_expression
+  | _ -> fail `Not_implemented
 ;;
 
 let infer_structure (structure : structure) =
