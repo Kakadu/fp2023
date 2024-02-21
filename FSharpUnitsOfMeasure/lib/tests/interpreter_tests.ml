@@ -819,7 +819,7 @@ let test = [ (EMeasure (SMeasure_init (SMeasure ("m", (Pow (FInt ( 1)))))))]
 
 let%test _ =
   match run_test test with
-  | Ok (VMeasureList [("m", ["m"])]) -> true
+  | Ok (VMeasureList ["m"]) -> true
   | Error t ->
     Format.printf "%a\n" print_error t;
     false
@@ -904,7 +904,7 @@ let test = [
 
 let%test _ =
   match run_test test with
-  | Ok (VMeasureList [("speed", ["m^3"; "/"; "sec^-1"]); ("m", ["m"]); ("sec", ["sec"])]) -> true
+  | Ok (VMeasureList ["m^3"; "/"; "sec^-1"]) -> true
   | Error t ->
     Format.printf "%a\n" print_error t;
     false

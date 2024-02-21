@@ -15,24 +15,11 @@ module type FailMonad = sig
 end
 
 type environment = (id, value, String.comparator_witness) Map.t
-let measure_list = ref []
 
 module Interpret (M : FailMonad) = struct
   open M
 
-  (* Ищет element в measure_list *)
-  let find mlist element =
-    let mlist = !mlist in  (* Получаем обычный список кортежей из mutable списка *)
-    let rec find_element list =
-      match list with
-      | [] -> false  (* Элемент не найден *)
-      | (m1, _) :: tl ->
-          if (String.(=) m1 element) then
-            true
-          else find_element tl
-    in
-    find_element mlist
-  ;;
+  let list_to_string s = String.concat s
 
   (* возвращает значение до ^ из элемента measure*)
   let remove_degree str =
@@ -57,26 +44,7 @@ module Interpret (M : FailMonad) = struct
     | None -> ""
   ;;
 
-  (* Проверяет, что типы из какого-то measure(str_list) были инициализированы*)
-  let find_list mlist_ref str_list =
-    let mlist = !mlist_ref in 
-    let new_str_list = remove_degree_list str_list in
-    let rec find_element mlist slist =
-      match slist with 
-      | [] -> true 
-      | hd :: tl ->  
-        match hd with
-        | "/"
-        | "*" -> find_element mlist tl
-        | _ ->  if List.exists ~f:(fun (m1, _) -> String.(=) m1 hd) mlist then
-            find_element mlist tl
-          else
-            false
-    in 
-    find_element mlist new_str_list
-  ;;
-
-  (* ищет не инициаоизированный тип*)
+  (* ищет не инициализированный тип*)
   let search_list mlist_ref str_list =
     let mlist = !mlist_ref in 
     let new_str_list = remove_degree_list str_list in
@@ -93,17 +61,6 @@ module Interpret (M : FailMonad) = struct
             hd
     in 
     find_element mlist new_str_list
-  ;;
-
-  (* Обновляет значения в measure_list*)
-  let update_mlist mlist_ref m1 m2=
-    let mlist = !mlist_ref in
-    let updated_mlist = 
-      List.map ~f:(fun (first, second) -> 
-        if (String.(=) first m1)
-          then (first, m2) 
-        else (first, second)) mlist 
-    in updated_mlist
   ;;
 
   (* Создаем string list из какого-то measure *)
@@ -126,98 +83,99 @@ module Interpret (M : FailMonad) = struct
       measure_to_strlist measure_list_with_op m1
   ;;
 
-  (* Декомпозирует тип element *)
-  let rec dec_element measure_list element =
-    let add_degree l n =
-      List.map ~f: (fun elem -> elem ^ "^" ^ n) l
-    in
-    match measure_list with
-    | [] -> []
-    | (m1, m2) :: tl ->
-      if String.equal m1 (remove_degree element) then 
-        let n = return_degree element
-        in
-        if (String.(=) n "") 
-          then m2
-        else add_degree m2 n
-      else 
-        dec_element tl element
-  ;;
-
   (* Принимает список списков строк и объединяет их в один список строк *)
   let strlist_to_str slist =
     List.concat (List.map ~f:(fun sublist -> sublist) slist)
   ;;
-      
+
+  (* Декомпозирует тип element *)
+
+  let dec_element element env =   
+    let add_degree list pow =
+      List.map ~f: (fun elem -> elem ^ "^" ^ pow) list
+    in
+    (match Map.find env ("<" ^ remove_degree element ^ ">") with 
+      | None -> failwith "Unreachable"
+      | Some VMeasureList value ->
+        let n = return_degree element
+        in
+        if (String.(=) n "") 
+          then value
+        else add_degree value n
+      | _ -> failwith "Unreachable") 
+  ;;
+
   (* Декомпозирует все значения из списка *)
-  let dec_list list measure_list =
+  let dec_list list env =
     List.map 
       ~f:(fun element -> 
         if ((String.(<>) element "/") && (String.(<>) element "*")) 
-          then dec_element measure_list element 
+          then dec_element element env
         else [element]) list
   ;;
 
   (* Декомпозирует список до самого основания*)
-  let rec mbase m1 measure_list =
-    let m3 = strlist_to_str @@ dec_list m1 measure_list
+  let rec mbase m1 env =
+    let m3 = strlist_to_str @@ dec_list m1 env
     in
     if Poly.(=) m3 m1
       then return @@ m3
-    else mbase m3 measure_list
+    else mbase m3 env
   ;;
 
   (* Сравнивает, равны ли списки декомпозированные до основания*)
-  let meq m1 m2 measure_list =
-    let m3 = mbase m1 measure_list
-    in let m4 = mbase m2 measure_list
+  let meq m1 m2 env =
+    let m3 = mbase m1 env
+    in let m4 = mbase m2 env
     in Poly.(=) m3 m4
   ;;
 
   (* Произведение VFloatMeasure *)
+
+  let rec m1_el_with_m2 z elem m2 =
+    match m2 with
+    | [] -> z :: [elem]
+    | _ :: [] -> []
+    | z1 :: hd :: tl-> 
+        let p1 = return_degree elem
+        in let p2 = return_degree hd
+        in let hd_eq_elem = String.(=) (remove_degree hd) (remove_degree elem)
+        in let z1_eq_z = if String.(=) z1 z then true else false
+        in let p1_empty = String.(=) p1 ""
+        in let p2_empty = String.(=) p2 ""
+        in
+        if hd_eq_elem 
+          then
+            (match (z, z1_eq_z, p1_empty, p2_empty) with
+            | ("/", true, true, true) | ("*", true, true, true) -> 
+                z :: [remove_degree elem ^ "^2"]
+
+            | ("/", false, true, true) | ("*", false, true, true) -> 
+                z :: [remove_degree elem ^ "^0"]
+
+            | ("/", true, false, true) | ("*", true, false, true) -> 
+                z :: [remove_degree elem ^ "^" ^ Int.to_string ((Int.of_string p1) + 1)]
+
+            | ("/", false, false, true) | ("*", false, false, true) -> 
+                z :: [remove_degree elem ^ "^" ^ Int.to_string ((Int.of_string p1) - 1)]
+
+            | ("/", true, true, false) | ("*", true, true, false) -> 
+                z :: [remove_degree elem ^ "^" ^ Int.to_string ((Int.of_string p2) + 1)]
+
+            | ("/", false, true, false) -> z :: [remove_degree elem ^ "^" ^ Int.to_string (1 - (Int.of_string p2))]
+            | ("*", false, true, false) -> z :: [remove_degree elem ^ "^" ^ Int.to_string ((Int.of_string p2) - 1)]
+
+            | ("/", true, false, false) | ("*", true, false, false) -> 
+                z :: [remove_degree elem ^ "^" ^ Int.to_string ((Int.of_string p1) + (Int.of_string p2))]
+
+            | ("/", false, false, false)| ("*", false, false, false) -> 
+                z :: [remove_degree elem ^ "^" ^ Int.to_string ((Int.of_string p1) - (Int.of_string p2))]
+                
+            | _ -> m1_el_with_m2 z elem tl)
+        else m1_el_with_m2 z elem tl
+    ;;
+
   let multiplication_measure m1 m2 =
-    let rec m1_el_with_m2 z elem m2 =
-        match m2 with
-        | [] -> z :: [elem]
-        | _ :: [] -> []
-        | z1 :: hd :: tl-> 
-            let p1 = return_degree elem
-            in let p2 = return_degree hd
-            in let hd_eq_elem = String.(=) (remove_degree hd) (remove_degree elem)
-            in let eq_op = if String.(=) z1 z then true else false
-            in let p1_empty = String.(=) p1 ""
-            in let p2_empty = String.(=) p2 ""
-            in
-            if hd_eq_elem 
-              then
-                (match (z, eq_op, p1_empty, p2_empty) with
-                | ("/", true, true, true) | ("*", true, true, true) -> 
-                    z :: [remove_degree elem ^ "^2"]
-
-                | ("/", false, true, true) | ("*", false, true, true) -> 
-                    z :: [remove_degree elem ^ "^0"]
-
-                | ("/", true, false, true) | ("*", true, false, true) -> 
-                    z :: [remove_degree elem ^ "^" ^ Int.to_string ((Int.of_string p1) + 1)]
-
-                | ("/", false, false, true) | ("*", false, false, true) -> 
-                    z :: [remove_degree elem ^ "^" ^ Int.to_string ((Int.of_string p1) - 1)]
-
-                | ("/", true, true, false) | ("*", true, true, false) -> 
-                    z :: [remove_degree elem ^ "^" ^ Int.to_string ((Int.of_string p2) + 1)]
-
-                | ("/", false, true, false) -> z :: [remove_degree elem ^ "^" ^ Int.to_string (1 - (Int.of_string p2))]
-                | ("*", false, true, false) -> z :: [remove_degree elem ^ "^" ^ Int.to_string ((Int.of_string p2) - 1)]
-
-                | ("/", true, false, false) | ("*", true, false, false) -> 
-                    z :: [remove_degree elem ^ "^" ^ Int.to_string ((Int.of_string p1) + (Int.of_string p2))]
-
-                | ("/", false, false, false)| ("*", false, false, false) -> 
-                    z :: [remove_degree elem ^ "^" ^ Int.to_string ((Int.of_string p1) - (Int.of_string p2))]
-                    
-                | _ -> m1_el_with_m2 z elem tl)
-          else m1_el_with_m2 z elem tl
-    in
     let rec mult_m1_with_m2 m1 m2 =
         match m1 with
         | [] -> []
@@ -260,8 +218,6 @@ module Interpret (M : FailMonad) = struct
     remove_first_element @@ mult_m2_with_m1 (strlist_to_str (mult_m1_with_m2 ("*" :: m1) ("*" :: m2))) m2
   ;;
 
-  let list_to_string s = String.concat s
-
   let eval_list expr env l =
     let* list =
       List.fold l ~init:(return []) ~f:(fun l e ->
@@ -281,8 +237,32 @@ module Interpret (M : FailMonad) = struct
     let new_map = List.fold links ~init:map ~f:(fun map (id, value) -> linking map id value)
     in return new_map
   ;;
+
+  let rec check list env =
+    match list with  
+    | hd :: tl -> 
+      if String.(=) hd "*" || String.(=) hd "/"
+        then check tl env
+      else 
+      (match Map.find env ("<" ^ remove_degree hd ^ ">") with 
+      | None -> false
+      | Some _-> check tl env) 
+    | [] -> true
+  ;;
+
+  let rec undefined list env =
+    match list with  
+    | hd :: tl -> 
+      if String.(=) hd "*" || String.(=) hd "/"
+        then undefined tl env
+      else 
+      (match Map.find env ("<" ^ remove_degree hd ^ ">") with 
+      | None -> hd
+      | Some _-> undefined tl env) 
+    | [] -> ""
+  ;;
   
-  let binop op left right =
+  let binop op left right env =
     match op, left, right with 
     
     (* Int to Int operation *)
@@ -306,17 +286,19 @@ module Interpret (M : FailMonad) = struct
     (* Measure to Measure operation *)
     
     | Add, VFloatMeasure(VFloat fl, ml), VFloatMeasure(VFloat fr, mr) ->
-        if (meq ml mr !measure_list) 
+        if (meq ml mr env) 
           then return @@ VFloatMeasure (( VFloat(fl +. fr)), ml)
         else 
           fail @@ DifferentMeasure (list_to_string ml, list_to_string mr)
     | Sub, VFloatMeasure(VFloat fl, ml), VFloatMeasure(VFloat fr, mr) ->
-        if (meq ml mr !measure_list) 
+        if (meq ml mr env) 
           then return @@ VFloatMeasure (( VFloat(fl -. fr)), ml)
         else 
           fail @@ DifferentMeasure (list_to_string ml, list_to_string mr)
+    | Mul, VFloatMeasure(VFloat fl, ml), VFloat r -> return @@ VFloatMeasure (( VFloat(fl *. r)), ml)
+    | Mul, VFloat l, VFloatMeasure(VFloat fr, mr) -> return @@ VFloatMeasure (( VFloat(l *. fr)), mr)
     | Mul, VFloatMeasure(VFloat fl, ml), VFloatMeasure(VFloat fr, mr) ->
-        return @@ VFloatMeasure (( VFloat(fl *. fr)), multiplication_measure ml mr)
+      return @@ VFloatMeasure (( VFloat(fl *. fr)), multiplication_measure ml mr)
     (* | Div, VFloatMeasure(VFloat fl, ml), VFloatMeasure(VFloat fr, mr) ->
         if (meq ml mr !measure_list) 
           then return @@ VFloatMeasure (( VFloat(fl /. fr)), ml)
@@ -377,7 +359,7 @@ module Interpret (M : FailMonad) = struct
     | Gre, VList l, VList r -> return @@ VBool (Poly.(>) l r)
     | Leq, VList l, VList r -> return @@ VBool (Poly.(<=) l r)
     | Greq, VList l, VList r -> return @@ VBool (Poly.(>=) l r)
-    | _ -> fail UnsupportedOperation
+    | _ -> fail Unreachable
   ;;
 
   let rec pattern =
@@ -425,56 +407,45 @@ module Interpret (M : FailMonad) = struct
     match expr with
     | EMeasure m ->
       (match m with
-        | SMeasure_init (SMeasure (m1, p)) ->
-            (match (find measure_list m1, p) with
-            | (true, Pow (FInt (1))) -> return @@ VMeasureList !measure_list
-            | (false, Pow (FInt (1))) ->  
-                measure_list := (m1, [m1]) :: !measure_list; 
-                return @@ VMeasureList !measure_list
-            | _ -> fail UnexpectedInfix)
-        | MMeasure_init (SMeasure (m1, p), m2) -> 
-            let m2  = measure_to_strlist [] m2 
-            in let search_m1 = find measure_list m1 
-            in let search_m2 = find_list measure_list m2
-            in
-            (match (search_m1, search_m2, p) with
-            | (true, true, Pow (FInt 1)) -> 
-                measure_list := update_mlist measure_list m1 m2; 
-                return @@ VMeasureList !measure_list
-            | (false, true, Pow (FInt 1)) -> 
-                measure_list := (m1, m2) :: !measure_list; 
-                return @@ VMeasureList !measure_list
-            | (_, false, Pow (FInt 1)) -> fail @@ UndefinedType (search_list measure_list m2)
-            | (_, _, Pow (FInt _)) -> fail UnexpectedInfix
-            | _ -> fail Unreachable)
-        | _ -> fail Unreachable
-      )
+        | SMeasure_init (SMeasure (m1, p)) -> 
+          (match p with 
+          | Pow (FInt 1) -> return @@ (VMeasureList [m1])
+          | _ -> fail UnexpectedInfix)
+        | MMeasure_init (SMeasure (_, p), m2) -> 
+          (match p with 
+          | Pow (FInt 1) -> 
+              let m2 = measure_to_strlist [] m2
+              in 
+              if (check m2 env) 
+                then return @@ (VMeasureList m2)
+              else fail (UndefinedType (undefined m2 env))
+          | _ -> fail UnexpectedInfix)
+        | _ -> fail Unreachable)
     | EConst c ->
       (match c with
         | FInt i -> return @@ VInt i
         | FBool b -> return @@ VBool b
         | FString s -> return @@ VString s
         | FFloat f -> return @@ VFloat f
-        | Measure_float (f, SMeasure (m, p)) ->
-          (match (find measure_list m, p) with
-            | (true, Pow (FInt (1))) -> 
-                let* f = eval_expr (EConst f) env []
-                in return @@ VFloatMeasure (f, [m])
-            | (true, Pow (FInt (n))) ->
-              let* f = eval_expr (EConst f) env []
-                in
-                return @@ VFloatMeasure (f, [m ^ "^" ^ Int.to_string n])
-            |_ -> fail @@ UndefinedType m
-          )
-        | Measure_float (f, m) ->
-          let m  = measure_to_strlist [] m in
-          if (find_list measure_list m) 
-            then 
-              let* f = eval_expr (EConst f) env []
-              in return @@ VFloatMeasure (f, m) 
-          else fail @@ UndefinedType (search_list measure_list m)
         | FNil -> return VNil
-        | FUnit -> return VUnit)
+        | FUnit -> return VUnit
+        | Measure_float (f, SMeasure (m, Pow(FInt p))) ->
+          (match Map.find env ("<" ^ m ^ ">") with
+            | None -> fail (UndefinedValue m)
+            | Some _ ->  
+              if p = 1 then 
+                let* f = eval_expr (EConst f) env [] in
+                return @@ VFloatMeasure (f, [m])
+            else 
+              let* f = eval_expr (EConst f) env [] in
+              return @@ VFloatMeasure (f, [m ^ "^" ^ Int.to_string p]))
+        | Measure_float (f, m) -> 
+          let m  = measure_to_strlist [] m 
+          in 
+          if (check m env) 
+            then let* f = eval_expr (EConst f) env []
+            in return @@ VFloatMeasure (f, m)
+          else fail (UndefinedType (list_to_string m)))
     | EFun (p, e) -> return @@ VFun (p, e, vmap)
     | EVar var -> 
         (match Map.find env var with
@@ -485,15 +456,15 @@ module Interpret (M : FailMonad) = struct
         | EBinaryOp op, EApp (num1, num2) -> 
             let* n1 = eval_expr num1 env [] in
             let* n2 = eval_expr num2 env [] in
-            binop op n1 n2
+            binop op n1 n2 env
         | _ -> 
           let* evaled_fun = eval_expr func env [] in
           let* evaled_arg = eval_expr arg env [] in
           (match evaled_fun with
             | VFun (p, e, vmap) ->
               let* pat = pattern (p, evaled_arg) in
-              let* link_variable = link env vmap in
-              let* link_variables = link link_variable pat in
+              let* link_variable = link env vmap in 
+              let* link_variables = link link_variable pat in 
               eval_expr e link_variables (pat @ vmap)
             | _ -> fail Unreachable))
     | EBinaryOp op -> return @@ VBinOp op
@@ -531,11 +502,16 @@ module Interpret (M : FailMonad) = struct
     | ELet (_, name, _) ->
       let* env = link env [ name, value ] in
       return (env, value)
+    | EMeasure (SMeasure_init (SMeasure (m, _))) -> 
+      let* env = link env [ "<" ^ m ^ ">", value ] in
+      return (env, value)
+    | EMeasure (MMeasure_init (SMeasure (m1, _), _m2)) ->
+      let* env = link env [ "<" ^ m1 ^ ">", value ] in
+      return (env, value)
     | _ -> return (env, value)
   ;;
 
   let interpreter ?(environment = Map.empty (module String)) program = 
-    measure_list := [];
     let rec helper env = function
       | [] -> fail EmptyInput
       | hd :: [] ->
