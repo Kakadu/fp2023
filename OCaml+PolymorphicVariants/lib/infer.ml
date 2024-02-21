@@ -31,6 +31,12 @@ let pp_error ppf : error -> _ =
 
 type id = string
 
+module VarSet = struct
+  include Stdlib.Set.Make (Int)
+end
+
+type scheme = S of VarSet.t * ty (** \forall a1 a2 ... an . ty *)
+
 module R : sig
   type 'a t
 

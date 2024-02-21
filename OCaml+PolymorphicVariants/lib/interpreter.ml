@@ -264,11 +264,12 @@ module Inter = Eval (struct
 
 let pp_env env_t env_v =
   let open Stdlib.Format in
-  let open Typedtree in
+  let open Infer in
   Base.Map.iteri
     ~f:(fun ~key ~data ->
       match Base.Map.find env_t key with
-      | Some (S (_, ty)) -> printf "val %s : %a = %a\n" key pp_typ ty pp_value data
+      | Some (S (_, ty)) ->
+        printf "val %s : %a = %a\n" key Typedtree.pp_typ ty pp_value data
       | None -> printf "val %s = %a\n" key pp_value data)
     env_v
 ;;
