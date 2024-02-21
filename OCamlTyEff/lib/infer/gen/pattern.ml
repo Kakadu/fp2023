@@ -22,6 +22,7 @@ module BoundVars = struct
 
   let idents = Map.keys
   let vars = Map.data
+  let set = Map.set
   let fold = Map.fold
 
   exception Rebound of Ident.t

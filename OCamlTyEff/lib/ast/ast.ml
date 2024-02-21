@@ -4,6 +4,7 @@
 
 open! Base
 open Misc
+open Types
 
 type constant =
   | Const_integer of int  (** Integer such as [25] *)
@@ -13,7 +14,7 @@ type constant =
 [@@deriving eq, show {with_path= false}]
 
 (* ======= Patterns ======= *)
-and pattern =
+type pattern =
   | Pat_any  (** The pattern [_] *)
   | Pat_var of Ident.t  (** A variable pattern such as [x] *)
   | Pat_constant of constant
@@ -29,12 +30,12 @@ and pattern =
 [@@deriving show {with_path= false}]
 
 (* ======= Expressions ======= *)
-and rec_flag =
+type rec_flag =
   | Recursive  (** Recursive value binding *)
   | Nonrecursive  (** Nonrecursive value binding *)
 [@@deriving show {with_path= false}]
 
-and value_binding = {pat: pattern; expr: expression}
+type value_binding = {pat: pattern; expr: expression}
 [@@deriving show {with_path= false}]
 
 (** Pattern matching case *)
@@ -80,11 +81,19 @@ and expression =
 
 (* ======= Module structure ======= *)
 
-type structure = structure_item list [@@deriving show {with_path= false}]
+(** Constructor declaration. E.g. [A of string] *)
+type constructor_decl = {id: Ident.t; arg: Ty.t option}
+[@@deriving show {with_path= false}]
 
-and structure_item =
+(** Variant type declaration *)
+type type_decl =
+  {id: Ident.t; params: Var.t list; variants: constructor_decl list}
+[@@deriving show {with_path= false}]
+
+type structure_item =
   | Str_eval of expression  (** [E] *)
-  | Str_exception of Ident.t  (** [exception Some_exc] *)
+  | Str_type of type_decl  (** [type ('a, 'b) ab = A of T1 | B of T2 ...] *)
+  | Str_exception of constructor_decl  (** [exception My_exc of T] *)
   | Str_value of rec_flag * value_binding list
       (** [Str_value(flag, [(P1, E1) ; ... ; (Pn, En)])] represents:
           - [let P1 = E1 and ... and Pn = EN]      when [flag] is [Nonrecursive]
@@ -92,3 +101,5 @@ and structure_item =
           Invariant: [n >= 1]
         *)
 [@@deriving show {with_path= false}]
+
+type structure = structure_item list [@@deriving show {with_path= false}]

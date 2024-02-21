@@ -21,6 +21,7 @@ module BoundVars : sig
 
   val idents : t -> Ident.t list
   val vars : t -> Var.t list
+  val set : t -> key:Ident.t -> data:Var.t -> t
   val fold :
     t -> init:'acc -> f:(key:Ident.t -> data:Var.t -> 'acc -> 'acc) -> 'acc
 end

@@ -19,5 +19,8 @@ type t =
   | ConstructorArityMismatch of Ident.t
   | NotVarLHSRec
   | NotAllowedRHSRec of expression
+  | UnboundTypeVariable of string
+  | UnboundType of Ident.t
+  | TypeArityMismatch of Ident.t
   | NotImplemented of string
 [@@deriving show {with_path= false}]

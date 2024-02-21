@@ -10,7 +10,7 @@ open Common
 (** ['a] *)
 let parse_var =
   char '\'' *> (parse_lowercase_ident <|> parse_capitalized_ident)
-  >>| fun name -> Ty.Ty_var (Var name)
+  >>| fun name -> Var.Var name
 
 (**
   typeconstr
@@ -28,7 +28,11 @@ let parse_constr pty =
 *)
 let parse_app pty =
   let parse_single =
-    ws *> choice [parse_var; parse_constr pty; char '(' *> pty <* ws <* char ')']
+    ws
+    *> choice
+         [ (parse_var >>| fun var -> Ty.Ty_var var)
+         ; parse_constr pty
+         ; char '(' *> pty <* ws <* char ')' ]
   in
   let* arg = parse_single in
   option None (ws *> parse_lowercase_ident >>| Option.some)

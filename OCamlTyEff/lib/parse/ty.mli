@@ -6,4 +6,6 @@ open! Base
 open Angstrom
 open Types
 
+val parse_var : Var.t t
+
 val parse_ty : Ty.t t

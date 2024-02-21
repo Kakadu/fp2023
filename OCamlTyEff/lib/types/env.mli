@@ -9,10 +9,16 @@ open Misc
 (** Type environment. Maps identifiers to types *)
 type t
 
-val of_alist_exn : weak_counter:int -> (Ident.t * Scheme.t) list -> t
+(** Maps identifiers of defined types / type constructors to their arity *)
+type types_arity = (Ident.t, int, Ident.comparator_witness) Map.t
+
+val get_types_arity : t -> types_arity
+val set_types_arity : t -> types_arity -> t
 
 val get_weak_counter : t -> int
 val set_weak_counter : t -> int -> t
+
+val of_alist_exn : (Ident.t * Scheme.t) list -> t
 
 val set : t -> key:Ident.t -> data:Scheme.t -> t
 val map : t -> f:(Scheme.t -> Scheme.t) -> t

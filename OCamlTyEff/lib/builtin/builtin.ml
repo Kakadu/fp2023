@@ -60,5 +60,4 @@ let env_functions : (Ident.t * Scheme.t) list =
   ; (id ":=", single_var (Ty.ref alpha @> Ty_arr (alpha, eff_ref, Ty.unit))) ]
 
 let ty_env =
-  List.concat [env_arith; env_constructors; env_functions]
-  |> Env.of_alist_exn ~weak_counter:1
+  List.concat [env_arith; env_constructors; env_functions] |> Env.of_alist_exn

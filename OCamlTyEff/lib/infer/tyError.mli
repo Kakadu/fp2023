@@ -30,6 +30,22 @@ type t =
         The expression is not allowed as right-hand side of `let rec'.
         E.g. `let rec x = x + 1`
       *)
+  | UnboundTypeVariable of string
+      (**
+        Type variable is unbound in type declaration.
+        E.g. `type bar = Bar of 'a` ('a is unbound)
+      *)
+  | UnboundType of Ident.t
+      (**
+        Type is unbound in type declaration.
+        E.g. `type bar = Bar of foo` (foo is unbound)
+      *)
+  | TypeArityMismatch of Ident.t
+      (**
+        Type expects more/less arguments than applied.
+        E.g. `type foo = Foo` (foo expects 0 arguments)
+        `type bar = Bar of int foo`
+      *)
   | NotImplemented of string
       (**
         Feature is not yet implemented in the type checker.

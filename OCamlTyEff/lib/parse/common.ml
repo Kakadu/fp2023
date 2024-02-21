@@ -92,7 +92,8 @@ let is_keyword = function
   | "rec"
   | "then"
   | "true"
-  | "with" ->
+  | "with"
+  | "type" ->
       true
   | _ ->
       false

@@ -168,11 +168,25 @@ let%expect_test "parse_fact" =
       ] |}]
 
 let%expect_test "parse_define_and_raise_exc" =
-  run {| exception My_exc;; raise My_exc |} ;
+  run {| exception My_exc of string;; raise (My_exc "hello") |} ;
   [%expect
     {|
-    [(Str_exception (Ident "My_exc"));
+    [(Str_exception { id = (Ident "My_exc"); arg = (Some string) });
       (Str_eval
          (Exp_apply ((Exp_ident (Ident "raise")),
-            (Exp_construct ((Ident "My_exc"), None)))))
+            (Exp_construct ((Ident "My_exc"),
+               (Some (Exp_constant (Const_string "hello")))))
+            )))
+      ] |}]
+
+let%expect_test "parse_type_decl" =
+  run {| type 'a list = Nil | Cons of 'a * 'a list |} ;
+  [%expect
+    {|
+    [(Str_type
+        { id = (Ident "list"); params = ['a];
+          variants =
+          [{ id = (Ident "Nil"); arg = None };
+            { id = (Ident "Cons"); arg = (Some 'a * 'a list) }]
+          })
       ] |}]

@@ -241,7 +241,7 @@ let rec gen : expression -> (As.t * Ty.t * Eff.t) GenMonad.t = function
       let* as_cases, eff =
         GenMonad.List.fold_right cases ~init:(As.empty, eff_res)
           ~f:(fun {left= pat; right= e_rhs} (as_acc, eff_acc) ->
-            let* as_pat, _, ty_pat = Pattern.gen pat in
+            let* as_pat, bounds_pat, ty_pat = Pattern.gen pat in
             let* as_rhs, ty_rhs, eff_rhs = gen e_rhs in
 
             let* exn_type = fresh_var >>| ( ! ) in
@@ -250,8 +250,20 @@ let rec gen : expression -> (As.t * Ty.t * Eff.t) GenMonad.t = function
                 [ty_rhs == ty_e; ty_pat == Ty.exn exn_type; eff_rhs === eff_res]
             in
 
+            let constrs =
+              Pattern.BoundVars.fold bounds_pat ~init:[]
+                ~f:(fun ~key:id ~data:var_pat acc ->
+                  let cs =
+                    As.lookup as_rhs id
+                    |> List.map ~f:(fun var_expr -> !var_expr == !var_pat)
+                  in
+                  cs :: acc )
+            in
+            let* () = add_constrs (List.concat_no_order constrs) in
+
             return
-              ( as_acc ++ as_pat ++ as_rhs
+              ( as_acc ++ as_pat
+                ++ (as_rhs -- Pattern.BoundVars.idents bounds_pat)
               , Eff.Eff_row (Eff.Label.exn exn_type, eff_acc) ) )
       in
       let* () = add_constrs [eff_e === eff] in

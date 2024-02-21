@@ -17,9 +17,19 @@ let infer_structure_item env str_item =
   let fail = Result.fail in
   let return = Result.return in
 
-  let* asm, bound_vars, ty_res, eff, gen_cs, con_assumpt = gen str_item in
+  let types_arity = Env.get_types_arity env in
+  let* asm, bound_vars, ty_res, eff, gen_cs, con_assumpt, defined_types =
+    gen types_arity str_item
+  in
 
-  (* create new constrainsts based on type environment *)
+  (* set arity in environment for newly defined types *)
+  let env =
+    Env.set_types_arity env
+      (List.fold defined_types ~init:types_arity ~f:(fun acc {id; arity} ->
+           Map.set acc ~key:id ~data:arity ) )
+  in
+
+  (* create new constraints based on type environment *)
   let* env_cs =
     Assumptions.fold asm ~init:(return ConstrSet.empty)
       ~f:(fun ~key:id ~data:vars acc ->
@@ -64,7 +74,7 @@ let infer_structure_item env str_item =
         return @@ ConstrSet.union acc new_cs )
   in
 
-  (* solve constrainsts *)
+  (* solve constraints *)
   let* sub = solve @@ ConstrSet.union gen_cs env_cs in
   let env = Sub.apply_to_env sub env in
   let is_ref = Eff.contains (Sub.apply_to_eff sub eff) (Eff.Label.ref ()) in

@@ -34,5 +34,5 @@ let eval = function
         set_env (Env.set_bounds env (Bounds.merge (Env.get_bounds env) bounds))
       in
       return (None, Bounds.idents bounds)
-  | Str_exception _ ->
+  | Str_exception _ | Str_type _ ->
       return (None, [])
