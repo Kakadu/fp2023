@@ -28,11 +28,6 @@ module Interpret (M : FailMonad) = struct
       | None -> str
   ;;
 
-  (* Возвращает значения до ^ из measure*)
-  let remove_degree_list list =
-    List.map ~f:(fun str -> remove_degree str) list
-  ;;
-
   (* Возвращает значение после ^ из элемента measure*)
   let return_degree str =
     match String.index str '^' with
@@ -42,25 +37,6 @@ module Interpret (M : FailMonad) = struct
             ~len: (String.length str - caret_index - 1) 
               str
     | None -> ""
-  ;;
-
-  (* ищет не инициализированный тип*)
-  let search_list mlist_ref str_list =
-    let mlist = !mlist_ref in 
-    let new_str_list = remove_degree_list str_list in
-    let rec find_element mlist slist =
-      match slist with 
-      | [] -> ""
-      | hd :: tl ->  
-        match hd with
-        | "/"
-        | "*" -> find_element mlist tl
-        | _ ->  if List.exists ~f:(fun (m1, _) -> String.(=) m1 hd) mlist then
-            find_element mlist tl
-          else
-            hd
-    in 
-    find_element mlist new_str_list
   ;;
 
   (* Создаем string list из какого-то measure *)
@@ -84,7 +60,7 @@ module Interpret (M : FailMonad) = struct
   ;;
 
   (* Принимает список списков строк и объединяет их в один список строк *)
-  let strlist_to_str slist =
+  let strlistlist_to_strlist slist =
     List.concat (List.map ~f:(fun sublist -> sublist) slist)
   ;;
 
@@ -92,17 +68,20 @@ module Interpret (M : FailMonad) = struct
 
   let dec_element element env =   
     let add_degree list pow =
-      List.map ~f: (fun elem -> elem ^ "^" ^ pow) list
+      List.map ~f: (fun elem -> 
+        if (String.(=) elem "*") || (String.(=) elem "/")
+          then elem
+        else elem ^ "^" ^ pow) list
     in
     (match Map.find env ("<" ^ remove_degree element ^ ">") with 
-      | None -> failwith "Unreachable"
+      | None -> []
       | Some VMeasureList value ->
         let n = return_degree element
         in
         if (String.(=) n "") 
           then value
         else add_degree value n
-      | _ -> failwith "Unreachable") 
+      | _ -> []) 
   ;;
 
   (* Декомпозирует все значения из списка *)
@@ -116,7 +95,7 @@ module Interpret (M : FailMonad) = struct
 
   (* Декомпозирует список до самого основания*)
   let rec mbase m1 env =
-    let m3 = strlist_to_str @@ dec_list m1 env
+    let m3 = strlistlist_to_strlist @@ dec_list m1 env
     in
     if Poly.(=) m3 m1
       then return @@ m3
@@ -132,90 +111,123 @@ module Interpret (M : FailMonad) = struct
 
   (* Произведение VFloatMeasure *)
 
-  let rec m1_el_with_m2 z elem m2 =
+  let rec m1_el_with_m2 z1 elem m2 =
     match m2 with
-    | [] -> z :: [elem]
+    | [] -> z1 :: [elem]
     | _ :: [] -> []
-    | z1 :: hd :: tl-> 
+    | z2 :: hd :: tl-> 
         let p1 = return_degree elem
         in let p2 = return_degree hd
         in let hd_eq_elem = String.(=) (remove_degree hd) (remove_degree elem)
-        in let z1_eq_z = if String.(=) z1 z then true else false
+        in let z1_eq_z2 = if String.(=) z1 z2 then true else false
         in let p1_empty = String.(=) p1 ""
         in let p2_empty = String.(=) p2 ""
         in
         if hd_eq_elem 
           then
-            (match (z, z1_eq_z, p1_empty, p2_empty) with
+            (match (z2, z1_eq_z2, p1_empty, p2_empty) with
             | ("/", true, true, true) | ("*", true, true, true) -> 
-                z :: [remove_degree elem ^ "^2"]
+                z1 :: [remove_degree elem ^ "^2"]
 
             | ("/", false, true, true) | ("*", false, true, true) -> 
-                z :: [remove_degree elem ^ "^0"]
+                z1 :: [remove_degree elem ^ "^0"]
 
             | ("/", true, false, true) | ("*", true, false, true) -> 
-                z :: [remove_degree elem ^ "^" ^ Int.to_string ((Int.of_string p1) + 1)]
+                z1 :: [remove_degree elem ^ "^" ^ Int.to_string ((Int.of_string p1) + 1)]
 
             | ("/", false, false, true) | ("*", false, false, true) -> 
-                z :: [remove_degree elem ^ "^" ^ Int.to_string ((Int.of_string p1) - 1)]
+                z1 :: [remove_degree elem ^ "^" ^ Int.to_string ((Int.of_string p1) - 1)]
 
             | ("/", true, true, false) | ("*", true, true, false) -> 
-                z :: [remove_degree elem ^ "^" ^ Int.to_string ((Int.of_string p2) + 1)]
+                z1 :: [remove_degree elem ^ "^" ^ Int.to_string ((Int.of_string p2) + 1)]
 
-            | ("/", false, true, false) -> z :: [remove_degree elem ^ "^" ^ Int.to_string (1 - (Int.of_string p2))]
-            | ("*", false, true, false) -> z :: [remove_degree elem ^ "^" ^ Int.to_string ((Int.of_string p2) - 1)]
+            | ("/", false, true, false) -> z1 :: [remove_degree elem ^ "^" ^ Int.to_string (1 - (Int.of_string p2))]
+            | ("*", false, true, false) -> z2 :: [remove_degree elem ^ "^" ^ Int.to_string ((Int.of_string p2) - 1)]
 
             | ("/", true, false, false) | ("*", true, false, false) -> 
-                z :: [remove_degree elem ^ "^" ^ Int.to_string ((Int.of_string p1) + (Int.of_string p2))]
+                z1 :: [remove_degree elem ^ "^" ^ Int.to_string ((Int.of_string p1) + (Int.of_string p2))]
 
             | ("/", false, false, false)| ("*", false, false, false) -> 
-                z :: [remove_degree elem ^ "^" ^ Int.to_string ((Int.of_string p1) - (Int.of_string p2))]
+                z1 :: [remove_degree elem ^ "^" ^ Int.to_string ((Int.of_string p1) - (Int.of_string p2))]
                 
-            | _ -> m1_el_with_m2 z elem tl)
-        else m1_el_with_m2 z elem tl
-    ;;
+            | _ -> m1_el_with_m2 z1 elem tl)
+        else m1_el_with_m2 z1 elem tl
+  ;;
+
+  let rec mult_m1_with_m2 m1 m2 =
+    match m1 with
+    | [] -> []
+    | _ :: [] -> []
+    | z :: hd :: tl -> m1_el_with_m2 z hd m2 :: mult_m1_with_m2 tl m2
+  ;;
+
+  let rec not_uniq_in_m1 elem m1 =
+      match m1 with
+      | [] -> false
+      | hd :: tl -> if String.(=) (remove_degree hd) (remove_degree elem) then true else not_uniq_in_m1 elem tl
+  ;;
+
+  let mult_m2_with_m1 m1 m2 =
+      match m2 with
+      | [] -> m1
+      | hd :: tl -> 
+          let rec merge_uniq_el m1 tl = 
+            match tl with
+            | [] -> m1
+            | hd :: [] -> 
+              if not_uniq_in_m1 hd m1 
+                then merge_uniq_el m1 []
+              else
+                hd :: "*" :: m1
+            | hd :: bo :: tl ->
+                if not_uniq_in_m1 bo m1 then
+                  merge_uniq_el m1 tl
+                else
+                  merge_uniq_el (m1 @ [hd] @ [bo]) tl
+          in
+          if not_uniq_in_m1 hd m1 
+            then merge_uniq_el m1 tl
+          else 
+            merge_uniq_el m1 tl @ ["*"] @ [hd]
+  ;;   
+
+  let remove_first_element lst =
+    match lst with
+    | [] -> []
+    | _::tl -> tl
+  ;;
+
+  let rec remove_excess_pow lst =
+    match lst with
+    | [] -> []
+    | hd :: [] -> [hd]
+    | z :: hd :: tl -> 
+      match return_degree hd with 
+      | "0" -> remove_excess_pow tl
+      | "1" -> z :: (remove_degree hd) :: remove_excess_pow tl 
+      | _ -> z :: hd :: remove_excess_pow tl 
+  ;;
 
   let multiplication_measure m1 m2 =
-    let rec mult_m1_with_m2 m1 m2 =
-        match m1 with
-        | [] -> []
-        | _ :: [] -> []
-        | z :: hd :: tl -> m1_el_with_m2 z hd m2 :: mult_m1_with_m2 tl m2
-    in
-    let rec not_uniq_in_m1 elem m1 =
-        match m1 with
-        | [] -> false
-        | hd :: tl -> if String.(=) (remove_degree hd) (remove_degree elem) then true else not_uniq_in_m1 elem tl
-    in
-    let mult_m2_with_m1 m1 m2 =
-        match m2 with
-        | [] -> m1
-        | hd :: tl -> 
-            let rec merge_uniq_el m1 tl = 
-              match tl with
-              | [] -> m1
-              | hd :: [] -> 
-                if not_uniq_in_m1 hd m1 
-                  then merge_uniq_el m1 []
-                else
-                  hd :: "*" :: m1
-              | hd :: bo :: tl ->
-                  if not_uniq_in_m1 bo m1 then
-                    merge_uniq_el m1 tl
-                  else
-                    merge_uniq_el (m1 @ [hd] @ [bo]) tl
-            in
-            if not_uniq_in_m1 hd m1 
-              then merge_uniq_el m1 tl
-            else 
-              merge_uniq_el m1 tl @ ["*"] @ [hd]       
-    in
-    let remove_first_element lst =
-      match lst with
-      | [] -> []
-      | _::tl -> tl
-    in
-    remove_first_element @@ mult_m2_with_m1 (strlist_to_str (mult_m1_with_m2 ("*" :: m1) ("*" :: m2))) m2
+    remove_first_element 
+    @@ remove_excess_pow 
+    @@ mult_m2_with_m1 (strlistlist_to_strlist (mult_m1_with_m2 ("*" :: m1) ("*" :: m2))) m2
+  ;;
+
+  let rec process_list lst =
+    match lst with
+    | [] -> []
+    | hd::tl ->
+        match hd with
+        | "*" -> "/" :: process_list tl
+        | "/" -> "*" :: process_list tl
+        | _ -> hd :: process_list tl
+  ;;
+  
+  let division_measure m1 m2 =
+    remove_first_element 
+    @@ remove_excess_pow 
+    @@ mult_m2_with_m1 (strlistlist_to_strlist (mult_m1_with_m2 ("*" :: m1) (process_list ("*" :: m2)))) m2
   ;;
 
   let eval_list expr env l =
@@ -290,25 +302,28 @@ module Interpret (M : FailMonad) = struct
           then return @@ VFloatMeasure (( VFloat(fl +. fr)), ml)
         else 
           fail @@ DifferentMeasure (list_to_string ml, list_to_string mr)
+
     | Sub, VFloatMeasure(VFloat fl, ml), VFloatMeasure(VFloat fr, mr) ->
         if (meq ml mr env) 
           then return @@ VFloatMeasure (( VFloat(fl -. fr)), ml)
         else 
           fail @@ DifferentMeasure (list_to_string ml, list_to_string mr)
+
     | Mul, VFloatMeasure(VFloat fl, ml), VFloat r -> return @@ VFloatMeasure (( VFloat(fl *. r)), ml)
     | Mul, VFloat l, VFloatMeasure(VFloat fr, mr) -> return @@ VFloatMeasure (( VFloat(l *. fr)), mr)
     | Mul, VFloatMeasure(VFloat fl, ml), VFloatMeasure(VFloat fr, mr) ->
-      return @@ VFloatMeasure (( VFloat(fl *. fr)), multiplication_measure ml mr)
-    (* | Div, VFloatMeasure(VFloat fl, ml), VFloatMeasure(VFloat fr, mr) ->
-        if (meq ml mr !measure_list) 
-          then return @@ VFloatMeasure (( VFloat(fl /. fr)), ml)
-        else 
-          fail @@ DifferentMeasure (list_to_string ml, list_to_string mr)
-    | Mod, VFloatMeasure(VFloat fl, ml), VFloatMeasure(VFloat fr, mr) ->
-        if (meq ml mr !measure_list) 
-          then return @@ VFloatMeasure (( VFloat(fl %. fr)), ml)
-        else 
-          fail @@ DifferentMeasure (list_to_string ml, list_to_string mr) *)
+        let multm = multiplication_measure ml mr
+        in (match multm with 
+        | [] -> return @@ VFloat (fl *. fr)
+        | _ -> return @@ VFloatMeasure (( VFloat(fl *. fr)), multm))
+
+    | Div, VFloatMeasure(VFloat fl, ml), VFloat r -> return @@ VFloatMeasure (( VFloat(fl /. r)), ml)
+    | Div, VFloat l, VFloatMeasure(VFloat fr, mr) -> return @@ VFloatMeasure (( VFloat(l /. fr)), mr)
+    | Div, VFloatMeasure(VFloat fl, ml), VFloatMeasure(VFloat fr, mr) ->
+        let divm = division_measure ml mr
+        in (match divm with 
+        | [] -> return @@ VFloat (fl /. fr)
+        | _ -> return @@ VFloatMeasure (( VFloat(fl /. fr)), divm))
 
     (* Boolean operation *)
 
@@ -473,20 +488,18 @@ module Interpret (M : FailMonad) = struct
       (match comp_eifelse with
         | VBool res -> if res then eval_expr t env [] else eval_expr e env []
         | _ -> fail Unreachable)
-    | EMatch (matched, patterns) ->
-      let* comp_match = eval_expr matched env [] in
-      let rec eval_match_expr = function
+    | EMatch (matc, patterns) ->
+      let* eval_match = eval_expr matc env [] in
+      let rec eval_matched = function
         | [] -> fail UnexpectedPattern
         | (p, e) :: tl ->
-          let res = pattern (p, comp_match) in
-          run
-            res
-            ~ok:(fun res ->
-              let* env = link env res in
-              eval_expr e env [])
-            ~err:(fun _res -> eval_match_expr tl)
+          run (pattern (p, eval_match))  
+          ~ok:(fun res -> 
+              let* env = link env res 
+              in eval_expr e env [])
+          ~err:(fun _ -> eval_matched tl)
       in
-      eval_match_expr patterns
+      eval_matched patterns
     | ELet (_, _, expr) -> eval_expr expr env []
     | EList l -> 
       let* vl = eval_list eval_expr env l  in
