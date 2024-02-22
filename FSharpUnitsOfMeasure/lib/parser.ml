@@ -508,4 +508,3 @@ let parse_expression = pack.expression pack
 let parse_program = many1 (token parse_expression <* token (many (stoken ";;")))
 let parse_str p s = parse_string ~consume:All p s
 let parser str = parse_str parse_program (String.strip str)
-let parser1234567 = parse_string ~consume:All parse_expression
