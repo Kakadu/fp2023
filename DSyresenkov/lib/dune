@@ -1,13 +1,12 @@
 (library
  (name miniml_lib)
  (public_name DSyresenkov.Lib)
- (modules Ast Parser)
+ (modules Ast Parser Infer Typing Interpret)
  (libraries base angstrom)
  (preprocess
-  (pps ppx_expect ppx_deriving.show))
+  (pps ppx_deriving.show))
  (instrumentation
-  (backend bisect_ppx))
-  (inline_tests))
+  (backend bisect_ppx)))
 
 (library
  (name tests)

@@ -1,96 +1,107 @@
-(** Copyright 2021-2023, Kakadu and contributors *)
+(** Copyright 2023, Artem-Rzhankoff *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-type ident = Id of string [@@deriving eq, show { with_path = false }]
-
-let p_id s = Id s
+type ident = string [@@deriving show { with_path = false }]
 
 type private_flag =
   | Private
   | Public
-[@@deriving eq, show { with_path = false }]
+[@@deriving show { with_path = false }]
 
-type closed_flag =
-  | Closed
-  | Open
+type rec_flag =
+  | Nonrecursive
+  | Recursive
 [@@deriving eq, show { with_path = false }]
 
 type bin_op =
-  | Asterisk
-  | Divider
-  | Plus
-  | Sub
-  | Eq
-  | Neq
-  | Lt
-  | Ltq
-  | Gt
-  | Gtq
-  | And
-  | Or
-[@@deriving eq, show { with_path = false }]
+  | Asterisk (** [*] *)
+  | Divider (** [\ ]*)
+  | Plus (** [+] *)
+  | Sub (** [-] *)
+  | Eq (** [=] *)
+  | Neq (** [!=]*)
+  | Lt (** [<] *)
+  | Ltq (** [<=]*)
+  | Gt (** [>] *)
+  | Gtq (** [>=]*)
+  | And (** [&&]*)
+  | Or (** [||]*)
+[@@deriving show { with_path = false }]
 
 type unary_op =
-  | Minus
-  | Not
-[@@deriving eq, show { with_path = false }]
+  | Minus (** [-]*)
+  | Not (** [not]*)
+[@@deriving show { with_path = false }]
 
 type const =
-  | Int of int
-  | Bool of bool
-  | Nil
-  | Unit
-[@@deriving eq, show { with_path = false }]
+  | Const_int of int (** Integers constants such as [52] *)
+  | Const_bool of bool (** Boolean constant: [true], [false]*)
+  | Const_nil (** Represents empty list [[]] *)
+[@@deriving show { with_path = false }]
 
-type ptrn =
-  | PConst of const
-  | PVal of ident
-  | Pcons of ptrn * ptrn
-  | Pany (* the pattern _ *)
-[@@deriving eq, show { with_path = false }]
+type pattern =
+  | Pat_const of const (** Patterns such as [1], [true] *)
+  | Pat_var of ident (** A variable pattern such as [x] *)
+  | Pat_cons of pattern * pattern (** The pattern such as [P1::P2] *)
+  | Pat_any (** The pattern [_] *)
+  | Pat_tuple of pattern list (** Patterns [(P1, ..., P2)]
+                                  Invariant : [n >= 2]*)
+[@@deriving show { with_path = false }]
 
-type exp =
-  | EConst of const
-  | UnaryOp of unary_op * exp
-  | BinOp of bin_op * exp * exp
-  | EVal of ident
-  | Fun of ptrn * exp
-  | Let of decl * exp
-  | LetRec of decl * exp
-  | Match of exp * (ptrn * exp) list
-  | IfThenElse of exp * exp * exp
-  | App of exp * exp
-  | Eobject of ptrn * field list
-  | Esend of exp * ptrn (* not sure *)
-[@@deriving eq, show { with_path = false }]
+type expression =
+  | Exp_constant of const (** Expressions constant such as [1], [true] *)
+  | Exp_unary_op of unary_op * expression
+  | Exp_bin_op of bin_op * expression * expression
+  | Exp_ident of ident (** Identifiers such as [x] *)
+  | Exp_tuple of expression list (** Expressions [(E1, ..., En)]
+                                     Invariant: [n >= 2] *)
+  | Exp_function of pattern * expression (** [fun P1 -> E] *)
+  | Exp_let of decl * expression
+  (** [Exp_let({d_rec=flag; P; E}, E')] represents:
+      - [let P = E in E'] when [flag] is {{!rec_flag.Nonrecursive} [Nonrecursive]}
+      - [let rec P = E in E'] when [d_rec] is {{!rec_flag.Recursive} [Recursive]} *)
+  | Exp_match of expression * (pattern * expression) list
+  (** [match E0 with P1 -> E1 | .. | Pn -> En] *)
+  | Exp_ifthenelse of expression * expression * expression (** [if E1 then E2 else E3] *)
+  | Exp_apply of expression * expression (** [E0 E1] *)
+  | Exp_object of obj (** [object ... end]*)
+  | Exp_send of expression * ident (** [E # m]*)
+  (*  | Exp_list of expression list (** [[E1; ..; En]]*)*)
+  | Exp_override of (ident * expression) list (** [{< x1 = E1; ...; xn = En >}] *)
+  | Exp_list of expression * expression
+  (** The expression such as [E1::E2]
+      This also represents lists [E1; ... En] via [E]*)
+[@@deriving show { with_path = false }]
 
-and decl = Pdecl of ptrn * exp
+(** Represents:
+    - [let P = E] when [d_rec] is {{!rec_flag.Nonrecursive} [Nonrecursive]}
+    - [let rec P = E] when [d_rec] is {{!rec_flag.Recursive} [Recursive]} *)
+and decl =
+  { d_rec : rec_flag
+  ; d_pat : pattern
+  ; d_expr : expression
+  }
 
-and field =
-  | Oval of ptrn * exp
-  | Omethod of private_flag * ptrn * exp
+(** Values of type {!obj} represents:
+    - [object(selfpat) ... end]
+    - [object ... end] when {{!obj.o_self} [o_self] is {{!pattern.Pat_any} [Pat_any]}} *)
+and obj =
+  { o_self : pattern
+  ; o_fields : obj_field list
+  }
 
-let c_int n = Int n
-let c_bool b = Bool b
-let nil = Nil
-let econst c = EConst c
-let pconst c = PConst c
-let pcons a b = Pcons (a, b)
-let pany = Pany
-let pnil = PConst Nil
-let eval c = EVal c
-let pval c = PVal c
-let un_op o e = UnaryOp (o, e)
-let bin_op o l r = BinOp (o, l, r)
-let pdecl i e = Pdecl (i, e)
-let plet d e = Let (d, e)
-let prlet d e = LetRec (d, e)
-let pfun i e = Fun (i, e)
-let ematch v ptrns = Match (v, ptrns)
-let eapp f a = App (f, a)
-let ite b t e = IfThenElse (b, t, e)
-let oval p e = Oval (p, e)
-let omthd f p e = Omethod (f, p, e)
-let eobj s flds = Eobject (s, flds)
-let esend s m = Esend (s, m)
+and obj_field =
+  | Obj_val of ident * expression (** [val x = E] *)
+  | Obj_method of private_flag * ident * expression (** [method x = E]*)
+
+type structure_item =
+  | Str_eval of expression (** [E] *)
+  | Str_value of decl
+  (** [Str_value({is_rec; P; E})] represents:
+      - [let P = E] when {{!rec_flag.Nonrecursive}[Nonrecursive]
+      - [let rec P = E] when [d_rec] is {{!rec_flag.Recursive}[Recursive]} *)
+[@@deriving show { with_path = false }]
+
+(** Represents whole program with all statements *)
+type program = structure_item list [@@deriving show { with_path = false }]

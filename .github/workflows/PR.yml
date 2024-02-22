@@ -7,6 +7,7 @@ on:
 env:
   OPAMROOT: /home/user/.opam
   OPAMYES: true
+  OPAMCONFIRMLEVEL: unsafe-yes
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -27,13 +28,14 @@ jobs:
       #  if: matrix.os != 'macos-latest'
 
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0                # fix me later
 
-      #- run: opam pin add https://github.com/Kakadu/mylinter.git --no-action
-      #- name: Installing a linter
-      #  run: opam install zanuda --yes
+      - run: |
+          opam pin add https://github.com/Kakadu/zanuda.git --no-action
+          opam reinstall zanuda --yes
+
 
       - name: List installed OPAM packages
         run: opam list
@@ -66,7 +68,11 @@ jobs:
         #if: ${{ github.event.pull_request.user.login == 'fp2022-helper' }}
 
       - name: Installing dependencies
-        run: cd ${{ env.latest }} && opam install . --deps-only --with-test --with-doc
+        run: |
+          sudo apt update
+          opam update
+          opam install ./${{ env.latest }} --depext-only --with-test --with-doc
+          opam install ./${{ env.latest }} --deps-only --with-test --with-doc
 
       - name: Naive linting
         run: |
@@ -82,11 +88,6 @@ jobs:
 
       - name: Running tests in ${{ env.latest }}...
         run: cd ${{ env.latest }} && opam exec -- dune runtest --profile=release
-
-      - name: Build API documentation for ${{ env.latest }}...
-        run: |
-          opam install odoc --yes
-          cd ${{ env.latest }} && opam exec -- dune build @doc --profile=release
 
       - name: Setting the environment
         env:
@@ -122,16 +123,6 @@ jobs:
       - run: echo $(git rev-parse HEAD~1)
       - run: echo ${{ github.event.pull_request.head.sha }}
       - run: PAGER= git log
-
-      - name: Update docs artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: docs
-          path: |
-            ${{ env.latest }}/_build/default/_doc/_html
-            ${{ env.latest }}/${{ env.RDJSON_DIR_PATH }}/projectname.txt
-            ${{ env.latest }}/${{ env.RDJSON_DIR_PATH }}/PR_number.txt
-          #${{ env.latest }}/${{ env.RDJSON_DIR_PATH }}/CI_COMMIT.txt
 
       # Omitted. It is in docker image already
       #- name: Installing a clone detector
@@ -191,8 +182,31 @@ jobs:
           BISECT_FILE: /tmp/bisect_ppx_data/data
 
       - run: echo ${{ env.latest }} > ${{ env.latest }}/_coverage/projectname.txt
+
       - name: Update coverage artifact ${{ steps.calc-coverage.outputs.percent }}
         uses: actions/upload-artifact@v3
         with:
           name: coverage
           path: ${{ env.latest }}/_coverage
+
+      ###################### Upload Docs #####################################
+      - name: Build API documentation for ${{ env.latest }}...
+        run: |
+          opam install odoc --yes
+          cd ${{ env.latest }} && opam exec -- dune build @doc --profile=release
+
+      - run: echo ${{ github.event.number }} > ${{ env.latest }}/PR_number.txt
+      - run: echo ${{ env.latest }}          > ${{ env.latest }}/projectname.txt
+      - run: cp ${{ env.latest }}/_coverage/percent.txt .
+      - run: cp ${{ env.latest }}/_build/default/_doc/_html . -r
+
+      - name: Update docs artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: docs
+          path: |
+            _html
+            projectname.txt
+            PR_number.txt
+            percent.txt
+          #${{ env.latest }}/${{ env.RDJSON_DIR_PATH }}/CI_COMMIT.txt

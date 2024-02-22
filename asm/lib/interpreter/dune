@@ -1,0 +1,9 @@
+(library
+ (name interpreter)
+ (public_name asm.Interpreter)
+ (libraries base angstrom ast parser)
+ (instrumentation
+  (backend bisect_ppx))
+ (preprocess
+  (pps ppx_expect ppx_inline_test))
+ (inline_tests))
