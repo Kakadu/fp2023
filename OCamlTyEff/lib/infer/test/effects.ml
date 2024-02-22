@@ -282,3 +282,36 @@ let%expect_test _ =
          let _ = print_string "hi" in ()
        in () |} ;
   [%expect {| unit -[console]-> unit |}]
+
+let%expect_test _ =
+  run
+    {|
+    let map f l =
+      let rec helper acc = function
+        | [] -> acc []
+        | x :: xs -> helper (fun ys -> acc (f x :: ys)) xs
+      in
+      helper (fun ys -> ys) l
+    |} ;
+  [%expect {| map: 'a 'b 'e. ('a -'e-> 'b) -> 'a list -'e-> 'b list |}]
+
+let%expect_test _ =
+  run
+    {|
+    let rev l =
+      let rec helper acc = function
+        | [] -> acc
+        | hd :: tl -> helper (hd :: acc) tl
+      in
+      helper [] l
+    |} ;
+  [%expect {| rev: 'a. 'a list -> 'a list |}]
+
+let%expect_test _ =
+  run
+    {|
+    let rec list_iter f = function
+      | [] -> ()
+      | hd :: tl -> let () = f hd in list_iter f tl
+    |} ;
+  [%expect {| list_iter: 'a 'e. ('a -'e-> unit) -> 'a list -'e-> unit |}]

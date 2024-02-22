@@ -216,7 +216,9 @@ let solve cs =
           | TyEqConstr (t1, t2, Dont_unify_eff)
           (* solve after all other eq constraints on [t1] & [t2] are solved *)
             when VarSet.is_empty
-                 @@ VarSet.inter (activevars rest)
+                 @@ VarSet.inter
+                      (activevars ~incl_impl_inst:false ~incl_effeq_late:false
+                         rest )
                       (VarSet.union (Ty.vars t1) (Ty.vars t2)) ->
               ok
           | EffEqConstr (eff1, eff2, EffEq_Late)
