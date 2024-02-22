@@ -1213,7 +1213,7 @@ let parse_init_smeasure = parse_measure_type &gt;&gt;<span data-count="61">|</sp
 
 (* Parsing float + measure single: 7.77 &lt;m&gt;*)
 
-let construct_float_measure = angle_bracket<span data-count="61">s</span> @@ parse_smeasure
+let construct_float_measure = angle_bracket<span data-count="61">s</span> parse_smeasure
 
 let parse_float_smeasure = 
   lift<span data-count="61">2</span> (fun f m -&gt; <span data-count="0">(</span>measure_float f m))

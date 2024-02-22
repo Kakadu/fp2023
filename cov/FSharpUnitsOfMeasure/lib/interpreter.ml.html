@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8"/>
     <title>interpreter.ml &mdash; Coverage report</title>
-    <meta name="description" content="71.46% coverage in lib/interpreter.ml">
+    <meta name="description" content="70.96% coverage in lib/interpreter.ml">
     <link rel="stylesheet" href="../coverage.css"/>
     <script src="../highlight.pack.js"></script>
     <script>hljs.initHighlightingOnLoad();</script>
@@ -15,7 +15,7 @@
           <span class="dirname">lib/</span>interpreter.ml
         </a>
       </h1>
-      <h2>71.46%</h2>
+      <h2>70.96%</h2>
     </div>
     <div id="navbar">
       <span class="unvisited" style="top:8.84%"></span>
@@ -158,7 +158,7 @@
 <a id="L41"></a><span > </span>
 <a id="L42"></a><span > </span>
 <a id="L43"></a><span > </span>
-<a id="L44"></a><span class="visited"> </span>
+<a id="L44"></a><span > </span>
 <a id="L45"></a><span class="visited"> </span>
 <a id="L46"></a><span > </span>
 <a id="L47"></a><span class="visited"> </span>
@@ -166,7 +166,7 @@
 <a id="L49"></a><span class="unvisited"> </span>
 <a id="L50"></a><span class="visited"> </span>
 <a id="L51"></a><span > </span>
-<a id="L52"></a><span class="visited"> </span>
+<a id="L52"></a><span > </span>
 <a id="L53"></a><span class="visited"> </span>
 <a id="L54"></a><span class="visited"> </span>
 <a id="L55"></a><span class="unvisited"> </span>
@@ -229,7 +229,7 @@
 <a id="L112"></a><span > </span>
 <a id="L113"></a><span > </span>
 <a id="L114"></a><span > </span>
-<a id="L115"></a><span class="visited"> </span>
+<a id="L115"></a><span > </span>
 <a id="L116"></a><span class="visited"> </span>
 <a id="L117"></a><span class="unvisited"> </span>
 <a id="L118"></a><span class="visited"> </span>
@@ -279,13 +279,13 @@
 <a id="L162"></a><span > </span>
 <a id="L163"></a><span > </span>
 <a id="L164"></a><span > </span>
-<a id="L165"></a><span class="visited"> </span>
+<a id="L165"></a><span > </span>
 <a id="L166"></a><span class="visited"> </span>
 <a id="L167"></a><span class="visited"> </span>
 <a id="L168"></a><span > </span>
 <a id="L169"></a><span > </span>
 <a id="L170"></a><span > </span>
-<a id="L171"></a><span class="visited"> </span>
+<a id="L171"></a><span > </span>
 <a id="L172"></a><span class="unvisited"> </span>
 <a id="L173"></a><span class="visited"> </span>
 <a id="L174"></a><span > </span>
@@ -309,13 +309,13 @@
 <a id="L192"></a><span > </span>
 <a id="L193"></a><span > </span>
 <a id="L194"></a><span > </span>
-<a id="L195"></a><span class="visited"> </span>
+<a id="L195"></a><span > </span>
 <a id="L196"></a><span class="visited"> </span>
 <a id="L197"></a><span class="visited"> </span>
 <a id="L198"></a><span > </span>
 <a id="L199"></a><span > </span>
 <a id="L200"></a><span > </span>
-<a id="L201"></a><span class="visited"> </span>
+<a id="L201"></a><span > </span>
 <a id="L202"></a><span class="visited"> </span>
 <a id="L203"></a><span class="unvisited"> </span>
 <a id="L204"></a><span class="visited"> </span>
@@ -332,7 +332,7 @@
 <a id="L215"></a><span > </span>
 <a id="L216"></a><span > </span>
 <a id="L217"></a><span > </span>
-<a id="L218"></a><span class="visited"> </span>
+<a id="L218"></a><span > </span>
 <a id="L219"></a><span class="visited"> </span>
 <a id="L220"></a><span class="visited"> </span>
 <a id="L221"></a><span > </span>
@@ -1270,19 +1270,19 @@ module Interpret (M : FailMonad) = struct
   ;;
 
   (* Создаем string list из какого-то measure *)
-  let rec measure_to_strlist list measure =
-    <span data-count="117">m</span>atch measure with
+  let rec measure_to_strlist list =
+    function
     | <span data-count="77">S</span>Measure (m, p) -&gt; 
       (match p with 
         | <span data-count="53">P</span>ow (FInt (1)) -&gt; m :: list
         | <span data-count="24">P</span>ow (FInt (n)) -&gt; (m ^ "^" ^ Int.to_strin<span data-count="24">g</span> ( n)) :: list
         | <span data-count="0">_</span> -&gt; [])
     | <span data-count="40">M</span>Measure (m1, op, m2) -&gt;
-      let op_str op =
-        <span data-count="40">(</span>match op with
+      let op_str =
+        function
         | <span data-count="17">M</span>ul -&gt; "*"  
         | <span data-count="23">D</span>iv -&gt; "/"
-        | <span data-count="0">_</span> -&gt; "")
+        | <span data-count="0">_</span> -&gt; ""
       in 
       let measure_list_with_op = (op_st<span data-count="40">r</span> op) :: measure_to_strlis<span data-count="40">t</span> list m2 
       in
@@ -1328,7 +1328,7 @@ module Interpret (M : FailMonad) = struct
     <span data-count="27">l</span>et m3 = strlistlist_to_strlist @@ dec_lis<span data-count="27">t</span> m1 env
     in
     <span data-count="27">i</span>f Poly.(=) m3 m1
-      then <span data-count="18">r</span>eturn @@ m3
+      then <span data-count="18">r</span>eturn m3
     else <span data-count="9">m</span>base m3 env
   ;;
 
@@ -1341,8 +1341,8 @@ module Interpret (M : FailMonad) = struct
 
   (* Произведение VFloatMeasure *)
 
-  let rec m1_el_with_m2 z1 elem m2 =
-    <span data-count="27">m</span>atch m2 with
+  let rec m1_el_with_m2 z1 elem =
+    function
     | <span data-count="2">[</span>] -&gt; z1 :: [elem]
     | <span data-count="0">_</span> :: [] -&gt; []
     | <span data-count="25">z</span>2 :: hd :: tl-&gt; 
@@ -1391,14 +1391,14 @@ module Interpret (M : FailMonad) = struct
     | <span data-count="18">z</span> :: hd :: tl -&gt; m1_el_with_m<span data-count="18">2</span> z hd m2 :: mult_m1_with_m<span data-count="18">2</span> tl m2
   ;;
 
-  let rec not_uniq_in_m1 elem m1 =
-      <span data-count="52">m</span>atch m1 with
-      | <span data-count="2">[</span>] -&gt; false
-      | <span data-count="50">h</span>d :: tl -&gt; if String.(=) (remove_degre<span data-count="50">e</span> hd) (remove_degre<span data-count="50">e</span> elem) then <span data-count="16">t</span>rue else <span data-count="34">n</span>ot_uniq_in_m1 elem tl
+  let rec not_uniq_in_m1 elem =
+    function
+    | <span data-count="2">[</span>] -&gt; false
+    | <span data-count="50">h</span>d :: tl -&gt; if String.(=) (remove_degre<span data-count="50">e</span> hd) (remove_degre<span data-count="50">e</span> elem) then <span data-count="16">t</span>rue else <span data-count="34">n</span>ot_uniq_in_m1 elem tl
   ;;
 
-  let mult_m2_with_m1 m1 m2 =
-      <span data-count="11">m</span>atch m2 with
+  let mult_m2_with_m1 m1 =
+      function
       | <span data-count="0">[</span>] -&gt; m1
       | <span data-count="11">h</span>d :: tl -&gt; 
           let rec merge_uniq_el m1 tl = 
@@ -1421,14 +1421,14 @@ module Interpret (M : FailMonad) = struct
             <span data-count="2">m</span>erge_uniq_e<span data-count="2">l</span> m1 tl @ ["*"] @ [hd]
   ;;   
 
-  let remove_first_element lst =
-    <span data-count="11">m</span>atch lst with
+  let remove_first_element =
+    function
     | <span data-count="1">[</span>] -&gt; []
     | <span data-count="10">_</span>::tl -&gt; tl
   ;;
 
-  let rec remove_excess_pow lst =
-    <span data-count="31">m</span>atch lst with
+  let rec remove_excess_pow =
+    function
     | <span data-count="11">[</span>] -&gt; []
     | <span data-count="0">h</span>d :: [] -&gt; [hd]
     | <span data-count="20">z</span> :: hd :: tl -&gt; 
@@ -1444,8 +1444,8 @@ module Interpret (M : FailMonad) = struct
     @@ mult_m2_with_m<span data-count="7">1</span> (strlistlist_to_strlis<span data-count="7">t</span> (mult_m1_with_m<span data-count="7">2</span> ("*" :: m1) ("*" :: m2))) m2
   ;;
 
-  let rec process_list lst =
-    <span data-count="18">m</span>atch lst with
+  let rec process_list =
+    function
     | <span data-count="4">[</span>] -&gt; []
     | <span data-count="14">h</span>d::tl -&gt;
         match hd with
