@@ -23,6 +23,9 @@ type strategy =
   | NO
   | AO
 
+(** To silence a warning in the template *)
+let _ = AO
+
 type opts =
   { mutable batch : bool
   ; mutable stra : strategy

@@ -1,0 +1,10 @@
+(library
+ (name ruby_lib)
+ (public_name Ruby.Lib)
+ (modules Ast Interpret Parser)
+ (libraries base angstrom ppx_show.runtime)
+ (preprocess
+  (pps ppx_expect ppx_deriving.show ppx_inline_test ppx_variants_conv))
+ (instrumentation
+  (backend bisect_ppx))
+ (inline_tests))

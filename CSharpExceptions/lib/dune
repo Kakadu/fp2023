@@ -1,20 +1,29 @@
 (library
- (name lambda_lib)
+ (name csharp_Exc_Lib)
  (public_name CSharpExceptions.Lib)
- (modules Ast Lambda Interpret Parser Printast Pprintast utils)
- (modules_without_implementation ast)
- (libraries base angstrom)
+ (modules
+  Ast
+  Parser
+  Type_check
+  Env_types
+  Common_types
+  Errors
+  Monads
+  Base_lib
+  Interpreter
+  Interpret_converters)
+ (libraries base angstrom str)
  (preprocess
-  (pps ppx_deriving.show))
+  (pps ppx_deriving.show ppx_deriving.eq))
  (instrumentation
   (backend bisect_ppx)))
 
 (library
- (name tests)
- (modules tests)
- (libraries lambda_lib)
+ (name ml_tests)
+ (modules Pars_tests Type_check_tests Interpreter_tests)
+ (libraries csharp_Exc_Lib)
  (preprocess
-  (pps ppx_expect ppx_deriving.show))
+  (pps ppx_expect ppx_deriving.show ppx_inline_test))
  (instrumentation
   (backend bisect_ppx))
  (inline_tests))
