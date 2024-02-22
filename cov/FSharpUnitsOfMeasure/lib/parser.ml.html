@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8"/>
     <title>parser.ml &mdash; Coverage report</title>
-    <meta name="description" content="95.01% coverage in lib/parser.ml">
+    <meta name="description" content="95.00% coverage in lib/parser.ml">
     <link rel="stylesheet" href="../coverage.css"/>
     <script src="../highlight.pack.js"></script>
     <script>hljs.initHighlightingOnLoad();</script>
@@ -15,28 +15,28 @@
           <span class="dirname">lib/</span>parser.ml
         </a>
       </h1>
-      <h2>95.01%</h2>
+      <h2>95.00%</h2>
     </div>
     <div id="navbar">
-      <span class="some-visited" style="top:2.15%"></span>
-      <span class="unvisited" style="top:5.09%"></span>
-      <span class="some-visited" style="top:6.07%"></span>
-      <span class="unvisited" style="top:6.85%"></span>
-      <span class="unvisited" style="top:7.05%"></span>
-      <span class="unvisited" style="top:7.44%"></span>
-      <span class="unvisited" style="top:8.22%"></span>
-      <span class="unvisited" style="top:8.41%"></span>
-      <span class="unvisited" style="top:9.00%"></span>
-      <span class="unvisited" style="top:9.20%"></span>
-      <span class="unvisited" style="top:10.57%"></span>
-      <span class="unvisited" style="top:14.29%"></span>
-      <span class="unvisited" style="top:15.46%"></span>
-      <span class="unvisited" style="top:17.81%"></span>
-      <span class="unvisited" style="top:18.00%"></span>
-      <span class="some-visited" style="top:29.16%"></span>
-      <span class="unvisited" style="top:42.27%"></span>
-      <span class="unvisited" style="top:42.47%"></span>
-      <span class="unvisited" style="top:42.86%"></span>
+      <span class="some-visited" style="top:2.16%"></span>
+      <span class="unvisited" style="top:5.10%"></span>
+      <span class="some-visited" style="top:6.08%"></span>
+      <span class="unvisited" style="top:6.86%"></span>
+      <span class="unvisited" style="top:7.06%"></span>
+      <span class="unvisited" style="top:7.45%"></span>
+      <span class="unvisited" style="top:8.24%"></span>
+      <span class="unvisited" style="top:8.43%"></span>
+      <span class="unvisited" style="top:9.02%"></span>
+      <span class="unvisited" style="top:9.22%"></span>
+      <span class="unvisited" style="top:10.59%"></span>
+      <span class="unvisited" style="top:14.31%"></span>
+      <span class="unvisited" style="top:15.49%"></span>
+      <span class="unvisited" style="top:17.84%"></span>
+      <span class="unvisited" style="top:18.04%"></span>
+      <span class="some-visited" style="top:29.22%"></span>
+      <span class="unvisited" style="top:42.35%"></span>
+      <span class="unvisited" style="top:42.55%"></span>
+      <span class="unvisited" style="top:42.94%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -551,7 +551,6 @@
 <a id="L508"></a><span class="visited"> </span>
 <a id="L509"></a><span class="visited"> </span>
 <a id="L510"></a><span class="visited"> </span>
-<a id="L511"></a><span class="visited"> </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -1066,7 +1065,6 @@
 <a href="#L508">508</a>
 <a href="#L509">509</a>
 <a href="#L510">510</a>
-<a href="#L511">511</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2021-2023, Efim Perevalov *)
 
@@ -1578,7 +1576,6 @@ let parse_expression = pack.expressio<span data-count="61">n</span> pack
 let parse_program = many<span data-count="61">1</span> (toke<span data-count="61">n</span> parse_expression &lt;<span data-count="61">*</span> toke<span data-count="61">n</span> (man<span data-count="61">y</span> (stoke<span data-count="61">n</span> ";;")))
 let parse_str p s = <span data-count="157">p</span>arse_string ~consume:All p s
 let parser str = <span data-count="57">p</span>arse_str parse_program (String.stri<span data-count="57">p</span> str)
-let parser1234567 = parse_strin<span data-count="61">g</span> ~consume:All parse_expression
 </code></pre>
       </div>
     </div>
