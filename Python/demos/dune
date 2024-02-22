@@ -12,131 +12,14 @@
  (deps %{bin:demo_fact}))
 
 (executable
- (name interpreter_fact_test)
- (public_name interpreter_fact_test)
- (modules interpreter_fact_test)
- (libraries Python.Lib)
+ (name interpreter)
+ (public_name interpreter)
+ (modules interpreter)
+ (libraries Python.Lib stdio)
  (preprocess
-  (pps ppx_show))
+  (pps ppx_show ppx_deriving.eq))
  (instrumentation
   (backend bisect_ppx)))
 
 (cram
- (deps %{bin:interpreter_fact_test}))
-
-(executable
- (name parse_and_interpret_fact_test)
- (public_name parse_and_interpret_fact_test)
- (modules parse_and_interpret_fact_test)
- (libraries Python.Lib)
- (preprocess
-  (pps ppx_show))
- (instrumentation
-  (backend bisect_ppx)))
-
-(cram
- (deps %{bin:parse_and_interpret_fact_test}))
-
-(executable
- (name change_print_test)
- (public_name change_print_test)
- (modules change_print_test)
- (libraries Python.Lib)
- (preprocess
-  (pps ppx_show))
- (instrumentation
-  (backend bisect_ppx)))
-
-(cram
- (deps %{bin:change_print_test}))
-
-(executable
- (name adding_class_to_env_test)
- (public_name adding_class_to_env_test)
- (modules adding_class_to_env_test)
- (libraries Python.Lib)
- (preprocess
-  (pps ppx_show))
- (instrumentation
-  (backend bisect_ppx)))
-
-(cram
- (deps %{bin:adding_class_to_env_test}))
-
-(executable
- (name method_call_test)
- (public_name method_call_test)
- (modules method_call_test)
- (libraries Python.Lib)
- (preprocess
-  (pps ppx_show))
- (instrumentation
-  (backend bisect_ppx)))
-
-(cram
- (deps %{bin:method_call_test}))
-
-(executable
- (name string_interpolation_test)
- (public_name string_interpolation_test)
- (modules string_interpolation_test)
- (libraries Python.Lib)
- (preprocess
-  (pps ppx_show))
- (instrumentation
-  (backend bisect_ppx)))
-
-(cram
- (deps %{bin:string_interpolation_test}))
-
-(executable
- (name anon_func_test)
- (public_name anon_func_test)
- (modules anon_func_test)
- (libraries Python.Lib)
- (preprocess
-  (pps ppx_show))
- (instrumentation
-  (backend bisect_ppx)))
-
-(cram
- (deps %{bin:anon_func_test}))
-
-(executable
- (name logic_test)
- (public_name logic_test)
- (modules logic_test)
- (libraries Python.Lib)
- (preprocess
-  (pps ppx_show))
- (instrumentation
-  (backend bisect_ppx)))
-
-(cram
- (deps %{bin:logic_test}))
-
-(executable
- (name change_func_test)
- (public_name change_func_test)
- (modules change_func_test)
- (libraries Python.Lib)
- (preprocess
-  (pps ppx_show))
- (instrumentation
-  (backend bisect_ppx)))
-
-(cram
- (deps %{bin:change_func_test}))
-
-(executable
- (name dynamic_adding_test)
- (public_name dynamic_adding_test)
- (modules dynamic_adding_test)
- (libraries Python.Lib)
- (preprocess
-  (pps ppx_show))
- (instrumentation
-  (backend bisect_ppx)))
-
-(cram
- (deps %{bin:dynamic_adding_test}))
+ (deps %{bin:interpreter}))
