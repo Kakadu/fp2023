@@ -7,7 +7,7 @@ let parsing_and_inerpretation input =
   match parser input with
   | Ok ast ->
     (match interpreter ast with
-     | Ok (_,res) -> pp_value Format.std_formatter res
+     | Ok (_, res) -> pp_value Format.std_formatter res
      | Error e -> Format.printf "Interpretation error. %a" print_error e)
   | Error e -> Format.printf "Parsing error %s" e
 ;;
