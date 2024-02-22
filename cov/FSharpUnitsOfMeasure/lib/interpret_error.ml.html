@@ -18,12 +18,12 @@
       <h2>40.00%</h2>
     </div>
     <div id="navbar">
-      <span class="unvisited" style="bottom:32.14%"></span>
-      <span class="unvisited" style="bottom:28.57%"></span>
-      <span class="unvisited" style="bottom:14.29%"></span>
-      <span class="unvisited" style="bottom:10.71%"></span>
-      <span class="unvisited" style="bottom:7.14%"></span>
-      <span class="unvisited" style="bottom:3.57%"></span>
+      <span class="unvisited" style="bottom:34.48%"></span>
+      <span class="unvisited" style="bottom:31.03%"></span>
+      <span class="unvisited" style="bottom:13.79%"></span>
+      <span class="unvisited" style="bottom:10.34%"></span>
+      <span class="unvisited" style="bottom:6.90%"></span>
+      <span class="unvisited" style="bottom:3.45%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -50,12 +50,13 @@
 <a id="L20"></a><span class="unvisited"> </span>
 <a id="L21"></a><span class="visited"> </span>
 <a id="L22"></a><span class="visited"> </span>
-<a id="L23"></a><span class="visited"> </span>
-<a id="L24"></a><span class="unvisited"> </span>
+<a id="L23"></a><span > </span>
+<a id="L24"></a><span class="visited"> </span>
 <a id="L25"></a><span class="unvisited"> </span>
 <a id="L26"></a><span class="unvisited"> </span>
 <a id="L27"></a><span class="unvisited"> </span>
-<a id="L28"></a><span > </span>
+<a id="L28"></a><span class="unvisited"> </span>
+<a id="L29"></a><span > </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -88,6 +89,7 @@
 <a href="#L26">26</a>
 <a href="#L27">27</a>
 <a href="#L28">28</a>
+<a href="#L29">29</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2023-2024, Efim Perevalov *)
 
@@ -110,7 +112,8 @@ let print_error e : error -&gt; unit =
   | <span data-count="0">D</span>ivideByZeroException -&gt; fprintf e "Attempted to divide by zero"
   | <span data-count="0">U</span>ndefinedValue v -&gt; fprintf e "The value or constructor %s is not defined" v
   | <span data-count="1">U</span>ndefinedType t -&gt; fprintf e "The type '%s' is not defined" t
-  | <span data-count="1">D</span>ifferentMeasure (m1, m2) -&gt; fprintf e "The unit of measure '%s' does not match the unit of measure '%s'" m1 m2
+  | <span data-count="1">D</span>ifferentMeasure (m1, m2) -&gt; 
+    fprintf e "The unit of measure '%s' does not match the unit of measure '%s'" m1 m2
   | <span data-count="1">U</span>nexpectedInfix -&gt; fprintf e "Unexpected infix operator in type definition"
   | <span data-count="0">U</span>nsupportedOperation -&gt; fprintf e "This type does not support this operator"
   | <span data-count="0">U</span>nexpectedPattern -&gt; fprintf e "Unexpected in pattern"

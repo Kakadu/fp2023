@@ -28,7 +28,7 @@
       <span class="unvisited" style="top:18.82%"></span>
       <span class="some-visited" style="top:22.35%"></span>
       <span class="unvisited" style="top:23.53%"></span>
-      <span class="some-visited" style="top:27.06%"></span>
+      <span class="some-visited" style="top:28.24%"></span>
       <span class="unvisited" style="top:30.59%"></span>
       <span class="unvisited" style="top:31.76%"></span>
       <span class="unvisited" style="top:32.94%"></span>
@@ -76,8 +76,8 @@
 <a id="L20"></a><span class="unvisited"> </span>
 <a id="L21"></a><span > </span>
 <a id="L22"></a><span > </span>
-<a id="L23"></a><span class="some-visited"> </span>
-<a id="L24"></a><span > </span>
+<a id="L23"></a><span > </span>
+<a id="L24"></a><span class="some-visited"> </span>
 <a id="L25"></a><span > </span>
 <a id="L26"></a><span class="unvisited"> </span>
 <a id="L27"></a><span class="unvisited"> </span>
@@ -248,11 +248,11 @@
 
 <span data-count="58">a</span>nd measure_type =
   <span data-count="0">|</span> SMeasure of strin<span data-count="41">g</span> * po<span data-count="0">w</span> (** single measure: &lt;m&gt;*)
-  <span data-count="0">|</span> MMeasure of measure_type * binary_op * measure_typ<span data-count="0">e</span> (** multiple measure: &lt;m / sec * h ... &gt;*)
+  <span data-count="0">|</span> MMeasure of measure_type * binary_op * measure_typ<span data-count="0">e</span> 
+  (** multiple measure: &lt;m / sec * h ... &gt;*)
 [@@deriving eq, show { with_path = false }]
 
-<span data-count="82">a</span>nd pow = <span data-count="0">P</span>ow of type<span data-count="0">s</span> (** ^ *)
-[@@deriving eq, show { with_path = false }]
+<span data-count="82">a</span>nd pow = <span data-count="0">P</span>ow of type<span data-count="0">s</span> (** ^ *) [@@deriving eq, show { with_path = false }]
 
 <span data-count="0">a</span>nd binary_op =
   <span data-count="0">|</span> Add (** + *)
@@ -285,15 +285,15 @@
 [@@deriving show { with_path = false }<span data-count="28">]</span>
 
 <span data-count="1995">t</span>ype expression = 
-  | EConst of types  (** constant *)
+  | EConst of types (** constant *)
   | EVar of id (** variable *)
   | EBinaryOp of binary_op (** binary operation *)
   | EList of <span data-count="170">e</span>xpression lis<span data-count="38">t</span> (** list *)
-  | ETuple of <span data-count="173">e</span>xpression lis<span data-count="39">t</span>  (** tuple *)
+  | ETuple of <span data-count="173">e</span>xpression lis<span data-count="39">t</span> (** tuple *)
   | EApp of expression * expression (** application *) 
   | EIfElse of expression * expression * expression (** if z then v else n*)
   | ELet of strin<span data-count="9">g</span> * id * expression (** let z = ... or let rec z = ...*) 
-  | EFun of pattern * expression  (** fun z -&gt; z + z *)
+  | EFun of pattern * expression (** fun z -&gt; z + z *)
   | EMatch of expression * <span data-count="20">(</span><span data-count="8">p</span>attern * expression) lis<span data-count="6">t</span> (** match *)
   | EMeasure of measure_init (** measure *)
 [@@deriving show { with_path = false }<span data-count="1303">]</span>
