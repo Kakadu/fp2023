@@ -80,6 +80,6 @@ type value =
   | VList of value list (** list *)
   | VBinOp of binary_op (** binary operation *)
   | VFun of pattern * expression * (id * value) list (** fun *)
-  | VMeasureList of id list
+  | VMeasureList of id list (** measure list*)
   | VFloatMeasure of value * id list (** float + measure*)
 [@@deriving show { with_path = false }]

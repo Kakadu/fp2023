@@ -46,13 +46,13 @@ module Interpret (M : FailMonad) = struct
       (match p with 
         | Pow (FInt (1)) -> m :: list
         | Pow (FInt (n)) -> (m ^ "^" ^ Int.to_string ( n)) :: list
-        | _ -> failwith "This type does not support this operator")
+        | _ -> [])
     | MMeasure (m1, op, m2) ->
       let op_str op =
         (match op with
         | Mul -> "*"  
         | Div -> "/"
-        | _ -> failwith "This type does not support this operator")
+        | _ -> "")
       in 
       let measure_list_with_op = (op_str op) :: measure_to_strlist list m2 
       in
