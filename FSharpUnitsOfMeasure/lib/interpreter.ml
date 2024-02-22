@@ -358,7 +358,7 @@ module Interpret (M : FailMonad) = struct
        | FFloat fnum, VFloat vnum when Float.( = ) fnum vnum -> return []
        | Measure_float (_, SMeasure (m1, p)), VFloatMeasure (_, m2) ->
          (match p with
-          | Pow (FInt n) when Poly.( = ) [m1 ^ "^" ^ Int.to_string n] m2 -> return []
+          | Pow (FInt n) when Poly.( = ) [ m1 ^ "^" ^ Int.to_string n ] m2 -> return []
           | _ -> fail UnexpectedPattern)
        | FUnit, VUnit -> return []
        | FNil, VList v ->
