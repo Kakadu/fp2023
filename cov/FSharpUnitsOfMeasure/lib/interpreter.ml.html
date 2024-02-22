@@ -1163,7 +1163,7 @@
 <a href="#L521">521</a>
 <a href="#L522">522</a>
 </pre>
-<pre><code class="ocaml">(** Copyright 2021-2023, Efim Perevalov *)
+<pre><code class="ocaml">(** Copyright 2023-2024, Efim Perevalov *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
@@ -1228,7 +1228,7 @@ module Interpret (M : FailMonad) = struct
     <span data-count="52">l</span>et add_degree list pow =
       <span data-count="15">L</span>ist.map
         ~f:(fun elem -&gt;
-          <span data-count="19">i</span>f String.( = <span data-count="19">)</span> elem "*<span data-count="1">"</span> || String.(=<span data-count="18">)</span> elem "/<span data-count="1">"</span>
+          <span data-count="19">i</span>f String.( = <span data-count="19">)</span> elem "*<span data-count="1">"</span> || String.( = <span data-count="18">)</span> elem "/<span data-count="1">"</span>
           then <span data-count="2">e</span>lem
           else <span data-count="17">e</span>lem ^ "^" ^ pow)
         list
@@ -1237,7 +1237,7 @@ module Interpret (M : FailMonad) = struct
     | <span data-count="0">N</span>one -&gt; []
     | <span data-count="52">S</span>ome (VMeasureList value) -&gt;
       let n = return_degree element in
-      <span data-count="52">i</span>f (String.( = ) n "") then <span data-count="37">v</span>alue else <span data-count="15">a</span>dd_degree value n
+      <span data-count="52">i</span>f String.( = ) n "" then <span data-count="37">v</span>alue else <span data-count="15">a</span>dd_degree value n
     | <span data-count="0">_</span> -&gt; []
   ;;
 
@@ -1461,14 +1461,14 @@ module Interpret (M : FailMonad) = struct
       let multm = multiplication_measure ml mr in
       <span data-count="7">(</span>match multm with
        | <span data-count="0">[</span>] -&gt; return @@ VFloat (fl *. fr)
-       | <span data-count="7">_</span> -&gt; return @@ VFloatMeasure ((VFloat (fl *. fr)), multm))
+       | <span data-count="7">_</span> -&gt; return @@ VFloatMeasure (VFloat (fl *. fr), multm))
     | <span data-count="0">D</span>iv, VFloatMeasure (VFloat fl, ml), VFloat r -&gt;
       return @@ VFloatMeasure (VFloat (fl /. r), ml)
     | <span data-count="0">D</span>iv, VFloat l, VFloatMeasure (VFloat fr, mr) -&gt;
       return @@ VFloatMeasure (VFloat (l /. fr), mr)
     | <span data-count="4">D</span>iv, VFloatMeasure (VFloat fl, ml), VFloatMeasure (VFloat fr, mr) -&gt;
       let divm = division_measure ml mr in
-      <span data-count="4">(</span>match divm with 
+      <span data-count="4">(</span>match divm with
        | <span data-count="1">[</span>] -&gt; return @@ VFloat (fl /. fr)
        | <span data-count="3">_</span> -&gt; return @@ VFloatMeasure (VFloat (fl /. fr), divm))
     (* Boolean operation *)
@@ -1520,10 +1520,10 @@ module Interpret (M : FailMonad) = struct
        | <span data-count="0">F</span>Bool fb, VBool vb when Bool.( = <span data-count="0">)</span> fb vb -&gt; <span data-count="0">r</span>eturn []
        | <span data-count="3">F</span>Int fnum, VInt vnum when fnum = vnum -&gt; <span data-count="1">r</span>eturn []
        | <span data-count="0">F</span>String fs, VString vs when String.( = <span data-count="0">)</span> fs vs -&gt; <span data-count="0">r</span>eturn []
-       | <span data-count="0">F</span>Float fnum, VFloat vnum when (Float.( = <span data-count="0">)</span> fnum vnum) -&gt; <span data-count="0">r</span>eturn []
+       | <span data-count="0">F</span>Float fnum, VFloat vnum when Float.( = <span data-count="0">)</span> fnum vnum -&gt; <span data-count="0">r</span>eturn []
        | <span data-count="0">M</span>easure_float (_, SMeasure (m1, p)), VFloatMeasure (_, m2) -&gt;
          (match p with
-          | <span data-count="0">P</span>ow (FInt n) when Poly.(=<span data-count="0">)</span> [m1 ^ "^" ^ Int.to_strin<span data-count="0">g</span> n] m2 -&gt; <span data-count="0">r</span>eturn []
+          | <span data-count="0">P</span>ow (FInt n) when Poly.( = <span data-count="0">)</span> [ m1 ^ "^" ^ Int.to_strin<span data-count="0">g</span> n ] m2 -&gt; <span data-count="0">r</span>eturn []
           | <span data-count="0">_</span> -&gt; fail UnexpectedPattern)
        | <span data-count="0">F</span>Unit, VUnit -&gt; return []
        | <span data-count="0">F</span>Nil, VList v -&gt;
@@ -1556,15 +1556,15 @@ module Interpret (M : FailMonad) = struct
     | <span data-count="70">E</span>Measure m -&gt;
       (match m with
        | <span data-count="56">S</span>Measure_init (SMeasure (m1, p)) -&gt;
-         (match p with 
-          | <span data-count="55">P</span>ow (FInt 1) -&gt; return @@ VMeasureList [m1]
+         (match p with
+          | <span data-count="55">P</span>ow (FInt 1) -&gt; return @@ VMeasureList [ m1 ]
           | <span data-count="1">_</span> -&gt; fail UnexpectedInfix)
        | <span data-count="14">M</span>Measure_init (SMeasure (_, p), m2) -&gt;
          (match p with
           | <span data-count="14">P</span>ow (FInt 1) -&gt;
             let m2 = measure_to_strlist [] m2 in
             <span data-count="14">i</span>f check m2 env
-            then <span data-count="13">r</span>eturn @@ (VMeasureList m2)
+            then <span data-count="13">r</span>eturn @@ VMeasureList m2
             else <span data-count="1">f</span>ail (UndefinedType (undefine<span data-count="1">d</span> m2 env))
           | <span data-count="0">_</span> -&gt; fail UnexpectedInfix)
        | <span data-count="0">_</span> -&gt; fail Unreachable)
