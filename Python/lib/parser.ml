@@ -532,7 +532,10 @@ let remove_columns_and_join_elses list =
 let parse p s = parse_string ~consume:All p s
 
 let pyParser =
-  let* pseudo_statement = take_while (fun c -> is_eol c) *> sep_by t_eol p_statement <* take_while (fun c -> is_eol c) in
+  let* pseudo_statement =
+    take_while (fun c -> is_eol c) *> sep_by t_eol p_statement
+    <* take_while (fun c -> is_eol c)
+  in
   let* intermediate_ast = align_pseudo_statement pseudo_statement in
   remove_columns_and_join_elses intermediate_ast
 ;;
