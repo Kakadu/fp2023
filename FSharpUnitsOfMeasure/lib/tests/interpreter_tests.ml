@@ -375,7 +375,7 @@ let%test _ =
 
 (*
    let num x = x
-   num 5 
+   num 5
 *)
 let test =
   [ ELet ("NotRec", "num", EFun (PVar "x", EVar "x"))
@@ -435,11 +435,11 @@ let%test _ =
 ;;
 
 (*
-   let num x = 
-   match x with 
-     | 1 -> 1
-     | _ -> 2  
-   num 10 
+   let num x =
+   match x with
+   | 1 -> 1
+   | _ -> 2
+   num 10
 *)
 let test =
   [ ELet
@@ -465,11 +465,11 @@ let%test _ =
 ;;
 
 (*
-   let num x = 
-   match x with 
-     | 1 -> 1
-     | _ -> 2  
-   num 10
+   let num x =
+   match x with
+   | 1 -> 1
+   | _ -> 2
+   num 1
 *)
 let test =
   [ ELet
@@ -548,12 +548,12 @@ let%test _ =
   | Ok t ->
     Format.printf "%s" (show_value t);
     false
-;; 
+;;
 
 (*
-   let rec fact n = 
-   if n = 1 
-   then 1 
+   let rec fact n =
+   if n = 1
+   then 1
    else n * (fact ( n - 1 ))
    fact 6
 *)
@@ -591,9 +591,9 @@ let%test _ =
 ;;
 
 (*
-   let rec fib n = 
-   if n <= 1 
-   then n 
+   let rec fib n =
+   if n <= 1
+   then n
    else (fib (n - 1)) + (fib (n - 2))
    fib 9
 *)
@@ -649,7 +649,7 @@ let%test _ =
 
 (*
    [<Measure>] type m
-   7.77 <m> + 7.73 <m> 
+   7.77 <m> + 7.73 <m>
 *)
 let test =
   [ EMeasure (SMeasure_init (SMeasure ("m", Pow (FInt 1))))

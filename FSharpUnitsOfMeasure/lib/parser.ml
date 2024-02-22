@@ -119,7 +119,7 @@ let parse_ffloat =
   lift3
     (fun s int_part fraction_part ->
       let float_value = float_of_string (int_part ^ "." ^ fraction_part) in
-      ffloat @@ s *. float_value)
+      ffloat @@ (s *. float_value))
     parse_sign_float
     parse_digit
     parse_decimal
@@ -172,7 +172,7 @@ let parse_init_mmeasure =
 
 (* Parsing float + measure multiple: 7.77 <sec/meters>*)
 
-let parse_float_mmeasure = 
+let parse_float_mmeasure =
   lift2 (fun f m -> Measure_float (f, m)) parse_ffloat (angle_brackets parse_mmeasure)
 ;;
 
@@ -229,15 +229,15 @@ let parse_tuple parser constructor =
 ;;
 
 type pdispatch =
-  { cons: pdispatch -> pattern t
+  { cons : pdispatch -> pattern t
   ; tuple : pdispatch -> pattern t
   ; tuple_brackets : pdispatch -> pattern t
-  ; list: pdispatch -> pattern t
+  ; list : pdispatch -> pattern t
   ; value : pdispatch -> pattern t
   ; pattern : pdispatch -> pattern t
   }
 
-let pack = 
+let pack =
   let pattern pack =
     choice
       [ pack.cons pack
@@ -288,15 +288,15 @@ type edispatch =
   { evar : edispatch -> expression t
   ; econst : edispatch -> expression t
   ; eifelse : edispatch -> expression t
-  ; elet: edispatch -> expression t
-  ; ebinaryop: edispatch -> expression t
-  ; etuple: edispatch -> expression t
-  ; elist: edispatch -> expression t
-  ; eapp: edispatch -> expression t
-  ; efun: edispatch -> expression t
-  ; ematch: edispatch -> expression t
-  ; emeasure: edispatch -> expression t
-  ; expression: edispatch -> expression t
+  ; elet : edispatch -> expression t
+  ; ebinaryop : edispatch -> expression t
+  ; etuple : edispatch -> expression t
+  ; elist : edispatch -> expression t
+  ; eapp : edispatch -> expression t
+  ; efun : edispatch -> expression t
+  ; ematch : edispatch -> expression t
+  ; emeasure : edispatch -> expression t
+  ; expression : edispatch -> expression t
   }
 
 let eifelse i expr =
@@ -327,7 +327,7 @@ let eletfun parse_expr =
   *> lift4
        (fun r name arg body ->
          let body = construct_efun arg body in
-         elet r name body )
+         elet r name body)
        parse_rec
        parse_id
        parse_arg
@@ -374,20 +374,20 @@ let parse_binop =
        ; string "-" *> return esub
        ; string ">=" *> return egreq
        ; string ">" *> return egre
-       ;  string "<=" *> return eleq
+       ; string "<=" *> return eleq
        ; string "<" *> return eless
-       ] 
+       ]
   <* take_empty
 ;;
 
 let parse_eapp parse_expr =
   take_empty
   *> lift2
-      (fun expr l ->
-        let res = List.fold ~f:eapp ~init:expr l in
-        res)
-      parse_expr
-      (many (token parse_expr))
+       (fun expr l ->
+         let res = List.fold ~f:eapp ~init:expr l in
+         res)
+       parse_expr
+       (many (token parse_expr))
 ;;
 
 let pack =
@@ -395,7 +395,7 @@ let pack =
   let econst _ = parse_econst in
   let evar _ = parse_evar in
   let expression pack =
-    choice 
+    choice
       [ pack.elet pack
       ; pack.eifelse pack
       ; pack.eapp pack
@@ -428,7 +428,7 @@ let pack =
     @@ fun _ ->
     let exp =
       choice
-        [ pack.emeasure pack 
+        [ pack.emeasure pack
         ; pack.etuple pack
         ; pack.elist pack
         ; pack.econst pack
@@ -465,8 +465,8 @@ let pack =
       ; pack.efun pack
       ; pack.ematch pack
       ]
-  in 
-  let value pack = 
+  in
+  let value pack =
     choice
       [ pack.etuple pack
       ; pack.evar pack

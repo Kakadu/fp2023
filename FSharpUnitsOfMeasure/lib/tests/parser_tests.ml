@@ -494,7 +494,7 @@ let%expect_test _ =
 (** Expressions with match test *)
 
 let%expect_test _ =
-  parsed_result 
+  parsed_result
     "match x with \n \n   | a -> b \n   | _ -> c"
     parse_expression
     show_expression;
