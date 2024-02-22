@@ -391,7 +391,7 @@ module Eval (M : MONADERROR) = struct
       | Function (i, some_params, some_body) ->
         let new_func_env = { identifier = i; params = some_params; body = some_body } in
         return (change_or_add_func new_func_env env)
-      | Setatter (classDest, methodName, methodItself) ->
+      | Setattr (classDest, methodName, methodItself) ->
         let fetchedFunc = get_func methodItself env in
         let fetchedClass = get_class classDest env in
         let changedClass =
