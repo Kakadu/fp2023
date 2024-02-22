@@ -16,6 +16,10 @@ depends: [
   "dune" {>= "3.7"}
   "base"
   "stdio"
+  "lambda-term"
+  "zed"
+  "lwt"
+  "react"
   "angstrom"
   "monads" {= "dev"}
   "ppx_deriving"

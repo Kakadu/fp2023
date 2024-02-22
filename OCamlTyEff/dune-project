@@ -25,6 +25,10 @@
   dune
   base
   stdio
+  lambda-term
+  zed
+  lwt
+  react
   angstrom
   (monads
    (= dev))

@@ -24,6 +24,7 @@ let empty =
   ; map= Map.empty (module Ident)
   ; types_arity= Map.empty (module Ident) }
 
+let idents env = Map.keys env.map
 let set env ~key ~data = {env with map= Map.set env.map ~key ~data}
 let map env ~f = {env with map= Map.map env.map ~f}
 let find env = Map.find env.map

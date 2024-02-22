@@ -1,0 +1,16 @@
+(executable
+ (public_name repl)
+ (libraries
+  base
+  stdio
+  lwt
+  react
+  zed
+  lambda-term
+  misc
+  ast
+  parse
+  types
+  infer
+  eval
+  builtin))

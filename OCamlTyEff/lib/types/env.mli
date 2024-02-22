@@ -20,6 +20,7 @@ val set_weak_counter : t -> int -> t
 
 val empty : t
 
+val idents : t -> Ident.t list
 val set : t -> key:Ident.t -> data:Scheme.t -> t
 val map : t -> f:(Scheme.t -> Scheme.t) -> t
 val find : t -> Ident.t -> Scheme.t option
