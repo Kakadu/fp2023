@@ -1278,7 +1278,7 @@ module Eval (M : MONADERROR) = struct
       | <span data-count="11">F</span>unction (i, some_params, some_body) -&gt;
         let new_func_env = { identifier = i; params = some_params; body = some_body } in
         return (change_or_add_fun<span data-count="11">c</span> new_func_env env)
-      | <span data-count="1">S</span>etatter (classDest, methodName, methodItself) -&gt;
+      | <span data-count="1">S</span>etattr (classDest, methodName, methodItself) -&gt;
         let fetchedFunc = get_func methodItself env in
         <span data-count="1">l</span>et fetchedClass = get_class classDest env in
         <span data-count="1">l</span>et changedClass =

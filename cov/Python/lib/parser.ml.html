@@ -1720,7 +1720,7 @@ type pseudo_statement =
   | While of expression * pseudo_statement list
   | Class of identifier * pseudo_statement list
   | Return of expression
-  | Setatter of identifier * identifier * identifier
+  | Setattr of identifier * identifier * identifier
   | ParsingError
 
 let rec map1 f = function
@@ -1747,8 +1747,8 @@ let rec convert_pseudoast_to_ast : pseudo_statement -&gt; statement t = function
   | <span data-count="2">W</span>hile (exp, body) -&gt;
     let* newBody = map<span data-count="2">1</span> (fun x -&gt; <span data-count="2">c</span>onvert_pseudoast_to_ast x) body in
     <span data-count="2">r</span>eturn @@ Ast.While (exp, newBody)
-  | <span data-count="2">S</span>etatter (className, methodName, methodItself) -&gt;
-    return @@ Ast.Setatter (className, methodName, methodItself)
+  | <span data-count="2">S</span>etattr (className, methodName, methodItself) -&gt;
+    return @@ Ast.Setattr (className, methodName, methodItself)
   | <span data-count="0">_</span> -&gt; fail "parsing error"
 ;;
 
@@ -1764,7 +1764,7 @@ let is_banned = function
   | <span data-count="4">"</span>while"
   | <span data-count="28">"</span>def"
   | <span data-count="8">"</span>class"
-  | <span data-count="4">"</span>setatter"
+  | <span data-count="4">"</span>setattr"
   | <span data-count="10">"</span>lambda" -&gt; true
   | <span data-count="231">_</span> -&gt; false
 ;;
@@ -1806,7 +1806,7 @@ let is_stmt_sep = function
 ;;
 
 let is_variable = function
-  | <span data-count="1137">'</span>a' .. 'z' | <span data-count="39">'</span>A' .. 'Z' | <span data-count="8">'</span>0' .. '9' | <span data-count="0">'</span>_' -&gt; true
+  | <span data-count="1133">'</span>a' .. 'z' | <span data-count="39">'</span>A' .. 'Z' | <span data-count="8">'</span>0' .. '9' | <span data-count="0">'</span>_' -&gt; true
   | <span data-count="329">_</span> -&gt; false
 ;;
 
@@ -1886,7 +1886,7 @@ let t_f = toke<span data-count="12">n</span> "f"
 let t_curlyLeft = toke<span data-count="12">n</span> "{"
 let t_curlyRight = toke<span data-count="12">n</span> "}"
 let t_tab1 = toke<span data-count="12">n</span> "\t"
-let t_setatter = toke<span data-count="12">n</span> "setatter"
+let t_setattr = toke<span data-count="12">n</span> "setattr"
 
 (* Builders *)
 let exp_add e1 e2 = <span data-count="4">A</span>rithOp (Add, e1, e2)
@@ -2065,12 +2065,12 @@ let gp_logic_ops = choic<span data-count="12">e</span> [ p_and; p_or ]
 
 (* Main parsers *)
 
-let p_setatter columns =
-  <span data-count="82">l</span>et* className = t_setatter *<span data-count="82">&gt;</span> toke<span data-count="82">n</span> "(" *<span data-count="82">&gt;</span> p_identifier in
+let p_setattr columns =
+  <span data-count="82">l</span>et* className = t_setattr *<span data-count="82">&gt;</span> toke<span data-count="82">n</span> "(" *<span data-count="82">&gt;</span> p_identifier in
   <span data-count="2">l</span>et* newMethodName = t_comma *<span data-count="2">&gt;</span> skip_whitespace *<span data-count="2">&gt;</span> p_identifier in
   <span data-count="2">l</span>et* methodItself = t_comma *<span data-count="2">&gt;</span> skip_whitespace *<span data-count="2">&gt;</span> p_identifier &lt;<span data-count="2">*</span> toke<span data-count="2">n</span> ")" in
   <span data-count="2">r</span>eturn
-    (StatementWithColumns (columns, Setatter (className, newMethodName, methodItself)))
+    (StatementWithColumns (columns, Setattr (className, newMethodName, methodItself)))
 ;;
 
 let p_expression =
@@ -2112,7 +2112,7 @@ let p_statement =
     &lt;|<span data-count="82">&gt;</span> p_retur<span data-count="82">n</span> p_expression columns
     &lt;|<span data-count="82">&gt;</span> p_clas<span data-count="82">s</span> columns
     &lt;|<span data-count="82">&gt;</span> p_els<span data-count="82">e</span> columns
-    &lt;|<span data-count="82">&gt;</span> p_setatte<span data-count="82">r</span> columns
+    &lt;|<span data-count="82">&gt;</span> p_setatt<span data-count="82">r</span> columns
     &lt;|&gt; (p_expression &gt;&gt;<span data-count="82">|</span> expression_with_column<span data-count="82">s</span> columns))
 ;;
 
@@ -2507,10 +2507,10 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  <span data-count="1">p</span>arser_tester pyParser show_statement "setatter(someClass, nickForFunc, func)";
+  <span data-count="1">p</span>arser_tester pyParser show_statement "setattr(someClass, nickForFunc, func)";
   <span data-count="1">[</span>%expect
     {|
-    (Setatter ((Identifier "someClass"), (Identifier "nickForFunc"),
+    (Setattr ((Identifier "someClass"), (Identifier "nickForFunc"),
        (Identifier "func"))) |}<span data-count="25">]</span>
 ;;
 
