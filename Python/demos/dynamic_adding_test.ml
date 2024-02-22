@@ -11,7 +11,7 @@ def funcToAdd():
 class myClass:
     def met1():
         return 1
-setattr(myClass, funco, funcToAdd)        
+setattr(myClass, "funco", funcToAdd)        
 print(myClass.funco())|}
   in
   match res with

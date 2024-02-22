@@ -69,7 +69,7 @@ type statement =
   | While of expression * statement list
   | Class of identifier * statement list
   | Return of expression
-  | Setattr of identifier * identifier * identifier
+  | Setattr of identifier * expression * identifier
 [@@deriving show { with_path = false }]
 
 type flag =

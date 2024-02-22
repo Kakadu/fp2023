@@ -19,7 +19,7 @@ type pseudo_statement =
   | While of expression * pseudo_statement list
   | Class of identifier * pseudo_statement list
   | Return of expression
-  | Setattr of identifier * identifier * identifier
+  | Setattr of identifier * expression * identifier
   | ParsingError
 
 let rec map1 f = function
@@ -366,7 +366,7 @@ let gp_logic_ops = choice [ p_and; p_or ]
 
 let p_setattr columns =
   let* className = t_setattr *> token "(" *> p_identifier in
-  let* newMethodName = t_comma *> skip_whitespace *> p_identifier in
+  let* newMethodName = t_comma *> skip_whitespace *> p_string in
   let* methodItself = t_comma *> skip_whitespace *> p_identifier <* token ")" in
   return
     (StatementWithColumns (columns, Setattr (className, newMethodName, methodItself)))
@@ -806,11 +806,11 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  parser_tester pyParser show_statement "setattr(someClass, nickForFunc, func)";
+  parser_tester pyParser show_statement {|setattr(someClass, "nickForFunc", func)|};
   [%expect
     {|
-    (Setattr ((Identifier "someClass"), (Identifier "nickForFunc"),
-       (Identifier "func"))) |}]
+    (Setattr ((Identifier "someClass"), (Const (String "nickForFunc")),
+       (Identifier "func")))|}]
 ;;
 
 let%test _ = true = is_banned "return"

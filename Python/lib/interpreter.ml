@@ -392,12 +392,17 @@ module Eval (M : MONADERROR) = struct
         let new_func_env = { identifier = i; params = some_params; body = some_body } in
         return (change_or_add_func new_func_env env)
       | Setattr (classDest, methodName, methodItself) ->
-        let fetchedFunc = get_func methodItself env in
-        let fetchedClass = get_class classDest env in
-        let changedClass =
-          change_or_add_func { fetchedFunc with identifier = methodName } fetchedClass
-        in
-        return @@ change_or_add_class changedClass env
+        (match methodName with
+         | Const (String str) ->
+           let fetchedFunc = get_func methodItself env in
+           let fetchedClass = get_class classDest env in
+           let changedClass =
+             change_or_add_func
+               { fetchedFunc with identifier = Identifier str }
+               fetchedClass
+           in
+           return @@ change_or_add_class changedClass env
+         | _ -> error "string was expected in the place of method name")
       | Else _ -> error "loose else statement"
     in
     { i_expr; i_stmt }
