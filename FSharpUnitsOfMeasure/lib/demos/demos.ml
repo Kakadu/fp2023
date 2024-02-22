@@ -1,3 +1,7 @@
+(** Copyright 2023-2024, Efim Perevalov *)
+
+(** SPDX-License-Identifier: LGPL-3.0-or-later *)
+
 open FSharpUnitsOfMeasure_lib.Ast
 open FSharpUnitsOfMeasure_lib.Interpreter
 open FSharpUnitsOfMeasure_lib.Parser

@@ -1,4 +1,4 @@
-(** Copyright 2021-2023, Efim Perevalov *)
+(** Copyright 2023-2024, Efim Perevalov *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
@@ -63,7 +63,7 @@ module Interpret (M : FailMonad) = struct
     let add_degree list pow =
       List.map
         ~f:(fun elem ->
-          if String.( = ) elem "*" || String.(=) elem "/"
+          if String.( = ) elem "*" || String.( = ) elem "/"
           then elem
           else elem ^ "^" ^ pow)
         list
@@ -72,7 +72,7 @@ module Interpret (M : FailMonad) = struct
     | None -> []
     | Some (VMeasureList value) ->
       let n = return_degree element in
-      if (String.( = ) n "") then value else add_degree value n
+      if String.( = ) n "" then value else add_degree value n
     | _ -> []
   ;;
 
@@ -296,14 +296,14 @@ module Interpret (M : FailMonad) = struct
       let multm = multiplication_measure ml mr in
       (match multm with
        | [] -> return @@ VFloat (fl *. fr)
-       | _ -> return @@ VFloatMeasure ((VFloat (fl *. fr)), multm))
+       | _ -> return @@ VFloatMeasure (VFloat (fl *. fr), multm))
     | Div, VFloatMeasure (VFloat fl, ml), VFloat r ->
       return @@ VFloatMeasure (VFloat (fl /. r), ml)
     | Div, VFloat l, VFloatMeasure (VFloat fr, mr) ->
       return @@ VFloatMeasure (VFloat (l /. fr), mr)
     | Div, VFloatMeasure (VFloat fl, ml), VFloatMeasure (VFloat fr, mr) ->
       let divm = division_measure ml mr in
-      (match divm with 
+      (match divm with
        | [] -> return @@ VFloat (fl /. fr)
        | _ -> return @@ VFloatMeasure (VFloat (fl /. fr), divm))
     (* Boolean operation *)
@@ -355,10 +355,10 @@ module Interpret (M : FailMonad) = struct
        | FBool fb, VBool vb when Bool.( = ) fb vb -> return []
        | FInt fnum, VInt vnum when fnum = vnum -> return []
        | FString fs, VString vs when String.( = ) fs vs -> return []
-       | FFloat fnum, VFloat vnum when (Float.( = ) fnum vnum) -> return []
+       | FFloat fnum, VFloat vnum when Float.( = ) fnum vnum -> return []
        | Measure_float (_, SMeasure (m1, p)), VFloatMeasure (_, m2) ->
          (match p with
-          | Pow (FInt n) when Poly.(=) [m1 ^ "^" ^ Int.to_string n] m2 -> return []
+          | Pow (FInt n) when Poly.( = ) [m1 ^ "^" ^ Int.to_string n] m2 -> return []
           | _ -> fail UnexpectedPattern)
        | FUnit, VUnit -> return []
        | FNil, VList v ->
@@ -391,15 +391,15 @@ module Interpret (M : FailMonad) = struct
     | EMeasure m ->
       (match m with
        | SMeasure_init (SMeasure (m1, p)) ->
-         (match p with 
-          | Pow (FInt 1) -> return @@ VMeasureList [m1]
+         (match p with
+          | Pow (FInt 1) -> return @@ VMeasureList [ m1 ]
           | _ -> fail UnexpectedInfix)
        | MMeasure_init (SMeasure (_, p), m2) ->
          (match p with
           | Pow (FInt 1) ->
             let m2 = measure_to_strlist [] m2 in
             if check m2 env
-            then return @@ (VMeasureList m2)
+            then return @@ VMeasureList m2
             else fail (UndefinedType (undefined m2 env))
           | _ -> fail UnexpectedInfix)
        | _ -> fail Unreachable)

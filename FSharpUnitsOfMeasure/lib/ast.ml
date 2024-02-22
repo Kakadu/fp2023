@@ -24,8 +24,8 @@ and measure_type =
 and pow = Pow of types (** ^ *) [@@deriving eq, show { with_path = false }]
 
 and binary_op =
-  | Add (** + *)
-  | Sub (** - *)
+  | Add (** 1 + 2 *)
+  | Sub (** 1 - 2 *)
   | Mul (** * *)
   | Div (** / *)
   | Mod (** % *)
