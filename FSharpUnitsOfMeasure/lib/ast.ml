@@ -6,18 +6,18 @@
 
 type id = string [@@deriving eq, show { with_path = false }]
 
-type types = 
+type types =
   | FInt of int (** integer number: ..., 0, 1, 2, ...*)
   | FString of string (** string values: "Ocaml" *)
   | FBool of bool (** boolean values: true and false *)
   | FNil (** empty list: [] *)
   | FUnit (** () *)
   | FFloat of float (** float number: ..., 0.1, ..., 1.2, ...*)
-  | Measure_float of types * measure_type (** 5.0<cm> *) 
+  | Measure_float of types * measure_type (** 5.0<cm> *)
 
 and measure_type =
   | SMeasure of string * pow (** single measure: <m>*)
-  | MMeasure of measure_type * binary_op * measure_type 
+  | MMeasure of measure_type * binary_op * measure_type
   (** multiple measure: <m / sec * h ... >*)
 [@@deriving eq, show { with_path = false }]
 
@@ -39,7 +39,7 @@ and binary_op =
   | Greq (** >= *)
 [@@deriving show { with_path = false }]
 
-type pattern = 
+type pattern =
   | PWild (** _ *)
   | PConst of types (** constant pattern *)
   | PVar of id (** varuable pattern*)
@@ -48,20 +48,21 @@ type pattern =
   | PCons of pattern * pattern (** hd::tl pattern*)
 [@@deriving eq, show { with_path = false }]
 
-type measure_init = 
+type measure_init =
   | SMeasure_init of measure_type (** initialization [<Measure>] type sec*)
-  | MMeasure_init of measure_type * measure_type (** initialization [<Measure>] type speed = m/sec*)
+  | MMeasure_init of measure_type * measure_type
+  (** initialization [<Measure>] type speed = m/sec*)
 [@@deriving show { with_path = false }]
 
-type expression = 
+type expression =
   | EConst of types (** constant *)
   | EVar of id (** variable *)
   | EBinaryOp of binary_op (** binary operation *)
   | EList of expression list (** list *)
   | ETuple of expression list (** tuple *)
-  | EApp of expression * expression (** application *) 
+  | EApp of expression * expression (** application *)
   | EIfElse of expression * expression * expression (** if z then v else n*)
-  | ELet of string * id * expression (** let z = ... or let rec z = ...*) 
+  | ELet of string * id * expression (** let z = ... or let rec z = ...*)
   | EFun of pattern * expression (** fun z -> z + z *)
   | EMatch of expression * (pattern * expression) list (** match *)
   | EMeasure of measure_init (** measure *)

@@ -7,7 +7,7 @@ type error =
   | UndefinedValue of string
   | UndefinedType of string
   | DifferentMeasure of string * string
-  | UnexpectedInfix 
+  | UnexpectedInfix
   | UnsupportedOperation
   | UnexpectedPattern
   | EmptyInput
@@ -19,7 +19,7 @@ let print_error e : error -> unit =
   | DivideByZeroException -> fprintf e "Attempted to divide by zero"
   | UndefinedValue v -> fprintf e "The value or constructor %s is not defined" v
   | UndefinedType t -> fprintf e "The type '%s' is not defined" t
-  | DifferentMeasure (m1, m2) -> 
+  | DifferentMeasure (m1, m2) ->
     fprintf e "The unit of measure '%s' does not match the unit of measure '%s'" m1 m2
   | UnexpectedInfix -> fprintf e "Unexpected infix operator in type definition"
   | UnsupportedOperation -> fprintf e "This type does not support this operator"

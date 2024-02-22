@@ -6,4 +6,3 @@
 
 (cram
  (deps ./demos.exe))
- 

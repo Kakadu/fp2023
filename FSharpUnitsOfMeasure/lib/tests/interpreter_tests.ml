@@ -193,13 +193,13 @@ let%test _ =
 (* ((fun z v -> z * v)4 )5 *)
 
 let test =
-    [ EApp
-        ( EApp
-            ( EFun
-                (PVar "z", EFun (PVar "v", EApp (EBinaryOp Mul, EApp (EVar "z", EVar "v"))))
-            , EConst (FInt 4) )
-        , EConst (FInt 5) )
-    ]
+  [ EApp
+      ( EApp
+          ( EFun
+              (PVar "z", EFun (PVar "v", EApp (EBinaryOp Mul, EApp (EVar "z", EVar "v"))))
+          , EConst (FInt 4) )
+      , EConst (FInt 5) )
+  ]
 ;;
 
 let%test _ =
@@ -224,7 +224,7 @@ let test =
       , EConst (FInt 5) )
   ]
 ;;
-  
+
 let%test _ =
   match run_test test with
   | Ok (VInt 0) -> true
@@ -247,7 +247,7 @@ let test =
       , EConst (FFloat 2.0) )
   ]
 ;;
-  
+
 let%test _ =
   match run_test test with
   | Ok (VFloat 2.5) -> true
@@ -270,7 +270,7 @@ let test =
       , EConst (FInt 5) )
   ]
 ;;
-  
+
 let%test _ =
   match run_test test with
   | Ok (VBool true) -> true
@@ -294,7 +294,6 @@ let test =
   ]
 ;;
 
-  
 let%test _ =
   match run_test test with
   | Ok (VBool false) -> true
@@ -348,7 +347,7 @@ let test =
       , EConst (FInt 5) )
   ]
 ;;
-   
+
 let%test _ =
   match run_test test with
   | Ok (VInt 15) -> true
@@ -365,7 +364,7 @@ let test = [ ETuple [ EConst (FInt 1); EConst (FInt 5) ] ]
 
 let%test _ =
   match run_test test with
-  | Ok ((VTuple [(VInt 1); (VInt 5)])) -> true
+  | Ok (VTuple [ VInt 1; VInt 5 ]) -> true
   | Error t ->
     Format.printf "%a\n" print_error t;
     false
@@ -375,8 +374,8 @@ let%test _ =
 ;;
 
 (*
-    let num x = x
-    num 5 
+   let num x = x
+   num 5 
 *)
 let test =
   [ ELet ("NotRec", "num", EFun (PVar "x", EVar "x"))
@@ -419,7 +418,7 @@ let%test _ =
   | Ok t ->
     Format.printf "%s" (show_value t);
     false
-;; 
+;;
 
 (* if true then 2 else 1 *)
 let test = [ EIfElse (EConst (FBool true), EConst (FInt 2), EConst (FInt 1)) ]
@@ -435,12 +434,12 @@ let%test _ =
     false
 ;;
 
-(* 
-  let num x = 
-  match x with 
-    | 1 -> 1
-    | _ -> 2  
-  num 10 
+(*
+   let num x = 
+   match x with 
+     | 1 -> 1
+     | _ -> 2  
+   num 10 
 *)
 let test =
   [ ELet
@@ -463,14 +462,14 @@ let%test _ =
   | Ok t ->
     Format.printf "%s" (show_value t);
     false
-;; 
+;;
 
-(* 
-  let num x = 
-  match x with 
-    | 1 -> 1
-    | _ -> 2  
-  num 10
+(*
+   let num x = 
+   match x with 
+     | 1 -> 1
+     | _ -> 2  
+   num 10
 *)
 let test =
   [ ELet
@@ -493,7 +492,7 @@ let%test _ =
   | Ok t ->
     Format.printf "%s" (show_value t);
     false
-;; 
+;;
 
 (* (fun x -> x) 5 *)
 let test = [ EApp (EFun (PVar "x", EVar "x"), EConst (FInt 5)) ]
@@ -551,12 +550,12 @@ let%test _ =
     false
 ;; 
 
-(* 
-    let rec fact n = 
-    if n = 1 
-    then 1 
-    else n * (fact ( n - 1 ))
-    fact 6
+(*
+   let rec fact n = 
+   if n = 1 
+   then 1 
+   else n * (fact ( n - 1 ))
+   fact 6
 *)
 
 let test =
@@ -589,14 +588,14 @@ let%test _ =
   | Ok t ->
     Format.printf "%s" (show_value t);
     false
-;; 
+;;
 
-(* 
-    let rec fib n = 
-    if n <= 1 
-    then n 
-    else (fib (n - 1)) + (fib (n - 2))
-    fib 9
+(*
+   let rec fib n = 
+   if n <= 1 
+   then n 
+   else (fib (n - 1)) + (fib (n - 2))
+   fib 9
 *)
 let test =
   [ ELet
@@ -646,11 +645,11 @@ let%test _ =
   | Ok t ->
     Format.printf "%s" (show_value t);
     false
-;; 
+;;
 
-(* 
-    [<Measure>] type m
-    7.77 <m> + 7.73 <m> 
+(*
+   [<Measure>] type m
+   7.77 <m> + 7.73 <m> 
 *)
 let test =
   [ EMeasure (SMeasure_init (SMeasure ("m", Pow (FInt 1))))
@@ -673,7 +672,7 @@ let%test _ =
     false
 ;;
 
-(* 
+(*
    [<Measure>] type sec
    [<Measure>] type m
    [<Measure>] type dm
@@ -688,14 +687,14 @@ let test =
       , EApp
           ( EConst
               (Measure_float
-                  ( FFloat 7.77
-                  , MMeasure
-                      (SMeasure ("m", Pow (FInt 1)), Div, SMeasure ("dm", Pow (FInt 1))) ))
+                 ( FFloat 7.77
+                 , MMeasure
+                     (SMeasure ("m", Pow (FInt 1)), Div, SMeasure ("dm", Pow (FInt 1))) ))
           , EConst
               (Measure_float
-                  ( FFloat 7.73
-                  , MMeasure
-                      (SMeasure ("m", Pow (FInt 1)), Div, SMeasure ("dm", Pow (FInt 1))) ))
+                 ( FFloat 7.73
+                 , MMeasure
+                     (SMeasure ("m", Pow (FInt 1)), Div, SMeasure ("dm", Pow (FInt 1))) ))
           ) )
   ]
 ;;
@@ -709,21 +708,21 @@ let%test _ =
   | Ok t ->
     Format.printf "%s" (show_value t);
     false
-;; 
+;;
 
-(* 
+(*
    [<Measure>] type sec
    [<Measure>] type m
-   [<Measure>] type speed = m^3 / sec^-1 
+   [<Measure>] type speed = m^3 / sec^-1
 *)
 let test =
   [ EMeasure (SMeasure_init (SMeasure ("sec", Pow (FInt 1))))
   ; EMeasure (SMeasure_init (SMeasure ("m", Pow (FInt 1))))
   ; EMeasure
       (MMeasure_init
-          ( SMeasure ("speed", Pow (FInt 1))
-          , MMeasure (SMeasure ("m", Pow (FInt 3)), Div, SMeasure ("sec", Pow (FInt (-1))))
-          ))
+         ( SMeasure ("speed", Pow (FInt 1))
+         , MMeasure (SMeasure ("m", Pow (FInt 3)), Div, SMeasure ("sec", Pow (FInt (-1))))
+         ))
   ]
 ;;
 
@@ -733,26 +732,26 @@ let test =
   ; EMeasure (SMeasure_init (SMeasure ("dm", Pow (FInt 1))))
   ; EMeasure
       (MMeasure_init
-          ( SMeasure ("speed", Pow (FInt 1))
-          , MMeasure (SMeasure ("m", Pow (FInt 1)), Div, SMeasure ("sec", Pow (FInt 1))) ))
+         ( SMeasure ("speed", Pow (FInt 1))
+         , MMeasure (SMeasure ("m", Pow (FInt 1)), Div, SMeasure ("sec", Pow (FInt 1))) ))
   ; EMeasure
       (MMeasure_init
-          ( SMeasure ("sp", Pow (FInt 1))
-          , MMeasure (SMeasure ("speed", Pow (FInt 1)), Mul, SMeasure ("dm", Pow (FInt 1)))
-          ))
+         ( SMeasure ("sp", Pow (FInt 1))
+         , MMeasure (SMeasure ("speed", Pow (FInt 1)), Mul, SMeasure ("dm", Pow (FInt 1)))
+         ))
   ; EApp
       ( EBinaryOp Add
       , EApp
           ( EConst
               (Measure_float
-                  ( FFloat 7.
-                  , MMeasure
-                      ( SMeasure ("m", Pow (FInt 1))
-                      , Div
-                      , MMeasure
-                          ( SMeasure ("sec", Pow (FInt 1))
-                          , Mul
-                          , SMeasure ("dm", Pow (FInt 1)) ) ) ))
+                 ( FFloat 7.
+                 , MMeasure
+                     ( SMeasure ("m", Pow (FInt 1))
+                     , Div
+                     , MMeasure
+                         ( SMeasure ("sec", Pow (FInt 1))
+                         , Mul
+                         , SMeasure ("dm", Pow (FInt 1)) ) ) ))
           , EConst (Measure_float (FFloat 7., SMeasure ("sp", Pow (FInt 1)))) ) )
   ]
 ;;
@@ -766,4 +765,4 @@ let%test _ =
   | Ok t ->
     Format.printf "%s" (show_value t);
     false
-;; 
+;;

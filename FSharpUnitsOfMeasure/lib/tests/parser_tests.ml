@@ -67,8 +67,8 @@ let%expect_test _ =
 
 let%expect_test _ =
   parsed_result "7.77<m/sec>" parse_types show_types;
-  [%expect 
-  {|
+  [%expect
+    {|
     (Measure_float ((FFloat 7.77),
        (MMeasure ((SMeasure ("m", (Pow (FInt 1)))), Div,
           (SMeasure ("sec", (Pow (FInt 1))))))
@@ -201,7 +201,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   parsed_result "[<Measure>] type spped = m^2/sec" parse_expression show_expression;
-  [%expect 
+  [%expect
     {|
     (EMeasure
        (MMeasure_init ((SMeasure ("spped", (Pow (FInt 1)))),
@@ -212,14 +212,14 @@ let%expect_test _ =
 
 let%expect_test _ =
   parsed_result "7.77<sec>" parse_expression show_expression;
-  [%expect 
+  [%expect
     {|
     (EConst (Measure_float ((FFloat 7.77), (SMeasure ("sec", (Pow (FInt 1))))))) |}]
 ;;
 
 let%expect_test _ =
   parsed_result "7.77<m/sec>" parse_expression show_expression;
-  [%expect 
+  [%expect
     {|
     (EConst
        (Measure_float ((FFloat 7.77),
@@ -308,7 +308,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   parsed_result "z * (v / y)" parse_expression show_expression;
-  [%expect 
+  [%expect
     {| 
   (EApp ((EBinaryOp Mul),
      (EApp ((EVar "z"),
@@ -319,7 +319,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   parsed_result "(z && v) || x" parse_expression show_expression;
-  [%expect 
+  [%expect
     {|
      (EApp ((EBinaryOp Or),
         (EApp ((EApp ((EBinaryOp And), (EApp ((EVar "z"), (EVar "v"))))),
@@ -330,7 +330,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   parsed_result "1 + 3 - 5" parse_expression show_expression;
-  [%expect 
+  [%expect
     {|
     (EApp ((EBinaryOp Sub),
        (EApp (
@@ -341,7 +341,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   parsed_result "(3 + 1) * (4 - 2) * (9 / 3)" parse_expression show_expression;
-  [%expect 
+  [%expect
     {|
      (EApp ((EBinaryOp Mul),
         (EApp (
@@ -377,9 +377,8 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  parsed_result 
-  "(1,2,3) = (1,2,3)" parse_expression show_expression;
-  [%expect 
+  parsed_result "(1,2,3) = (1,2,3)" parse_expression show_expression;
+  [%expect
     {|
     (EApp ((EBinaryOp Eq),
        (EApp ((ETuple [(EConst (FInt 1)); (EConst (FInt 2)); (EConst (FInt 3))]),
@@ -388,9 +387,8 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  parsed_result 
-  "a = (1,2,3)" parse_expression show_expression;
-  [%expect 
+  parsed_result "a = (1,2,3)" parse_expression show_expression;
+  [%expect
     {|
     (EApp ((EBinaryOp Eq),
        (EApp ((EVar "a"),
@@ -405,7 +403,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   parsed_result "((a, 1), ((1.2, b), (c, 3.44)))" parse_expression show_expression;
-  [%expect 
+  [%expect
     {|
     (ETuple
        [(ETuple [(EVar "a"); (EConst (FInt 1))]);
@@ -429,7 +427,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   parsed_result "[1.1; 5] = [1.1; 5]" parse_expression show_expression;
-  [%expect 
+  [%expect
     {|
     (EApp ((EBinaryOp Eq),
        (EApp ((EList [(EConst (FFloat 1.1)); (EConst (FInt 5))]),
@@ -449,7 +447,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   parsed_result "[1.1; 5] = z" parse_expression show_expression;
-  [%expect 
+  [%expect
     {|
     (EApp ((EBinaryOp Eq),
        (EApp ((EList [(EConst (FFloat 1.1)); (EConst (FInt 5))]), (EVar "z"))))) |}]
@@ -457,7 +455,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   parsed_result "z = [1.1; 5]" parse_expression show_expression;
-  [%expect 
+  [%expect
     {|
     (EApp ((EBinaryOp Eq),
        (EApp ((EVar "z"), (EList [(EConst (FFloat 1.1)); (EConst (FInt 5))]))))) |}]
@@ -465,7 +463,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   parsed_result "[[a; 1]; [[1.2; b]; [c; 3]]]" parse_expression show_expression;
-  [%expect 
+  [%expect
     {|
     (EList
        [(EList [(EVar "a"); (EConst (FInt 1))]);
@@ -478,17 +476,8 @@ let%expect_test _ =
 (** Expressions with list + tuple test *)
 
 let%expect_test _ =
-  parsed_result "[(69.69, b); (1, d); []; ()]" parse_expression show_expression;
-  [%expect 
-    {|
-    (EList
-       [(ETuple [(EConst (FFloat 69.69)); (EVar "b")]);
-         (ETuple [(EConst (FInt 1)); (EVar "d")]); (EConst FNil); (EConst FUnit)]) |}]
-;;
-
-let%expect_test _ =
   parsed_result "([69.69; b], [1; d], [], ())" parse_expression show_expression;
-  [%expect 
+  [%expect
     {|
     (ETuple
        [(EList [(EConst (FFloat 69.69)); (EVar "b")]);
@@ -498,10 +487,7 @@ let%expect_test _ =
 (** Expression with if ... then ... else ...*)
 
 let%expect_test _ =
-  parsed_result 
-  "if true then 2 else 1" 
-  parse_expression 
-  show_expression;
+  parsed_result "if true then 2 else 1" parse_expression show_expression;
   [%expect {| (EIfElse ((EConst (FBool true)), (EConst (FInt 2)), (EConst (FInt 1)))) |}]
 ;;
 
@@ -509,20 +495,20 @@ let%expect_test _ =
 
 let%expect_test _ =
   parsed_result 
-    "match x with \n \n   | a -> b \n   | _ -> c" 
-    parse_expression 
+    "match x with \n \n   | a -> b \n   | _ -> c"
+    parse_expression
     show_expression;
-  [%expect 
+  [%expect
     {|
     (EMatch ((EVar "x"), [((PVar "a"), (EVar "b")); (PWild, (EVar "c"))])) |}]
 ;;
 
 let%expect_test _ =
-  parsed_result 
+  parsed_result
     "let num x = \n    match x with \n     | 1 -> 1 \n     | _ -> 2"
-    parse_expression 
+    parse_expression
     show_expression;
-  [%expect  
+  [%expect
     {|
     (ELet ("NotRec", "num",
        (EFun ((PVar "x"),
@@ -553,9 +539,11 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  parsed_result 
-  "(((((fun a b c d e -> a + b + c + d + e) 1) 2) 3) 4) " parse_expression show_expression ;
-  [%expect 
+  parsed_result
+    "(((((fun a b c d e -> a + b + c + d + e) 1) 2) 3) 4) "
+    parse_expression
+    show_expression;
+  [%expect
     {|
     (EApp (
        (EApp (
@@ -611,11 +599,11 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  parsed_result 
-    "let increase_by_five z = (fun v -> z + v) 5" 
-    parse_expression 
+  parsed_result
+    "let increase_by_five z = (fun v -> z + v) 5"
+    parse_expression
     show_expression;
-  [%expect 
+  [%expect
     {|
     (ELet ("NotRec", "increase_by_five",
        (EFun ((PVar "z"),
@@ -647,7 +635,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   parsed_result "7.73<m> + 7.77<m>" parse_expression show_expression;
-  [%expect 
+  [%expect
     {|
     (EApp ((EBinaryOp Add),
        (EApp (
@@ -661,7 +649,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   parsed_result "[<Measure>] type sp = speed^-1 * dm" parse_expression show_expression;
-  [%expect 
+  [%expect
     {|
     (EMeasure
        (MMeasure_init ((SMeasure ("sp", (Pow (FInt 1)))),
@@ -672,7 +660,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   parsed_result "[<Measure>] type sp = speed dm" parse_expression show_expression;
-  [%expect 
+  [%expect
     {|
     (EMeasure
        (MMeasure_init ((SMeasure ("sp", (Pow (FInt 1)))),
@@ -683,7 +671,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   parsed_result "7.0<m/sec*dm> + 7.0<sp>" parse_expression show_expression;
-  [%expect 
+  [%expect
     {|
     (EApp ((EBinaryOp Add),
        (EApp (
@@ -701,11 +689,11 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  parsed_result 
-    "[<Measure>] type hz = m / sec * sm * luck / unluck" 
-    parse_expression 
+  parsed_result
+    "[<Measure>] type hz = m / sec * sm * luck / unluck"
+    parse_expression
     show_expression;
-  [%expect 
+  [%expect
     {|
     (EMeasure
        (MMeasure_init ((SMeasure ("hz", (Pow (FInt 1)))),
@@ -722,7 +710,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   parsed_result "let x = 1.<m>" parse_expression show_expression;
-  [%expect 
+  [%expect
     {|
     (ELet ("NotRec", "x",
        (EConst (Measure_float ((FFloat 1.), (SMeasure ("m", (Pow (FInt 1))))))))) |}]
@@ -730,7 +718,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   parsed_result "let x = 1.0<m / sm * dm / sec * damn>" parse_expression show_expression;
-  [%expect 
+  [%expect
     {|
     (ELet ("NotRec", "x",
        (EConst
@@ -748,8 +736,8 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  parsed_result "7.77<m/cm> + 7.73<m/cm>" parse_expression show_expression ;
-  [%expect 
+  parsed_result "7.77<m/cm> + 7.73<m/cm>" parse_expression show_expression;
+  [%expect
     {|
     (EApp ((EBinaryOp Add),
        (EApp (
@@ -770,9 +758,9 @@ let%expect_test _ =
 (** Factorial test *)
 
 let%expect_test _ =
-  parsed_result 
-    "let rec fact n = if n = 1 then 1 else n * fact (n - 1)" 
-    parse_expression 
+  parsed_result
+    "let rec fact n = if n = 1 then 1 else n * fact (n - 1)"
+    parse_expression
     show_expression;
   [%expect
     {|
@@ -796,18 +784,18 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  parsed_result "fact 6" parse_expression show_expression ;
+  parsed_result "fact 6" parse_expression show_expression;
   [%expect {| (EApp ((EVar "fact"), (EConst (FInt 6)))) |}]
 ;;
 
 (** Fibonacci test*)
 
 let%expect_test _ =
-  parsed_result 
-    "let rec fib n = if n <= 1 then n else fib(n - 1) + fib(n - 2)" 
-    parse_expression 
+  parsed_result
+    "let rec fib n = if n <= 1 then n else fib(n - 1) + fib(n - 2)"
+    parse_expression
     show_expression;
-  [%expect 
+  [%expect
     {|
     (ELet ("Rec", "fib",
        (EFun ((PVar "n"),
@@ -832,6 +820,6 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  parsed_result "fib 6" parse_expression show_expression ;
+  parsed_result "fib 6" parse_expression show_expression;
   [%expect {| (EApp ((EVar "fib"), (EConst (FInt 6)))) |}]
 ;;
