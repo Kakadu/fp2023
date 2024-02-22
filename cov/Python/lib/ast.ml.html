@@ -190,9 +190,9 @@
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
 (* Standard data types: integers, strings, lists*)
-<span data-count="108">t</span>ype value =
+<span data-count="111">t</span>ype value =
   | Int of in<span data-count="33">t</span>
-  | String of strin<span data-count="3">g</span>
+  | String of strin<span data-count="4">g</span>
   | List of <span data-count="0">v</span>alue lis<span data-count="0">t</span>
   | Bool of boo<span data-count="0">l</span>
   | Nil
@@ -208,7 +208,7 @@
 [@@deriving show { with_path = false }]
 
 (* Functions' names &amp; args' names *)
-<span data-count="162">t</span>ype identifier = Identifier of strin<span data-count="54">g</span> [@@deriving show { with_path = false }]
+<span data-count="159">t</span>ype identifier = Identifier of strin<span data-count="53">g</span> [@@deriving show { with_path = false }]
 
 <span data-count="29">t</span>ype modifier =
   | Global
@@ -233,7 +233,7 @@
 [@@deriving show { with_path = false }<span data-count="6">]</span>
 
 (* Standard expressions *)
-<span data-count="536">t</span>ype expression =
+<span data-count="540">t</span>ype expression =
   | Const of value
   | Variable of modifier * identifier
   | ArithOp of arith_op * expression * expression
@@ -244,7 +244,7 @@
   | MethodCall of identifier * identifier * <span data-count="10">e</span>xpression lis<span data-count="3">t</span>
   | Lambda of <span data-count="9">i</span>dentifier lis<span data-count="2">t</span> * expression
   | FString of <span data-count="13">f</span>_string_type lis<span data-count="3">t</span>
-[@@deriving show { with_path = false }<span data-count="434">]</span>
+[@@deriving show { with_path = false }<span data-count="436">]</span>
 
 (* Standard statements *)
 <span data-count="230">t</span>ype statement =
@@ -256,7 +256,7 @@
   | While of expression * <span data-count="12">s</span>tatement lis<span data-count="4">t</span>
   | Class of identifier * <span data-count="10">s</span>tatement lis<span data-count="3">t</span>
   | Return of expression
-  | Setattr of identifier * identifier * identifier
+  | Setattr of identifier * expression * identifier
 [@@deriving show { with_path = false }<span data-count="150">]</span>
 
 type flag =

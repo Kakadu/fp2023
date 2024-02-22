@@ -1720,7 +1720,7 @@ type pseudo_statement =
   | While of expression * pseudo_statement list
   | Class of identifier * pseudo_statement list
   | Return of expression
-  | Setattr of identifier * identifier * identifier
+  | Setattr of identifier * expression * identifier
   | ParsingError
 
 let rec map1 f = function
@@ -1766,7 +1766,7 @@ let is_banned = function
   | <span data-count="8">"</span>class"
   | <span data-count="4">"</span>setattr"
   | <span data-count="10">"</span>lambda" -&gt; true
-  | <span data-count="231">_</span> -&gt; false
+  | <span data-count="229">_</span> -&gt; false
 ;;
 
 (* Checkers *)
@@ -1786,7 +1786,7 @@ let is_sign = function
 ;;
 
 let is_valid_first_char = function
-  | <span data-count="272">'</span>a' .. 'z' | <span data-count="9">'</span>A' .. 'Z' -&gt; true
+  | <span data-count="270">'</span>a' .. 'z' | <span data-count="9">'</span>A' .. 'Z' -&gt; true
   | <span data-count="109">_</span> -&gt; false
 ;;
 
@@ -1806,13 +1806,13 @@ let is_stmt_sep = function
 ;;
 
 let is_variable = function
-  | <span data-count="1133">'</span>a' .. 'z' | <span data-count="39">'</span>A' .. 'Z' | <span data-count="8">'</span>0' .. '9' | <span data-count="0">'</span>_' -&gt; true
-  | <span data-count="329">_</span> -&gt; false
+  | <span data-count="1119">'</span>a' .. 'z' | <span data-count="37">'</span>A' .. 'Z' | <span data-count="8">'</span>0' .. '9' | <span data-count="0">'</span>_' -&gt; true
+  | <span data-count="327">_</span> -&gt; false
 ;;
 
 let is_quotes = function
-  | <span data-count="6">'</span>\"' -&gt; true
-  | <span data-count="42">_</span> -&gt; false
+  | <span data-count="8">'</span>\"' -&gt; true
+  | <span data-count="58">_</span> -&gt; false
 ;;
 
 let is_whitespace_or_eol = function
@@ -1932,7 +1932,7 @@ let p_integer =
 
 let p_string =
   let* x = t_quote *<span data-count="12">&gt;</span> take_string &lt;<span data-count="12">*</span> t_quote in
-  <span data-count="4">r</span>eturn (Const (String x))
+  <span data-count="6">r</span>eturn (Const (String x))
 ;;
 
 let p_global_variable =
@@ -1961,10 +1961,10 @@ let p_else columns =
 let p_identifier =
   skip_whitespace *<span data-count="12">&gt;</span> peek_char
   &gt;&gt;<span data-count="12">=</span> function
-  | <span data-count="246">S</span>ome c when is_valid_first_cha<span data-count="246">r</span> c -&gt;
-    <span data-count="229">t</span>ake_variable
+  | <span data-count="244">S</span>ome c when is_valid_first_cha<span data-count="244">r</span> c -&gt;
+    <span data-count="227">t</span>ake_variable
     &gt;&gt;= (function
-     | <span data-count="229">x</span> when not (is_banne<span data-count="229">d</span> x) -&gt; <span data-count="173">r</span>etur<span data-count="173">n</span> (Identifier x) &lt;* skip_whitespace
+     | <span data-count="227">x</span> when not (is_banne<span data-count="227">d</span> x) -&gt; <span data-count="171">r</span>etur<span data-count="171">n</span> (Identifier x) &lt;* skip_whitespace
      | <span data-count="56">_</span> -&gt; fail "can't name a variable with a taken word")
   | <span data-count="18">_</span> -&gt; fail "banned first character"
 ;;
@@ -2067,7 +2067,7 @@ let gp_logic_ops = choic<span data-count="12">e</span> [ p_and; p_or ]
 
 let p_setattr columns =
   <span data-count="82">l</span>et* className = t_setattr *<span data-count="82">&gt;</span> toke<span data-count="82">n</span> "(" *<span data-count="82">&gt;</span> p_identifier in
-  <span data-count="2">l</span>et* newMethodName = t_comma *<span data-count="2">&gt;</span> skip_whitespace *<span data-count="2">&gt;</span> p_identifier in
+  <span data-count="2">l</span>et* newMethodName = t_comma *<span data-count="2">&gt;</span> skip_whitespace *<span data-count="2">&gt;</span> p_string in
   <span data-count="2">l</span>et* methodItself = t_comma *<span data-count="2">&gt;</span> skip_whitespace *<span data-count="2">&gt;</span> p_identifier &lt;<span data-count="2">*</span> toke<span data-count="2">n</span> ")" in
   <span data-count="2">r</span>eturn
     (StatementWithColumns (columns, Setattr (className, newMethodName, methodItself)))
@@ -2507,11 +2507,11 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  <span data-count="1">p</span>arser_tester pyParser show_statement "setattr(someClass, nickForFunc, func)";
+  <span data-count="1">p</span>arser_tester pyParser show_statement {|setattr(someClass, "nickForFunc", func)|};
   <span data-count="1">[</span>%expect
     {|
-    (Setattr ((Identifier "someClass"), (Identifier "nickForFunc"),
-       (Identifier "func"))) |}<span data-count="25">]</span>
+    (Setattr ((Identifier "someClass"), (Const (String "nickForFunc")),
+       (Identifier "func")))|}<span data-count="25">]</span>
 ;;
 
 let%test _ = <span data-count="1">t</span>rue = is_banne<span data-count="1">d</span> "return"
