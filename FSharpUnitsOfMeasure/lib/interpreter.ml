@@ -40,19 +40,19 @@ module Interpret (M : FailMonad) = struct
   ;;
 
   (* Создаем string list из какого-то measure *)
-  let rec measure_to_strlist list measure =
-    match measure with
+  let rec measure_to_strlist list =
+    function
     | SMeasure (m, p) -> 
       (match p with 
         | Pow (FInt (1)) -> m :: list
         | Pow (FInt (n)) -> (m ^ "^" ^ Int.to_string ( n)) :: list
         | _ -> [])
     | MMeasure (m1, op, m2) ->
-      let op_str op =
-        (match op with
+      let op_str =
+        function
         | Mul -> "*"  
         | Div -> "/"
-        | _ -> "")
+        | _ -> ""
       in 
       let measure_list_with_op = (op_str op) :: measure_to_strlist list m2 
       in
@@ -98,7 +98,7 @@ module Interpret (M : FailMonad) = struct
     let m3 = strlistlist_to_strlist @@ dec_list m1 env
     in
     if Poly.(=) m3 m1
-      then return @@ m3
+      then return m3
     else mbase m3 env
   ;;
 
@@ -111,8 +111,8 @@ module Interpret (M : FailMonad) = struct
 
   (* Произведение VFloatMeasure *)
 
-  let rec m1_el_with_m2 z1 elem m2 =
-    match m2 with
+  let rec m1_el_with_m2 z1 elem =
+    function
     | [] -> z1 :: [elem]
     | _ :: [] -> []
     | z2 :: hd :: tl-> 
@@ -161,14 +161,14 @@ module Interpret (M : FailMonad) = struct
     | z :: hd :: tl -> m1_el_with_m2 z hd m2 :: mult_m1_with_m2 tl m2
   ;;
 
-  let rec not_uniq_in_m1 elem m1 =
-      match m1 with
-      | [] -> false
-      | hd :: tl -> if String.(=) (remove_degree hd) (remove_degree elem) then true else not_uniq_in_m1 elem tl
+  let rec not_uniq_in_m1 elem =
+    function
+    | [] -> false
+    | hd :: tl -> if String.(=) (remove_degree hd) (remove_degree elem) then true else not_uniq_in_m1 elem tl
   ;;
 
-  let mult_m2_with_m1 m1 m2 =
-      match m2 with
+  let mult_m2_with_m1 m1 =
+      function
       | [] -> m1
       | hd :: tl -> 
           let rec merge_uniq_el m1 tl = 
@@ -191,14 +191,14 @@ module Interpret (M : FailMonad) = struct
             merge_uniq_el m1 tl @ ["*"] @ [hd]
   ;;   
 
-  let remove_first_element lst =
-    match lst with
+  let remove_first_element =
+    function
     | [] -> []
     | _::tl -> tl
   ;;
 
-  let rec remove_excess_pow lst =
-    match lst with
+  let rec remove_excess_pow =
+    function
     | [] -> []
     | hd :: [] -> [hd]
     | z :: hd :: tl -> 
@@ -214,8 +214,8 @@ module Interpret (M : FailMonad) = struct
     @@ mult_m2_with_m1 (strlistlist_to_strlist (mult_m1_with_m2 ("*" :: m1) ("*" :: m2))) m2
   ;;
 
-  let rec process_list lst =
-    match lst with
+  let rec process_list =
+    function
     | [] -> []
     | hd::tl ->
         match hd with

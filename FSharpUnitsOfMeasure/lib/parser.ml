@@ -143,7 +143,7 @@ let parse_init_smeasure = parse_measure_type >>| fun a -> SMeasure_init a
 
 (* Parsing float + measure single: 7.77 <m>*)
 
-let construct_float_measure = angle_brackets @@ parse_smeasure
+let construct_float_measure = angle_brackets parse_smeasure
 
 let parse_float_smeasure = 
   lift2 (fun f m -> (measure_float f m))
