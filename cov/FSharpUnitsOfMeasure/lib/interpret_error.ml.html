@@ -100,7 +100,7 @@ type error =
   | UndefinedValue of string
   | UndefinedType of string
   | DifferentMeasure of string * string
-  | UnexpectedInfix 
+  | UnexpectedInfix
   | UnsupportedOperation
   | UnexpectedPattern
   | EmptyInput
@@ -112,7 +112,7 @@ let print_error e : error -&gt; unit =
   | <span data-count="0">D</span>ivideByZeroException -&gt; fprintf e "Attempted to divide by zero"
   | <span data-count="0">U</span>ndefinedValue v -&gt; fprintf e "The value or constructor %s is not defined" v
   | <span data-count="1">U</span>ndefinedType t -&gt; fprintf e "The type '%s' is not defined" t
-  | <span data-count="1">D</span>ifferentMeasure (m1, m2) -&gt; 
+  | <span data-count="1">D</span>ifferentMeasure (m1, m2) -&gt;
     fprintf e "The unit of measure '%s' does not match the unit of measure '%s'" m1 m2
   | <span data-count="1">U</span>nexpectedInfix -&gt; fprintf e "Unexpected infix operator in type definition"
   | <span data-count="0">U</span>nsupportedOperation -&gt; fprintf e "This type does not support this operator"
