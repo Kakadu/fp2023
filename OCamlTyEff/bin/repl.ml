@@ -54,7 +54,9 @@ class read_line ~term ~history ~completion_ids =
 
     method! completion =
       let input = Zed_string.to_utf8 @@ Zed_rope.to_string self#input_prev in
-      let cur_word = List.last_exn @@ String.split input ~on:' ' in
+      let cur_word =
+        List.last_exn @@ String.split_on_chars input ~on:[' '; '\n']
+      in
       let cur_word_index =
         List.last_exn
         @@ String.substr_index_all input ~may_overlap:false ~pattern:cur_word
