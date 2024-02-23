@@ -152,22 +152,35 @@ let get_infix_binding_power = function
       (11, 10)
   | IOpTuple ->
       (51, 50)
-  | IOpCustom (Ident id) ->
-      let is_prefix prefix = String.is_prefix ~prefix id in
-      let is_equal str = String.( = ) id str in
-      if is_prefix "**" then (91, 90)
-      else if is_prefix "*" || is_prefix "/" || is_prefix "%" then (85, 86)
-      else if is_prefix "+" || is_prefix "-" then (83, 84)
-      else if is_prefix "@" || is_prefix "^" then (79, 78)
-      else if
-        is_prefix "=" || is_prefix "<" || is_prefix ">" || is_prefix "|"
-        || (is_prefix "&" && not (is_equal "&"))
-        || is_prefix "$" || is_equal "!="
-      then (75, 76)
-      else if is_equal "&" || is_equal "&&" then (71, 70)
-      else if is_equal "||" then (66, 65)
-      else if is_equal ":=" then (45, 44)
-      else assert false
+  | IOpCustom (Ident id) -> (
+      let prefix_powers_map =
+        [ (["**"], (91, 90))
+        ; (["*"; "/"; "%"], (85, 86))
+        ; (["+"; "-"], (83, 84))
+        ; (["@"; "^"], (79, 78))
+        ; (["="; "<"; ">"; "|"; "&"; "$"], (75, 76)) ]
+      in
+      let get_prefix_powers ident =
+        List.find_map prefix_powers_map ~f:(fun (prefixes, powers) ->
+            if
+              List.exists prefixes ~f:(fun prefix ->
+                  String.is_prefix ident ~prefix )
+            then Some powers
+            else None )
+        |> Option.value_exn ~message:"Unexpected operator"
+      in
+
+      match id with
+      | "!=" ->
+          (75, 76)
+      | "&" | "&&" ->
+          (71, 70)
+      | "||" ->
+          (66, 65)
+      | ":=" ->
+          (45, 44)
+      | _ ->
+          get_prefix_powers id )
 
 type expr_prefix_op = POpPlus | POpMinus | POpCustom of Ident.t
 
