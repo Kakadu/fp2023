@@ -58,7 +58,7 @@ module Unify = struct
         let* sub, eff = rewrite_eff lbl1 eff_rest2 in
         return (sub, Eff.Eff_row (lbl2, eff))
     | _ ->
-        assert false
+        fail @@ NotImplemented "should be unreachable :)"
 
   let rec eff_tail = function
     | Eff.Eff_total ->
@@ -186,14 +186,15 @@ let activevars ?(incl_impl_inst = true) ?(incl_effeq_late = true) =
         VarSet.union (Ty.vars ty1) (Ty.vars ty2)
     | EffEqConstr (eff1, eff2, EffEq_Normal) ->
         VarSet.union (Eff.vars eff1) (Eff.vars eff2)
-    | EffEqConstr (eff1, eff2, EffEq_Late) ->
-        if incl_effeq_late then VarSet.union (Eff.vars eff1) (Eff.vars eff2)
-        else VarSet.empty
-    | ImplInstConstr (ty1, mset, ty2, eff2) ->
-        if incl_impl_inst then
-          VarSet.union_list
-            [Ty.vars ty1; VarSet.inter mset (Ty.vars ty2); Eff.vars eff2]
-        else VarSet.empty
+    | EffEqConstr (eff1, eff2, EffEq_Late) when incl_effeq_late ->
+        VarSet.union (Eff.vars eff1) (Eff.vars eff2)
+    | EffEqConstr (_, _, EffEq_Late) ->
+        VarSet.empty
+    | ImplInstConstr (ty1, mset, ty2, eff2) when incl_impl_inst ->
+        VarSet.union_list
+          [Ty.vars ty1; VarSet.inter mset (Ty.vars ty2); Eff.vars eff2]
+    | ImplInstConstr (_, _, _, _) ->
+        VarSet.empty
     | ExplInstConstr (ty, sc) ->
         VarSet.union (Ty.vars ty) (Scheme.free_vars sc)
   in

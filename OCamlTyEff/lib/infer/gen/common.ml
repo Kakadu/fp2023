@@ -76,9 +76,10 @@ module GenMonad = struct
         match ConArityAssumpt.find con_assumpt con_id with
         | None ->
             return ()
-        | Some ar ->
-            if ConArityAssumpt.equal_arity arity ar then return ()
-            else fail @@ ConstructorArityMismatch con_id
+        | Some ar when ConArityAssumpt.equal_arity arity ar ->
+            return ()
+        | Some _ ->
+            fail @@ ConstructorArityMismatch con_id
       in
       (* set arity for constructor *)
       let* () =

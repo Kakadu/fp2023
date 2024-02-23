@@ -23,9 +23,10 @@ type defined_type = {id: Ident.t; arity: int}
   and unbound type variables & types
 *)
 let rec check_type ~types_arity ~params = function
-  | Ty.Ty_var ((Var name | Var_weak name) as var) ->
-      if List.mem params var ~equal:Var.equal then return ()
-      else fail @@ UnboundTypeVariable name
+  | Ty.Ty_var var when List.mem params var ~equal:Var.equal ->
+      return ()
+  | Ty_var (Var name | Var_weak name) ->
+      fail @@ UnboundTypeVariable name
   | Ty_con (id, args) ->
       let* arity =
         Map.find types_arity id
