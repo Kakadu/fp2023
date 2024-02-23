@@ -194,17 +194,15 @@ let parse_single_exp pexp =
        ; parse_exp_const
        ; parse_exp_constr
        ; char '(' *> pexp None <* ws <* char ')'
-       ; parse_exp_function (pexp (Some (IOpCustom (Ident "|"))))
-         (* disable | as it's used as cases separator *)
+       ; parse_exp_function (pexp None)
        ; parse_exp_fun (pexp None)
        ; parse_exp_list (pexp (Some IOpSeq))
          (* disable ; as it's a separator in lists *)
        ; parse_exp_let (pexp None)
        ; parse_exp_ite (pexp None) (pexp (Some IOpSeq))
          (* disable ; in [then] and [else] blocks to maintain correct precedence *)
-       ; parse_exp_match (pexp None) (pexp (Some (IOpCustom (Ident "|"))))
-       ; parse_exp_try (pexp None) (pexp (Some (IOpCustom (Ident "|"))))
-         (* disable | in [with] block as it's used as cases separator *) ]
+       ; parse_exp_match (pexp None) (pexp None)
+       ; parse_exp_try (pexp None) (pexp None) ]
 
 let parse_expression =
   let rec pexp disabled_op =

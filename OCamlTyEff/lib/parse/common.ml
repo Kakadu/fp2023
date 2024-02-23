@@ -20,6 +20,29 @@ let ws1 =
   (skip_whitespaces1 *> many parse_comments <|> many1 parse_comments)
   *> return ()
 
+let is_keyword = function
+  (* https://v2.ocaml.org/releases/5.1/htmlman/lex.html#sss:keywords *)
+  | "and"
+  | "else"
+  | "exception"
+  | "false"
+  | "fun"
+  | "function"
+  | "if"
+  | "in"
+  | "let"
+  | "match"
+  | "try"
+  | "rec"
+  | "then"
+  | "true"
+  | "with"
+  | "type"
+  | "|" ->
+      true
+  | _ ->
+      false
+
 (* ======= Operator names ======= *)
 
 let is_core_operator_char = function
@@ -68,6 +91,9 @@ let peek_custom_infix_operator_name =
     else return acc
   in
   lift2 String.( ^ ) peek_first (peek_rest "" 2)
+  >>= fun name ->
+  if not (is_keyword name) then return name
+  else fail (name ^ " keyword can't be used as operator name")
 
 let parse_custom_operator_name =
   parse_custom_prefix_operator_name
@@ -75,28 +101,6 @@ let parse_custom_operator_name =
       >>= fun name -> advance (String.length name) *> return name )
 
 (* ======= Value names ======= *)
-
-let is_keyword = function
-  (* https://v2.ocaml.org/releases/5.1/htmlman/lex.html#sss:keywords *)
-  | "and"
-  | "else"
-  | "exception"
-  | "false"
-  | "fun"
-  | "function"
-  | "if"
-  | "in"
-  | "let"
-  | "match"
-  | "try"
-  | "rec"
-  | "then"
-  | "true"
-  | "with"
-  | "type" ->
-      true
-  | _ ->
-      false
 
 let parse_lowercase_ident =
   let parse_first =
