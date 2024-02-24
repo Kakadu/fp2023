@@ -67,14 +67,15 @@ let chainl1 e op =
 (* Ident parse *)
 let parse_id =
   let length_id res = String.length res = 0 in
-  let first_char res = (Char.is_digit @@ String.get res 0) || (Char.is_uppercase @@ String.get res 0)
+  let first_char res =
+    (Char.is_digit @@ String.get res 0) || (Char.is_uppercase @@ String.get res 0)
   in
   take_empty *> take_while1 ident_symbol
   >>= fun res ->
-  match (length_id res, keywords res, first_char res) with 
-  | (true, _, _) -> fail "Not identifier"
-  | (_, true,  _) -> fail "You can not use keywords as vars"
-  | (_, _, true) -> fail "The first character of the identifier is a small letter"
+  match length_id res, keywords res, first_char res with
+  | true, _, _ -> fail "Not identifier"
+  | _, true,  _ -> fail "You can not use keywords as vars"
+  | _, _, true -> fail "The first character of the identifier is a small letter"
   | _ -> return res
 ;;
 
