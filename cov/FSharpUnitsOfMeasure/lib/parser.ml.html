@@ -1065,27 +1065,27 @@ open Base
 open Angstrom
 
 let empty_space = function
-  | <span data-count="3079">'</span> ' | <span data-count="0">'</span>\t' | <span data-count="153">'</span>\n' | <span data-count="0">'</span>\r' -&gt; true
-  | <span data-count="36331">_</span> -&gt; false
+  | <span data-count="3161">'</span> ' | <span data-count="0">'</span>\t' | <span data-count="157">'</span>\n' | <span data-count="0">'</span>\r' -&gt; true
+  | <span data-count="37480">_</span> -&gt; false
 ;;
 
 let digit = function
-  | <span data-count="1596">'</span>0' .. '9' -&gt; true
-  | <span data-count="5799">_</span> -&gt; false
+  | <span data-count="1636">'</span>0' .. '9' -&gt; true
+  | <span data-count="5983">_</span> -&gt; false
 ;;
 
 let lower_letter = function
-  | <span data-count="1138">'</span>a' .. 'z' -&gt; true
-  | <span data-count="1566">_</span> -&gt; false
+  | <span data-count="1170">'</span>a' .. 'z' -&gt; true
+  | <span data-count="1608">_</span> -&gt; false
 ;;
 
 let upper_letter = function
   | <span data-count="0">'</span>A' .. 'Z' -&gt; true
-  | <span data-count="1566">_</span> -&gt; false
+  | <span data-count="1608">_</span> -&gt; false
 ;;
 
 let ident_symbol = function
-  | <span data-count="2704">c</span> -&gt; lower_lette<span data-count="2704">r</span> <span data-count="1138">c</span> || upper_lette<span data-count="1566">r</span> <span data-count="0">c</span> || digi<span data-count="1566">t</span> <span data-count="128">c</span> || Char.equal c '_'
+  | <span data-count="2778">c</span> -&gt; lower_lette<span data-count="2778">r</span> <span data-count="1170">c</span> || upper_lette<span data-count="1608">r</span> <span data-count="0">c</span> || digi<span data-count="1608">t</span> <span data-count="129">c</span> || Char.equal c '_'
 ;;
 
 let keywords = function
@@ -1094,54 +1094,54 @@ let keywords = function
   | <span data-count="43">"</span>fun"
   | <span data-count="0">"</span>in"
   | <span data-count="4">"</span>if"
-  | <span data-count="10">"</span>then"
-  | <span data-count="10">"</span>else"
+  | <span data-count="12">"</span>then"
+  | <span data-count="12">"</span>else"
   | <span data-count="0">"</span>true"
   | <span data-count="0">"</span>false"
   | <span data-count="3">"</span>match"
   | <span data-count="6">"</span>with"
   | <span data-count="0">"</span>function"
   | <span data-count="0">"</span>Measure" -&gt; true
-  | <span data-count="688">_</span> -&gt; false
+  | <span data-count="701">_</span> -&gt; false
 ;;
 
-let take_empty = take_whil<span data-count="61">e</span> empty_space
-let take_empty1 = take_while<span data-count="61">1</span> empty_space
-let token s = <span data-count="362">t</span>ake_empty *&gt; s
+let take_empty = take_whil<span data-count="65">e</span> empty_space
+let take_empty1 = take_while<span data-count="65">1</span> empty_space
+let token s = <span data-count="385">t</span>ake_empty *&gt; s
 let token1 s = <span data-count="0">t</span>ake_empty1 *&gt; s
-let stoken s = <span data-count="10411">t</span>ake_empty *&gt; strin<span data-count="10411">g</span> s
-let stoken1 s = <span data-count="61">t</span>ake_empty1 *&gt; strin<span data-count="61">g</span> s
-let brackets p = <span data-count="3037">s</span>toke<span data-count="3037">n</span> "(" *<span data-count="3037">&gt;</span> p &lt;* stoke<span data-count="3037">n</span> ")"
-let square_brackets p = <span data-count="449">s</span>toke<span data-count="449">n</span> "[" *<span data-count="449">&gt;</span> p &lt;* stoke<span data-count="449">n</span> "]"
-let angle_brackets p = <span data-count="183">c</span>ha<span data-count="183">r</span> '&lt;' *<span data-count="183">&gt;</span> p &lt;* cha<span data-count="183">r</span> '&gt;'
-let quotes p = <span data-count="61">s</span>toke<span data-count="61">n</span> "\"" *<span data-count="61">&gt;</span> p &lt;* stoke<span data-count="61">n</span> "\""
-let brackets_or_not p = <span data-count="1392">p</span> &lt;|&gt; bracket<span data-count="1392">s</span> p
+let stoken s = <span data-count="10994">t</span>ake_empty *&gt; strin<span data-count="10994">g</span> s
+let stoken1 s = <span data-count="65">t</span>ake_empty1 *&gt; strin<span data-count="65">g</span> s
+let brackets p = <span data-count="3207">s</span>toke<span data-count="3207">n</span> "(" *<span data-count="3207">&gt;</span> p &lt;* stoke<span data-count="3207">n</span> ")"
+let square_brackets p = <span data-count="469">s</span>toke<span data-count="469">n</span> "[" *<span data-count="469">&gt;</span> p &lt;* stoke<span data-count="469">n</span> "]"
+let angle_brackets p = <span data-count="195">c</span>ha<span data-count="195">r</span> '&lt;' *<span data-count="195">&gt;</span> p &lt;* cha<span data-count="195">r</span> '&gt;'
+let quotes p = <span data-count="65">s</span>toke<span data-count="65">n</span> "\"" *<span data-count="65">&gt;</span> p &lt;* stoke<span data-count="65">n</span> "\""
+let brackets_or_not p = <span data-count="1470">p</span> &lt;|&gt; bracket<span data-count="1470">s</span> p
 
 let chainl1 e op =
-  <span data-count="132">l</span>et rec go acc = <span data-count="374">l</span>ift<span data-count="374">2</span> (fun f x -&gt; <span data-count="91">f</span> acc x) op e &gt;&gt;<span data-count="374">=</span> go &lt;|&gt; retur<span data-count="374">n</span> acc in
-  e &gt;&gt;= fun init -&gt; <span data-count="283">g</span>o init
+  <span data-count="140">l</span>et rec go acc = <span data-count="387">l</span>ift<span data-count="387">2</span> (fun f x -&gt; <span data-count="95">f</span> acc x) op e &gt;&gt;<span data-count="387">=</span> go &lt;|&gt; retur<span data-count="387">n</span> acc in
+  e &gt;&gt;= fun init -&gt; <span data-count="292">g</span>o init
 ;;
 
 (* Ident parse *)
 
 let parse_id =
-  take_empty *<span data-count="61">&gt;</span> take_while<span data-count="61">1</span> ident_symbol
-  &gt;&gt;<span data-count="61">=</span> fun res -&gt;
-  <span data-count="764">i</span>f String.lengt<span data-count="764">h</span> res == 0
+  take_empty *<span data-count="65">&gt;</span> take_while<span data-count="65">1</span> ident_symbol
+  &gt;&gt;<span data-count="65">=</span> fun res -&gt;
+  <span data-count="781">i</span>f String.lengt<span data-count="781">h</span> res == 0
   then <span data-count="0">f</span>ail "Not identifier"
-  else <span data-count="764">i</span>f keywords res
-  then <span data-count="76">f</span>ail "You can not use keywords as vars"
-  else <span data-count="688">i</span>f Char.is_digit @@ String.ge<span data-count="688">t</span> res 0
-  then <span data-count="124">f</span>ail "Identifier first sumbol is letter, not digit"
-  else <span data-count="564">i</span>f Char.is_uppercase @@ String.ge<span data-count="564">t</span> res 0
+  else <span data-count="781">i</span>f keywords res
+  then <span data-count="80">f</span>ail "You can not use keywords as vars"
+  else <span data-count="701">i</span>f Char.is_digit @@ String.ge<span data-count="701">t</span> res 0
+  then <span data-count="125">f</span>ail "Identifier first sumbol is letter, not digit"
+  else <span data-count="576">i</span>f Char.is_uppercase @@ String.ge<span data-count="576">t</span> res 0
   then <span data-count="0">f</span>ail "Identifier first sumbol is not small letter"
-  else <span data-count="564">r</span>eturn res
+  else <span data-count="576">r</span>eturn res
 ;;
 
 (* Types constructor *)
 
-let fint x = <span data-count="274">F</span>Int x
-let ffloat x = <span data-count="125">F</span>Float x
+let fint x = <span data-count="285">F</span>Int x
+let ffloat x = <span data-count="127">F</span>Float x
 let fbool x = <span data-count="11">F</span>Bool x
 let fstring x = <span data-count="3">F</span>String x
 let fnil = FNil
@@ -1153,98 +1153,98 @@ let measure_float f m = <span data-count="0">M</span>easure_float (f, m)
 
 let parse_fint =
   let parse_sign =
-    choice [ stoke<span data-count="61">n</span> "+" *<span data-count="61">&gt;</span> retur<span data-count="61">n</span> 1; stoke<span data-count="61">n</span> "-" *<span data-count="61">&gt;</span> retur<span data-count="61">n</span> (-1); stoke<span data-count="61">n</span> "" *<span data-count="61">&gt;</span> retur<span data-count="61">n</span> 1 ]
+    choice [ stoke<span data-count="65">n</span> "+" *<span data-count="65">&gt;</span> retur<span data-count="65">n</span> 1; stoke<span data-count="65">n</span> "-" *<span data-count="65">&gt;</span> retur<span data-count="65">n</span> (-1); stoke<span data-count="65">n</span> "" *<span data-count="65">&gt;</span> retur<span data-count="65">n</span> 1 ]
   in
-  <span data-count="61">l</span>et parse_digit = take_while1 digit in
-  <span data-count="61">l</span>ift<span data-count="61">2</span> (fun s v -&gt; <span data-count="274">f</span>int @@ (s * Int.of_strin<span data-count="274">g</span> v)) parse_sign parse_digit
+  <span data-count="65">l</span>et parse_digit = take_while1 digit in
+  <span data-count="65">l</span>ift<span data-count="65">2</span> (fun s v -&gt; <span data-count="285">f</span>int @@ (s * Int.of_strin<span data-count="285">g</span> v)) parse_sign parse_digit
 ;;
 
 let parse_fbool =
-  lif<span data-count="61">t</span> (fun b -&gt; <span data-count="11">f</span>bool @@ Bool.of_strin<span data-count="11">g</span> b) (stoke<span data-count="61">n</span> "false" &lt;|<span data-count="61">&gt;</span> stoke<span data-count="61">n</span> "true")
+  lif<span data-count="65">t</span> (fun b -&gt; <span data-count="11">f</span>bool @@ Bool.of_strin<span data-count="11">g</span> b) (stoke<span data-count="65">n</span> "false" &lt;|<span data-count="65">&gt;</span> stoke<span data-count="65">n</span> "true")
 ;;
 
 let parse_fstring =
-  lif<span data-count="61">t</span> (fun s -&gt; <span data-count="3">f</span>string s) (quote<span data-count="61">s</span> @@ take_whil<span data-count="61">e</span> (fun c -&gt; <span data-count="45">n</span>ot (Char.equa<span data-count="45">l</span> c '"')))
+  lif<span data-count="65">t</span> (fun s -&gt; <span data-count="3">f</span>string s) (quote<span data-count="65">s</span> @@ take_whil<span data-count="65">e</span> (fun c -&gt; <span data-count="45">n</span>ot (Char.equa<span data-count="45">l</span> c '"')))
 ;;
 
 let parse_ffloat =
   let parse_sign_float =
     choice
-      [ stoke<span data-count="61">n</span> "+" *<span data-count="61">&gt;</span> retur<span data-count="61">n</span> 1.0; stoke<span data-count="61">n</span> "-" *<span data-count="61">&gt;</span> retur<span data-count="61">n</span> (-1.0); stoke<span data-count="61">n</span> "" *<span data-count="61">&gt;</span> retur<span data-count="61">n</span> 1.0 ]
+      [ stoke<span data-count="65">n</span> "+" *<span data-count="65">&gt;</span> retur<span data-count="65">n</span> 1.0; stoke<span data-count="65">n</span> "-" *<span data-count="65">&gt;</span> retur<span data-count="65">n</span> (-1.0); stoke<span data-count="65">n</span> "" *<span data-count="65">&gt;</span> retur<span data-count="65">n</span> 1.0 ]
   in
-  <span data-count="61">l</span>et parse_digit = take_while1 digit in
-  <span data-count="61">l</span>et parse_decimal = stoke<span data-count="61">n</span> "." *&gt; take_whil<span data-count="61">e</span> digit in
-  <span data-count="61">l</span>ift<span data-count="61">3</span>
+  <span data-count="65">l</span>et parse_digit = take_while1 digit in
+  <span data-count="65">l</span>et parse_decimal = stoke<span data-count="65">n</span> "." *&gt; take_whil<span data-count="65">e</span> digit in
+  <span data-count="65">l</span>ift<span data-count="65">3</span>
     (fun s int_part fraction_part -&gt;
-      <span data-count="125">l</span>et float_value = float_of_string (int_part ^ "." ^ fraction_part) in
-      <span data-count="125">f</span>float @@ (s *. float_value))
+      <span data-count="127">l</span>et float_value = float_of_string (int_part ^ "." ^ fraction_part) in
+      <span data-count="127">f</span>float @@ (s *. float_value))
     parse_sign_float
     parse_digit
     parse_decimal
 ;;
 
-let parse_fnil = stoke<span data-count="61">n</span> "[]" *<span data-count="61">&gt;</span> retur<span data-count="61">n</span> fnil
-let parse_funit = stoke<span data-count="61">n</span> "()" *<span data-count="61">&gt;</span> retur<span data-count="61">n</span> funit
+let parse_fnil = stoke<span data-count="65">n</span> "[]" *<span data-count="65">&gt;</span> retur<span data-count="65">n</span> fnil
+let parse_funit = stoke<span data-count="65">n</span> "()" *<span data-count="65">&gt;</span> retur<span data-count="65">n</span> funit
 
 (* Parsing initialization measure single: [&lt;Measure&gt;] type m*)
 
 let parse_pow =
-  take_empty *<span data-count="61">&gt;</span> lif<span data-count="61">t</span> (fun n -&gt; <span data-count="296">P</span>ow n) (strin<span data-count="61">g</span> "^" *<span data-count="61">&gt;</span> parse_fint &lt;|<span data-count="61">&gt;</span> retur<span data-count="61">n</span> (FInt 1))
+  take_empty *<span data-count="65">&gt;</span> lif<span data-count="65">t</span> (fun n -&gt; <span data-count="306">P</span>ow n) (strin<span data-count="65">g</span> "^" *<span data-count="65">&gt;</span> parse_fint &lt;|<span data-count="65">&gt;</span> retur<span data-count="65">n</span> (FInt 1))
 ;;
 
-let parse_smeasure = lift<span data-count="61">2</span> (fun m p -&gt; <span data-count="296">S</span>Measure (m, p)) parse_id parse_pow
+let parse_smeasure = lift<span data-count="65">2</span> (fun m p -&gt; <span data-count="306">S</span>Measure (m, p)) parse_id parse_pow
 
 let parse_measure_type =
-  square_bracket<span data-count="61">s</span> (angle_bracket<span data-count="61">s</span> (stoke<span data-count="61">n</span> "Measure")) *<span data-count="61">&gt;</span> stoke<span data-count="61">n</span> "type" *<span data-count="61">&gt;</span> parse_smeasure
+  square_bracket<span data-count="65">s</span> (angle_bracket<span data-count="65">s</span> (stoke<span data-count="65">n</span> "Measure")) *<span data-count="65">&gt;</span> stoke<span data-count="65">n</span> "type" *<span data-count="65">&gt;</span> parse_smeasure
 ;;
 
-let parse_init_smeasure = parse_measure_type &gt;&gt;<span data-count="61">|</span> fun a -&gt; <span data-count="52">S</span>Measure_init a
+let parse_init_smeasure = parse_measure_type &gt;&gt;<span data-count="65">|</span> fun a -&gt; <span data-count="54">S</span>Measure_init a
 
 (* Parsing float + measure single: 7.77 &lt;m&gt;*)
 
-let construct_float_measure = angle_bracket<span data-count="61">s</span> parse_smeasure
+let construct_float_measure = angle_bracket<span data-count="65">s</span> parse_smeasure
 
 let parse_float_smeasure =
-  lift<span data-count="61">2</span> (fun f m -&gt; <span data-count="0">m</span>easure_float f m) parse_ffloat construct_float_measure
+  lift<span data-count="65">2</span> (fun f m -&gt; <span data-count="0">m</span>easure_float f m) parse_ffloat construct_float_measure
 ;;
 
 (* Parsing initialization measure multiple: [&lt;Measure&gt;] type speed = m/sec *)
 
 let parse_mbin_op =
-  take_empty *<span data-count="61">&gt;</span> choic<span data-count="61">e</span> [ strin<span data-count="61">g</span> "*" *<span data-count="61">&gt;</span> retur<span data-count="61">n</span> Mul; strin<span data-count="61">g</span> "/" *<span data-count="61">&gt;</span> retur<span data-count="61">n</span> Div ]
-  &lt;|<span data-count="61">&gt;</span> retur<span data-count="61">n</span> Mul
+  take_empty *<span data-count="65">&gt;</span> choic<span data-count="65">e</span> [ strin<span data-count="65">g</span> "*" *<span data-count="65">&gt;</span> retur<span data-count="65">n</span> Mul; strin<span data-count="65">g</span> "/" *<span data-count="65">&gt;</span> retur<span data-count="65">n</span> Div ]
+  &lt;|<span data-count="65">&gt;</span> retur<span data-count="65">n</span> Mul
 ;;
 
 let parse_mmeasure =
-  fi<span data-count="61">x</span> (fun p -&gt;
-    <span data-count="23">l</span>ift<span data-count="23">3</span> (fun m1 op m2 -&gt; <span data-count="50">M</span>Measure (m1, op, m2)) parse_smeasure parse_mbin_op p
+  fi<span data-count="65">x</span> (fun p -&gt;
+    <span data-count="24">l</span>ift<span data-count="24">3</span> (fun m1 op m2 -&gt; <span data-count="52">M</span>Measure (m1, op, m2)) parse_smeasure parse_mbin_op p
     &lt;|&gt; parse_smeasure)
 ;;
 
 let parse_init_mmeasure =
-  lift<span data-count="61">2</span>
+  lift<span data-count="65">2</span>
     (fun typ meaning -&gt; <span data-count="16">M</span>Measure_init (typ, meaning))
-    (parse_measure_type &lt;<span data-count="61">*</span> stoke<span data-count="61">n</span> "=")
+    (parse_measure_type &lt;<span data-count="65">*</span> stoke<span data-count="65">n</span> "=")
     parse_mmeasure
 ;;
 
 (* Parsing float + measure multiple: 7.77 &lt;sec/meters&gt;*)
 
 let parse_float_mmeasure =
-  lift<span data-count="61">2</span> (fun f m -&gt; <span data-count="47">M</span>easure_float (f, m)) parse_ffloat (angle_bracket<span data-count="61">s</span> parse_mmeasure)
+  lift<span data-count="65">2</span> (fun f m -&gt; <span data-count="49">M</span>easure_float (f, m)) parse_ffloat (angle_bracket<span data-count="65">s</span> parse_mmeasure)
 ;;
 
-let parse_fmeasure = parse_float_mmeasure &lt;|<span data-count="61">&gt;</span> parse_float_smeasure
-let parse_init_meassure = parse_init_mmeasure &lt;|<span data-count="61">&gt;</span> parse_init_smeasure
+let parse_fmeasure = parse_float_mmeasure &lt;|<span data-count="65">&gt;</span> parse_float_smeasure
+let parse_init_meassure = parse_init_mmeasure &lt;|<span data-count="65">&gt;</span> parse_init_smeasure
 
 let parse_types =
   parse_fmeasure
-  &lt;|<span data-count="61">&gt;</span> parse_ffloat
-  &lt;|<span data-count="61">&gt;</span> parse_fint
-  &lt;|<span data-count="61">&gt;</span> parse_fbool
-  &lt;|<span data-count="61">&gt;</span> parse_fstring
-  &lt;|<span data-count="61">&gt;</span> parse_fnil
-  &lt;|<span data-count="61">&gt;</span> parse_funit
+  &lt;|<span data-count="65">&gt;</span> parse_ffloat
+  &lt;|<span data-count="65">&gt;</span> parse_fint
+  &lt;|<span data-count="65">&gt;</span> parse_fbool
+  &lt;|<span data-count="65">&gt;</span> parse_fstring
+  &lt;|<span data-count="65">&gt;</span> parse_fnil
+  &lt;|<span data-count="65">&gt;</span> parse_funit
 ;;
 
 (** Pattern constructor *)
@@ -1258,10 +1258,10 @@ let pcons ht tl = <span data-count="2">P</span>Cons (ht, tl)
 
 (** Pattern parse *)
 
-let parse_pconst = parse_types &gt;&gt;<span data-count="61">|</span> fun x -&gt; <span data-count="95">p</span>const x
-let parse_pvar = parse_id &gt;&gt;<span data-count="61">|</span> fun x -&gt; <span data-count="137">p</span>var x
-let parse_pwild = stoke<span data-count="61">n</span> "_" *<span data-count="61">&gt;</span> retur<span data-count="61">n</span> pwild
-let parse_plist l = <span data-count="388">s</span>quare_brackets (sep_by<span data-count="388">1</span> (stoke<span data-count="388">n</span> ";") l)
+let parse_pconst = parse_types &gt;&gt;<span data-count="65">|</span> fun x -&gt; <span data-count="95">p</span>const x
+let parse_pvar = parse_id &gt;&gt;<span data-count="65">|</span> fun x -&gt; <span data-count="137">p</span>var x
+let parse_pwild = stoke<span data-count="65">n</span> "_" *<span data-count="65">&gt;</span> retur<span data-count="65">n</span> pwild
+let parse_plist l = <span data-count="404">s</span>quare_brackets (sep_by<span data-count="404">1</span> (stoke<span data-count="404">n</span> ";") l)
 
 let rec create_cons = function
   | <span data-count="0">[</span>] -&gt; pconst fnil
@@ -1271,18 +1271,18 @@ let rec create_cons = function
 ;;
 
 let parse_cons parser constructor =
-  <span data-count="16">l</span>ift2
+  <span data-count="17">l</span>ift2
     (fun a b -&gt; <span data-count="2">c</span>onstructor @@ (a :: b))
-    (parser &lt;<span data-count="16">*</span> stoke<span data-count="16">n</span> "::")
-    (sep_by<span data-count="16">1</span> (stoke<span data-count="16">n</span> "::") parser)
+    (parser &lt;<span data-count="17">*</span> stoke<span data-count="17">n</span> "::")
+    (sep_by<span data-count="17">1</span> (stoke<span data-count="17">n</span> "::") parser)
 ;;
 
 let parse_tuple parser constructor =
-  <span data-count="421">t</span>ake_empty
-  *<span data-count="421">&gt;</span> lift<span data-count="421">2</span>
+  <span data-count="445">t</span>ake_empty
+  *<span data-count="445">&gt;</span> lift<span data-count="445">2</span>
        (fun a b -&gt; <span data-count="31">c</span>onstructor @@ (a :: b))
-       (parser &lt;<span data-count="421">*</span> stoke<span data-count="421">n</span> ",")
-       (sep_by<span data-count="421">1</span> (stoke<span data-count="421">n</span> ",") parser)
+       (parser &lt;<span data-count="445">*</span> stoke<span data-count="445">n</span> ",")
+       (sep_by<span data-count="445">1</span> (stoke<span data-count="445">n</span> ",") parser)
   &lt;* take_empty
 ;;
 
@@ -1297,50 +1297,50 @@ type pdispatch =
 
 let pack =
   let pattern pack =
-    <span data-count="124">c</span>hoice
-      [ pack.con<span data-count="124">s</span> pack
-      ; pack.tupl<span data-count="124">e</span> pack
-      ; pack.lis<span data-count="124">t</span> pack
-      ; pack.tuple_bracket<span data-count="124">s</span> pack
-      ; pack.valu<span data-count="124">e</span> pack
+    <span data-count="131">c</span>hoice
+      [ pack.con<span data-count="131">s</span> pack
+      ; pack.tupl<span data-count="131">e</span> pack
+      ; pack.lis<span data-count="131">t</span> pack
+      ; pack.tuple_bracket<span data-count="131">s</span> pack
+      ; pack.valu<span data-count="131">e</span> pack
       ]
   in
   let parser pack =
-    <span data-count="86">c</span>hoice [ pack.lis<span data-count="86">t</span> pack; pack.tuple_bracket<span data-count="86">s</span> pack; pack.valu<span data-count="86">e</span> pack ]
+    <span data-count="91">c</span>hoice [ pack.lis<span data-count="91">t</span> pack; pack.tuple_bracket<span data-count="91">s</span> pack; pack.valu<span data-count="91">e</span> pack ]
   in
-  let value _ = <span data-count="210">p</span>arse_pwild &lt;|<span data-count="210">&gt;</span> parse_pvar &lt;|&gt; parse_pconst in
+  let value _ = <span data-count="222">p</span>arse_pwild &lt;|<span data-count="222">&gt;</span> parse_pvar &lt;|&gt; parse_pconst in
   let tuple_brackets pack =
-    <span data-count="210">f</span>ix @@ fun _ -&gt; <span data-count="54">t</span>ake_empty *&gt; (bracket<span data-count="54">s</span> @@ parse_tupl<span data-count="54">e</span> (parse<span data-count="54">r</span> pack) ptuple)
+    <span data-count="222">f</span>ix @@ fun _ -&gt; <span data-count="57">t</span>ake_empty *&gt; (bracket<span data-count="57">s</span> @@ parse_tupl<span data-count="57">e</span> (parse<span data-count="57">r</span> pack) ptuple)
   in
-  let tuple pack = <span data-count="124">f</span>ix @@ fun _ -&gt; <span data-count="16">t</span>ake_empty *&gt; parse_tupl<span data-count="16">e</span> (parse<span data-count="16">r</span> pack) ptuple in
+  let tuple pack = <span data-count="131">f</span>ix @@ fun _ -&gt; <span data-count="17">t</span>ake_empty *&gt; parse_tupl<span data-count="17">e</span> (parse<span data-count="17">r</span> pack) ptuple in
   let list pack =
-    <span data-count="273">f</span>ix
-    @@ fun _ -&gt; <span data-count="63">p</span>list &lt;$<span data-count="63">&gt;</span> parse_plis<span data-count="63">t</span> @@ pack.patter<span data-count="63">n</span> pack &lt;|&gt; bracket<span data-count="63">s</span> @@ pack.lis<span data-count="63">t</span> pack
+    <span data-count="288">f</span>ix
+    @@ fun _ -&gt; <span data-count="66">p</span>list &lt;$<span data-count="66">&gt;</span> parse_plis<span data-count="66">t</span> @@ pack.patter<span data-count="66">n</span> pack &lt;|&gt; bracket<span data-count="66">s</span> @@ pack.lis<span data-count="66">t</span> pack
   in
-  let cons pack = <span data-count="124">f</span>ix @@ fun _ -&gt; <span data-count="16">t</span>ake_empty *&gt; parse_con<span data-count="16">s</span> (parse<span data-count="16">r</span> pack) create_cons in
+  let cons pack = <span data-count="131">f</span>ix @@ fun _ -&gt; <span data-count="17">t</span>ake_empty *&gt; parse_con<span data-count="17">s</span> (parse<span data-count="17">r</span> pack) create_cons in
   { cons; tuple; tuple_brackets; list; value; pattern }
 ;;
 
-let parse_pattern = pack.patter<span data-count="61">n</span> pack
+let parse_pattern = pack.patter<span data-count="65">n</span> pack
 
 (** Expression constructor *)
 
-let eifelse i t e = <span data-count="5">E</span>IfElse (i, t, e)
-let elet is_rec name body = <span data-count="15">E</span>Let (is_rec, name, body)
+let eifelse i t e = <span data-count="6">E</span>IfElse (i, t, e)
+let elet is_rec name body = <span data-count="16">E</span>Let (is_rec, name, body)
 let etuple z = <span data-count="18">E</span>Tuple z
 let elist l = <span data-count="20">E</span>List l
 let efun id body = <span data-count="34">E</span>Fun (id, body)
-let eapp f a = <span data-count="220">E</span>App (f, a)
-let evar x = <span data-count="116">E</span>Var x
+let eapp f a = <span data-count="228">E</span>App (f, a)
+let evar x = <span data-count="117">E</span>Var x
 let ematch c pl = <span data-count="3">E</span>Match (c, pl)
 
 (** Expression parse *)
 
-let parse_evar = parse_id &gt;&gt;<span data-count="61">|</span> evar
-let parse_econst = parse_types &gt;&gt;<span data-count="61">|</span> fun x -&gt; <span data-count="214">E</span>Const x
-let parse_measure = parse_init_meassure &gt;&gt;<span data-count="61">|</span> fun x -&gt; <span data-count="68">E</span>Measure x
-let parse_arg = man<span data-count="61">y</span> @@ brackets_or_no<span data-count="61">t</span> parse_pattern
-let parse_arg1 = many<span data-count="61">1</span> @@ brackets_or_no<span data-count="61">t</span> parse_pattern
+let parse_evar = parse_id &gt;&gt;<span data-count="65">|</span> evar
+let parse_econst = parse_types &gt;&gt;<span data-count="65">|</span> fun x -&gt; <span data-count="224">E</span>Const x
+let parse_measure = parse_init_meassure &gt;&gt;<span data-count="65">|</span> fun x -&gt; <span data-count="70">E</span>Measure x
+let parse_arg = man<span data-count="65">y</span> @@ brackets_or_no<span data-count="65">t</span> parse_pattern
+let parse_arg1 = many<span data-count="65">1</span> @@ brackets_or_no<span data-count="65">t</span> parse_pattern
 
 type edispatch =
   { evar : edispatch -&gt; expression t
@@ -1358,189 +1358,189 @@ type edispatch =
   }
 
 let eifelse i expr =
-  <span data-count="102">t</span>ake_empty
-  *&gt; lift<span data-count="102">3</span> eifelse (stoke<span data-count="102">n</span> "if" *<span data-count="102">&gt;</span> i) (stoke<span data-count="102">n</span> "then" *<span data-count="102">&gt;</span> expr) (stoke<span data-count="102">n</span> "else" *<span data-count="102">&gt;</span> expr)
+  <span data-count="108">t</span>ake_empty
+  *&gt; lift<span data-count="108">3</span> eifelse (stoke<span data-count="108">n</span> "if" *<span data-count="108">&gt;</span> i) (stoke<span data-count="108">n</span> "then" *<span data-count="108">&gt;</span> expr) (stoke<span data-count="108">n</span> "else" *<span data-count="108">&gt;</span> expr)
 ;;
 
 let construct_efun arg body =
-  <span data-count="28">l</span>et helper hd acc = <span data-count="34">e</span>fun hd acc in
+  <span data-count="29">l</span>et helper hd acc = <span data-count="34">e</span>fun hd acc in
   List.fold_right arg ~f:helper ~init:body
 ;;
 
 let parse_efun expr =
-  <span data-count="170">t</span>ake_empty
-  *&gt; lift<span data-count="170">2</span>
+  <span data-count="181">t</span>ake_empty
+  *&gt; lift<span data-count="181">2</span>
        (fun arg exp -&gt; <span data-count="13">c</span>onstruct_efun arg exp)
-       (stoke<span data-count="170">n</span> "fun" *<span data-count="170">&gt;</span> parse_arg1)
-       (stoke<span data-count="170">n</span> "-&gt;" *<span data-count="170">&gt;</span> expr)
+       (stoke<span data-count="181">n</span> "fun" *<span data-count="181">&gt;</span> parse_arg1)
+       (stoke<span data-count="181">n</span> "-&gt;" *<span data-count="181">&gt;</span> expr)
 ;;
 
 let parse_rec =
-  take_empty *<span data-count="61">&gt;</span> stoke<span data-count="61">n</span> "let" *<span data-count="61">&gt;</span> optio<span data-count="61">n</span> "false" (stoken<span data-count="61">1</span> "rec")
-  &gt;&gt;<span data-count="61">|</span> fun x -&gt; <span data-count="15">i</span>f x != "false" then <span data-count="4">"</span>Rec" else <span data-count="11">"</span>NotRec"
+  take_empty *<span data-count="65">&gt;</span> stoke<span data-count="65">n</span> "let" *<span data-count="65">&gt;</span> optio<span data-count="65">n</span> "false" (stoken<span data-count="65">1</span> "rec")
+  &gt;&gt;<span data-count="65">|</span> fun x -&gt; <span data-count="16">i</span>f x != "false" then <span data-count="4">"</span>Rec" else <span data-count="12">"</span>NotRec"
 ;;
 
 let eletfun parse_expr =
-  <span data-count="84">t</span>ake_empty
-  *&gt; lift<span data-count="84">4</span>
+  <span data-count="89">t</span>ake_empty
+  *&gt; lift<span data-count="89">4</span>
        (fun r name arg body -&gt;
-         <span data-count="15">l</span>et body = construct_efun arg body in
-         <span data-count="15">e</span>let r name body)
+         <span data-count="16">l</span>et body = construct_efun arg body in
+         <span data-count="16">e</span>let r name body)
        parse_rec
        parse_id
        parse_arg
-       (stoke<span data-count="84">n</span> "=" *<span data-count="84">&gt;</span> parse_expr)
+       (stoke<span data-count="89">n</span> "=" *<span data-count="89">&gt;</span> parse_expr)
 ;;
 
 let ematch matching parse_expr =
-  <span data-count="72">l</span>et wand = stoke<span data-count="72">n</span> "|" *&gt; parse_pattern in
-  <span data-count="72">l</span>et arrow = stoke<span data-count="72">n</span> "-&gt;" *&gt; parse_expr in
-  <span data-count="72">l</span>et expr = lift2 (fun value arrow_value -&gt; <span data-count="6">v</span>alue, arrow_value) wand arrow in
-  <span data-count="72">l</span>et exprs = many1 expr in
-  <span data-count="72">l</span>et pematch = stoke<span data-count="72">n</span> "match" *<span data-count="72">&gt;</span> matching &lt;* stoke<span data-count="72">n</span> "with" in
-  <span data-count="72">t</span>ake_empty *&gt; lift<span data-count="72">2</span> ematch pematch exprs
+  <span data-count="76">l</span>et wand = stoke<span data-count="76">n</span> "|" *&gt; parse_pattern in
+  <span data-count="76">l</span>et arrow = stoke<span data-count="76">n</span> "-&gt;" *&gt; parse_expr in
+  <span data-count="76">l</span>et expr = lift2 (fun value arrow_value -&gt; <span data-count="6">v</span>alue, arrow_value) wand arrow in
+  <span data-count="76">l</span>et exprs = many1 expr in
+  <span data-count="76">l</span>et pematch = stoke<span data-count="76">n</span> "match" *<span data-count="76">&gt;</span> matching &lt;* stoke<span data-count="76">n</span> "with" in
+  <span data-count="76">t</span>ake_empty *&gt; lift<span data-count="76">2</span> ematch pematch exprs
 ;;
 
 (** Binary operations constructors *)
 
-let ebinop op e1 e2 = <span data-count="91">e</span>app op (eap<span data-count="91">p</span> e1 e2)
-let ediv = ebino<span data-count="61">p</span> @@ EBinaryOp Div
-let emul = ebino<span data-count="61">p</span> @@ EBinaryOp Mul
-let eadd = ebino<span data-count="61">p</span> @@ EBinaryOp Add
-let esub = ebino<span data-count="61">p</span> @@ EBinaryOp Sub
-let eless = ebino<span data-count="61">p</span> @@ EBinaryOp Less
-let eleq = ebino<span data-count="61">p</span> @@ EBinaryOp Leq
-let egre = ebino<span data-count="61">p</span> @@ EBinaryOp Gre
-let egreq = ebino<span data-count="61">p</span> @@ EBinaryOp Greq
-let emod = ebino<span data-count="61">p</span> @@ EBinaryOp Mod
-let eand = ebino<span data-count="61">p</span> @@ EBinaryOp And
-let eor = ebino<span data-count="61">p</span> @@ EBinaryOp Or
-let eeq = ebino<span data-count="61">p</span> @@ EBinaryOp Eq
-let eneq = ebino<span data-count="61">p</span> @@ EBinaryOp Neq
+let ebinop op e1 e2 = <span data-count="95">e</span>app op (eap<span data-count="95">p</span> e1 e2)
+let ediv = ebino<span data-count="65">p</span> @@ EBinaryOp Div
+let emul = ebino<span data-count="65">p</span> @@ EBinaryOp Mul
+let eadd = ebino<span data-count="65">p</span> @@ EBinaryOp Add
+let esub = ebino<span data-count="65">p</span> @@ EBinaryOp Sub
+let eless = ebino<span data-count="65">p</span> @@ EBinaryOp Less
+let eleq = ebino<span data-count="65">p</span> @@ EBinaryOp Leq
+let egre = ebino<span data-count="65">p</span> @@ EBinaryOp Gre
+let egreq = ebino<span data-count="65">p</span> @@ EBinaryOp Greq
+let emod = ebino<span data-count="65">p</span> @@ EBinaryOp Mod
+let eand = ebino<span data-count="65">p</span> @@ EBinaryOp And
+let eor = ebino<span data-count="65">p</span> @@ EBinaryOp Or
+let eeq = ebino<span data-count="65">p</span> @@ EBinaryOp Eq
+let eneq = ebino<span data-count="65">p</span> @@ EBinaryOp Neq
 
 let parse_binop =
   take_empty
-  *<span data-count="61">&gt;</span> choic<span data-count="61">e</span>
-       [ strin<span data-count="61">g</span> "=" *<span data-count="61">&gt;</span> retur<span data-count="61">n</span> eeq
-       ; strin<span data-count="61">g</span> "&lt;&gt;" *<span data-count="61">&gt;</span> retur<span data-count="61">n</span> eneq
-       ; strin<span data-count="61">g</span> "&amp;&amp;" *<span data-count="61">&gt;</span> retur<span data-count="61">n</span> eand
-       ; strin<span data-count="61">g</span> "||" *<span data-count="61">&gt;</span> retur<span data-count="61">n</span> eor
-       ; strin<span data-count="61">g</span> "*" *<span data-count="61">&gt;</span> retur<span data-count="61">n</span> emul
-       ; strin<span data-count="61">g</span> "/" *<span data-count="61">&gt;</span> retur<span data-count="61">n</span> ediv
-       ; strin<span data-count="61">g</span> "%" *<span data-count="61">&gt;</span> retur<span data-count="61">n</span> emod
-       ; strin<span data-count="61">g</span> "+" *<span data-count="61">&gt;</span> retur<span data-count="61">n</span> eadd
-       ; strin<span data-count="61">g</span> "-" *<span data-count="61">&gt;</span> retur<span data-count="61">n</span> esub
-       ; strin<span data-count="61">g</span> "&gt;=" *<span data-count="61">&gt;</span> retur<span data-count="61">n</span> egreq
-       ; strin<span data-count="61">g</span> "&gt;" *<span data-count="61">&gt;</span> retur<span data-count="61">n</span> egre
-       ; strin<span data-count="61">g</span> "&lt;=" *<span data-count="61">&gt;</span> retur<span data-count="61">n</span> eleq
-       ; strin<span data-count="61">g</span> "&lt;" *<span data-count="61">&gt;</span> retur<span data-count="61">n</span> eless
+  *<span data-count="65">&gt;</span> choic<span data-count="65">e</span>
+       [ strin<span data-count="65">g</span> "=" *<span data-count="65">&gt;</span> retur<span data-count="65">n</span> eeq
+       ; strin<span data-count="65">g</span> "&lt;&gt;" *<span data-count="65">&gt;</span> retur<span data-count="65">n</span> eneq
+       ; strin<span data-count="65">g</span> "&amp;&amp;" *<span data-count="65">&gt;</span> retur<span data-count="65">n</span> eand
+       ; strin<span data-count="65">g</span> "||" *<span data-count="65">&gt;</span> retur<span data-count="65">n</span> eor
+       ; strin<span data-count="65">g</span> "*" *<span data-count="65">&gt;</span> retur<span data-count="65">n</span> emul
+       ; strin<span data-count="65">g</span> "/" *<span data-count="65">&gt;</span> retur<span data-count="65">n</span> ediv
+       ; strin<span data-count="65">g</span> "%" *<span data-count="65">&gt;</span> retur<span data-count="65">n</span> emod
+       ; strin<span data-count="65">g</span> "+" *<span data-count="65">&gt;</span> retur<span data-count="65">n</span> eadd
+       ; strin<span data-count="65">g</span> "-" *<span data-count="65">&gt;</span> retur<span data-count="65">n</span> esub
+       ; strin<span data-count="65">g</span> "&gt;=" *<span data-count="65">&gt;</span> retur<span data-count="65">n</span> egreq
+       ; strin<span data-count="65">g</span> "&gt;" *<span data-count="65">&gt;</span> retur<span data-count="65">n</span> egre
+       ; strin<span data-count="65">g</span> "&lt;=" *<span data-count="65">&gt;</span> retur<span data-count="65">n</span> eleq
+       ; strin<span data-count="65">g</span> "&lt;" *<span data-count="65">&gt;</span> retur<span data-count="65">n</span> eless
        ]
-  &lt;<span data-count="61">*</span> take_empty
+  &lt;<span data-count="65">*</span> take_empty
 ;;
 
 let parse_eapp parse_expr =
-  <span data-count="240">t</span>ake_empty
-  *&gt; lift<span data-count="240">2</span>
+  <span data-count="255">t</span>ake_empty
+  *&gt; lift<span data-count="255">2</span>
        (fun expr l -&gt;
-         <span data-count="646">l</span>et res = List.fold ~f:eapp ~init:expr l in
-         <span data-count="646">r</span>es)
+         <span data-count="667">l</span>et res = List.fold ~f:eapp ~init:expr l in
+         <span data-count="667">r</span>es)
        parse_expr
-       (man<span data-count="240">y</span> (toke<span data-count="240">n</span> parse_expr))
+       (man<span data-count="255">y</span> (toke<span data-count="255">n</span> parse_expr))
 ;;
 
 let pack =
-  let emeasure _ = <span data-count="483">p</span>arse_measure in
-  let econst _ = <span data-count="483">p</span>arse_econst in
-  let evar _ = <span data-count="483">p</span>arse_evar in
+  let emeasure _ = <span data-count="511">p</span>arse_measure in
+  let econst _ = <span data-count="511">p</span>arse_econst in
+  let evar _ = <span data-count="511">p</span>arse_evar in
   let expression pack =
-    <span data-count="730">c</span>hoice
-      [ pack.ele<span data-count="730">t</span> pack
-      ; pack.eifels<span data-count="730">e</span> pack
-      ; pack.eap<span data-count="730">p</span> pack
-      ; pack.etupl<span data-count="730">e</span> pack
-      ; pack.elis<span data-count="730">t</span> pack
-      ; pack.efu<span data-count="730">n</span> pack
-      ; pack.ematc<span data-count="730">h</span> pack
+    <span data-count="768">c</span>hoice
+      [ pack.ele<span data-count="768">t</span> pack
+      ; pack.eifels<span data-count="768">e</span> pack
+      ; pack.eap<span data-count="768">p</span> pack
+      ; pack.etupl<span data-count="768">e</span> pack
+      ; pack.elis<span data-count="768">t</span> pack
+      ; pack.efu<span data-count="768">n</span> pack
+      ; pack.ematc<span data-count="768">h</span> pack
       ]
   in
   let eifelse pack =
-    <span data-count="1228">f</span>ix
+    <span data-count="1296">f</span>ix
     @@ fun _ -&gt;
-    <span data-count="102">l</span>et parse_eifelse =
+    <span data-count="108">l</span>et parse_eifelse =
       brackets_or_not
-      @@ choic<span data-count="102">e</span> [ pack.eifels<span data-count="102">e</span> pack; pack.eap<span data-count="102">p</span> pack; pack.efu<span data-count="102">n</span> pack; pack.ematc<span data-count="102">h</span> pack ]
+      @@ choic<span data-count="108">e</span> [ pack.eifels<span data-count="108">e</span> pack; pack.eap<span data-count="108">p</span> pack; pack.efu<span data-count="108">n</span> pack; pack.ematc<span data-count="108">h</span> pack ]
     in
-    <span data-count="102">e</span>ifelse parse_eifelse (pack.expressio<span data-count="102">n</span> pack)
+    <span data-count="108">e</span>ifelse parse_eifelse (pack.expressio<span data-count="108">n</span> pack)
   in
-  let efun pack = <span data-count="1024">b</span>rackets_or_not @@ fi<span data-count="1024">x</span> @@ fun _ -&gt; <span data-count="170">p</span>arse_efun @@ pack.expressio<span data-count="170">n</span> pack in
+  let efun pack = <span data-count="1080">b</span>rackets_or_not @@ fi<span data-count="1080">x</span> @@ fun _ -&gt; <span data-count="181">p</span>arse_efun @@ pack.expressio<span data-count="181">n</span> pack in
   let ematch pack =
-    <span data-count="1228">f</span>ix
+    <span data-count="1296">f</span>ix
     @@ fun _ -&gt;
-    <span data-count="72">l</span>et ematch_parse =
-      brackets_or_not @@ choic<span data-count="72">e</span> [ pack.eap<span data-count="72">p</span> pack; pack.eifels<span data-count="72">e</span> pack; pack.ematc<span data-count="72">h</span> pack ]
+    <span data-count="76">l</span>et ematch_parse =
+      brackets_or_not @@ choic<span data-count="76">e</span> [ pack.eap<span data-count="76">p</span> pack; pack.eifels<span data-count="76">e</span> pack; pack.ematc<span data-count="76">h</span> pack ]
     in
-    <span data-count="72">b</span>rackets_or_not @@ ematc<span data-count="72">h</span> ematch_parse (pack.expressio<span data-count="72">n</span> pack)
+    <span data-count="76">b</span>rackets_or_not @@ ematc<span data-count="76">h</span> ematch_parse (pack.expressio<span data-count="76">n</span> pack)
   in
   let ebinaryop pack =
-    <span data-count="240">f</span>ix
+    <span data-count="255">f</span>ix
     @@ fun _ -&gt;
-    <span data-count="132">l</span>et exp =
+    <span data-count="140">l</span>et exp =
       choice
-        [ pack.emeasur<span data-count="132">e</span> pack
-        ; pack.etupl<span data-count="132">e</span> pack
-        ; pack.elis<span data-count="132">t</span> pack
-        ; pack.econs<span data-count="132">t</span> pack
-        ; bracket<span data-count="132">s</span> @@ pack.ebinaryo<span data-count="132">p</span> pack
-        ; bracket<span data-count="132">s</span> @@ pack.ematc<span data-count="132">h</span> pack
-        ; bracket<span data-count="132">s</span> @@ pack.eifels<span data-count="132">e</span> pack
-        ; bracket<span data-count="132">s</span> @@ pack.eap<span data-count="132">p</span> pack
-        ; pack.eva<span data-count="132">r</span> pack
+        [ pack.emeasur<span data-count="140">e</span> pack
+        ; pack.etupl<span data-count="140">e</span> pack
+        ; pack.elis<span data-count="140">t</span> pack
+        ; pack.econs<span data-count="140">t</span> pack
+        ; bracket<span data-count="140">s</span> @@ pack.ebinaryo<span data-count="140">p</span> pack
+        ; bracket<span data-count="140">s</span> @@ pack.ematc<span data-count="140">h</span> pack
+        ; bracket<span data-count="140">s</span> @@ pack.eifels<span data-count="140">e</span> pack
+        ; bracket<span data-count="140">s</span> @@ pack.eap<span data-count="140">p</span> pack
+        ; pack.eva<span data-count="140">r</span> pack
         ]
     in
-    <span data-count="132">c</span>hainl<span data-count="132">1</span> (parse_eap<span data-count="132">p</span> exp) parse_binop &lt;* take_empty
+    <span data-count="140">c</span>hainl<span data-count="140">1</span> (parse_eap<span data-count="140">p</span> exp) parse_binop &lt;* take_empty
   in
   let eapp pack =
-    <span data-count="1228">f</span>ix
+    <span data-count="1296">f</span>ix
     @@ fun _ -&gt;
-    <span data-count="108">l</span>et parse_eapp_pack =
+    <span data-count="115">l</span>et parse_eapp_pack =
       choice
-        [ pack.ebinaryo<span data-count="108">p</span> pack
-        ; pack.etupl<span data-count="108">e</span> pack
-        ; pack.efu<span data-count="108">n</span> pack
-        ; bracket<span data-count="108">s</span> @@ pack.eifels<span data-count="108">e</span> pack
-        ; bracket<span data-count="108">s</span> @@ pack.eap<span data-count="108">p</span> pack
-        ; bracket<span data-count="108">s</span> @@ pack.ematc<span data-count="108">h</span> pack
+        [ pack.ebinaryo<span data-count="115">p</span> pack
+        ; pack.etupl<span data-count="115">e</span> pack
+        ; pack.efu<span data-count="115">n</span> pack
+        ; bracket<span data-count="115">s</span> @@ pack.eifels<span data-count="115">e</span> pack
+        ; bracket<span data-count="115">s</span> @@ pack.eap<span data-count="115">p</span> pack
+        ; bracket<span data-count="115">s</span> @@ pack.ematc<span data-count="115">h</span> pack
         ]
     in
-    <span data-count="108">p</span>arse_eapp parse_eapp_pack
+    <span data-count="115">p</span>arse_eapp parse_eapp_pack
   in
   let parse_let pack =
-    <span data-count="84">c</span>hoice
-      [ pack.eap<span data-count="84">p</span> pack
-      ; pack.eifels<span data-count="84">e</span> pack
-      ; pack.etupl<span data-count="84">e</span> pack
-      ; pack.elis<span data-count="84">t</span> pack
-      ; pack.efu<span data-count="84">n</span> pack
-      ; pack.ematc<span data-count="84">h</span> pack
+    <span data-count="89">c</span>hoice
+      [ pack.eap<span data-count="89">p</span> pack
+      ; pack.eifels<span data-count="89">e</span> pack
+      ; pack.etupl<span data-count="89">e</span> pack
+      ; pack.elis<span data-count="89">t</span> pack
+      ; pack.efu<span data-count="89">n</span> pack
+      ; pack.ematc<span data-count="89">h</span> pack
       ]
   in
   let value pack =
-    <span data-count="351">c</span>hoice
-      [ pack.etupl<span data-count="351">e</span> pack
-      ; pack.eva<span data-count="351">r</span> pack
-      ; pack.emeasur<span data-count="351">e</span> pack
-      ; pack.econs<span data-count="351">t</span> pack
-      ; pack.elis<span data-count="351">t</span> pack
+    <span data-count="371">c</span>hoice
+      [ pack.etupl<span data-count="371">e</span> pack
+      ; pack.eva<span data-count="371">r</span> pack
+      ; pack.emeasur<span data-count="371">e</span> pack
+      ; pack.econs<span data-count="371">t</span> pack
+      ; pack.elis<span data-count="371">t</span> pack
       ]
   in
-  let elet pack = <span data-count="730">f</span>ix @@ fun _ -&gt; <span data-count="84">e</span>letfun @@ parse_le<span data-count="84">t</span> pack in
+  let elet pack = <span data-count="768">f</span>ix @@ fun _ -&gt; <span data-count="89">e</span>letfun @@ parse_le<span data-count="89">t</span> pack in
   let etuple pack =
-    <span data-count="1405">f</span>ix @@ fun _ -&gt; <span data-count="351">t</span>ake_empty *&gt; (bracket<span data-count="351">s</span> @@ parse_tupl<span data-count="351">e</span> (valu<span data-count="351">e</span> pack) etuple)
+    <span data-count="1483">f</span>ix @@ fun _ -&gt; <span data-count="371">t</span>ake_empty *&gt; (bracket<span data-count="371">s</span> @@ parse_tupl<span data-count="371">e</span> (valu<span data-count="371">e</span> pack) etuple)
   in
   let elist pack =
-    <span data-count="1622">f</span>ix
+    <span data-count="1706">f</span>ix
     @@ fun _ -&gt;
-    <span data-count="325">e</span>list &lt;$<span data-count="325">&gt;</span> parse_plis<span data-count="325">t</span> @@ pack.expressio<span data-count="325">n</span> pack &lt;|&gt; bracket<span data-count="325">s</span> @@ pack.elis<span data-count="325">t</span> pack
+    <span data-count="338">e</span>list &lt;$<span data-count="338">&gt;</span> parse_plis<span data-count="338">t</span> @@ pack.expressio<span data-count="338">n</span> pack &lt;|&gt; bracket<span data-count="338">s</span> @@ pack.elis<span data-count="338">t</span> pack
   in
   { expression
   ; evar
@@ -1557,10 +1557,10 @@ let pack =
   }
 ;;
 
-let parse_expression = pack.expressio<span data-count="61">n</span> pack
-let parse_program = many<span data-count="61">1</span> (toke<span data-count="61">n</span> parse_expression &lt;<span data-count="61">*</span> toke<span data-count="61">n</span> (man<span data-count="61">y</span> (stoke<span data-count="61">n</span> ";;")))
-let parse_str p s = <span data-count="156">p</span>arse_string ~consume:All p s
-let parser str = <span data-count="57">p</span>arse_str parse_program (String.stri<span data-count="57">p</span> str)
+let parse_expression = pack.expressio<span data-count="65">n</span> pack
+let parse_program = many<span data-count="65">1</span> (toke<span data-count="65">n</span> parse_expression &lt;<span data-count="65">*</span> toke<span data-count="65">n</span> (man<span data-count="65">y</span> (stoke<span data-count="65">n</span> ";;")))
+let parse_str p s = <span data-count="160">p</span>arse_string ~consume:All p s
+let parser str = <span data-count="61">p</span>arse_str parse_program (String.stri<span data-count="61">p</span> str)
 </code></pre>
       </div>
     </div>
