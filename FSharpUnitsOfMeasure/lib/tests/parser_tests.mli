@@ -5,4 +5,4 @@
 open FSharpUnitsOfMeasure_lib
 open Ast
 
-val parsed_result: id -> 'a Angstrom.t -> ('a -> id) -> unit
+val parsed_result : id -> 'a Angstrom.t -> ('a -> id) -> unit
