@@ -48,7 +48,7 @@
 
   $ ./demos.exe <<- EOF
   > 5 / 0;;
-  (VInt -45)
+  Interpretation error. Attempted to divide by zero
 
   $ ./demos.exe <<- EOF
   > -7.77 + 7.73;;
@@ -112,7 +112,7 @@
 
   $ ./demos.exe <<- EOF
   > if (2 + 3) then 1 else 2;;
-  (VFloatMeasure ((VFloat 3.885), ["m^3"; "/"; "n^3"]))
+  Interpretation error. Unreachable
 
   $ ./demos.exe <<- EOF
   > let num = 5;;
@@ -120,7 +120,7 @@
 
   $ ./demos.exe <<- EOF
   > let sum = num + 5;;
-  (VInt 5)
+  Interpretation error. The value or constructor 'num' is not defined
 
   $ ./demos.exe <<- EOF
   > let sum x = fun y -> x + y;;
@@ -309,4 +309,4 @@ division float + measure
   > [<Measure>] type m;;
   > [<Measure>] type n;;
   > 7.77<m / n> && 2.<n^2 / m^2>;;
-  (VFloatMeasure ((VFloat 3.885), ["m^3"; "/"; "n^3"]))
+  Interpretation error. This type does not support this operator
