@@ -113,7 +113,7 @@ module Interpret (M : FailMonad) = struct
       let p2_empty = String.( = ) p2 "" in
       if hd_eq_elem
       then (
-        match z2, String.(=) z1 z1_eq_z2, p1_empty, p2_empty with
+        match z2, String.( = ) z1 z1_eq_z2, p1_empty, p2_empty with
         | "/", true, true, true | "*", true, true, true ->
           z1 :: [ remove_degree elem ^ "^2" ]
         | "/", false, true, true | "*", false, true, true ->
@@ -166,13 +166,16 @@ module Interpret (M : FailMonad) = struct
         match tl with
         | [] -> m1
         | hd :: [] ->
-          if String.(<>) (not_uniq_in_m1 hd m1) "" then merge_uniq_el m1 [] else hd :: "*" :: m1
+          if String.( <> )
+          (not_uniq_in_m1 hd m1) ""
+          then merge_uniq_el m1 []
+          else hd :: "*" :: m1
         | hd :: bo :: tl ->
-          if String.(<>) (not_uniq_in_m1 bo m1) ""
+          if String.( <> ) (not_uniq_in_m1 bo m1) ""
           then merge_uniq_el m1 tl
           else merge_uniq_el (m1 @ [ hd ] @ [ bo ]) tl
       in
-      if String.(<>) (not_uniq_in_m1 hd m1) ""
+      if String.( <> ) (not_uniq_in_m1 hd m1) ""
       then merge_uniq_el m1 tl
       else merge_uniq_el m1 tl @ [ "*" ] @ [ hd ]
   ;;
