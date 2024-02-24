@@ -178,11 +178,11 @@ end = struct
     let open Format in
     function
     | TypeError ->
-        fprintf ppf "TypeError"
+        fprintf ppf "TypeError\n"
     | Exception exc ->
-        fprintf ppf "Exception: %a" (Val.pp env) exc
+        fprintf ppf "Exception: %a\n" (Val.pp env) exc
     | NotImplemented desc ->
-        fprintf ppf "NotImplemented: %s" desc
+        fprintf ppf "NotImplemented: %s\n" desc
 
   let exc name = Exception (Val.Val_con (Ident name, None))
 end
