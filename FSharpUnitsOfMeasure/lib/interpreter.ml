@@ -108,12 +108,12 @@ module Interpret (M : FailMonad) = struct
       let p1 = return_degree elem in
       let p2 = return_degree hd in
       let hd_eq_elem = String.( = ) (remove_degree hd) (remove_degree elem) in
-      let z1_eq_z2 = if String.( = ) z1 z2 then true else false in
+      let z1_eq_z2 = if String.( = ) z1 z2 then z1 else "" in
       let p1_empty = String.( = ) p1 "" in
       let p2_empty = String.( = ) p2 "" in
       if hd_eq_elem
       then (
-        match z2, z1_eq_z2, p1_empty, p2_empty with
+        match z2, String.(=) z1 z1_eq_z2, p1_empty, p2_empty with
         | "/", true, true, true | "*", true, true, true ->
           z1 :: [ remove_degree elem ^ "^2" ]
         | "/", false, true, true | "*", false, true, true ->
@@ -152,10 +152,10 @@ module Interpret (M : FailMonad) = struct
   ;;
 
   let rec not_uniq_in_m1 elem = function
-    | [] -> false
+    | [] -> ""
     | hd :: tl ->
       if String.( = ) (remove_degree hd) (remove_degree elem)
-      then true
+      then elem
       else not_uniq_in_m1 elem tl
   ;;
 
@@ -166,13 +166,13 @@ module Interpret (M : FailMonad) = struct
         match tl with
         | [] -> m1
         | hd :: [] ->
-          if not_uniq_in_m1 hd m1 then merge_uniq_el m1 [] else hd :: "*" :: m1
+          if String.(<>) (not_uniq_in_m1 hd m1) "" then merge_uniq_el m1 [] else hd :: "*" :: m1
         | hd :: bo :: tl ->
-          if not_uniq_in_m1 bo m1
+          if String.(<>) (not_uniq_in_m1 bo m1) ""
           then merge_uniq_el m1 tl
           else merge_uniq_el (m1 @ [ hd ] @ [ bo ]) tl
       in
-      if not_uniq_in_m1 hd m1
+      if String.(<>) (not_uniq_in_m1 hd m1) ""
       then merge_uniq_el m1 tl
       else merge_uniq_el m1 tl @ [ "*" ] @ [ hd ]
   ;;
@@ -344,7 +344,7 @@ module Interpret (M : FailMonad) = struct
     | Gre, VList l, VList r -> return @@ VBool (Poly.( > ) l r)
     | Leq, VList l, VList r -> return @@ VBool (Poly.( <= ) l r)
     | Greq, VList l, VList r -> return @@ VBool (Poly.( >= ) l r)
-    | _ -> fail Unreachable
+    | _ -> fail UnsupportedOperation
   ;;
 
   let rec pattern = function

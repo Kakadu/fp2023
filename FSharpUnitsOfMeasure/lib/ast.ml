@@ -6,6 +6,22 @@
 
 type id = string [@@deriving eq, show { with_path = false }]
 
+type binary_op =
+  | Add (** 1 + 2 *)
+  | Sub (** 1 - 2 *)
+  | Mul (** * *)
+  | Div (** / *)
+  | Mod (** % *)
+  | And (** && *)
+  | Or (** || *)
+  | Eq (** = *)
+  | Neq (** <> *)
+  | Less (** < *)
+  | Gre (** > *)
+  | Leq (** <= *)
+  | Greq (** >= *)
+[@@deriving eq, show { with_path = false }]
+
 type types =
   | FInt of int (** integer number: ..., 0, 1, 2, ...*)
   | FString of string (** string values: "Ocaml" *)
@@ -19,25 +35,8 @@ and measure_type =
   | SMeasure of string * pow (** single measure: <m>*)
   | MMeasure of measure_type * binary_op * measure_type
   (** multiple measure: <m / sec * h ... >*)
-[@@deriving eq, show { with_path = false }]
 
 and pow = Pow of types (** ^ *) [@@deriving eq, show { with_path = false }]
-
-and binary_op =
-  | Add (** 1 + 2 *)
-  | Sub (** 1 - 2 *)
-  | Mul (** * *)
-  | Div (** / *)
-  | Mod (** % *)
-  | And (** && *)
-  | Or (** || *)
-  | Eq (** = *)
-  | Neq (** <> *)
-  | Less (* < *)
-  | Gre (** > *)
-  | Leq (** <= *)
-  | Greq (** >= *)
-[@@deriving show { with_path = false }]
 
 type pattern =
   | PWild (** _ *)

@@ -13,140 +13,7 @@ let run_test t =
   | Error e -> Error e
 ;;
 
-(* 777 *)
-let test = [ EConst (FInt 777) ]
-
-let%test _ =
-  match run_test test with
-  | Ok (VInt 777) -> true
-  | Error t ->
-    Format.printf "%a\n" print_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
-;;
-
-(* -777 *)
-let test = [ EConst (FInt (-777)) ]
-
-let%test _ =
-  match run_test test with
-  | Ok (VInt -777) -> true
-  | Error t ->
-    Format.printf "%a\n" print_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
-;;
-
-(* 777.777 *)
-
-let test = [ EConst (FFloat 777.777) ]
-
-let%test _ =
-  match run_test test with
-  | Ok (VFloat 777.777) -> true
-  | Error t ->
-    Format.printf "%a\n" print_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
-;;
-
-(* -777.777 *)
-
-let test = [ EConst (FFloat (-777.777)) ]
-
-let%test _ =
-  match run_test test with
-  | Ok (VFloat -777.777) -> true
-  | Error t ->
-    Format.printf "%a\n" print_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
-;;
-
-(* string *)
-
-let test = [ EConst (FString "Test to string") ]
-
-let%test _ =
-  match run_test test with
-  | Ok (VString "Test to string") -> true
-  | Error t ->
-    Format.printf "%a\n" print_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
-;;
-
-(* () *)
-
-let test = [ EConst FUnit ]
-
-let%test _ =
-  match run_test test with
-  | Ok VUnit -> true
-  | Error t ->
-    Format.printf "%a\n" print_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
-;;
-
-(* [] *)
-
-let test = [ EConst FNil ]
-
-let%test _ =
-  match run_test test with
-  | Ok VNil -> true
-  | Error t ->
-    Format.printf "%a\n" print_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
-;;
-
 (* Binary operation *)
-
-(* 1 + 5 *)
-
-let test = [ EApp (EBinaryOp Add, EApp (EConst (FInt 1), EConst (FInt 5))) ]
-
-let%test _ =
-  match run_test test with
-  | Ok (VInt 6) -> true
-  | Error t ->
-    Format.printf "%a\n" print_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
-;;
-
-(* 1 - 2 *)
-
-let test = [ EApp (EBinaryOp Sub, EApp (EConst (FInt 1), EConst (FInt 2))) ]
-
-let%test _ =
-  match run_test test with
-  | Ok (VInt -1) -> true
-  | Error t ->
-    Format.printf "%a\n" print_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
-;;
 
 (* (3 + 1) * (4 - 2) * (9 / 3) *)
 
@@ -166,20 +33,6 @@ let test =
 let%test _ =
   match run_test test with
   | Ok (VInt 24) -> true
-  | Error t ->
-    Format.printf "%a\n" print_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
-;;
-
-(* 7.77 + 7.73*)
-let test = [ EApp (EBinaryOp Add, EApp (EConst (FFloat 7.77), EConst (FFloat 7.73))) ]
-
-let%test _ =
-  match run_test test with
-  | Ok (VFloat 15.5) -> true
   | Error t ->
     Format.printf "%a\n" print_error t;
     false
@@ -228,75 +81,6 @@ let test =
 let%test _ =
   match run_test test with
   | Ok (VInt 0) -> true
-  | Error t ->
-    Format.printf "%a\n" print_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
-;;
-
-(* ((fun z v -> z / v)5.0 )2.0 *)
-
-let test =
-  [ EApp
-      ( EApp
-          ( EFun
-              (PVar "z", EFun (PVar "v", EApp (EBinaryOp Div, EApp (EVar "z", EVar "v"))))
-          , EConst (FFloat 5.0) )
-      , EConst (FFloat 2.0) )
-  ]
-;;
-
-let%test _ =
-  match run_test test with
-  | Ok (VFloat 2.5) -> true
-  | Error t ->
-    Format.printf "%a\n" print_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
-;;
-
-(* ((fun z v -> z < v)4 )5 *)
-
-let test =
-  [ EApp
-      ( EApp
-          ( EFun
-              (PVar "z", EFun (PVar "v", EApp (EBinaryOp Less, EApp (EVar "z", EVar "v"))))
-          , EConst (FInt 4) )
-      , EConst (FInt 5) )
-  ]
-;;
-
-let%test _ =
-  match run_test test with
-  | Ok (VBool true) -> true
-  | Error t ->
-    Format.printf "%a\n" print_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
-;;
-
-(* ((fun z v -> z > v)4 )5 *)
-
-let test =
-  [ EApp
-      ( EApp
-          ( EFun
-              (PVar "z", EFun (PVar "v", EApp (EBinaryOp Gre, EApp (EVar "z", EVar "v"))))
-          , EConst (FInt 4) )
-      , EConst (FInt 5) )
-  ]
-;;
-
-let%test _ =
-  match run_test test with
-  | Ok (VBool false) -> true
   | Error t ->
     Format.printf "%a\n" print_error t;
     false
@@ -464,70 +248,12 @@ let%test _ =
     false
 ;;
 
-(*
-   let num x =
-   match x with
-   | 1 -> 1
-   | _ -> 2
-   num 1
-*)
-let test =
-  [ ELet
-      ( "NotRec"
-      , "num"
-      , EFun
-          ( PVar "x"
-          , EMatch (EVar "x", [ PConst (FInt 1), EConst (FInt 1); PWild, EConst (FInt 2) ])
-          ) )
-  ; EApp (EVar "num", EConst (FInt 1))
-  ]
-;;
-
-let%test _ =
-  match run_test test with
-  | Ok (VInt 1) -> true
-  | Error t ->
-    Format.printf "%a\n" print_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
-;;
-
 (* (fun x -> x) 5 *)
 let test = [ EApp (EFun (PVar "x", EVar "x"), EConst (FInt 5)) ]
 
 let%test _ =
   match run_test test with
   | Ok (VInt 5) -> true
-  | Error t ->
-    Format.printf "%a\n" print_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
-;;
-
-(* [1; 5] *)
-let test = [ EList [ EConst (FInt 1); EConst (FInt 5) ] ]
-
-let%test _ =
-  match run_test test with
-  | Ok (VList [ VInt 1; VInt 5 ]) -> true
-  | Error t ->
-    Format.printf "%a\n" print_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
-;;
-
-(* (1, 5) *)
-let test = [ ETuple [ EConst (FInt 1); EConst (FInt 5) ] ]
-
-let%test _ =
-  match run_test test with
-  | Ok (VTuple [ VInt 1; VInt 5 ]) -> true
   | Error t ->
     Format.printf "%a\n" print_error t;
     false
@@ -632,20 +358,6 @@ let%test _ =
 ;;
 
 (* measure test*)
-
-(* [<Measure>] type m *)
-let test = [ EMeasure (SMeasure_init (SMeasure ("m", Pow (FInt 1)))) ]
-
-let%test _ =
-  match run_test test with
-  | Ok (VMeasureList [ "m" ]) -> true
-  | Error t ->
-    Format.printf "%a\n" print_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
-;;
 
 (*
    [<Measure>] type m

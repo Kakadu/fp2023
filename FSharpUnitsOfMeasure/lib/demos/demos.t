@@ -47,6 +47,10 @@
   (VInt -45)
 
   $ ./demos.exe <<- EOF
+  > 5 / 0;;
+  (VInt -45)
+
+  $ ./demos.exe <<- EOF
   > -7.77 + 7.73;;
   (VFloat -0.04)
 
@@ -107,7 +111,15 @@
   (VInt 15)
 
   $ ./demos.exe <<- EOF
+  > if (2 + 3) then 1 else 2;;
+  (VFloatMeasure ((VFloat 3.885), ["m^3"; "/"; "n^3"]))
+
+  $ ./demos.exe <<- EOF
   > let num = 5;;
+  (VInt 5)
+
+  $ ./demos.exe <<- EOF
+  > let sum = num + 5;;
   (VInt 5)
 
   $ ./demos.exe <<- EOF
@@ -239,7 +251,6 @@ multiplication float + measure
   > 7.77<m^2 / n> * 2.<n^2 / m>;;
   (VFloatMeasure ((VFloat 15.54), ["m"; "*"; "n"]))
 
-
   $ ./demos.exe <<- EOF
   > [<Measure>] type m;;
   > 7.77<m>;;
@@ -292,4 +303,10 @@ division float + measure
   > [<Measure>] type m;;
   > [<Measure>] type n;;
   > 7.77<m / n> / 2.<n^2 / m^2>;;
+  (VFloatMeasure ((VFloat 3.885), ["m^3"; "/"; "n^3"]))
+
+  $ ./demos.exe <<- EOF
+  > [<Measure>] type m;;
+  > [<Measure>] type n;;
+  > 7.77<m / n> && 2.<n^2 / m^2>;;
   (VFloatMeasure ((VFloat 3.885), ["m^3"; "/"; "n^3"]))
