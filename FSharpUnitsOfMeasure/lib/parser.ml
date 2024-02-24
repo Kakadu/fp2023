@@ -74,7 +74,7 @@ let parse_id =
   >>= fun res ->
   match length_id res, keywords res, first_char res with
   | true, _, _ -> fail "Not identifier"
-  | _, true,  _ -> fail "You can not use keywords as vars"
+  | _, true, _ -> fail "You can not use keywords as vars"
   | _, _, true -> fail "The first character of the identifier is a small letter"
   | _ -> return res
 ;;
