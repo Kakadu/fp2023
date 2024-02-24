@@ -166,8 +166,7 @@ module Interpret (M : FailMonad) = struct
         match tl with
         | [] -> m1
         | hd :: [] ->
-          if String.( <> )
-          (not_uniq_in_m1 hd m1) ""
+          if String.( <> ) (not_uniq_in_m1 hd m1) ""
           then merge_uniq_el m1 []
           else hd :: "*" :: m1
         | hd :: bo :: tl ->
