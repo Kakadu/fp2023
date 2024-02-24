@@ -120,8 +120,6 @@ let peek_infix_op disabled_op =
     >>= function
     | "::" ->
         return {op= IOpList; op_length= 2}
-    | ":=" ->
-        return {op= IOpCustom (Ident ":="); op_length= 2}
     | _ ->
         fail "not an infix operator"
   in

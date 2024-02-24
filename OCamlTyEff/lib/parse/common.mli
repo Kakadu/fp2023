@@ -14,7 +14,7 @@ val peek_custom_infix_operator_name : string t
   core-operator-char ::= \{ $ | & | * | + | - | / | = | > | @ | ^ | | \}
   operator-char ::= \{ ~ | ! | ? | core-operator-char | % | < | : | . \}
 
-  infix-symbol ::= (core-operator-char | % | <) \{ operator-char \} 
+  infix-symbol ::= (:=) | (core-operator-char | % | <) \{ operator-char \}
 *)
 
 val parse_custom_prefix_operator_name : string t

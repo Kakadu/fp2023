@@ -83,6 +83,7 @@ let peek_custom_infix_operator_name =
       return (String.of_char c)
     else fail "not a infix-symbol"
   in
+
   let rec peek_rest acc index =
     peek_string index
     >>| (fun s -> String.get s (String.length s - 1)) (* get last char *)
@@ -90,7 +91,15 @@ let peek_custom_infix_operator_name =
     if is_operator_char c then peek_rest (acc ^ String.of_char c) (index + 1)
     else return acc
   in
-  lift2 String.( ^ ) peek_first (peek_rest "" 2)
+
+  let peek_assign =
+    peek_string 2
+    >>= fun s ->
+    if String.equal s ":=" then return s else fail "not an assignment operator"
+  in
+
+  peek_assign
+  <|> lift2 String.( ^ ) peek_first (peek_rest "" 2)
   >>= fun name ->
   if not (is_keyword name) then return name
   else fail (name ^ " keyword can't be used as operator name")
@@ -218,9 +227,8 @@ let parse_operators ?prefix ?infix parse_operand =
       (* check if {prefix} supplied *)
       Option.value_map prefix ~default:parse_operand ~f:(fun prefix ->
           option None (ws *> prefix.parse >>| Option.some)
-          >>= fun op ->
-          (* check if prefix op parsed successfully *)
-          Option.value_map op ~default:parse_operand ~f:(fun op ->
+          >>= (* check if prefix op parsed successfully *)
+          Option.value_map ~default:parse_operand ~f:(fun op ->
               let r_bp = prefix.get_binding_power op in
               let* rhs = helper r_bp in
               return (prefix.apply op rhs) ) )
@@ -235,6 +243,6 @@ let parse_operators ?prefix ?infix parse_operand =
              advance op_length
              *> let* rhs = helper r_bp in
                 return (op, rhs) )
-        >>| fun results -> List.fold_left results ~init:lhs ~f:infix.fold )
+        >>| List.fold_left ~init:lhs ~f:infix.fold )
   in
   helper 0
