@@ -5,7 +5,6 @@
 open FSharpUnitsOfMeasure_lib
 open Ast
 open Interpreter
-open Interpret_error
 
 let run_test t =
   match interpreter t with
@@ -33,12 +32,7 @@ let test =
 let%test _ =
   match run_test test with
   | Ok (VInt 24) -> true
-  | Error t ->
-    Format.printf "%a\n" print_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
+  | _ -> false
 ;;
 
 (* Binary operation and fun*)
@@ -58,12 +52,7 @@ let test =
 let%test _ =
   match run_test test with
   | Ok (VInt 20) -> true
-  | Error t ->
-    Format.printf "%a\n" print_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
+  | _ -> false
 ;;
 
 (* ((fun z v -> z / v)4 )5 *)
@@ -81,12 +70,7 @@ let test =
 let%test _ =
   match run_test test with
   | Ok (VInt 0) -> true
-  | Error t ->
-    Format.printf "%a\n" print_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
+  | _ -> false
 ;;
 
 (* (((((fun a b c d e -> a + b + c + d + e) 1) 2) 3) 4) 5 *)
@@ -135,12 +119,7 @@ let test =
 let%test _ =
   match run_test test with
   | Ok (VInt 15) -> true
-  | Error t ->
-    Format.printf "%a\n" print_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
+  | _ -> false
 ;;
 
 (* (1, 5) *)
@@ -149,12 +128,7 @@ let test = [ ETuple [ EConst (FInt 1); EConst (FInt 5) ] ]
 let%test _ =
   match run_test test with
   | Ok (VTuple [ VInt 1; VInt 5 ]) -> true
-  | Error t ->
-    Format.printf "%a\n" print_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
+  | _ -> false
 ;;
 
 (*
@@ -170,12 +144,7 @@ let test =
 let%test _ =
   match run_test test with
   | Ok (VInt 5) -> true
-  | Error t ->
-    Format.printf "%a\n" print_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
+  | _ -> false
 ;;
 
 (* let increase_by_five z = (fun v -> z + v) 5 *)
@@ -196,12 +165,7 @@ let test =
 let%test _ =
   match run_test test with
   | Ok (VInt 15) -> true
-  | Error t ->
-    Format.printf "%a\n" print_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
+  | _ -> false
 ;;
 
 (* if true then 2 else 1 *)
@@ -210,12 +174,7 @@ let test = [ EIfElse (EConst (FBool true), EConst (FInt 2), EConst (FInt 1)) ]
 let%test _ =
   match run_test test with
   | Ok (VInt 2) -> true
-  | Error t ->
-    Format.printf "%a\n" print_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
+  | _ -> false
 ;;
 
 (*
@@ -240,12 +199,7 @@ let test =
 let%test _ =
   match run_test test with
   | Ok (VInt 2) -> true
-  | Error t ->
-    Format.printf "%a\n" print_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
+  | _ -> false
 ;;
 
 (* (fun x -> x) 5 *)
@@ -254,12 +208,7 @@ let test = [ EApp (EFun (PVar "x", EVar "x"), EConst (FInt 5)) ]
 let%test _ =
   match run_test test with
   | Ok (VInt 5) -> true
-  | Error t ->
-    Format.printf "%a\n" print_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
+  | _ -> false
 ;;
 
 (* let x = 5 *)
@@ -268,12 +217,7 @@ let test = [ ELet ("NotRec", "x", EConst (FInt 5)) ]
 let%test _ =
   match run_test test with
   | Ok (VInt 5) -> true
-  | Error t ->
-    Format.printf "%a\n" print_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
+  | _ -> false
 ;;
 
 (*
@@ -308,12 +252,7 @@ let test =
 let%test _ =
   match run_test test with
   | Ok (VInt 720) -> true
-  | Error t ->
-    Format.printf "%a\n" print_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
+  | _ -> false
 ;;
 
 (*
@@ -349,12 +288,7 @@ let test =
 let%test _ =
   match run_test test with
   | Ok (VInt 34) -> true
-  | Error t ->
-    Format.printf "%a\n" print_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
+  | _ -> false
 ;;
 
 (* measure test*)
@@ -376,12 +310,7 @@ let test =
 let%test _ =
   match run_test test with
   | Ok (VFloatMeasure (VFloat 15.5, [ "m^3" ])) -> true
-  | Error t ->
-    Format.printf "%a\n" print_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
+  | _ -> false
 ;;
 
 (*
@@ -414,12 +343,7 @@ let test =
 let%test _ =
   match run_test test with
   | Ok (VFloatMeasure (VFloat 15.5, [ "m"; "/"; "dm" ])) -> true
-  | Error t ->
-    Format.printf "%a\n" print_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
+  | _ -> false
 ;;
 
 (*
@@ -471,10 +395,5 @@ let test =
 let%test _ =
   match run_test test with
   | Ok (VFloatMeasure (VFloat 14., [ "m"; "/"; "sec"; "*"; "dm" ])) -> true
-  | Error t ->
-    Format.printf "%a\n" print_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
+  | _ -> false
 ;;
