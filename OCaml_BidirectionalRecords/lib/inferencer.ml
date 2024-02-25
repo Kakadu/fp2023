@@ -8,6 +8,7 @@
 open Typing
 
 module R : sig
+
   type 'a t
 
   val return : 'a -> 'a t
@@ -32,6 +33,7 @@ module R : sig
   end
 
   val fresh : int t
+
   val run : 'a t -> ('a, error) Result.t
 end = struct
   type 'a t = int -> int * ('a, error) Result.t
@@ -55,7 +57,6 @@ end = struct
 
   (** either a success (Ok value) or a failure (Error err) *)
   let return v last = last, Base.Result.return v
-
   let bind v ~f = v >>= f
   let fail error state = state, Base.Result.fail error
 
@@ -63,22 +64,16 @@ end = struct
     let ( let* ) v f = bind v ~f
   end
 
-  open Syntax
-
   module RMap = struct
     let fold_left map ~init ~f =
       Base.Map.fold map ~init ~f:(fun ~key ~data acc ->
-        let* acc = acc in
-        f key data acc)
-    ;;
+        acc >>= fun acc -> f key data acc)
   end
 
   module RList = struct
     let fold_left lt ~init ~f =
       Base.List.fold_left lt ~init ~f:(fun acc item ->
-        let* acc = acc in
-        f acc item)
-    ;;
+        acc >>= fun acc -> f acc item)
   end
 
   (** creating new type var *)
@@ -95,8 +90,7 @@ module Type = struct
     | TVar x -> x = v
     | TArr (l, r) -> occurs_in v l || occurs_in v r
     | TList typ -> occurs_in v typ
-    | TTuple typ_list ->
-      List.fold_left (fun acc item -> acc || occurs_in v item) false typ_list
+    | TTuple typ_list -> List.exists (occurs_in v) typ_list
     | TPrim _ -> false
   ;;
 
@@ -105,7 +99,7 @@ module Type = struct
       | TVar x -> VarSet.add x acc
       | TArr (l, r) -> helper (helper acc l) r
       | TList typ -> helper acc typ
-      | TTuple typ_list -> List.fold_left (fun acc item -> helper acc item) acc typ_list
+      | TTuple typ_list -> List.fold_left helper acc typ_list
       | TPrim _ -> acc
     in
     helper VarSet.empty
@@ -131,22 +125,17 @@ end = struct
   let empty = Base.Map.empty (module Base.Int)
 
   let singleton key v =
-    if Type.occurs_in key v
-    then fail OccursCheck
+    if Type.occurs_in key v then fail OccursCheck
     else return (Base.Map.singleton (module Base.Int) key v)
-  ;;
 
   let find sub key = Base.Map.find sub key
 
   let remove sub key = Base.Map.remove sub key
 
   let apply sub =
-    let rec helper = function
-      | TVar n ->
-        (match find sub n with
-         | None -> tvar n
-         | Some v -> v)
-      | TArr (left, right) -> tarrow (helper left) (helper right)
+    let rec helper typ = match typ with
+      | TVar n -> find sub n |> Option.value ~default:(tvar n)
+      | TArr (l, r) -> tarrow (helper l) (helper r)
       | TList typ -> tlist (helper typ)
       | TTuple t_list -> ttuple (Base.List.map t_list ~f:helper)
       | other -> other
@@ -159,25 +148,26 @@ end = struct
     | TPrim l, TPrim r when l = r -> return empty
     | TVar a, TVar b when a = b -> return empty
     | TVar a, t | t, TVar a -> singleton a t
-    | TArr (l1, r1), TArr (l2, r2) ->
-      let* sub1 = unify l1 l2 in
-      let* sub2 = unify (apply sub1 r1) (apply sub1 r2) in
-      compose sub1 sub2
+    | TArr (l1, r1), TArr (l2, r2) -> unify_arr l1 r1 l2 r2
     | _ -> fail (UnificationFailed (l, r))
+    
+  and unify_arr l1 r1 l2 r2 =
+    let* sub1 = unify l1 l2 in
+    let* sub2 = unify (apply sub1 r1) (apply sub1 r2) in
+    compose sub1 sub2 
 
   and extend k v sub =
     match find sub k with
     | None ->
       let v = apply sub v in
       let* sub2 = singleton k v in
-      let f1 ~key ~data acc =
+      Base.Map.fold sub ~init:(return sub2) ~f:(fun ~key ~data acc ->
         let* acc = acc in
         let new_data = apply sub2 data in
         return (Base.Map.update acc key ~f:(fun _ -> new_data))
-      in
-      Base.Map.fold sub ~init:(return sub2) ~f:f1
-    | Some vl ->
-      let* sub2 = unify v vl in
+      )
+    | Some value ->
+      let* sub2 = unify v value in
       compose sub sub2
 
   and compose sub1 sub2 = RMap.fold_left sub2 ~init:(return sub1) ~f:extend
@@ -186,9 +176,8 @@ end = struct
 end
 
 module Scheme = struct
-  let free_vars = function
-    | Scheme (bind_vars, ty) -> VarSet.diff (Type.type_vars_acc ty) bind_vars
-  ;;
+
+  let free_vars (Scheme (bind_vars, ty)) = VarSet.diff (Type.type_vars_acc ty) bind_vars
 
   (** check whether a type variable occurs in a type scheme *)
   let occurs_in tvar = function
