@@ -33,7 +33,6 @@ let%expect_test _ =
 ;;
 
 (* infer *)
-
 open Inferencer
 open Inferencer.PP
 

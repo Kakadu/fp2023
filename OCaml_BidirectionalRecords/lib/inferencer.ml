@@ -35,7 +35,9 @@ module R : sig
   val fresh : int t
 
   val run : 'a t -> ('a, error) Result.t
+
 end = struct
+
   type 'a t = int -> int * ('a, error) Result.t
 
   (** stops the computation at the first error *)
@@ -45,7 +47,6 @@ end = struct
     match result with
     | Error err -> final_state, Error err
     | Ok v -> f v final_state
-  ;;
 
   (** ignores errors and continues with the computation *)
   let ( >>| ) : 'a 'b. 'a t -> ('a -> 'b) -> 'b t =
@@ -53,7 +54,6 @@ end = struct
     match v state with
     | state, Ok v -> state, Ok (f v)
     | state, Error err -> state, Error err
-  ;;
 
   (** either a success (Ok value) or a failure (Error err) *)
   let return v last = last, Base.Result.return v
@@ -81,6 +81,7 @@ end = struct
 
   (** run from initial state of 0 and extract the second component of the resulting tuple *)
   let run monad = snd (monad 0)
+
 end
 
 module Type = struct
@@ -92,7 +93,6 @@ module Type = struct
     | TList typ -> occurs_in v typ
     | TTuple typ_list -> List.exists (occurs_in v) typ_list
     | TPrim _ -> false
-  ;;
 
   let type_vars_acc =
     let rec helper acc = function
@@ -103,10 +103,11 @@ module Type = struct
       | TPrim _ -> acc
     in
     helper VarSet.empty
-  ;;
+
 end
 
 module Subst : sig
+
   type t
 
   val empty : t
@@ -116,7 +117,9 @@ module Subst : sig
   val unify : typ -> typ -> t R.t
   val compose : t -> t -> t R.t
   val compose_all : t list -> t R.t
+
 end = struct
+
   open R
   open R.Syntax
 
@@ -180,39 +183,31 @@ module Scheme = struct
   let free_vars (Scheme (bind_vars, ty)) = VarSet.diff (Type.type_vars_acc ty) bind_vars
 
   (** check whether a type variable occurs in a type scheme *)
-  let occurs_in tvar = function
-    | Scheme (bind_vars, ty) ->
-      (not (VarSet.mem tvar bind_vars)) && Type.occurs_in tvar ty
-  ;;
+  let occurs_in tvar (Scheme (bind_vars, ty)) = not (VarSet.mem tvar bind_vars) && Type.occurs_in tvar ty
 
   (** apply a substitution to a type scheme *)
-  let apply sub = function
-    | Scheme (bind_vars, ty) ->
-      let sub2 = VarSet.fold (fun sub key -> Subst.remove key sub) bind_vars sub in
-      Scheme (bind_vars, Subst.apply sub2 ty)
-  ;;
+  let apply sub (Scheme (bind_vars, ty)) =
+    let sub' = VarSet.fold (fun sub key -> Subst.remove key sub) bind_vars sub in
+    Scheme (bind_vars, Subst.apply sub' ty)
+
 end
 
 module TypeEnv = struct
+
   type t = (string, scheme, Base.String.comparator_witness) Base.Map.t
 
   let empty : t = Base.Map.empty (module Base.String)
 
-  let free_vars : t -> VarSet.t =
-    fun env ->
-    Base.Map.fold
-      ~init:VarSet.empty
-      ~f:(fun ~key:_ ~data acc -> VarSet.union acc (Scheme.free_vars data))
-      env
-  ;;
-
+  (** calculates the set of free type vars in a given type env *)
+  let free_vars env =
+    Base.Map.fold env ~init:VarSet.empty ~f:(fun ~key:_ ~data acc ->
+      VarSet.union acc (Scheme.free_vars data))
+  
   let extend : t -> string -> scheme -> t =
-    fun env key schema -> Base.Map.update env key ~f:(fun _ -> schema)
-  ;;
-
-  let apply : t -> Subst.t -> t = fun env sub -> Base.Map.map env ~f:(Scheme.apply sub)
+    fun env key scheme -> Base.Map.update env key ~f:(fun _ -> scheme)
+  let apply env sub = Base.Map.map env ~f:(Scheme.apply sub)
   let find env key = Base.Map.find env key
-  let update mp k v = Base.Map.update mp k ~f:(function _ -> v)
+  let update map key v = Base.Map.update map key ~f:(fun _ -> v)
 end
 
 open R
@@ -225,11 +220,10 @@ let instantiate (Scheme (bind_vars, ty)) =
   let fold_acc var_name acc =
     let* acc = acc in
     let* fv = fresh_var in
-    let* subst = Subst.singleton var_name fv in
-    return (Subst.apply subst acc)
+    let* sub = Subst.singleton var_name fv in
+    return (Subst.apply sub acc)
   in
   VarSet.fold fold_acc bind_vars (return ty)
-;;
 
 (* creating a scheme out of a type *)
 let generalize env ty =
@@ -260,7 +254,6 @@ let infer_pattern env = function
   | _ -> fail NotImplemented
 ;;
 
-
 let infer_binop_type op =
   match op with
   | Eq | Neq | Gt | Gtq | Lt | Ltq ->
@@ -268,7 +261,6 @@ let infer_binop_type op =
   | Plus | Minus | Mult | Div | Mod -> return (tint, tint)
   | And | Or -> return (tbool, tbool)
 ;;
-
 
 let infer_expr =
   let rec helper env = function
