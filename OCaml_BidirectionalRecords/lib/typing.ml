@@ -24,11 +24,10 @@ module VarSet = Stdlib.Set.Make (Int)
 type scheme = Scheme of VarSet.t * typ
 
 type error =
-  [ `OccursCheck
-  | `UndeclaredVariable of string
-  | `UnificationFailed of typ * typ
-  | `NotImplemented
-  ]
+  | OccursCheck
+  | UndeclaredVariable of string
+  | UnificationFailed of typ * typ
+  | NotImplemented
 
 let tvar x = TVar x
 let tint = TPrim Int

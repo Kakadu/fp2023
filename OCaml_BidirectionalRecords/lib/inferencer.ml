@@ -3,13 +3,7 @@
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
 (** https://jeremymikkola.com/posts/2018_03_25_understanding_algorithm_w.html *)
-(* https://gitlab.com/Kakadu/fp2020course-materials/-/blob/master/code/miniml/inferencer.ml?ref_type=heads *)
-
-(**
-    TODO:
-    - rename variables
-    - infer_expr refactor
-*)
+(** https://gitlab.com/Kakadu/fp2020course-materials/-/blob/master/code/miniml/inferencer.ml?ref_type=heads *)
 
 open Typing
 
@@ -51,7 +45,6 @@ end = struct
     | Ok v -> f v final_state
   ;;
 
-
   (** ignores errors and continues with the computation *)
   let ( >>| ) : 'a 'b. 'a t -> ('a -> 'b) -> 'b t =
     fun v f state ->
@@ -88,6 +81,7 @@ end = struct
     ;;
   end
 
+  (** creating new type var *)
   let fresh : int t = fun last -> last + 1, Result.Ok last
 
   (** run from initial state of 0 and extract the second component of the resulting tuple *)
@@ -98,7 +92,7 @@ module Type = struct
   type t = typ
 
   let rec occurs_in v = function
-    | TVar b -> b = v
+    | TVar x -> x = v
     | TArr (l, r) -> occurs_in v l || occurs_in v r
     | TList typ -> occurs_in v typ
     | TTuple typ_list ->
@@ -108,7 +102,7 @@ module Type = struct
 
   let type_vars_acc =
     let rec helper acc = function
-      | TVar b -> VarSet.add b acc
+      | TVar x -> VarSet.add x acc
       | TArr (l, r) -> helper (helper acc l) r
       | TList typ -> helper acc typ
       | TTuple typ_list -> List.fold_left (fun acc item -> helper acc item) acc typ_list
@@ -138,11 +132,12 @@ end = struct
 
   let singleton key v =
     if Type.occurs_in key v
-    then fail `OccursCheck
+    then fail OccursCheck
     else return (Base.Map.singleton (module Base.Int) key v)
   ;;
 
   let find sub key = Base.Map.find sub key
+
   let remove sub key = Base.Map.remove sub key
 
   let apply sub =
@@ -168,7 +163,7 @@ end = struct
       let* sub1 = unify l1 l2 in
       let* sub2 = unify (apply sub1 r1) (apply sub1 r2) in
       compose sub1 sub2
-    | _ -> fail (`UnificationFailed (l, r))
+    | _ -> fail (UnificationFailed (l, r))
 
   and extend k v sub =
     match find sub k with
@@ -228,8 +223,6 @@ module TypeEnv = struct
 
   let apply : t -> Subst.t -> t = fun env sub -> Base.Map.map env ~f:(Scheme.apply sub)
   let find env key = Base.Map.find env key
-
-  (* overwrite existing *)
   let update mp k v = Base.Map.update mp k ~f:(function _ -> v)
 end
 
@@ -239,16 +232,14 @@ open R.Syntax
 let fresh_var = fresh >>| fun x -> tvar x
 
 (** a type is brought into existence *)
-let instantiate : scheme -> typ R.t =
-  fun (Scheme (bind_var, ty)) ->
-  VarSet.fold
-    (fun var_name acc ->
-      let* acc = acc in
-      let* fv = fresh_var in
-      let* sub = Subst.singleton var_name fv in
-      return (Subst.apply sub acc))
-    bind_var
-    (return ty)
+let instantiate (Scheme (bind_vars, ty)) =
+  let fold_acc var_name acc =
+    let* acc = acc in
+    let* fv = fresh_var in
+    let* subst = Subst.singleton var_name fv in
+    return (Subst.apply subst acc)
+  in
+  VarSet.fold fold_acc bind_vars (return ty)
 ;;
 
 (* creating a scheme out of a type *)
@@ -268,30 +259,27 @@ let infer_const = function
 ;;
 
 let infer_pattern env = function
-  | Ast.PAny ->
-    let* fresh = fresh_var in
-    return (Subst.empty, fresh, env)
-  | Ast.PNil ->
-    let* fresh = fresh_var in
-    return (Subst.empty, fresh, env)
+  | Ast.PAny | Ast.PNil ->
+    fresh_var >>| fun fv -> (Subst.empty, fv, env)
   | Ast.PConst c ->
-    let fresh = infer_const c in
-    return (Subst.empty, fresh, env)
+    let fv = infer_const c in
+    return (Subst.empty, fv, env)
   | Ast.PVar x ->
-    let* fresh = fresh_var in
-    let env' = TypeEnv.extend env x (Scheme (VarSet.empty, fresh)) in
-    return (Subst.empty, fresh, env')
-  | _ -> fail `NotImplemented
+    fresh_var >>| fun fv ->
+    let env' = TypeEnv.extend env x (Scheme (VarSet.empty, fv)) in
+    (Subst.empty, fv, env')
+  | _ -> fail NotImplemented
 ;;
 
-let binop_type operator =
-  match operator with
+
+let infer_binop_type op =
+  match op with
   | Eq | Neq | Gt | Gtq | Lt | Ltq ->
-    let* fv = fresh_var in
-    return (fv, tbool)
+    fresh_var >>| fun fv -> (fv, tbool)
   | Plus | Minus | Mult | Div | Mod -> return (tint, tint)
   | And | Or -> return (tbool, tbool)
 ;;
+
 
 let infer_expr =
   let rec helper env = function
@@ -301,46 +289,46 @@ let infer_expr =
        | Some scheme ->
          let* ans = instantiate scheme in
          return (Subst.empty, ans)
-       | None -> fail @@ `UndeclaredVariable x)
+       | None -> fail @@ UndeclaredVariable x)
     | EBinOp (op, e1, e2) ->
-      let* args_type, expr_type = binop_type op in
-      let* sub_left, ty1 = helper env e1 in
-      let* sub_right, ty2 = helper env e2 in
+      let* args_type, expr_type = infer_binop_type op in
+      let* sub_l, ty1 = helper env e1 in
+      let* sub_r, ty2 = helper env e2 in
       let* sub1 = Subst.unify ty1 args_type in
       let* sub2 = Subst.unify (Subst.apply sub1 ty2) args_type in
-      let* sub = Subst.compose_all [ sub_left; sub_right; sub1; sub2 ] in
+      let* sub = Subst.compose_all [ sub_l; sub_r; sub1; sub2 ] in
       return (sub, expr_type)
     | EApp (e1, e2) ->
-      let* subst1, ty1 = helper env e1 in
-      let* subst2, ty2 = helper (TypeEnv.apply env subst1) e2 in
-      let* tv = fresh_var in
-      let* subst3 = Subst.unify (Subst.apply subst2 ty1) (tarrow ty2 tv) in
-      let res_ty = Subst.apply subst3 tv in
-      let* final_subst = Subst.compose_all [ subst1; subst2; subst3 ] in
-      return (final_subst, res_ty)
+      let* sub1, ty1 = helper env e1 in
+      let* sub2, ty2 = helper (TypeEnv.apply env sub1) e2 in
+      let* fv = fresh_var in
+      let* sub3 = Subst.unify (Subst.apply sub2 ty1) (tarrow ty2 fv) in
+      let ty = Subst.apply sub3 fv in
+      let* sub = Subst.compose_all [ sub1; sub2; sub3 ] in
+      return (sub, ty)
     | EFun (pattern, e) ->
       let* _, t1, env' = infer_pattern env pattern in
       let* sub2, t2 = helper env' e in
       let ty = tarrow (Subst.apply sub2 t1) t2 in
       return (sub2, ty)
     | EIfThenElse (e1, e2, e3) ->
-      let* si, ti = helper env e1 in
-      let* st, tt = helper env e2 in
-      let* se, te = helper env e3 in
-      let* sub = Subst.unify ti tbool in
-      let* tv = fresh_var in
-      let* sub1 = Subst.unify tv tt in
-      let* sub2 = Subst.unify tv te in
-      let* final_subs = Subst.compose_all [ si; st; se; sub; sub1; sub2 ] in
-      return (final_subs, Subst.apply final_subs tt)
+      let* sub_e1, t1 = helper env e1 in
+      let* sub_e2, t2 = helper env e2 in
+      let* sub_e3, te = helper env e3 in
+      let* sub = Subst.unify t1 tbool in
+      let* fv = fresh_var in
+      let* sub1 = Subst.unify fv t2 in
+      let* sub2 = Subst.unify fv te in
+      let* final_subs = Subst.compose_all [ sub_e1; sub_e2; sub_e3; sub; sub1; sub2 ] in
+      return (final_subs, Subst.apply final_subs t2)
     | ELet ((NonRec, _, e1), EUnit) -> helper env e1
     | ELet ((Rec, x, e1), EUnit) ->
-      let* tv = fresh_var in
-      let env = TypeEnv.extend env x (Scheme (VarSet.empty, tv)) in
-      let* subst1, ty1 = helper env e1 in
-      let* subst2 = Subst.unify (Subst.apply subst1 tv) ty1 in
-      let* final_subst = Subst.compose subst1 subst2 in
-      return (final_subst, Subst.apply final_subst tv)
+      let* fv = fresh_var in
+      let env = TypeEnv.extend env x (Scheme (VarSet.empty, fv)) in
+      let* sub1, ty1 = helper env e1 in
+      let* sub2 = Subst.unify (Subst.apply sub1 fv) ty1 in
+      let* sub = Subst.compose sub1 sub2 in
+      return (sub, Subst.apply sub fv)
     | _ -> return (Subst.empty, tint)
   in
   helper
@@ -350,40 +338,43 @@ let run_inference expr = Result.map snd (run (infer_expr TypeEnv.empty expr))
 
 (** module for test typing *)
 module PP = struct 
+
+open Format
+
 let rec pp_type ppf (typ : typ) =
   match typ with
   | TPrim x ->
     (match x with
-     | Int -> Format.fprintf ppf "int"
-     | Bool -> Format.fprintf ppf "bool"
-     | Unit -> Format.fprintf ppf "unit"
-     | Char -> Format.fprintf ppf "char"
-     | String -> Format.fprintf ppf "string")
-  | TVar x -> Format.fprintf ppf "%s" @@ Char.escaped (Char.chr (x + 97))  (** 97 is an ASCII code of letter "a" *)
+     | Int -> fprintf ppf "int"
+     | Bool -> fprintf ppf "bool"
+     | Unit -> fprintf ppf "unit"
+     | Char -> fprintf ppf "char"
+     | String -> fprintf ppf "string")
+  | TVar x -> fprintf ppf "%s" @@ Char.escaped (Char.chr (x + 97))  (** 97 is an ASCII code of letter "a" *)
   | TArr (l, r) ->
     (match l, r with
-     | TArr _, _ -> Format.fprintf ppf "(%a) -> %a" pp_type l pp_type r
-     | _, _ -> Format.fprintf ppf "%a -> %a" pp_type l pp_type r)
-  | _ -> Format.fprintf ppf "not implemented"
+     | TArr _, _ -> fprintf ppf "(%a) -> %a" pp_type l pp_type r
+     | _, _ -> fprintf ppf "%a -> %a" pp_type l pp_type r)
+  | _ -> fprintf ppf "not implemented"
 ;;
 
 let pp_error ppf (err : error) =
   match err with
-  | `OccursCheck -> Format.fprintf ppf "Occurs check failed"
-  | `UndeclaredVariable s -> Format.fprintf ppf "Undefined variable: %s" s
-  | `UnificationFailed (l, r) ->
-    Format.fprintf ppf "Unification failed on %a and %a" pp_type l pp_type r
-  | `NotImplemented -> Format.fprintf ppf "NotImplemented"
+  | OccursCheck -> fprintf ppf "Occurs check failed"
+  | UndeclaredVariable s -> fprintf ppf "Undefined variable: %s" s
+  | UnificationFailed (l, r) ->
+    fprintf ppf "Unification failed on %a and %a" pp_type l pp_type r
+  | NotImplemented -> fprintf ppf "NotImplemented"
 ;;
 
 let print_typ typ =
-  let s = Format.asprintf "%a" pp_type typ in
-  Format.printf "%s\n" s
+  let s = asprintf "%a" pp_type typ in
+  printf "%s\n" s
 ;;
 
 let print_type_error error =
-  let s = Format.asprintf "%a" pp_error error in
-  Format.printf "%s\n" s
+  let s = asprintf "%a" pp_error error in
+  printf "%s\n" s
 ;;
 
 let print_result expr =

@@ -7,7 +7,6 @@ open Ast
 type error =
   | DivisionByZero
   | UnboundValue of string
-  | EmptyInput
   | TypeMismatch
   | NotImplemented 
   | PatternMatchingFailed
@@ -96,43 +95,43 @@ module Interpret (M : Monad) = struct
   let eval_expr =
     let rec helper env = function
       | EConst e -> eval_const e
-      | EVar x -> lookup env x
+      | EVar e -> lookup env e
       | EBinOp (op, e1, e2) ->
-        let* l = helper env e1 in
-        let* r = helper env e2 in
-        eval_binop op l r
+        let* v1 = helper env e1 in
+        let* v2 = helper env e2 in
+        eval_binop op v1 v2
       | EIfThenElse (e1, e2, e3) ->
-        let* e = helper env e1 in
-        (match e with
+        let* v1 = helper env e1 in
+        (match v1 with
          | VBool true -> helper env e2
          | VBool false -> helper env e3
          | _ -> fail TypeMismatch)
-      | EFun (id, e) -> return (VFun (id, e, env))
+      | EFun (x, e) -> return (VFun (x, e, env))
       | EApp (e1, e2) ->
         let* v1 = helper env e1 in
         let* v2 = helper env e2 in
         (match v1 with
         (** application is applicable only for functions *)
-         | VFun (p, e, env) ->
-          (match eval_pattern env (p, v2) with
+         | VFun (x, e, env) ->
+          (match eval_pattern env (x, v2) with
             | Some env -> helper env e
             | None -> fail PatternMatchingFailed)
         | _ -> fail TypeMismatch)
       | ELet ((NonRec, _, e1), EUnit) -> helper env e1 
       | ELet ((Rec, _, e1), EUnit) -> helper env e1
       | ELet ((NonRec, x, e1), e2) -> 
-        let* v = helper env e1 in 
-        let env' = extend x v env in
-        let* v = helper env' e2 in
-        return v
+        let* v1 = helper env e1 in 
+        let env' = extend x v1 env in
+        let* v2 = helper env' e2 in
+        return v2
       | ELet ((Rec, x, e1), e2) ->
-         let* v = helper env e1 in
-         let v =
-           match v with
-           | VFun (p, e, _) -> VFun (p, e, env)
-           | _ -> v
+         let* v1 = helper env e1 in
+         let v2 =
+           match v1 with
+           | VFun (x, e, _) -> VFun (x, e, env)
+           | _ -> v1
          in
-         let env' = extend x v env in
+         let env' = extend x v2 env in
          helper env' e2
       | _ -> fail NotImplemented
     in
@@ -170,7 +169,6 @@ module PP = struct
     function
     | DivisionByZero -> fprintf ppf "Division by zero"
     | UnboundValue s -> fprintf ppf "Unbound value %s" s
-    | EmptyInput -> fprintf ppf "Empty input to interpret"
     | NotImplemented -> fprintf ppf "Not implemented" 
     | TypeMismatch -> fprintf ppf "Operator and operand type mismatch"
     | PatternMatchingFailed -> fprintf ppf "Mismatch between function and arguments"
