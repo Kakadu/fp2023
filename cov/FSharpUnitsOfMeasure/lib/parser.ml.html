@@ -1373,7 +1373,7 @@ let parse_efun expr =
 
 let parse_rec =
   take_empty *<span data-count="65">&gt;</span> stoke<span data-count="65">n</span> "let" *<span data-count="65">&gt;</span> optio<span data-count="65">n</span> "false" (stoken<span data-count="65">1</span> "rec")
-  &gt;&gt;<span data-count="65">|</span> fun x -&gt; <span data-count="16">i</span>f x != "false" then <span data-count="4">"</span>Rec" else <span data-count="12">"</span>NotRec"
+  &gt;&gt;<span data-count="65">|</span> fun x -&gt; <span data-count="16">i</span>f String.( &lt;&gt; ) x "false" then <span data-count="4">"</span>Rec" else <span data-count="12">"</span>NotRec"
 ;;
 
 let eletfun parse_expr =
