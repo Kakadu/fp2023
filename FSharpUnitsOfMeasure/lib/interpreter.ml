@@ -218,12 +218,13 @@ module Interpret (M : FailMonad) = struct
   ;;
 
   let process_list lst =
-    List.map ~f:(fun hd ->
-      match hd with
-      | "*" -> "/"
-      | "/" -> "*"
-      | _ -> hd
-    ) lst
+    List.map
+      ~f:(fun hd ->
+        match hd with
+        | "*" -> "/"
+        | "/" -> "*"
+        | _ -> hd
+      ) lst
   ;;
 
   let division_measure m1 m2 =
