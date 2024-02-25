@@ -2,7 +2,6 @@
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-open FSharpUnitsOfMeasure_lib.Ast
 open FSharpUnitsOfMeasure_lib.Interpreter
 open FSharpUnitsOfMeasure_lib.Parser
 open FSharpUnitsOfMeasure_lib.Interpret_error

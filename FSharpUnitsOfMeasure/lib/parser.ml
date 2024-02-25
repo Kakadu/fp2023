@@ -318,7 +318,7 @@ let parse_efun expr =
 
 let parse_rec =
   take_empty *> stoken "let" *> option "false" (stoken1 "rec")
-  >>| fun x -> if x != "false" then "Rec" else "NotRec"
+  >>| fun x -> if String.( <> ) x "false" then "Rec" else "NotRec"
 ;;
 
 let eletfun parse_expr =

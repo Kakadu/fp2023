@@ -2,8 +2,6 @@
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-(* Parser *)
-
 type id = string [@@deriving eq, show { with_path = false }]
 
 type binary_op =
@@ -26,7 +24,7 @@ type types =
   | FInt of int (** integer number: ..., 0, 1, 2, ...*)
   | FString of string (** string values: "Ocaml" *)
   | FBool of bool (** boolean values: true and false *)
-  | FNil (** empty list: [] *)
+  | FNil (** [] *)
   | FUnit (** () *)
   | FFloat of float (** float number: ..., 0.1, ..., 1.2, ...*)
   | Measure_float of types * measure_type (** 5.0<cm> *)
@@ -65,21 +63,4 @@ type expression =
   | EFun of pattern * expression (** fun z -> z + z *)
   | EMatch of expression * (pattern * expression) list (** match *)
   | EMeasure of measure_init (** measure *)
-[@@deriving show { with_path = false }]
-
-(* interpreter *)
-
-type value =
-  | VInt of int (** int *)
-  | VString of string (** string*)
-  | VBool of bool (** bool *)
-  | VNil (** empty list: [] *)
-  | VUnit (** () *)
-  | VFloat of float (** float *)
-  | VTuple of value list (** tuple *)
-  | VList of value list (** list *)
-  | VBinOp of binary_op (** binary operation *)
-  | VFun of pattern * expression * (id * value) list (** fun *)
-  | VMeasureList of id list (** measure list*)
-  | VFloatMeasure of value * id list (** float + measure*)
 [@@deriving show { with_path = false }]

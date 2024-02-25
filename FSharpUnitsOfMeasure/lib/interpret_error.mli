@@ -10,7 +10,6 @@ type error =
   | UnexpectedInfix
   | UnsupportedOperation
   | UnexpectedPattern
-  | EmptyInput
   | Unreachable
 
 val print_error : Format.formatter -> error -> unit

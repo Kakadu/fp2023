@@ -14,6 +14,21 @@ module type FailMonad = sig
   val ( let* ) : ('a, 'e) t -> ('a -> ('b, 'e) t) -> ('b, 'e) t
 end
 
+type value =
+  | VInt of int (** int *)
+  | VString of string (** string*)
+  | VBool of bool (** bool *)
+  | VNil (** empty list: [] *)
+  | VUnit (** () *)
+  | VFloat of float (** float *)
+  | VTuple of value list (** tuple *)
+  | VList of value list (** list *)
+  | VBinOp of binary_op (** binary operation *)
+  | VFun of pattern * expression * (id * value) list (** fun *)
+  | VMeasureList of id list (** measure list*)
+  | VFloatMeasure of value * id list (** float + measure*)
+[@@deriving show { with_path = false }]
+
 type environment = (id, value, String.comparator_witness) Map.t
 
 module Interpret (M : FailMonad) = struct
@@ -202,13 +217,13 @@ module Interpret (M : FailMonad) = struct
          m2
   ;;
 
-  let rec process_list = function
-    | [] -> []
-    | hd :: tl ->
-      (match hd with
-       | "*" -> "/" :: process_list tl
-       | "/" -> "*" :: process_list tl
-       | _ -> hd :: process_list tl)
+  let process_list lst =
+    List.map ~f:(fun hd ->
+      match hd with
+      | "*" -> "/"
+      | "/" -> "*"
+      | _ -> hd
+    ) lst
   ;;
 
   let division_measure m1 m2 =
@@ -224,7 +239,7 @@ module Interpret (M : FailMonad) = struct
       List.fold l ~init:(return []) ~f:(fun l e ->
         let* l = l in
         let* eval = expr e env [] in
-        return @@ (eval :: l))
+        return (eval :: l))
     in
     return (List.rev list)
   ;;
@@ -497,7 +512,7 @@ module Interpret (M : FailMonad) = struct
 
   let interpreter ?(environment = Map.empty (module String)) program =
     let rec helper env = function
-      | [] -> fail EmptyInput
+      | [] -> fail Unreachable
       | hd :: [] ->
         let* env, value = exp env hd in
         return (env, value)

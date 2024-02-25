@@ -10,7 +10,6 @@ type error =
   | UnexpectedInfix
   | UnsupportedOperation
   | UnexpectedPattern
-  | EmptyInput
   | Unreachable
 
 let print_error e : error -> unit =
@@ -24,6 +23,5 @@ let print_error e : error -> unit =
   | UnexpectedInfix -> fprintf e "Unexpected infix operator in type definition"
   | UnsupportedOperation -> fprintf e "This type does not support this operator"
   | UnexpectedPattern -> fprintf e "Unexpected in pattern"
-  | EmptyInput -> fprintf e "Empty input to interpret"
   | Unreachable -> fprintf e "Unreachable"
 ;;
