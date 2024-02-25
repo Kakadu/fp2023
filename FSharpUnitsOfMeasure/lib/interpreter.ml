@@ -223,8 +223,8 @@ module Interpret (M : FailMonad) = struct
         match hd with
         | "*" -> "/"
         | "/" -> "*"
-        | _ -> hd
-      ) lst
+        | _ -> hd)
+      lst
   ;;
 
   let division_measure m1 m2 =
