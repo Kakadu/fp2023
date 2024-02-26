@@ -2,11 +2,6 @@
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-(*
-   TODO
-   - match
-*)
-
 open Angstrom
 open Base
 open Ast
@@ -110,9 +105,6 @@ let pvar = varname >>| fun x -> PVar x
 let pconst = const >>| fun x -> PConst x
 let pany = pstoken "_" >>| fun _ -> PAny
 
-(* let pptuple pptr =
-   lift2 List.cons pptr (many1 (pstoken "," *> pptr)) >>| fun x -> PTuple x *)
-
 let ppattern =
   choice
     [ pconst; pvar; (pstoken "_" >>| fun _ -> PAny); (pstoken "[]" >>| fun _ -> PNil) ]
@@ -125,10 +117,6 @@ let record pexpr =
 ;;
 
 let precord pexpr = pstoken "type" *> varname *> pstoken "=" *> record pexpr
-
-(* let pprecord pexpr =
-  lift2 (fun name field -> { name; field}) varname (precord pexpr)
-;; *)
 
 (* expressions *)
 
