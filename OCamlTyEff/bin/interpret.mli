@@ -8,4 +8,4 @@ type env = Types.Env.t * Eval.Env.t
 
 val std_env : env
 
-val interpret : ?rec_types:bool -> term:LTerm.t -> env -> string -> env Lwt.t
+val interpret : term:LTerm.t -> ?rec_types:bool -> env -> string -> env Lwt.t

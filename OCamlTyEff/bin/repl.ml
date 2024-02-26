@@ -41,6 +41,59 @@ module Command = struct
         None
 end
 
+let help_message =
+  eval
+    [ B_fg lcyan
+    ; S "<expression>"
+    ; E_fg
+    ; S " - evaluate the given expression\n"
+    ; B_fg lcyan
+    ; S ":load <filepath>"
+    ; E_fg
+    ; S " - load source code from file\n"
+    ; B_fg lcyan
+    ; S ":rectypes"
+    ; E_fg
+    ; S " - (experimental) enable / disable recursive types\n"
+    ; B_fg lcyan
+    ; S ":q"
+    ; E_fg
+    ; S " - quit" ]
+
+let eval_command ~term ~rec_types env = function
+  | Command.Eval str ->
+      let* env = Interpret.interpret ~term ~rec_types env str in
+      return @@ Some (rec_types, env)
+  | Load filepath ->
+      let* env =
+        try
+          let code = In_channel.read_all filepath in
+          Interpret.interpret ~term ~rec_types env code
+        with Sys_error err ->
+          let* () =
+            LTerm.fprintls term @@ eval [B_fg lcyan; S "Error. "; S err; E_fg]
+          in
+          return env
+      in
+      return @@ Some (rec_types, env)
+  | Rectypes ->
+      let rec_types = not rec_types in
+      let msg =
+        Format.sprintf "Recursive types %s" (if rec_types then "on" else "off")
+      in
+      let* () = LTerm.fprintl term msg in
+      return @@ Some (rec_types, env)
+  | Help ->
+      let* () = LTerm.fprintls term help_message in
+      return @@ Some (rec_types, env)
+  | Break ->
+      let* () =
+        LTerm.fprintls term @@ eval [B_fg lcyan; S "Interrupted"; E_fg]
+      in
+      return @@ Some (rec_types, env)
+  | Quit ->
+      return None
+
 let prompt = eval [B_fg lgreen; S "\n# "; E_fg]
 
 class read_line ~term ~history ~completion_ids =
@@ -94,83 +147,60 @@ class read_line ~term ~history ~completion_ids =
           super_term#exec ?keys actions
   end
 
-let help_message =
-  eval
-    [ B_fg lcyan
-    ; S "<expression>"
-    ; E_fg
-    ; S " - evaluate the given expression\n"
-    ; B_fg lcyan
-    ; S ":load <filepath>"
-    ; E_fg
-    ; S " - load source code from file\n"
-    ; B_fg lcyan
-    ; S ":rectypes"
-    ; E_fg
-    ; S " - (experimental) enable / disable recursive types\n"
-    ; B_fg lcyan
-    ; S ":q"
-    ; E_fg
-    ; S " - quit" ]
-
-let rec loop ~rec_types term history ((ty_env, _) as env) =
+let rec repl_loop ~term ~history ~rec_types ((ty_env, _) as env) =
   let completion_ids =
     Types.Env.idents ty_env |> List.map ~f:(fun (Ident.Ident name) -> name)
   in
   let rl = new read_line ~term ~history ~completion_ids in
   rl#run
+  >>= eval_command ~term ~rec_types env
   >>= function
-  | Eval str ->
-      let* env = Interpret.interpret ~rec_types ~term env str in
-      loop ~rec_types term history env
-  | Load filepath ->
-      let* env =
-        try
-          let code = In_channel.read_all filepath in
-          Interpret.interpret ~rec_types ~term env code
-        with Sys_error err ->
-          let* () =
-            LTerm.fprintls term @@ eval [B_fg lcyan; S "Error. "; S err; E_fg]
-          in
-          return env
-      in
-      loop ~rec_types term history env
-  | Rectypes ->
-      let rec_types = not rec_types in
-      let msg =
-        Format.sprintf "Recursive types %s" (if rec_types then "on" else "off")
-      in
-      let* () = LTerm.fprintl term msg in
-
-      loop ~rec_types term history env
-  | Help ->
-      let* () = LTerm.fprintls term help_message in
-      loop ~rec_types term history env
-  | Break ->
-      let* () =
-        LTerm.fprintls term @@ eval [B_fg lcyan; S "Interrupted"; E_fg]
-      in
-      loop ~rec_types term history env
-  | Quit ->
+  | None ->
       return ()
+  | Some (new_rec, new_env) ->
+      repl_loop ~term ~history ~rec_types:new_rec new_env
+
+let eval_str ~term ~rec_types env str =
+  let* (_ : bool * Interpret.env * string) =
+    Lwt_list.fold_left_s
+      (fun (rec_types, env, str_buf) line ->
+        match Command.parse (str_buf ^ line) with
+        | None ->
+            return (rec_types, env, str_buf ^ line)
+        | Some cmd ->
+            let* res = eval_command ~term ~rec_types env cmd in
+            let* () = LTerm.fprint term "\n" in
+            let rec_types, env =
+              Option.value_map res ~default:(rec_types, env) ~f:Fun.id
+            in
+            return (rec_types, env, "") )
+      (rec_types, env, "") (String.split_lines str)
+  in
+  return ()
 
 let greeting =
   eval [B_fg lcyan; S "Welcome to OcamlTyEff. Type :help for help\n"; E_fg]
 
-let main =
+let run_repl ~term =
   let history = LTerm_history.create ~max_entries:1024 [] in
   let* () = LTerm_history.load history history_filepath in
   let* () = LTerm_inputrc.load () in
 
-  let* term = force LTerm.stdout in
   let* () = LTerm.fprints term greeting in
-
   let* () =
     Lwt.catch
-      (fun () -> loop ~rec_types:false term history Interpret.std_env)
+      (fun () -> repl_loop ~term ~history ~rec_types:false Interpret.std_env)
       (function LTerm_read_line.Interrupt -> return () | exn -> fail exn)
   in
 
   LTerm_history.save history history_filepath
+
+let eval_stdin ~term =
+  let code = In_channel.input_all stdin in
+  eval_str ~term ~rec_types:false Interpret.std_env code
+
+let main =
+  let* term = force LTerm.stdout in
+  if LTerm.is_a_tty term then run_repl ~term else eval_stdin ~term
 
 let () = Lwt_main.run main

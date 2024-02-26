@@ -125,7 +125,7 @@ let print_value ~term eval_env name (Scheme.Forall (_, ty)) value =
   in
   LTerm.fprintlf term "%s : %s%s" name ty_str val_str
 
-let interpret_exn ~rec_types ~term env str () =
+let interpret_exn ~term ~rec_types env str () =
   let* structure = parse str in
   Lwt_list.fold_left_s
     (fun (ty_env, eval_env) str_item ->
@@ -152,8 +152,8 @@ let interpret_exn ~rec_types ~term env str () =
       return (ty_env, eval_env) )
     env structure
 
-let interpret ?(rec_types = false) ~term env str =
-  Lwt.catch (interpret_exn ~rec_types ~term env str) (function
+let interpret ~term ?(rec_types = false) env str =
+  Lwt.catch (interpret_exn ~term ~rec_types env str) (function
     | ParseError ->
         let* () =
           LTerm.fprintls term (eval [B_fg err_color; S "Syntax error"; E_fg])
