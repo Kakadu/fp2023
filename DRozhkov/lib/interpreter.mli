@@ -131,7 +131,6 @@ module Interpret : functor (M : MONADERROR) -> sig
   type error =
     | Division_by_zero
     | Let_bundle
-    | Not_implemented
     | Pattern_matching_error
     | Unbound_value of string
     | Incorrect_type of value
@@ -155,7 +154,6 @@ module Interpreter : sig
   type error = Interpret(MONAD_ADAPTER).error =
     | Division_by_zero
     | Let_bundle
-    | Not_implemented
     | Pattern_matching_error
     | Unbound_value of string
     | Incorrect_type of value

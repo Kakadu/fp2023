@@ -34,12 +34,12 @@ type value =
 and bundle = (id, value, Base.String.comparator_witness) Base.Map.t
 
 let rec pp_value fmt = function
-  | VInt x -> fprintf fmt "%d" x
-  | VBool x -> fprintf fmt "%b" x
+  | VInt x -> fprintf fmt "%d " x
+  | VBool x -> fprintf fmt "%b " x
   | VUnit -> fprintf fmt "()"
   | VList vs ->
     fprintf fmt "[%a]" (pp_print_list ~pp_sep:(fun fmt _ -> fprintf fmt "; ") pp_value) vs
-  | VFun _ -> fprintf fmt "<fun>"
+  | VFun _ -> fprintf fmt "<fun> \n"
 ;;
 
 module Env = struct
@@ -54,7 +54,6 @@ module Interpret (M : MONADERROR) = struct
   type error =
     | Division_by_zero
     | Let_bundle
-    | Not_implemented
     | Pattern_matching_error
     | Unbound_value of id
     | Incorrect_type of value
@@ -65,8 +64,6 @@ module Interpret (M : MONADERROR) = struct
     | Incorrect_type v ->
       fprintf fmt "Value %a has incorrect type in expression" pp_value v
     | Let_bundle -> fprintf fmt "Let without in is not allowed in this part of expression"
-    | Not_implemented ->
-      Stdlib.print_endline "The expression is not implemented in the expression"
     | Pattern_matching_error ->
       fprintf fmt "Value can't be match with any case in this expression"
   ;;
