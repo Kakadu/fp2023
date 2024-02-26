@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8"/>
     <title>tyError.ml &mdash; Coverage report</title>
-    <meta name="description" content="66.67% coverage in lib/infer/tyError.ml">
+    <meta name="description" content="75.00% coverage in lib/infer/tyError.ml">
     <link rel="stylesheet" href="../../coverage.css"/>
     <script src="../../highlight.pack.js"></script>
     <script>hljs.initHighlightingOnLoad();</script>
@@ -15,10 +15,10 @@
           <span class="dirname">lib/infer/</span>tyError.ml
         </a>
       </h1>
-      <h2>66.67%</h2>
+      <h2>75.00%</h2>
     </div>
     <div id="navbar">
-      <span class="unvisited" style="bottom:4.35%"></span>
+      <span class="unvisited" style="bottom:3.70%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -44,8 +44,12 @@
 <a id="L19"></a><span > </span>
 <a id="L20"></a><span > </span>
 <a id="L21"></a><span > </span>
-<a id="L22"></a><span class="unvisited"> </span>
+<a id="L22"></a><span > </span>
 <a id="L23"></a><span class="visited"> </span>
+<a id="L24"></a><span > </span>
+<a id="L25"></a><span > </span>
+<a id="L26"></a><span class="unvisited"> </span>
+<a id="L27"></a><span class="visited"> </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -73,6 +77,10 @@
 <a href="#L21">21</a>
 <a href="#L22">22</a>
 <a href="#L23">23</a>
+<a href="#L24">24</a>
+<a href="#L25">25</a>
+<a href="#L26">26</a>
+<a href="#L27">27</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2023-2024, Danil S, Andrei *)
 
@@ -83,7 +91,7 @@ open Misc
 open Types
 open Ast
 
-<span data-count="100">t</span>ype t =
+<span data-count="131">t</span>ype t =
   | UnificationMismatch
   | UnificationFailTy of Ty.t * Ty.t
   | UnificationFailEff of Eff.t * Eff.t
@@ -92,11 +100,15 @@ open Ast
   | OccursInEff of Var.t * Eff.t
   | RecursiveEffRows
   | PatVarBoundSeveralTimes of Ident.t
+  | VarsMismatchOrPattern of Ident.t
   | ConstructorArityMismatch of Ident.t
   | NotVarLHSRec
   | NotAllowedRHSRec of expression
+  | UnboundTypeVariable of strin<span data-count="1">g</span>
+  | UnboundType of Ident.t
+  | TypeArityMismatch of Ident.t
   | NotImplemented of strin<span data-count="0">g</span>
-[@@deriving show {with_path= false}<span data-count="68">]</span>
+[@@deriving show {with_path= false}<span data-count="86">]</span>
 </code></pre>
       </div>
     </div>

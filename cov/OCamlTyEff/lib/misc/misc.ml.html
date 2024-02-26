@@ -95,18 +95,20 @@
 <a id="L71"></a><span > </span>
 <a id="L72"></a><span > </span>
 <a id="L73"></a><span > </span>
-<a id="L74"></a><span class="visited"> </span>
+<a id="L74"></a><span > </span>
 <a id="L75"></a><span > </span>
 <a id="L76"></a><span > </span>
 <a id="L77"></a><span > </span>
 <a id="L78"></a><span > </span>
 <a id="L79"></a><span class="visited"> </span>
-<a id="L80"></a><span > </span>
+<a id="L80"></a><span class="visited"> </span>
 <a id="L81"></a><span > </span>
 <a id="L82"></a><span > </span>
-<a id="L83"></a><span class="visited"> </span>
+<a id="L83"></a><span > </span>
 <a id="L84"></a><span class="visited"> </span>
-<a id="L85"></a><span > </span>
+<a id="L85"></a><span class="visited"> </span>
+<a id="L86"></a><span class="visited"> </span>
+<a id="L87"></a><span > </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -196,6 +198,8 @@
 <a href="#L83">83</a>
 <a href="#L84">84</a>
 <a href="#L85">85</a>
+<a href="#L86">86</a>
+<a href="#L87">87</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2023-2024, Danil S, Andrei *)
 
@@ -231,56 +235,58 @@ struct
   include Monad.Reader.Make (ReaderT) (WriterM)
 
   module Reader = struct
-    let read = rea<span data-count="1">d</span> ()
+    let read = rea<span data-count="7">d</span> ()
 
     let local f m =
-      <span data-count="90">l</span>et* cur = read in
-      <span data-count="90">l</span>ift @@ ru<span data-count="90">n</span> m (<span data-count="90">f</span> cur)
+      <span data-count="556">l</span>et* cur = read in
+      <span data-count="556">l</span>ift @@ ru<span data-count="556">n</span> m (<span data-count="556">f</span> cur)
   end
 
   module Writer = struct
-    let write x = <span data-count="684">l</span>ift @@ WriterM.writ<span data-count="684">e</span> x
+    let write x = <span data-count="7205">l</span>ift @@ WriterM.writ<span data-count="7205">e</span> x
   end
 
   module State = struct
-    let get = lif<span data-count="1">t</span> @@ WriterM.lif<span data-count="1">t</span> @@ StateM.ge<span data-count="1">t</span> ()
-    let put x = <span data-count="1651">l</span>ift @@ WriterM.lif<span data-count="1651">t</span> @@ StateM.pu<span data-count="1651">t</span> x
+    let get = lif<span data-count="7">t</span> @@ WriterM.lif<span data-count="7">t</span> @@ StateM.ge<span data-count="7">t</span> ()
+    let put x = <span data-count="15405">l</span>ift @@ WriterM.lif<span data-count="15405">t</span> @@ StateM.pu<span data-count="15405">t</span> x
   end
 
   module Error = struct
-    let fail err = <span data-count="9">l</span>ift @@ WriterM.lif<span data-count="9">t</span> @@ StateM.lif<span data-count="9">t</span> @@ ErrorM.fai<span data-count="9">l</span> err
+    let fail err = <span data-count="47">l</span>ift @@ WriterM.lif<span data-count="47">t</span> @@ StateM.lif<span data-count="47">t</span> @@ ErrorM.fai<span data-count="47">l</span> err
   end
 
   let run m reader_env init_state =
-    <span data-count="115">l</span>et r = run m reader_env in
-    <span data-count="115">l</span>et r = WriterM.run r in
-    <span data-count="115">l</span>et r = StateM.run r init_state in
-    <span data-count="115">E</span>rrorM.run r
-    |&gt; <span data-count="115">R</span>esult.map ~f:(fun ((ret, writer_state), state) -&gt;
-           <span data-count="106">(</span>ret, writer_state, state) )
+    <span data-count="403">l</span>et r = run m reader_env in
+    <span data-count="403">l</span>et r = WriterM.run r in
+    <span data-count="403">l</span>et r = StateM.run r init_state in
+    <span data-count="403">E</span>rrorM.run r
+    |&gt; <span data-count="403">R</span>esult.map ~f:(fun ((ret, writer_state), state) -&gt;
+           <span data-count="389">(</span>ret, writer_state, state) )
 end
 
-module MakeSEMonad (StateT : T) (ErrorT : T) = struct
-  module ErrorM = struct
-    include Monad.Result.T1 (ErrorT) (Monad.Ident)
-    include Monad.Result.Make (ErrorT) (Monad.Ident)
+module MakeESMonad (ErrorT : T) (StateT : T) = struct
+  module StateM = struct
+    include Monad.State.T1 (StateT) (Monad.Ident)
+    include Monad.State.Make (StateT) (Monad.Ident)
   end
 
-  include Monad.State.T1 (StateT) (ErrorM)
-  include Monad.State.Make (StateT) (ErrorM)
-
-  module State = struct
-    let get = ge<span data-count="1">t</span> ()
-    let put = put
-  end
+  include Monad.Result.T1 (ErrorT) (StateM)
+  include Monad.Result.Make (ErrorT) (StateM)
 
   module Error = struct
-    let fail err = <span data-count="11">l</span>ift @@ ErrorM.fai<span data-count="11">l</span> err
+    let fail = fail
+    let catch = catch
+  end
+
+  module State = struct
+    let get = lif<span data-count="15">t</span> @@ StateM.ge<span data-count="15">t</span> ()
+    let put x = <span data-count="177393">l</span>ift @@ StateM.pu<span data-count="177393">t</span> x
   end
 
   let run m init_state =
-    <span data-count="103">l</span>et r = run m init_state in
-    <span data-count="103">E</span>rrorM.run r
+    <span data-count="173983">l</span>et r = run m in
+    <span data-count="173983">l</span>et r, st = StateM.run r init_state in
+    <span data-count="173983">R</span>esult.map r ~f:(fun ret -&gt; <span data-count="173085">(</span>ret, st))
 end
 </code></pre>
       </div>

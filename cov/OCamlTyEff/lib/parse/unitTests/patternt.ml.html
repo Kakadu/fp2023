@@ -318,37 +318,37 @@ open Pattern
 
 let%expect_test "parse_var" =
   <span data-count="1">p</span>p pp_pattern parse_pattern "a" ;
-  <span data-count="1">[</span>%expect {| (Pat_var (Ident "a")) |}<span data-count="7">]</span>
+  <span data-count="1">[</span>%expect {| (Pat_var (Ident "a")) |}<span data-count="9">]</span>
 
 let%expect_test "parse_any" =
   <span data-count="1">p</span>p pp_pattern parse_pattern "_" ;
-  <span data-count="1">[</span>%expect {| Pat_any |}<span data-count="7">]</span>
+  <span data-count="1">[</span>%expect {| Pat_any |}<span data-count="9">]</span>
 
 let%expect_test "parse_const" =
   <span data-count="1">p</span>p pp_pattern parse_pattern "5" ;
-  <span data-count="1">[</span>%expect {| (Pat_constant (Const_integer 5)) |}<span data-count="7">]</span>
+  <span data-count="1">[</span>%expect {| (Pat_constant (Const_integer 5)) |}<span data-count="9">]</span>
 
 let%expect_test "parse_constr1" =
   <span data-count="1">p</span>p pp_pattern parse_pattern "C" ;
-  <span data-count="1">[</span>%expect {| (Pat_construct ((Ident "C"), None)) |}<span data-count="7">]</span>
+  <span data-count="1">[</span>%expect {| (Pat_construct ((Ident "C"), None)) |}<span data-count="9">]</span>
 
 let%expect_test "parse_constr2" =
   <span data-count="1">p</span>p pp_pattern parse_pattern "C a" ;
-  <span data-count="1">[</span>%expect {| (Pat_construct ((Ident "C"), (Some (Pat_var (Ident "a"))))) |}<span data-count="7">]</span>
+  <span data-count="1">[</span>%expect {| (Pat_construct ((Ident "C"), (Some (Pat_var (Ident "a"))))) |}<span data-count="9">]</span>
 
 let%expect_test "parse_constr3" =
   <span data-count="1">p</span>p pp_pattern parse_pattern "Cons (hd, tl)" ;
   <span data-count="1">[</span>%expect
     {|
     (Pat_construct ((Ident "Cons"),
-       (Some (Pat_tuple [(Pat_var (Ident "hd")); (Pat_var (Ident "tl"))])))) |}<span data-count="7">]</span>
+       (Some (Pat_tuple [(Pat_var (Ident "hd")); (Pat_var (Ident "tl"))])))) |}<span data-count="9">]</span>
 
 let%expect_test "parse_constr_or_tuple" =
   <span data-count="1">p</span>p pp_pattern parse_pattern "C _ | a, b" ;
   <span data-count="1">[</span>%expect
     {|
     (Pat_or ((Pat_construct ((Ident "C"), (Some Pat_any))),
-       (Pat_tuple [(Pat_var (Ident "a")); (Pat_var (Ident "b"))]))) |}<span data-count="7">]</span>
+       (Pat_tuple [(Pat_var (Ident "a")); (Pat_var (Ident "b"))]))) |}<span data-count="9">]</span>
 
 let%expect_test "parse_or" =
   <span data-count="1">p</span>p pp_pattern parse_pattern "a | (b | c) | d" ;
@@ -357,7 +357,7 @@ let%expect_test "parse_or" =
     (Pat_or (
        (Pat_or ((Pat_var (Ident "a")),
           (Pat_or ((Pat_var (Ident "b")), (Pat_var (Ident "c")))))),
-       (Pat_var (Ident "d")))) |}<span data-count="7">]</span>
+       (Pat_var (Ident "d")))) |}<span data-count="9">]</span>
 
 let%expect_test "parse_tuple" =
   <span data-count="1">p</span>p pp_pattern parse_pattern "a, (b, c), d" ;
@@ -366,14 +366,14 @@ let%expect_test "parse_tuple" =
     (Pat_tuple
        [(Pat_var (Ident "a"));
          (Pat_tuple [(Pat_var (Ident "b")); (Pat_var (Ident "c"))]);
-         (Pat_var (Ident "d"))]) |}<span data-count="7">]</span>
+         (Pat_var (Ident "d"))]) |}<span data-count="9">]</span>
 
 let%expect_test "parse_or_tuple" =
   <span data-count="1">p</span>p pp_pattern parse_pattern "a, b | c, d" ;
   <span data-count="1">[</span>%expect
     {|
     (Pat_or ((Pat_tuple [(Pat_var (Ident "a")); (Pat_var (Ident "b"))]),
-       (Pat_tuple [(Pat_var (Ident "c")); (Pat_var (Ident "d"))]))) |}<span data-count="7">]</span>
+       (Pat_tuple [(Pat_var (Ident "c")); (Pat_var (Ident "d"))]))) |}<span data-count="9">]</span>
 
 let%expect_test "parse_list_op" =
   <span data-count="1">p</span>p pp_pattern parse_pattern "a::(b::c)::d" ;
@@ -392,7 +392,7 @@ let%expect_test "parse_list_op" =
                                 (Pat_var (Ident "d"))]))
                      ))
                   ]))
-       )) |}<span data-count="7">]</span>
+       )) |}<span data-count="9">]</span>
 
 let%expect_test "parse_list_or_tuple" =
   <span data-count="1">p</span>p pp_pattern parse_pattern "a::b::c,d|e" ;
@@ -411,7 +411,7 @@ let%expect_test "parse_list_or_tuple" =
                          ]))
               ));
             (Pat_var (Ident "d"))]),
-       (Pat_var (Ident "e")))) |}<span data-count="7">]</span>
+       (Pat_var (Ident "e")))) |}<span data-count="9">]</span>
 
 let%expect_test "parse_list" =
   <span data-count="1">p</span>p pp_pattern parse_pattern "[a;b;c]" ;
@@ -433,7 +433,7 @@ let%expect_test "parse_list" =
                                 ]))
                      ))
                   ]))
-       )) |}<span data-count="7">]</span>
+       )) |}<span data-count="9">]</span>
 
 let%expect_test "parse_list_1element" =
   <span data-count="1">p</span>p pp_pattern parse_pattern "[a]" ;
@@ -442,11 +442,11 @@ let%expect_test "parse_list_1element" =
     (Pat_construct ((Ident "::"),
        (Some (Pat_tuple
                 [(Pat_var (Ident "a")); (Pat_construct ((Ident "[]"), None))]))
-       )) |}<span data-count="7">]</span>
+       )) |}<span data-count="9">]</span>
 
 let%expect_test "parse_list_empty" =
   <span data-count="1">p</span>p pp_pattern parse_pattern "[]" ;
-  <span data-count="1">[</span>%expect {| (Pat_construct ((Ident "[]"), None)) |}<span data-count="7">]</span>
+  <span data-count="1">[</span>%expect {| (Pat_construct ((Ident "[]"), None)) |}<span data-count="9">]</span>
 </code></pre>
       </div>
     </div>

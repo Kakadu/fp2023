@@ -258,6 +258,58 @@
 <a id="L234"></a><span > </span>
 <a id="L235"></a><span class="visited"> </span>
 <a id="L236"></a><span class="visited"> </span>
+<a id="L237"></a><span > </span>
+<a id="L238"></a><span > </span>
+<a id="L239"></a><span class="visited"> </span>
+<a id="L240"></a><span > </span>
+<a id="L241"></a><span > </span>
+<a id="L242"></a><span > </span>
+<a id="L243"></a><span > </span>
+<a id="L244"></a><span > </span>
+<a id="L245"></a><span > </span>
+<a id="L246"></a><span > </span>
+<a id="L247"></a><span class="visited"> </span>
+<a id="L248"></a><span > </span>
+<a id="L249"></a><span > </span>
+<a id="L250"></a><span > </span>
+<a id="L251"></a><span > </span>
+<a id="L252"></a><span > </span>
+<a id="L253"></a><span class="visited"> </span>
+<a id="L254"></a><span > </span>
+<a id="L255"></a><span > </span>
+<a id="L256"></a><span class="visited"> </span>
+<a id="L257"></a><span class="visited"> </span>
+<a id="L258"></a><span > </span>
+<a id="L259"></a><span > </span>
+<a id="L260"></a><span class="visited"> </span>
+<a id="L261"></a><span class="visited"> </span>
+<a id="L262"></a><span > </span>
+<a id="L263"></a><span > </span>
+<a id="L264"></a><span class="visited"> </span>
+<a id="L265"></a><span class="visited"> </span>
+<a id="L266"></a><span > </span>
+<a id="L267"></a><span > </span>
+<a id="L268"></a><span class="visited"> </span>
+<a id="L269"></a><span > </span>
+<a id="L270"></a><span class="visited"> </span>
+<a id="L271"></a><span > </span>
+<a id="L272"></a><span class="visited"> </span>
+<a id="L273"></a><span > </span>
+<a id="L274"></a><span > </span>
+<a id="L275"></a><span class="visited"> </span>
+<a id="L276"></a><span class="visited"> </span>
+<a id="L277"></a><span > </span>
+<a id="L278"></a><span > </span>
+<a id="L279"></a><span class="visited"> </span>
+<a id="L280"></a><span class="visited"> </span>
+<a id="L281"></a><span > </span>
+<a id="L282"></a><span > </span>
+<a id="L283"></a><span class="visited"> </span>
+<a id="L284"></a><span class="visited"> </span>
+<a id="L285"></a><span > </span>
+<a id="L286"></a><span > </span>
+<a id="L287"></a><span class="visited"> </span>
+<a id="L288"></a><span class="visited"> </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -498,6 +550,58 @@
 <a href="#L234">234</a>
 <a href="#L235">235</a>
 <a href="#L236">236</a>
+<a href="#L237">237</a>
+<a href="#L238">238</a>
+<a href="#L239">239</a>
+<a href="#L240">240</a>
+<a href="#L241">241</a>
+<a href="#L242">242</a>
+<a href="#L243">243</a>
+<a href="#L244">244</a>
+<a href="#L245">245</a>
+<a href="#L246">246</a>
+<a href="#L247">247</a>
+<a href="#L248">248</a>
+<a href="#L249">249</a>
+<a href="#L250">250</a>
+<a href="#L251">251</a>
+<a href="#L252">252</a>
+<a href="#L253">253</a>
+<a href="#L254">254</a>
+<a href="#L255">255</a>
+<a href="#L256">256</a>
+<a href="#L257">257</a>
+<a href="#L258">258</a>
+<a href="#L259">259</a>
+<a href="#L260">260</a>
+<a href="#L261">261</a>
+<a href="#L262">262</a>
+<a href="#L263">263</a>
+<a href="#L264">264</a>
+<a href="#L265">265</a>
+<a href="#L266">266</a>
+<a href="#L267">267</a>
+<a href="#L268">268</a>
+<a href="#L269">269</a>
+<a href="#L270">270</a>
+<a href="#L271">271</a>
+<a href="#L272">272</a>
+<a href="#L273">273</a>
+<a href="#L274">274</a>
+<a href="#L275">275</a>
+<a href="#L276">276</a>
+<a href="#L277">277</a>
+<a href="#L278">278</a>
+<a href="#L279">279</a>
+<a href="#L280">280</a>
+<a href="#L281">281</a>
+<a href="#L282">282</a>
+<a href="#L283">283</a>
+<a href="#L284">284</a>
+<a href="#L285">285</a>
+<a href="#L286">286</a>
+<a href="#L287">287</a>
+<a href="#L288">288</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2023-2024, Danil S, Andrei *)
 
@@ -735,6 +839,58 @@ let%expect_test _ =
 let%expect_test _ =
   <span data-count="1">r</span>un {| let rec y = 1 in let rec x = y in x |} ;
   <span data-count="1">[</span>%expect {| int |}<span data-count="3">]</span>
+
+let%expect_test _ =
+  <span data-count="1">r</span>un
+    {|
+      type 'a list = Nil | Cons of 'a * 'a list
+      type unit = ()
+      type foo = Foo
+
+      exception My_exc of string
+    |} ;
+  <span data-count="1">[</span>%expect
+    {|
+    Cons: 'a. ('a * 'a list) -&gt; 'a list
+    Nil: 'a. 'a list
+    (): unit
+    Foo: foo
+    My_exc: string -&gt; _My_exc exception |}<span data-count="3">]</span>
+
+let%expect_test _ =
+  <span data-count="1">r</span>un {| type foo = Foo of 'a list |} ;
+  <span data-count="1">[</span>%expect {| (UnboundTypeVariable "a") |}<span data-count="3">]</span>
+
+let%expect_test _ =
+  <span data-count="1">r</span>un {| type foo = Foo of list |} ;
+  <span data-count="1">[</span>%expect {| (TypeArityMismatch (Ident "list")) |}<span data-count="3">]</span>
+
+let%expect_test _ =
+  <span data-count="1">r</span>un {| type foo = Foo of bar |} ;
+  <span data-count="1">[</span>%expect {| (UnboundType (Ident "bar")) |}<span data-count="3">]</span>
+
+let%expect_test _ =
+  <span data-count="1">r</span>un {| type foo = Foo
+         type 'a foo = Foo of foo |} ;
+  <span data-count="1">[</span>%expect {|
+    Foo: foo
+    (TypeArityMismatch (Ident "foo")) |}<span data-count="3">]</span>
+
+let%expect_test _ =
+  <span data-count="1">r</span>un {| function Some x | Some y -&gt; 0 |} ;
+  <span data-count="1">[</span>%expect {| (VarsMismatchOrPattern (Ident "x")) |}<span data-count="3">]</span>
+
+let%expect_test _ =
+  <span data-count="1">r</span>un {| function Some x | Some (Some x) -&gt; 1 |} ;
+  <span data-count="1">[</span>%expect {| (OccursInTy ('solve5, 'solve5 option)) |}<span data-count="3">]</span>
+
+let%expect_test _ =
+  <span data-count="1">r</span>un {| function Some 1 | Some "42" -&gt; 0 |} ;
+  <span data-count="1">[</span>%expect {| (UnificationFailTy (int, string)) |}<span data-count="3">]</span>
+
+let%expect_test _ =
+  <span data-count="1">r</span>un {| function 1 | 2 -&gt; 0 |} ;
+  <span data-count="1">[</span>%expect {| int -&gt; int |}<span data-count="3">]</span>
 </code></pre>
       </div>
     </div>

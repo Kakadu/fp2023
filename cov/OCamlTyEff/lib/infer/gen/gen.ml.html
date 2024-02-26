@@ -34,9 +34,13 @@
 <a id="L10"></a><span > </span>
 <a id="L11"></a><span > </span>
 <a id="L12"></a><span > </span>
-<a id="L13"></a><span class="visited"> </span>
-<a id="L14"></a><span class="visited"> </span>
-<a id="L15"></a><span class="visited"> </span>
+<a id="L13"></a><span > </span>
+<a id="L14"></a><span > </span>
+<a id="L15"></a><span > </span>
+<a id="L16"></a><span class="visited"> </span>
+<a id="L17"></a><span class="visited"> </span>
+<a id="L18"></a><span > </span>
+<a id="L19"></a><span class="visited"> </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -56,6 +60,10 @@
 <a href="#L13">13</a>
 <a href="#L14">14</a>
 <a href="#L15">15</a>
+<a href="#L16">16</a>
+<a href="#L17">17</a>
+<a href="#L18">18</a>
+<a href="#L19">19</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2023-2024, Danil S, Andrei *)
 
@@ -66,12 +74,16 @@ module BoundVars = Pattern.BoundVars
 module ConArityAssumpt = Common.ConArityAssumpt
 
 open! Base
+open Misc
 open Common
 
-let gen str_item =
-  <span data-count="115">G</span>enMonad.run @@ Structure.ge<span data-count="115">n</span> str_item
-  |&gt; <span data-count="115">R</span>esult.map ~f:(fun ((asm, bound, ty, eff), constrs, con_assumpt) -&gt;
-         <span data-count="106">(</span>asm, bound, ty, eff, constrs, con_assumpt) )
+type defined_type = Structure.defined_type = {id: Ident.t; arity: int}
+
+let gen types_arity str_item =
+  <span data-count="403">G</span>enMonad.run @@ Structure.ge<span data-count="403">n</span> types_arity str_item
+  |&gt; <span data-count="403">R</span>esult.map
+       ~f:(fun ((asm, bound, ty, eff, defined_types), constrs, con_assumpt) -&gt;
+         <span data-count="389">(</span>asm, bound, ty, eff, constrs, con_assumpt, defined_types) )
 </code></pre>
       </div>
     </div>

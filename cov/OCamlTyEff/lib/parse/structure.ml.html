@@ -46,21 +46,51 @@
 <a id="L22"></a><span class="visited"> </span>
 <a id="L23"></a><span class="visited"> </span>
 <a id="L24"></a><span > </span>
-<a id="L25"></a><span > </span>
-<a id="L26"></a><span > </span>
+<a id="L25"></a><span class="visited"> </span>
+<a id="L26"></a><span class="visited"> </span>
 <a id="L27"></a><span > </span>
 <a id="L28"></a><span > </span>
 <a id="L29"></a><span > </span>
-<a id="L30"></a><span > </span>
-<a id="L31"></a><span > </span>
-<a id="L32"></a><span > </span>
+<a id="L30"></a><span class="visited"> </span>
+<a id="L31"></a><span class="visited"> </span>
+<a id="L32"></a><span class="visited"> </span>
 <a id="L33"></a><span > </span>
-<a id="L34"></a><span > </span>
+<a id="L34"></a><span class="visited"> </span>
 <a id="L35"></a><span class="visited"> </span>
 <a id="L36"></a><span > </span>
 <a id="L37"></a><span > </span>
 <a id="L38"></a><span > </span>
 <a id="L39"></a><span class="visited"> </span>
+<a id="L40"></a><span class="visited"> </span>
+<a id="L41"></a><span class="visited"> </span>
+<a id="L42"></a><span class="visited"> </span>
+<a id="L43"></a><span class="visited"> </span>
+<a id="L44"></a><span class="visited"> </span>
+<a id="L45"></a><span class="visited"> </span>
+<a id="L46"></a><span class="visited"> </span>
+<a id="L47"></a><span > </span>
+<a id="L48"></a><span > </span>
+<a id="L49"></a><span > </span>
+<a id="L50"></a><span class="visited"> </span>
+<a id="L51"></a><span > </span>
+<a id="L52"></a><span > </span>
+<a id="L53"></a><span > </span>
+<a id="L54"></a><span > </span>
+<a id="L55"></a><span > </span>
+<a id="L56"></a><span > </span>
+<a id="L57"></a><span > </span>
+<a id="L58"></a><span > </span>
+<a id="L59"></a><span > </span>
+<a id="L60"></a><span > </span>
+<a id="L61"></a><span > </span>
+<a id="L62"></a><span class="visited"> </span>
+<a id="L63"></a><span class="visited"> </span>
+<a id="L64"></a><span > </span>
+<a id="L65"></a><span > </span>
+<a id="L66"></a><span > </span>
+<a id="L67"></a><span > </span>
+<a id="L68"></a><span class="visited"> </span>
+<a id="L69"></a><span class="visited"> </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -104,6 +134,36 @@
 <a href="#L37">37</a>
 <a href="#L38">38</a>
 <a href="#L39">39</a>
+<a href="#L40">40</a>
+<a href="#L41">41</a>
+<a href="#L42">42</a>
+<a href="#L43">43</a>
+<a href="#L44">44</a>
+<a href="#L45">45</a>
+<a href="#L46">46</a>
+<a href="#L47">47</a>
+<a href="#L48">48</a>
+<a href="#L49">49</a>
+<a href="#L50">50</a>
+<a href="#L51">51</a>
+<a href="#L52">52</a>
+<a href="#L53">53</a>
+<a href="#L54">54</a>
+<a href="#L55">55</a>
+<a href="#L56">56</a>
+<a href="#L57">57</a>
+<a href="#L58">58</a>
+<a href="#L59">59</a>
+<a href="#L60">60</a>
+<a href="#L61">61</a>
+<a href="#L62">62</a>
+<a href="#L63">63</a>
+<a href="#L64">64</a>
+<a href="#L65">65</a>
+<a href="#L66">66</a>
+<a href="#L67">67</a>
+<a href="#L68">68</a>
+<a href="#L69">69</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2023-2024, Danil S, Andrei *)
 
@@ -121,13 +181,40 @@ open Pattern
   [let rec ValName1 PArg1 = E1 and P1 = E2 and ...]
 *)
 let parse_str_let =
-  parse_let_bindin<span data-count="3">g</span> parse_expression parse_pattern
-  &gt;&gt;<span data-count="3">|</span> fun (rec_flag, bindings) -&gt; <span data-count="40">S</span>tr_value (rec_flag, bindings)
+  parse_let_bindin<span data-count="10">g</span> parse_expression parse_pattern
+  &gt;&gt;<span data-count="10">|</span> fun (rec_flag, bindings) -&gt; <span data-count="268">S</span>tr_value (rec_flag, bindings)
 
-(** [exception Some_exc] *)
+(** [A of string] *)
+let parse_con_decl =
+  lift<span data-count="10">2</span>
+    (fun name arg -&gt; <span data-count="136">{</span>id= Ident name; arg})
+    parse_constr_name
+    ( optio<span data-count="10">n</span> None (ws *<span data-count="10">&gt;</span> strin<span data-count="10">g</span> "of" &gt;&gt;<span data-count="10">|</span> Option.some)
+    &gt;&gt;<span data-count="10">=</span> function <span data-count="84">N</span>one -&gt; return None | <span data-count="52">S</span>ome _ -&gt; Ty.parse_ty &gt;&gt;| Option.some )
+
+(** [('a, 'b, 'c)] *)
+let parse_type_params =
+  let comma = ws *<span data-count="10">&gt;</span> cha<span data-count="10">r</span> ',' *&gt; ws in
+  <span data-count="10">l</span>et parse_multiple =
+    cha<span data-count="10">r</span> '(' *<span data-count="10">&gt;</span> ws *<span data-count="10">&gt;</span> sep_by<span data-count="10">1</span> comma Ty.parse_var &lt;<span data-count="10">*</span> ws &lt;* cha<span data-count="10">r</span> ')'
+  in
+  <span data-count="10">l</span>et parse_single = Ty.parse_var &gt;&gt;| fun var -&gt; <span data-count="16">[</span>var] in
+  <span data-count="10">p</span>arse_single &lt;|<span data-count="10">&gt;</span> parse_multiple
+
+(** [type ('a, 'b) ab = A | B of T1 ...] *)
+let parse_str_type =
+  let pipe = ws *<span data-count="10">&gt;</span> cha<span data-count="10">r</span> '|' *&gt; ws in
+  <span data-count="10">l</span>et skip_pipe = ws *<span data-count="10">&gt;</span> optio<span data-count="10">n</span> () (cha<span data-count="10">r</span> '|' *<span data-count="10">&gt;</span> retur<span data-count="10">n</span> ()) *&gt; ws in
+  <span data-count="10">s</span>trin<span data-count="10">g</span> "type"
+  *<span data-count="10">&gt;</span> lift<span data-count="10">3</span>
+       (fun params name variants -&gt; <span data-count="51">S</span>tr_type {id= Ident name; params; variants})
+       (ws *<span data-count="10">&gt;</span> optio<span data-count="10">n</span> [] parse_type_params)
+       (ws *<span data-count="10">&gt;</span> parse_lowercase_ident)
+       (ws *<span data-count="10">&gt;</span> strin<span data-count="10">g</span> "=" *<span data-count="10">&gt;</span> skip_pipe *<span data-count="10">&gt;</span> sep_by<span data-count="10">1</span> pipe parse_con_decl)
+
+(** [exception Some_exc of string] *)
 let parse_str_exception =
-  ws *<span data-count="3">&gt;</span> strin<span data-count="3">g</span> "exception" *<span data-count="3">&gt;</span> ws *<span data-count="3">&gt;</span> parse_capitalized_ident
-  &gt;&gt;<span data-count="3">|</span> fun name -&gt; <span data-count="5">S</span>tr_exception (Ident name)
+  strin<span data-count="10">g</span> "exception" *<span data-count="10">&gt;</span> ws *<span data-count="10">&gt;</span> parse_con_decl &gt;&gt;<span data-count="10">|</span> fun decl -&gt; <span data-count="39">S</span>tr_exception decl
 
 let parse_structure : structure t =
   let parse_structure_item =
@@ -138,12 +225,15 @@ let parse_structure : structure t =
 
        we probably should use lookahead to check for `in`
     *)
-    choice
-      [ (parse_expression &gt;&gt;<span data-count="3">|</span> fun e -&gt; <span data-count="80">S</span>tr_eval e)
-      ; parse_str_let
-      ; parse_str_exception ]
+    ws
+    *&gt; choic<span data-count="10">e</span>
+         [ (parse_expression &gt;&gt;<span data-count="10">|</span> fun e -&gt; <span data-count="118">S</span>tr_eval e)
+         ; parse_str_let
+         ; parse_str_type
+         ; parse_str_exception ]
   in
-  <span data-count="3">s</span>ep_b<span data-count="3">y</span> (ws *<span data-count="3">&gt;</span> optio<span data-count="3">n</span> () (strin<span data-count="3">g</span> ";;" *<span data-count="3">&gt;</span> retur<span data-count="3">n</span> ())) parse_structure_item &lt;<span data-count="3">*</span> ws
+  <span data-count="10">l</span>et semicolons = ws *&gt; optio<span data-count="10">n</span> () (strin<span data-count="10">g</span> ";;" *<span data-count="10">&gt;</span> retur<span data-count="10">n</span> ()) in
+  <span data-count="10">s</span>ep_b<span data-count="10">y</span> semicolons parse_structure_item &lt;<span data-count="10">*</span> semicolons &lt;<span data-count="10">*</span> ws
 </code></pre>
       </div>
     </div>

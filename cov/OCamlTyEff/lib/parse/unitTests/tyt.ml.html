@@ -116,31 +116,31 @@ open Types
 
 let%expect_test "parse_var" =
   <span data-count="1">p</span>p Ty.pp parse_ty "'some_type_var" ;
-  <span data-count="1">[</span>%expect {| 'some_type_var |}<span data-count="7">]</span>
+  <span data-count="1">[</span>%expect {| 'some_type_var |}<span data-count="9">]</span>
 
 let%expect_test "parse_arrow" =
   <span data-count="1">p</span>p Ty.pp parse_ty "'a -&gt; 'b -&gt; 'c" ;
-  <span data-count="1">[</span>%expect {| 'a -&gt; 'b -&gt; 'c |}<span data-count="7">]</span>
+  <span data-count="1">[</span>%expect {| 'a -&gt; 'b -&gt; 'c |}<span data-count="9">]</span>
 
 let%expect_test "parse_tuple" =
   <span data-count="1">p</span>p Ty.pp parse_ty "'a * 'b * 'c" ;
-  <span data-count="1">[</span>%expect {| 'a * 'b * 'c |}<span data-count="7">]</span>
+  <span data-count="1">[</span>%expect {| 'a * 'b * 'c |}<span data-count="9">]</span>
 
-let%expect_test "parse_constr1" = <span data-count="1">p</span>p Ty.pp parse_ty "int" ; <span data-count="1">[</span>%expect {| int |}<span data-count="7">]</span>
+let%expect_test "parse_constr1" = <span data-count="1">p</span>p Ty.pp parse_ty "int" ; <span data-count="1">[</span>%expect {| int |}<span data-count="9">]</span>
 
 let%expect_test "parse_constr2" =
   <span data-count="1">p</span>p Ty.pp parse_ty "int list" ;
-  <span data-count="1">[</span>%expect {| int list |}<span data-count="7">]</span>
+  <span data-count="1">[</span>%expect {| int list |}<span data-count="9">]</span>
 
 let%expect_test "parse_constr3" =
   <span data-count="1">p</span>p Ty.pp parse_ty "(int, string) map" ;
   <span data-count="1">[</span>%expect {|
-    (int, string) map |}<span data-count="7">]</span>
+    (int, string) map |}<span data-count="9">]</span>
 
 let%expect_test "parse_constr4" =
   <span data-count="1">p</span>p Ty.pp parse_ty "('a -&gt; int * (string, unit, 'b -&gt; 'c) foo bar) -&gt; e" ;
   <span data-count="1">[</span>%expect {|
-    ('a -&gt; int * (string, unit, ('b -&gt; 'c)) foo bar) -&gt; e |}<span data-count="7">]</span>
+    ('a -&gt; int * (string, unit, ('b -&gt; 'c)) foo bar) -&gt; e |}<span data-count="9">]</span>
 </code></pre>
       </div>
     </div>

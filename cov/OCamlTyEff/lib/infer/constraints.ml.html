@@ -134,18 +134,18 @@ open Types
 
 module Constr = struct
   module T = struct
-    <span data-count="1822">t</span>ype unify_eff = <span data-count="0">U</span>nify_eff <span data-count="0">|</span> Dont_unify_eff
+    <span data-count="18334">t</span>ype unify_eff = <span data-count="0">U</span>nify_eff <span data-count="0">|</span> Dont_unify_eff
     [@@deriving ord, sexp_of, show {with_path= false}<span data-count="0">]</span>
 
-    <span data-count="1218">t</span>ype eff_eq = <span data-count="0">E</span>ffEq_Normal <span data-count="0">|</span> EffEq_Late
+    <span data-count="30756">t</span>ype eff_eq = <span data-count="0">E</span>ffEq_Normal <span data-count="0">|</span> EffEq_Late2
     [@@deriving ord, sexp_of, show {with_path= false}<span data-count="0">]</span>
 
-    <span data-count="183082">t</span>ype t =
-      <span data-count="0">|</span> TyEqConstr of <span data-count="13780">T</span>y.t * <span data-count="1458">T</span>y.t * <span data-count="911">u</span>nify_ef<span data-count="0">f</span>
-      <span data-count="0">|</span> EffEqConstr of <span data-count="5362">E</span>ff.t * <span data-count="674">E</span>ff.t * <span data-count="609">e</span>ff_e<span data-count="0">q</span>
-      <span data-count="0">|</span> ExplInstConstr of <span data-count="4954">T</span>y.t * <span data-count="299">S</span>cheme.<span data-count="0">t</span>
-      <span data-count="0">|</span> ImplInstConstr of <span data-count="584">T</span>y.t * <span data-count="63">V</span>arSet.t * <span data-count="63">T</span>y.t * <span data-count="63">E</span>ff.<span data-count="0">t</span>
-    [@@deriving ord, sexp_of, show {with_path= false}<span data-count="67802">]</span>
+    <span data-count="116355820">t</span>ype t =
+      <span data-count="0">|</span> TyEqConstr of <span data-count="11978025">T</span>y.t * <span data-count="177251">T</span>y.t * <span data-count="9167">u</span>nify_ef<span data-count="0">f</span>
+      <span data-count="0">|</span> EffEqConstr of <span data-count="5260753">E</span>ff.t * <span data-count="401128">E</span>ff.t * <span data-count="15378">e</span>ff_e<span data-count="0">q</span>
+      <span data-count="0">|</span> ExplInstConstr of <span data-count="3058702">T</span>y.t * <span data-count="2901">S</span>cheme.<span data-count="0">t</span>
+      <span data-count="0">|</span> ImplInstConstr of <span data-count="3625998">T</span>y.t * <span data-count="68669">V</span>arSet.t * <span data-count="40163">T</span>y.t * <span data-count="10540">E</span>ff.<span data-count="0">t</span>
+    [@@deriving ord, sexp_of, show {with_path= false}<span data-count="34273425">]</span>
   end
 
   include T
@@ -155,20 +155,20 @@ end
 module ConstrSet = struct
   type t = (Constr.t, Constr.comparator_witness) Set.t
 
-  let empty = Set.empt<span data-count="1">y</span> (module Constr)
-  let singleton = Set.singleto<span data-count="1">n</span> (module Constr)
-  let of_list = Set.of_lis<span data-count="1">t</span> (module Constr)
+  let empty = Set.empt<span data-count="7">y</span> (module Constr)
+  let singleton = Set.singleto<span data-count="7">n</span> (module Constr)
+  let of_list = Set.of_lis<span data-count="7">t</span> (module Constr)
 
   let is_empty = Set.is_empty
 
   let add = Set.add
   let union = Set.union
-  let union_list = Set.union_lis<span data-count="1">t</span> (module Constr)
+  let union_list = Set.union_lis<span data-count="7">t</span> (module Constr)
   let remove = Set.remove
   let find_map = Set.find_map
 
   let fold = Set.fold
-  let map = Set.ma<span data-count="1">p</span> (module Constr)
+  let map = Set.ma<span data-count="7">p</span> (module Constr)
 end
 </code></pre>
       </div>

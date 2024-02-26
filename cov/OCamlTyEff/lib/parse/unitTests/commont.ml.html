@@ -173,64 +173,64 @@ open Pp
 open Common
 
 let%expect_test "parse_bool1" =
-  <span data-count="1">p</span>p Stdlib.Format.pp_print_string parse_constr_name "true" ;
-  <span data-count="1">[</span>%expect {| true |}<span data-count="7">]</span>
+  <span data-count="1">p</span>p Format.pp_print_string parse_constr_name "true" ;
+  <span data-count="1">[</span>%expect {| true |}<span data-count="9">]</span>
 
 let%expect_test "parse_bool2" =
-  <span data-count="1">p</span>p Stdlib.Format.pp_print_string parse_constr_name "false" ;
-  <span data-count="1">[</span>%expect {| false |}<span data-count="7">]</span>
+  <span data-count="1">p</span>p Format.pp_print_string parse_constr_name "false" ;
+  <span data-count="1">[</span>%expect {| false |}<span data-count="9">]</span>
 
 let%expect_test "parse_unit" =
-  <span data-count="1">p</span>p Stdlib.Format.pp_print_string parse_constr_name "()" ;
-  <span data-count="1">[</span>%expect {| () |}<span data-count="7">]</span>
+  <span data-count="1">p</span>p Format.pp_print_string parse_constr_name "()" ;
+  <span data-count="1">[</span>%expect {| () |}<span data-count="9">]</span>
 
 let%expect_test "parse_quoted_string_literal1" =
   <span data-count="1">p</span>p pp_constant parse_const "{|Hello world!|}" ;
-  <span data-count="1">[</span>%expect {| (Const_string "Hello world!") |}<span data-count="7">]</span>
+  <span data-count="1">[</span>%expect {| (Const_string "Hello world!") |}<span data-count="9">]</span>
 
 let%expect_test "parse_quoted_string_literal2" =
   <span data-count="1">p</span>p pp_constant parse_const "{aa|Hello world!|aa}" ;
-  <span data-count="1">[</span>%expect {| (Const_string "Hello world!") |}<span data-count="7">]</span>
+  <span data-count="1">[</span>%expect {| (Const_string "Hello world!") |}<span data-count="9">]</span>
 
 let%expect_test "parse_quoted_string_literal3" =
   <span data-count="1">p</span>p pp_constant parse_const "{aa|Hello |aa world!|aa}" ;
-  <span data-count="1">[</span>%expect {| (Const_string "Hello |aa world!") |}<span data-count="7">]</span>
+  <span data-count="1">[</span>%expect {| (Const_string "Hello |aa world!") |}<span data-count="9">]</span>
 
 let%expect_test "parse_value_name1" =
-  <span data-count="1">p</span>p Stdlib.Format.pp_print_string parse_value_name "abc" ;
-  <span data-count="1">[</span>%expect {| abc |}<span data-count="7">]</span>
+  <span data-count="1">p</span>p Format.pp_print_string parse_value_name "abc" ;
+  <span data-count="1">[</span>%expect {| abc |}<span data-count="9">]</span>
 
 let%expect_test "parse_value_name2" =
-  <span data-count="1">p</span>p Stdlib.Format.pp_print_string parse_value_name "a0b'c_d" ;
-  <span data-count="1">[</span>%expect {| a0b'c_d |}<span data-count="7">]</span>
+  <span data-count="1">p</span>p Format.pp_print_string parse_value_name "a0b'c_d" ;
+  <span data-count="1">[</span>%expect {| a0b'c_d |}<span data-count="9">]</span>
 
 let%expect_test "parse_value_name3" =
-  <span data-count="1">p</span>p Stdlib.Format.pp_print_string parse_value_name "_0a" ;
-  <span data-count="1">[</span>%expect {| _0a |}<span data-count="7">]</span>
+  <span data-count="1">p</span>p Format.pp_print_string parse_value_name "_0a" ;
+  <span data-count="1">[</span>%expect {| _0a |}<span data-count="9">]</span>
 
 let%expect_test "parse_value_name_operator1" =
-  <span data-count="1">p</span>p Stdlib.Format.pp_print_string parse_value_name "(&gt;&gt;)" ;
-  <span data-count="1">[</span>%expect {| &gt;&gt; |}<span data-count="7">]</span>
+  <span data-count="1">p</span>p Format.pp_print_string parse_value_name "(&gt;&gt;)" ;
+  <span data-count="1">[</span>%expect {| &gt;&gt; |}<span data-count="9">]</span>
 
 let%expect_test "parse_value_name_operator2" =
-  <span data-count="1">p</span>p Stdlib.Format.pp_print_string parse_value_name "(%&gt;)" ;
-  <span data-count="1">[</span>%expect {| %&gt; |}<span data-count="7">]</span>
+  <span data-count="1">p</span>p Format.pp_print_string parse_value_name "(%&gt;)" ;
+  <span data-count="1">[</span>%expect {| %&gt; |}<span data-count="9">]</span>
 
 let%expect_test "parse_value_name_operator3" =
-  <span data-count="1">p</span>p Stdlib.Format.pp_print_string parse_value_name "(!)" ;
-  <span data-count="1">[</span>%expect {| ! |}<span data-count="7">]</span>
+  <span data-count="1">p</span>p Format.pp_print_string parse_value_name "(!)" ;
+  <span data-count="1">[</span>%expect {| ! |}<span data-count="9">]</span>
 
 let%expect_test "parse_value_name_operator4" =
-  <span data-count="1">p</span>p Stdlib.Format.pp_print_string parse_value_name "(~:=)" ;
-  <span data-count="1">[</span>%expect {| ~:= |}<span data-count="7">]</span>
+  <span data-count="1">p</span>p Format.pp_print_string parse_value_name "(~:=)" ;
+  <span data-count="1">[</span>%expect {| ~:= |}<span data-count="9">]</span>
 
 let%expect_test "parse_value_name_operator5" =
-  <span data-count="1">p</span>p Stdlib.Format.pp_print_string parse_value_name "(@&lt;&gt;)" ;
-  <span data-count="1">[</span>%expect {| @&lt;&gt; |}<span data-count="7">]</span>
+  <span data-count="1">p</span>p Format.pp_print_string parse_value_name "(@&lt;&gt;)" ;
+  <span data-count="1">[</span>%expect {| @&lt;&gt; |}<span data-count="9">]</span>
 
 let%expect_test "parse_constr_name" =
-  <span data-count="1">p</span>p Stdlib.Format.pp_print_string parse_constr_name "Nil" ;
-  <span data-count="1">[</span>%expect {| Nil |}<span data-count="7">]</span>
+  <span data-count="1">p</span>p Format.pp_print_string parse_constr_name "Nil" ;
+  <span data-count="1">[</span>%expect {| Nil |}<span data-count="9">]</span>
 </code></pre>
       </div>
     </div>

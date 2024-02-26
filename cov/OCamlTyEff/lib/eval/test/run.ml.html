@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8"/>
     <title>run.ml &mdash; Coverage report</title>
-    <meta name="description" content="87.50% coverage in lib/infer/test/run.ml">
+    <meta name="description" content="89.47% coverage in lib/eval/test/run.ml">
     <link rel="stylesheet" href="../../../coverage.css"/>
     <script src="../../../highlight.pack.js"></script>
     <script>hljs.initHighlightingOnLoad();</script>
@@ -12,14 +12,14 @@
     <div id="header">
       <h1>
         <a href="../../../index.html">
-          <span class="dirname">lib/infer/test/</span>run.ml
+          <span class="dirname">lib/eval/test/</span>run.ml
         </a>
       </h1>
-      <h2>87.50%</h2>
+      <h2>89.47%</h2>
     </div>
     <div id="navbar">
-      <span class="unvisited" style="bottom:27.78%"></span>
-      <span class="unvisited" style="bottom:22.22%"></span>
+      <span class="unvisited" style="bottom:22.86%"></span>
+      <span class="unvisited" style="bottom:17.14%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -47,19 +47,18 @@
 <a id="L21"></a><span > </span>
 <a id="L22"></a><span class="visited"> </span>
 <a id="L23"></a><span class="visited"> </span>
-<a id="L24"></a><span > </span>
-<a id="L25"></a><span class="visited"> </span>
-<a id="L26"></a><span class="unvisited"> </span>
-<a id="L27"></a><span > </span>
-<a id="L28"></a><span class="unvisited"> </span>
-<a id="L29"></a><span > </span>
+<a id="L24"></a><span class="visited"> </span>
+<a id="L25"></a><span > </span>
+<a id="L26"></a><span class="visited"> </span>
+<a id="L27"></a><span class="unvisited"> </span>
+<a id="L28"></a><span > </span>
+<a id="L29"></a><span class="unvisited"> </span>
 <a id="L30"></a><span > </span>
-<a id="L31"></a><span > </span>
-<a id="L32"></a><span class="visited"> </span>
+<a id="L31"></a><span class="visited"> </span>
+<a id="L32"></a><span > </span>
 <a id="L33"></a><span > </span>
-<a id="L34"></a><span > </span>
+<a id="L34"></a><span class="visited"> </span>
 <a id="L35"></a><span class="visited"> </span>
-<a id="L36"></a><span class="visited"> </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -99,7 +98,6 @@
 <a href="#L33">33</a>
 <a href="#L34">34</a>
 <a href="#L35">35</a>
-<a href="#L36">36</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2023-2024, Danil S, Andrei *)
 
@@ -107,36 +105,35 @@
 
 open! Base
 open Stdio
-open Types
+open Eval
 
 let run_env ppf init_env code =
-  <span data-count="94">l</span>et open Format in
+  <span data-count="17">l</span>et open Format in
   match Parse.parse code with
-  | <span data-count="94">S</span>ome program -&gt;
-      List.fold program ~init:init_env ~f:(fun env_acc str_item -&gt;
-          <span data-count="160">m</span>atch Infer.infer_structure_item env_acc str_item with
-          | <span data-count="130">O</span>k (new_env, bounds, sc) -&gt;
-              Option.iter sc ~f:(fprint<span data-count="130">f</span> ppf "%a\n" Scheme.pp) ;
+  | <span data-count="17">S</span>ome program -&gt;
+      List.fold program ~init:init_env ~f:(fun env str_item -&gt;
+          <span data-count="59">m</span>atch eval_structure_item ~printer:print_string env str_item with
+          | <span data-count="55">O</span>k (new_env, idents, value) -&gt;
+              Option.iter value ~f:(fprint<span data-count="55">f</span> ppf "%a\n" (Val.p<span data-count="55">p</span> new_env)) ;
 
-              <span data-count="130">L</span>ist.iter bounds ~f:(fun bound_var -&gt;
-                  <span data-count="70">l</span>et sc = Env.find_exn new_env bound_var in
-                  <span data-count="70">l</span>et (Ident name) = bound_var in
-                  fprintf ppf "%s: %a\n" name Scheme.pp sc ) ;
-              <span data-count="130">n</span>ew_env
-          | <span data-count="30">E</span>rror err -&gt;
-              fprintf ppf "%a\n" Infer.TyError.pp err ;
-              <span data-count="30">e</span>nv_acc )
+              <span data-count="55">l</span>et bounds = Env.get_bounds new_env in
+              <span data-count="55">L</span>ist.iter idents ~f:(fun bound_var -&gt;
+                  <span data-count="24">l</span>et (Ident name) = bound_var in
+                  let value = Bounds.find_exn bounds bound_var in
+                  <span data-count="24">f</span>printf ppf "%s: %a\n" name (Val.p<span data-count="24">p</span> new_env) value ) ;
+              <span data-count="55">n</span>ew_env
+          | <span data-count="4">E</span>rror err -&gt;
+              EvalError.pp env Format.std_formatter err ;
+              <span data-count="4">e</span>nv )
   | <span data-count="0">N</span>one -&gt;
       print_endline "syntax error" ;
       <span data-count="0">i</span>nit_env
 
-let std_env =
-  let prelude = {| exception Exc1;; exception Exc2;; |} ^ Builtin.prelude in
-  run_en<span data-count="1">v</span> Format.str_formatter Builtin.ty_env prelude
+let std_env = run_en<span data-count="1">v</span> Format.str_formatter Builtin.eval_env Builtin.prelude
 
 let run code =
-  <span data-count="93">l</span>et _ : Env.t = run_env Format.std_formatter std_env code in
-  <span data-count="93">(</span>)
+  <span data-count="16">l</span>et _ : Env.t = run_env Format.std_formatter std_env code in
+  <span data-count="16">(</span>)
 </code></pre>
       </div>
     </div>

@@ -52,52 +52,56 @@
 <a id="L28"></a><span > </span>
 <a id="L29"></a><span > </span>
 <a id="L30"></a><span class="visited"> </span>
-<a id="L31"></a><span class="visited"> </span>
-<a id="L32"></a><span > </span>
+<a id="L31"></a><span > </span>
+<a id="L32"></a><span class="visited"> </span>
 <a id="L33"></a><span class="visited"> </span>
 <a id="L34"></a><span class="visited"> </span>
 <a id="L35"></a><span class="visited"> </span>
 <a id="L36"></a><span > </span>
-<a id="L37"></a><span > </span>
-<a id="L38"></a><span > </span>
-<a id="L39"></a><span > </span>
+<a id="L37"></a><span class="visited"> </span>
+<a id="L38"></a><span class="visited"> </span>
+<a id="L39"></a><span class="visited"> </span>
 <a id="L40"></a><span > </span>
 <a id="L41"></a><span > </span>
 <a id="L42"></a><span > </span>
 <a id="L43"></a><span > </span>
 <a id="L44"></a><span > </span>
-<a id="L45"></a><span class="visited"> </span>
-<a id="L46"></a><span class="visited"> </span>
+<a id="L45"></a><span > </span>
+<a id="L46"></a><span > </span>
 <a id="L47"></a><span > </span>
-<a id="L48"></a><span class="visited"> </span>
+<a id="L48"></a><span > </span>
 <a id="L49"></a><span class="visited"> </span>
-<a id="L50"></a><span > </span>
-<a id="L51"></a><span class="visited"> </span>
+<a id="L50"></a><span class="visited"> </span>
+<a id="L51"></a><span > </span>
 <a id="L52"></a><span class="visited"> </span>
-<a id="L53"></a><span > </span>
-<a id="L54"></a><span class="visited"> </span>
-<a id="L55"></a><span > </span>
+<a id="L53"></a><span class="visited"> </span>
+<a id="L54"></a><span > </span>
+<a id="L55"></a><span class="visited"> </span>
 <a id="L56"></a><span class="visited"> </span>
 <a id="L57"></a><span > </span>
-<a id="L58"></a><span > </span>
+<a id="L58"></a><span class="visited"> </span>
 <a id="L59"></a><span > </span>
 <a id="L60"></a><span class="visited"> </span>
-<a id="L61"></a><span class="visited"> </span>
+<a id="L61"></a><span > </span>
 <a id="L62"></a><span > </span>
-<a id="L63"></a><span class="visited"> </span>
-<a id="L64"></a><span > </span>
+<a id="L63"></a><span > </span>
+<a id="L64"></a><span class="visited"> </span>
 <a id="L65"></a><span class="visited"> </span>
 <a id="L66"></a><span > </span>
 <a id="L67"></a><span class="visited"> </span>
 <a id="L68"></a><span > </span>
-<a id="L69"></a><span > </span>
-<a id="L70"></a><span class="visited"> </span>
+<a id="L69"></a><span class="visited"> </span>
+<a id="L70"></a><span > </span>
 <a id="L71"></a><span class="visited"> </span>
 <a id="L72"></a><span > </span>
 <a id="L73"></a><span > </span>
-<a id="L74"></a><span > </span>
-<a id="L75"></a><span > </span>
-<a id="L76"></a><span class="visited"> </span>
+<a id="L74"></a><span class="visited"> </span>
+<a id="L75"></a><span class="visited"> </span>
+<a id="L76"></a><span > </span>
+<a id="L77"></a><span > </span>
+<a id="L78"></a><span > </span>
+<a id="L79"></a><span > </span>
+<a id="L80"></a><span class="visited"> </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -178,6 +182,10 @@
 <a href="#L74">74</a>
 <a href="#L75">75</a>
 <a href="#L76">76</a>
+<a href="#L77">77</a>
+<a href="#L78">78</a>
+<a href="#L79">79</a>
+<a href="#L80">80</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2023-2024, Danil S, Andrei *)
 
@@ -190,30 +198,34 @@ open Common
 
 (** ['a] *)
 let parse_var =
-  cha<span data-count="3">r</span> '\'' *<span data-count="3">&gt;</span> (parse_lowercase_ident &lt;|<span data-count="3">&gt;</span> parse_capitalized_ident)
-  &gt;&gt;<span data-count="3">|</span> fun name -&gt; <span data-count="22">T</span>y.Ty_var (Var name)
+  cha<span data-count="10">r</span> '\'' *<span data-count="10">&gt;</span> (parse_lowercase_ident &lt;|<span data-count="10">&gt;</span> parse_capitalized_ident)
+  &gt;&gt;<span data-count="10">|</span> fun name -&gt; <span data-count="196">V</span>ar.Var name
 
 (**
   typeconstr
   | ( typexpr { , typexpr } ) typeconstr
 *)
 let parse_constr pty =
-  <span data-count="2">b</span>ot<span data-count="2">h</span>
-    (optio<span data-count="2">n</span> [] (cha<span data-count="2">r</span> '(' *<span data-count="2">&gt;</span> sep_by<span data-count="2">1</span> (ws *<span data-count="2">&gt;</span> cha<span data-count="2">r</span> ',') pty &lt;<span data-count="2">*</span> ws &lt;<span data-count="2">*</span> cha<span data-count="2">r</span> ')'))
-    (ws *<span data-count="2">&gt;</span> parse_lowercase_ident)
-  &gt;&gt;| fun (args, name) -&gt; <span data-count="23">T</span>y.Ty_con (Ident name, args)
+  <span data-count="10">b</span>ot<span data-count="10">h</span>
+    (optio<span data-count="10">n</span> [] (cha<span data-count="10">r</span> '(' *<span data-count="10">&gt;</span> sep_by<span data-count="10">1</span> (ws *<span data-count="10">&gt;</span> cha<span data-count="10">r</span> ',') pty &lt;<span data-count="10">*</span> ws &lt;<span data-count="10">*</span> cha<span data-count="10">r</span> ')'))
+    (ws *<span data-count="10">&gt;</span> parse_lowercase_ident)
+  &gt;&gt;| fun (args, name) -&gt; <span data-count="270">T</span>y.Ty_con (Ident name, args)
 
 (**
   typexpr
   | typexpr typeconstr
 *)
 let parse_app pty =
-  <span data-count="2">l</span>et parse_single =
-    ws *&gt; choic<span data-count="2">e</span> [parse_var; parse_const<span data-count="2">r</span> pty; cha<span data-count="2">r</span> '(' *<span data-count="2">&gt;</span> pty &lt;<span data-count="2">*</span> ws &lt;<span data-count="2">*</span> cha<span data-count="2">r</span> ')']
+  <span data-count="10">l</span>et parse_single =
+    ws
+    *&gt; choic<span data-count="10">e</span>
+         [ (parse_var &gt;&gt;<span data-count="10">|</span> fun var -&gt; <span data-count="158">T</span>y.Ty_var var)
+         ; parse_const<span data-count="10">r</span> pty
+         ; cha<span data-count="10">r</span> '(' *<span data-count="10">&gt;</span> pty &lt;<span data-count="10">*</span> ws &lt;<span data-count="10">*</span> cha<span data-count="10">r</span> ')' ]
   in
-  <span data-count="2">l</span>et* arg = parse_single in
-  <span data-count="47">o</span>ptio<span data-count="47">n</span> None (ws *<span data-count="47">&gt;</span> parse_lowercase_ident &gt;&gt;<span data-count="47">|</span> Option.some)
-  &gt;&gt;| Option.value_map ~default:arg ~f:(fun name -&gt; <span data-count="9">T</span>y_con (Ident name, [arg]))
+  <span data-count="10">l</span>et* arg = parse_single in
+  <span data-count="437">o</span>ptio<span data-count="437">n</span> None (ws *<span data-count="437">&gt;</span> parse_lowercase_ident &gt;&gt;<span data-count="437">|</span> Option.some)
+  &gt;&gt;| Option.value_map ~default:arg ~f:(fun name -&gt; <span data-count="48">T</span>y_con (Ident name, [arg]))
 
 (* ======= Operators parsing ======= *)
 
@@ -223,38 +235,38 @@ let peek_infix_op =
   let peek_tuple_op =
     peek_char_fail
     &gt;&gt;= fun c -&gt;
-    <span data-count="39">i</span>f Char.equal c '*' then <span data-count="6">r</span>eturn {op= OpTuple; op_length= 1}
-    else <span data-count="33">f</span>ail "not a type tuple operator"
+    <span data-count="354">i</span>f Char.equal c '*' then <span data-count="49">r</span>eturn {op= OpTuple; op_length= 1}
+    else <span data-count="305">f</span>ail "not a type tuple operator"
   in
-  <span data-count="3">l</span>et peek_arrow_op =
-    peek_strin<span data-count="3">g</span> 2
+  <span data-count="10">l</span>et peek_arrow_op =
+    peek_strin<span data-count="10">g</span> 2
     &gt;&gt;= fun s -&gt;
-    <span data-count="33">i</span>f String.equal s "-&gt;" then <span data-count="13">r</span>eturn {op= OpArrow; op_length= 2}
-    else <span data-count="20">f</span>ail "not a type arrow operator"
+    <span data-count="305">i</span>f String.equal s "-&gt;" then <span data-count="159">r</span>eturn {op= OpArrow; op_length= 2}
+    else <span data-count="146">f</span>ail "not a type arrow operator"
   in
-  <span data-count="3">p</span>eek_tuple_op &lt;|<span data-count="3">&gt;</span> peek_arrow_op
+  <span data-count="10">p</span>eek_tuple_op &lt;|<span data-count="10">&gt;</span> peek_arrow_op
 
-let get_infix_binding_power = function <span data-count="13">O</span>pArrow -&gt; (2, 1) | <span data-count="6">O</span>pTuple -&gt; (4, 3)
+let get_infix_binding_power = function <span data-count="159">O</span>pArrow -&gt; (2, 1) | <span data-count="49">O</span>pTuple -&gt; (4, 3)
 
 let parse_ty =
   let fold_infix acc (op, rhs) =
-    <span data-count="19">m</span>atch op with
-    | <span data-count="13">O</span>pArrow -&gt;
+    <span data-count="208">m</span>atch op with
+    | <span data-count="159">O</span>pArrow -&gt;
         Ty.Ty_arr (acc, Eff.Eff_total, rhs)
-    | <span data-count="6">O</span>pTuple -&gt; (
+    | <span data-count="49">O</span>pTuple -&gt; (
       match rhs with
-      | <span data-count="1">T</span>y_tuple tl -&gt;
+      | <span data-count="13">T</span>y_tuple tl -&gt;
           Ty_tuple (acc :: tl)
-      | <span data-count="5">_</span> -&gt;
+      | <span data-count="36">_</span> -&gt;
           Ty_tuple [acc; rhs] )
   in
-  fi<span data-count="3">x</span> (fun pty -&gt;
-      <span data-count="2">p</span>arse_operators
+  fi<span data-count="10">x</span> (fun pty -&gt;
+      <span data-count="10">p</span>arse_operators
         ~infix:
           { peek= peek_infix_op
           ; get_binding_power= get_infix_binding_power
           ; fold= fold_infix }
-        (parse_ap<span data-count="2">p</span> pty) )
+        ~parse_oprnd:(parse_ap<span data-count="10">p</span> pty) () )
 </code></pre>
       </div>
     </div>

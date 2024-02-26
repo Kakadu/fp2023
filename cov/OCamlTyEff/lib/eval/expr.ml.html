@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>expr.ml &mdash; Coverage report</title>
+    <meta name="description" content="88.24% coverage in lib/eval/expr.ml">
+    <link rel="stylesheet" href="../../coverage.css"/>
+    <script src="../../highlight.pack.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+  </head>
+  <body>
+    <div id="header">
+      <h1>
+        <a href="../../index.html">
+          <span class="dirname">lib/eval/</span>expr.ml
+        </a>
+      </h1>
+      <h2>88.24%</h2>
+    </div>
+    <div id="navbar">
+      <span class="unvisited" style="top:18.75%"></span>
+      <span class="unvisited" style="top:31.94%"></span>
+      <span class="unvisited" style="top:36.81%"></span>
+      <span class="some-visited" style="top:41.67%"></span>
+      <span class="unvisited" style="top:42.36%"></span>
+      <span class="unvisited" style="top:43.06%"></span>
+      <span class="unvisited" style="bottom:45.14%"></span>
+      <span class="unvisited" style="bottom:44.44%"></span>
+      <span class="unvisited" style="bottom:43.75%"></span>
+      <span class="unvisited" style="bottom:13.89%"></span>
+      <span class="some-visited" style="bottom:1.39%"></span>
+    </div>
+    <div id="report">
+      <div id="lines-layer">
+        <pre>
+<a id="L1"></a><span > </span>
+<a id="L2"></a><span > </span>
+<a id="L3"></a><span > </span>
+<a id="L4"></a><span > </span>
+<a id="L5"></a><span > </span>
+<a id="L6"></a><span > </span>
+<a id="L7"></a><span > </span>
+<a id="L8"></a><span > </span>
+<a id="L9"></a><span > </span>
+<a id="L10"></a><span > </span>
+<a id="L11"></a><span > </span>
+<a id="L12"></a><span > </span>
+<a id="L13"></a><span > </span>
+<a id="L14"></a><span class="visited"> </span>
+<a id="L15"></a><span > </span>
+<a id="L16"></a><span > </span>
+<a id="L17"></a><span > </span>
+<a id="L18"></a><span class="visited"> </span>
+<a id="L19"></a><span class="visited"> </span>
+<a id="L20"></a><span > </span>
+<a id="L21"></a><span class="visited"> </span>
+<a id="L22"></a><span class="visited"> </span>
+<a id="L23"></a><span > </span>
+<a id="L24"></a><span > </span>
+<a id="L25"></a><span class="visited"> </span>
+<a id="L26"></a><span > </span>
+<a id="L27"></a><span class="unvisited"> </span>
+<a id="L28"></a><span > </span>
+<a id="L29"></a><span class="visited"> </span>
+<a id="L30"></a><span > </span>
+<a id="L31"></a><span > </span>
+<a id="L32"></a><span class="visited"> </span>
+<a id="L33"></a><span class="visited"> </span>
+<a id="L34"></a><span > </span>
+<a id="L35"></a><span > </span>
+<a id="L36"></a><span class="visited"> </span>
+<a id="L37"></a><span class="visited"> </span>
+<a id="L38"></a><span > </span>
+<a id="L39"></a><span class="visited"> </span>
+<a id="L40"></a><span class="visited"> </span>
+<a id="L41"></a><span class="visited"> </span>
+<a id="L42"></a><span class="visited"> </span>
+<a id="L43"></a><span class="visited"> </span>
+<a id="L44"></a><span class="visited"> </span>
+<a id="L45"></a><span > </span>
+<a id="L46"></a><span class="unvisited"> </span>
+<a id="L47"></a><span > </span>
+<a id="L48"></a><span class="visited"> </span>
+<a id="L49"></a><span class="visited"> </span>
+<a id="L50"></a><span class="visited"> </span>
+<a id="L51"></a><span class="visited"> </span>
+<a id="L52"></a><span > </span>
+<a id="L53"></a><span class="unvisited"> </span>
+<a id="L54"></a><span > </span>
+<a id="L55"></a><span > </span>
+<a id="L56"></a><span > </span>
+<a id="L57"></a><span class="visited"> </span>
+<a id="L58"></a><span > </span>
+<a id="L59"></a><span class="visited"> </span>
+<a id="L60"></a><span class="some-visited"> </span>
+<a id="L61"></a><span class="unvisited"> </span>
+<a id="L62"></a><span class="unvisited"> </span>
+<a id="L63"></a><span > </span>
+<a id="L64"></a><span class="visited"> </span>
+<a id="L65"></a><span class="visited"> </span>
+<a id="L66"></a><span > </span>
+<a id="L67"></a><span class="visited"> </span>
+<a id="L68"></a><span > </span>
+<a id="L69"></a><span class="visited"> </span>
+<a id="L70"></a><span > </span>
+<a id="L71"></a><span class="visited"> </span>
+<a id="L72"></a><span class="visited"> </span>
+<a id="L73"></a><span > </span>
+<a id="L74"></a><span class="visited"> </span>
+<a id="L75"></a><span > </span>
+<a id="L76"></a><span class="visited"> </span>
+<a id="L77"></a><span > </span>
+<a id="L78"></a><span class="visited"> </span>
+<a id="L79"></a><span class="unvisited"> </span>
+<a id="L80"></a><span class="unvisited"> </span>
+<a id="L81"></a><span class="unvisited"> </span>
+<a id="L82"></a><span > </span>
+<a id="L83"></a><span > </span>
+<a id="L84"></a><span class="visited"> </span>
+<a id="L85"></a><span > </span>
+<a id="L86"></a><span class="visited"> </span>
+<a id="L87"></a><span class="visited"> </span>
+<a id="L88"></a><span class="visited"> </span>
+<a id="L89"></a><span > </span>
+<a id="L90"></a><span class="visited"> </span>
+<a id="L91"></a><span > </span>
+<a id="L92"></a><span class="visited"> </span>
+<a id="L93"></a><span > </span>
+<a id="L94"></a><span class="visited"> </span>
+<a id="L95"></a><span class="visited"> </span>
+<a id="L96"></a><span class="visited"> </span>
+<a id="L97"></a><span > </span>
+<a id="L98"></a><span class="visited"> </span>
+<a id="L99"></a><span class="visited"> </span>
+<a id="L100"></a><span class="visited"> </span>
+<a id="L101"></a><span class="visited"> </span>
+<a id="L102"></a><span class="visited"> </span>
+<a id="L103"></a><span > </span>
+<a id="L104"></a><span class="visited"> </span>
+<a id="L105"></a><span > </span>
+<a id="L106"></a><span class="visited"> </span>
+<a id="L107"></a><span > </span>
+<a id="L108"></a><span class="visited"> </span>
+<a id="L109"></a><span > </span>
+<a id="L110"></a><span class="visited"> </span>
+<a id="L111"></a><span class="visited"> </span>
+<a id="L112"></a><span class="visited"> </span>
+<a id="L113"></a><span class="visited"> </span>
+<a id="L114"></a><span class="visited"> </span>
+<a id="L115"></a><span class="visited"> </span>
+<a id="L116"></a><span class="visited"> </span>
+<a id="L117"></a><span class="visited"> </span>
+<a id="L118"></a><span class="visited"> </span>
+<a id="L119"></a><span class="visited"> </span>
+<a id="L120"></a><span class="visited"> </span>
+<a id="L121"></a><span > </span>
+<a id="L122"></a><span class="visited"> </span>
+<a id="L123"></a><span class="visited"> </span>
+<a id="L124"></a><span class="unvisited"> </span>
+<a id="L125"></a><span > </span>
+<a id="L126"></a><span class="visited"> </span>
+<a id="L127"></a><span class="visited"> </span>
+<a id="L128"></a><span class="visited"> </span>
+<a id="L129"></a><span class="visited"> </span>
+<a id="L130"></a><span > </span>
+<a id="L131"></a><span class="visited"> </span>
+<a id="L132"></a><span class="visited"> </span>
+<a id="L133"></a><span class="visited"> </span>
+<a id="L134"></a><span class="visited"> </span>
+<a id="L135"></a><span > </span>
+<a id="L136"></a><span class="visited"> </span>
+<a id="L137"></a><span class="visited"> </span>
+<a id="L138"></a><span class="visited"> </span>
+<a id="L139"></a><span class="visited"> </span>
+<a id="L140"></a><span class="visited"> </span>
+<a id="L141"></a><span class="visited"> </span>
+<a id="L142"></a><span class="some-visited"> </span>
+<a id="L143"></a><span > </span>
+<a id="L144"></a><span class="visited"> </span>
+</pre>
+      </div>
+      <div id="text-layer">
+        <pre id="line-numbers">
+<a href="#L1">  1</a>
+<a href="#L2">  2</a>
+<a href="#L3">  3</a>
+<a href="#L4">  4</a>
+<a href="#L5">  5</a>
+<a href="#L6">  6</a>
+<a href="#L7">  7</a>
+<a href="#L8">  8</a>
+<a href="#L9">  9</a>
+<a href="#L10"> 10</a>
+<a href="#L11"> 11</a>
+<a href="#L12"> 12</a>
+<a href="#L13"> 13</a>
+<a href="#L14"> 14</a>
+<a href="#L15"> 15</a>
+<a href="#L16"> 16</a>
+<a href="#L17"> 17</a>
+<a href="#L18"> 18</a>
+<a href="#L19"> 19</a>
+<a href="#L20"> 20</a>
+<a href="#L21"> 21</a>
+<a href="#L22"> 22</a>
+<a href="#L23"> 23</a>
+<a href="#L24"> 24</a>
+<a href="#L25"> 25</a>
+<a href="#L26"> 26</a>
+<a href="#L27"> 27</a>
+<a href="#L28"> 28</a>
+<a href="#L29"> 29</a>
+<a href="#L30"> 30</a>
+<a href="#L31"> 31</a>
+<a href="#L32"> 32</a>
+<a href="#L33"> 33</a>
+<a href="#L34"> 34</a>
+<a href="#L35"> 35</a>
+<a href="#L36"> 36</a>
+<a href="#L37"> 37</a>
+<a href="#L38"> 38</a>
+<a href="#L39"> 39</a>
+<a href="#L40"> 40</a>
+<a href="#L41"> 41</a>
+<a href="#L42"> 42</a>
+<a href="#L43"> 43</a>
+<a href="#L44"> 44</a>
+<a href="#L45"> 45</a>
+<a href="#L46"> 46</a>
+<a href="#L47"> 47</a>
+<a href="#L48"> 48</a>
+<a href="#L49"> 49</a>
+<a href="#L50"> 50</a>
+<a href="#L51"> 51</a>
+<a href="#L52"> 52</a>
+<a href="#L53"> 53</a>
+<a href="#L54"> 54</a>
+<a href="#L55"> 55</a>
+<a href="#L56"> 56</a>
+<a href="#L57"> 57</a>
+<a href="#L58"> 58</a>
+<a href="#L59"> 59</a>
+<a href="#L60"> 60</a>
+<a href="#L61"> 61</a>
+<a href="#L62"> 62</a>
+<a href="#L63"> 63</a>
+<a href="#L64"> 64</a>
+<a href="#L65"> 65</a>
+<a href="#L66"> 66</a>
+<a href="#L67"> 67</a>
+<a href="#L68"> 68</a>
+<a href="#L69"> 69</a>
+<a href="#L70"> 70</a>
+<a href="#L71"> 71</a>
+<a href="#L72"> 72</a>
+<a href="#L73"> 73</a>
+<a href="#L74"> 74</a>
+<a href="#L75"> 75</a>
+<a href="#L76"> 76</a>
+<a href="#L77"> 77</a>
+<a href="#L78"> 78</a>
+<a href="#L79"> 79</a>
+<a href="#L80"> 80</a>
+<a href="#L81"> 81</a>
+<a href="#L82"> 82</a>
+<a href="#L83"> 83</a>
+<a href="#L84"> 84</a>
+<a href="#L85"> 85</a>
+<a href="#L86"> 86</a>
+<a href="#L87"> 87</a>
+<a href="#L88"> 88</a>
+<a href="#L89"> 89</a>
+<a href="#L90"> 90</a>
+<a href="#L91"> 91</a>
+<a href="#L92"> 92</a>
+<a href="#L93"> 93</a>
+<a href="#L94"> 94</a>
+<a href="#L95"> 95</a>
+<a href="#L96"> 96</a>
+<a href="#L97"> 97</a>
+<a href="#L98"> 98</a>
+<a href="#L99"> 99</a>
+<a href="#L100">100</a>
+<a href="#L101">101</a>
+<a href="#L102">102</a>
+<a href="#L103">103</a>
+<a href="#L104">104</a>
+<a href="#L105">105</a>
+<a href="#L106">106</a>
+<a href="#L107">107</a>
+<a href="#L108">108</a>
+<a href="#L109">109</a>
+<a href="#L110">110</a>
+<a href="#L111">111</a>
+<a href="#L112">112</a>
+<a href="#L113">113</a>
+<a href="#L114">114</a>
+<a href="#L115">115</a>
+<a href="#L116">116</a>
+<a href="#L117">117</a>
+<a href="#L118">118</a>
+<a href="#L119">119</a>
+<a href="#L120">120</a>
+<a href="#L121">121</a>
+<a href="#L122">122</a>
+<a href="#L123">123</a>
+<a href="#L124">124</a>
+<a href="#L125">125</a>
+<a href="#L126">126</a>
+<a href="#L127">127</a>
+<a href="#L128">128</a>
+<a href="#L129">129</a>
+<a href="#L130">130</a>
+<a href="#L131">131</a>
+<a href="#L132">132</a>
+<a href="#L133">133</a>
+<a href="#L134">134</a>
+<a href="#L135">135</a>
+<a href="#L136">136</a>
+<a href="#L137">137</a>
+<a href="#L138">138</a>
+<a href="#L139">139</a>
+<a href="#L140">140</a>
+<a href="#L141">141</a>
+<a href="#L142">142</a>
+<a href="#L143">143</a>
+<a href="#L144">144</a>
+</pre>
+<pre><code class="ocaml">(** Copyright 2023-2024, Danil S, Andrei *)
+
+(** SPDX-License-Identifier: MIT *)
+
+open! Base
+open Ast
+open Values
+
+open EvalMonad.Let
+open EvalMonad.Let_syntax
+open EvalMonad.Eval
+
+let eval_const = function
+  | (<span data-count="22887">C</span>onst_integer _ | <span data-count="118">C</span>onst_char _ | <span data-count="154">C</span>onst_string _) as const -&gt;
+      return @@ Val.Val_const const
+
+let rec eval_cases val_match ~final_error cases =
+  <span data-count="57296">l</span>et rec helper = function
+    | <span data-count="130428">{</span>left= pat; right= expr} :: case_rest -&gt;
+        let m =
+          let* bounds = Pattern.eva<span data-count="130428">l</span> pat val_match in
+          <span data-count="57294">r</span>eturn (bounds, expr)
+        in
+        catch m (function
+          | <span data-count="73134">E</span>xception (Val_con (Ident "Match_failure", None)) -&gt;
+              helper case_rest
+          | <span data-count="0">e</span>rr -&gt;
+              fail err )
+    | <span data-count="2">[</span>] -&gt;
+        fail final_error
+  in
+  let* bounds, expr = helpe<span data-count="57296">r</span> cases in
+  <span data-count="57294">e</span>xtend_bounds bounds (eva<span data-count="57294">l</span> expr)
+
+and eval_apply f arg =
+  <span data-count="221543">m</span>atch f with
+  | <span data-count="116532">V</span>al.Val_fun (Fun_closure (pats, expr, defenv)) -&gt; (
+    match pats with
+    | <span data-count="58640">p</span>at1 :: [] -&gt;
+        let* bounds = Pattern.eva<span data-count="58640">l</span> pat1 arg in
+        <span data-count="58640">w</span>ith_bounds (Bounds.merg<span data-count="58640">e</span> (forc<span data-count="58640">e</span> defenv) bounds) (eva<span data-count="58640">l</span> expr)
+    | <span data-count="57892">p</span>at1 :: pat_rest -&gt;
+        let* bounds = Pattern.eva<span data-count="57892">l</span> pat1 arg in
+        <span data-count="57892">l</span>et defenv = lazy <span data-count="30774">(</span>Bounds.merge (forc<span data-count="30774">e</span> defenv) bounds) in
+        return @@ Val.Val_fun (Fun_closure (pat_rest, expr, defenv))
+    | <span data-count="0">[</span>] -&gt;
+        fail TypeError )
+  | <span data-count="56006">V</span>al_fun (Fun_cases (cases, defenv)) -&gt;
+      with_bounds (forc<span data-count="56006">e</span> defenv)
+        (eval_case<span data-count="56006">s</span> arg cases ~final_error:Pattern.match_failure)
+  | <span data-count="49005">V</span>al_fun (Fun_builtin funct) -&gt;
+      funct arg
+  | <span data-count="0">_</span> -&gt;
+      fail TypeError
+
+and eval_let_rec bindings =
+  <span data-count="136">l</span>et* id, expr1 =
+    match bindings with
+    | <span data-count="136">[</span>{pat; expr}] -&gt; (
+      match pat with <span data-count="136">P</span>at_var id -&gt; retur<span data-count="136">n</span> (id, expr) | <span data-count="0">_</span> -&gt; fai<span data-count="0">l</span> TypeError )
+    | <span data-count="0">_</span> -&gt;
+        fai<span data-count="0">l</span> @@ NotImplemented "mutually recursive bindings"
+  in
+  <span data-count="136">m</span>atch expr1 with
+  | <span data-count="53">E</span>xp_fun (pats, expr) -&gt;
+      let* env = get_env in
+      <span data-count="53">l</span>et rec defenv = lazy <span data-count="45">(</span>Bounds.merge (Env.get_bound<span data-count="45">s</span> env) (forc<span data-count="45">e</span> self_env))
+      and self_env =
+        lazy <span data-count="53">(</span>Bounds.singleton id (Val_fun (Fun_closure (pats, expr, defenv))))
+      in
+      return @@ forc<span data-count="53">e</span> self_env
+  | <span data-count="83">E</span>xp_function cases -&gt;
+      let* env = get_env in
+      <span data-count="83">l</span>et rec defenv = lazy <span data-count="80">(</span>Bounds.merge (Env.get_bound<span data-count="80">s</span> env) (forc<span data-count="80">e</span> self_env))
+      and self_env =
+        lazy <span data-count="83">(</span>Bounds.singleton id (Val_fun (Fun_cases (cases, defenv))))
+      in
+      return @@ forc<span data-count="83">e</span> self_env
+  | <span data-count="0">_</span> -&gt;
+      let* value1 = eva<span data-count="0">l</span> expr1 in
+      <span data-count="0">r</span>eturn @@ Bounds.singleto<span data-count="0">n</span> id value1
+
+and eval = function
+  | <span data-count="291716">E</span>xp_ident id -&gt;
+      let* env = get_env in
+      <span data-count="291716">B</span>ounds.find (Env.get_bound<span data-count="291716">s</span> env) id
+      |&gt; <span data-count="291716">O</span>ption.value_map ~f:return ~default:(fai<span data-count="291716">l</span> TypeError)
+  | <span data-count="23159">E</span>xp_constant const -&gt;
+      eval_const const
+  | <span data-count="1243">E</span>xp_let (Nonrecursive, bindings, expr2) -&gt;
+      let* bounds =
+        EvalMonad.List.fol<span data-count="1243">d</span> bindings ~init:Bounds.empty
+          ~f:(fun acc {pat= pat1; expr= expr1} -&gt;
+            <span data-count="1244">l</span>et* value1 = eva<span data-count="1244">l</span> expr1 in
+            <span data-count="1244">l</span>et* bounds = Pattern.eva<span data-count="1244">l</span> pat1 value1 in
+            <span data-count="1243">r</span>eturn @@ Bounds.merg<span data-count="1243">e</span> acc bounds )
+      in
+      <span data-count="1242">e</span>xtend_bounds bounds (eva<span data-count="1242">l</span> expr2)
+  | <span data-count="113">E</span>xp_let (Recursive, bindings, expr2) -&gt;
+      let* bounds = eval_let_re<span data-count="113">c</span> bindings in
+      <span data-count="113">e</span>xtend_bounds bounds (eva<span data-count="113">l</span> expr2)
+  | <span data-count="522">E</span>xp_fun (pats, expr) -&gt;
+      let* env = get_env in
+      <span data-count="522">l</span>et defenv = lazy <span data-count="364">(</span>Env.get_bounds env) in
+      return @@ Val.Val_fun (Fun_closure (pats, expr, defenv))
+  | <span data-count="28078">E</span>xp_function cases -&gt;
+      let* env = get_env in
+      <span data-count="28078">l</span>et defenv = lazy <span data-count="28054">(</span>Env.get_bounds env) in
+      return @@ Val.Val_fun (Fun_cases (cases, defenv))
+  | <span data-count="221545">E</span>xp_apply (expr_fun, expr_arg) -&gt;
+      let* val_fun = eva<span data-count="221545">l</span> expr_fun in
+      <span data-count="221545">l</span>et* val_arg = eva<span data-count="221545">l</span> expr_arg in
+      <span data-count="221543">e</span>val_apply val_fun val_arg
+  | <span data-count="21919">E</span>xp_tuple exprs -&gt;
+      let* vals = EvalMonad.List.ma<span data-count="21919">p</span> exprs ~f:eval in
+      <span data-count="21919">r</span>eturn @@ Val.Val_tuple vals
+  | <span data-count="2541">E</span>xp_ifthenelse (expr_cond, expr_th, expr_el) -&gt; (
+      let* val_cond = eva<span data-count="2541">l</span> expr_cond in
+      <span data-count="2541">m</span>atch val_cond with
+      | <span data-count="1222">V</span>al_con (Ident "true", None) -&gt;
+          eval expr_th
+      | <span data-count="1319">V</span>al_con (Ident "false", None) -&gt;
+          Option.value_map expr_el ~f:eval ~default:(retur<span data-count="1319">n</span> Val.unit)
+      | <span data-count="0">_</span> -&gt;
+          fail TypeError )
+  | <span data-count="1216">E</span>xp_match (expr_match, cases) -&gt;
+      let* val_match = eva<span data-count="1216">l</span> expr_match in
+      <span data-count="1216">e</span>val_cases val_match cases ~final_error:Pattern.match_failure
+  | <span data-count="43325">E</span>xp_construct (id, arg) -&gt; (
+    match arg with
+    | <span data-count="21776">S</span>ome arg -&gt;
+        let* val_arg = eva<span data-count="21776">l</span> arg in
+        <span data-count="21758">r</span>eturn @@ Val.Val_con (id, Some val_arg)
+    | <span data-count="21549">N</span>one -&gt;
+        return @@ Val.Val_con (id, None) )
+  | <span data-count="188">E</span>xp_sequence (expr1, expr2) -&gt;
+      let* _ = eva<span data-count="188">l</span> expr1 in
+      <span data-count="188">e</span>val expr2
+  | <span data-count="189">E</span>xp_try (expr_try, cases) -&gt;
+      catch (eva<span data-count="189">l</span> expr_try) (fun error -&gt;
+          <span data-count="74">l</span>et* exc =
+            match error with <span data-count="74">E</span>xception exc -&gt; retur<span data-count="74">n</span> exc | <span data-count="0">e</span>rr -&gt; fai<span data-count="0">l</span> err
+          in
+          <span data-count="74">e</span>val_cases exc cases ~final_error:error )
+</code></pre>
+      </div>
+    </div>
+    <script src="../../coverage.js"></script>
+  </body>
+</html>

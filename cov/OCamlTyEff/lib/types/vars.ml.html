@@ -157,9 +157,9 @@ open! Base
 
 module Var = struct
   module T = struct
-    <span data-count="232820">t</span>ype t = <span data-count="2192">V</span>ar of <span data-count="114283">s</span>tring <span data-count="16">|</span> Var_weak of <span data-count="273">s</span>tring [@@deriving eq, ord, sexp_of<span data-count="115844">]</span>
+    <span data-count="152389572">t</span>ype t = <span data-count="29726">V</span>ar of <span data-count="76179470">s</span>tring <span data-count="22">|</span> Var_weak of <span data-count="1224">s</span>tring [@@deriving eq, ord, sexp_of<span data-count="76187328">]</span>
 
-    let pp ppf (Var name | Var_weak name) = <span data-count="247">S</span>tdlib.Format.fprintf ppf "'%s" name
+    let pp ppf (Var name | Var_weak name) = <span data-count="878">F</span>ormat.fprintf ppf "'%s" name
   end
 
   include T
@@ -169,10 +169,10 @@ end
 module VarSet = struct
   module Elt = struct
     module T = struct
-      <span data-count="99466">t</span>ype t = <span data-count="0">V</span>ar_ty of <span data-count="14199">V</span>ar.<span data-count="0">t</span> <span data-count="678">|</span> Var_eff of <span data-count="7717">V</span>ar.<span data-count="226">t</span>
-      [@@deriving eq, ord, sexp_of<span data-count="38662">]</span>
+      <span data-count="134836538">t</span>ype t = <span data-count="0">V</span>ar_ty of <span data-count="27432030">V</span>ar.<span data-count="0">t</span> <span data-count="6534">|</span> Var_eff of <span data-count="9029374">V</span>ar.<span data-count="2178">t</span>
+      [@@deriving eq, ord, sexp_of<span data-count="49186478">]</span>
 
-      let pp ppf (Var_ty var | Var_eff var) = <span data-count="80">V</span>ar.pp ppf var
+      let pp ppf (Var_ty var | Var_eff var) = <span data-count="109">V</span>ar.pp ppf var
     end
 
     include T
@@ -182,18 +182,18 @@ module VarSet = struct
   type t = (Elt.t, Elt.comparator_witness) Set.t
 
   let pp ppf set =
-    <span data-count="48">l</span>et open Stdlib.Format in
+    <span data-count="63">l</span>et open Format in
     let vars = Set.to_list set in
-    <span data-count="48">p</span>p_print_list ~pp_sep:(fun out () -&gt; <span data-count="32">f</span>printf out " ") Elt.pp ppf vars
+    <span data-count="63">p</span>p_print_list ~pp_sep:(fun out () -&gt; <span data-count="46">f</span>printf out " ") Elt.pp ppf vars
 
   let compare = Set.compare_direct
   let sexp_of_t set = <span data-count="0">S</span>et.sexp_of_m__t (module Elt) set
 
-  let empty = Set.empt<span data-count="3">y</span> (module Elt)
-  let singleton = Set.singleto<span data-count="3">n</span> (module Elt)
-  let singleton_ty var = <span data-count="5731">S</span>et.singleton (module Elt) (Var_ty var)
-  let singleton_eff var = <span data-count="4849">S</span>et.singleton (module Elt) (Var_eff var)
-  let of_list = Set.of_lis<span data-count="3">t</span> (module Elt)
+  let empty = Set.empt<span data-count="10">y</span> (module Elt)
+  let singleton = Set.singleto<span data-count="10">n</span> (module Elt)
+  let singleton_ty var = <span data-count="4121032">S</span>et.singleton (module Elt) (Var_ty var)
+  let singleton_eff var = <span data-count="1979628">S</span>et.singleton (module Elt) (Var_eff var)
+  let of_list = Set.of_lis<span data-count="10">t</span> (module Elt)
   let to_list = Set.to_list
 
   let is_empty = Set.is_empty
@@ -201,7 +201,7 @@ module VarSet = struct
 
   let add = Set.add
   let union = Set.union
-  let union_list = Set.union_lis<span data-count="3">t</span> (module Elt)
+  let union_list = Set.union_lis<span data-count="10">t</span> (module Elt)
   let inter = Set.inter
   let diff = Set.diff
 

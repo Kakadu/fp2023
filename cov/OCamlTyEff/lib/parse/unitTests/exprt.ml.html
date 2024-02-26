@@ -575,7 +575,7 @@ let%expect_test "parse_function_pattern_matching" =
           right = (Exp_construct ((Ident "true"), None)) };
          { left = (Pat_var (Ident "b"));
            right = (Exp_construct ((Ident "false"), None)) }
-         ]) |}<span data-count="7">]</span>
+         ]) |}<span data-count="9">]</span>
 
 let%expect_test "parse_lambda_fun" =
   <span data-count="1">p</span>p pp_expression parse_expression "fun x y -&gt; x + y" ;
@@ -585,7 +585,7 @@ let%expect_test "parse_lambda_fun" =
        (Exp_apply (
           (Exp_apply ((Exp_ident (Ident "+")), (Exp_ident (Ident "x")))),
           (Exp_ident (Ident "y"))))
-       )) |}<span data-count="7">]</span>
+       )) |}<span data-count="9">]</span>
 
 let%expect_test "parse_custom_operator" =
   <span data-count="1">p</span>p pp_expression parse_expression "a &gt;&gt;= b ++ c ** d !+ e" ;
@@ -600,7 +600,7 @@ let%expect_test "parse_custom_operator" =
                 (Exp_apply ((Exp_ident (Ident "!+")), (Exp_ident (Ident "e"))))))
              ))
           ))
-       )) |}<span data-count="7">]</span>
+       )) |}<span data-count="9">]</span>
 
 let%expect_test "parse_let" =
   <span data-count="1">p</span>p pp_expression parse_expression "let rec a = 1 and b = 2 in let e = 3 in a" ;
@@ -615,7 +615,7 @@ let%expect_test "parse_let" =
              }
             ],
           (Exp_ident (Ident "a"))))
-       )) |}<span data-count="7">]</span>
+       )) |}<span data-count="9">]</span>
 
 let%expect_test "parse_ifthenelse" =
   <span data-count="1">p</span>p pp_expression parse_expression "if a then (if b then c) else d" ;
@@ -623,7 +623,7 @@ let%expect_test "parse_ifthenelse" =
     {|
     (Exp_ifthenelse ((Exp_ident (Ident "a")),
        (Exp_ifthenelse ((Exp_ident (Ident "b")), (Exp_ident (Ident "c")), None)),
-       (Some (Exp_ident (Ident "d"))))) |}<span data-count="7">]</span>
+       (Some (Exp_ident (Ident "d"))))) |}<span data-count="9">]</span>
 
 let%expect_test "parse_if_with_seq1" =
   <span data-count="1">p</span>p pp_expression parse_expression "if a; b then c; d" ;
@@ -633,7 +633,7 @@ let%expect_test "parse_if_with_seq1" =
        (Exp_ifthenelse (
           (Exp_sequence ((Exp_ident (Ident "a")), (Exp_ident (Ident "b")))),
           (Exp_ident (Ident "c")), None)),
-       (Exp_ident (Ident "d")))) |}<span data-count="7">]</span>
+       (Exp_ident (Ident "d")))) |}<span data-count="9">]</span>
 
 let%expect_test "parse_if_with_seq2" =
   <span data-count="1">p</span>p pp_expression parse_expression "if a; b then (c; d)" ;
@@ -641,7 +641,7 @@ let%expect_test "parse_if_with_seq2" =
     {|
     (Exp_ifthenelse (
        (Exp_sequence ((Exp_ident (Ident "a")), (Exp_ident (Ident "b")))),
-       (Exp_sequence ((Exp_ident (Ident "c")), (Exp_ident (Ident "d")))), None)) |}<span data-count="7">]</span>
+       (Exp_sequence ((Exp_ident (Ident "c")), (Exp_ident (Ident "d")))), None)) |}<span data-count="9">]</span>
 
 let%expect_test "parse_match1" =
   <span data-count="1">p</span>p pp_expression parse_expression "match a with b -&gt; c | d -&gt; e" ;
@@ -650,7 +650,7 @@ let%expect_test "parse_match1" =
     (Exp_match ((Exp_ident (Ident "a")),
        [{ left = (Pat_var (Ident "b")); right = (Exp_ident (Ident "c")) };
          { left = (Pat_var (Ident "d")); right = (Exp_ident (Ident "e")) }]
-       )) |}<span data-count="7">]</span>
+       )) |}<span data-count="9">]</span>
 
 let%expect_test "parse_match2" =
   <span data-count="1">p</span>p pp_expression parse_expression "match a with | b | c | d -&gt; e | f -&gt; g" ;
@@ -662,16 +662,16 @@ let%expect_test "parse_match2" =
              (Pat_var (Ident "d"))));
           right = (Exp_ident (Ident "e")) };
          { left = (Pat_var (Ident "f")); right = (Exp_ident (Ident "g")) }]
-       )) |}<span data-count="7">]</span>
+       )) |}<span data-count="9">]</span>
 
 let%expect_test "parse_constr1" =
   <span data-count="1">p</span>p pp_expression parse_expression "Nil" ;
-  <span data-count="1">[</span>%expect {| (Exp_construct ((Ident "Nil"), None)) |}<span data-count="7">]</span>
+  <span data-count="1">[</span>%expect {| (Exp_construct ((Ident "Nil"), None)) |}<span data-count="9">]</span>
 
 let%expect_test "parse_constr2" =
   <span data-count="1">p</span>p pp_expression parse_expression "Some x" ;
   <span data-count="1">[</span>%expect
-    {| (Exp_construct ((Ident "Some"), (Some (Exp_ident (Ident "x"))))) |}<span data-count="7">]</span>
+    {| (Exp_construct ((Ident "Some"), (Some (Exp_ident (Ident "x"))))) |}<span data-count="9">]</span>
 
 let%expect_test "parse_constr3" =
   <span data-count="1">p</span>p pp_expression parse_expression "Cons (1, Nil)" ;
@@ -681,7 +681,7 @@ let%expect_test "parse_constr3" =
        (Some (Exp_tuple
                 [(Exp_constant (Const_integer 1));
                   (Exp_construct ((Ident "Nil"), None))]))
-       )) |}<span data-count="7">]</span>
+       )) |}<span data-count="9">]</span>
 
 let%expect_test "parse_list" =
   <span data-count="1">p</span>p pp_expression parse_expression "[a;b;c]" ;
@@ -703,7 +703,7 @@ let%expect_test "parse_list" =
                                 ]))
                      ))
                   ]))
-       )) |}<span data-count="7">]</span>
+       )) |}<span data-count="9">]</span>
 
 let%expect_test "parse_list_with_seq" =
   <span data-count="1">p</span>p pp_expression parse_expression "[a;(b;c)]" ;
@@ -719,7 +719,7 @@ let%expect_test "parse_list_with_seq" =
                                 (Exp_construct ((Ident "[]"), None))]))
                      ))
                   ]))
-       )) |}<span data-count="7">]</span>
+       )) |}<span data-count="9">]</span>
 
 let%expect_test "parse_list_1element" =
   <span data-count="1">p</span>p pp_expression parse_expression "[a]" ;
@@ -728,11 +728,11 @@ let%expect_test "parse_list_1element" =
     (Exp_construct ((Ident "::"),
        (Some (Exp_tuple
                 [(Exp_ident (Ident "a")); (Exp_construct ((Ident "[]"), None))]))
-       )) |}<span data-count="7">]</span>
+       )) |}<span data-count="9">]</span>
 
 let%expect_test "parse_list_empty" =
   <span data-count="1">p</span>p pp_expression parse_expression "[]" ;
-  <span data-count="1">[</span>%expect {| (Exp_construct ((Ident "[]"), None)) |}<span data-count="7">]</span>
+  <span data-count="1">[</span>%expect {| (Exp_construct ((Ident "[]"), None)) |}<span data-count="9">]</span>
 
 let%expect_test "parse_list_op" =
   <span data-count="1">p</span>p pp_expression parse_expression "(a :: b) :: c :: d :: []" ;
@@ -757,7 +757,7 @@ let%expect_test "parse_list_op" =
                                 ]))
                      ))
                   ]))
-       )) |}<span data-count="7">]</span>
+       )) |}<span data-count="9">]</span>
 
 let%expect_test "parse_seq_op" =
   <span data-count="1">p</span>p pp_expression parse_expression "(a ; b) ; c ; d ; e" ;
@@ -767,7 +767,7 @@ let%expect_test "parse_seq_op" =
        (Exp_sequence ((Exp_ident (Ident "a")), (Exp_ident (Ident "b")))),
        (Exp_sequence ((Exp_ident (Ident "c")),
           (Exp_sequence ((Exp_ident (Ident "d")), (Exp_ident (Ident "e"))))))
-       )) |}<span data-count="7">]</span>
+       )) |}<span data-count="9">]</span>
 
 let%expect_test "parse_tuple_op" =
   <span data-count="1">p</span>p pp_expression parse_expression "a, (b, c), d, e" ;
@@ -776,7 +776,7 @@ let%expect_test "parse_tuple_op" =
     (Exp_tuple
        [(Exp_ident (Ident "a"));
          (Exp_tuple [(Exp_ident (Ident "b")); (Exp_ident (Ident "c"))]);
-         (Exp_ident (Ident "d")); (Exp_ident (Ident "e"))]) |}<span data-count="7">]</span>
+         (Exp_ident (Ident "d")); (Exp_ident (Ident "e"))]) |}<span data-count="9">]</span>
 
 let%expect_test "parse_plus_minus_prefix_op" =
   <span data-count="1">p</span>p pp_expression parse_expression "1 + - + + 3" ;
@@ -790,7 +790,7 @@ let%expect_test "parse_plus_minus_prefix_op" =
                 (Exp_constant (Const_integer 3))))
              ))
           ))
-       )) |}<span data-count="7">]</span>
+       )) |}<span data-count="9">]</span>
 
 let%expect_test "parse_custom_prefix_op" =
   <span data-count="1">p</span>p pp_expression parse_expression "?!5; !%&lt; 123; !0; ~-3" ;
@@ -808,7 +808,7 @@ let%expect_test "parse_custom_prefix_op" =
                 (Exp_constant (Const_integer 3))))
              ))
           ))
-       )) |}<span data-count="7">]</span>
+       )) |}<span data-count="9">]</span>
 
 let%expect_test "parse_try" =
   <span data-count="1">p</span>p pp_expression parse_expression "try x / y with Division_by_zero -&gt; 0" ;
@@ -821,7 +821,7 @@ let%expect_test "parse_try" =
        [{ left = (Pat_construct ((Ident "Division_by_zero"), None));
           right = (Exp_constant (Const_integer 0)) }
          ]
-       )) |}<span data-count="7">]</span>
+       )) |}<span data-count="9">]</span>
 </code></pre>
       </div>
     </div>

@@ -412,86 +412,86 @@ open Solve
             ---&gt; [(int -'e1-&gt; int) -&gt; int -'e1-&gt; int]
 *)
 let close_effs ty =
-  <span data-count="95">l</span>et rec eff_vars = function
-    | <span data-count="110">T</span>y.Ty_arr (l, eff, r) -&gt;
-        List.concat [eff_var<span data-count="110">s</span> l; VarSet.to_lis<span data-count="110">t</span> (Eff.var<span data-count="110">s</span> eff); eff_var<span data-count="110">s</span> r]
-    | <span data-count="11">T</span>y_tuple tys | <span data-count="151">T</span>y_con (_, tys) -&gt;
-        List.map ~f:eff_vars tys |&gt; <span data-count="162">L</span>ist.concat
-    | <span data-count="113">T</span>y_var _ -&gt;
+  <span data-count="411">l</span>et rec eff_vars = function
+    | <span data-count="652">T</span>y.Ty_arr (l, eff, r) -&gt;
+        List.concat [eff_var<span data-count="652">s</span> l; VarSet.to_lis<span data-count="652">t</span> (Eff.var<span data-count="652">s</span> eff); eff_var<span data-count="652">s</span> r]
+    | <span data-count="39">T</span>y_tuple tys | <span data-count="824">T</span>y_con (_, tys) -&gt;
+        List.map ~f:eff_vars tys |&gt; <span data-count="863">L</span>ist.concat
+    | <span data-count="737">T</span>y_var _ -&gt;
         []
   in
   let ty_eff_vars = eff_vars ty in
-  <span data-count="95">l</span>et subst =
+  <span data-count="411">l</span>et subst =
     List.fold ty_eff_vars ~init:Sub.empty ~f:(fun sub elt -&gt;
-        <span data-count="110">m</span>atch elt with
-        | <span data-count="110">V</span>ar_eff var when List.coun<span data-count="110">t</span> ty_eff_vars ~f:(VarSet.Elt.equa<span data-count="110">l</span> elt) = 1
+        <span data-count="652">m</span>atch elt with
+        | <span data-count="652">V</span>ar_eff var when List.coun<span data-count="652">t</span> ty_eff_vars ~f:(VarSet.Elt.equa<span data-count="652">l</span> elt) = 1
           -&gt;
-            <span data-count="76">S</span>ub.compose (Sub.singleton_ef<span data-count="76">f</span> var Eff_total) sub
-        | <span data-count="34">_</span> -&gt;
+            <span data-count="381">S</span>ub.compose (Sub.singleton_ef<span data-count="381">f</span> var Eff_total) sub
+        | <span data-count="271">_</span> -&gt;
             sub )
   in
-  <span data-count="95">S</span>ub.apply_to_ty subst ty
+  <span data-count="411">S</span>ub.apply_to_ty subst ty
 
 type rename_state = {cnt_ty: int; cnt_eff: int; cnt_weak: int; sub: Sub.t}
 
 (** Rename (to a, b .., e, e1, .., _weak1, _weak2) all variables in a type.
     Accepts weak counter to rename weaks and returns it's possibly modified version *)
 let rename_vars ty ~weak_counter =
-  <span data-count="95">l</span>et open Monad.State in
+  <span data-count="411">l</span>et open Monad.State in
   let next_weak_var cnt_weak =
-    <span data-count="9">V</span>ar.Var_weak ("_weak" ^ Int.to_strin<span data-count="9">g</span> cnt_weak)
+    <span data-count="13">V</span>ar.Var_weak ("_weak" ^ Int.to_strin<span data-count="13">g</span> cnt_weak)
   in
 
   (* Rename type variable to a, b, c, .. or _weak1, _weak2, .. for weaks *)
   let rename_ty_var ((Var.Var name | Var_weak name) as var) =
-    <span data-count="113">l</span>et next_var cnt_ty =
+    <span data-count="737">l</span>et next_var cnt_ty =
       (* try to use english letter. if out of bounds then "t{cnt}" *)
-      <span data-count="64">l</span>et default () = <span data-count="0">V</span>ar.Var ("t" ^ Int.to_strin<span data-count="0">g</span> cnt_ty) in
+      <span data-count="363">l</span>et default () = <span data-count="0">V</span>ar.Var ("t" ^ Int.to_strin<span data-count="0">g</span> cnt_ty) in
       (* 'a' = 97 *)
       match Char.of_int (cnt_ty + 96) with
       | <span data-count="0">N</span>one -&gt;
           default ()
-      | <span data-count="64">S</span>ome ch when Char.( &gt; <span data-count="64">)</span> ch 'z' -&gt;
+      | <span data-count="363">S</span>ome ch when Char.( &gt; <span data-count="363">)</span> ch 'z' -&gt;
           <span data-count="0">d</span>efault ()
-      | <span data-count="64">S</span>ome ch -&gt;
-          Var.Var (Char.to_strin<span data-count="64">g</span> ch)
+      | <span data-count="363">S</span>ome ch -&gt;
+          Var.Var (Char.to_strin<span data-count="363">g</span> ch)
     in
-    let* ({cnt_ty; cnt_weak; sub; _} as st) = ge<span data-count="113">t</span> () in
-    <span data-count="113">i</span>f
-      Sub.me<span data-count="113">m</span> sub va<span data-count="39">r</span>
+    let* ({cnt_ty; cnt_weak; sub; _} as st) = ge<span data-count="737">t</span> () in
+    <span data-count="737">i</span>f
+      Sub.me<span data-count="737">m</span> sub va<span data-count="360">r</span>
       || (* do not rename weak var if already named properly.
             XXX: better way to do this? *)
-      String.is_prefi<span data-count="74">x</span> name ~prefix:"_weak<span data-count="1">"</span>
-    then <span data-count="40">r</span>eturn ()
+      String.is_prefi<span data-count="377">x</span> name ~prefix:"_weak<span data-count="1">"</span>
+    then <span data-count="361">r</span>eturn ()
     else
-      <span data-count="73">l</span>et fresh, cnt_ty, cnt_weak =
+      <span data-count="376">l</span>et fresh, cnt_ty, cnt_weak =
         match var with
-        | <span data-count="64">V</span>ar _ -&gt;
-            (next_va<span data-count="64">r</span> cnt_ty, cnt_ty + 1, cnt_weak)
-        | <span data-count="9">V</span>ar_weak _ -&gt;
-            (next_weak_va<span data-count="9">r</span> cnt_weak, cnt_ty, cnt_weak + 1)
+        | <span data-count="363">V</span>ar _ -&gt;
+            (next_va<span data-count="363">r</span> cnt_ty, cnt_ty + 1, cnt_weak)
+        | <span data-count="13">V</span>ar_weak _ -&gt;
+            (next_weak_va<span data-count="13">r</span> cnt_weak, cnt_ty, cnt_weak + 1)
       in
       put
         { st with
           cnt_ty
         ; cnt_weak
-        ; sub= Sub.compos<span data-count="73">e</span> sub (Sub.singleton_t<span data-count="73">y</span> var (Ty_var fresh)) }
+        ; sub= Sub.compos<span data-count="376">e</span> sub (Sub.singleton_t<span data-count="376">y</span> var (Ty_var fresh)) }
   in
 
   (* Rename effect variable to e, e1, e2, .. or _weak1, _weak2, .. for weaks *)
   let rename_eff_var ((Var.Var name | Var_weak name) as var) =
-    <span data-count="34">l</span>et next_var cnt_eff =
-      <span data-count="16">l</span>et name = if cnt_eff = 0 then <span data-count="15">"</span>e" else <span data-count="1">"</span>e" ^ Int.to_strin<span data-count="1">g</span> cnt_eff in
+    <span data-count="271">l</span>et next_var cnt_eff =
+      <span data-count="105">l</span>et name = if cnt_eff = 0 then <span data-count="103">"</span>e" else <span data-count="2">"</span>e" ^ Int.to_strin<span data-count="2">g</span> cnt_eff in
       Var.Var name
     in
 
-    let* ({cnt_eff; cnt_weak; sub; _} as st) = ge<span data-count="34">t</span> () in
-    <span data-count="34">i</span>f Sub.me<span data-count="34">m</span> sub va<span data-count="18">r</span> || String.is_prefi<span data-count="16">x</span> name ~prefix:"_weak<span data-count="0">"</span> then <span data-count="18">r</span>eturn ()
+    let* ({cnt_eff; cnt_weak; sub; _} as st) = ge<span data-count="271">t</span> () in
+    <span data-count="271">i</span>f Sub.me<span data-count="271">m</span> sub va<span data-count="166">r</span> || String.is_prefi<span data-count="105">x</span> name ~prefix:"_weak<span data-count="0">"</span> then <span data-count="166">r</span>eturn ()
     else
-      <span data-count="16">l</span>et fresh, cnt_eff, cnt_weak =
+      <span data-count="105">l</span>et fresh, cnt_eff, cnt_weak =
         match var with
-        | <span data-count="16">V</span>ar _ -&gt;
-            (next_va<span data-count="16">r</span> cnt_eff, cnt_eff + 1, cnt_weak)
+        | <span data-count="105">V</span>ar _ -&gt;
+            (next_va<span data-count="105">r</span> cnt_eff, cnt_eff + 1, cnt_weak)
         | <span data-count="0">V</span>ar_weak _ -&gt;
             (next_weak_va<span data-count="0">r</span> cnt_weak, cnt_eff, cnt_weak + 1)
       in
@@ -499,83 +499,83 @@ let rename_vars ty ~weak_counter =
         { st with
           cnt_weak
         ; cnt_eff
-        ; sub= Sub.compos<span data-count="16">e</span> sub (Sub.singleton_ef<span data-count="16">f</span> var (Eff_var fresh)) }
+        ; sub= Sub.compos<span data-count="105">e</span> sub (Sub.singleton_ef<span data-count="105">f</span> var (Eff_var fresh)) }
   in
 
   let rec rename_eff = function
-    | <span data-count="34">E</span>ff.Eff_var var -&gt;
+    | <span data-count="271">E</span>ff.Eff_var var -&gt;
         rename_eff_var var
-    | <span data-count="76">E</span>ff_total -&gt;
+    | <span data-count="381">E</span>ff_total -&gt;
         return ()
-    | <span data-count="70">E</span>ff_row (_, eff_rest) -&gt;
+    | <span data-count="102">E</span>ff_row (_, eff_rest) -&gt;
         rename_eff eff_rest
   in
   let rec rename_type = function
-    | <span data-count="113">T</span>y.Ty_var var -&gt;
+    | <span data-count="737">T</span>y.Ty_var var -&gt;
         rename_ty_var var
-    | <span data-count="110">T</span>y_arr (l, eff, r) -&gt;
-        let* () = rename_typ<span data-count="110">e</span> l in
-        <span data-count="110">l</span>et* () = rename_ef<span data-count="110">f</span> eff in
-        <span data-count="110">r</span>ename_type r
-    | <span data-count="11">T</span>y_tuple tys | <span data-count="151">T</span>y_con (_, tys) -&gt;
+    | <span data-count="652">T</span>y_arr (l, eff, r) -&gt;
+        let* () = rename_typ<span data-count="652">e</span> l in
+        <span data-count="652">l</span>et* () = rename_ef<span data-count="652">f</span> eff in
+        <span data-count="652">r</span>ename_type r
+    | <span data-count="39">T</span>y_tuple tys | <span data-count="824">T</span>y_con (_, tys) -&gt;
         List.iter tys ~f:rename_type
   in
 
   let {cnt_weak= new_weak_counter; sub; _} =
     snd
-    @@ ru<span data-count="95">n</span> (rename_typ<span data-count="95">e</span> ty)
+    @@ ru<span data-count="411">n</span> (rename_typ<span data-count="411">e</span> ty)
          {cnt_ty= 1; cnt_eff= 0; cnt_weak= weak_counter; sub= Sub.empty}
   in
-  <span data-count="95">(</span>Sub.apply_to_t<span data-count="95">y</span> sub ty, new_weak_counter)
+  <span data-count="411">(</span>Sub.apply_to_t<span data-count="411">y</span> sub ty, new_weak_counter)
 
 let close_over ty ~weak_counter =
-  <span data-count="95">l</span>et ty_closed = close_effs ty in
-  <span data-count="95">l</span>et ty_renamed, new_counter = rename_vars ty_closed ~weak_counter in
-  <span data-count="95">(</span>generaliz<span data-count="95">e</span> VarSet.empty ty_renamed, new_counter)
+  <span data-count="411">l</span>et ty_closed = close_effs ty in
+  <span data-count="411">l</span>et ty_renamed, new_counter = rename_vars ty_closed ~weak_counter in
+  <span data-count="411">(</span>generaliz<span data-count="411">e</span> VarSet.empty ty_renamed, new_counter)
 
 let open_effs (Scheme.Forall (quantified, ty)) =
-  <span data-count="213">l</span>et open Monad.State in
+  <span data-count="888">l</span>et open Monad.State in
   let fresh_var =
-    let* cnt = ge<span data-count="213">t</span> () in
-    <span data-count="160">l</span>et* () = pu<span data-count="160">t</span> (cnt + 1) in
-    <span data-count="160">r</span>eturn @@ Var.Var ("open" ^ Int.to_strin<span data-count="160">g</span> cnt)
+    let* cnt = ge<span data-count="888">t</span> () in
+    <span data-count="845">l</span>et* () = pu<span data-count="845">t</span> (cnt + 1) in
+    <span data-count="845">r</span>eturn @@ Var.Var ("open" ^ Int.to_strin<span data-count="845">g</span> cnt)
   in
 
   let rec open_eff = function
-    | <span data-count="160">E</span>ff.Eff_total -&gt;
+    | <span data-count="845">E</span>ff.Eff_total -&gt;
         let* fresh = fresh_var in
-        <span data-count="160">r</span>eturn (VarSet.singleton_ef<span data-count="160">f</span> fresh, Eff.Eff_var fresh)
-    | <span data-count="28">E</span>ff_var _ as eff -&gt;
+        <span data-count="845">r</span>eturn (VarSet.singleton_ef<span data-count="845">f</span> fresh, Eff.Eff_var fresh)
+    | <span data-count="352">E</span>ff_var _ as eff -&gt;
         return (VarSet.empty, eff)
-    | <span data-count="93">E</span>ff_row (lbl, eff_rest) -&gt;
-        let* new_vars, eff_rest_opened = open_ef<span data-count="93">f</span> eff_rest in
-        <span data-count="93">r</span>eturn (new_vars, Eff.Eff_row (lbl, eff_rest_opened))
+    | <span data-count="182">E</span>ff_row (lbl, eff_rest) -&gt;
+        let* new_vars, eff_rest_opened = open_ef<span data-count="182">f</span> eff_rest in
+        <span data-count="182">r</span>eturn (new_vars, Eff.Eff_row (lbl, eff_rest_opened))
   in
 
   let rec open_ty = function
-    | <span data-count="188">T</span>y.Ty_arr (l, eff, r) -&gt;
-        let* new_vars_l, l_opened = open_t<span data-count="188">y</span> l in
-        <span data-count="188">l</span>et* new_vars_eff, eff_opened = open_ef<span data-count="188">f</span> eff in
-        <span data-count="188">l</span>et* new_vars_r, r_opened = open_t<span data-count="188">y</span> r in
-        <span data-count="188">r</span>eturn
-          ( VarSet.union_lis<span data-count="188">t</span> [new_vars_l; new_vars_eff; new_vars_r]
+    | <span data-count="1197">T</span>y.Ty_arr (l, eff, r) -&gt;
+        let* new_vars_l, l_opened = open_t<span data-count="1197">y</span> l in
+        <span data-count="1197">l</span>et* new_vars_eff, eff_opened = open_ef<span data-count="1197">f</span> eff in
+        <span data-count="1197">l</span>et* new_vars_r, r_opened = open_t<span data-count="1197">y</span> r in
+        <span data-count="1197">r</span>eturn
+          ( VarSet.union_lis<span data-count="1197">t</span> [new_vars_l; new_vars_eff; new_vars_r]
           , Ty.Ty_arr (l_opened, eff_opened, r_opened) )
-    | <span data-count="11">T</span>y_tuple tys -&gt;
-        let* new_vars, tys_opened = open_man<span data-count="11">y</span> tys in
-        <span data-count="11">r</span>eturn (new_vars, Ty.Ty_tuple tys_opened)
-    | <span data-count="322">T</span>y_con (id, tys) -&gt;
-        let* new_vars, tys_opened = open_man<span data-count="322">y</span> tys in
-        <span data-count="322">r</span>eturn (new_vars, Ty.Ty_con (id, tys_opened))
-    | <span data-count="231">T</span>y_var _ as ty -&gt;
+    | <span data-count="110">T</span>y_tuple tys -&gt;
+        let* new_vars, tys_opened = open_man<span data-count="110">y</span> tys in
+        <span data-count="110">r</span>eturn (new_vars, Ty.Ty_tuple tys_opened)
+    | <span data-count="1688">T</span>y_con (id, tys) -&gt;
+        let* new_vars, tys_opened = open_man<span data-count="1688">y</span> tys in
+        <span data-count="1688">r</span>eturn (new_vars, Ty.Ty_con (id, tys_opened))
+    | <span data-count="1407">T</span>y_var _ as ty -&gt;
         return (VarSet.empty, ty)
   and open_many =
     List.fold_right ~init:(VarSet.empty, []) ~f:(fun ty (vars_acc, tys_acc) -&gt;
-        <span data-count="163">l</span>et* new_vars, ty_opened = open_t<span data-count="163">y</span> ty in
-        <span data-count="163">r</span>eturn (VarSet.unio<span data-count="163">n</span> vars_acc new_vars, ty_opened :: tys_acc) )
+        <span data-count="1120">l</span>et* new_vars, ty_opened = open_t<span data-count="1120">y</span> ty in
+        <span data-count="1120">r</span>eturn (VarSet.unio<span data-count="1120">n</span> vars_acc new_vars, ty_opened :: tys_acc) )
   in
 
-  let new_vars, ty_opened = fst @@ ru<span data-count="213">n</span> (open_t<span data-count="213">y</span> ty) 1 in
-  <span data-count="213">S</span>cheme.Forall (VarSet.unio<span data-count="213">n</span> quantified new_vars, ty_opened)
+  let new_vars, ty_opened = fst @@ ru<span data-count="888">n</span> (open_t<span data-count="888">y</span> ty) 1 in
+  <span data-count="888">S</span>cheme.Forall (VarSet.unio<span data-count="888">n</span> quantified new_vars, ty_opened)
 </code></pre>
       </div>
     </div>

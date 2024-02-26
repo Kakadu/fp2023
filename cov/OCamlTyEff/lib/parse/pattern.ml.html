@@ -246,43 +246,43 @@ open Common
 
 (* ======= Single patterns parsing ======= *)
 
-let parse_pat_any = cha<span data-count="3">r</span> '_' *<span data-count="3">&gt;</span> retur<span data-count="3">n</span> Pat_any
+let parse_pat_any = cha<span data-count="10">r</span> '_' *<span data-count="10">&gt;</span> retur<span data-count="10">n</span> Pat_any
 
-let parse_pat_var = parse_value_name &gt;&gt;<span data-count="3">|</span> fun name -&gt; <span data-count="253">P</span>at_var (Ident name)
+let parse_pat_var = parse_value_name &gt;&gt;<span data-count="10">|</span> fun name -&gt; <span data-count="2881">P</span>at_var (Ident name)
 
-let parse_pat_const = parse_const &gt;&gt;<span data-count="3">|</span> fun const -&gt; <span data-count="8">P</span>at_constant const
+let parse_pat_const = parse_const &gt;&gt;<span data-count="10">|</span> fun const -&gt; <span data-count="186">P</span>at_constant const
 
 (** [a; b; c] *)
 let parse_pat_list ppat =
-  <span data-count="3">l</span>et parse_list =
-    sep_b<span data-count="3">y</span> (ws *<span data-count="3">&gt;</span> cha<span data-count="3">r</span> ';') ppat
+  <span data-count="10">l</span>et parse_list =
+    sep_b<span data-count="10">y</span> (ws *<span data-count="10">&gt;</span> cha<span data-count="10">r</span> ';') ppat
     &gt;&gt;| fun list -&gt;
-    <span data-count="12">l</span>et rec helper = function
+    <span data-count="101">l</span>et rec helper = function
       | <span data-count="11">h</span> :: tl -&gt;
           Pat_construct (Ident "::", Some (Pat_tuple [h; helpe<span data-count="11">r</span> tl]))
-      | <span data-count="12">[</span>] -&gt;
+      | <span data-count="101">[</span>] -&gt;
           Pat_construct (Ident "[]", None)
     in
     helper list
   in
-  <span data-count="3">c</span>ha<span data-count="3">r</span> '[' *<span data-count="3">&gt;</span> parse_list &lt;<span data-count="3">*</span> ws &lt;* cha<span data-count="3">r</span> ']'
+  <span data-count="10">c</span>ha<span data-count="10">r</span> '[' *<span data-count="10">&gt;</span> parse_list &lt;<span data-count="10">*</span> ws &lt;* cha<span data-count="10">r</span> ']'
 
 (* [Cons (hd, tl)] *)
 let parse_pat_constr ppat_single =
-  <span data-count="3">l</span>et* name = parse_constr_name in
-  <span data-count="56">l</span>et* arg = optio<span data-count="56">n</span> None (ppat_single &lt;<span data-count="56">*</span> ws &gt;&gt;<span data-count="56">|</span> Option.some) in
-  <span data-count="56">r</span>eturn (Pat_construct (Ident name, arg))
+  <span data-count="10">l</span>et* name = parse_constr_name in
+  <span data-count="550">l</span>et* arg = optio<span data-count="550">n</span> None (ppat_single &lt;<span data-count="550">*</span> ws &gt;&gt;<span data-count="550">|</span> Option.some) in
+  <span data-count="550">r</span>eturn (Pat_construct (Ident name, arg))
 
 let parse_single_pat ppat =
-  <span data-count="3">f</span>ix (fun ppat_single -&gt;
-      <span data-count="3">w</span>s
-      *&gt; choic<span data-count="3">e</span>
+  <span data-count="10">f</span>ix (fun ppat_single -&gt;
+      <span data-count="10">w</span>s
+      *&gt; choic<span data-count="10">e</span>
            [ parse_pat_any
            ; parse_pat_var
            ; parse_pat_const
-           ; parse_pat_lis<span data-count="3">t</span> ppat
-           ; parse_pat_const<span data-count="3">r</span> ppat_single
-           ; cha<span data-count="3">r</span> '(' *<span data-count="3">&gt;</span> ppat &lt;<span data-count="3">*</span> ws &lt;<span data-count="3">*</span> cha<span data-count="3">r</span> ')' ] )
+           ; parse_pat_lis<span data-count="10">t</span> ppat
+           ; parse_pat_const<span data-count="10">r</span> ppat_single
+           ; cha<span data-count="10">r</span> '(' *<span data-count="10">&gt;</span> ppat &lt;<span data-count="10">*</span> ws &lt;<span data-count="10">*</span> cha<span data-count="10">r</span> ')' ] )
 
 (* ======= Operators parsing ======= *)
 
@@ -292,53 +292,53 @@ let peek_infix_op =
   let peek_1char_op =
     peek_char_fail
     &gt;&gt;= function
-    | <span data-count="12">'</span>|' -&gt;
+    | <span data-count="354">'</span>|' -&gt;
         return {op= OpOr; op_length= 1}
-    | <span data-count="25">'</span>,' -&gt;
+    | <span data-count="1032">'</span>,' -&gt;
         return {op= OpTuple; op_length= 1}
-    | <span data-count="337">_</span> -&gt;
+    | <span data-count="3740">_</span> -&gt;
         fail "not a pattern infix operator"
   in
-  <span data-count="3">l</span>et peek_2chars_op =
-    peek_strin<span data-count="3">g</span> 2
+  <span data-count="10">l</span>et peek_2chars_op =
+    peek_strin<span data-count="10">g</span> 2
     &gt;&gt;= function
-    | <span data-count="13">"</span>::" -&gt;
+    | <span data-count="102">"</span>::" -&gt;
         return {op= OpList; op_length= 2}
-    | <span data-count="320">_</span> -&gt;
+    | <span data-count="3634">_</span> -&gt;
         fail "not a pattern infix operator"
   in
-  <span data-count="3">p</span>eek_1char_op &lt;|<span data-count="3">&gt;</span> peek_2chars_op
+  <span data-count="10">p</span>eek_1char_op &lt;|<span data-count="10">&gt;</span> peek_2chars_op
 
 (** Set precedence and associativity for infix operators *)
 let get_infix_binding_power = function
-  | <span data-count="12">O</span>pOr -&gt;
+  | <span data-count="354">O</span>pOr -&gt;
       (1, 2)
-  | <span data-count="25">O</span>pTuple -&gt;
+  | <span data-count="1032">O</span>pTuple -&gt;
       (5, 4)
-  | <span data-count="13">O</span>pList -&gt;
+  | <span data-count="102">O</span>pList -&gt;
       (11, 10)
 
 let parse_pattern =
   let fold_infix acc (op, rhs) =
-    <span data-count="44">m</span>atch op with
-    | <span data-count="8">O</span>pOr -&gt;
+    <span data-count="1318">m</span>atch op with
+    | <span data-count="186">O</span>pOr -&gt;
         Pat_or (acc, rhs)
-    | <span data-count="23">O</span>pTuple -&gt; (
+    | <span data-count="1030">O</span>pTuple -&gt; (
       match rhs with
-      | <span data-count="1">P</span>at_tuple tl -&gt;
+      | <span data-count="601">P</span>at_tuple tl -&gt;
           Pat_tuple (acc :: tl)
-      | <span data-count="22">_</span> -&gt;
+      | <span data-count="429">_</span> -&gt;
           Pat_tuple [acc; rhs] )
-    | <span data-count="13">O</span>pList -&gt;
+    | <span data-count="102">O</span>pList -&gt;
         Pat_construct (Ident "::", Some (Pat_tuple [acc; rhs]))
   in
-  fi<span data-count="3">x</span> (fun ppat -&gt;
-      <span data-count="3">p</span>arse_operators
+  fi<span data-count="10">x</span> (fun ppat -&gt;
+      <span data-count="10">p</span>arse_operators
         ~infix:
           { peek= peek_infix_op
           ; get_binding_power= get_infix_binding_power
           ; fold= fold_infix }
-        (parse_single_pa<span data-count="3">t</span> ppat) )
+        ~parse_oprnd:(parse_single_pa<span data-count="10">t</span> ppat) () )
 </code></pre>
       </div>
     </div>
