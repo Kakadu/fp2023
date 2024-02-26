@@ -30,6 +30,13 @@ let b_div =
       if y = 0 then fail @@ EvalError.exc "Division_by_zero"
       else return @@ Val.Val_const (Const_integer (x / y)) )
 
+let b_mod =
+  make_2args_fun (fun x y ->
+      let* x = extract_int x in
+      let* y = extract_int y in
+      if y = 0 then fail @@ EvalError.exc "Division_by_zero"
+      else return @@ Val.Val_const (Const_integer (x mod y)) )
+
 let b_minus x =
   let* x = extract_int x in
   return @@ Val.Val_const (Const_integer (-x))
@@ -189,6 +196,11 @@ let env_functions : (Ident.t * Scheme.t * builtin) list =
       @> (Ty.int, eff @@ Eff.Label.exn div_by_zero)
       @> Ty.int
     , b_div )
+  ; ( id "mod"
+    , no_vars @@ (Ty.int, Eff_total)
+      @> (Ty.int, eff @@ Eff.Label.exn div_by_zero)
+      @> Ty.int
+    , b_mod )
   ; (id "~-", sc_int_unary, b_minus)
   ; (id "~+", sc_int_unary, return)
   ; (id "<", sc_int_cmp, b_int_lt)
