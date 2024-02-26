@@ -12,28 +12,33 @@ open Constraints
 module SolveMonad : sig
   include Monad.S
 
-  val run : 'a t -> ('a, TyError.t) result
+  val run : rec_types:bool -> 'a t -> ('a, TyError.t) result
 
   module Solve : sig
     val fresh_var : Var.t t
-    val fresh_weak : Var.t t
+    val rec_types : bool t
     val fail : TyError.t -> 'a t
   end
 end = struct
-  include MakeESMonad (TyError) (Int)
+  module StateT = struct
+    type t = {count: int; rec_types: bool}
+  end
 
-  let run m = run m 0 |> Result.map ~f:fst
+  include MakeESMonad (TyError) (StateT)
+
+  let run ~rec_types m = run m {count= 0; rec_types} |> Result.map ~f:fst
 
   module Solve = struct
-    let fresh_name =
-      let* count = State.get in
-      let* () = State.put (count + 1) in
+    let fresh_var =
+      let* ({count} as st) = State.get in
+      let* () = State.put {st with count= count + 1} in
       (* "solve" prefix is important to avoid collision
          with vars created in gen monad *)
-      return ("solve" ^ Int.to_string count)
+      return @@ Var.Var ("solve" ^ Int.to_string count)
 
-    let fresh_var = fresh_name >>| fun name -> Var.Var name
-    let fresh_weak = fresh_name >>| fun name -> Var.Var_weak name
+    let rec_types =
+      let* {rec_types} = State.get in
+      return rec_types
 
     let fail = Error.fail
   end
@@ -96,8 +101,10 @@ module Unify = struct
     | ty1, ty2 when Ty.equal ty1 ty2 ->
         return Sub.empty
     | Ty.Ty_var var, ty | ty, Ty.Ty_var var ->
-        if occurs_check_ty var ty then fail @@ OccursInTy (var, ty)
-        else return @@ Sub.singleton_ty var ty
+        let* rec_types = rec_types in
+        if rec_types || not (occurs_check_ty var ty) then
+          return @@ Sub.singleton_ty var ty
+        else fail @@ OccursInTy (var, ty)
     | Ty_arr (l1, eff1, r1), Ty_arr (l2, eff2, r2) -> (
         let* sub1 = unify_many [l1; r1] [l2; r2] unify_eff_flag in
         match unify_eff_flag with
@@ -204,7 +211,7 @@ let activevars ?(incl_impl_inst = true) ?(incl_effeq_late = true)
   ConstrSet.fold ~init:VarSet.empty ~f:(fun acc constr ->
       VarSet.union acc (activevars_single constr) )
 
-let solve cs =
+let solve ~rec_types cs =
   let rec solve' cs =
     let next_solvable =
       ConstrSet.find_map cs ~f:(fun constr ->
@@ -277,4 +284,4 @@ let solve cs =
           let* ty' = instantiate sc in
           solve' @@ ConstrSet.add cs (TyEqConstr (ty, ty', Unify_eff)) )
   in
-  SolveMonad.run @@ solve' cs
+  SolveMonad.run ~rec_types @@ solve' cs

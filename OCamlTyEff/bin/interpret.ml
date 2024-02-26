@@ -85,8 +85,8 @@ let ty_error_to_string = function
   | NotImplemented desc ->
       Format.sprintf {|"%s" is not yet implemented :(|} desc
 
-let infer_item ty_env str_item =
-  match Infer.infer_structure_item ty_env str_item with
+let infer_item ~rec_types ty_env str_item =
+  match Infer.infer_structure_item ~rec_types ty_env str_item with
   | Ok res ->
       return res
   | Error err ->
@@ -125,11 +125,11 @@ let print_value ~term eval_env name (Scheme.Forall (_, ty)) value =
   in
   LTerm.fprintlf term "%s : %s%s" name ty_str val_str
 
-let interpret_exn ~term env str () =
+let interpret_exn ~rec_types ~term env str () =
   let* structure = parse str in
   Lwt_list.fold_left_s
     (fun (ty_env, eval_env) str_item ->
-      let* ty_env, bound_vars, sc = infer_item ty_env str_item in
+      let* ty_env, bound_vars, sc = infer_item ~rec_types ty_env str_item in
       let* eval_env, _, value = eval_item ~term eval_env str_item in
 
       let* () =
@@ -152,8 +152,8 @@ let interpret_exn ~term env str () =
       return (ty_env, eval_env) )
     env structure
 
-let interpret ~term env str =
-  Lwt.catch (interpret_exn ~term env str) (function
+let interpret ?(rec_types = false) ~term env str =
+  Lwt.catch (interpret_exn ~rec_types ~term env str) (function
     | ParseError ->
         let* () =
           LTerm.fprintls term (eval [B_fg err_color; S "Syntax error"; E_fg])

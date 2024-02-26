@@ -13,4 +13,4 @@ val generalize : VarSet.t -> Ty.t -> Scheme.t
 (** Quantify all variables except weak ones
     and those present in passed varset *)
 
-val solve : ConstrSet.t -> (Sub.t, TyError.t) result
+val solve : rec_types:bool -> ConstrSet.t -> (Sub.t, TyError.t) result

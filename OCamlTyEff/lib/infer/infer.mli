@@ -10,7 +10,8 @@ open Ast
 module TyError : module type of TyError
 
 val infer_structure_item :
-     Env.t
+     ?rec_types:bool
+  -> Env.t
   -> structure_item
   -> (Env.t * Ident.t list * Scheme.t option, TyError.t) result
 (**

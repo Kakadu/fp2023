@@ -19,6 +19,7 @@ module Command = struct
     | Help  (** Show help message *)
     | Quit  (** Quit REPL *)
     | Break  (** Ctrl-c *)
+    | Rectypes  (** Switch recursive types *)
     | Load of string  (** Evaluate source code from file *)
     | Eval of string  (** Evaluate the given string *)
 
@@ -27,6 +28,8 @@ module Command = struct
         Some Help
     | str when String.equal str ":q" ->
         Some Quit
+    | str when String.equal str ":rectypes" ->
+        Some Rectypes
     | str when String.is_prefix str ~prefix:":load" ->
         let filepath =
           String.lstrip @@ String.chop_prefix_exn str ~prefix:":load"
@@ -102,11 +105,15 @@ let help_message =
     ; E_fg
     ; S " - load source code from file\n"
     ; B_fg lcyan
+    ; S ":rectypes"
+    ; E_fg
+    ; S " - (experimental) enable / disable recursive types\n"
+    ; B_fg lcyan
     ; S ":q"
     ; E_fg
     ; S " - quit" ]
 
-let rec loop term history ((ty_env, _) as env) =
+let rec loop ~rec_types term history ((ty_env, _) as env) =
   let completion_ids =
     Types.Env.idents ty_env |> List.map ~f:(fun (Ident.Ident name) -> name)
   in
@@ -114,28 +121,36 @@ let rec loop term history ((ty_env, _) as env) =
   rl#run
   >>= function
   | Eval str ->
-      let* env = Interpret.interpret ~term env str in
-      loop term history env
+      let* env = Interpret.interpret ~rec_types ~term env str in
+      loop ~rec_types term history env
   | Load filepath ->
       let* env =
         try
           let code = In_channel.read_all filepath in
-          Interpret.interpret ~term env code
+          Interpret.interpret ~rec_types ~term env code
         with Sys_error err ->
           let* () =
             LTerm.fprintls term @@ eval [B_fg lcyan; S "Error. "; S err; E_fg]
           in
           return env
       in
-      loop term history env
+      loop ~rec_types term history env
+  | Rectypes ->
+      let rec_types = not rec_types in
+      let msg =
+        Format.sprintf "Recursive types %s" (if rec_types then "on" else "off")
+      in
+      let* () = LTerm.fprintl term msg in
+
+      loop ~rec_types term history env
   | Help ->
       let* () = LTerm.fprintls term help_message in
-      loop term history env
+      loop ~rec_types term history env
   | Break ->
       let* () =
         LTerm.fprintls term @@ eval [B_fg lcyan; S "Interrupted"; E_fg]
       in
-      loop term history env
+      loop ~rec_types term history env
   | Quit ->
       return ()
 
@@ -152,7 +167,7 @@ let main =
 
   let* () =
     Lwt.catch
-      (fun () -> loop term history Interpret.std_env)
+      (fun () -> loop ~rec_types:false term history Interpret.std_env)
       (function LTerm_read_line.Interrupt -> return () | exn -> fail exn)
   in
 

@@ -12,7 +12,7 @@ open Gen
 open Solve
 open CloseOver
 
-let infer_structure_item env str_item =
+let infer_structure_item ?(rec_types = false) env str_item =
   let ( let* ) x f = Result.bind x ~f in
   let fail = Result.fail in
   let return = Result.return in
@@ -75,7 +75,7 @@ let infer_structure_item env str_item =
   in
 
   (* solve constraints *)
-  let* sub = solve @@ ConstrSet.union gen_cs env_cs in
+  let* sub = solve ~rec_types @@ ConstrSet.union gen_cs env_cs in
   let env = Sub.apply_to_env sub env in
   let is_ref = Eff.contains (Sub.apply_to_eff sub eff) (Eff.Label.ref ()) in
 
