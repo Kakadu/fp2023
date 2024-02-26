@@ -178,10 +178,15 @@ let instantiate (Scheme.Forall (quantified, ty)) =
   in
   return @@ Sub.apply_to_ty subst ty
 
-let activevars ?(incl_impl_inst = true) ?(incl_effeq_late = true) =
+let activevars ?(incl_impl_inst = true) ?(incl_effeq_late = true)
+    ?(incl_tyeq_noeff = true) =
   let activevars_single = function
-    | Constr.TyEqConstr (ty1, ty2, _) ->
+    | Constr.TyEqConstr (ty1, ty2, Unify_eff) ->
         VarSet.union (Ty.vars ty1) (Ty.vars ty2)
+    | TyEqConstr (ty1, ty2, Dont_unify_eff) when incl_tyeq_noeff ->
+        VarSet.union (Ty.vars ty1) (Ty.vars ty2)
+    | TyEqConstr (_, _, Dont_unify_eff) ->
+        VarSet.empty
     | EffEqConstr (eff1, eff2, EffEq_Normal) ->
         VarSet.union (Eff.vars eff1) (Eff.vars eff2)
     | EffEqConstr (eff1, eff2, EffEq_Late) when incl_effeq_late ->
@@ -217,7 +222,7 @@ let solve cs =
             when VarSet.is_empty
                  @@ VarSet.inter
                       (activevars ~incl_impl_inst:false ~incl_effeq_late:false
-                         rest )
+                         ~incl_tyeq_noeff:false rest )
                       (VarSet.union (Ty.vars t1) (Ty.vars t2)) ->
               ok
           | EffEqConstr (eff1, eff2, EffEq_Late)
