@@ -19,7 +19,11 @@ let process_program input =
       if Result.is_ok interpret_result
       then (
         let _, vl = Result.get_ok interpret_result in
-        List.iter (fun value -> pp_value Format.std_formatter value; Format.pp_print_flush Format.std_formatter ()) vl)
+        List.iter
+          (fun value ->
+            pp_value Format.std_formatter value;
+            Format.pp_print_flush Format.std_formatter ())
+          vl)
       else printf "Interpretation error\n")
     else printf "Typecheck error\n"
   | _ -> printf "Parsing error\n"
@@ -122,8 +126,7 @@ let%expect_test _ =
   let f = 5 / 4
   let q = true = true
        |};
-  [%expect
-    {| 
+  [%expect {| 
     false true 1 false
        |}]
 ;;
