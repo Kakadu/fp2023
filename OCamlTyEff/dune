@@ -5,3 +5,6 @@
  (release
   (flags
    (:standard -warn-error -A -w -58))))
+
+(cram
+ (deps ./bin/repl.exe))
