@@ -189,9 +189,9 @@ let activevars ?(incl_impl_inst = true) ?(incl_effeq_late = true)
         VarSet.empty
     | EffEqConstr (eff1, eff2, EffEq_Normal) ->
         VarSet.union (Eff.vars eff1) (Eff.vars eff2)
-    | EffEqConstr (eff1, eff2, EffEq_Late) when incl_effeq_late ->
+    | EffEqConstr (eff1, eff2, EffEq_Late2) when incl_effeq_late ->
         VarSet.union (Eff.vars eff1) (Eff.vars eff2)
-    | EffEqConstr (_, _, EffEq_Late) ->
+    | EffEqConstr (_, _, EffEq_Late2) ->
         VarSet.empty
     | ImplInstConstr (ty1, mset, ty2, eff2) when incl_impl_inst ->
         VarSet.union_list
@@ -225,12 +225,12 @@ let solve cs =
                          ~incl_tyeq_noeff:false rest )
                       (VarSet.union (Ty.vars t1) (Ty.vars t2)) ->
               ok
-          | EffEqConstr (eff1, eff2, EffEq_Late)
-          (* solve after all other constraints on [eff1] & [eff2] are solved *)
+          | EffEqConstr (_, eff2, EffEq_Late2)
+          (* solve after all other constraints on [eff2] are solved *)
             when VarSet.is_empty
                  @@ VarSet.inter
                       (activevars ~incl_effeq_late:false rest)
-                      (VarSet.union (Eff.vars eff1) (Eff.vars eff2)) ->
+                      (Eff.vars eff2) ->
               ok
           | ImplInstConstr (_, mset, t2, eff2)
           (* solve after all other (excluding late EffEqs)

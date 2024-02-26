@@ -10,7 +10,7 @@ module Constr = struct
     type unify_eff = Unify_eff | Dont_unify_eff
     [@@deriving ord, sexp_of, show {with_path= false}]
 
-    type eff_eq = EffEq_Normal | EffEq_Late
+    type eff_eq = EffEq_Normal | EffEq_Late2
     [@@deriving ord, sexp_of, show {with_path= false}]
 
     type t =

@@ -10,7 +10,9 @@ module Constr : sig
     | Unify_eff  (** Unify effects in types *)
     | Dont_unify_eff  (** Do not unify effects in types *)
 
-  type eff_eq = EffEq_Normal | EffEq_Late
+  type eff_eq =
+    | EffEq_Normal
+    | EffEq_Late2  (** Late with respect to the 2nd effect *)
 
   type t =
     | TyEqConstr of Ty.t * Ty.t * unify_eff
@@ -21,7 +23,7 @@ module Constr : sig
     | EffEqConstr of Eff.t * Eff.t * eff_eq
         (** [EffEqConstr(eff1, eff2, eff_eq)] reflects that eff1 and eff2 should be unified. 
             If [eff_eq] == [EffEq_Late] then constraint will be solved
-            after all other constraints for eff1 and eff2 are solved. *)
+            after all other constraints for eff2 are solved. *)
     | ExplInstConstr of Ty.t * Scheme.t
         (** [ExplInstConstr(ty, sc)] states that ty has to be a generic instance of sc *)
     | ImplInstConstr of Ty.t * VarSet.t * Ty.t * Eff.t

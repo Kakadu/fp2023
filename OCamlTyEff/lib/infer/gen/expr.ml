@@ -80,7 +80,7 @@ let rec gen : expression -> (As.t * Ty.t * Eff.t) GenMonad.t = function
         add_constrs
           [ ty_pat == ty1
           ; (* unify eff1 & eff2 only after ImplInstConstrs with eff1 are solved *)
-            EffEqConstr (eff1, eff2, EffEq_Late) ]
+            EffEqConstr (eff2, eff1, EffEq_Late2) ]
       in
       let* mset = varset in
       let constrs =
@@ -128,7 +128,7 @@ let rec gen : expression -> (As.t * Ty.t * Eff.t) GenMonad.t = function
       let* () =
         add_constrs
           [ (* unify eff1 & eff2 only after ImplInstConstrs with eff1 are solved *)
-            EffEqConstr (eff1, eff2, EffEq_Late) ]
+            EffEqConstr (eff2, eff1, EffEq_Late2) ]
       in
       let* mset = varset in
       let* () =
@@ -228,7 +228,7 @@ let rec gen : expression -> (As.t * Ty.t * Eff.t) GenMonad.t = function
               add_constrs
                 [ ty_case == ty_res
                 ; (* unify eff_case & eff_e only after ImplInstConstrs with eff_e are solved *)
-                  EffEqConstr (eff_case, eff_e, EffEq_Late) ]
+                  EffEqConstr (eff_case, eff_e, EffEq_Late2) ]
             in
             return (acc ++ as_case) )
       in
@@ -266,7 +266,7 @@ let rec gen : expression -> (As.t * Ty.t * Eff.t) GenMonad.t = function
                 ++ (as_rhs -- Pattern.BoundVars.idents bounds_pat)
               , Eff.Eff_row (Eff.Label.exn exn_type, eff_acc) ) )
       in
-      let* () = add_constrs [EffEqConstr (eff_e, eff, EffEq_Late)] in
+      let* () = add_constrs [EffEqConstr (eff_e, eff, EffEq_Late2)] in
 
       return (as_e ++ as_cases, ty_e, eff_res)
   | Exp_function cases ->

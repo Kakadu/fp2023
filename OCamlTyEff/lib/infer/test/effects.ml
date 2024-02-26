@@ -148,7 +148,7 @@ let%expect_test _ =
     | Some a -> raise Exc1
     | None -> print_string "42" |} ;
   [%expect
-    {| foo: 'a 'b 'e. ('a -[exn _Exc1, console | 'e]-> 'b option) -> 'a -[exn _Exc1, console | 'e]-> unit |}]
+    {| foo: 'a 'b 'e. ('a -[console, exn _Exc1 | 'e]-> 'b option) -> 'a -[console, exn _Exc1 | 'e]-> unit |}]
 
 let%expect_test _ =
   run
@@ -251,7 +251,7 @@ let%expect_test _ =
     let a = ref None in a := Some 1; a := Some true |} ;
   [%expect {|
     int option ref
-    (UnificationFailTy (int, bool)) |}]
+    (UnificationFailTy (bool, int)) |}]
 
 let%expect_test _ =
   run
@@ -319,3 +319,14 @@ let%expect_test _ =
       | hd :: tl -> let () = f hd in list_iter f tl
     |} ;
   [%expect {| list_iter: 'a 'e. ('a -'e-> unit) -> 'a list -'e-> unit |}]
+
+let%expect_test _ =
+  run
+    {|
+      let map_cps f l =
+        let rec helper l k =
+          match l with [] -> k [] | hd :: tl -> helper tl (fun tl -> k (f hd :: tl))
+        in
+        helper l id
+    |} ;
+  [%expect {| map_cps: 'a 'b 'e. ('a -'e-> 'b) -> 'a list -'e-> 'b list |}]
