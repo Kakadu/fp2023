@@ -191,3 +191,36 @@ let%expect_test "parse_type_decl" =
             { id = (Ident "Cons"); arg = (Some 'a * 'a list) }]
           })
       ] |}]
+
+let%expect_test _ =
+  run {| id let a = 1 in a |} ;
+  [%expect
+    {|
+    [(Str_eval (Exp_ident (Ident "id")));
+      (Str_eval
+         (Exp_let (Nonrecursive,
+            [{ pat = (Pat_var (Ident "a"));
+               expr = (Exp_constant (Const_integer 1)) }
+              ],
+            (Exp_ident (Ident "a")))))
+      ] |}]
+
+let%expect_test _ =
+  run {| ! let a = 1 in a |} ; [%expect {|
+    syntax error |}]
+
+let%expect_test _ =
+  run {| 1 + let a = 1 in a |} ;
+  [%expect
+    {|
+    [(Str_eval
+        (Exp_apply (
+           (Exp_apply ((Exp_ident (Ident "+")), (Exp_constant (Const_integer 1))
+              )),
+           (Exp_let (Nonrecursive,
+              [{ pat = (Pat_var (Ident "a"));
+                 expr = (Exp_constant (Const_integer 1)) }
+                ],
+              (Exp_ident (Ident "a"))))
+           )))
+      ] |}]

@@ -88,7 +88,10 @@ type ('oprnd, 'op) infix_helpers =
 val parse_operators :
      ?prefix:('oprnd, 'prefix_op) prefix_helpers
   -> ?infix:('oprnd, 'infix_op) infix_helpers
-  -> 'oprnd t
+  -> parse_oprnd:'oprnd t
+  -> ?parse_prefix_rhs:('prefix_op -> 'oprnd t)
+  -> ?parse_infix_rhs:('infix_op -> 'oprnd t)
+  -> unit
   -> 'oprnd t
 (**
   Parse expressions with infix and prefix operators.

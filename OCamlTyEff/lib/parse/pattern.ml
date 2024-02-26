@@ -101,4 +101,4 @@ let parse_pattern =
           { peek= peek_infix_op
           ; get_binding_power= get_infix_binding_power
           ; fold= fold_infix }
-        (parse_single_pat ppat) )
+        ~parse_oprnd:(parse_single_pat ppat) () )

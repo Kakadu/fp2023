@@ -77,4 +77,4 @@ let parse_ty =
           { peek= peek_infix_op
           ; get_binding_power= get_infix_binding_power
           ; fold= fold_infix }
-        (parse_app pty) )
+        ~parse_oprnd:(parse_app pty) () )

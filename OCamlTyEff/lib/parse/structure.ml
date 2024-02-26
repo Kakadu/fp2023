@@ -37,12 +37,13 @@ let parse_type_params =
 (** [type ('a, 'b) ab = A | B of T1 ...] *)
 let parse_str_type =
   let pipe = ws *> char '|' *> ws in
+  let skip_pipe = ws *> option () (char '|' *> return ()) *> ws in
   string "type"
   *> lift3
        (fun params name variants -> Str_type {id= Ident name; params; variants})
        (ws *> option [] parse_type_params)
        (ws *> parse_lowercase_ident)
-       (ws *> string "=" *> ws *> sep_by1 pipe parse_con_decl)
+       (ws *> string "=" *> skip_pipe *> sep_by1 pipe parse_con_decl)
 
 (** [exception Some_exc of string] *)
 let parse_str_exception =

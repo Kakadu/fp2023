@@ -198,7 +198,7 @@ let get_prefix_binding_power = function
   | POpMinus ->
       95 (* a bit lower than application precedence *)
 
-let parse_single_exp pexp =
+let parse_single_exp ?(disable_let = false) pexp =
   ws
   *> choice
        [ parse_exp_ident
@@ -209,7 +209,7 @@ let parse_single_exp pexp =
        ; parse_exp_fun (pexp None)
        ; parse_exp_list (pexp (Some IOpSeq))
          (* disable ; as it's a separator in lists *)
-       ; parse_exp_let (pexp None)
+       ; (if disable_let then fail "let disabled" else parse_exp_let (pexp None))
        ; parse_exp_ite (pexp None) (pexp (Some IOpSeq))
          (* disable ; in [then] and [else] blocks to maintain correct precedence *)
        ; parse_exp_match (pexp None) (pexp None)
@@ -262,6 +262,13 @@ let parse_expression =
             { parse= parse_prefix_op
             ; get_binding_power= get_prefix_binding_power
             ; apply= apply_prefix }
-          (parse_single_exp pexp) )
+          ~parse_oprnd:(parse_single_exp pexp)
+          ~parse_prefix_rhs:(fun _ -> parse_single_exp ~disable_let:true pexp)
+          ~parse_infix_rhs:(function
+            | IOpApply ->
+                parse_single_exp ~disable_let:true pexp
+            | _ ->
+                parse_single_exp pexp )
+          () )
   in
   pexp None

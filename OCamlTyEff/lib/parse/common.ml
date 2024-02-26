@@ -217,20 +217,22 @@ type ('oprnd, 'op) infix_helpers =
   ; get_binding_power: 'op -> int * int
   ; fold: 'oprnd -> 'op * 'oprnd -> 'oprnd }
 
-let parse_operators ?prefix ?infix parse_operand =
+let parse_operators ?prefix ?infix ~parse_oprnd
+    ?(parse_prefix_rhs = fun _ -> parse_oprnd)
+    ?(parse_infix_rhs = fun _ -> parse_oprnd) () =
   (*
      Pratt parsing
      https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html
   *)
-  let rec helper min_bp =
+  let rec helper min_bp poprnd =
     let* lhs =
       (* check if {prefix} supplied *)
-      Option.value_map prefix ~default:parse_operand ~f:(fun prefix ->
+      Option.value_map prefix ~default:poprnd ~f:(fun prefix ->
           option None (ws *> prefix.parse >>| Option.some)
           >>= (* check if prefix op parsed successfully *)
-          Option.value_map ~default:parse_operand ~f:(fun op ->
+          Option.value_map ~default:poprnd ~f:(fun op ->
               let r_bp = prefix.get_binding_power op in
-              let* rhs = helper r_bp in
+              let* rhs = helper r_bp (parse_prefix_rhs op) in
               return (prefix.apply op rhs) ) )
     in
     (* check if {infix} supplied *)
@@ -241,8 +243,8 @@ let parse_operators ?prefix ?infix parse_operand =
            if l_bp < min_bp then fail "found op with lower binding power"
            else
              advance op_length
-             *> let* rhs = helper r_bp in
+             *> let* rhs = helper r_bp (parse_infix_rhs op) in
                 return (op, rhs) )
         >>| List.fold_left ~init:lhs ~f:infix.fold )
   in
-  helper 0
+  helper 0 parse_oprnd
