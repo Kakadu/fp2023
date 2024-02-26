@@ -34,11 +34,10 @@ let b_minus x =
   let* x = extract_int x in
   return @@ Val.Val_const (Const_integer (-x))
 
-let b_lt = make_bin_fun_bool ( < )
-let b_le = make_bin_fun_bool ( <= )
-let b_gt = make_bin_fun_bool ( > )
-let b_ge = make_bin_fun_bool ( >= )
-let b_eq = make_bin_fun_bool ( = )
+let b_int_lt = make_bin_fun_bool ( < )
+let b_int_le = make_bin_fun_bool ( <= )
+let b_int_gt = make_bin_fun_bool ( > )
+let b_int_ge = make_bin_fun_bool ( >= )
 
 (* ======= IO ======= *)
 let b_print_string value =
@@ -59,7 +58,90 @@ let b_print_int value =
   let () = printer @@ Format.sprintf "%i" num in
   return Val.unit
 
+(* ======= Conversions ======= *)
+let b_char_of_int value =
+  let* int = extract_int value in
+  match Char.of_int int with
+  | Some ch ->
+      return @@ Val.Val_const (Const_char ch)
+  | None ->
+      fail @@ EvalError.exc "Invalid_argument"
+
+let b_int_to_string value =
+  let* int = extract_int value in
+  return @@ Val.Val_const (Const_string (Int.to_string int))
+
+let b_string_of_char value =
+  let* ch = extract_char value in
+  return @@ Val.Val_const (Const_string (String.of_char ch))
+
+let b_int_of_string value =
+  let* str = extract_string value in
+  try return @@ Val.Val_const (Const_integer (Int.of_string str))
+  with Failure _ -> fail @@ EvalError.exc "Invalid_argument"
+
+let b_string_to_list value =
+  let list arg1 arg2 =
+    Val.Val_con (Ident "::", Some (Val_tuple [arg1; arg2]))
+  in
+  let empty_list = Val.Val_con (Ident "[]", None) in
+  let* str = extract_string value in
+  return
+  @@ List.fold_right (String.to_list str) ~init:empty_list ~f:(fun ch acc ->
+         list (Val_const (Const_char ch)) acc )
+
 (* ======= Misc =======  *)
+let b_eq =
+  let rec helper (x : Val.t) (y : Val.t) =
+    match (x, y) with
+    | Val_const x, Val_const y ->
+        Ast.equal_constant x y
+    | Val_con (id1, Some arg1), Val_con (id2, Some arg2)
+      when Ident.equal id1 id2 ->
+        helper arg1 arg2
+    | Val_con (id1, None), Val_con (id2, None) ->
+        Ident.equal id1 id2
+    | Val_tuple vals1, Val_tuple vals2 -> (
+      match List.for_all2 vals1 vals2 ~f:helper with
+      | Ok res ->
+          res
+      | Unequal_lengths ->
+          false )
+    | Val_ref link1, Val_ref link2 ->
+        Env.Link.equal link1 link2
+    | _ ->
+        false
+  in
+
+  make_2args_fun (fun x y ->
+      return @@ if helper x y then Val.bool_true else Val.bool_false )
+
+let b_string_compare =
+  make_2args_fun (fun x y ->
+      let* x = extract_string x in
+      let* y = extract_string y in
+      return @@ Val.Val_const (Const_integer (String.compare x y)) )
+
+let b_string_join =
+  make_2args_fun (fun x y ->
+      let* x = extract_string x in
+      let* y = extract_string y in
+      return @@ Val.Val_const (Const_string (x ^ y)) )
+
+let b_char_code value =
+  let* ch = extract_char value in
+  return @@ Val.Val_const (Const_integer (Char.to_int ch))
+
+let b_char_is_alpha value =
+  let* ch = extract_char value in
+  return @@ if Char.is_alpha ch then Val.bool_true else Val.bool_false
+
+let b_char_is_whitespace value =
+  let* ch = extract_char value in
+  return @@ if Char.is_whitespace ch then Val.bool_true else Val.bool_false
+
+let b_unreachable _ = fail @@ EvalError.exc "Unreachable"
+
 let b_raise error = fail @@ Exception error
 
 let b_ref value =
@@ -89,12 +171,16 @@ let b_deref = function
 
 (* ======= Environments ======= *)
 let sc_arith = sc "int -> int -> int"
-let sc_unary = sc "int -> int"
-let sc_compar = sc "int -> int -> bool"
+let sc_int_unary = sc "int -> int"
+let sc_int_cmp = sc "int -> int -> bool"
 
 let div_by_zero = Ty.Ty_con (Ident "_Division_by_zero", [])
+let invalid_arg = Ty.Ty_con (Ident "_Invalid_argument", [])
 
-let env_arith : (Ident.t * Scheme.t * builtin) list =
+let eff_console = eff @@ Eff.Label.console ()
+let eff_ref = eff @@ Eff.Label.ref ()
+
+let env_functions : (Ident.t * Scheme.t * builtin) list =
   [ (id "+", sc_arith, b_add)
   ; (id "-", sc_arith, b_sub)
   ; (id "*", sc_arith, b_mul)
@@ -103,25 +189,35 @@ let env_arith : (Ident.t * Scheme.t * builtin) list =
       @> (Ty.int, eff @@ Eff.Label.exn div_by_zero)
       @> Ty.int
     , b_div )
-  ; (id "~-", sc_unary, b_minus)
-  ; (id "~+", sc_unary, return)
-  ; (id "=", sc_compar, b_eq)
-  ; (id "<", sc_compar, b_lt)
-  ; (id ">", sc_compar, b_gt)
-  ; (id ">=", sc_compar, b_ge)
-  ; (id "<=", sc_compar, b_le) ]
-
-let eff_console = eff @@ Eff.Label.console ()
-let eff_ref = eff @@ Eff.Label.ref ()
-
-let env_functions : (Ident.t * Scheme.t * builtin) list =
-  [ ( id "print_string"
+  ; (id "~-", sc_int_unary, b_minus)
+  ; (id "~+", sc_int_unary, return)
+  ; (id "<", sc_int_cmp, b_int_lt)
+  ; (id ">", sc_int_cmp, b_int_gt)
+  ; (id ">=", sc_int_cmp, b_int_ge)
+  ; (id "<=", sc_int_cmp, b_int_le)
+  ; (id "=", sc "'a -> 'a -> bool", b_eq)
+  ; (id "string_compare", sc "string -> string -> int", b_string_compare)
+  ; (id "string_of_char", sc "char -> string", b_string_of_char)
+  ; ( id "int_of_string"
+    , no_vars @@ (Ty.string, eff @@ Eff.Label.exn invalid_arg) @> Ty.int
+    , b_int_of_string )
+  ; ( id "char_of_int"
+    , no_vars @@ (Ty.int, eff @@ Eff.Label.exn invalid_arg) @> Ty.char
+    , b_char_of_int )
+  ; (id "string_to_list", sc "string -> char list", b_string_to_list)
+  ; (id "int_to_string", sc "int -> string", b_int_to_string)
+  ; (id "^", sc "string -> string -> string", b_string_join)
+  ; (id "char_code", sc "char -> int", b_char_code)
+  ; (id "char_is_alpha", sc "char -> bool", b_char_is_alpha)
+  ; (id "char_is_whitespace", sc "char -> bool", b_char_is_whitespace)
+  ; ( id "print_string"
     , no_vars @@ (Ty.string, eff_console) @> Ty.unit
     , b_print_string )
   ; ( id "print_endline"
     , no_vars @@ (Ty.string, eff_console) @> Ty.unit
     , b_print_endline )
   ; (id "print_int", no_vars @@ (Ty.int, eff_console) @> Ty.unit, b_print_int)
+  ; (id "unreachable", sc "unit -> 'a", b_unreachable)
   ; ( id "raise"
     , Forall
         ( VarSet.of_list [Var_ty (Var "a"); Var_ty (Var "b")]
@@ -156,9 +252,7 @@ let ty_env =
        ~f:(fun acc (id, arity) -> Map.set acc ~key:id ~data:arity ) )
 
 let ty_env, eval_env =
-  List.fold
-    (List.concat [env_arith; env_functions])
-    ~init:(ty_env, EvalEnv.empty)
+  List.fold env_functions ~init:(ty_env, EvalEnv.empty)
     ~f:(fun (ty_env, eval_env) (id, sc, builtin) ->
       let new_ty_env = TyEnv.set ty_env ~key:id ~data:sc in
       let new_eval_bounds =

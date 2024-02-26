@@ -41,6 +41,12 @@ let extract_string = function
   | _ ->
       fail TypeError
 
+let extract_char = function
+  | Val.Val_const (Const_char x) ->
+      return x
+  | _ ->
+      fail TypeError
+
 let make_2args_fun f (value : Val.t) =
   return @@ Val.Val_fun (Fun_builtin (f value))
 

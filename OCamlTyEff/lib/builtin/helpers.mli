@@ -39,6 +39,9 @@ val extract_int : Val.t -> int EvalMonad.t
 val extract_string : Val.t -> string EvalMonad.t
 (** Extract string from value *)
 
+val extract_char : Val.t -> char EvalMonad.t
+(** Extract char from value *)
+
 val make_2args_fun : (Val.t -> Val.t -> Val.t EvalMonad.t) -> builtin
 (** Convert function of 2 args to built-in *)
 

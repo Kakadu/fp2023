@@ -58,8 +58,10 @@ end = struct
         fprintf ppf "(%a)" pp_values values
     | Val_fun _ ->
         fprintf ppf "<fun>"
-    | Val_con (Ident name, Some value) ->
-        fprintf ppf "%s %a" name (pp env) value
+    | Val_con (Ident name, Some (Val_con (_, Some _) as arg)) ->
+        fprintf ppf "%s (%a)" name (pp env) arg
+    | Val_con (Ident name, Some arg) ->
+        fprintf ppf "%s %a" name (pp env) arg
     | Val_con (Ident name, None) ->
         fprintf ppf "%s" name
     | Val_ref link ->
@@ -106,6 +108,8 @@ and Env : sig
   module Link : sig
     (** Link to a value *)
     type t
+
+    val equal : t -> t -> bool
   end
 
   (** Evaluation environment *)
@@ -125,13 +129,9 @@ and Env : sig
   val deref : t -> Link.t -> Val.t option
   (** Get value by link *)
 end = struct
-  module Link : sig
-    type t = Link of int
-
-    include Comparator.S with type t := t
-  end = struct
+  module Link = struct
     module T = struct
-      type t = Link of int [@@deriving ord, sexp_of]
+      type t = Link of int [@@deriving eq, ord, sexp_of]
     end
 
     include T
