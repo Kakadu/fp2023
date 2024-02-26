@@ -76,17 +76,28 @@ let infer_structure_item ?(rec_types = false) env str_item =
 
   (* solve constraints *)
   let* sub = solve ~rec_types @@ ConstrSet.union gen_cs env_cs in
-  let env = Sub.apply_to_env sub env in
+
   let is_ref = Eff.contains (Sub.apply_to_eff sub eff) (Eff.Label.ref ()) in
+  let sub = if is_ref then Sub.map_ty sub ~f:weaken else sub in
+
+  (*
+     XXX: weak variables in substitution are not renamed yet.
+     thus replacing one weak var in env with another from sub
+     will result in not-renamed weak var in env.
+     such var will be renamed every time it's displayed
+     incrementing weak_counter when not needed.
+
+     e.g. [let a = ref None;; a := None]
+     on every [a;;] weak_counter will be incremented
+  *)
+  let env = Sub.apply_to_env sub env in
 
   (* add new bounds to type environment *)
   let env =
     BoundVars.fold bound_vars ~init:env ~f:(fun ~key:id ~data:tv acc ->
         let ty = Sub.apply_to_ty sub (Ty_var tv) in
         let ty, new_counter =
-          close_over
-            (if is_ref then weaken ty else ty)
-            ~weak_counter:(Env.get_weak_counter acc)
+          close_over ty ~weak_counter:(Env.get_weak_counter acc)
         in
         let acc = Env.set_weak_counter acc new_counter in
         Env.set acc ~key:id ~data:ty )
@@ -99,9 +110,7 @@ let infer_structure_item ?(rec_types = false) env str_item =
     | Some ty ->
         let ty = Sub.apply_to_ty sub ty in
         let ty, counter =
-          close_over
-            (if is_ref then weaken ty else ty)
-            ~weak_counter:(Env.get_weak_counter env)
+          close_over ty ~weak_counter:(Env.get_weak_counter env)
         in
         (Some ty, Env.set_weak_counter env counter)
   in

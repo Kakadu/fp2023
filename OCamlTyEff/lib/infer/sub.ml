@@ -99,3 +99,5 @@ let compose s1 s2 =
       | Eff eff ->
           Eff (apply_to_eff s1 eff) ) )
     s1
+
+let map_ty ~f = Map.map ~f:(function Ty ty -> Ty (f ty) | Eff _ as eff -> eff)

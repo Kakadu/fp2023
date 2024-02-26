@@ -330,3 +330,20 @@ let%expect_test _ =
         helper l id
     |} ;
   [%expect {| map_cps: 'a 'b 'e. ('a -'e-> 'b) -> 'a list -'e-> 'b list |}]
+
+let%expect_test _ =
+  run
+    {|
+      let a = ref None;;
+      a := None; a;;
+      a;; a;;
+      a := Some 5;; a
+    |} ;
+  [%expect
+    {|
+    a: '_weak1 option ref
+    '_weak2 option ref
+    '_weak3 option ref
+    '_weak4 option ref
+    unit
+    int option ref |}]

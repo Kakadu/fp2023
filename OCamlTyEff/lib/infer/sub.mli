@@ -27,3 +27,5 @@ val apply_to_constrs : t -> ConstrSet.t -> ConstrSet.t
 (** Apply substitution to a set of constraints *)
 
 val compose : t -> t -> t
+
+val map_ty : f:(Ty.t -> Ty.t) -> t -> t
