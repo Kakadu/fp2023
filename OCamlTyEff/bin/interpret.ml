@@ -65,6 +65,8 @@ let ty_error_to_string = function
       "Recursive effect rows"
   | PatVarBoundSeveralTimes (Ident name) ->
       Format.sprintf "Variable %s is bound several times" name
+  | VarsMismatchOrPattern (Ident name) ->
+      Format.sprintf "Variable %s must occur on both sides of | pattern" name
   | ConstructorArityMismatch (Ident name) ->
       Format.sprintf
         "The constructor %s expects more/less arguments than applied here" name

@@ -270,3 +270,19 @@ let%expect_test _ =
   [%expect {|
     Foo: foo
     (TypeArityMismatch (Ident "foo")) |}]
+
+let%expect_test _ =
+  run {| function Some x | Some y -> 0 |} ;
+  [%expect {| (VarsMismatchOrPattern (Ident "x")) |}]
+
+let%expect_test _ =
+  run {| function Some x | Some (Some x) -> 1 |} ;
+  [%expect {| (OccursInTy ('solve5, 'solve5 option)) |}]
+
+let%expect_test _ =
+  run {| function Some 1 | Some "42" -> 0 |} ;
+  [%expect {| (UnificationFailTy (int, string)) |}]
+
+let%expect_test _ =
+  run {| function 1 | 2 -> 0 |} ;
+  [%expect {| int -> int |}]

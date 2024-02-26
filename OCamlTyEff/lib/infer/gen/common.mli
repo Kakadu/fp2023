@@ -57,6 +57,7 @@ module GenMonad : sig
     val extend_varset : Var.t list -> 'a t -> 'a t
 
     val add_constrs : Constr.t list -> unit t
+    val add_constrs_set : ConstrSet.t -> unit t
     val add_con_assumpt : Ident.t -> ConArityAssumpt.arity -> unit t
 
     val fresh_var : Var.t t

@@ -60,5 +60,9 @@ let rec eval pat value =
           return Bounds.empty
       | _ ->
           fail match_failure )
-  | Pat_or _ ->
-      fail @@ NotImplemented "or pattern"
+  | Pat_or (pat1, pat2) ->
+      catch (eval pat1 value) (function
+        | Exception (Val_con (Ident "Match_failure", None)) ->
+            eval pat2 value
+        | err ->
+            fail err )

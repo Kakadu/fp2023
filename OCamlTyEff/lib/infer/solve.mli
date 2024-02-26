@@ -6,8 +6,6 @@ open! Base
 open Types
 open Constraints
 
-module Sub : module type of Sub
-
 val weaken : Ty.t -> Ty.t
 (** Convert all variables in a type to weak ones *)
 

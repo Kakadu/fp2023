@@ -69,6 +69,8 @@ module GenMonad = struct
         m
 
     let add_constrs constrs = Writer.write @@ ConstrSet.of_list constrs
+    let add_constrs_set = Writer.write
+
     let add_con_assumpt con_id arity =
       let* ({con_assumpt; _} as st) = State.get in
       (* check for arity mismatch *)

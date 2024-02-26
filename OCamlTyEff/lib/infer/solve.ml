@@ -2,8 +2,6 @@
 
 (** SPDX-License-Identifier: MIT *)
 
-module Sub = Sub
-
 open! Base
 open Monads.Std
 open Misc

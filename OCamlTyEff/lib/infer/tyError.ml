@@ -16,6 +16,7 @@ type t =
   | OccursInEff of Var.t * Eff.t
   | RecursiveEffRows
   | PatVarBoundSeveralTimes of Ident.t
+  | VarsMismatchOrPattern of Ident.t
   | ConstructorArityMismatch of Ident.t
   | NotVarLHSRec
   | NotAllowedRHSRec of expression

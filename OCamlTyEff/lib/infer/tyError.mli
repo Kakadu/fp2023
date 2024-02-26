@@ -18,6 +18,8 @@ type t =
   | RecursiveEffRows  (** Recursive effect rows *)
   | PatVarBoundSeveralTimes of Ident.t
       (** Pattern(s) bound the same variable several times. E.g. `let x, x = ..` *)
+  | VarsMismatchOrPattern of Ident.t
+      (** Sides of | pattern bound different variables. E.g. `Some x | Some y` *)
   | ConstructorArityMismatch of Ident.t
       (** Constructor is not applied (`Some`), or applied when not needed (`None 1`) *)
   | NotVarLHSRec
