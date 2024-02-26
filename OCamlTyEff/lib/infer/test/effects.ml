@@ -136,7 +136,7 @@ let%expect_test _ =
     {|
     My_exc1: _My_exc1 exception
     My_exc2: _My_exc2 exception
-    catch: 'a 'e. ('a -[exn _My_exc1, exn _My_exc2, exn _Exc1, console | 'e]-> int) -> 'a -[console | 'e]-> int |}]
+    catch: 'a 'e. ('a -[console, exn _My_exc1, exn _My_exc2, exn _Exc1 | 'e]-> int) -> 'a -[console | 'e]-> int |}]
 
 let%expect_test _ =
   run {| print_string |} ; [%expect {| string -[console]-> unit |}]
@@ -169,6 +169,10 @@ let%expect_test _ =
     let baz x = if x then (id raise_Exc1) else (id print_string) in
     baz true |} ;
   [%expect {| string -[console, exn _Exc1]-> unit |}]
+
+let%expect_test _ =
+  run {| fun () -> try (raise Division_by_zero) with Division_by_zero -> 0 |} ;
+  [%expect {| unit -> int |}]
 
 let%expect_test _ =
   run

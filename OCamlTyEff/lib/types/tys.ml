@@ -80,6 +80,8 @@ end = struct
   let rec vars = function
     | Eff_var var ->
         VarSet.singleton_eff var
+    | Eff_row (Label (_, Some ty), eff_rest) ->
+        VarSet.union (Ty.vars ty) (vars eff_rest)
     | Eff_row (_, eff_rest) ->
         vars eff_rest
     | Eff_total ->

@@ -266,7 +266,7 @@ let rec gen : expression -> (As.t * Ty.t * Eff.t) GenMonad.t = function
                 ++ (as_rhs -- Pattern.BoundVars.idents bounds_pat)
               , Eff.Eff_row (Eff.Label.exn exn_type, eff_acc) ) )
       in
-      let* () = add_constrs [eff_e === eff] in
+      let* () = add_constrs [EffEqConstr (eff_e, eff, EffEq_Late)] in
 
       return (as_e ++ as_cases, ty_e, eff_res)
   | Exp_function cases ->
