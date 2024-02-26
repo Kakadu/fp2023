@@ -1,14 +1,21 @@
-val free_vars : string Ast.t -> string list
-val is_free_in : string -> string Ast.t -> bool
+(** Copyright 2023-2024, Kuarni, AlexShmak *)
 
-(** Smart constructors *)
+(** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-val var : 'a -> 'a Ast.t
-val abs : 'a -> 'a Ast.t -> 'a Ast.t
-val app : 'a Ast.t -> 'a Ast.t -> 'a Ast.t
+type 'a t = ('a, string) Result.t
 
-module type MONAD_FAIL = sig
-  include Base.Monad.S2
+val ( >>= ) : 'a t -> ('a -> 'b t) -> 'b t
+val ( >>| ) : 'a t -> ('a -> 'b) -> 'b t
+val ( <?> ) : 'a t -> string -> 'a t
+val ( let* ) : 'a t -> ('a -> 'b t) -> 'b t
+val ( let+ ) : 'a t -> ('a -> 'b) -> 'b t
+val return : 'a -> 'a t
+val uerror : string -> 'a t
+val map : ('a -> 'b t) -> 'a list -> 'b list t
+val fold_left : ('a -> 'b -> 'a t) -> 'a -> 'b list -> 'a t
+val fold_left_map : ('a -> 'b -> ('a * 'c) t) -> 'a -> 'b list -> ('a * 'c list) t
+val fold_left_s : ('a -> 'b -> 'a t) -> ('a -> bool) -> 'a -> 'b list -> 'a t
+val both : ('a -> 'b t) -> 'a -> 'a -> ('b * 'b) t
+val both_ext : ('a -> 'b -> ('a * 'c) t) -> 'a -> 'b -> 'b -> ('a * ('c * 'c)) t
 
-  val fail : 'e -> ('a, 'e) t
-end
+module IntMap : Map.S with type key = int

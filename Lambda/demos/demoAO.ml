@@ -80,13 +80,16 @@ module _ = struct
     @@ ite (Var "N") one (app (app mul (app (var "self") (app pred (var "N")))) (var "N"))
   ;;
 
+  let _ = fact
+
   let zed =
     let hack = abs "x" (app f (abs "y" (app (app x x) y))) in
     abs "f" (app hack hack)
   ;;
 
-  let () = test ao_strat @@ zero |> fun lam -> Format.printf "%a\n%!" Pprintast.pp lam
-  let () = test ao_strat @@ one |> fun lam -> Format.printf "%a\n%!" Pprintast.pp lam
+  let _ = zed
+  let () = test ao_strat @@ zero |> Format.printf "%a\n%!" Pprintast.pp
+  let () = test ao_strat @@ one |> Format.printf "%a\n%!" Pprintast.pp
   let _ = test ao_strat @@ app plus @@ app one one |> Format.printf "%a\n%!" Pprintast.pp
 
   let () =

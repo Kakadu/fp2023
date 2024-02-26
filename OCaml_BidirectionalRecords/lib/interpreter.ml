@@ -8,7 +8,7 @@ type error =
   | DivisionByZero
   | UnboundValue of string
   | TypeMismatch
-  | NotImplemented 
+  | NotImplemented
   | PatternMatchingFailed
 
 (** different kinds of values that can exist in the interpreted language *)
@@ -51,11 +51,12 @@ module Interpret (M : Monad) = struct
   open Env (M)
 
   let eval_const = function
-  | Int i -> return (VInt i)
-  | Bool b -> return (VBool b)
-  | Char c -> return (VChar c)
-  | String s -> return (VString s)
-  | Unit -> return VUnit
+    | Int i -> return (VInt i)
+    | Bool b -> return (VBool b)
+    | Char c -> return (VChar c)
+    | String s -> return (VString s)
+    | Unit -> return VUnit
+  ;;
 
   let eval_binop op l r =
     match op, l, r with
@@ -90,7 +91,8 @@ module Interpret (M : Monad) = struct
     let* v = find env x in
     match v with
     | VFun (p, e, env) -> return (VFun (p, e, extend x v env))
-    | _ -> return v  
+    | _ -> return v
+  ;;
 
   let eval_expr =
     let rec helper env = function
@@ -111,35 +113,33 @@ module Interpret (M : Monad) = struct
         let* v1 = helper env e1 in
         let* v2 = helper env e2 in
         (match v1 with
-        (** application is applicable only for functions *)
          | VFun (x, e, env) ->
-          (match eval_pattern env (x, v2) with
+           (match eval_pattern env (x, v2) with
             | Some env -> helper env e
             | None -> fail PatternMatchingFailed)
-        | _ -> fail TypeMismatch)
-      | ELet ((NonRec, _, e1), EUnit) -> helper env e1 
+         | _ -> fail TypeMismatch)
+      | ELet ((NonRec, _, e1), EUnit) -> helper env e1
       | ELet ((Rec, _, e1), EUnit) -> helper env e1
-      | ELet ((NonRec, x, e1), e2) -> 
-        let* v1 = helper env e1 in 
+      | ELet ((NonRec, x, e1), e2) ->
+        let* v1 = helper env e1 in
         let env' = extend x v1 env in
         let* v2 = helper env' e2 in
         return v2
       | ELet ((Rec, x, e1), e2) ->
-         let* v1 = helper env e1 in
-         let v2 =
-           match v1 with
-           | VFun (x, e, _) -> VFun (x, e, env)
-           | _ -> v1
-         in
-         let env' = extend x v2 env in
-         helper env' e2
+        let* v1 = helper env e1 in
+        let v2 =
+          match v1 with
+          | VFun (x, e, _) -> VFun (x, e, env)
+          | _ -> v1
+        in
+        let env' = extend x v2 env in
+        helper env' e2
       | _ -> fail NotImplemented
     in
     helper
   ;;
 
-  let interpret_expr expr = eval_expr empty expr 
-  ;;
+  let interpret_expr expr = eval_expr empty expr
 end
 
 module R = struct
@@ -155,8 +155,8 @@ let run_expr_interpreter = InterpretResult.interpret_expr
 (** module for test typing *)
 module PP = struct
   open Format
-  let pp_value ppf =
-    function
+
+  let pp_value ppf = function
     | VInt x -> fprintf ppf "%d" x
     | VBool x -> fprintf ppf "%b" x
     | VUnit -> fprintf ppf "()"
@@ -165,11 +165,10 @@ module PP = struct
     | _ -> fprintf ppf "TODO"
   ;;
 
-  let pp_error ppf : error -> unit =
-    function
+  let pp_error ppf : error -> unit = function
     | DivisionByZero -> fprintf ppf "Division by zero"
     | UnboundValue s -> fprintf ppf "Unbound value %s" s
-    | NotImplemented -> fprintf ppf "Not implemented" 
+    | NotImplemented -> fprintf ppf "Not implemented"
     | TypeMismatch -> fprintf ppf "Operator and operand type mismatch"
     | PatternMatchingFailed -> fprintf ppf "Mismatch between function and arguments"
   ;;

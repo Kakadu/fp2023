@@ -1,30 +1,48 @@
-(** Copyright 2021-2023, Kakadu and contributors *)
+(** Copyright 2023-2024, Kuarni, AlexShmak *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-open Base
-open Ast
+type 'a t = ('a, string) Result.t
 
-(* TODO: use a set instead of list *)
-let list_remove x = List.filter ~f:(fun a -> not (String.equal a x))
+let ( >>= ) = Result.bind
+let return = Result.ok
+let uerror = Result.error
+let ( >>| ) x f = x >>= fun r -> return @@ f r
+let ( let* ) = ( >>= )
+let ( let+ ) = ( >>| )
 
-let free_vars =
-  let rec helper acc = function
-    | Var s -> s :: acc
-    | Abs (s, l) -> acc @ list_remove s (helper [] l)
-    | App (l, r) -> helper (helper acc r) l
-  in
-  helper []
+let ( <?> ) x str =
+  match x with
+  | Result.Ok _ -> x
+  | Result.Error a -> Result.Error (str ^ " > " ^ a)
 ;;
 
-let is_free_in x term = List.mem (free_vars term) x ~equal:String.equal
-let var x = Var x
-let abs x l = Abs (x, l)
-let app l r = App (l, r)
+let rec map f = function
+  | [] -> return []
+  | h :: tl -> f h >>= fun c -> map f tl >>| fun lst -> c :: lst
+;;
 
-(* TODO: rework this *)
-module type MONAD_FAIL = sig
-  include Base.Monad.S2
+let rec fold_left f acc = function
+  | [] -> return acc
+  | h :: tl -> f acc h >>= fun acc -> fold_left f acc tl
+;;
 
-  val fail : 'e -> ('a, 'e) t
-end
+let rec fold_left_map f acc = function
+  | [] -> return (acc, [])
+  | h :: tl ->
+    f acc h >>= fun (acc, c) -> fold_left_map f acc tl >>| fun (acc, lst) -> acc, c :: lst
+;;
+
+let rec fold_left_s f stop acc = function
+  | [] -> return acc
+  | h :: tl ->
+    f acc h >>= fun acc -> if stop acc then return acc else fold_left_s f stop acc tl
+;;
+
+let both f a b = f a >>= fun x -> f b >>= fun y -> return (x, y)
+
+let both_ext f acc a b =
+  f acc a >>= fun (acc, x) -> f acc b >>= fun (acc, y) -> return (acc, (x, y))
+;;
+
+module IntMap = Map.Make (Int)

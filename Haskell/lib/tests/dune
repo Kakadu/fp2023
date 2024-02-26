@@ -1,0 +1,8 @@
+(library
+ (name tests)
+ (libraries haskellLib)
+ (preprocess
+  (pps ppx_expect ppx_deriving.show))
+ (instrumentation
+  (backend bisect_ppx))
+ (inline_tests))

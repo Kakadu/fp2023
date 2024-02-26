@@ -1,16 +1,16 @@
-open Angstrom
 open Python_Lib.Parser
 open Python_Lib.Ast
 
 let test_parse =
   let res =
     parser
-      "\n\
-       def factorial(x):\n\
-      \    if (x == 1):\n\
-      \        return 1\n\
-      \    else:\n\
-      \        return (x * factorial(x - 1))"
+      {|
+def factorial(x):
+    if (x == 1):
+        return 1
+    else:
+        return (x * factorial(x - 1))
+|}
   in
   match res with
   | Ok v -> List.iter (fun e -> print_endline (show_statement e)) v
