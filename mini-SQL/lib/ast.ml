@@ -1,11 +1,16 @@
+(** Copyright 2023-2024, Zaytsev Dmitriy *)
+
+(** SPDX-License-Identifier: CC0-1.0 *)
+
+type name = string [@@deriving show { with_path = false }]
+
 type value =
-  | Name of string
+  | Name of name
   | String of string
   | Digit of int
+  | Float_Digit of float
   | Bool of bool
 [@@deriving show { with_path = false }]
-
-type unary_op = Not [@@deriving show { with_path = false }]
 
 type bin_op =
   (* Arithmetic *)
@@ -19,12 +24,14 @@ type bin_op =
   | Or
   (* Compare *)
   | Equal
-  | NotEqual
-  | GreaterThan
-  | LessThan
-  | LessThanOrEqual
-  | GreaterThanOrEqual
+  | Not_Equal
+  | Greater_Than
+  | Less_Than
+  | Less_Than_Or_Equal
+  | Greater_Than_Or_Equal
 [@@deriving show { with_path = false }]
+
+type unary_op = Not [@@deriving show { with_path = false }]
 
 type expr =
   | Const of value
@@ -32,15 +39,31 @@ type expr =
   | Binary_operation of bin_op * expr * expr
 [@@deriving show { with_path = false }]
 
-type select_expr =
-  | All_Columns
-  | Expr of expr
+type select_statement =
+  | Asterisk
+  | Expression of expr
 [@@deriving show { with_path = false }]
 
-type command =
-  | Select of
-      { exprs : select_expr list
-      ; table : string
-      ; condition : expr option
+type join_type =
+  | Inner
+  | Left
+  | Right
+  | Full
+[@@deriving show { with_path = false }]
+
+type from_statement =
+  | Table of name
+  | Join of
+      { jtype : join_type
+      ; left : from_statement
+      ; table : name
+      ; on : expr
       }
+[@@deriving show { with_path = false }]
+
+type request =
+  { select : select_statement list
+  ; from : from_statement
+  ; where : expr option
+  }
 [@@deriving show { with_path = false }]

@@ -1,0 +1,5 @@
+(library
+ (name ast)
+ (public_name Lua.ast)
+ (preprocess
+  (pps ppx_deriving.show)))

@@ -10,3 +10,16 @@
 
 (cram
  (deps %{bin:demo_fact}))
+
+(executable
+ (name interpreter)
+ (public_name interpreter)
+ (modules interpreter)
+ (libraries Python.Lib stdio)
+ (preprocess
+  (pps ppx_show ppx_deriving.eq))
+ (instrumentation
+  (backend bisect_ppx)))
+
+(cram
+ (deps %{bin:interpreter}))

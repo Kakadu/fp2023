@@ -17,10 +17,10 @@
 (package
  (name mini-SQL)
  (synopsis "An interpreter for SQL")
- (description
-  "Mini-SQL interpreter. Language includes keywords: SELECT, JOIN, WHERE.")
+ (description "Mini-SQL interpreter. Language includes keywords: SELECT, JOIN, WHERE.")
  (version 1)
  (depends
+  csv
   dune
   angstrom
   (ppx_inline_test :with-test)

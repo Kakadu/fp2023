@@ -1,0 +1,23 @@
+(executable
+ (name demoParser)
+ (modules demoParser)
+ (public_name asm.demoParser)
+ (libraries asm.Parser stdio)
+ (instrumentation
+  (backend bisect_ppx)))
+
+(executable
+ (name demoInterpreter)
+ (modules demoInterpreter)
+ (public_name asm.demoInterpreter)
+ (libraries asm.Parser asm.Interpreter stdio)
+ (instrumentation
+  (backend bisect_ppx)))
+
+(cram
+ (deps
+  ./demoParser.exe
+  ./demoInterpreter.exe
+  ./sources/fib.asm
+  ./sources/scalar.asm
+  ./sources/matrix.asm))

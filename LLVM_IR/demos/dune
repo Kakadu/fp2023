@@ -2,8 +2,77 @@
  (name demoParse)
  (modules demoParse)
  (public_name demoParse)
- (libraries llvm_lib stdio))
+ (libraries parser stdio))
+
+(executable
+ (name demoInterpret)
+ (modules demoInterpret)
+ (public_name demoInterpret)
+ (libraries main stdio))
+
+(rule
+ (target sum_args_patched.ll)
+ (deps ./attachments/sum_args.ll)
+ (action
+  (system "sed 's/;!//' %{deps} > %{target}")))
+
+(rule
+ (target sum_args.elf)
+ (deps sum_args_patched.ll)
+ (action
+  (system "clang-15 %{deps} -o  %{target}")))
+
+(rule
+ (target fac_arg_patched.ll)
+ (deps ./attachments/fac_arg.ll)
+ (action
+  (system "sed 's/;!//' %{deps} > %{target}")))
+
+(rule
+ (target fac_arg.elf)
+ (deps fac_arg_patched.ll)
+ (action
+  (system "clang-15 %{deps} -o  %{target}")))
+
+(rule
+ (target triangle_square_patched.ll)
+ (deps ./attachments/triangle_square.ll)
+ (action
+  (system "sed 's/;!//' %{deps} > %{target}")))
+
+(rule
+ (target triangle_square.elf)
+ (deps triangle_square_patched.ll)
+ (action
+  (system "clang-15 %{deps} -o  %{target}")))
+
+(rule
+ (target vec_sum_args_patched.ll)
+ (deps ./attachments/vec_sum_args.ll)
+ (action
+  (system "sed 's/;!//' %{deps} > %{target}")))
+
+(rule
+ (target vec_sum_args.elf)
+ (deps vec_sum_args_patched.ll)
+ (action
+  (system "clang-15 %{deps} -o  %{target}")))
 
 (cram
  (applies_to parsingTests)
- (deps ./demoParse.exe ./attachments/fac.ll))
+ (deps ./demoParse.exe ./attachments/fac.ll ./attachments/test.ll))
+
+(cram
+ (applies_to interpretTests)
+ (deps
+  ./demoInterpret.exe
+  ./attachments/simple_ssa_fail.ll
+  ./attachments/fac.ll
+  ./attachments/sum_args.ll
+  sum_args.elf
+  ./attachments/triangle_square.ll
+  triangle_square.elf
+  ./attachments/fac_arg.ll
+  fac_arg.elf
+  ./attachments/vec_sum_args.ll
+  vec_sum_args.elf))
