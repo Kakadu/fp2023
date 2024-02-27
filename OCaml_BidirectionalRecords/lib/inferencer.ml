@@ -257,8 +257,7 @@ let infer_pattern env = function
     Subst.empty, fv, env'
 ;;
 
-let infer_binop_type op =
-  match op with
+let infer_binop_type = function
   | Eq | Neq | Gt | Gtq | Lt | Ltq -> fresh_var >>| fun fv -> fv, tbool
   | Plus | Minus | Mult | Div | Mod -> return (tint, tint)
   | And | Or -> return (tbool, tbool)
