@@ -5,6 +5,6 @@
  (modules Ast Parser Errorinter Typedtree Interpret Inferencer)
  (libraries base angstrom)
  (preprocess
-  (pps ppx_expect ppx_deriving.show))
+  (pps ppx_expect ppx_deriving.show ppx_deriving.eq))
  (instrumentation
   (backend bisect_ppx)))
