@@ -63,7 +63,6 @@ end = struct
       | _ -> fail MatchFailure
     in
     function
-    | _, VCases _ -> fail MatchFailure
     | Wild, _ -> return []
     | Const c, app_arg ->
       (match c, app_arg with
@@ -71,10 +70,9 @@ end = struct
        | CInt i1, VInt i2 when i1 = i2 -> return []
        | CString s1, VString s2 when String.equal s1 s2 -> return []
        | CNil, VNone -> return []
-       | _ -> fail MatchFailure)
+       | _ -> fail NotImplemented)
     | Var var, app_arg -> return [ var, app_arg ]
-    | Tuple pt, VTuple vt -> bind_pat_list pt vt
-    | List pl, VList vl -> bind_pat_list pl vl
+    | Tuple pl, VTuple vl | List pl, VList vl -> bind_pat_list pl vl
     | Case (acase_id, acase_args), value_to_match ->
       let* apat = find_val env acase_id in
       (match apat with
@@ -84,12 +82,17 @@ end = struct
            eval apat_expr (add_binds (add_binds empty apat_env) bind_matching_val)
          in
          (match eval_res_apat with
-          | VCases (_, opt_res) ->
+          | VCases (a, opt_res) when String.( = ) a acase_id ->
             (match opt_res, acase_args with
              | Some v, res :: [] -> bind_fun_params (res, v)
+             | None, res :: [] -> bind_fun_params (res, VNone)
              | None, _ -> return []
              | _ -> fail MatchFailure)
-          | _ -> fail MatchFailure)
+          | VInt _ ->
+            (match apat_arg with
+             | Var name -> return [ name, eval_res_apat ]
+             | _ -> fail Unreachable)
+          | _ -> fail NotImplemented)
        | _ -> fail Unreachable)
     | _ -> fail MatchFailure
 
@@ -103,15 +106,20 @@ end = struct
     | IfExpr (cond, e_then, e_else) -> inter_if cond e_then e_else env
     | FunExpr (pat, expr) -> return @@ VFun (pat, expr, Map.to_alist env)
     | AppExpr (func, arg) -> inter_app func arg env
-    | LetExpr (bool, name, body) -> inter_let bool name body env
+    | LetExpr (is_rec, name, body) -> inter_let is_rec name body env
     | MatchExpr (expr_match, cases) -> inter_match expr_match cases env
     | CaseExpr (constr_id, args) -> inter_case constr_id args env
+    | LetActExpr (act_name, body) -> inter_act_let act_name body env
 
   and inter_const = function
     | CBool b -> VBool b
     | CInt i -> VInt i
     | CString s -> VString s
     | CNil -> VNone
+
+  and inter_act_let pat_name body env =
+    let* fun_pat = eval body env in
+    return @@ VLetAPat (pat_name, fun_pat)
 
   and inter_list l env =
     let* eval_list = all (List.map l ~f:(fun expr -> eval expr env)) in
@@ -148,19 +156,12 @@ end = struct
       eval e env
     | _ -> fail TypeError
 
-  and inter_let bool name body env =
-    if bool
+  and inter_let is_rec name body env =
+    if is_rec
     then
-      if List.length name == 1
-      then
-        let* func_body = eval body env in
-        return @@ VLetWAPat (List.hd_exn name, func_body)
-      else fail Unreachable
-    else if List.length name == 1
-    then eval body env
-    else
-      let* fun_pat = eval body env in
-      return @@ VLetAPat (name, fun_pat)
+      let* func_body = eval body env in
+      return @@ VLetWAPat (name, func_body)
+    else eval body env
 
   and inter_app func arg env =
     let* fun_to_apply = eval func env in
@@ -219,9 +220,10 @@ end = struct
             | h :: tl -> add_bind (eval_env_apat env tl) h eval_h
           in
           match h with
-          | LetExpr (_, f, _) when not @@ String.equal (List.hd_exn f) "_" ->
-            add_bind env (List.hd_exn f) eval_h
-          | LetExpr (_, fl, _) -> eval_env_apat env fl
+          | LetExpr (_, f, _) -> add_bind env f eval_h
+          | LetActExpr (fl, _) when List.length fl = 1 ->
+            add_bind env (List.hd_exn fl) eval_h
+          | LetActExpr (fl, _) -> eval_env_apat env fl
           | _ -> env
         in
         helper eval_env tl
@@ -244,18 +246,7 @@ module InterpretResult = Interpret (struct
 
 let eval_program = InterpretResult.eval_program
 
-let run input =
-  match Parser.main_parse input with
-  | Ok ast ->
-    (match eval_program ast with
-     | Ok res -> pp_value Format.std_formatter res
-     | Error e -> Format.printf "(Error while interpreting): %a" pp_error e)
-  | Error e -> Format.printf "(Error while parsing): %s" e
-;;
-
 (* TESTS INTERPRET *)
-
-(* cram тесты добавлю немного позже *)
 
 (*  7 + 10 + 4 * 50 + 19 / 3 + (10 - 5) *)
 let test =
@@ -275,27 +266,23 @@ let test =
 let%test _ =
   match eval_program test with
   | Ok (VInt 228) -> true
-  | Error t ->
-    Format.printf "%a" pp_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
+  | _ -> false
 ;;
 
-(* 5 = 5 *)
-
-let test = [ BinExpr (Eq, ConstExpr (CInt 5), ConstExpr (CInt 5)) ]
+let test = [ BinExpr (Div, ConstExpr (CInt 5), ConstExpr (CInt 0)) ]
 
 let%test _ =
   match eval_program test with
-  | Ok (VBool true) -> true
-  | Error t ->
-    Format.printf "%a" pp_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
+  | Error Division_by_zero -> true
+  | _ -> false
+;;
+
+let test = [ BinExpr (Mod, ConstExpr (CInt 5), ConstExpr (CInt 0)) ]
+
+let%test _ =
+  match eval_program test with
+  | Error Division_by_zero -> true
+  | _ -> false
 ;;
 
 (*[1;2;3]*)
@@ -305,16 +292,20 @@ let test = [ ListExpr [ ConstExpr (CInt 1); ConstExpr (CInt 2); ConstExpr (CInt 
 let%test _ =
   match eval_program test with
   | Ok (VList [ VInt 1; VInt 2; VInt 3 ]) -> true
-  | Error t ->
-    Format.printf "%a\n" pp_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
+  | _ -> false
+;;
+
+(* 5 = 5 *)
+
+let test = [ BinExpr (Eq, ConstExpr (CInt 5), ConstExpr (CInt 5)) ]
+
+let%test _ =
+  match eval_program test with
+  | Ok (VBool true) -> true
+  | _ -> false
 ;;
 
 (*(1, [2;3;4], 5)*)
-
 let test =
   [ TupleExpr
       [ ConstExpr (CInt 1)
@@ -327,12 +318,7 @@ let test =
 let%test _ =
   match eval_program test with
   | Ok (VTuple [ VInt 1; VList [ VInt 2; VInt 3; VInt 4 ]; VInt 5 ]) -> true
-  | Error t ->
-    Format.printf "%a\n" pp_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
+  | _ -> false
 ;;
 
 (*
@@ -342,7 +328,7 @@ let%test _ =
 *)
 
 let test =
-  [ LetExpr (false, [ "f" ], FunExpr (Var "x", BinExpr (Add, VarExpr "x", VarExpr "x")))
+  [ LetExpr (false, "f", FunExpr (Var "x", BinExpr (Add, VarExpr "x", VarExpr "x")))
   ; AppExpr (VarExpr "f", ConstExpr (CInt 25))
   ]
 ;;
@@ -350,12 +336,7 @@ let test =
 let%test _ =
   match eval_program test with
   | Ok (VInt 50) -> true
-  | Error t ->
-    Format.printf "%a\n" pp_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
+  | _ -> false
 ;;
 
 (* Varis *)
@@ -365,12 +346,7 @@ let test = [ CaseExpr ("Varis", []) ]
 let%test _ =
   match eval_program test with
   | Ok (VCases ("Varis", None)) -> true
-  | Error t ->
-    Format.printf "%a\n" pp_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
+  | _ -> false
 ;;
 
 let test = [ ConstExpr (CBool true) ]
@@ -378,12 +354,7 @@ let test = [ ConstExpr (CBool true) ]
 let%test _ =
   match eval_program test with
   | Ok (VBool true) -> true
-  | Error t ->
-    Format.printf "%a\n" pp_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
+  | _ -> false
 ;;
 
 (* (fun x -> x*x) 5 *)
@@ -397,12 +368,16 @@ let test =
 let%test _ =
   match eval_program test with
   | Ok (VInt 25) -> true
-  | Error t ->
-    Format.printf "%a\n" pp_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
+  | _ -> false
+;;
+
+let test = [ ConstExpr CNil ]
+let test = [ ConstExpr (CString "pomogite") ]
+
+let%test _ =
+  match eval_program test with
+  | Ok (VString "pomogite") -> true
+  | _ -> false
 ;;
 
 (*
@@ -414,7 +389,7 @@ let%test _ =
 let test =
   [ LetExpr
       ( true
-      , [ "fact" ]
+      , "fact"
       , FunExpr
           ( Var "n"
           , IfExpr
@@ -433,12 +408,7 @@ let test =
 let%test _ =
   match eval_program test with
   | Ok (VInt 120) -> true
-  | Error t ->
-    Format.printf "%a" pp_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
+  | _ -> false
 ;;
 
 (*
@@ -448,7 +418,7 @@ let%test _ =
 *)
 
 let test =
-  [ LetExpr (false, [ "x" ], ConstExpr (CInt 5))
+  [ LetExpr (false, "x", ConstExpr (CInt 5))
   ; AppExpr (FunExpr (Var "y", BinExpr (Mul, VarExpr "y", VarExpr "y")), VarExpr "x")
   ]
 ;;
@@ -456,12 +426,7 @@ let test =
 let%test _ =
   match eval_program test with
   | Ok (VInt 25) -> true
-  | Error t ->
-    Format.printf "%a" pp_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
+  | _ -> false
 ;;
 
 (*
@@ -473,7 +438,7 @@ let%test _ =
 let test =
   [ LetExpr
       ( false
-      , [ "check" ]
+      , "check"
       , FunExpr
           ( Var "input"
           , MatchExpr
@@ -488,98 +453,162 @@ let test =
 let%test _ =
   match eval_program test with
   | Ok (VInt 10) -> true
-  | Error t ->
-    Format.printf "%a" pp_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
+  | _ -> false
 ;;
 
 (*
-   let (|Even|Odd|) v = if v % 2 = 0 then Even else Odd
+   let (|Even|_|) v = if v % 2 = 0 then Some(v) else None
+   let (|Odd|_|) v = if v % 2 <> 0 then Some(v) else None
 
-   let myfunc v = match v with | Even -> 1 | Odd -> 5
+   let myfunc v =
+   match v with
+   | Even -> 50
+   | Odd -> 25
+   | _ -> 6
 
-   myfunc 5
+   myfunc 6
 *)
 
 let test =
-  [ LetExpr
-      ( false
-      , [ "Even"; "Odd" ]
-      , FunExpr
-          ( Var "input"
-          , IfExpr
-              ( BinExpr
-                  ( Eq
-                  , BinExpr (Mod, VarExpr "input", ConstExpr (CInt 2))
-                  , ConstExpr (CInt 0) )
-              , CaseExpr ("Even", [])
-              , CaseExpr ("Odd", []) ) ) )
-  ; LetExpr
-      ( false
-      , [ "myfunc" ]
-      , FunExpr
-          ( Var "v"
-          , MatchExpr
-              ( VarExpr "v"
-              , [ Case ("Even", []), ConstExpr (CInt 1)
-                ; Case ("Odd", []), ConstExpr (CInt 5)
-                ] ) ) )
-  ; AppExpr (VarExpr "myfunc", ConstExpr (CInt 6))
-  ]
-;;
-
-let%test _ =
-  match eval_program test with
-  | Ok (VInt 1) -> true
-  | Error t ->
-    Format.printf "%a\n" pp_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
-;;
-
-(*
-   let (|Even|) v = if v % 2 = 0 then Even else 0
-
-   let good input = match input with | Even -> 5 | _ -> 7
-
-   good 6
-*)
-
-let test =
-  [ LetExpr
-      ( false
-      , [ "Even" ]
+  [ LetActExpr
+      ( [ "Even"; "_" ]
       , FunExpr
           ( Var "v"
           , IfExpr
               ( BinExpr
                   (Eq, BinExpr (Mod, VarExpr "v", ConstExpr (CInt 2)), ConstExpr (CInt 0))
-              , CaseExpr ("Even", [])
-              , ConstExpr (CInt 0) ) ) )
+              , CaseExpr ("Some", [ VarExpr "v" ])
+              , CaseExpr ("None", []) ) ) )
+  ; LetActExpr
+      ( [ "Odd"; "_" ]
+      , FunExpr
+          ( Var "v"
+          , IfExpr
+              ( BinExpr
+                  (NEq, BinExpr (Mod, VarExpr "v", ConstExpr (CInt 2)), ConstExpr (CInt 0))
+              , CaseExpr ("Some", [ VarExpr "v" ])
+              , CaseExpr ("None", []) ) ) )
   ; LetExpr
       ( false
-      , [ "good" ]
+      , "myfunc"
       , FunExpr
-          ( Var "input"
+          ( Var "c"
           , MatchExpr
-              ( VarExpr "input"
-              , [ Case ("Even", []), ConstExpr (CInt 5); Wild, ConstExpr (CInt 7) ] ) ) )
-  ; AppExpr (VarExpr "good", ConstExpr (CInt 103))
+              ( VarExpr "c"
+              , [ Case ("Even", [ Var "c" ]), ConstExpr (CInt 50)
+                ; Case ("Odd", [ Var "c" ]), ConstExpr (CInt 25)
+                ; Wild, ConstExpr (CInt 10)
+                ] ) ) )
+  ; AppExpr (VarExpr "myfunc", ConstExpr (CInt 9))
   ]
 ;;
 
 let%test _ =
   match eval_program test with
-  | Ok (VInt 7) -> true
-  | Error t ->
-    Format.printf "%a\n" pp_error t;
-    false
-  | Ok t ->
-    Format.printf "%s" (show_value t);
-    false
+  | Ok (VInt 25) -> true
+  | _ -> false
+;;
+
+(*
+   let (|Default|) value =
+   match value with
+   | value -> (value * value)
+
+   let greet (Default value) = value
+
+   greet 10
+*)
+
+let test =
+  [ LetActExpr
+      ( [ "Square" ]
+      , FunExpr
+          ( Var "value"
+          , MatchExpr
+              ( VarExpr "value"
+              , [ Var "value", BinExpr (Mul, VarExpr "value", VarExpr "value") ] ) ) )
+  ; LetExpr (false, "greet", FunExpr (Case ("Square", [ Var "value" ]), VarExpr "value"))
+  ; AppExpr (VarExpr "greet", ConstExpr (CInt 10))
+  ]
+;;
+
+let%test _ =
+  match eval_program test with
+  | Ok (VInt 100) -> true
+  | _ -> false
+;;
+
+(*
+   let (|Even|Odd|) value = if value%2 = 0 then Even else Odd)
+
+   let check value =
+   match value with
+   | Even -> 25
+   | Odd -> 53
+
+   check 14/check 13
+*)
+
+let test =
+  [ LetActExpr
+      ( [ "Even"; "Odd" ]
+      , FunExpr
+          ( Var "value"
+          , IfExpr
+              ( BinExpr
+                  ( Eq
+                  , BinExpr (Mod, VarExpr "value", ConstExpr (CInt 2))
+                  , ConstExpr (CInt 0) )
+              , CaseExpr ("Even", [])
+              , CaseExpr ("Odd", []) ) ) )
+  ; LetExpr
+      ( false
+      , "check"
+      , FunExpr
+          ( Var "value"
+          , MatchExpr
+              ( VarExpr "value"
+              , [ Case ("Even", [ Var "c" ]), ConstExpr (CInt 25)
+                ; Case ("Odd", [ Var "c" ]), ConstExpr (CInt 53)
+                ] ) ) )
+  ; AppExpr (VarExpr "check", ConstExpr (CInt 14))
+  ]
+;;
+
+let%test _ =
+  match eval_program test with
+  | Ok (VInt 25) -> true
+  | _ -> false
+;;
+
+let test =
+  [ LetActExpr
+      ( [ "Even"; "Odd" ]
+      , FunExpr
+          ( Var "value"
+          , IfExpr
+              ( BinExpr
+                  ( Eq
+                  , BinExpr (Mod, VarExpr "value", ConstExpr (CInt 2))
+                  , ConstExpr (CInt 0) )
+              , CaseExpr ("Even", [])
+              , CaseExpr ("Odd", []) ) ) )
+  ; LetExpr
+      ( false
+      , "check"
+      , FunExpr
+          ( Var "value"
+          , MatchExpr
+              ( VarExpr "value"
+              , [ Case ("Even", [ Var "c" ]), ConstExpr (CInt 25)
+                ; Case ("Odd", [ Var "c" ]), ConstExpr (CInt 53)
+                ] ) ) )
+  ; AppExpr (VarExpr "check", ConstExpr (CInt 13))
+  ]
+;;
+
+let%test _ =
+  match eval_program test with
+  | Ok (VInt 53) -> true
+  | _ -> false
 ;;

@@ -25,7 +25,7 @@ release:
 	dune runtest --profile=release
 
 TEST_COV_D = /tmp/cov
-COVERAGE_OPTS = --coverage-path $(TEST_COV_D) --expect lib/ --expect demos/
+COVERAGE_OPTS = --coverage-path $(TEST_COV_D) --expect lib/ 
 
 .PHONY: test_coverage coverage
 test_coverage: coverage

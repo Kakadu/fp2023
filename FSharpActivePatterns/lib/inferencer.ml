@@ -63,31 +63,23 @@ module Type = struct
     let occurs_in_list ts =
       List.fold ts ~init:false ~f:(fun acc t -> occurs_in v t || acc)
     in
-    let occurs_in_tag pvlist =
-      List.fold pvlist ~init:false ~f:(fun acc (_, l) -> occurs_in_list l || acc)
-    in
     function
     | Ty_var b -> b = v
     | Arrow (l, r) -> occurs_in v l || occurs_in v r
-    | List t -> occurs_in v t
-    | Tuple ts -> occurs_in_list ts
+    | List_typ t -> occurs_in v t
+    | Tuple_typ ts -> occurs_in_list ts
     | Prim _ -> false
-    | ActiveCases (_, ls) -> occurs_in_tag ls
   ;;
 
   let free_vars =
     let rec helper acc =
       let free_list acc ts = List.fold ts ~init:acc ~f:(fun acc t -> helper acc t) in
-      let free_tag acc pvlist =
-        List.fold pvlist ~init:acc ~f:(fun acc (_, l) -> free_list acc l)
-      in
       function
       | Ty_var b -> VarSetInit.add b acc
       | Arrow (l, r) -> helper (helper acc l) r
-      | List t -> helper acc t
-      | Tuple ts -> free_list acc ts
+      | List_typ t -> helper acc t
+      | Tuple_typ ts -> free_list acc ts
       | Prim _ -> acc
-      | ActiveCases (_, ac) -> free_tag acc ac
     in
     helper VarSetInit.empty
   ;;
@@ -106,8 +98,6 @@ module Subst : sig
   val pp : Format.formatter -> t -> unit
   val empty : t
   val singleton : fresh -> typ -> t R.t
-  val find_exn : fresh -> t -> typ
-  val find : fresh -> t -> typ option
   val apply : t -> typ -> typ
   val unify : typ -> typ -> t R.t
   val compose : t -> t -> t R.t
@@ -122,7 +112,7 @@ end = struct
   let pp ppf subst =
     let open Format in
     Map.Poly.iteri subst ~f:(fun ~key ~data ->
-      fprintf ppf "'_%d -> %a@\n" key Typedtree.pp_typ_binder data)
+      fprintf ppf "%d -> %a@\n" key Typedtree.pp_typ_binder data)
   ;;
 
   let empty = Map.Poly.empty
@@ -133,8 +123,6 @@ end = struct
     return @@ Map.Poly.singleton f t
   ;;
 
-  let find_exn f m = Map.Poly.find_exn m f
-  let find f m = Map.Poly.find m f
   let remove m f = Map.Poly.remove m f
 
   let apply subst =
@@ -142,12 +130,12 @@ end = struct
       let apply_to_list l = List.map ~f:(fun t -> helper t) l in
       function
       | Ty_var b as ty ->
-        (match find_exn b subst with
+        (match Map.Poly.find_exn subst b with
          | exception Not_found_s _ -> ty
          | x -> x)
       | Arrow (l, r) -> Arrow (helper l, helper r)
-      | List t -> List (helper t)
-      | Tuple l -> Tuple (apply_to_list l)
+      | List_typ t -> List_typ (helper t)
+      | Tuple_typ l -> Tuple_typ (apply_to_list l)
       | other -> other
     in
     helper
@@ -176,8 +164,8 @@ end = struct
       let* subs1 = unify l1 l2 in
       let* subs2 = unify (apply subs1 r1) (apply subs1 r2) in
       compose subs1 subs2
-    | List a, List b -> unify a b
-    | Tuple a, Tuple b -> unify_lists a b
+    | List_typ a, List_typ b -> unify a b
+    | Tuple_typ a, Tuple_typ b -> unify_lists a b
     | _ -> fail (Unification_failed (l, r))
 
   and extend key value extensible_subst =
@@ -296,13 +284,13 @@ let infer =
       return (env, tv)
     | Tuple tuple ->
       let* finenv, fintys = eval_list_helper @@ return (env, tuple) in
-      return (finenv, tuple_typ fintys)
+      return (finenv, Tuple_typ fintys)
     | Wild ->
       let* ty = fresh_var in
       return (env, ty)
     | List a ->
       let* env, ty1 = pattern_helper env (List.hd_exn a) in
-      let ty1 = list_typ ty1 in
+      let ty1 = List_typ ty1 in
       let* env, ty2 = pattern_helper env (List.hd_exn (List.tl_exn a)) in
       let* subst = unify ty1 ty2 in
       let finenv = TypeEnv.apply subst env in
@@ -349,19 +337,16 @@ let infer =
       let* s5 = unify t2 t3 in
       let* final_subst = Subst.compose_all [ s5; s4; s3; s2; s1 ] in
       return (final_subst, Subst.apply final_subst t2)
-    | LetExpr (bool, name, expr) ->
-      if List.length name == 1 || String.equal (List.hd_exn (List.tl_exn name)) "_"
+    | LetExpr (is_rec, name, expr) ->
+      if not is_rec
       then
-        if bool
-        then
-          let* s, t = helper env expr in
-          return (s, t)
-        else
-          let* tv = fresh_var in
-          let env = TypeEnv.extend env (List.hd_exn name, S (VarSet.empty, tv)) in
-          let* s, t = helper env expr in
-          return (s, t)
-      else fail NotImplemented
+        let* s, t = helper env expr in
+        return (s, t)
+      else
+        let* tv = fresh_var in
+        let env = TypeEnv.extend env (name, S (VarSet.empty, tv)) in
+        let* s, t = helper env expr in
+        return (s, t)
     | FunExpr (arg, e) ->
       let* env, t1 = pattern_helper env arg in
       let* s, t2 = helper env e in
@@ -397,7 +382,7 @@ let infer =
       return (finalmatchsub, Subst.apply finalmatchsub match_ty)
     | ListExpr a ->
       let* s1, t1 = helper env (List.hd_exn a) in
-      let t1 = list_typ t1 in
+      let t1 = List_typ t1 in
       let* subst = Subst.compose_all [ s1 ] in
       return (subst, Subst.apply subst t1)
     | CaseExpr (_, _) -> fail NotImplemented
@@ -412,7 +397,8 @@ let infer =
             let* subst = Subst.compose s tuple_s in
             return (subst, t :: tuple))
       in
-      return (s, tuple_typ @@ List.rev t)
+      return (s, Tuple_typ (List.rev t))
+    | LetActExpr (_, _) -> fail NotImplemented
   in
   helper
 ;;
@@ -423,7 +409,7 @@ let check_type env expr =
   let* _, typ = infer env expr in
   match expr with
   | LetExpr (_, name, _) ->
-    let env = TypeEnv.extend env (List.hd_exn name, S (VarSet.empty, typ)) in
+    let env = TypeEnv.extend env (name, S (VarSet.empty, typ)) in
     return (env, typ)
   | _ -> return (env, typ)
 ;;
@@ -456,45 +442,9 @@ let run_subst subst =
 (** Arrow unification *)
 
 let%expect_test _ =
-  let _ = unify (Ty_var 1 @-> Ty_var 1) (Prim "int" @-> Ty_var 2) |> run_subst in
+  let _ = unify (Ty_var 1) (Prim "int") |> run_subst in
   [%expect {|
-    '_1 -> int
-    '_2 -> int |}]
-;;
-
-let%expect_test _ =
-  let _ =
-    unify (Ty_var 1 @-> Ty_var 1) ((Ty_var 2 @-> Prim "int") @-> Prim "int" @-> Prim "int")
-    |> run_subst
-  in
-  [%expect {|
-    '_1 -> (int -> int)
-    '_2 -> int |}]
-;;
-
-let%expect_test _ =
-  let _ = unify (Ty_var 1 @-> Ty_var 2) (Ty_var 2 @-> Ty_var 3) |> run_subst in
-  [%expect {|
-    '_1 -> '_3
-    '_2 -> '_3 |}]
-;;
-
-let%expect_test _ =
-  let _ = unify (Ty_var 1 @-> Prim "bool") (Ty_var 2 @-> Prim "int") |> run_subst in
-  [%expect {| Typechecker error: unification failed on bool and int |}]
-;;
-
-let%expect_test _ =
-  let _ =
-    unify
-      (tuple_typ [ Prim "int"; Ty_var 1; Ty_var 2 ])
-      (tuple_typ [ Ty_var 3; Prim "bool"; Prim "int" ])
-    |> run_subst
-  in
-  [%expect {|
-    '_1 -> bool
-    '_2 -> int
-    '_3 -> int |}]
+    1 -> int |}]
 ;;
 
 let run_infer = function
@@ -622,27 +572,7 @@ let%expect_test _ =
 let%expect_test _ =
   let open Ast in
   let _ =
-    let e =
-      [ LetExpr
-          ( false
-          , [ "good" ]
-          , FunExpr
-              ( Var "input"
-              , MatchExpr
-                  ( VarExpr "input"
-                  , [ Const (CInt 15), ConstExpr (CInt 5); Wild, ConstExpr (CInt 7) ] ) )
-          )
-      ]
-    in
-    check_types e |> run_infer
-  in
-  [%expect {| (int -> int) |}]
-;;
-
-let%expect_test _ =
-  let open Ast in
-  let _ =
-    let e = [ LetExpr (false, [ "x" ], ConstExpr (CInt 5)) ] in
+    let e = [ LetExpr (false, "x", ConstExpr (CInt 5)) ] in
     check_types e |> run_infer
   in
   [%expect {| int |}]
@@ -685,4 +615,25 @@ let%expect_test _ =
     check_types e |> run_infer
   in
   [%expect {| bool |}]
+;;
+
+let%expect_test _ =
+  let open Ast in
+  let _ =
+    let e =
+      [ LetExpr
+          ( false
+          , "check"
+          , FunExpr
+              ( Var "input"
+              , MatchExpr
+                  ( VarExpr "input"
+                  , [ Const (CInt 2), ConstExpr (CInt 5)
+                    ; Const (CInt 5), ConstExpr (CInt 10)
+                    ] ) ) )
+      ]
+    in
+    check_types e |> run_infer
+  in
+  [%expect {| (int -> int) |}]
 ;;

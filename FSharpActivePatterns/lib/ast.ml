@@ -44,7 +44,9 @@ type expr =
   | TupleExpr of expr list (** (1,2,3)*)
   | BinExpr of binary_op * expr * expr (** 1 + 5 - 3*)
   | IfExpr of expr * expr * expr (** if a then b else c *)
-  | LetExpr of bool * name list * expr (** let sq x = x * x *)
+  | LetExpr of bool * name * expr
+  | LetActExpr of name list * expr
+  (** let sq x = x * x , first bool - is rec or not, second bool - is act pat or not *)
   | AppExpr of expr * expr (** sq 5 *)
   | FunExpr of pattern * expr (** fun x -> x * x *)
   | MatchExpr of expr * (pattern * expr) list (** match input with | 2 -> 5 | 5 -> 10 *)
@@ -65,5 +67,6 @@ type value =
   | VLetWAPat of name * value (* without active patterns *)
   | VLetAPat of name list * value (* with active patterns *)
   | VCases of name * value option
+  | VSome of value
   | VNone
 [@@deriving show { with_path = false }]
