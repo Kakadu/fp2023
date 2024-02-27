@@ -58,8 +58,7 @@ module Interpret (M : Monad) = struct
     | Unit -> return VUnit
   ;;
 
-  let eval_binop op l r =
-    match op, l, r with
+  let eval_binop = function
     | Plus, VInt i1, VInt i2 -> return (VInt (i1 + i2))
     | Minus, VInt i1, VInt i2 -> return (VInt (i1 - i2))
     | Mult, VInt i1, VInt i2 -> return (VInt (i1 * i2))
@@ -101,7 +100,7 @@ module Interpret (M : Monad) = struct
       | EBinOp (op, e1, e2) ->
         let* v1 = helper env e1 in
         let* v2 = helper env e2 in
-        eval_binop op v1 v2
+        eval_binop (op, v1, v2)
       | EIfThenElse (e1, e2, e3) ->
         let* v1 = helper env e1 in
         (match v1 with

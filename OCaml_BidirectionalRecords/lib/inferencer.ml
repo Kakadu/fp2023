@@ -37,7 +37,8 @@ module R : sig
 end = struct
   type 'a t = int -> int * ('a, error) Result.t
 
-  (** stops the computation at the first error *)
+  (** stops the computation at the first error.
+      p >>= f run p, pass its result to f, run the f, return the result of f *)
   let ( >>= ) : 'a 'b. 'a t -> ('a -> 'b t) -> 'b t =
     fun monad f state ->
     let final_state, result = monad state in
@@ -46,7 +47,8 @@ end = struct
     | Ok v -> f v final_state
   ;;
 
-  (** ignores errors and continues with the computation *)
+  (** stops the computation at the first error.
+      p >>| f run p, if it succeeds with result v, will return f v *)
   let ( >>| ) : 'a 'b. 'a t -> ('a -> 'b) -> 'b t =
     fun v f state ->
     match v state with
@@ -253,7 +255,6 @@ let infer_pattern env = function
     >>| fun fv ->
     let env' = TypeEnv.extend env x (Scheme (VarSet.empty, fv)) in
     Subst.empty, fv, env'
-  | _ -> fail NotImplemented
 ;;
 
 let infer_binop_type op =
@@ -348,15 +349,8 @@ module PP = struct
     | NotImplemented -> fprintf ppf "NotImplemented"
   ;;
 
-  let print_typ typ =
-    let s = asprintf "%a" pp_type typ in
-    printf "%s\n" s
-  ;;
-
-  let print_type_error error =
-    let s = asprintf "%a" pp_error error in
-    printf "%s\n" s
-  ;;
+  let print_typ typ = printf "%a\n" pp_type typ
+  let print_type_error error = printf "%a\n" pp_error error
 
   let print_result expr =
     match run_inference expr with

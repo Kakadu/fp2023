@@ -12,32 +12,16 @@ let parse p s = parse_string ~consume:Consume.All p s
 
 let is_keyword = function
   | "let"
-  | "and"
-  | "end"
+  | "in"
   | "if"
   | "then"
   | "else"
   | "fun"
   | "function"
-  | "include"
-  | "for"
   | "rec"
   | "true"
-  | "object"
-  | "of"
-  | "open"
-  | "or"
-  | "sig"
-  | "struct"
-  | "val"
   | "false"
-  | "match"
-  | "module"
-  | "exception"
-  | "with"
-  | "while"
-  | "in"
-  | "type" -> true
+  | "val" -> true
   | _ -> false
 ;;
 

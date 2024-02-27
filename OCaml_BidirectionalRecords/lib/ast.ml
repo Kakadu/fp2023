@@ -50,7 +50,6 @@ type pattern =
   | PConst of const
   | PAny (* _ *)
   | PNil (* []*)
-  | PTuple of pattern list
 [@@deriving show { with_path = false }]
 
 type rec_flag =
