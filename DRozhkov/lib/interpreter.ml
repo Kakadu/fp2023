@@ -5,23 +5,12 @@
 open Ast
 open Format
 
-module type MONAD = sig
+module type MONAD_ERROR = sig
   type ('a, 'e) t
 
+  val fail : 'e -> ('a, 'e) t
   val return : 'a -> ('a, 'e) t
   val ( let* ) : ('a, 'e) t -> ('a -> ('b, 'e) t) -> ('b, 'e) t
-end
-
-module type MONADERROR = sig
-  include MONAD
-
-  val fail : 'e -> ('a, 'e) t
-end
-
-module MONAD_ADAPTER = struct
-  include Base.Result
-
-  let ( let* ) m f = m >>= fun x -> f x
 end
 
 type value =
@@ -42,38 +31,53 @@ let rec pp_value fmt = function
   | VFun _ -> fprintf fmt "<fun> \n"
 ;;
 
+type error =
+  | Division_by_zero
+  | Let_bundle
+  | Pattern_matching_error
+  | Unbound_value of id
+  | Incorrect_type of value
+
+let pp_error fmt = function
+  | Division_by_zero -> fprintf fmt "Division by zero"
+  | Unbound_value id -> fprintf fmt "Unbound value %s" id
+  | Incorrect_type v -> fprintf fmt "Value %a has incorrect type in expression" pp_value v
+  | Let_bundle -> fprintf fmt "Let without in is not allowed in this part of expression"
+  | Pattern_matching_error ->
+    fprintf fmt "Value can't be match with any case in this expression"
+;;
+
 module Env = struct
   open Base
 
   let empty = Map.empty (module String)
-  let extend env (id, value) = Map.set env ~key:id ~data:value
-  let singleton (id, value) = extend empty (id, value)
 end
 
-module Interpret (M : MONADERROR) = struct
-  type error =
-    | Division_by_zero
-    | Let_bundle
-    | Pattern_matching_error
-    | Unbound_value of id
-    | Incorrect_type of value
-
-  let pp_error fmt = function
-    | Division_by_zero -> fprintf fmt "Division by zero"
-    | Unbound_value id -> fprintf fmt "Unbound value %s" id
-    | Incorrect_type v ->
-      fprintf fmt "Value %a has incorrect type in expression" pp_value v
-    | Let_bundle -> fprintf fmt "Let without in is not allowed in this part of expression"
-    | Pattern_matching_error ->
-      fprintf fmt "Value can't be match with any case in this expression"
-  ;;
-
+module Interpret (M : MONAD_ERROR) = struct
   open M
 
   let lookup_env env id =
     match Base.Map.find env id with
     | None -> fail (Unbound_value id)
     | Some v -> return v
+  ;;
+
+  let binop (op, lv, rv) =
+    match op, lv, rv with
+    | Add, VInt l, VInt r -> return (VInt (l + r))
+    | Sub, VInt l, VInt r -> return (VInt (l - r))
+    | Eq, VInt l, VInt r -> return (VBool (l = r))
+    | Eq, VBool l, VBool r -> return (VBool (l <> r))
+    | Neq, VInt l, VInt r -> return (VBool (l = r))
+    | Neq, VBool l, VBool r -> return (VBool (l <> r))
+    | Les, VInt l, VInt r -> return (VBool (l < r))
+    | Leq, VInt l, VInt r -> return (VBool (l <= r))
+    | Gre, VInt l, VInt r -> return (VBool (l > r))
+    | Geq, VInt l, VInt r -> return (VBool (l >= r))
+    | Mul, VInt l, VInt r -> return (VInt (l * r))
+    | Div, VInt _, VInt 0 -> fail Division_by_zero
+    | Div, VInt l, VInt r -> return (VInt (l / r))
+    | _ -> fail (Incorrect_type rv)
   ;;
 
   let eval =
@@ -108,21 +112,7 @@ module Interpret (M : MONADERROR) = struct
       | Binop (op, l, r) ->
         let* lv = helper env l in
         let* rv = helper env r in
-        (match op, lv, rv with
-         | Add, VInt l, VInt r -> return (VInt (l + r))
-         | Sub, VInt l, VInt r -> return (VInt (l - r))
-         | Eq, VInt l, VInt r -> return (VBool (l = r))
-         | Eq, VBool l, VBool r -> return (VBool (l <> r))
-         | Neq, VInt l, VInt r -> return (VBool (l = r))
-         | Neq, VBool l, VBool r -> return (VBool (l <> r))
-         | Les, VInt l, VInt r -> return (VBool (l < r))
-         | Leq, VInt l, VInt r -> return (VBool (l <= r))
-         | Gre, VInt l, VInt r -> return (VBool (l > r))
-         | Geq, VInt l, VInt r -> return (VBool (l >= r))
-         | Mul, VInt l, VInt r -> return (VInt (l * r))
-         | Div, VInt _, VInt 0 -> fail Division_by_zero
-         | Div, VInt l, VInt r -> return (VInt (l / r))
-         | _ -> fail (Incorrect_type rv))
+        binop (op, lv, rv)
       | Match (e, cases) ->
         let* v = helper env e in
         let rec match_cases env v = function
@@ -130,7 +120,7 @@ module Interpret (M : MONADERROR) = struct
             (match pat, v with
              | PAny, _ -> helper env expression
              | PVar id, v' ->
-               let env' = Env.extend env (id, v') in
+               let env' = Base.Map.set env ~key:id ~data:v' in
                helper env' expression
              | PConst const, cvalue ->
                (match const, cvalue with
@@ -146,10 +136,10 @@ module Interpret (M : MONADERROR) = struct
         let* ev = helper env e in
         (match fv with
          | VFun (id, e, fenv) ->
-           let fenv = Env.extend fenv (id, ev) in
+           let fenv = Base.Map.set fenv ~key:id ~data:ev in
            let updated_env =
              Base.Map.fold fenv ~init:env ~f:(fun ~key ~data acc_env ->
-               Env.extend acc_env (key, data))
+               Base.Map.set acc_env ~key ~data)
            in
            let* v = helper updated_env e in
            return v
@@ -159,7 +149,7 @@ module Interpret (M : MONADERROR) = struct
          | None -> fail Let_bundle
          | Some e2 ->
            let* v1 = helper env e1 in
-           let env = Env.extend env (name, v1) in
+           let env = Base.Map.set env ~key:name ~data:v1 in
            let* v2 = helper env e2 in
            return v2)
     in
@@ -187,6 +177,12 @@ module Interpret (M : MONADERROR) = struct
     in
     return (env, List.rev rs)
   ;;
+end
+
+module MONAD_ADAPTER = struct
+  include Base.Result
+
+  let ( let* ) m f = m >>= fun x -> f x
 end
 
 module Interpreter = Interpret (MONAD_ADAPTER)

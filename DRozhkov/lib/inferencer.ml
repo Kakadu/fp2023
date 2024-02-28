@@ -1,18 +1,18 @@
 (** Copyright 2021-2023, Kakadu, RozhkovAleksandr *)
-
+ 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
-
+ 
 open Ast
 open Base
 open Typedtree
 open Errors
-
+ 
 module R = struct
   type ('a, 'e) t = int -> int * ('a, 'e) Result.t
-
+ 
   let return : 'a -> ('a, 'e) t = fun x st -> st, Result.Ok x
   let fail : 'e -> ('a, 'e) t = fun e st -> st, Result.Error e
-
+ 
   let ( >>= ) : ('a, 'e) t -> ('a -> ('b, 'e) t) -> ('b, 'e) t =
     fun m f st ->
     let st, r = m st in
@@ -20,21 +20,21 @@ module R = struct
     | Ok a -> f a st
     | Error e -> fail e st
   ;;
-
+ 
   let ( let* ) = ( >>= )
 end
-
+ 
 let fresh st = st + 1, Ok st
 let run m = snd (m 0)
-
+ 
 module VarSet = struct
   include Set
-
+ 
   type t = (int, Int.comparator_witness) Set.t
-
+ 
   let empty = Set.empty (module Int)
 end
-
+ 
 module Type = struct
   let rec occurs_in v = function
     | TBool | TInt | TEmpty -> false
@@ -42,7 +42,7 @@ module Type = struct
     | TList x -> occurs_in v x
     | TArrow (l, r) -> occurs_in v l || occurs_in v r
   ;;
-
+ 
   let free_vars =
     let rec helper acc = function
       | TBool | TInt | TEmpty -> acc
@@ -55,15 +55,15 @@ module Type = struct
     helper VarSet.empty
   ;;
 end
-
+ 
 module Subst = struct
   open R
-
+ 
   type t = (int, typ, Int.comparator_witness) Map.t
-
+ 
   let empty = Map.empty (module Int)
-  let singleton (k, v) = return (Map.singleton (module Int) k v)
-
+  let singleton (k, v) = return (Map.singleton (module Int) k v) (** &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
+ 
   let apply (subst : t) =
     let rec helper = function
       | (TInt | TBool | TEmpty) as other -> other
@@ -76,7 +76,7 @@ module Subst = struct
     in
     helper
   ;;
-
+ 
   let rec unify l r =
     match l, r with
     | TInt, TInt | TBool, TBool | TEmpty, TEmpty -> return empty
@@ -88,7 +88,7 @@ module Subst = struct
       compose subs1 subs2
     | TList x1, TList x2 -> unify x1 x2
     | _ -> fail (Ivalid_format_concat (l, r))
-
+ 
   and extend (subst : t) (k, v) : (t, error) R.t =
     match Map.find subst k with
     | Some v2 ->
@@ -98,58 +98,58 @@ module Subst = struct
       let v = apply subst v in
       let* subst2 = singleton (k, v) in
       Map.fold subst ~init:(return subst2) ~f:(fun ~key:k ~data:v acc ->
-        let* acc = acc in
+        let* acc = acc in (**??????????????????????????????????????????????*)
         let v = apply subst2 v in
         if Type.occurs_in k v
         then fail (Occurs_check (k, v))
         else return (Map.set acc ~key:k ~data:v))
-
+ 
   and compose subst1 subst2 =
     Map.fold subst1 ~init:(return subst2) ~f:(fun ~key:k ~data:v acc ->
       let* acc = acc in
       extend acc (k, v))
   ;;
-
+ 
   let compose_all substs =
     List.fold_left substs ~init:(return empty) ~f:(fun acc subst ->
       let* acc = acc in
       compose acc subst)
   ;;
 end
-
+ 
 module Scheme = struct
   type t = S of VarSet.t * typ
-
+ 
   let free_vars (S (s, typ)) = VarSet.diff (Type.free_vars typ) s
-
+ 
   let apply (S (s, typ)) subst =
     let subst2 = VarSet.fold s ~init:subst ~f:(fun acc k -> Map.remove acc k) in
     S (s, Subst.apply subst2 typ)
   ;;
 end
-
+ 
 module TypeEnv = struct
   type t = (id, Scheme.t, String.comparator_witness) Map.t
-
+ 
   let empty = Map.empty (module String)
-
+ 
   let free_vars env =
     Map.fold env ~init:VarSet.empty ~f:(fun ~key:_ ~data:sch acc ->
       VarSet.union acc (Scheme.free_vars sch))
   ;;
-
+ 
   let extend env (id, sch) = Map.set env ~key:id ~data:sch
 end
-
+ 
 open R
-
+ 
 let varf = fresh >>= fun x -> return (TVar x)
-
+ 
 let generalize env typ =
   let free = VarSet.diff (Type.free_vars typ) (TypeEnv.free_vars env) in
   Scheme.S (free, typ)
 ;;
-
+ 
 let infer_pattern =
   let helper env = function
     | PAny ->
@@ -168,7 +168,7 @@ let infer_pattern =
   in
   helper
 ;;
-
+ 
 let lookup_env env id =
   match Map.find env id with
   | Some sch ->
@@ -183,7 +183,7 @@ let lookup_env env id =
     return (Subst.empty, typ)
   | None -> fail (Unbound_value id)
 ;;
-
+ 
 let inferencer =
   let rec helper env = function
     | Const (Int _) -> return (Subst.empty, TInt)
@@ -292,7 +292,7 @@ let inferencer =
   in
   helper
 ;;
-
+ 
 let infer env program =
   let check_expr env e =
     let* _, typ = inferencer env e in
@@ -313,5 +313,6 @@ let infer env program =
   in
   return (env, List.rev tys)
 ;;
-
+ 
 let infer_program ?(env = TypeEnv.empty) program = run (infer env program)
+ 

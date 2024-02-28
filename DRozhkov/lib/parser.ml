@@ -50,7 +50,6 @@ let parens p = char '(' *> p <* char ')'
 
 let is_syntax = function
   | "let"
-  | "open"
   | "if"
   | "else"
   | "fun"
