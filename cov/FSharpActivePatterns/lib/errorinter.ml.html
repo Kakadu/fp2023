@@ -18,7 +18,6 @@
       <h2>23.08%</h2>
     </div>
     <div id="navbar">
-      <span class="unvisited" style="bottom:48.84%"></span>
       <span class="unvisited" style="bottom:46.51%"></span>
       <span class="unvisited" style="bottom:44.19%"></span>
       <span class="unvisited" style="bottom:41.86%"></span>
@@ -27,6 +26,7 @@
       <span class="unvisited" style="bottom:27.91%"></span>
       <span class="unvisited" style="bottom:25.58%"></span>
       <span class="unvisited" style="bottom:23.26%"></span>
+      <span class="unvisited" style="bottom:20.93%"></span>
       <span class="unvisited" style="bottom:2.33%"></span>
     </div>
     <div id="report">
@@ -53,7 +53,7 @@
 <a id="L19"></a><span > </span>
 <a id="L20"></a><span > </span>
 <a id="L21"></a><span class="visited"> </span>
-<a id="L22"></a><span class="unvisited"> </span>
+<a id="L22"></a><span class="visited"> </span>
 <a id="L23"></a><span class="unvisited"> </span>
 <a id="L24"></a><span class="unvisited"> </span>
 <a id="L25"></a><span class="unvisited"> </span>
@@ -65,7 +65,7 @@
 <a id="L31"></a><span class="unvisited"> </span>
 <a id="L32"></a><span class="unvisited"> </span>
 <a id="L33"></a><span class="unvisited"> </span>
-<a id="L34"></a><span class="visited"> </span>
+<a id="L34"></a><span class="unvisited"> </span>
 <a id="L35"></a><span > </span>
 <a id="L36"></a><span > </span>
 <a id="L37"></a><span > </span>
@@ -144,7 +144,7 @@ type error =
   | Empty_pattern
 
 let pp_error fmt : error -&gt; _ = <span data-count="2">f</span>unction
-  | <span data-count="0">D</span>ivision_by_zero -&gt; Format.fprintf fmt "Exception: Division_by_zero."
+  | <span data-count="1">D</span>ivision_by_zero -&gt; Format.fprintf fmt "Exception: Division_by_zero."
   | <span data-count="0">U</span>nboundValue s -&gt; Format.fprintf fmt "Error: Unbound value %s" s
   | <span data-count="0">U</span>nboundConstructor s -&gt; Format.fprintf fmt "Error: Unbound constructor %s" s
   | <span data-count="0">M</span>atchFailure -&gt;
@@ -156,7 +156,7 @@ let pp_error fmt : error -&gt; _ = <span data-count="2">f</span>unction
   | <span data-count="0">N</span>otImplemented -&gt; Format.fprintf fmt "This feature has not yet been implemented"
   | <span data-count="0">O</span>ccurs_check -&gt; Format.fprintf fmt "Typechecker error: occurs check failed"
   | <span data-count="0">N</span>o_variable s -&gt; Format.fprintf fmt "Typechecker error: undefined variable '%s'" s
-  | <span data-count="1">U</span>nification_failed (l, r) -&gt;
+  | <span data-count="0">U</span>nification_failed (l, r) -&gt;
     Format.fprintf
       fmt
       "Typechecker error: unification failed on %a and %a"
