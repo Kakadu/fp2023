@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>int_errors.ml &mdash; Coverage report</title>
+    <meta name="description" content="20.00% coverage in lib/interpreter/int_errors.ml">
+    <link rel="stylesheet" href="../../coverage.css"/>
+    <script src="../../highlight.pack.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+  </head>
+  <body>
+    <div id="header">
+      <h1>
+        <a href="../../index.html">
+          <span class="dirname">lib/interpreter/</span>int_errors.ml
+        </a>
+      </h1>
+      <h2>20.00%</h2>
+    </div>
+    <div id="navbar">
+      <span class="unvisited" style="bottom:21.43%"></span>
+      <span class="unvisited" style="bottom:17.86%"></span>
+      <span class="unvisited" style="bottom:7.14%"></span>
+      <span class="unvisited" style="bottom:3.57%"></span>
+    </div>
+    <div id="report">
+      <div id="lines-layer">
+        <pre>
+<a id="L1"></a><span > </span>
+<a id="L2"></a><span > </span>
+<a id="L3"></a><span > </span>
+<a id="L4"></a><span > </span>
+<a id="L5"></a><span > </span>
+<a id="L6"></a><span > </span>
+<a id="L7"></a><span > </span>
+<a id="L8"></a><span > </span>
+<a id="L9"></a><span > </span>
+<a id="L10"></a><span > </span>
+<a id="L11"></a><span > </span>
+<a id="L12"></a><span > </span>
+<a id="L13"></a><span > </span>
+<a id="L14"></a><span > </span>
+<a id="L15"></a><span > </span>
+<a id="L16"></a><span > </span>
+<a id="L17"></a><span > </span>
+<a id="L18"></a><span > </span>
+<a id="L19"></a><span > </span>
+<a id="L20"></a><span > </span>
+<a id="L21"></a><span > </span>
+<a id="L22"></a><span class="unvisited"> </span>
+<a id="L23"></a><span class="unvisited"> </span>
+<a id="L24"></a><span > </span>
+<a id="L25"></a><span class="visited"> </span>
+<a id="L26"></a><span class="unvisited"> </span>
+<a id="L27"></a><span class="unvisited"> </span>
+<a id="L28"></a><span > </span>
+</pre>
+      </div>
+      <div id="text-layer">
+        <pre id="line-numbers">
+<a href="#L1"> 1</a>
+<a href="#L2"> 2</a>
+<a href="#L3"> 3</a>
+<a href="#L4"> 4</a>
+<a href="#L5"> 5</a>
+<a href="#L6"> 6</a>
+<a href="#L7"> 7</a>
+<a href="#L8"> 8</a>
+<a href="#L9"> 9</a>
+<a href="#L10">10</a>
+<a href="#L11">11</a>
+<a href="#L12">12</a>
+<a href="#L13">13</a>
+<a href="#L14">14</a>
+<a href="#L15">15</a>
+<a href="#L16">16</a>
+<a href="#L17">17</a>
+<a href="#L18">18</a>
+<a href="#L19">19</a>
+<a href="#L20">20</a>
+<a href="#L21">21</a>
+<a href="#L22">22</a>
+<a href="#L23">23</a>
+<a href="#L24">24</a>
+<a href="#L25">25</a>
+<a href="#L26">26</a>
+<a href="#L27">27</a>
+<a href="#L28">28</a>
+</pre>
+<pre><code class="ocaml">(** Copyright 2021-2024, DmitryPilyuk and raf-nr *)
+
+(** SPDX-License-Identifier: LGPL-3.0-or-later *)
+
+open Ast
+
+type error =
+  [ `Devision_by_zero
+  | `Pattern_matching_failure
+  | `Unbound_variable of id (* Unreachable after type checking *)
+  | `Unbound_effect of id (* Unreachable after type checking *)
+  | `Unbound_handler of id
+  | `Type_error (* Unreachable after type checking *)
+  | `Handler_without_continue of id (* Unreachable after type checking *)
+  | `Not_continue_var of id (* Unreachable after type checking *)
+  ]
+(* More detailed descriptions of errors can be found in the file int_pprint.ml. *)
+
+(* Constructors for types *)
+let division_by_zero = `Division_by_zero
+let pattern_matching_failure = `Pattern_matching_failure
+let unbound_variable name = <span data-count="0">`</span>Unbound_variable name
+let unbound_effect name = <span data-count="0">`</span>Unbound_effect name
+let type_error = `Type_error
+let unbound_handler name = <span data-count="1">`</span>Unbound_handler name
+let handler_without_continue name = <span data-count="0">`</span>Handler_without_continue name
+let not_continue_var name = <span data-count="0">`</span>Not_continue_var name
+(* ---------------- *)
+</code></pre>
+      </div>
+    </div>
+    <script src="../../coverage.js"></script>
+  </body>
+</html>
