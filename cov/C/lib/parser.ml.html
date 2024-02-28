@@ -1604,7 +1604,7 @@ let p_func_decl statements : func_decl t =
 
 let p_programm : program t =
   whitespace *<span data-count="15">&gt;</span> sep_b<span data-count="15">y</span> whitespace (p_func_dec<span data-count="15">l</span> p_statements)
-  &gt;&gt;<span data-count="15">=</span> fun prog_ls -&gt; <span data-count="13">r</span>eturn @@ prog_ls
+  &gt;&gt;<span data-count="15">=</span> fun prog_ls -&gt; <span data-count="13">r</span>eturn prog_ls
 
 let parse input = <span data-count="13">p</span>arse_string ~consume:All p_programm input
 </code></pre>
