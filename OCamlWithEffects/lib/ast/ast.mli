@@ -13,24 +13,24 @@ type const =
 [@@deriving show { with_path = false }]
 
 type bin_op =
-  | Add (** + *)
-  | Sub (** - *)
-  | Mul (** * *)
-  | Div (** / *)
-  | Eq (** = *)
-  | NEq (** <> or != *)
-  | Gt (** > *)
-  | Gte (** >= *)
-  | Lt (** < *)
-  | Lte (** <= *)
-  | And (** && *)
-  | Or (** || *)
+  | Add (**  +  *)
+  | Sub (**  -  *)
+  | Mul (**  * *)
+  | Div (**  / *)
+  | Eq (**  = *)
+  | NEq (**  <> or != *)
+  | Gt (**  > *)
+  | Gte (**  >= *)
+  | Lt (**  < *)
+  | Lte (**  <= *)
+  | And (**  && *)
+  | Or (**  || *)
 [@@deriving show { with_path = false }]
 
 type un_op =
-  | Not (** not *)
-  | Minus (** - *)
-  | Plus (** + *)
+  | Not (**  not *)
+  | Minus (**  -  *)
+  | Plus (**  +  *)
 [@@deriving show { with_path = false }]
 
 type effect_types_annotation =
@@ -55,8 +55,8 @@ type pattern =
   | PVal of id (** x *)
   | PTuple of pattern list (** (x, y, z) *)
   | PListCons of pattern * pattern (** hd :: tl *)
-  | PEffectWithArguments of id * pattern (** Effect *)
-  | PEffectWithoutArguments of id (** Effect (x::y) *)
+  | PEffectWithArguments of id * pattern (** Effect (x::y) *)
+  | PEffectWithoutArguments of id (** Effect *)
 [@@deriving show { with_path = false }]
 
 type effect_handler =

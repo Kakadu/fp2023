@@ -82,7 +82,8 @@ let%expect_test _ =
     in
     f [1]
   |};
-  [%expect {|
+  [%expect
+    {|
     Error: pattern matching failure - the value does not match any pattern. |}]
 ;;
 
@@ -122,7 +123,8 @@ let%expect_test _ =
     in
     f (1, 2)
   |};
-  [%expect {|
+  [%expect
+    {|
     Error: pattern matching failure - the value does not match any pattern. |}]
 ;;
 
@@ -140,7 +142,8 @@ let%expect_test _ =
 
     let res = f ((5,0), (6, 1))
     |};
-  [%expect {|
+  [%expect
+    {|
     Error: pattern matching failure - the value does not match any pattern. |}]
 ;;
 
