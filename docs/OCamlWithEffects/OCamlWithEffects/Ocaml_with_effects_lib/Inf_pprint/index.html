@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"><head><title>Inf_pprint (OCamlWithEffects.Ocaml_with_effects_lib.Inf_pprint)</title><link rel="stylesheet" href="../../../odoc.support/odoc.css"/><meta charset="utf-8"/><meta name="generator" content="odoc 2.3.1"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><script src="../../../odoc.support/highlight.pack.js"></script><script>hljs.initHighlightingOnLoad();</script></head><body class="odoc"><nav class="odoc-nav"><a href="../index.html">Up</a> – <a href="../../index.html">OCamlWithEffects</a> &#x00BB; <a href="../index.html">Ocaml_with_effects_lib</a> &#x00BB; Inf_pprint</nav><header class="odoc-preamble"><h1>Module <code><span>Ocaml_with_effects_lib.Inf_pprint</span></code></h1><p>Copyright 2021-2024, DmitryPilyuk and raf-nr</p></header><div class="odoc-content"><p>SPDX-License-Identifier: LGPL-3.0-or-later</p><div class="odoc-spec"><div class="spec value anchored" id="val-print_inferencer_error"><a href="#val-print_inferencer_error" class="anchor"></a><code><span><span class="keyword">val</span> print_inferencer_error : 
+  <span><span>[&lt; `Handler_without_continue
+  <span><span>| `Not_continue_val</span> of string</span>
+  <span>| `Handler_without_effect</span>
+  <span><span>| `Not_effect_with_args</span> of string</span>
+  <span><span>| `Not_effect_without_args</span> of string</span>
+  <span>| `Not_reachable</span>
+  <span>| `Occurs_check</span>
+  <span>| `Perform_with_no_effect</span>
+  <span><span>| `Several_bounds</span> of string</span>
+  <span><span>| `Unbound_effect</span> of string</span>
+  <span><span>| `Unbound_variable</span> of string</span>
+  <span><span>| `Unification_failed</span> of <a href="../Typedtree/index.html#type-typ">Typedtree.typ</a> * <a href="../Typedtree/index.html#type-typ">Typedtree.typ</a></span>
+  <span><span>| `Wrong_effect_typ</span> of string * <a href="../Typedtree/index.html#type-typ">Typedtree.typ</a></span> ]</span> <span class="arrow">&#45;&gt;</span></span>
+  unit</span></code></div></div><div class="odoc-spec"><div class="spec value anchored" id="val-expr_without_name"><a href="#val-expr_without_name" class="anchor"></a><code><span><span class="keyword">val</span> expr_without_name : <span><a href="../Typedtree/index.html#type-typ">Typedtree.typ</a> <span class="arrow">&#45;&gt;</span></span> string</span></code></div></div><div class="odoc-spec"><div class="spec value anchored" id="val-expr_with_name"><a href="#val-expr_with_name" class="anchor"></a><code><span><span class="keyword">val</span> expr_with_name : <span>string <span class="arrow">&#45;&gt;</span></span> <span><a href="../Typedtree/index.html#type-typ">Typedtree.typ</a> <span class="arrow">&#45;&gt;</span></span> string</span></code></div></div><div class="odoc-spec"><div class="spec value anchored" id="val-print_expr_type"><a href="#val-print_expr_type" class="anchor"></a><code><span><span class="keyword">val</span> print_expr_type : <span><a href="../Typedtree/index.html#type-typ">Typedtree.typ</a> <span class="arrow">&#45;&gt;</span></span> unit</span></code></div></div><div class="odoc-spec"><div class="spec value anchored" id="val-print_program_type"><a href="#val-print_program_type" class="anchor"></a><code><span><span class="keyword">val</span> print_program_type : 
+  <span><span><span>(string, <a href="../Typedtree/index.html#type-scheme">Typedtree.scheme</a>, <span class="type-var">'a</span>)</span> <span class="xref-unresolved">Base</span>.Map.t</span> <span class="arrow">&#45;&gt;</span></span>
+  <span><span>string list</span> <span class="arrow">&#45;&gt;</span></span>
+  unit</span></code></div></div></div></body></html>

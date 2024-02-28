@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"><head><title>Int_pprint (OCamlWithEffects.Ocaml_with_effects_lib.Int_pprint)</title><link rel="stylesheet" href="../../../odoc.support/odoc.css"/><meta charset="utf-8"/><meta name="generator" content="odoc 2.3.1"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><script src="../../../odoc.support/highlight.pack.js"></script><script>hljs.initHighlightingOnLoad();</script></head><body class="odoc"><nav class="odoc-nav"><a href="../index.html">Up</a> – <a href="../../index.html">OCamlWithEffects</a> &#x00BB; <a href="../index.html">Ocaml_with_effects_lib</a> &#x00BB; Int_pprint</nav><header class="odoc-preamble"><h1>Module <code><span>Ocaml_with_effects_lib.Int_pprint</span></code></h1><p>Copyright 2021-2024, DmitryPilyuk and raf-nr</p></header><div class="odoc-content"><p>SPDX-License-Identifier: LGPL-3.0-or-later</p><div class="odoc-spec"><div class="spec value anchored" id="val-print_interpreter_error"><a href="#val-print_interpreter_error" class="anchor"></a><code><span><span class="keyword">val</span> print_interpreter_error : 
+  <span><span>[&lt; `Division_by_zero
+  <span><span>| `Handler_without_continue</span> of string</span>
+  <span><span>| `Not_continue_var</span> of string</span>
+  <span>| `Pattern_matching_failure</span>
+  <span>| `Type_error</span>
+  <span><span>| `Unbound_effect</span> of string</span>
+  <span><span>| `Unbound_handler</span> of string</span>
+  <span><span>| `Unbound_variable</span> of string</span> ]</span> <span class="arrow">&#45;&gt;</span></span>
+  unit</span></code></div></div><div class="odoc-spec"><div class="spec value anchored" id="val-print_expr_value"><a href="#val-print_expr_value" class="anchor"></a><code><span><span class="keyword">val</span> print_expr_value : <span><a href="../Values/index.html#type-value">Values.value</a> <span class="arrow">&#45;&gt;</span></span> <span><a href="../Typedtree/index.html#type-typ">Typedtree.typ</a> <span class="arrow">&#45;&gt;</span></span> unit</span></code></div></div><div class="odoc-spec"><div class="spec value anchored" id="val-print_program_value"><a href="#val-print_program_value" class="anchor"></a><code><span><span class="keyword">val</span> print_program_value : 
+  <span><span><span>(string, <a href="../Values/index.html#type-value">Values.value</a>, <span class="type-var">'a</span>)</span> <span class="xref-unresolved">Base</span>.Map.t</span> <span class="arrow">&#45;&gt;</span></span>
+  <span><span><span>(string, <a href="../Typedtree/index.html#type-scheme">Typedtree.scheme</a>, <span class="type-var">'b</span>)</span> <span class="xref-unresolved">Base</span>.Map.t</span> <span class="arrow">&#45;&gt;</span></span>
+  <span><span>string list</span> <span class="arrow">&#45;&gt;</span></span>
+  unit</span></code></div></div></div></body></html>
