@@ -18,7 +18,7 @@ type error =
   | Unification_failed of typ * typ
   | Empty_pattern
 
-let pp_error fmt : error -> _ = function
+let pp_error fmt = function
   | Division_by_zero -> Format.fprintf fmt "Exception: Division_by_zero."
   | UnboundValue s -> Format.fprintf fmt "Error: Unbound value %s" s
   | UnboundConstructor s -> Format.fprintf fmt "Error: Unbound constructor %s" s

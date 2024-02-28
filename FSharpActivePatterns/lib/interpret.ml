@@ -40,9 +40,7 @@ module Environment (M : MonadFail) = struct
   ;;
 end
 
-module Interpret (M : MonadFail) : sig
-  val eval_program : program -> (value, error) M.t
-end = struct
+module Interpret (M : MonadFail) = struct
   open M
   open Environment (M)
 
@@ -85,15 +83,14 @@ end = struct
           | VCases (a, opt_res) when String.( = ) a acase_id ->
             (match opt_res, acase_args with
              | Some v, res :: [] -> bind_fun_params (res, v)
-             | None, res :: [] -> bind_fun_params (res, VNone)
              | None, _ -> return []
              | _ -> fail MatchFailure)
-          | VInt _ ->
+          | VInt _ | VString _ | VList _ | VTuple _ | VBool _ ->
             (match apat_arg with
              | Var name -> return [ name, eval_res_apat ]
              | _ -> fail Unreachable)
-          | _ -> fail NotImplemented)
-       | _ -> fail Unreachable)
+          | _ -> fail MatchFailure)
+       | _ -> fail MatchFailure)
     | _ -> fail MatchFailure
 
   and eval expr env =
@@ -215,15 +212,12 @@ end = struct
       | h :: tl ->
         let* eval_h = eval h env in
         let eval_env =
-          let rec eval_env_apat env = function
-            | [] -> env
-            | h :: tl -> add_bind (eval_env_apat env tl) h eval_h
-          in
           match h with
           | LetExpr (_, f, _) -> add_bind env f eval_h
           | LetActExpr (fl, _) when List.length fl = 1 ->
             add_bind env (List.hd_exn fl) eval_h
-          | LetActExpr (fl, _) -> eval_env_apat env fl
+          | LetActExpr (fl, _) ->
+            List.fold_right ~f:(fun h acc -> add_bind acc h eval_h) ~init:env fl
           | _ -> env
         in
         helper eval_env tl

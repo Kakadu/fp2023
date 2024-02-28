@@ -2,7 +2,7 @@
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-type id = string [@@deriving eq, show { with_path = false }]
+type id = string [@@deriving show { with_path = false }]
 
 module VarSetInit = struct
   include Caml.Set.Make (Int)
