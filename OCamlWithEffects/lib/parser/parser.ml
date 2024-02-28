@@ -577,7 +577,7 @@ let parse_list pack =
       ]
   in
   let content = skip_wspace *> many (parse_expr <* list_sep) in
-  parens self <|> lift elist @@ sqr_parens @@ content
+  parens self <|> lift elist @@ sqr_parens content
 ;;
 
 let parse_tuple pack =
