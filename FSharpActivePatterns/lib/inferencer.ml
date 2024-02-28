@@ -11,20 +11,7 @@ open Base
 open Typedtree
 open Errorinter
 
-module R : sig
-  include Monad.Infix
-
-  val bind : 'a t -> f:('a -> 'b t) -> 'b t
-  val return : 'a -> 'a t
-  val fail : error -> 'a t
-
-  module Syntax : sig
-    val ( let* ) : 'a 'b. 'a t -> ('a -> 'b t) -> 'b t
-  end
-
-  val fresh : int t
-  val run : 'a t -> ('a, error) Result.t
-end = struct
+module R = struct
   type 'a t = int -> int * ('a, error) Result.t
 
   let ( >>= ) : 'a 'b. 'a t -> ('a -> 'b t) -> 'b t =
@@ -70,19 +57,6 @@ module Type = struct
     | Tuple_typ ts -> occurs_in_list ts
     | Prim _ -> false
   ;;
-
-  let free_vars =
-    let rec helper acc =
-      let free_list acc ts = List.fold ts ~init:acc ~f:(fun acc t -> helper acc t) in
-      function
-      | Ty_var b -> VarSetInit.add b acc
-      | Arrow (l, r) -> helper (helper acc l) r
-      | List_typ t -> helper acc t
-      | Tuple_typ ts -> free_list acc ts
-      | Prim _ -> acc
-    in
-    helper VarSetInit.empty
-  ;;
 end
 
 let fold_left map ~init ~f =
@@ -92,18 +66,7 @@ let fold_left map ~init ~f =
     f key data acc)
 ;;
 
-module Subst : sig
-  type t
-
-  val pp : Format.formatter -> t -> unit
-  val empty : t
-  val singleton : fresh -> typ -> t R.t
-  val apply : t -> typ -> typ
-  val unify : typ -> typ -> t R.t
-  val compose : t -> t -> t R.t
-  val compose_all : t list -> t R.t
-  val remove : t -> fresh -> t
-end = struct
+module Subst = struct
   open R
   open R.Syntax
 
@@ -210,8 +173,8 @@ module VarSet = struct
   ;;
 end
 
-type binder_set = VarSet.t [@@deriving show { with_path = false }]
-type scheme = S of binder_set * typ [@@deriving show { with_path = false }]
+type binder_set = VarSet.t
+type scheme = S of binder_set * typ
 
 module Scheme = struct
   type t = scheme
@@ -355,24 +318,18 @@ let infer =
     | MatchExpr (cond, matches) ->
       let* cond_sub, cond_ty = helper env cond in
       let env = TypeEnv.apply cond_sub env in
-      let rec (matches_helper : (pattern * expr) list -> (Subst.t * typ * typ) R.t)
-        = function
+      let rec matches_helper = function
         | [] -> fail Empty_pattern
-        | hd :: [] ->
-          (match hd with
-           | pat, expr ->
-             let* pat_env, pat_ty = pattern_helper env pat in
-             let* s1 = unify cond_ty pat_ty in
-             let* s2, expr_ty = helper (TypeEnv.apply s1 pat_env) expr in
-             let* finalsub = Subst.compose s1 s2 in
-             return (finalsub, Subst.apply finalsub expr_ty, pat_ty))
+        | (pat, expr) :: [] ->
+          let* pat_env, pat_ty = pattern_helper env pat in
+          let* s1 = unify cond_ty pat_ty in
+          let* s2, expr_ty = helper (TypeEnv.apply s1 pat_env) expr in
+          let* finalsub = Subst.compose s1 s2 in
+          return (finalsub, Subst.apply finalsub expr_ty, pat_ty)
         | hd :: tl ->
           let* s1, ty1, pattern1 = matches_helper [ hd ] in
-          let* s2, ty2, pattern2 = matches_helper tl in
-          let* s3 =
-            match pattern1, pattern2 with
-            | _ -> return Subst.empty
-          in
+          let* s2, ty2, _ = matches_helper tl in
+          let* s3 = return Subst.empty in
           let* s4 = unify ty1 ty2 in
           let* finalsubst = Subst.compose_all [ s1; s2; s3; s4 ] in
           return (finalsubst, Subst.apply s3 ty1, pattern1)
