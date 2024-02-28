@@ -11,27 +11,14 @@ let parse p s = parse_string ~consume:Consume.All p s
 (* helpers *)
 
 let is_keyword = function
-  | "let"
-  | "in"
-  | "if"
-  | "then"
-  | "else"
-  | "fun"
-  | "function"
-  | "rec"
-  | "true"
-  | "false"
-  | "val" -> true
+  | "let" | "in" | "if" | "then" | "else" | "fun" | "rec" | "true" | "false" -> true
   | _ -> false
 ;;
 
 let pws = take_while Char.is_whitespace
-let pws1 = take_while1 Char.is_whitespace
 let pstoken s = pws *> string s
-let pstoken1 s = pws1 *> string s
 let ptoken s = pws *> s
 let pparens p = pstoken "(" *> p <* pstoken ")"
-let pbrackets p = pstoken "{" *> p <* pstoken "}"
 let psqparens p = pstoken "[" *> p <* pstoken "]"
 
 let chainl1 e op =
@@ -80,8 +67,7 @@ let varname =
 let ptint = pstoken "int" *> return TInt
 let ptstring = pstoken "string" *> return TString
 let ptbool = pstoken "bool" *> return TBool
-let unspecified = pstoken "" *> return Unspecified
-let pty = choice [ ptint; ptstring; ptbool; unspecified ]
+let pty = choice [ ptint; ptstring; ptbool ]
 
 (* patterns *)
 
@@ -93,14 +79,6 @@ let ppattern =
   choice
     [ pconst; pvar; (pstoken "_" >>| fun _ -> PAny); (pstoken "[]" >>| fun _ -> PNil) ]
 ;;
-
-(* records *)
-
-let record pexpr =
-  pbrackets (lift2 List.cons pexpr (many1 (pstoken ";" *> pexpr)) >>| fun x -> ERecord x)
-;;
-
-let precord pexpr = pstoken "type" *> varname *> pstoken "=" *> record pexpr
 
 (* expressions *)
 
@@ -164,9 +142,7 @@ let pfun pexpr =
 
 let pexpr =
   fix (fun expr ->
-    let expr =
-      choice [ peconst; pevar; pparens expr; plist expr; precord expr; pfun expr ]
-    in
+    let expr = choice [ peconst; pevar; pparens expr; plist expr; pfun expr ] in
     let expr = peapp expr <|> expr in
     let expr = chainl1 expr (mult <|> div) in
     let expr = chainl1 expr (add <|> sub) in
@@ -175,12 +151,6 @@ let pexpr =
     let expr = pbranch expr <|> expr in
     let expr = plet expr <|> expr in
     expr)
-;;
-
-(* type ascription *)
-
-let tvar =
-  lift2 (fun name ty -> { name; ty }) varname (pstoken ":" *> pty <|> return Unspecified)
 ;;
 
 let parse_expr = parse_string ~consume:Consume.All (pexpr <* skip_while Char.is_whitespace)

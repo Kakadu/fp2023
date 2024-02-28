@@ -11,14 +11,6 @@ type ty =
   | TList of ty
   | TArrow of ty * ty
   | TTuple of ty list
-  | Unspecified
-  | UserDefined of id
-[@@deriving show { with_path = false }]
-
-type ty_bind =
-  { name : id
-  ; ty : ty
-  }
 [@@deriving show { with_path = false }]
 
 type const =
@@ -70,13 +62,6 @@ type expr =
   | EList of expr list
   | EMatch of expr * (pattern * expr)
   | EUnit
-  | ERecord of expr list
 [@@deriving show { with_path = false }]
 
 and decl = rec_flag * id * expr
-
-type record_bind =
-  { name : id
-  ; field : expr
-  }
-[@@deriving show { with_path = false }]
