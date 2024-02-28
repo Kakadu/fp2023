@@ -228,24 +228,24 @@
 [@@deriving show { with_path = false }]
 
 <span data-count="25">t</span>ype bin_op =
-  | Add (** + *)
-  | Sub (** - *)
-  | Mul (** * *)
-  | Div (** / *)
-  | Eq (** = *)
-  | NEq (** &lt;&gt; or != *)
-  | Gt (** &gt; *)
-  | Gte (** &gt;= *)
-  | Lt (** &lt; *)
-  | Lte (** &lt;= *)
-  | And (** &amp;&amp; *)
-  | Or (** || *)
+  | Add (**  +  *)
+  | Sub (**  -  *)
+  | Mul (**  * *)
+  | Div (**  / *)
+  | Eq (**  = *)
+  | NEq (**  &lt;&gt; or != *)
+  | Gt (**  &gt; *)
+  | Gte (**  &gt;= *)
+  | Lt (**  &lt; *)
+  | Lte (**  &lt;= *)
+  | And (**  &amp;&amp; *)
+  | Or (**  || *)
 [@@deriving show { with_path = false }]
 
 <span data-count="8">t</span>ype un_op =
-  | Not (** not *)
-  | Minus (** - *)
-  | Plus (** + *)
+  | Not (**  not *)
+  | Minus (**  -  *)
+  | Plus (**  +  *)
 [@@deriving show { with_path = false }]
 
 <span data-count="213">t</span>ype effect_types_annotation =
@@ -270,8 +270,8 @@
   | PVal of id (** x *)
   | PTuple of <span data-count="22">p</span>attern lis<span data-count="5">t</span> (** (x, y, z) *)
   | PListCons of pattern * pattern (** hd :: tl *)
-  | PEffectWithArguments of id * pattern (** Effect *)
-  | PEffectWithoutArguments of id (** Effect (x::y) *)
+  | PEffectWithArguments of id * pattern (** Effect (x::y) *)
+  | PEffectWithoutArguments of id (** Effect *)
 [@@deriving show { with_path = false }<span data-count="137">]</span>
 
 <span data-count="1215">t</span>ype effect_handler =
