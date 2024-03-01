@@ -130,21 +130,21 @@
 open Typedtree
 
 type error =
-  | Division_by_zero
+  | DivisionByZero (** Interpret Errors*)
   | UnboundValue of string
   | UnboundConstructor of string
   | MatchFailure
-  | EmptyProgram
   | TypeError
   | Unreachable
+  | OccursCheck (** Typing errors *)
+  | NoVariable of string
+  | UnificationFailed of typ * typ
+  | EmptyPattern
+  | EmptyProgram
   | NotImplemented
-  | Occurs_check
-  | No_variable of string
-  | Unification_failed of typ * typ
-  | Empty_pattern
 
 let pp_error fmt = function
-  | <span data-count="1">D</span>ivision_by_zero -&gt; Format.fprintf fmt "Exception: Division_by_zero."
+  | <span data-count="1">D</span>ivisionByZero -&gt; Format.fprintf fmt "Exception: Division_by_zero."
   | <span data-count="0">U</span>nboundValue s -&gt; Format.fprintf fmt "Error: Unbound value %s" s
   | <span data-count="0">U</span>nboundConstructor s -&gt; Format.fprintf fmt "Error: Unbound constructor %s" s
   | <span data-count="0">M</span>atchFailure -&gt;
@@ -154,9 +154,9 @@ let pp_error fmt = function
   | <span data-count="0">U</span>nreachable -&gt;
     Format.fprintf fmt "Error: Unreachable error... Something went wrong..."
   | <span data-count="0">N</span>otImplemented -&gt; Format.fprintf fmt "This feature has not yet been implemented"
-  | <span data-count="0">O</span>ccurs_check -&gt; Format.fprintf fmt "Typechecker error: occurs check failed"
-  | <span data-count="0">N</span>o_variable s -&gt; Format.fprintf fmt "Typechecker error: undefined variable '%s'" s
-  | <span data-count="0">U</span>nification_failed (l, r) -&gt;
+  | <span data-count="0">O</span>ccursCheck -&gt; Format.fprintf fmt "Typechecker error: occurs check failed"
+  | <span data-count="0">N</span>oVariable s -&gt; Format.fprintf fmt "Typechecker error: undefined variable '%s'" s
+  | <span data-count="0">U</span>nificationFailed (l, r) -&gt;
     Format.fprintf
       fmt
       "Typechecker error: unification failed on %a and %a"
@@ -164,7 +164,7 @@ let pp_error fmt = function
       l
       Typedtree.pp_typ_binder
       r
-  | <span data-count="0">E</span>mpty_pattern -&gt; Format.fprintf fmt "Typechecker error: empty pattern"
+  | <span data-count="0">E</span>mptyPattern -&gt; Format.fprintf fmt "Typechecker error: empty pattern"
 ;;
 </code></pre>
       </div>

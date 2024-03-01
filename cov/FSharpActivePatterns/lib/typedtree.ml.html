@@ -143,10 +143,10 @@ let pp_list helper l sep =
 ;;
 
 let rec pp_typ_binder ppf =
-  <span data-count="30">l</span>et open Format in
+  <span data-count="31">l</span>et open Format in
   function
   | <span data-count="0">T</span>y_var n -&gt; fprintf ppf "%d" n
-  | <span data-count="23">P</span>rim s -&gt; pp_print_string ppf s
+  | <span data-count="24">P</span>rim s -&gt; pp_print_string ppf s
   | <span data-count="1">A</span>rrow (l, r) -&gt; fprintf ppf "(%a -&gt; %a)" pp_typ_binder l pp_typ_binder r
   | <span data-count="3">L</span>ist_typ t -&gt; fprintf ppf "%a list" pp_typ_binder t
   | <span data-count="3">T</span>uple_typ ts -&gt; fprintf ppf "(%a)" (fun ppf -&gt; <span data-count="3">p</span>p_list pp_typ_binder ppf " * ") ts
