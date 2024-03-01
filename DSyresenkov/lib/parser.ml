@@ -1,27 +1,23 @@
-(** Copyright 2021-2023, Kakadu, Ilya Syresenkov and contributors *)
+(** Copyright 2021-2023, Ilya Syresenkov *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
 (* let rec fac x = if x = 1 then x else x * (fac x) *)
 
 (*
-   Todo:
-   1. Implement signed int parse
-   2. Think about type annotations support
-   3. Implement match parsing
-   4. Think about supporting list a :: b syntax
-   5. Add tuples and lists parsers
-   6. Add comments parser
+   Type anotations
+   let f : int -> int -> bool = fun x y -> x = y
+   let f (x : int) (y : int) : bool = x = y
 *)
 
 open Angstrom
 open Base
 open Ast
 
-let pp printer parser str =
-  Stdlib.Format.printf "%a" printer
-  @@ Result.ok_or_failwith
-  @@ parse_string ~consume:Consume.All parser str
+let pp printer parser input =
+  match parse_string ~consume:Consume.All parser input with
+  | Result.Ok res -> Stdlib.Format.printf "%a" printer res
+  | _ -> Stdlib.print_endline "Failed to parse"
 ;;
 
 let is_space = function
@@ -87,7 +83,7 @@ let pid =
   >>= fun s -> if is_keyword s then fail "Keyword identifiers are forbidden" else return s
 ;;
 
-let pint = ptoken @@ take_while1 is_digit >>| fun x -> EConst (CInt (int_of_string x))
+let pint = ptoken @@ take_while1 is_digit >>| fun x -> CInt (int_of_string x)
 
 let pbool =
   ptoken
@@ -96,10 +92,11 @@ let pbool =
        ; pstoken "false" *> return false
        ; fail "Failed to parse boolean"
        ]
-  >>| fun x -> EConst (CBool x)
+  >>| fun x -> CBool x
 ;;
 
-let pconst = choice [ pint; pbool ]
+let punit = pstoken "()" *> return CUnit
+let pconst = choice [ pint; pbool; punit ] >>| fun x -> EConst x
 let pvar = pid >>| fun e -> EVar e
 
 let plet pexpr =
@@ -112,7 +109,7 @@ let plet pexpr =
        (pstoken "rec" *> return Rec <|> return NonRec)
        (pstoken "()" <|> pid)
        (pstoken "=" *> pexpr <|> pbody pexpr)
-       (pstoken "in" *> pexpr <|> return EUnit)
+       (pstoken "in" *> pexpr >>| (fun x -> Some x) <|> return None)
 ;;
 
 let pbranch pexpr =
@@ -121,7 +118,71 @@ let pbranch pexpr =
        (fun cond t f -> EBranch (cond, t, f))
        (pstoken "if" *> pexpr)
        (pstoken "then" *> pexpr)
-       (pstoken "else" *> pexpr <|> return EUnit)
+       (pstoken "else" *> pexpr <|> return (EConst CUnit))
+;;
+
+let plist pexpr =
+  let psqparens p = pstoken "[" *> p <* pstoken "]" in
+  psqparens @@ sep_by (pstoken ";") pexpr >>| fun x -> EList x
+;;
+
+let ppconst = choice [ pint; pbool ] >>| fun x -> PConst x
+let ppvar = pid >>| fun x -> PVar x
+
+let ppattern =
+  fix
+  @@ fun ppattern ->
+  let ppt =
+    choice
+      [ pparens ppattern
+      ; ppconst
+      ; (pstoken "_" >>| fun _ -> PWild)
+      ; (pstoken "[]" >>| fun _ -> PEmpty)
+      ; ppvar
+      ]
+  in
+  let ppt =
+    lift2
+      (fun p1 -> function
+        | h :: tl -> PCons (p1, h, tl)
+        | _ -> p1)
+      ppt
+      (many (pstoken "::" *> ppt))
+  in
+  let ppt =
+    lift2
+      (fun p -> function
+        | h :: tl -> PTuple (p, h, tl)
+        | _ -> p)
+      ppt
+      (many (pstoken "," *> ppt))
+  in
+  let ppt =
+    lift2
+      (fun p1 -> function
+        | h :: tl -> POr (p1, h, tl)
+        | _ -> p1)
+      ppt
+      (many (pstoken "|" *> ppt))
+  in
+  ppt
+;;
+
+let pmatch pexpr =
+  let pcase ppattern pexpr =
+    lift2 (fun p e -> p, e) (pstoken "|" *> ppattern) (pstoken "->" *> pexpr)
+  in
+  lift2
+    (fun expr cases -> EMatch (expr, cases))
+    (pstoken "match" *> pexpr <* pstoken "with")
+    (many1 (pcase ppattern pexpr))
+;;
+
+let pfun pexpr =
+  let rec pbody pexpr =
+    pid >>= fun id -> pbody pexpr <|> pstoken "->" *> pexpr >>| fun e -> EFun (id, e)
+  in
+  pstoken "fun" *> pbody pexpr
 ;;
 
 let pebinop chain1 e pbinop = chain1 e (pbinop >>| fun op e1 e2 -> EBinop (op, e1, e2))
@@ -132,11 +193,15 @@ let pmul = pstoken "*" *> return Mul
 let pdiv = pstoken "/" *> return Div
 let peq = pstoken "=" *> return Eq
 let pneq = pstoken "<>" *> return Neq
+let ples = pstoken "<" *> return Les
+let pleq = pstoken "<=" *> return Leq
+let pgre = pstoken ">" *> return Gre
+let pgeq = pstoken ">=" *> return Geq
 
 let pexpr =
   fix
   @@ fun pexpr ->
-  let pe = choice [ pparens pexpr; pconst; pvar ] in
+  let pe = choice [ pparens pexpr; pconst; pvar; plist pexpr; pfun pexpr ] in
   let pe =
     lift2
       (fun f args -> List.fold_left ~f:(fun f arg -> EApp (f, arg)) ~init:f args)
@@ -145,8 +210,17 @@ let pexpr =
   in
   let pe = plbinop pe (pmul <|> pdiv) in
   let pe = plbinop pe (padd <|> psub) in
-  let pe = plbinop pe (peq <|> pneq) in
-  choice [ plet pexpr; pbranch pexpr; pe ]
+  let pe = plbinop pe (choice [ peq; pneq; pgeq; pleq; ples; pgre ]) in
+  let pe =
+    lift2
+      (fun e -> function
+        | h :: tl -> ETuple (e, h, tl)
+        | _ -> e)
+      pe
+      (many (pstoken "," *> pe))
+  in
+  choice [ plet pexpr; pbranch pexpr; pmatch pexpr; pfun pexpr; pe ]
 ;;
 
-let parse = parse_string ~consume:Consume.All (pexpr <* pspaces)
+let parse_expr = parse_string ~consume:Consume.All (pexpr <* pspaces)
+let parse = parse_string ~consume:Consume.All (many1 (plet pexpr) <* pspaces)

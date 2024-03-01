@@ -1,12 +1,10 @@
-(** Copyright 2021-2023, Kakadu and contributors *)
+(** Copyright 2023, Artem-Rzhankoff *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-open OcamlOOP_lib.Parser
-open OcamlOOP_lib.Ast
+open OcamlOOP_lib.Interpreter
 
-let test_parse = 
-  let res = parse Stdio.In_channel.(input_all stdin) in 
-  match res with
-  | Ok v -> List.iter (fun e -> print_endline (show_exp e)) v
-  | Error v -> prerr_endline v
+let () =
+  let input = Stdio.In_channel.(input_all stdin) in
+  eval_with_printing input
+;;

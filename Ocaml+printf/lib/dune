@@ -1,10 +1,27 @@
+(include_subdirs unqualified)
+
 (library
  (name ocaml_printf_lib)
  (public_name Ocaml+printf.Lib)
- (modules Ast Parser Tests)
+ (modules Ast Parser Typedtree Inferencer Interpreter Pprint)
  (libraries base stdlib angstrom)
  (inline_tests)
  (preprocess
-  (pps ppx_expect ppx_inline_test ppx_deriving.show ppx_deriving.eq))
+  (pps ppx_expect ppx_deriving.show))
  (instrumentation
   (backend bisect_ppx)))
+
+(library
+ (name tests)
+ (modules Parser_tests Infer_tests Interpret_tests)
+ (libraries ocaml_printf_lib)
+ (inline_tests)
+ (preprocess
+  (pps ppx_expect ppx_deriving.show))
+ (instrumentation
+  (backend bisect_ppx)))
+
+(env
+ (dev
+  (flags
+   (:standard -w -32))))

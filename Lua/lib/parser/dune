@@ -1,0 +1,10 @@
+(library
+ (name parser)
+ (public_name Lua.Parser)
+ (modules common expr stat parser)
+ (libraries base angstrom ast)
+ (preprocess
+  (pps ppx_expect))
+ (inline_tests)
+ (instrumentation
+  (backend bisect_ppx)))

@@ -6,11 +6,11 @@
   (flags
    (:standard -warn-error -A -w -58))))
 
-(executable
- (name REPL)
- (public_name REPL)
- (modules REPL)
- (libraries Lambda.Lib stdio))
+; (executable
+;  (name parser)
+;  (public_name parser)
+;  (modules Parser)
+;  (libraries Go.Lib stdio))
 
-(cram
- (deps ./REPL.exe %{bin:REPL}))
+; (cram
+;  (deps ./REPL.exe %{bin:REPL}))

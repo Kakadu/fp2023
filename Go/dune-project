@@ -10,13 +10,9 @@
 
 (maintainers "Nikita Lukonenko")
 
-(bug_reports "FIXME where to put bug reports about the code")
-
-(homepage "FIXME Homepage")
-
 (package
- (name Lambda) ; FIXME and regenerate .opam file using 'dune build @install'
- (synopsis "FIXME An interpreter for language")
+ (name Go) ;regenerate .opam file using 'dune build @install'
+ (synopsis "An interpreter for Golang language")
  (description
   "FIXME. A longer description, for example, which are the most interesing features being supported, etc.")
  (version 0.1)
@@ -29,6 +25,6 @@
   bisect_ppx
   (odoc :with-doc)
   (ocamlformat :build)
-  ; base
-  ; After adding dependencies to 'dune' files and the same dependecies here too
+  base
+  After adding dependencies to 'dune' files and the same dependecies here too
   ))

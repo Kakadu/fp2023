@@ -12,7 +12,7 @@
 
 (bug_reports "nikita.nemakin@yandex.ru")
 
-(homepage "")
+(homepage "github.com/nemakin/fp2023")
 
 (package
  (name OCaml+PolymorphicVariants)

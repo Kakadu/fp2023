@@ -1,18 +1,18 @@
 (library
- (name lambda_lib)
- (public_name Lambda.Lib)
- (modules Ast Lambda Interpret Parser Printast Pprintast utils)
- (modules_without_implementation ast)
+ (name javascript_lib)
+ (public_name Javascript.Lib)
+ (modules Ast Parser Print Utils Interpreter VTypes)
+ (modules_without_implementation VTypes)
  (libraries base angstrom)
  (preprocess
-  (pps ppx_deriving.show))
+  (pps ppx_expect ppx_deriving.show))
  (instrumentation
   (backend bisect_ppx)))
 
 (library
  (name tests)
- (modules tests)
- (libraries lambda_lib)
+ (modules ParserTests InterpreterTests WATnWtfjsTests)
+ (libraries javascript_lib)
  (preprocess
   (pps ppx_expect ppx_deriving.show))
  (instrumentation

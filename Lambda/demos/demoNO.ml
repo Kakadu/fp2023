@@ -7,35 +7,6 @@ open Ast
 open Lambda
 open Utils
 
-type 'a status =
-  | Done of 'a
-  | WIP of 'a
-
-let fin x = Done x
-let wip x = WIP x
-
-let nor_small_step_strat =
-  let rec helper = function
-    | (Var _ as l) | (Abs (_, _) as l) -> fin l
-    | App (f, arg) ->
-      (match helper f with
-       | WIP f2 -> fin (app f2 arg)
-       | Done (Abs (x, e)) -> wip (subst x ~by:arg e)
-       | Done f2 -> fin (App (f2, arg)))
-  in
-  let rec loop t =
-    match helper t with
-    | Done x -> x
-    | WIP x ->
-      Format.printf " -- %a\n%!" Pprintast.pp x;
-      loop x
-  in
-  let on_app _ f arg = loop (app f arg) in
-  let on_abs _ f x = loop (abs f x) in
-  let on_var _ x = loop (var x) in
-  { on_var; on_abs; on_app }
-;;
-
 let test strat term =
   Format.printf "Evaluating: %a\n%!" Pprintast.pp term;
   let rez = apply_strat strat term in
@@ -43,7 +14,7 @@ let test strat term =
   rez
 ;;
 
-module Std = struct
+module _ = struct
   let zero = abs "g" @@ abs "y" @@ Var "y"
   let one = abs "f" @@ abs "x" @@ app f (Var "x")
   let two = abs "f" @@ abs "x" @@ app f (app f x)
@@ -72,6 +43,8 @@ module Std = struct
     let hack = abs "x" (app f (app x x)) in
     abs "f" (app hack hack)
   ;;
+
+  let () = test nor_strat @@ zero |> Format.printf "%a\n%!" Pprintast.pp
 
   (* 5! = 120 *)
   let () =

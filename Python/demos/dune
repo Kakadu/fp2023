@@ -12,14 +12,14 @@
  (deps %{bin:demo_fact}))
 
 (executable
- (name interpreter_test)
- (public_name interpreter_test)
- (modules interpreter_test)
- (libraries Python.Lib)
+ (name interpreter)
+ (public_name interpreter)
+ (modules interpreter)
+ (libraries Python.Lib stdio)
  (preprocess
-  (pps ppx_show))
+  (pps ppx_show ppx_deriving.eq))
  (instrumentation
   (backend bisect_ppx)))
 
 (cram
- (deps %{bin:interpreter_test}))
+ (deps %{bin:interpreter}))

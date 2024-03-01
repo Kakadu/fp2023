@@ -1,10 +1,43 @@
 (executable
- (name demoFact)
- (modules demoFact)
- (public_name demoFact)
+ (name demoFactParse)
+ (modules demoFactParse)
+ (public_name demoFactParse)
+ (libraries miniml_lib)
+ (instrumentation
+  (backend bisect_ppx)))
+
+(executable
+ (name demoFacts)
+ (modules demoFacts)
+ (public_name demoFacts)
+ (libraries miniml_lib)
+ (instrumentation
+  (backend bisect_ppx)))
+
+(executable
+ (name demoLists)
+ (modules demoLists)
+ (public_name demoLists)
+ (libraries miniml_lib)
+ (instrumentation
+  (backend bisect_ppx)))
+
+(executable
+ (name demoTest)
+ (modules demoTest)
+ (public_name demoTest)
  (libraries miniml_lib)
  (instrumentation
   (backend bisect_ppx)))
 
 (cram
- (deps %{bin:demoFact}))
+ (deps %{bin:demoFactParse}))
+
+(cram
+ (deps %{bin:demoFacts}))
+
+(cram
+ (deps %{bin:demoLists}))
+
+(cram
+ (deps %{bin:demoTest}))

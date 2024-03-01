@@ -1,11 +1,11 @@
 (executable
- (name demoParse)
- (modules demoParse)
- (public_name demoParse)
- (libraries csharp_Exc_Lib stdio)
+ (name demoInterpret)
+ (modules demoInterpret)
+ (public_name demoInterpret)
+ (libraries ml_tests stdio)
  (instrumentation
   (backend bisect_ppx)))
 
 (cram
- (applies_to parsingTests)
- (deps ./demoParse.exe))
+ (applies_to interpreterTests try_catch_finTests failTests)
+ (deps ./demoInterpret.exe))

@@ -1,0 +1,7 @@
+(executable
+ (name demoInterpreter)
+ (public_name demoInterpreter)
+ (libraries ast interpreter parser))
+
+(cram
+ (deps ./demoInterpreter.exe))

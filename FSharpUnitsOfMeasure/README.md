@@ -8,11 +8,9 @@ Author: Efim Perevalov, es.perevalov@mail.ru
 
 Features done:
 
-- Parser
 
-Features in progress (and TODOs):
+- Parser, Interpreter
 
-- interpreter of non-recursive functions
 
 
 ##### Замечания по стилю кодирования

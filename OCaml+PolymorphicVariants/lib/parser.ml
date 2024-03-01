@@ -1,4 +1,4 @@
-(** Copyright 2021-2023, Nikita Nemakin *)
+(** Copyright 2023-2024, Nikita Nemakin *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
@@ -101,7 +101,6 @@ let tagname =
 ;;
 
 let ppvar = varname >>| pvar
-let pppoly p = lift2 ppoly tagname (option None (p >>| fun p -> Some p))
 let pptuple p = lift2 List.cons p (many1 (comma *> p)) >>| ptuple
 let pplist p = brackets @@ sep_by1 semi p >>| List.fold_right ~f:pcons ~init:(pconst CNil)
 
@@ -115,34 +114,23 @@ let chainr1 e op =
   e >>= go
 ;;
 
-type pdispatch =
-  { pat : pdispatch -> pattern t
-  ; tuple : pdispatch -> pattern t
-  ; poly : pdispatch -> pattern t
-  ; cons : pdispatch -> pattern t
-  }
-
-let pack =
-  let pat pack =
-    fix (fun _ -> choice [ pack.tuple pack; pack.cons pack; pack.poly pack ])
-  in
-  let term pack =
-    choice
-      [ pack.poly pack
-      ; ppconst
-      ; ppvar
-      ; ppany
-      ; pplist @@ pack.pat pack
-      ; parens @@ pack.pat pack
-      ]
-  in
-  let tuple pack = fix (fun _ -> pptuple @@ pack.cons pack) in
-  let poly pack = fix (fun _ -> pppoly @@ term pack) in
-  let cons pack = fix (fun _ -> chainr1 (term pack) (dcol *> return pcons)) in
-  { pat; tuple; poly; cons }
+let pppoly (p : pattern t) =
+  both (many1 tagname) (option None (p >>| fun p -> Some p))
+  >>| fun (tags, pat) ->
+  List.fold_right
+    (List.drop_last_exn tags)
+    ~f:(fun tag pat -> ppoly tag (Some pat))
+    ~init:(PPoly (List.last_exn tags, pat))
 ;;
 
-let pattern = pack.pat pack
+let pattern =
+  fix (fun pat ->
+    let term = choice [ ppconst; ppvar; ppany; pplist pat; parens pat ] in
+    let poly = pppoly term <|> term in
+    let cons = chainr1 poly (dcol *> return pcons) in
+    let tuple = pptuple cons <|> cons in
+    tuple)
+;;
 
 (*----------------------------- Expressions ----------------------------------*)
 let econst c = EConst c
@@ -158,7 +146,15 @@ let eapply e1 e2 = EApply (e1, e2)
 let epoly t e = EPoly (t, e)
 let peconst = const >>| econst
 let pevar = varname >>| evar
-let peif p = lift3 eif (token "if" *> p) (token "then" *> p) (token "else" *> p)
+
+let peif pe =
+  fix (fun peif ->
+    lift3
+      eif
+      (token "if" *> (peif <|> pe))
+      (token "then" *> (peif <|> pe))
+      (token "else" *> (peif <|> pe)))
+;;
 
 let pematch pe =
   let pexpr = token "match" *> pe <* token "with" <* option "" grd in
@@ -193,35 +189,21 @@ let pgte = token ">=" *> return (ebinop Gte)
 let pand = token "&&" *> return (ebinop And)
 let por = token "||" *> return (ebinop Or)
 
-(*
-   fun apply, tag apply  left
-  * /                   left
-  + -                   left
-  ::                    right
-  = <...                left
-  >...                  left
-  &&                    right
-  ||                    right
-  if                      -
-  let match fun           -
-*)
-
 let expr =
   fix (fun expr ->
-    let expr = choice [ peconst; pevar; pelist expr; parens expr ] in
-    let expr = pepoly expr <|> expr in
-    let expr = chainl1 expr (return eapply) in
-    let expr = chainl1 expr (pmul <|> pdiv) in
-    let expr = chainl1 expr (padd <|> psub) in
-    let expr = chainr1 expr (dcol *> return econs) in
-    let expr = chainl1 expr (choice [ plte; plt; pneq; peq ]) in
-    let expr = chainl1 expr (pgt <|> pgte) in
-    let expr = chainr1 expr pand in
-    let expr = chainr1 expr por in
-    let expr = petuple expr <|> expr in
-    let expr = peif expr <|> expr in
-    let expr = choice [ pelet expr; pematch expr; pefun expr; expr ] in
-    expr)
+    let term = choice [ pevar; peconst; pelist expr; parens expr ] in
+    let apply = chainl1 term (return eapply) in
+    let poly = pepoly apply <|> apply in
+    let fact = chainl1 poly (pmul <|> pdiv) in
+    let sum = chainl1 fact (padd <|> psub) in
+    let cons = chainr1 sum (dcol *> return econs) in
+    let cmp1 = chainl1 cons (choice [ plte; pneq; plt; peq ]) in
+    let cmp2 = chainl1 cmp1 (pgte <|> pgt) in
+    let band = chainr1 cmp2 pand in
+    let bor = chainr1 band por in
+    let tuple = petuple bor <|> bor in
+    let ife = peif tuple <|> tuple in
+    choice [ pelet expr; pematch expr; pefun expr; ife ])
 ;;
 
 (*----------------------------- Structure ------------------------------------*)
@@ -240,239 +222,10 @@ let str_item =
 
 let structure : structure t = sep_by dsemi str_item
 let parse s = parse_string ~consume:Prefix structure s
-(*-------------------------------- Tests -------------------------------------*)
 
-let test_parse p to_str input =
-  let parse p s = parse_string ~consume:Prefix p s in
-  match parse p input with
-  | Ok ast -> Format.printf "%s\n" (to_str ast)
-  | Error s -> Format.printf "%s\n" s
-;;
-
-let%expect_test _ =
-  test_parse pattern show_pattern "123";
-  [%expect {| (PConst (CInt 123)) |}]
-;;
-
-let%expect_test _ =
-  test_parse pattern show_pattern "_";
-  [%expect {| PAny |}]
-;;
-
-let%expect_test _ =
-  test_parse pattern show_pattern "_A";
-  [%expect {| (PVar "_A") |}]
-;;
-
-let%expect_test _ =
-  test_parse pattern show_pattern "true";
-  [%expect {| (PConst (CBool true)) |}]
-;;
-
-let%expect_test _ =
-  test_parse pattern show_pattern "\"true\"";
-  [%expect {| (PConst (CString "true")) |}]
-;;
-
-let%expect_test _ =
-  test_parse pattern show_pattern " [] ";
-  [%expect {| (PConst CNil) |}]
-;;
-
-let%expect_test _ =
-  test_parse pattern show_pattern " () ";
-  [%expect {| (PConst CUnit) |}]
-;;
-
-let%expect_test _ =
-  test_parse pattern show_pattern " `A ";
-  [%expect {| (PPoly ("A", None)) |}]
-;;
-
-let%expect_test _ =
-  test_parse pattern show_pattern " `A `B ";
-  [%expect {| (PPoly ("A", (Some (PPoly ("B", None))))) |}]
-;;
-
-let%expect_test _ =
-  test_parse pattern show_pattern " `A 123 ";
-  [%expect {| (PPoly ("A", (Some (PConst (CInt 123))))) |}]
-;;
-
-let%expect_test _ =
-  test_parse pattern show_pattern " 123, 321 ";
-  [%expect {| (PTuple [(PConst (CInt 123)); (PConst (CInt 321))]) |}]
-;;
-
-let%expect_test _ =
-  test_parse pattern show_pattern " [123] ";
-  [%expect {| (PCons ((PConst (CInt 123)), (PConst CNil))) |}]
-;;
-
-let%expect_test _ =
-  test_parse pattern show_pattern " [1; 2; 3] ";
-  [%expect
-    {| 
-    (PCons ((PConst (CInt 1)), 
-       (PCons ((PConst (CInt 2)), (PCons ((PConst (CInt 3)), (PConst CNil))))))) |}]
-;;
-
-let%expect_test _ =
-  test_parse pattern show_pattern " [1, 2; 3, 4] ";
-  [%expect
-    {| 
-  (PCons ((PTuple [(PConst (CInt 1)); (PConst (CInt 2))]), 
-     (PCons ((PTuple [(PConst (CInt 3)); (PConst (CInt 4))]), (PConst CNil))))) |}]
-;;
-
-let%expect_test _ =
-  test_parse pattern show_pattern " `A 123 ";
-  [%expect {| (PPoly ("A", (Some (PConst (CInt 123))))) |}]
-;;
-
-let%expect_test _ =
-  test_parse pattern show_pattern " 123, 321 ";
-  [%expect {| (PTuple [(PConst (CInt 123)); (PConst (CInt 321))]) |}]
-;;
-
-let%expect_test _ =
-  test_parse pattern show_pattern " [123] ";
-  [%expect {| (PCons ((PConst (CInt 123)), (PConst CNil))) |}]
-;;
-
-let%expect_test _ =
-  test_parse pattern show_pattern " [1; 2; 3] ";
-  [%expect
-    {| 
-   (PCons ((PConst (CInt 1)),
-      (PCons ((PConst (CInt 2)), (PCons ((PConst (CInt 3)), (PConst CNil))))))) |}]
-;;
-
-let%expect_test _ =
-  test_parse pattern show_pattern " [1, 2; 3, 4] ";
-  [%expect
-    {| 
-   (PCons ((PTuple [(PConst (CInt 1)); (PConst (CInt 2))]),
-      (PCons ((PTuple [(PConst (CInt 3)); (PConst (CInt 4))]), (PConst CNil))))) |}]
-;;
-
-let%expect_test _ =
-  test_parse pattern show_pattern " [1; 2], [3; 4] ";
-  [%expect
-    {| 
-  (PTuple 
-     [(PCons ((PConst (CInt 1)), (PCons ((PConst (CInt 2)), (PConst CNil)))));
-       (PCons ((PConst (CInt 3)), (PCons ((PConst (CInt 4)), (PConst CNil)))))])|}]
-;;
-
-let%expect_test _ =
-  test_parse pattern show_pattern " 123 :: [] ";
-  [%expect {| 
-   (PCons ((PConst (CInt 123)), (PConst CNil))) |}]
-;;
-
-let%expect_test _ =
-  test_parse pattern show_pattern " _ :: _ :: _ ";
-  [%expect {| 
-   (PCons (PAny, (PCons (PAny, PAny)))) |}]
-;;
-
-let%expect_test _ =
-  test_parse pattern show_pattern " `A 1, 2 ";
-  [%expect {| 
-   (PTuple [(PPoly ("A", (Some (PConst (CInt 1))))); (PConst (CInt 2))])|}]
-;;
-
-let%expect_test _ =
-  test_parse pattern show_pattern " `A (1, 2) ";
-  [%expect {| 
-   (PPoly ("A", (Some (PTuple [(PConst (CInt 1)); (PConst (CInt 2))]))))|}]
-;;
-
-let%expect_test _ =
-  test_parse pattern show_pattern " `A 1 :: [`A 3] ";
-  [%expect
-    {| 
-   (PCons ((PPoly ("A", (Some (PConst (CInt 1))))),
-      (PCons ((PPoly ("A", (Some (PConst (CInt 3))))), (PConst CNil)))))|}]
-;;
-
-let%expect_test _ =
-  test_parse
-    structure
-    show_structure
-    {| let rec fac n = if n < 2 then 1 else n * fac(n - 1);; |};
-  [%expect
-    {|
-    [(SValue (Rec,
-        ((PVar "fac"),
-         (EFun ((PVar "n"),
-            (EIf ((EBin_op (Lt, (EVar "n"), (EConst (CInt 2)))),
-               (EConst (CInt 1)),
-               (EBin_op (Mul, (EVar "n"),
-                  (EApply ((EVar "fac"),
-                     (EBin_op (Sub, (EVar "n"), (EConst (CInt 1))))))
-                  ))
-               ))
-            )))
-        ))
-      ] |}]
-;;
-
-let%expect_test _ =
-  test_parse
-    structure
-    show_structure
-    {| let f = let g x = x + 1 in g;;
-
-     let rec len l = 
-       match l with
-       | [] -> 0
-       | _ :: xs -> 1 + len xs
-     ;; |};
-  [%expect
-    {|
-      [(SValue (Nonrec,
-          ((PVar "f"),
-           (ELet (Nonrec,
-              ((PVar "g"),
-               (EFun ((PVar "x"), (EBin_op (Add, (EVar "x"), (EConst (CInt 1))))))),
-              (EVar "g"))))
-          ));
-        (SValue (Rec,
-           ((PVar "len"),
-            (EFun ((PVar "l"),
-               (EMatch ((EVar "l"),
-                  [((PConst CNil), (EConst (CInt 0)));
-                    ((PCons (PAny, (PVar "xs"))),
-                     (EBin_op (Add, (EConst (CInt 1)),
-                        (EApply ((EVar "len"), (EVar "xs"))))))
-                    ]
-                  ))
-               )))
-           ))
-        ] |}]
-;;
-
-let%expect_test _ =
-  test_parse
-    structure
-    show_structure
-    {| let f = (fun x -> x + 1) 123 in f;;
-       let x, y, z = (1, 2, 3);; |};
-  [%expect
-    {|
-      [(SEval
-          (ELet (Nonrec,
-             ((PVar "f"),
-              (EApply (
-                 (EFun ((PVar "x"), (EBin_op (Add, (EVar "x"), (EConst (CInt 1))))
-                    )),
-                 (EConst (CInt 123))))),
-             (EVar "f"))));
-        (SValue (Nonrec,
-           ((PTuple [(PVar "x"); (PVar "y"); (PVar "z")]),
-            (ETuple [(EConst (CInt 1)); (EConst (CInt 2)); (EConst (CInt 3))]))
-           ))
-        ] |}]
+let test_parse input =
+  let open Stdlib.Format in
+  match parse input with
+  | Ok ast -> printf "%a\n" pp_structure ast
+  | Error s -> printf "Parsing error: %s\n" s
 ;;

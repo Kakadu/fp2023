@@ -1,9 +1,13 @@
+(** Copyright 2023-2024, Zaytsev Dmitriy *)
+
+(** SPDX-License-Identifier: CC0-1.0 *)
+
 open Angstrom
 open Ast
 
 exception Parse_error of string
 
-(* IS *)
+(* ### comparisons ### *)
 let is_space = function
   | ' ' | '\t' | '\n' | '\r' -> true
   | _ -> false
@@ -21,9 +25,9 @@ let is_letter = function
 
 (* Correct name for column or table.contents
    - Names can contain letters of the Latin alphabet (upper or lower case), numbers and underscores ('_')*)
-let is_naming_letter c = is_letter c || is_digit c
+let is_name c = is_letter c || is_digit c
 
-let is_string_s_char = function
+let is_string_char = function
   | '\'' | '\"' -> true
   | _ -> false
 ;;
@@ -38,180 +42,271 @@ let is_condition_op = function
   | _ -> false
 ;;
 
-(* Digit parser *)
+let expr_of_value (v : value) = Const v
 
-let digit_parser =
-  lift2
-    (fun s d ->
-      match s with
-      | x when x = '+' -> Digit (int_of_string d)
-      | x when x = '-' -> Digit (-1 * int_of_string d)
-      | _ -> raise (Parse_error "Can't parse digit"))
-    (peek_char
-     >>= function
-     | Some x when x = '+' -> advance 1 *> return '+'
-     | Some x when is_digit x -> return '+'
-     | Some x when x = '-' -> advance 1 *> return '-'
-     | _ -> fail "Can't parse digit")
-    (take_while is_digit)
+let string_of_value = function
+  | String x | Name x -> x
+  | _ -> raise (Parse_error "Incorrect table name")
 ;;
 
-(* String parser *)
-let string_parser =
-  advance 1 *> take_while (fun c -> not (is_string_s_char c))
-  >>= fun s -> return (String s) <* advance 1
+let value_of_expr = function
+  | Const x -> x
+  | _ -> raise (Parse_error "Incorrect value")
 ;;
 
-(* Parser for column/table names*)
+(* #### Basic parsers ### *)
 
-let name_parser_s =
+(* --- nums --- *)
+
+let dot =
+  peek_char
+  >>= function
+  | Some '.' -> advance 1 *> return true
+  | _ -> return false
+;;
+
+let d_sign =
+  peek_char
+  >>= function
+  | Some '+' -> advance 1 *> return '+'
+  | Some '-' -> advance 1 *> return '-'
+  | Some x when is_digit x -> return '+'
+  | Some er ->
+    fail
+      (String.concat
+         "\""
+         [ "Invalid char "; String.make 1 er; " occured while parsing the digit sign" ])
+  | _ -> fail "Can't parse sign of digit"
+;;
+
+let digit =
+  d_sign
+  >>= fun s ->
+  take_while is_digit
+  >>= fun ld ->
+  dot
+  >>= function
+  | true ->
+    take_while is_digit
+    >>= fun rd -> return (Float_Digit (float_of_string (String.make 1 s ^ ld ^ "." ^ rd)))
+  | false -> return (Digit (int_of_string (String.make 1 s ^ ld)))
+;;
+
+(* --- strings --- *)
+let str =
+  peek_char
+  >>= function
+  | Some chr when is_string_char chr ->
+    advance 1 *> take_while (fun c -> not (is_string_char c))
+    >>= fun s -> return (String s) <* char chr
+  | Some er ->
+    fail
+      (String.concat
+         "\""
+         [ "Invalid char "; String.make 1 er; " occured while parsing the string" ])
+  | _ -> fail "Can't parse string"
+;;
+
+(* --- names --- *)
+
+let dot =
+  peek_char
+  >>= function
+  | Some c when c = '.' -> advance 1 *> return true
+  | _ -> return false
+;;
+
+let name =
   (peek_char
    >>= function
    | Some x when is_letter x -> return (String.make 1 x)
-   | _ -> fail "Names must begin with a letter of the Latin alphabet")
-  *> take_while is_naming_letter
-  >>= fun str -> return str
+   | Some er ->
+     fail
+       (String.concat
+          "\""
+          [ "Invalid name "
+          ; String.make 1 er
+          ; ". Names must begin with a letter of the Latin alphabet"
+          ])
+   | _ -> fail "Can't parse name")
+  *> take_while is_name
 ;;
 
-let name_parser = name_parser_s >>| fun r -> Name r
+let table_name = name >>= fun str -> return (Name str)
 
-(** Bool value parser *)
-let bool_parser =
+(* [table.name] *)
+let column_name =
+  name
+  >>= fun l ->
+  dot
+  >>= function
+  | true -> name >>= fun r -> return (Name (l ^ "." ^ r))
+  | false -> return (Name l)
+;;
+
+(** --- Bool --- *)
+let bool =
   string_ci "true"
   <|> string_ci "false"
   >>= fun r ->
   match String.lowercase_ascii r with
   | "true" -> return (Bool true)
   | "false" -> return (Bool false)
-  | _ -> fail "Can't parse bool"
+  | er ->
+    fail (String.concat "\"" [ "Invalid string "; er; " occured while parsing the bool" ])
 ;;
 
-(* Space parsers *)
-let space_skip = skip_while is_space
-let space_left p = space_skip *> p
-let space_right p = p <* space_skip
-let space_both p = space_skip *> p <* space_skip
+let value_p = digit <|> bool <|> str <|> column_name
 
-(** Const of value parser *)
-let value = digit_parser <|> bool_parser <|> name_parser <|> string_parser
+(* --- Spaces --- *)
+let space = skip_while is_space
+let lspace p = space *> p
+let rspace p = p <* space
+let bspace p = space *> p <* space
 
-(* --- BINARY OPERATORS ---*)
+(* ### operators ### *)
 
-(** Arithm operators parser*)
-let arithm_op_parser =
-  satisfy is_arithm_op
-  >>= fun op ->
-  match op with
-  | '+' -> return Add
-  | '-' -> return Substract
-  | '/' -> return Divide
-  | '*' -> return Multiply
-  | '%' -> return Modulo
-  | _ -> fail "Unsupported arithmetic operator"
+let parens p = char '(' *> bspace p <* char ')'
+let op s = lspace (string s)
+
+(* --- Arithmetic --- *)
+
+let ar_add = op "+" *> return (fun x y -> Binary_operation (Add, x, y))
+let ar_sub = op "-" *> return (fun x y -> Binary_operation (Substract, x, y))
+let ar_mult = op "*" *> return (fun x y -> Binary_operation (Multiply, x, y))
+let ar_div = op "/" *> return (fun x y -> Binary_operation (Divide, x, y))
+let ar_mod = op "%" *> return (fun x y -> Binary_operation (Modulo, x, y))
+
+(* --- Logic --- *)
+
+let l_and = op "AND" *> return (fun x y -> Binary_operation (And, x, y))
+let l_or = op "OR" *> return (fun x y -> Binary_operation (Or, x, y))
+let l_not = op "NOT" *> return (fun x -> Unary_operation (Not, x))
+
+(* --- Compare --- *)
+
+let eq = op "=" *> return (fun x y -> Binary_operation (Equal, x, y))
+let neq = (op "!=" <|> op "<>") *> return (fun x y -> Binary_operation (Not_Equal, x, y))
+let gr = op ">" *> return (fun x y -> Binary_operation (Greater_Than, x, y))
+let ls = op "<" *> return (fun x y -> Binary_operation (Less_Than, x, y))
+let greq = op ">=" *> return (fun x y -> Binary_operation (Greater_Than_Or_Equal, x, y))
+let lseq = op "<=" *> return (fun x y -> Binary_operation (Less_Than_Or_Equal, x, y))
+
+(* --- joins --- *)
+
+let join_inner = op "INNER JOIN" *> return Inner
+let join_left = op "LEFT JOIN" *> return Left
+let join_right = op "RIGHT JOIN" *> return Right
+let join_full = (op "FULL JOIN" <|> op "FULL OUTER JOIN") *> return Full
+let joins = join_full <|> join_inner <|> join_left <|> join_right
+
+(* --- Priorities --- *)
+
+let ar_pr_low = bspace (ar_add <|> ar_sub)
+let ar_pr_med = bspace ar_mod
+let ar_pr_high = bspace (ar_mult <|> ar_div)
+let cmp_op = eq <|> greq <|> lseq <|> neq <|> gr <|> ls
+
+(* #### Arithm parser ### *)
+
+let chainl1 e op =
+  let rec go acc = lift2 (fun f x -> f acc x) op e >>= go <|> return acc in
+  e >>= fun init -> go init
 ;;
 
-(** Logic operators parser *)
-let logic_op_parser =
-  take_while (fun c -> not (is_space c))
-  >>= fun op ->
-  match op with
-  | "AND" -> return And
-  | "OR" -> return Or
-  | _ -> fail "Can't parse binary logic operator"
+let arithm_p =
+  fix (fun ar ->
+    let pars = parens ar <|> (value_p >>| expr_of_value) in
+    let term1 = chainl1 pars ar_pr_high in
+    let term2 = chainl1 term1 ar_pr_med in
+    chainl1 term2 ar_pr_low)
 ;;
 
-(** Compare operators parser *)
-let compare_op_parser =
-  let str_p =
-    satisfy is_condition_op
-    >>= fun c1 ->
-    peek_char
-    >>= fun cx ->
-    match cx with
-    | Some c2 when not (is_condition_op c2) -> return (String.make 1 c1)
-    | Some c2 -> advance 1 *> return (String.make 1 c1 ^ String.make 1 c2)
-    | None -> fail "Unsupported compare operator"
-  in
-  lift
-    (function
-      | "=" -> Equal
-      | "<>" | "!=" -> NotEqual
-      | ">" -> GreaterThan
-      | "<" -> LessThan
-      | ">=" -> GreaterThanOrEqual
-      | "<=" -> LessThanOrEqual
-      | _ -> raise (Parse_error "Unsupported compare operator"))
-    str_p
+(*### Compare ###*)
+
+let cmp_p =
+  fix (fun cmp ->
+    let pars = parens cmp <|> bspace arithm_p in
+    chainl1 pars cmp_op)
 ;;
 
-(** Binary operators parser *)
-let bin_op_parser = logic_op_parser <|> compare_op_parser <|> arithm_op_parser
-
-(* --- Unary operators --- *)
-
-(** NOT parser *)
-let unary_logic_parser =
-  take_while (fun c -> not (is_space c))
-  >>= fun r ->
-  match r with
-  | "NOT" -> return Not
-  | _ -> fail "Can't parse logic operator"
+(* ### Logic ### *)
+let chainun e op =
+  let rec go acc = lift (fun f -> f acc) op >>= go <|> return acc in
+  op <*> e <|> e >>= fun init -> go init
 ;;
 
-(** Unary operators parser*)
-
-let un_op_parser = unary_logic_parser
-let expr_parser =
-  let const = value >>| fun r -> Const r in
-  lift2 (* | Unary operation *)
-    (fun op x -> Unary_operation (op, x))
-    (space_right un_op_parser)
-    const
-  <|> lift3 (* | Binary operation *)
-        (fun l op r -> Binary_operation (op, l, r))
-        const
-        (space_both bin_op_parser)
-        const
-  <|> const
+let logic_p =
+  fix (fun logic ->
+    let pars = parens logic <|> bspace cmp_p in
+    let term1 = chainun pars l_not in
+    let term2 = chainl1 term1 l_and in
+    chainl1 term2 l_or)
 ;;
-(** exprs parser *)
 
+(** ### SELECT exprs ### *)
+let expr_p = logic_p
 
-
-(** SELECT <expr> parser *)
-
-let select_expr_parser =
+let select_p =
   let choice_pars =
     choice
       [ (* "*" Parse *)
-        (space_both peek_char
-         >>= fun c ->
-         match c with
-         | Some x when x = '*' -> advance 1 *> return All_Columns
-         | Some _ | None -> fail "Can't parse All Columns")
-      ; (* Other exprs pars*)
-        (expr_parser >>| fun r -> Expr r)
+        (bspace peek_char
+         >>= function
+         | Some '*' -> advance 1 *> return Asterisk
+         | Some _ | None -> fail "Can't parse (*)")
+      ; (expr_p >>| fun r -> Expression r)
       ]
   in
-  sep_by1 (space_both (char ',')) choice_pars
+  sep_by1 (bspace (char ',')) choice_pars
 ;;
 
-(* Statements parser*)
+(* ### JOIN ### *)
 
-let statement_parser =
-  let sfw_pars =
-    space_both (string "SELECT") *> select_expr_parser
-    >>= fun exprs ->
-    space_both (string "FROM") *> name_parser_s
-    >>= fun name ->
-    space_both (string "WHERE") *> space_right expr_parser
-    >>= fun expr -> return (Select { exprs; table = name; condition = Some expr })
-  in
-  let sf_pars =
-    space_both (string "SELECT") *> select_expr_parser
-    >>= fun exprs ->
-    space_both (string "FROM") *> space_right name_parser_s
-    >>= fun name -> return (Select { exprs; table = name; condition = None })
-  in
-  choice [ sfw_pars; sf_pars ]
+(* pars "ON table1 <cmp> table2" *)
+let on_p = op "ON" *> chainl1 (bspace value_p >>| expr_of_value) cmp_op
+
+let join_p =
+  fix (fun join ->
+    lift4
+      (fun l op r ex -> Join { jtype = op; left = l; table = r; on = ex })
+      (bspace (parens join)
+       <|> (lspace table_name >>| string_of_value >>| fun x -> Table x))
+      (bspace joins)
+      (rspace table_name >>| string_of_value)
+      (rspace on_p))
 ;;
+
+let from_p =
+  parens join_p
+  <|> join_p
+  <|> (expr_p >>| fun r -> Table (string_of_value (value_of_expr r)))
+;;
+
+(* ### Request parser ### *)
+
+(* Optional words parser *)
+let opt_word (w : string) (p : 'a t) =
+  take_while (fun c -> not (is_space c))
+  >>= function
+  | r when r = w -> p >>| fun r -> Some r
+  | _ -> return None
+;;
+
+let word (w : string) (p : 'a t) =
+  opt_word w p
+  >>= function
+  | Some x -> return x
+  | _ -> fail (String.concat "\"" [ "Can't parse special word "; w; " :<" ])
+;;
+
+let request_p =
+  bspace (word "SELECT" (bspace select_p))
+  >>= fun s_expr ->
+  bspace (word "FROM" (bspace from_p))
+  >>= fun f_st ->
+  bspace (opt_word "WHERE" (bspace expr_p))
+  >>= fun w_expr -> return { select = s_expr; from = f_st; where = w_expr }
+;;
+
+let parse inp = Angstrom.parse_string ~consume:All request_p inp

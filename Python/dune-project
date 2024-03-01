@@ -10,7 +10,6 @@
 
 (maintainers "Averin Pavel")
 
-
 (bug_reports "FIXME where to put bug reports about the code")
 
 (homepage "FIXME Homepage")
@@ -26,6 +25,7 @@
   angstrom
   (ppx_inline_test :with-test)
   ppx_expect
+  ppx_show
   ppx_deriving
   bisect_ppx
   (odoc :with-doc)

@@ -1,10 +1,27 @@
+(include_subdirs unqualified)
+
 (library
  (name ocamladt_lib)
  (public_name Ocaml+ADT.Lib)
- (modules Ast Parser)
+ (modules
+  Ast
+  Parser
+  Interpreter
+  InterpreterTypes
+  Inferencer
+  InferencerTypes
+  InterpreterResultPrinter)
  (libraries angstrom)
  (inline_tests)
  (preprocess
   (pps ppx_expect ppx_deriving.show ppx_deriving.eq))
  (instrumentation
   (backend bisect_ppx)))
+
+(library
+ (name tests)
+ (modules ParserTests InterpreterTests InferencerTests)
+ (libraries ocamladt_lib)
+ (inline_tests)
+ (preprocess
+  (pps ppx_expect)))

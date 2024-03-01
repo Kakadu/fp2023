@@ -6,20 +6,20 @@
 
 (license LGPL-3.0-or-later)
 
-(authors "FIXME Vasya Pupkin")
+(authors "Kuarni <kuarni22@gmail.com>" "AlexShmak <lexnder9@gmail.com>")
 
-(maintainers "FIXME Vasya Pupkin")
+(maintainers "Kuarni <kuarni22@gmail.com>" "AlexShmak <lexnder9@gmail.com>")
 
-(bug_reports "FIXME where to put bug reports about the code")
+(bug_reports https://github.com/AlexShmak/fp2023/issues)
 
-(homepage "FIXME Homepage")
+(homepage https://github.com/AlexShmak/fp2023)
 
 (package
- (name Lambda) ; FIXME and regenerate .opam file using 'dune build @install'
- (synopsis "FIXME An interpreter for language")
+ (name Javascript)
+ (synopsis "Interpreter for Javascript")
  (description
-  "FIXME. A longer description, for example, which are the most interesing features being supported, etc.")
- (version 0.1)
+  "An interpreter and parser for Javascript. It can work with arrays, functions, let statement,\n  for, while loops, objects (class isn't supported). \nThe interpreter work in string mode by default. \n  You can print values with alert, console.log and return from main body.")
+ (version 0.21)
  (depends
   dune
   angstrom
@@ -28,7 +28,4 @@
   ppx_deriving
   bisect_ppx
   (odoc :with-doc)
-  (ocamlformat :build)
-  ; base
-  ; After adding dependencies to 'dune' files and the same dependecies here too
-  ))
+  (ocamlformat :build)))

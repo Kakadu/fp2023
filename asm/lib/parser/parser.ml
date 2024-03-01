@@ -13,8 +13,10 @@ let parse_ast =
   <* skip_empty_lines
 ;;
 
-let parse parser show str =
-  match Angstrom.parse_string ~consume:Consume.Prefix parser str with
+let parse parser str = Angstrom.parse_string ~consume:Consume.Prefix parser str
+
+let parse_show parser show str =
+  match parse parser str with
   | Result.Error e -> Format.printf "Error: %s" e
-  | Result.Ok ast -> Format.printf "%s" (show ast)
+  | Result.Ok ast -> Format.printf "%s\n" (show ast)
 ;;

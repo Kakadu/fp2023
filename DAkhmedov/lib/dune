@@ -1,0 +1,20 @@
+(library
+ (name OCaml_ExtensibleVariantTypes_lib)
+ (public_name OCaml_ExtensibleVariantTypes.Lib)
+ (modules Ast Parser Interpreter Parser Inferencer Typing)
+ (libraries base angstrom)
+ (preprocess
+  (pps ppx_expect ppx_deriving.show ppx_deriving.eq))
+ (instrumentation
+  (backend bisect_ppx))
+ (inline_tests))
+
+(library
+ (name tests)
+ (modules tests)
+ (libraries OCaml_ExtensibleVariantTypes_lib)
+ (preprocess
+  (pps ppx_expect ppx_deriving.show))
+ (instrumentation
+  (backend bisect_ppx))
+ (inline_tests))

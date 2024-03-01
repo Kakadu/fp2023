@@ -4,3 +4,4 @@ _coverage
 /node_modules
 /esy.lock
 /.melange.eobjs
+.notes

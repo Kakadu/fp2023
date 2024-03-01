@@ -15,8 +15,8 @@
 (package
  (name asm)
  (synopsis "NASM assembly interpeter")
- (description "Something is supported... but in december...")
- (version 0.2.1)
+ (description "With some SSE instructions")
+ (version 0.3.0)
  (depends
   dune
   angstrom

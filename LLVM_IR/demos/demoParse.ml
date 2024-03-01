@@ -4,7 +4,7 @@
 
 let () =
   let s = Stdio.In_channel.input_all Stdlib.stdin in
-  match Llvm_lib.Parser.parse_program s with
-  | Result.Ok lst -> Format.printf "%s" lst
+  match Parser.Parsing.parse_program s with
+  | Result.Ok lst -> Format.printf "%s" (Ast.show_glob_list lst)
   | Error e -> Format.printf "Error: %s" e
 ;;

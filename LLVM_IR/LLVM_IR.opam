@@ -33,3 +33,6 @@ build: [
     "@doc" {with-doc}
   ]
 ]
+depexts: [
+  [ "llvm-15-dev" "clang-15" ] {os-distribution = "ubuntu"}
+]

@@ -1,4 +1,4 @@
-### An implementaion of LLVM IR interpritator
+### An implementaion of LLVM IR interpretator
 
 This is a homework for functional programming course.
 

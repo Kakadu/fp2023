@@ -1,20 +1,38 @@
+; (executable
+;  (name Parser)
+;  (public_name Parser)
+;  (modules Ast Parser )
+; ;  (inline_tests)
+; ;  (modules_without_implementation ast)
+;  (libraries base angstrom)
+;  (preprocess
+;   (pps ppx_deriving.show ppx_inline_test))
+;  (instrumentation
+;   (backend bisect_ppx)))
+
 (library
- (name lambda_lib)
- (public_name Lambda.Lib)
- (modules Ast Lambda Interpret Parser Printast Pprintast utils)
- (modules_without_implementation ast)
+ (name Go_lib)
+ (public_name Go.Lib)
+ (modules Ast Parser Monades Binder Binded_ast)
+ (inline_tests)
+ ;  (modules_without_implementation ast)
  (libraries base angstrom)
  (preprocess
-  (pps ppx_deriving.show))
+  (pps ppx_deriving.show ppx_inline_test))
  (instrumentation
   (backend bisect_ppx)))
 
-(library
- (name tests)
- (modules tests)
- (libraries lambda_lib)
- (preprocess
-  (pps ppx_expect ppx_deriving.show))
- (instrumentation
-  (backend bisect_ppx))
- (inline_tests))
+; (executable
+;  (name parser)
+;  (public_name parser)
+;  (modules Parser)
+;  (libraries Go.Lib stdio))
+; (library
+;  (name tests)
+;  (modules tests)
+;  (libraries Go_lib)
+;  (preprocess
+;   (pps ppx_expect ppx_deriving.show))
+;  (instrumentation
+;   (backend bisect_ppx))
+;  (inline_tests))

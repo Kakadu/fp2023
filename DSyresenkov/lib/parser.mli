@@ -2,8 +2,7 @@
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-(* let rec fac x = if x = 1 then x else x * (fac x) *)
-
 open Ast
 
-val parse : string -> (expr, string) result
+val parse_expr : string -> (expr, string) result
+val parse : string -> (expr list, string) result
