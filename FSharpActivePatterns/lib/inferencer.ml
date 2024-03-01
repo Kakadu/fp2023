@@ -11,7 +11,22 @@ open Base
 open Typedtree
 open Errorinter
 
-module R = struct
+module R : sig
+  type 'a t
+
+  val ( >>= ) : 'a t -> ('a -> 'b t) -> 'b t
+  val ( >>| ) : 'a t -> ('a -> 'b) -> 'b t
+  val bind : 'a t -> f:('a -> 'b t) -> 'b t
+  val return : 'a -> 'a t
+  val fail : Errorinter.error -> 'a t
+
+  module Syntax : sig
+    val ( let* ) : 'a t -> ('a -> 'b t) -> 'b t
+  end
+
+  val fresh : int t
+  val run : 'a t -> ('a, Errorinter.error) result
+end = struct
   type 'a t = int -> int * ('a, error) Result.t
 
   let ( >>= ) : 'a 'b. 'a t -> ('a -> 'b t) -> 'b t =
@@ -48,7 +63,7 @@ module Type = struct
 
   let rec occurs_in v =
     let occurs_in_list ts =
-      List.fold ts ~init:false ~f:(fun acc t -> occurs_in v t || acc)
+      List.fold ts ~init:false ~f:(fun acc t -> acc || occurs_in v t)
     in
     function
     | Ty_var b -> b = v
@@ -79,7 +94,7 @@ module Subst = struct
   ;;
 
   let empty = Map.Poly.empty
-  let mapping k v = if Type.occurs_in k v then fail Occurs_check else return (k, v)
+  let mapping k v = if Type.occurs_in k v then fail OccursCheck else return (k, v)
 
   let singleton k v =
     let* f, t = mapping k v in
@@ -90,7 +105,7 @@ module Subst = struct
 
   let apply subst =
     let rec helper =
-      let apply_to_list l = List.map ~f:(fun t -> helper t) l in
+      let apply_to_list l = List.map ~f:helper l in
       function
       | Ty_var b as ty ->
         (match Map.Poly.find_exn subst b with
@@ -116,11 +131,11 @@ module Subst = struct
       in
       match subs with
       | Ok res -> res
-      | Unequal_lengths -> fail (Unification_failed (l, r))
+      | Unequal_lengths -> fail (UnificationFailed (l, r))
     in
     match l, r with
     | Prim l, Prim r when String.equal l r -> return empty
-    | Prim _, Prim _ -> fail (Unification_failed (l, r))
+    | Prim _, Prim _ -> fail (UnificationFailed (l, r))
     | Ty_var a, Ty_var b when Int.equal a b -> return empty
     | Ty_var b, t | t, Ty_var b -> singleton b t
     | Arrow (l1, r1), Arrow (l2, r2) ->
@@ -129,7 +144,7 @@ module Subst = struct
       compose subs1 subs2
     | List_typ a, List_typ b -> unify a b
     | Tuple_typ a, Tuple_typ b -> unify_lists a b
-    | _ -> fail (Unification_failed (l, r))
+    | _ -> fail (UnificationFailed (l, r))
 
   and extend key value extensible_subst =
     match Map.Poly.find extensible_subst key with
@@ -214,7 +229,7 @@ let instantiate : scheme -> typ R.t =
 
 let lookup_env var env =
   match List.Assoc.find_exn env ~equal:String.equal var with
-  | (exception Caml.Not_found) | (exception Not_found_s _) -> fail (No_variable var)
+  | (exception Caml.Not_found) | (exception Not_found_s _) -> fail (NoVariable var)
   | scheme ->
     let* ans = instantiate scheme in
     return (Subst.empty, ans)
@@ -302,14 +317,11 @@ let infer =
       return (final_subst, Subst.apply final_subst t2)
     | LetExpr (is_rec, name, expr) ->
       if not is_rec
-      then
-        let* s, t = helper env expr in
-        return (s, t)
+      then helper env expr
       else
         let* tv = fresh_var in
         let env = TypeEnv.extend env (name, S (VarSet.empty, tv)) in
-        let* s, t = helper env expr in
-        return (s, t)
+        helper env expr
     | FunExpr (arg, e) ->
       let* env, t1 = pattern_helper env arg in
       let* s, t2 = helper env e in
@@ -319,7 +331,7 @@ let infer =
       let* cond_sub, cond_ty = helper env cond in
       let env = TypeEnv.apply cond_sub env in
       let rec matches_helper = function
-        | [] -> fail Empty_pattern
+        | [] -> fail EmptyPattern
         | (pat, expr) :: [] ->
           let* pat_env, pat_ty = pattern_helper env pat in
           let* s1 = unify cond_ty pat_ty in
@@ -374,9 +386,7 @@ let check_type env expr =
 let check_types env program =
   let rec helper env = function
     | [] -> fail EmptyProgram
-    | hd :: [] ->
-      let* env, typ = check_type env hd in
-      return (env, typ)
+    | hd :: [] -> check_type env hd
     | hd :: tl ->
       let* env, _ = check_type env hd in
       helper env tl
@@ -593,4 +603,13 @@ let%expect_test _ =
     check_types e |> run_infer
   in
   [%expect {| (int -> int) |}]
+;;
+
+let%expect_test _ =
+  let open Ast in
+  let _ =
+    let e = [ ConstExpr CNil ] in
+    check_types e |> run_infer
+  in
+  [%expect {| nil |}]
 ;;

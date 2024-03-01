@@ -68,10 +68,10 @@ module Interpret (M : MonadFail) = struct
        | CInt i1, VInt i2 when i1 = i2 -> return []
        | CString s1, VString s2 when String.equal s1 s2 -> return []
        | CNil, VNone -> return []
-       | _ -> fail NotImplemented)
+       | _ -> fail Unreachable)
     | Var var, app_arg -> return [ var, app_arg ]
     | Tuple pl, VTuple vl | List pl, VList vl -> bind_pat_list pl vl
-    | Case (acase_id, acase_args), value_to_match ->
+    | Case (acase_id, _), value_to_match ->
       let* apat = find_val env acase_id in
       (match apat with
        | VLetAPat (_, VFun (apat_arg, apat_expr, apat_env)) ->
@@ -80,11 +80,7 @@ module Interpret (M : MonadFail) = struct
            eval apat_expr (add_binds (add_binds empty apat_env) bind_matching_val)
          in
          (match eval_res_apat with
-          | VCases (a, opt_res) when String.( = ) a acase_id ->
-            (match opt_res, acase_args with
-             | Some v, res :: [] -> bind_fun_params (res, v)
-             | None, _ -> return []
-             | _ -> fail MatchFailure)
+          | VCases a when String.( = ) a acase_id -> return []
           | VInt _ | VString _ | VList _ | VTuple _ | VBool _ ->
             (match apat_arg with
              | Var name -> return [ name, eval_res_apat ]
@@ -130,8 +126,8 @@ module Interpret (M : MonadFail) = struct
     let* rigth_val = eval r env in
     let* left_val = eval l env in
     match op, left_val, rigth_val with
-    | Div, VInt _, VInt 0 -> fail Division_by_zero
-    | Mod, VInt _, VInt 0 -> fail Division_by_zero
+    | Div, VInt _, VInt 0 -> fail DivisionByZero
+    | Mod, VInt _, VInt 0 -> fail DivisionByZero
     | Add, VInt l, VInt r -> return @@ VInt (l + r)
     | Sub, VInt l, VInt r -> return @@ VInt (l - r)
     | Mul, VInt l, VInt r -> return @@ VInt (l * r)
@@ -148,9 +144,7 @@ module Interpret (M : MonadFail) = struct
   and inter_if cond e_then e_else env =
     let* cond_branch = eval cond env in
     match cond_branch with
-    | VBool b ->
-      let e = if b then e_then else e_else in
-      eval e env
+    | VBool b -> eval (if b then e_then else e_else) env
     | _ -> fail TypeError
 
   and inter_let is_rec name body env =
@@ -198,10 +192,7 @@ module Interpret (M : MonadFail) = struct
       let* opt_val = eval arg env in
       return opt_val
     | "None", [] -> return VNone
-    | _, [] -> return @@ VCases (constr_id, None)
-    | _, arg :: [] ->
-      let* arg_val = eval arg env in
-      return @@ VCases (constr_id, Some arg_val)
+    | _, [] -> return @@ VCases constr_id
     | _ -> fail TypeError
   ;;
 
@@ -214,8 +205,6 @@ module Interpret (M : MonadFail) = struct
         let eval_env =
           match h with
           | LetExpr (_, f, _) -> add_bind env f eval_h
-          | LetActExpr (fl, _) when List.length fl = 1 ->
-            add_bind env (List.hd_exn fl) eval_h
           | LetActExpr (fl, _) ->
             List.fold_right ~f:(fun h acc -> add_bind acc h eval_h) ~init:env fl
           | _ -> env
@@ -267,7 +256,7 @@ let test = [ BinExpr (Div, ConstExpr (CInt 5), ConstExpr (CInt 0)) ]
 
 let%test _ =
   match eval_program test with
-  | Error Division_by_zero -> true
+  | Error DivisionByZero -> true
   | _ -> false
 ;;
 
@@ -275,7 +264,7 @@ let test = [ BinExpr (Mod, ConstExpr (CInt 5), ConstExpr (CInt 0)) ]
 
 let%test _ =
   match eval_program test with
-  | Error Division_by_zero -> true
+  | Error DivisionByZero -> true
   | _ -> false
 ;;
 
@@ -339,7 +328,7 @@ let test = [ CaseExpr ("Varis", []) ]
 
 let%test _ =
   match eval_program test with
-  | Ok (VCases ("Varis", None)) -> true
+  | Ok (VCases "Varis") -> true
   | _ -> false
 ;;
 
