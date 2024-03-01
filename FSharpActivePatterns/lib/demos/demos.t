@@ -57,6 +57,15 @@
   >   match value with
   >     | Even -> 25
   >     | Odd -> 53;;
+  > check 13;;
+  (VInt 53)
+
+  $ ./demos.exe <<- EOF
+  > let (|Some|Odd|) value = if value % 2 = 0 then Some else Odd;;
+  > let check value =
+  >   match value with
+  >     | Some -> 25
+  >     | Odd -> 53;;
   > check 14;;
   (VInt 25)
  
