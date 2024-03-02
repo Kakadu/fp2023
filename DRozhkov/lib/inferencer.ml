@@ -231,23 +231,15 @@ let inferencer =
       let* final_subst = Subst.compose subst1 subst2 in
       return (final_subst, typ3)
     | Let (Rec, x, e1, None) ->
-      let* tv = varf in
-      let env = TypeEnv.extend env (x, S (VarSet.empty, tv)) in
-      let* subst1, typ1 = helper env e1 in
-      let* subst2 = Subst.unify (Subst.apply subst1 tv) typ1 in
-      let* final_subst = Subst.compose subst1 subst2 in
+      let* final_subst, tv = infer_recursively env x e1 in
       return (final_subst, Subst.apply final_subst tv)
     | Let (Rec, x, e1, Some e2) ->
-      let* tv = varf in
-      let env = TypeEnv.extend env (x, S (VarSet.empty, tv)) in
-      let* subst1, typ1 = helper env e1 in
-      let* subst2 = Subst.unify (Subst.apply subst1 tv) typ1 in
-      let* subst = Subst.compose subst1 subst2 in
-      let env = Map.map env ~f:(fun sch -> Scheme.apply sch subst) in
-      let typ2 = generalize env (Subst.apply subst tv) in
-      let env = TypeEnv.extend env (x, typ2) in
-      let* subst2, typ2 = helper env e2 in
-      let* final_subst = Subst.compose subst subst2 in
+      let* final_subst1, typ1 = infer_with_binding env x e1 in
+      let env_after_bind = apply_substitution_to_env env final_subst1 in
+      let typ2 = generalize env_after_bind (Subst.apply final_subst1 typ1) in
+      let env_after_generalize = TypeEnv.extend env_after_bind (x, typ2) in
+      let* final_subst2, typ2 = infer_with_binding env_after_generalize x e2 in
+      let* final_subst = Subst.compose final_subst1 final_subst2 in
       return (final_subst, typ2)
     | App (e1, e2) ->
       let* subst1, typ1 = helper env e1 in
@@ -289,6 +281,23 @@ let inferencer =
       let* subst2 = Subst.unify r_typ TInt in
       let* final_subst = Subst.compose_all [ l_subst; r_subst; subst1; subst2 ] in
       return (final_subst, TInt)
+  and apply_substitution_to_env env subst =
+    Map.map env ~f:(fun sch -> Scheme.apply sch subst)
+  and infer_recursively env x e =
+    let* tv = varf in
+    let env = TypeEnv.extend env (x, S (VarSet.empty, tv)) in
+    let* subst1, typ1 = helper env e in
+    let* subst2 = Subst.unify (Subst.apply subst1 tv) typ1 in
+    let* final_subst = Subst.compose subst1 subst2 in
+    return (final_subst, tv)
+  and infer_with_binding env x e =
+    let* final_subst, typ1 = infer_recursively env x e in
+    let env_after_bind = apply_substitution_to_env env final_subst in
+    let typ2 = generalize env_after_bind (Subst.apply final_subst typ1) in
+    let env_after_generalize = TypeEnv.extend env_after_bind (x, typ2) in
+    let* final_subst2, typ2 = infer_recursively env_after_generalize x e in
+    let* final_subst = Subst.compose final_subst final_subst2 in
+    return (final_subst, typ2)
   in
   helper
 ;;
