@@ -263,7 +263,7 @@ open Parser
 let parse p s show_program =
   <span data-count="1">m</span>atch parse_string ~consume:All p s with
   | <span data-count="1">O</span>k ast -&gt; print_endline (show_progra<span data-count="1">m</span> ast)
-  | <span data-count="0">E</span>rror msg -&gt; failwith msg
+  | <span data-count="0">_</span> -&gt; Stdlib.print_endline "Parsing failed"
 ;;
 
 let%expect_test _ =
