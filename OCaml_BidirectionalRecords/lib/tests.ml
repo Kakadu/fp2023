@@ -85,7 +85,7 @@ let pp_interpret_expr ast =
 let pp_run code =
   match Parser.parse_expr code with
   | Ok e -> pp_interpret_expr e
-  | Error msg -> failwith msg
+  | _ -> Stdlib.print_endline "Parsing failed"
 ;;
 
 let%expect_test _ =
