@@ -337,7 +337,7 @@ let pp_interpret_expr ast =
 let pp_run code =
   <span data-count="4">m</span>atch Parser.parse_expr code with
   | <span data-count="4">O</span>k e -&gt; pp_interpret_expr e
-  | <span data-count="0">E</span>rror msg -&gt; failwith msg
+  | <span data-count="0">_</span> -&gt; Stdlib.print_endline "Parsing failed"
 ;;
 
 let%expect_test _ =
