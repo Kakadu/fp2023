@@ -11,7 +11,7 @@ open Parser
 let parse p s show_program =
   match parse_string ~consume:All p s with
   | Ok ast -> print_endline (show_program ast)
-  | Error msg -> failwith msg
+  | _ -> Stdlib.print_endline "Parsing failed"
 ;;
 
 let%expect_test _ =
