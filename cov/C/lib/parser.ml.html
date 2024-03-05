@@ -1106,11 +1106,11 @@ let pp printer parser str =
   @@ Angstrom.parse_strin<span data-count="13">g</span> ~consume:Angstrom.Consume.All parser str
 
 let chainl1 e op =
-  <span data-count="56">l</span>et rec go acc = <span data-count="967">l</span>ift<span data-count="967">2</span> (fun f x -&gt; <span data-count="58">f</span> acc x) op e &gt;&gt;<span data-count="967">=</span> go &lt;|&gt; retur<span data-count="967">n</span> acc in
-  e &gt;&gt;= fun init -&gt; <span data-count="909">g</span>o init
+  <span data-count="60">l</span>et rec go acc = <span data-count="985">l</span>ift<span data-count="985">2</span> (fun f x -&gt; <span data-count="59">f</span> acc x) op e &gt;&gt;<span data-count="985">=</span> go &lt;|&gt; retur<span data-count="985">n</span> acc in
+  e &gt;&gt;= fun init -&gt; <span data-count="926">g</span>o init
 
 let rec chainr1 e op =
-  <span data-count="31">e</span> &gt;&gt;= fun a -&gt; <span data-count="409">o</span>p &gt;&gt;<span data-count="409">=</span> (fun f -&gt; <span data-count="3">c</span>hainr<span data-count="3">1</span> e op &gt;&gt;| <span data-count="3">f</span> a) &lt;|&gt; retur<span data-count="409">n</span> a
+  <span data-count="33">e</span> &gt;&gt;= fun a -&gt; <span data-count="417">o</span>p &gt;&gt;<span data-count="417">=</span> (fun f -&gt; <span data-count="3">c</span>hainr<span data-count="3">1</span> e op &gt;&gt;| <span data-count="3">f</span> a) &lt;|&gt; retur<span data-count="417">n</span> a
 
 let is_keywords = function
   | <span data-count="0">"</span>while"
@@ -1119,7 +1119,7 @@ let is_keywords = function
   | <span data-count="0">"</span>continue"
   | <span data-count="0">"</span>if"
   | <span data-count="0">"</span>else"
-  | <span data-count="288">"</span>return"
+  | <span data-count="312">"</span>return"
   | <span data-count="12">"</span>char"
   | <span data-count="0">"</span>const"
   | <span data-count="6">"</span>float"
@@ -1133,69 +1133,69 @@ let is_keywords = function
   | <span data-count="0">"</span>void"
   | <span data-count="0">"</span>NULL" -&gt;
       true
-  | <span data-count="403">_</span> -&gt;
+  | <span data-count="411">_</span> -&gt;
       false
 
-let is_digit = function <span data-count="162">'</span>0' .. '9' -&gt; true | <span data-count="468">_</span> -&gt; false
+let is_digit = function <span data-count="164">'</span>0' .. '9' -&gt; true | <span data-count="486">_</span> -&gt; false
 
-let is_whitespace = function <span data-count="2581">'</span> ' | <span data-count="0">'</span>\t' | <span data-count="162">'</span>\n' | <span data-count="0">'</span>\r' -&gt; true | <span data-count="12337">_</span> -&gt; false
+let is_whitespace = function <span data-count="2611">'</span> ' | <span data-count="0">'</span>\t' | <span data-count="169">'</span>\n' | <span data-count="0">'</span>\r' -&gt; true | <span data-count="12730">_</span> -&gt; false
 
 let is_valid_char_id = function
-  | <span data-count="4245">'</span>a' .. 'z' | <span data-count="14">'</span>A' .. 'Z' | <span data-count="217">'</span>0' .. '9' | <span data-count="137">'</span>_' -&gt;
+  | <span data-count="4445">'</span>a' .. 'z' | <span data-count="17">'</span>A' .. 'Z' | <span data-count="217">'</span>0' .. '9' | <span data-count="137">'</span>_' -&gt;
       true
-  | <span data-count="1060">_</span> -&gt;
+  | <span data-count="1100">_</span> -&gt;
       false
 
-let whitespace = take_whil<span data-count="15">e</span> is_whitespace
+let whitespace = take_whil<span data-count="16">e</span> is_whitespace
 
-let token s = <span data-count="1226">w</span>hitespace *&gt; strin<span data-count="1226">g</span> s
+let token s = <span data-count="1292">w</span>hitespace *&gt; strin<span data-count="1292">g</span> s
 
-let parens p = <span data-count="68">t</span>oke<span data-count="68">n</span> "(" *<span data-count="68">&gt;</span> p &lt;* toke<span data-count="68">n</span> ")"
+let parens p = <span data-count="73">t</span>oke<span data-count="73">n</span> "(" *<span data-count="73">&gt;</span> p &lt;* toke<span data-count="73">n</span> ")"
 
-let brackets p = <span data-count="128">t</span>oke<span data-count="128">n</span> "[" *<span data-count="128">&gt;</span> p &lt;* toke<span data-count="128">n</span> "]"
+let brackets p = <span data-count="129">t</span>oke<span data-count="129">n</span> "[" *<span data-count="129">&gt;</span> p &lt;* toke<span data-count="129">n</span> "]"
 
-let braces p = <span data-count="14">t</span>oke<span data-count="14">n</span> "{" *<span data-count="14">&gt;</span> p &lt;* toke<span data-count="14">n</span> "}"
+let braces p = <span data-count="15">t</span>oke<span data-count="15">n</span> "{" *<span data-count="15">&gt;</span> p &lt;* toke<span data-count="15">n</span> "}"
 
 let p_number =
   let dot =
     peek_char
-    &gt;&gt;= function <span data-count="1">S</span>ome '.' -&gt; advanc<span data-count="1">e</span> 1 &gt;&gt;| fun () -&gt; <span data-count="1">t</span>rue | <span data-count="129">_</span> -&gt; return false
+    &gt;&gt;= function <span data-count="1">S</span>ome '.' -&gt; advanc<span data-count="1">e</span> 1 &gt;&gt;| fun () -&gt; <span data-count="1">t</span>rue | <span data-count="131">_</span> -&gt; return false
   in
-  <span data-count="15">l</span>et* whole = whitespace *<span data-count="15">&gt;</span> take_while<span data-count="15">1</span> is_digit in
-  <span data-count="130">l</span>et* dot = dot in
-  <span data-count="130">m</span>atch dot with
-  | <span data-count="129">f</span>alse -&gt;
-      return @@ V_int (int_of_strin<span data-count="129">g</span> whole)
+  <span data-count="16">l</span>et* whole = whitespace *<span data-count="16">&gt;</span> take_while<span data-count="16">1</span> is_digit in
+  <span data-count="132">l</span>et* dot = dot in
+  <span data-count="132">m</span>atch dot with
+  | <span data-count="131">f</span>alse -&gt;
+      return @@ V_int (int_of_strin<span data-count="131">g</span> whole)
   | <span data-count="1">t</span>rue -&gt;
       let* part = take_whil<span data-count="1">e</span> is_digit in
       <span data-count="1">r</span>eturn @@ V_float (float_of_strin<span data-count="1">g</span> (whole ^ "." ^ part))
 
 let p_ident =
   let is_valid_first_char = function
-    | <span data-count="897">'</span>a' .. 'z' | <span data-count="10">'</span>A' .. 'Z' | <span data-count="0">'</span>_' -&gt;
+    | <span data-count="929">'</span>a' .. 'z' | <span data-count="10">'</span>A' .. 'Z' | <span data-count="0">'</span>_' -&gt;
         true
-    | <span data-count="893">_</span> -&gt;
+    | <span data-count="923">_</span> -&gt;
         false
   in
   let* first_char = peek_char in
-  <span data-count="1800">m</span>atch first_char with
-  | <span data-count="1800">S</span>ome c when is_valid_first_cha<span data-count="1800">r</span> c -&gt;
-      <span data-count="907">l</span>et* ident = take_whil<span data-count="907">e</span> is_valid_char_id in
-      <span data-count="907">i</span>f is_keywords ident then <span data-count="504">f</span>ail "Keyword name" else <span data-count="403">r</span>eturn ident
-  | <span data-count="893">_</span> -&gt;
+  <span data-count="1862">m</span>atch first_char with
+  | <span data-count="1862">S</span>ome c when is_valid_first_cha<span data-count="1862">r</span> c -&gt;
+      <span data-count="939">l</span>et* ident = take_whil<span data-count="939">e</span> is_valid_char_id in
+      <span data-count="939">i</span>f is_keywords ident then <span data-count="528">f</span>ail "Keyword name" else <span data-count="411">r</span>eturn ident
+  | <span data-count="923">_</span> -&gt;
       fail "Invalid name"
 
 let p_char =
-  whitespace *<span data-count="15">&gt;</span> cha<span data-count="15">r</span> '\'' *<span data-count="15">&gt;</span> any_char &lt;<span data-count="15">*</span> cha<span data-count="15">r</span> '\'' &gt;&gt;<span data-count="15">|</span> fun char -&gt; <span data-count="0">V</span>_char char
+  whitespace *<span data-count="16">&gt;</span> cha<span data-count="16">r</span> '\'' *<span data-count="16">&gt;</span> any_char &lt;<span data-count="16">*</span> cha<span data-count="16">r</span> '\'' &gt;&gt;<span data-count="16">|</span> fun char -&gt; <span data-count="0">V</span>_char char
 
-let p_arr p_elm = <span data-count="14">b</span>races @@ sep_b<span data-count="14">y</span> (toke<span data-count="14">n</span> ",") p_elm
+let p_arr p_elm = <span data-count="15">b</span>races @@ sep_b<span data-count="15">y</span> (toke<span data-count="15">n</span> ",") p_elm
 
-let p_elements_arr p_elm = <span data-count="14">p</span>_ar<span data-count="14">r</span> p_elm &gt;&gt;= fun c -&gt; <span data-count="13">r</span>eturn @@ Array_value c
+let p_elements_arr p_elm = <span data-count="15">p</span>_ar<span data-count="15">r</span> p_elm &gt;&gt;= fun c -&gt; <span data-count="13">r</span>eturn @@ Array_value c
 
 let p_type =
   let parse_simple_type t err =
-    <span data-count="99">m</span>atch t with
-    | <span data-count="39">"</span>int" -&gt;
+    <span data-count="104">m</span>atch t with
+    | <span data-count="42">"</span>int" -&gt;
         return ID_int32
     | <span data-count="10">"</span>int32_t" -&gt;
         return ID_int32
@@ -1217,56 +1217,56 @@ let p_type =
         return ID_float
     | <span data-count="0">"</span>double" -&gt;
         return ID_float
-    | <span data-count="34">_</span> -&gt;
-        fail @@ "Unknown type in col: " ^ Int.to_strin<span data-count="34">g</span> err
+    | <span data-count="36">_</span> -&gt;
+        fail @@ "Unknown type in col: " ^ Int.to_strin<span data-count="36">g</span> err
   in
   pos
-  &gt;&gt;<span data-count="15">=</span> fun col -&gt;
-  <span data-count="167">l</span>et* t = whitespace *<span data-count="167">&gt;</span> take_while<span data-count="167">1</span> is_valid_char_id in
-  <span data-count="99">l</span>et* pars = parse_simple_typ<span data-count="99">e</span> t col in
-  <span data-count="65">l</span>et* list_ptrs = man<span data-count="65">y</span> @@ toke<span data-count="65">n</span> "*" in
-  <span data-count="65">r</span>eturn (List.fol<span data-count="65">d</span> ~init:pars ~f:(fun acc _ -&gt; <span data-count="9">P</span>ointer acc) list_ptrs)
+  &gt;&gt;<span data-count="16">=</span> fun col -&gt;
+  <span data-count="176">l</span>et* t = whitespace *<span data-count="176">&gt;</span> take_while<span data-count="176">1</span> is_valid_char_id in
+  <span data-count="104">l</span>et* pars = parse_simple_typ<span data-count="104">e</span> t col in
+  <span data-count="68">l</span>et* list_ptrs = man<span data-count="68">y</span> @@ toke<span data-count="68">n</span> "*" in
+  <span data-count="68">r</span>eturn (List.fol<span data-count="68">d</span> ~init:pars ~f:(fun acc _ -&gt; <span data-count="9">P</span>ointer acc) list_ptrs)
 
-let pe_type = (fun t -&gt; <span data-count="2">T</span>ype t) &lt;$<span data-count="15">&gt;</span> p_type
+let pe_type = (fun t -&gt; <span data-count="2">T</span>ype t) &lt;$<span data-count="16">&gt;</span> p_type
 
-let emul = toke<span data-count="15">n</span> "*" *<span data-count="15">&gt;</span> retur<span data-count="15">n</span> (fun e1 e2 -&gt; <span data-count="5">B</span>in_expr (Mul, e1, e2))
+let emul = toke<span data-count="16">n</span> "*" *<span data-count="16">&gt;</span> retur<span data-count="16">n</span> (fun e1 e2 -&gt; <span data-count="5">B</span>in_expr (Mul, e1, e2))
 
-let ediv = toke<span data-count="15">n</span> "/" *<span data-count="15">&gt;</span> retur<span data-count="15">n</span> (fun e1 e2 -&gt; <span data-count="2">B</span>in_expr (Div, e1, e2))
+let ediv = toke<span data-count="16">n</span> "/" *<span data-count="16">&gt;</span> retur<span data-count="16">n</span> (fun e1 e2 -&gt; <span data-count="2">B</span>in_expr (Div, e1, e2))
 
-let emod = toke<span data-count="15">n</span> "%" *<span data-count="15">&gt;</span> retur<span data-count="15">n</span> (fun e1 e2 -&gt; <span data-count="1">B</span>in_expr (Mod, e1, e2))
+let emod = toke<span data-count="16">n</span> "%" *<span data-count="16">&gt;</span> retur<span data-count="16">n</span> (fun e1 e2 -&gt; <span data-count="1">B</span>in_expr (Mod, e1, e2))
 
-let eadd = toke<span data-count="15">n</span> "+" *<span data-count="15">&gt;</span> retur<span data-count="15">n</span> (fun e1 e2 -&gt; <span data-count="20">B</span>in_expr (Add, e1, e2))
+let eadd = toke<span data-count="16">n</span> "+" *<span data-count="16">&gt;</span> retur<span data-count="16">n</span> (fun e1 e2 -&gt; <span data-count="21">B</span>in_expr (Add, e1, e2))
 
-let esub = toke<span data-count="15">n</span> "-" *<span data-count="15">&gt;</span> retur<span data-count="15">n</span> (fun e1 e2 -&gt; <span data-count="9">B</span>in_expr (Sub, e1, e2))
+let esub = toke<span data-count="16">n</span> "-" *<span data-count="16">&gt;</span> retur<span data-count="16">n</span> (fun e1 e2 -&gt; <span data-count="9">B</span>in_expr (Sub, e1, e2))
 
-let el = toke<span data-count="15">n</span> "&lt;" *<span data-count="15">&gt;</span> retur<span data-count="15">n</span> (fun e1 e2 -&gt; <span data-count="8">B</span>in_expr (Less, e1, e2))
+let el = toke<span data-count="16">n</span> "&lt;" *<span data-count="16">&gt;</span> retur<span data-count="16">n</span> (fun e1 e2 -&gt; <span data-count="8">B</span>in_expr (Less, e1, e2))
 
-let eg = toke<span data-count="15">n</span> "&gt;" *<span data-count="15">&gt;</span> retur<span data-count="15">n</span> (fun e1 e2 -&gt; <span data-count="3">B</span>in_expr (Grow, e1, e2))
+let eg = toke<span data-count="16">n</span> "&gt;" *<span data-count="16">&gt;</span> retur<span data-count="16">n</span> (fun e1 e2 -&gt; <span data-count="3">B</span>in_expr (Grow, e1, e2))
 
-let elte = toke<span data-count="15">n</span> "&lt;=" *<span data-count="15">&gt;</span> retur<span data-count="15">n</span> (fun e1 e2 -&gt; <span data-count="2">B</span>in_expr (LessOrEqual, e1, e2))
+let elte = toke<span data-count="16">n</span> "&lt;=" *<span data-count="16">&gt;</span> retur<span data-count="16">n</span> (fun e1 e2 -&gt; <span data-count="2">B</span>in_expr (LessOrEqual, e1, e2))
 
-let egte = toke<span data-count="15">n</span> "&gt;=" *<span data-count="15">&gt;</span> retur<span data-count="15">n</span> (fun e1 e2 -&gt; <span data-count="2">B</span>in_expr (GrowOrEqual, e1, e2))
+let egte = toke<span data-count="16">n</span> "&gt;=" *<span data-count="16">&gt;</span> retur<span data-count="16">n</span> (fun e1 e2 -&gt; <span data-count="2">B</span>in_expr (GrowOrEqual, e1, e2))
 
-let eeq = toke<span data-count="15">n</span> "==" *<span data-count="15">&gt;</span> retur<span data-count="15">n</span> (fun e1 e2 -&gt; <span data-count="2">B</span>in_expr (Equal, e1, e2))
+let eeq = toke<span data-count="16">n</span> "==" *<span data-count="16">&gt;</span> retur<span data-count="16">n</span> (fun e1 e2 -&gt; <span data-count="2">B</span>in_expr (Equal, e1, e2))
 
-let eneq = toke<span data-count="15">n</span> "!= " *<span data-count="15">&gt;</span> retur<span data-count="15">n</span> (fun e1 e2 -&gt; <span data-count="1">B</span>in_expr (NotEqual, e1, e2))
+let eneq = toke<span data-count="16">n</span> "!= " *<span data-count="16">&gt;</span> retur<span data-count="16">n</span> (fun e1 e2 -&gt; <span data-count="1">B</span>in_expr (NotEqual, e1, e2))
 
-let eand = toke<span data-count="15">n</span> "&amp;&amp;" *<span data-count="15">&gt;</span> retur<span data-count="15">n</span> (fun e1 e2 -&gt; <span data-count="1">B</span>in_expr (And, e1, e2))
+let eand = toke<span data-count="16">n</span> "&amp;&amp;" *<span data-count="16">&gt;</span> retur<span data-count="16">n</span> (fun e1 e2 -&gt; <span data-count="1">B</span>in_expr (And, e1, e2))
 
-let eor = toke<span data-count="15">n</span> "||" *<span data-count="15">&gt;</span> retur<span data-count="15">n</span> (fun e1 e2 -&gt; <span data-count="2">B</span>in_expr (Or, e1, e2))
+let eor = toke<span data-count="16">n</span> "||" *<span data-count="16">&gt;</span> retur<span data-count="16">n</span> (fun e1 e2 -&gt; <span data-count="2">B</span>in_expr (Or, e1, e2))
 
-let ershft = toke<span data-count="15">n</span> "&gt;&gt;" *<span data-count="15">&gt;</span> retur<span data-count="15">n</span> (fun e1 e2 -&gt; <span data-count="2">B</span>in_expr (Rshift, e1, e2))
+let ershft = toke<span data-count="16">n</span> "&gt;&gt;" *<span data-count="16">&gt;</span> retur<span data-count="16">n</span> (fun e1 e2 -&gt; <span data-count="2">B</span>in_expr (Rshift, e1, e2))
 
-let elshift = toke<span data-count="15">n</span> "&lt;&lt;" *<span data-count="15">&gt;</span> retur<span data-count="15">n</span> (fun e1 e2 -&gt; <span data-count="1">B</span>in_expr (Lshift, e1, e2))
+let elshift = toke<span data-count="16">n</span> "&lt;&lt;" *<span data-count="16">&gt;</span> retur<span data-count="16">n</span> (fun e1 e2 -&gt; <span data-count="1">B</span>in_expr (Lshift, e1, e2))
 
 let p_func_call expr =
-  <span data-count="14">l</span>ift2
-    (fun id ls -&gt; <span data-count="17">F</span>unc_call (id, ls))
-    (whitespace *<span data-count="14">&gt;</span> p_ident)
-    (toke<span data-count="14">n</span> "(" *<span data-count="14">&gt;</span> sep_b<span data-count="14">y</span> (toke<span data-count="14">n</span> ",") (expr &lt;|<span data-count="14">&gt;</span> pe_type) &lt;<span data-count="14">*</span> toke<span data-count="14">n</span> ")")
+  <span data-count="15">l</span>ift2
+    (fun id ls -&gt; <span data-count="19">F</span>unc_call (id, ls))
+    (whitespace *<span data-count="15">&gt;</span> p_ident)
+    (toke<span data-count="15">n</span> "(" *<span data-count="15">&gt;</span> sep_b<span data-count="15">y</span> (toke<span data-count="15">n</span> ",") (expr &lt;|<span data-count="15">&gt;</span> pe_type) &lt;<span data-count="15">*</span> toke<span data-count="15">n</span> ")")
 
 let p_index_array expr =
-  <span data-count="42">l</span>et rec helper ind =
+  <span data-count="45">l</span>et rec helper ind =
     <span data-count="5">w</span>hitespace *<span data-count="5">&gt;</span> peek_char
     &gt;&gt;= function
     | <span data-count="3">S</span>ome '[' -&gt;
@@ -1274,9 +1274,9 @@ let p_index_array expr =
     | <span data-count="2">_</span> -&gt;
         return ind
   in
-  whitespace *<span data-count="42">&gt;</span> p_ident
+  whitespace *<span data-count="45">&gt;</span> p_ident
   &gt;&gt;= fun id -&gt;
-  <span data-count="117">b</span>racket<span data-count="117">s</span> expr
+  <span data-count="118">b</span>racket<span data-count="118">s</span> expr
   &gt;&gt;= fun e -&gt;
   <span data-count="19">w</span>hitespace *<span data-count="19">&gt;</span> peek_char
   &gt;&gt;= function
@@ -1285,14 +1285,14 @@ let p_index_array expr =
   | <span data-count="17">_</span> -&gt;
       return @@ Index (Var_name id, e)
 
-let var_name = (fun c -&gt; <span data-count="98">V</span>ar_name c) &lt;$<span data-count="15">&gt;</span> whitespace *<span data-count="15">&gt;</span> p_ident
+let var_name = (fun c -&gt; <span data-count="99">V</span>ar_name c) &lt;$<span data-count="16">&gt;</span> whitespace *<span data-count="16">&gt;</span> p_ident
 
-let null = toke<span data-count="15">n</span> "NULL" *<span data-count="15">&gt;</span> (retur<span data-count="15">n</span> @@ V_null)
+let null = toke<span data-count="16">n</span> "NULL" *<span data-count="16">&gt;</span> retur<span data-count="16">n</span> V_null
 
-let p_const : expr t = p_number &lt;|<span data-count="15">&gt;</span> p_char &lt;|<span data-count="15">&gt;</span> null &gt;&gt;<span data-count="15">|</span> fun c -&gt; <span data-count="122">C</span>onst c
+let p_const : expr t = p_number &lt;|<span data-count="16">&gt;</span> p_char &lt;|<span data-count="16">&gt;</span> null &gt;&gt;<span data-count="16">|</span> fun c -&gt; <span data-count="124">C</span>onst c
 
 let p_un expr =
-  <span data-count="14">w</span>hitespace *<span data-count="14">&gt;</span> peek_char_fail
+  <span data-count="15">w</span>hitespace *<span data-count="15">&gt;</span> peek_char_fail
   &gt;&gt;= function
   | <span data-count="5">'</span>-' -&gt; (
       advanc<span data-count="5">e</span> 1 *<span data-count="5">&gt;</span> peek_char_fail
@@ -1310,54 +1310,54 @@ let p_un expr =
           &gt;&gt;= fun e1 -&gt; <span data-count="1">r</span>eturn @@ Unary_expr (Pref_increment, e1)
       | <span data-count="0">_</span> -&gt;
           expr &gt;&gt;= fun e1 -&gt; <span data-count="0">r</span>eturn @@ Unary_expr (Plus, e1) )
-  | <span data-count="600">_</span> -&gt;
+  | <span data-count="621">_</span> -&gt;
       fail "Expected '-'"
 
 let p_deref expr =
-  <span data-count="14">f</span>ix (fun deref -&gt;
-      <span data-count="14">t</span>oke<span data-count="14">n</span> "*" *<span data-count="14">&gt;</span> (paren<span data-count="14">s</span> expr &lt;|<span data-count="14">&gt;</span> p_index_arra<span data-count="14">y</span> expr &lt;|<span data-count="14">&gt;</span> var_name &lt;|<span data-count="14">&gt;</span> deref)
+  <span data-count="15">f</span>ix (fun deref -&gt;
+      <span data-count="15">t</span>oke<span data-count="15">n</span> "*" *<span data-count="15">&gt;</span> (paren<span data-count="15">s</span> expr &lt;|<span data-count="15">&gt;</span> p_index_arra<span data-count="15">y</span> expr &lt;|<span data-count="15">&gt;</span> var_name &lt;|<span data-count="15">&gt;</span> deref)
       &gt;&gt;= fun exp -&gt; <span data-count="4">r</span>eturn @@ Unary_expr (Dereference, exp) )
 
 let p_address expr =
-  <span data-count="14">(</span>fun exp -&gt; <span data-count="4">U</span>nary_expr (Address, exp))
-  &lt;$&gt; toke<span data-count="14">n</span> "&amp;" *<span data-count="14">&gt;</span> (p_index_arra<span data-count="14">y</span> expr &lt;|<span data-count="14">&gt;</span> paren<span data-count="14">s</span> expr &lt;|<span data-count="14">&gt;</span> var_name &lt;|<span data-count="14">&gt;</span> expr)
+  <span data-count="15">(</span>fun exp -&gt; <span data-count="4">U</span>nary_expr (Address, exp))
+  &lt;$&gt; toke<span data-count="15">n</span> "&amp;" *<span data-count="15">&gt;</span> (p_index_arra<span data-count="15">y</span> expr &lt;|<span data-count="15">&gt;</span> paren<span data-count="15">s</span> expr &lt;|<span data-count="15">&gt;</span> var_name &lt;|<span data-count="15">&gt;</span> expr)
 
 let p_cast expr =
-  <span data-count="14">l</span>ift2 (fun tp exp -&gt; <span data-count="1">C</span>ast (tp, exp)) (toke<span data-count="14">n</span> "(" *<span data-count="14">&gt;</span> p_type &lt;<span data-count="14">*</span> toke<span data-count="14">n</span> ")") expr
+  <span data-count="15">l</span>ift2 (fun tp exp -&gt; <span data-count="1">C</span>ast (tp, exp)) (toke<span data-count="15">n</span> "(" *<span data-count="15">&gt;</span> p_type &lt;<span data-count="15">*</span> toke<span data-count="15">n</span> ")") expr
 
-let p_not expr = <span data-count="14">t</span>oke<span data-count="14">n</span> "!" *<span data-count="14">&gt;</span> expr &gt;&gt;= fun c -&gt; <span data-count="3">r</span>eturn @@ Unary_expr (Not, c)
+let p_not expr = <span data-count="15">t</span>oke<span data-count="15">n</span> "!" *<span data-count="15">&gt;</span> expr &gt;&gt;= fun c -&gt; <span data-count="3">r</span>eturn @@ Unary_expr (Not, c)
 
 let p_expr =
-  fi<span data-count="15">x</span> (fun expr -&gt;
-      <span data-count="14">l</span>et term =
+  fi<span data-count="16">x</span> (fun expr -&gt;
+      <span data-count="15">l</span>et term =
         choice
-          [paren<span data-count="14">s</span> expr; p_func_cal<span data-count="14">l</span> expr; p_index_arra<span data-count="14">y</span> expr; var_name; p_const]
+          [paren<span data-count="15">s</span> expr; p_func_cal<span data-count="15">l</span> expr; p_index_arra<span data-count="15">y</span> expr; var_name; p_const]
       in
-      <span data-count="14">l</span>et term = p_no<span data-count="14">t</span> term &lt;|&gt; term in
-      <span data-count="14">l</span>et term = p_cas<span data-count="14">t</span> term &lt;|&gt; term in
-      <span data-count="14">l</span>et term = p_addres<span data-count="14">s</span> term &lt;|&gt; term in
-      <span data-count="14">l</span>et term = p_dere<span data-count="14">f</span> term &lt;|&gt; term in
-      <span data-count="14">l</span>et term = p_u<span data-count="14">n</span> term &lt;|&gt; term in
-      <span data-count="14">l</span>et term = chainl1 term (emul &lt;|<span data-count="14">&gt;</span> emod &lt;|<span data-count="14">&gt;</span> ediv) in
-      <span data-count="14">l</span>et term = chainl1 term (eadd &lt;|<span data-count="14">&gt;</span> esub) in
-      <span data-count="14">l</span>et term = chainl1 term (ershft &lt;|<span data-count="14">&gt;</span> elshift) in
-      <span data-count="14">l</span>et term = chainl1 term (elte &lt;|<span data-count="14">&gt;</span> egte &lt;|<span data-count="14">&gt;</span> el &lt;|<span data-count="14">&gt;</span> eg &lt;|<span data-count="14">&gt;</span> eeq &lt;|<span data-count="14">&gt;</span> eneq) in
-      <span data-count="14">l</span>et term = chainr1 term eand in
-      <span data-count="14">l</span>et term = chainr1 term eor in
-      <span data-count="14">l</span>et term = fi<span data-count="14">x</span> (fun e -&gt; <span data-count="14">t</span>erm &lt;|&gt; p_elements_ar<span data-count="14">r</span> e) &lt;|&gt; term in
-      <span data-count="14">t</span>erm )
+      <span data-count="15">l</span>et term = p_no<span data-count="15">t</span> term &lt;|&gt; term in
+      <span data-count="15">l</span>et term = p_cas<span data-count="15">t</span> term &lt;|&gt; term in
+      <span data-count="15">l</span>et term = p_addres<span data-count="15">s</span> term &lt;|&gt; term in
+      <span data-count="15">l</span>et term = p_dere<span data-count="15">f</span> term &lt;|&gt; term in
+      <span data-count="15">l</span>et term = p_u<span data-count="15">n</span> term &lt;|&gt; term in
+      <span data-count="15">l</span>et term = chainl1 term (emul &lt;|<span data-count="15">&gt;</span> emod &lt;|<span data-count="15">&gt;</span> ediv) in
+      <span data-count="15">l</span>et term = chainl1 term (eadd &lt;|<span data-count="15">&gt;</span> esub) in
+      <span data-count="15">l</span>et term = chainl1 term (ershft &lt;|<span data-count="15">&gt;</span> elshift) in
+      <span data-count="15">l</span>et term = chainl1 term (elte &lt;|<span data-count="15">&gt;</span> egte &lt;|<span data-count="15">&gt;</span> el &lt;|<span data-count="15">&gt;</span> eg &lt;|<span data-count="15">&gt;</span> eeq &lt;|<span data-count="15">&gt;</span> eneq) in
+      <span data-count="15">l</span>et term = chainr1 term eand in
+      <span data-count="15">l</span>et term = chainr1 term eor in
+      <span data-count="15">l</span>et term = fi<span data-count="15">x</span> (fun e -&gt; <span data-count="15">t</span>erm &lt;|&gt; p_elements_ar<span data-count="15">r</span> e) &lt;|&gt; term in
+      <span data-count="15">t</span>erm )
 
 let%expect_test "type parse" =
   <span data-count="1">p</span>p pp_types p_type "int32_t";
   <span data-count="1">[</span>%expect {|
-    ID_int32 |}<span data-count="31">]</span>
+    ID_int32 |}<span data-count="33">]</span>
 
 let%expect_test "shift parse" =
   <span data-count="1">p</span>p pp_expr p_expr "*a &gt;&gt; 2 + 2";
   <span data-count="1">[</span>%expect
     {|
     (Bin_expr (Rshift, (Unary_expr (Dereference, (Var_name "a"))),
-       (Bin_expr (Add, (Const (V_int 2)), (Const (V_int 2)))))) |}<span data-count="31">]</span>
+       (Bin_expr (Add, (Const (V_int 2)), (Const (V_int 2)))))) |}<span data-count="33">]</span>
 
 let%expect_test "array value parse" =
   <span data-count="1">p</span>p pp_expr p_expr "{1, 2 + 2, 3}";
@@ -1366,7 +1366,7 @@ let%expect_test "array value parse" =
     (Array_value
        [(Const (V_int 1));
          (Bin_expr (Add, (Const (V_int 2)), (Const (V_int 2))));
-         (Const (V_int 3))]) |}<span data-count="31">]</span>
+         (Const (V_int 3))]) |}<span data-count="33">]</span>
 
 let%expect_test "fun_call test" =
   <span data-count="1">p</span>p pp_expr p_expr "malloc(n, 12) - malloc(12 - 1)";
@@ -1375,7 +1375,7 @@ let%expect_test "fun_call test" =
     (Bin_expr (Sub, (Func_call ("malloc", [(Var_name "n"); (Const (V_int 12))])),
        (Func_call ("malloc",
           [(Bin_expr (Sub, (Const (V_int 12)), (Const (V_int 1))))]))
-       )) |}<span data-count="31">]</span>
+       )) |}<span data-count="33">]</span>
 
 let%expect_test "index array test" =
   <span data-count="1">p</span>p pp_expr p_expr "array[1 * 3][2 * 8]";
@@ -1384,69 +1384,69 @@ let%expect_test "index array test" =
     (Index (
        (Index ((Var_name "array"),
           (Bin_expr (Mul, (Const (V_int 1)), (Const (V_int 3)))))),
-       (Bin_expr (Mul, (Const (V_int 2)), (Const (V_int 8)))))) |}<span data-count="31">]</span>
+       (Bin_expr (Mul, (Const (V_int 2)), (Const (V_int 8)))))) |}<span data-count="33">]</span>
 
 let%expect_test "unary priority test" =
   <span data-count="1">p</span>p pp_expr p_expr "--1 + 2";
   <span data-count="1">[</span>%expect
     {|
     (Bin_expr (Add, (Unary_expr (Pref_decrement, (Const (V_int 1)))),
-       (Const (V_int 2)))) |}<span data-count="31">]</span>
+       (Const (V_int 2)))) |}<span data-count="33">]</span>
 
 let%expect_test "deref priority test" =
   <span data-count="1">p</span>p pp_expr p_expr "&amp;2 + 2";
   <span data-count="1">[</span>%expect
     {|
     (Bin_expr (Add, (Unary_expr (Address, (Const (V_int 2)))), (Const (V_int 2))
-       )) |}<span data-count="31">]</span>
+       )) |}<span data-count="33">]</span>
 
 let%expect_test "not priority test" =
   <span data-count="1">p</span>p pp_expr p_expr "!a + 2";
   <span data-count="1">[</span>%expect
     {|
-    (Bin_expr (Add, (Unary_expr (Not, (Var_name "a"))), (Const (V_int 2)))) |}<span data-count="31">]</span>
+    (Bin_expr (Add, (Unary_expr (Not, (Var_name "a"))), (Const (V_int 2)))) |}<span data-count="33">]</span>
 
 let%expect_test "sizeof test" =
   <span data-count="1">p</span>p pp_expr p_expr "sizeof(char)";
   <span data-count="1">[</span>%expect {|
-    (Func_call ("sizeof", [(Type ID_char)])) |}<span data-count="31">]</span>
+    (Func_call ("sizeof", [(Type ID_char)])) |}<span data-count="33">]</span>
 
 let%expect_test "ref priority test" =
   <span data-count="1">p</span>p pp_expr p_expr "*a + 2";
   <span data-count="1">[</span>%expect
     {|
     (Bin_expr (Add, (Unary_expr (Dereference, (Var_name "a"))), (Const (V_int 2))
-       )) |}<span data-count="31">]</span>
+       )) |}<span data-count="33">]</span>
 
 let%expect_test "index priority test" =
   <span data-count="1">p</span>p pp_expr p_expr "a[2] + b[3]";
   <span data-count="1">[</span>%expect
     {|
     (Bin_expr (Add, (Index ((Var_name "a"), (Const (V_int 2)))),
-       (Index ((Var_name "b"), (Const (V_int 3)))))) |}<span data-count="31">]</span>
+       (Index ((Var_name "b"), (Const (V_int 3)))))) |}<span data-count="33">]</span>
 
 let%expect_test "logical not priority test" =
   <span data-count="1">p</span>p pp_expr p_expr "!a[2]";
   <span data-count="1">[</span>%expect
     {|
-    (Unary_expr (Not, (Index ((Var_name "a"), (Const (V_int 2)))))) |}<span data-count="31">]</span>
+    (Unary_expr (Not, (Index ((Var_name "a"), (Const (V_int 2)))))) |}<span data-count="33">]</span>
 
 let%expect_test "cast priority test" =
   <span data-count="1">p</span>p pp_expr p_expr "(int) 2 + 2";
   <span data-count="1">[</span>%expect
     {|
-    (Bin_expr (Add, (Cast (ID_int32, (Const (V_int 2)))), (Const (V_int 2)))) |}<span data-count="31">]</span>
+    (Bin_expr (Add, (Cast (ID_int32, (Const (V_int 2)))), (Const (V_int 2)))) |}<span data-count="33">]</span>
 
 let p_arg =
-  p_type &lt;<span data-count="15">*</span> whitespace &gt;&gt;<span data-count="15">=</span> fun t -&gt; <span data-count="12">p</span>_ident &gt;&gt;= fun id -&gt; <span data-count="12">r</span>eturn @@ Arg (t, id)
+  p_type &lt;<span data-count="16">*</span> whitespace &gt;&gt;<span data-count="16">=</span> fun t -&gt; <span data-count="13">p</span>_ident &gt;&gt;= fun id -&gt; <span data-count="13">r</span>eturn @@ Arg (t, id)
 
 let p_compound statements =
-  <span data-count="56">w</span>hitespace *<span data-count="56">&gt;</span> toke<span data-count="56">n</span> "{" *<span data-count="56">&gt;</span> man<span data-count="56">y</span> (whitespace *<span data-count="56">&gt;</span> statements &lt;<span data-count="56">*</span> whitespace)
-  &lt;<span data-count="56">*</span> toke<span data-count="56">n</span> "}"
-  &gt;&gt;= fun s -&gt; <span data-count="40">w</span>hitespace *&gt; (retur<span data-count="40">n</span> @@ Compound s)
+  <span data-count="59">w</span>hitespace *<span data-count="59">&gt;</span> toke<span data-count="59">n</span> "{" *<span data-count="59">&gt;</span> man<span data-count="59">y</span> (whitespace *<span data-count="59">&gt;</span> statements &lt;<span data-count="59">*</span> whitespace)
+  &lt;<span data-count="59">*</span> toke<span data-count="59">n</span> "}"
+  &gt;&gt;= fun s -&gt; <span data-count="42">w</span>hitespace *&gt; (retur<span data-count="42">n</span> @@ Compound s)
 
 let p_if_else statements =
-  <span data-count="13">t</span>oke<span data-count="13">n</span> "if" *<span data-count="13">&gt;</span> paren<span data-count="13">s</span> p_expr
+  <span data-count="14">t</span>oke<span data-count="14">n</span> "if" *<span data-count="14">&gt;</span> paren<span data-count="14">s</span> p_expr
   &gt;&gt;= fun cnd -&gt;
   <span data-count="9">p</span>_compoun<span data-count="9">d</span> statements
   &gt;&gt;= fun cmd_if -&gt;
@@ -1469,7 +1469,7 @@ let rec p_mult_assign expr1 =
 let p_var_decl =
   let size_arr : int t =
     pos
-    &gt;&gt;<span data-count="15">=</span> fun col -&gt;
+    &gt;&gt;<span data-count="16">=</span> fun col -&gt;
     <span data-count="8">b</span>racket<span data-count="8">s</span> p_number
     &gt;&gt;= function
     | <span data-count="8">V</span>_int x -&gt;
@@ -1490,7 +1490,7 @@ let p_var_decl =
             return @@ Array (Some sz, t) )
   in
   p_type
-  &gt;&gt;<span data-count="15">=</span> function
+  &gt;&gt;<span data-count="16">=</span> function
   | <span data-count="0">I</span>D_void -&gt;
       fail "VOID cannot be a type for variable declaration"
   | <span data-count="30">t</span> -&gt; (
@@ -1527,26 +1527,26 @@ let p_var_decl =
           fail "Error declaration" )
 
 let p_return =
-  toke<span data-count="15">n</span> "return" *<span data-count="15">&gt;</span> whitespace *<span data-count="15">&gt;</span> peek_char
-  &gt;&gt;<span data-count="15">=</span> function
+  toke<span data-count="16">n</span> "return" *<span data-count="16">&gt;</span> whitespace *<span data-count="16">&gt;</span> peek_char
+  &gt;&gt;<span data-count="16">=</span> function
   | <span data-count="0">S</span>ome ';' -&gt;
       advanc<span data-count="0">e</span> 1 *&gt; (retur<span data-count="0">n</span> @@ Return (Const V_void))
-  | <span data-count="24">S</span>ome _ -&gt;
-      p_expr &gt;&gt;= fun exp -&gt; <span data-count="24">t</span>oke<span data-count="24">n</span> ";" *&gt; (retur<span data-count="24">n</span> @@ Return exp)
+  | <span data-count="26">S</span>ome _ -&gt;
+      p_expr &gt;&gt;= fun exp -&gt; <span data-count="26">t</span>oke<span data-count="26">n</span> ";" *&gt; (retur<span data-count="26">n</span> @@ Return exp)
   | <span data-count="0">_</span> -&gt;
       fail "Error return"
 
-let p_continue = toke<span data-count="15">n</span> "continue" *<span data-count="15">&gt;</span> toke<span data-count="15">n</span> ";" *<span data-count="15">&gt;</span> retur<span data-count="15">n</span> Continue
+let p_continue = toke<span data-count="16">n</span> "continue" *<span data-count="16">&gt;</span> toke<span data-count="16">n</span> ";" *<span data-count="16">&gt;</span> retur<span data-count="16">n</span> Continue
 
-let p_break = toke<span data-count="15">n</span> "break" *<span data-count="15">&gt;</span> toke<span data-count="15">n</span> ";" *<span data-count="15">&gt;</span> retur<span data-count="15">n</span> Break
+let p_break = toke<span data-count="16">n</span> "break" *<span data-count="16">&gt;</span> toke<span data-count="16">n</span> ";" *<span data-count="16">&gt;</span> retur<span data-count="16">n</span> Break
 
 let p_while statements =
-  <span data-count="13">t</span>oke<span data-count="13">n</span> "while" *<span data-count="13">&gt;</span> paren<span data-count="13">s</span> p_expr
+  <span data-count="14">t</span>oke<span data-count="14">n</span> "while" *<span data-count="14">&gt;</span> paren<span data-count="14">s</span> p_expr
   &gt;&gt;= fun exp -&gt; <span data-count="5">p</span>_compoun<span data-count="5">d</span> statements &gt;&gt;= fun cmd -&gt; <span data-count="5">r</span>eturn @@ While (exp, cmd)
 
 let p_assign =
-  whitespace *<span data-count="15">&gt;</span> p_expr &lt;<span data-count="15">*</span> whitespace
-  &gt;&gt;<span data-count="15">=</span> fun exp1 -&gt;
+  whitespace *<span data-count="16">&gt;</span> p_expr &lt;<span data-count="16">*</span> whitespace
+  &gt;&gt;<span data-count="16">=</span> fun exp1 -&gt;
   <span data-count="24">p</span>eek_char
   &gt;&gt;= function <span data-count="21">S</span>ome '=' -&gt; p_mult_assign exp1 | <span data-count="3">_</span> -&gt; fail "Error assign"
 
@@ -1559,8 +1559,8 @@ let p_func_call_with_st =
       fail "Error func_call"
 
 let p_for statements =
-  <span data-count="13">t</span>oke<span data-count="13">n</span> "for" *<span data-count="13">&gt;</span> toke<span data-count="13">n</span> "("
-  *<span data-count="13">&gt;</span> (p_var_decl &lt;|<span data-count="13">&gt;</span> p_assign &gt;&gt;<span data-count="13">|</span> Option.some &lt;|<span data-count="13">&gt;</span> (retur<span data-count="13">n</span> None &lt;<span data-count="13">*</span> toke<span data-count="13">n</span> ";"))
+  <span data-count="14">t</span>oke<span data-count="14">n</span> "for" *<span data-count="14">&gt;</span> toke<span data-count="14">n</span> "("
+  *<span data-count="14">&gt;</span> (p_var_decl &lt;|<span data-count="14">&gt;</span> p_assign &gt;&gt;<span data-count="14">|</span> Option.some &lt;|<span data-count="14">&gt;</span> (retur<span data-count="14">n</span> None &lt;<span data-count="14">*</span> toke<span data-count="14">n</span> ";"))
   &gt;&gt;= fun st -&gt;
   <span data-count="1">w</span>hitespace *<span data-count="1">&gt;</span> optio<span data-count="1">n</span> None (p_expr &gt;&gt;<span data-count="1">|</span> Option.some)
   &lt;<span data-count="1">*</span> toke<span data-count="1">n</span> ";"
@@ -1571,12 +1571,12 @@ let p_for statements =
   <span data-count="1">p</span>_compoun<span data-count="1">d</span> statements &gt;&gt;= fun cmd -&gt; <span data-count="1">r</span>eturn @@ For (st, exp1, exp2, cmd)
 
 let p_statements =
-  fi<span data-count="15">x</span> (fun statements -&gt;
-      <span data-count="13">c</span>hoice
-        [ p_compoun<span data-count="13">d</span> statements
-        ; p_if_els<span data-count="13">e</span> statements
-        ; p_whil<span data-count="13">e</span> statements
-        ; p_fo<span data-count="13">r</span> statements
+  fi<span data-count="16">x</span> (fun statements -&gt;
+      <span data-count="14">c</span>hoice
+        [ p_compoun<span data-count="14">d</span> statements
+        ; p_if_els<span data-count="14">e</span> statements
+        ; p_whil<span data-count="14">e</span> statements
+        ; p_fo<span data-count="14">r</span> statements
         ; p_assign
         ; p_var_decl
         ; p_func_call_with_st
@@ -1585,28 +1585,28 @@ let p_statements =
         ; p_return ] )
 
 let p_func_decl statements : func_decl t =
-  <span data-count="15">p</span>_type
+  <span data-count="16">p</span>_type
   &gt;&gt;= fun t -&gt;
-  <span data-count="19">w</span>hitespace *<span data-count="19">&gt;</span> p_ident &lt;<span data-count="19">*</span> whitespace
+  <span data-count="21">w</span>hitespace *<span data-count="21">&gt;</span> p_ident &lt;<span data-count="21">*</span> whitespace
   &gt;&gt;= fun id -&gt;
-  <span data-count="19">t</span>oke<span data-count="19">n</span> "(" *<span data-count="19">&gt;</span> sep_b<span data-count="19">y</span> (toke<span data-count="19">n</span> ",") p_arg
-  &lt;<span data-count="19">*</span> toke<span data-count="19">n</span> ")"
+  <span data-count="21">t</span>oke<span data-count="21">n</span> "(" *<span data-count="21">&gt;</span> sep_b<span data-count="21">y</span> (toke<span data-count="21">n</span> ",") p_arg
+  &lt;<span data-count="21">*</span> toke<span data-count="21">n</span> ")"
   &gt;&gt;= fun argls -&gt;
-  <span data-count="19">w</span>hitespace *<span data-count="19">&gt;</span> peek_char
+  <span data-count="21">w</span>hitespace *<span data-count="21">&gt;</span> peek_char
   &gt;&gt;= function
-  | <span data-count="19">S</span>ome '{' -&gt;
-      p_compoun<span data-count="19">d</span> statements
-      &gt;&gt;= fun cmd -&gt; <span data-count="19">r</span>eturn @@ Func_decl (t, id, argls, cmd)
+  | <span data-count="21">S</span>ome '{' -&gt;
+      p_compoun<span data-count="21">d</span> statements
+      &gt;&gt;= fun cmd -&gt; <span data-count="21">r</span>eturn @@ Func_decl (t, id, argls, cmd)
   | <span data-count="0">S</span>ome ';' -&gt;
       advanc<span data-count="0">e</span> 1 &gt;&gt;= fun _ -&gt; <span data-count="0">f</span>ail "Function definitions is not supported"
   | <span data-count="0">_</span> -&gt;
       fail "Wrong function declaration or defenition"
 
 let p_programm : program t =
-  whitespace *<span data-count="15">&gt;</span> sep_b<span data-count="15">y</span> whitespace (p_func_dec<span data-count="15">l</span> p_statements)
-  &gt;&gt;<span data-count="15">=</span> fun prog_ls -&gt; <span data-count="13">r</span>eturn prog_ls
+  whitespace *<span data-count="16">&gt;</span> sep_b<span data-count="16">y</span> whitespace (p_func_dec<span data-count="16">l</span> p_statements)
+  &gt;&gt;<span data-count="16">=</span> fun prog_ls -&gt; <span data-count="14">r</span>eturn prog_ls
 
-let parse input = <span data-count="13">p</span>arse_string ~consume:All p_programm input
+let parse input = <span data-count="14">p</span>arse_string ~consume:All p_programm input
 </code></pre>
       </div>
     </div>
