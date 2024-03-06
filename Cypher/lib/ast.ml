@@ -56,18 +56,18 @@ type expression =
   | List_op of expression * (list_op * expression) list
 [@@deriving show { with_path = false }]
 
-(** Patterns of node or relationship, e. g. :Person:Director{name:"John"}*)
+(** Patterns of node or relationship, e. g. :Person:Director\{name:"John"\}*)
 type pattern = name list * (name * expression) list
 [@@deriving show { with_path = false }]
 
 (** Relationship direction *)
 type direction =
-  | Left (** <-[...]- *)
+  | Left (** <-\[...\]- *)
   | Right (** --> *)
   | No (** -- *)
 [@@deriving show { with_path = false }] [@@deriving show { with_path = false }]
 
-(** Path pattern (n:Person)-->()<-[:Loves]-({name:"John"}) *)
+(** Path pattern (n:Person)-->()<-\[:Loves\]-(\{name:"John"\}) *)
 type path =
   (name option * pattern)
   * ((name option * pattern * direction) * (name option * pattern)) list
@@ -98,11 +98,11 @@ type delete_attr =
 (** Clauses *)
 type clause =
   | With of star option * (expression * name) list * order_by * where * clause
-  (** WHERE [ORDER BY] [WHERE] *)
-  | Match of path list * where * clause (** MATCH [WHERE] *)
+  (** WITH \[ORDER BY\] \[WHERE\] *)
+  | Match of path list * where * clause (** MATCH \[WHERE\] *)
   | Create of path list * clause option (** CREATE *)
-  | Delete of delete_attr option * name list * clause option
+  | Delete of delete_attr * name list * clause option
   (** DELETE, DETACH DELETE, NODETACH DELETE *)
   | Return of star option * (expression * name option) list * order_by
-  (** RETURN [ORDER BY] *)
+  (** RETURN \[ORDER BY\] *)
 [@@deriving show { with_path = false }]
