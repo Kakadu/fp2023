@@ -87,11 +87,7 @@ let un_chainr1 e op =
   lift2 (fun ops e -> List.fold_right (fun f e -> f e) ops e) (many op) e
 ;;
 
-let parse p str =
-  match parse_string ~consume:All (skip_spaces_after p) str with
-  | Ok v -> v
-  | Error msg -> failwith msg
-;;
+let parse p str = parse_string ~consume:All (skip_spaces_after p) str
 
 let name =
   let name1 =
@@ -109,27 +105,6 @@ let name =
       (char '`' *> return "`")
   in
   name2 <|> name1
-;;
-
-let liter =
-  let ltrue =
-    take_while is_letter
-    >>= fun l ->
-    if uc l <> "TRUE" then fail "Literal TRUE parse fail" else return @@ Liter True
-  in
-  let lfalse =
-    take_while is_letter
-    >>= fun l ->
-    if uc l <> "FALSE" then fail "Literal FALSE parse fail" else return @@ Liter False
-  in
-  let lnull =
-    take_while is_letter
-    >>= fun l ->
-    if uc l <> "NULL" then fail "Literal NULL parse fail" else return @@ Liter Null
-  in
-  check_after
-    (skip_spaces @@ choice [ ltrue; lfalse; lnull ])
-    (fun c -> not @@ is_digit c)
 ;;
 
 let const =
@@ -157,7 +132,18 @@ let const =
     let string c = char c *> content_while_not c <* char c in
     choice [ string '\"'; string '\'' ]
   in
-  skip_spaces @@ lift (fun c -> Const c) (choice [ string; float; int64 ])
+  let bool_or_null =
+    check_after
+      (take_while is_letter
+       >>= fun l ->
+       match uc l with
+       | "TRUE" -> return @@ Bool true
+       | "FALSE" -> return @@ Bool false
+       | "NULL" -> return Null
+       | _ -> fail "")
+      (fun c -> not @@ is_digit c)
+  in
+  skip_spaces @@ lift (fun c -> Const c) (choice [ string; float; int64; bool_or_null ])
 ;;
 
 let var = skip_spaces @@ lift (fun v -> Var v) name
