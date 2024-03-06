@@ -892,6 +892,26 @@ let%expect_test "DELETE clause test" =
        )) |}]
 ;;
 
+let%expect_test "DETACH DELETE test" =
+  parse_and_print {|
+CREATE (n)
+DETACH DELETE n |};
+  [%expect
+    {|
+    (Create ([(((Some "n"), ([], [])), [])],
+       (Some (Delete (Detach, ["n"], None))))) |}]
+;;
+
+let%expect_test "NODETACH DELETE test" =
+  parse_and_print {|
+CREATE (n)
+NODETACH DELETE n |};
+  [%expect
+    {|
+    (Create ([(((Some "n"), ([], [])), [])],
+       (Some (Delete (Nodetach, ["n"], None))))) |}]
+;;
+
 let%expect_test "many DELETE and CREATE clauses test" =
   parse_and_print
     {|
