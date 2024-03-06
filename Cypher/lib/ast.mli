@@ -1,108 +1,121 @@
-(** Copyright 2023, Arseniy Baytenov *)
+type name = string
 
-(** SPDX-License-Identifier: MIT *)
-
-type name = string [@@deriving show { with_path = false }]
+val pp_name : Format.formatter -> name -> unit
+val show_name : name -> string
 
 type constant =
-  | Float of float (** 4.4 *)
-  | Int64 of int64 (** 4 *)
-  | String of string (** "Hola" *)
-  | Bool of bool (** TRUE *)
-  | Null (** NULL *)
-[@@deriving show { with_path = false }]
+  | Float of float
+  | Int64 of int64
+  | String of name
+  | Bool of bool
+  | Null
 
-(** Binary operators, e. g. 5 + 10 *)
+val pp_constant : Format.formatter -> constant -> unit
+val show_constant : constant -> string
+
 type bin_op =
-  | CONTAINS (** CONTAINS *)
-  | STARTS_WITH (** STARTS WITH *)
-  | ENDS_WITH (** ENDS WITH *)
-  | Plus (** + *)
-  | Minus (** - *)
-  | Slash (** / *)
-  | Asterisk (** * *)
-  | Percent (** % *)
-  | Caret (** ^ *)
-  | AND (** AND *)
-  | OR (** OR *)
-  | XOR (** XOR *)
-[@@deriving show { with_path = false }]
+  | CONTAINS
+  | STARTS_WITH
+  | ENDS_WITH
+  | Plus
+  | Minus
+  | Slash
+  | Asterisk
+  | Percent
+  | Caret
+  | AND
+  | OR
+  | XOR
 
-(** Unary operators, e. g. n.id IS NULL *)
+val pp_bin_op : Format.formatter -> bin_op -> unit
+val show_bin_op : bin_op -> string
+
 type un_op =
-  | Minus (** - *)
-  | IS_NULL (** IS NULL *)
-  | IS_NOT_NULL (** IS NOT NULL *)
-  | NOT (** NOT *)
-[@@deriving show { with_path = false }]
+  | Minus
+  | IS_NULL
+  | IS_NOT_NULL
+  | NOT
 
-(** Comparison operators, e. g. 5 <= 6 >= 3 = n.id *)
+val pp_un_op : Format.formatter -> un_op -> unit
+val show_un_op : un_op -> string
+
 type list_op =
-  | Eq (** = *)
-  | NEq (** <> *)
-  | Less (** < *)
-  | Greater (** > *)
-  | LEq (** <= *)
-  | GEq (** >= *)
-[@@deriving show { with_path = false }]
+  | Eq
+  | NEq
+  | Less
+  | Greater
+  | LEq
+  | GEq
 
-(** Arithmetic expressions *)
+val pp_list_op : Format.formatter -> list_op -> unit
+val show_list_op : list_op -> string
+
 type expression =
-  | Const of constant (** 5, 4.4, "Hola" *)
-  | Var of name (** n, `hola` *)
-  | Property of name * name (** n.id *)
+  | Const of constant
+  | Var of name
+  | Property of name * name
   | Bin_op of bin_op * expression * expression
   | Un_op of un_op * expression
   | List_op of expression * (list_op * expression) list
-[@@deriving show { with_path = false }]
 
-(** Patterns of node or relationship, e. g. :Person:Director\{name:"John"\}*)
+val pp_expression : Format.formatter -> expression -> unit
+val show_expression : expression -> string
+
 type pattern = name list * (name * expression) list
-[@@deriving show { with_path = false }]
 
-(** Relationship direction *)
+val pp_pattern : Format.formatter -> pattern -> unit
+val show_pattern : pattern -> string
+
 type direction =
-  | Left (** <-\[...\]- *)
-  | Right (** --> *)
-  | No (** -- *)
-[@@deriving show { with_path = false }] [@@deriving show { with_path = false }]
+  | Left
+  | Right
+  | No
 
-(** Path pattern (n:Person)-->()<-\[:Loves\]-(\{name:"John"\}) *)
+val pp_direction : Format.formatter -> direction -> unit
+val show_direction : direction -> string
+
 type path =
   (name option * pattern)
   * ((name option * pattern * direction) * (name option * pattern)) list
-[@@deriving show { with_path = false }]
 
-(** WHERE subclause, e. g. WHERE n.id = 5 *)
-type where = expression list [@@deriving show { with_path = false }]
+val pp_path : Format.formatter -> path -> unit
+val show_path : path -> string
 
-(** ORDER BY subclause condition*)
+type where = expression list
+
+val pp_where : Format.formatter -> where -> unit
+val show_where : where -> string
+
 type order_by_cond =
-  | Asc (** ORDER BY n.id ASC, ORDER BY n.id *)
-  | Desc (** ORDER BY n.id DESC *)
-[@@deriving show { with_path = false }]
+  | Asc
+  | Desc
 
-(** ORDER BY subclause, e. g. ORDER BY n.id ASC, ORDER BY n.age, n.scores DESC *)
+val pp_order_by_cond : Format.formatter -> order_by_cond -> unit
+val show_order_by_cond : order_by_cond -> string
+
 type order_by = (expression list * order_by_cond) list
-[@@deriving show { with_path = false }]
 
-(** Projection of all aliases, e. g. RETURN * *)
-type star = All [@@deriving show { with_path = false }]
+val pp_order_by : Format.formatter -> order_by -> unit
+val show_order_by : order_by -> string
 
-(** DELETE attribute *)
+type star = All
+
+val pp_star : Format.formatter -> star -> unit
+val show_star : star -> string
+
 type delete_attr =
-  | Detach (** DETACH DELETE *)
-  | Nodetach (** NODETACH DELETE *)
-[@@deriving show { with_path = false }]
+  | Detach
+  | Nodetach
 
-(** Clauses *)
+val pp_delete_attr : Format.formatter -> delete_attr -> unit
+val show_delete_attr : delete_attr -> string
+
 type clause =
   | With of star option * (expression * name) list * order_by * where * clause
-  (** WITH \[ORDER BY\] \[WHERE\] *)
-  | Match of path list * where * clause (** MATCH \[WHERE\] *)
-  | Create of path list * clause option (** CREATE *)
+  | Match of path list * where * clause
+  | Create of path list * clause option
   | Delete of delete_attr * name list * clause option
-  (** DELETE, DETACH DELETE, NODETACH DELETE *)
   | Return of star option * (expression * name option) list * order_by
-  (** RETURN \[ORDER BY\] *)
-[@@deriving show { with_path = false }]
+
+val pp_clause : Format.formatter -> clause -> unit
+val show_clause : clause -> string
