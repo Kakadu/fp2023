@@ -146,14 +146,13 @@ let const =
   skip_spaces @@ lift (fun c -> Const c) (choice [ string; float; int64; bool_or_null ])
 ;;
 
-let var = skip_spaces @@ lift (fun v -> Var v) name
+let var = lift (fun v -> Var v) (skip_spaces name)
 
 let property =
-  skip_spaces
-  @@ lift2
-       (fun s1 s2 -> Property (s1, s2))
-       name
-       (skip_spaces (skip (fun c -> c = '.') *> skip_spaces name))
+  lift2
+    (fun s1 s2 -> Property (s1, s2))
+    (skip_spaces name)
+    (skip_spaces (skip (fun c -> c = '.') *> skip_spaces name))
 ;;
 
 let uminus =
@@ -334,4 +333,61 @@ let expr =
     bor)
 ;;
 
-let parse_expr = parse expr
+let labels =
+  let label = skip_spaces (char ':') *> skip_spaces name in
+  many label
+;;
+
+let properties =
+  let property =
+    lift2
+      (fun n e -> n, e)
+      (skip_spaces name)
+      (skip_spaces (char ':' *> skip_spaces expr))
+  in
+  choice
+    [ braces @@ return []
+    ; braces
+        (lift2 (fun p ps -> p :: ps) property (many (skip_spaces (char ',' *> property))))
+    ; return []
+    ]
+;;
+
+let pattern = lift2 (fun ls ps -> ls, ps) labels properties
+
+let path is_match =
+  let named_patt =
+    lift2
+      (fun n p -> n, p)
+      (skip_spaces name >>= (fun n -> return @@ Some n) <|> return None)
+      pattern
+  in
+  let rel =
+    choice
+      [ skip_spaces
+          (string "<-" *> (sq_brackets named_patt <|> return (None, ([], [])))
+           <* skip_spaces @@ char '-'
+           >>= fun (n, p) -> return (n, p, Left))
+      ; skip_spaces
+          (char '-' *> (sq_brackets named_patt <|> return (None, ([], [])))
+           <* skip_spaces @@ string "->"
+           >>= fun (n, p) -> return (n, p, Right))
+      ; skip_spaces
+          (char '-' *> (sq_brackets named_patt <|> return (None, ([], [])))
+           <* skip_spaces @@ char '-'
+           >>= fun (n, p) ->
+           match is_match with
+           | true -> return (n, p, No)
+           | _ -> fail "Incorrect relationship direction")
+      ]
+  in
+  let node = parens named_patt in
+  lift2 (fun n rns -> n, rns) node (many (lift2 (fun r n -> r, n) rel node))
+;;
+
+let paths is_match =
+  lift2
+    (fun p ps -> p :: ps)
+    (path is_match)
+    (many (skip_spaces (char ',') *> path is_match))
+;;
