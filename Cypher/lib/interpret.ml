@@ -64,6 +64,11 @@ type interpreter_error =
   | Multiple_using_rel_var of string
 [@@deriving show { with_path = false }]
 
+type req_error =
+  | Parser_err of string
+  | Interpreter_err of interpreter_error
+[@@deriving show { with_path = false }]
+
 module type MONAD = sig
   type 'a t
 
@@ -82,6 +87,7 @@ end
 
 module type MONADERROREXPR = MONADERROR with type error = expr_error
 module type MONADERRORINTERPRETER = MONADERROR with type error = interpreter_error
+module type MONADERRORREQ = MONADERROR with type error = req_error
 
 module Eval_expr (M : MONADERROREXPR) = struct
   open M
@@ -971,3 +977,45 @@ module InterpreterResult :
     | Error _ -> r
   ;;
 end
+
+open Parser
+
+module ReqResult : MONADERRORREQ with type 'a t = ('a, req_error) Result.t = struct
+  type 'a t = ('a, req_error) Result.t
+  type error = req_error
+
+  let return a = Ok a
+  let fail e = Error e
+
+  let ( >>= ) r f =
+    match r with
+    | Ok v -> f v
+    | Error e -> Error e
+  ;;
+
+  let ( <|> ) l r =
+    match l with
+    | Ok v -> return v
+    | Error _ -> r
+  ;;
+end
+
+open ReqResult
+
+let create_empty_graph = G.empty
+
+module I = Interpreter (InterpreterResult)
+
+let parse r =
+  match parse_request r with
+  | Ok r -> return r
+  | Error msg -> fail @@ Parser_err msg
+;;
+
+let interpret_request g r =
+  match I.interpret_request g r with
+  | Ok res -> return res
+  | Error err -> fail @@ Interpreter_err err
+;;
+
+let parse_and_interpret_request g r = parse r >>= fun r -> interpret_request g r
