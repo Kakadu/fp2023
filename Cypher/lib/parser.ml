@@ -391,3 +391,51 @@ let paths is_match =
     (path is_match)
     (many (skip_spaces (char ',') *> path is_match))
 ;;
+
+let where =
+  check_after
+    (skip_spaces
+       (take_while is_letter
+        >>= fun s ->
+        match uc s with
+        | "WHERE" -> return ()
+        | _ -> fail ""))
+    (fun c -> not @@ is_digit c)
+  *> lift2 (fun c cs -> c :: cs) expr (many (skip_spaces (char ',') *> expr))
+  <|> return []
+;;
+
+let star = skip_spaces (char '*') *> (return @@ Some All) <|> return None
+
+let order_by =
+  let order_by_cond =
+    check_after
+      (skip_spaces
+         (take_while is_letter
+          >>= fun c ->
+          match uc c with
+          | "ASC" -> return Asc
+          | "DESC" -> return Desc
+          | _ -> fail ""))
+      (fun c -> not @@ is_digit c)
+    <|> return Asc
+  in
+  let part =
+    lift2
+      (fun es c -> es, c)
+      (lift2 (fun e es -> e :: es) expr (many (skip_spaces (char ',') *> expr)))
+      order_by_cond
+  in
+  check_after
+    (skip_spaces
+       (lift2
+          (fun s1 s2 -> uc s1, uc s2)
+          (take_while is_letter)
+          (skip_spaces (take_while is_letter))
+        >>= function
+        | "ORDER", "BY" -> return ()
+        | _ -> fail ""))
+    (fun c -> not @@ is_digit c)
+  *> lift2 (fun p ps -> p :: ps) part (many (skip_spaces (char ',') *> part))
+  <|> return []
+;;
