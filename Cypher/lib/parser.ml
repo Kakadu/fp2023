@@ -558,3 +558,65 @@ let cdelete =
     (fun c -> not @@ is_digit c)
   *> lift2 (fun attr ns -> attr, ns) delete_attr names
 ;;
+
+type cd =
+  | C of path list
+  | D of delete_attr * name list
+
+let request =
+  let safety c_opt =
+    c_opt
+    >>= function
+    | Some c -> return c
+    | None -> fail "Incomplete request: there is expected clause."
+  in
+  let r =
+    many cwith
+    >>= fun ws ->
+    creturn
+    >>= fun (s_opt, als, o_b) ->
+    return
+    @@ List.fold_right
+         (fun (s_opt, als, o_b, wh) c -> With (s_opt, als, o_b, wh, c))
+         ws
+         (Return (s_opt, als, o_b))
+  in
+  let c = many cwith >>= fun ws -> ccreate >>= fun ps -> return (C ps, ws) in
+  let d =
+    many cwith >>= fun ws -> cdelete >>= fun (attr, ns) -> return (D (attr, ns), ws)
+  in
+  let cds =
+    many (c <|> d)
+    >>= fun cdwss ->
+    r
+    >>= (fun r -> return @@ Some r)
+    <|> return None
+    >>= fun r_opt ->
+    return
+    @@ List.fold_right
+         (fun (cd, ws) c_opt ->
+           Some
+             (List.fold_right
+                (fun (s_opt, als, o_b, wh) c -> With (s_opt, als, o_b, wh, c))
+                ws
+                (match cd with
+                 | C ps -> Create (ps, c_opt)
+                 | D (attr, ns) -> Delete (attr, ns, c_opt))))
+         cdwss
+         r_opt
+  in
+  many cwith
+  >>= (fun ws ->
+        cmatch
+        >>= fun (ps, wh) ->
+        safety cds
+        >>= fun c ->
+        return
+        @@ List.fold_right
+             (fun (s_opt, als, o_b, wh) c -> With (s_opt, als, o_b, wh, c))
+             ws
+             (Match (ps, wh, c)))
+  <|> safety cds
+;;
+
+let parse_request = parse request
