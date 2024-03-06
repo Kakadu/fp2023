@@ -506,3 +506,55 @@ let creturn =
         | None -> aliases >>= fun als -> return (None, als))
        order_by
 ;;
+
+let cmatch =
+  check_after
+    (skip_spaces
+       (take_while is_letter
+        >>= fun c ->
+        match uc c with
+        | "MATCH" -> return ()
+        | _ -> fail ""))
+    (fun c -> not @@ is_digit c)
+  *> lift2 (fun ps wh -> ps, wh) (paths true) where
+;;
+
+let ccreate =
+  check_after
+    (skip_spaces
+       (take_while is_letter
+        >>= fun c ->
+        match uc c with
+        | "CREATE" -> return ()
+        | _ -> fail ""))
+    (fun c -> not @@ is_digit c)
+  *> paths false
+;;
+
+let cdelete =
+  let delete_attr =
+    check_after
+      (skip_spaces
+         (take_while is_letter
+          >>= fun c ->
+          match uc c with
+          | "DETACH" -> return Detach
+          | "NODETACH" -> return Nodetach
+          | _ -> fail ""))
+      (fun c -> not @@ is_digit c)
+    <|> return Nodetach
+  in
+  let dname = parens (skip_spaces (skip_spaces_after name)) <|> skip_spaces name in
+  let names =
+    lift2 (fun n ns -> n :: ns) dname (many (skip_spaces (char ',') *> dname))
+  in
+  check_after
+    (skip_spaces
+       (take_while is_letter
+        >>= fun c ->
+        match uc c with
+        | "DELETE" -> return ()
+        | _ -> fail ""))
+    (fun c -> not @@ is_digit c)
+  *> lift2 (fun attr ns -> attr, ns) delete_attr names
+;;
