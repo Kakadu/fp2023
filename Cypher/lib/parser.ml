@@ -548,6 +548,8 @@ let cdelete =
   let names =
     lift2 (fun n ns -> n :: ns) dname (many (skip_spaces (char ',') *> dname))
   in
+  delete_attr
+  >>= fun attr ->
   check_after
     (skip_spaces
        (take_while is_letter
@@ -556,7 +558,7 @@ let cdelete =
         | "DELETE" -> return ()
         | _ -> fail ""))
     (fun c -> not @@ is_digit c)
-  *> lift2 (fun attr ns -> attr, ns) delete_attr names
+  *> lift (fun ns -> attr, ns) names
 ;;
 
 type cd =
