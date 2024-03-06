@@ -12,10 +12,8 @@ let kws =
   ; "WHERE"
   ; "DELETE"
   ; "DETACH"
-  ; "MERGE"
+  ; "NODETACH"
   ; "RETURN"
-  ; "CREATE"
-  ; "REMOVE"
   ; "IS"
   ; "NOT"
   ; "NULL"
@@ -24,6 +22,15 @@ let kws =
   ; "XOR"
   ; "TRUE"
   ; "FALSE"
+  ; "ORDER"
+  ; "BY"
+  ; "ASC"
+  ; "DESC"
+  ; "CONTAINS"
+  ; "STARTS"
+  ; "ENDS"
+  ; "WITH"
+  ; "AS"
   ]
 ;;
 
