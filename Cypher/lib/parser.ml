@@ -439,3 +439,40 @@ let order_by =
   *> lift2 (fun p ps -> p :: ps) part (many (skip_spaces (char ',') *> part))
   <|> return []
 ;;
+
+let kwas =
+  check_after
+    (skip_spaces
+       (take_while is_letter
+        >>= fun kwas ->
+        match uc kwas with
+        | "AS" -> return ()
+        | _ -> fail ""))
+    (fun c -> not @@ is_digit c)
+;;
+
+let cwith =
+  let alias = lift2 (fun e n -> e, n) expr (kwas *> skip_spaces name) in
+  let aliases =
+    lift2 (fun al als -> al :: als) alias (many (skip_spaces (char ',') *> alias))
+  in
+  check_after
+    (skip_spaces
+       (take_while is_letter
+        >>= fun c ->
+        match uc c with
+        | "WITH" -> return ()
+        | _ -> fail ""))
+    (fun c -> not @@ is_digit c)
+  *> lift3
+       (fun (s_opt, als) o_b wh -> s_opt, als, o_b, wh)
+       (star
+        >>= function
+        | Some All ->
+          skip_spaces (char ',') *> aliases
+          <|> return []
+          >>= fun als -> return (Some All, als)
+        | None -> aliases >>= fun als -> return (None, als))
+       order_by
+       where
+;;
