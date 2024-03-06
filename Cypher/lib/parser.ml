@@ -622,12 +622,9 @@ let request =
 let parse_request = parse request
 
 let parse_and_print s =
-  Stdlib.Format.printf
-    "%a"
-    pp_clause
-    (match parse_request s with
-     | Ok v -> v
-     | Error msg -> failwith msg)
+  match parse_request s with
+  | Ok v -> Stdlib.Format.printf "%a" pp_clause v
+  | Error msg -> Stdlib.Format.printf "%a" pp_name msg
 ;;
 
 let%expect_test "Simple expr" =
