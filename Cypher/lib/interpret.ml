@@ -1019,3 +1019,593 @@ let interpret_request g r =
 ;;
 
 let parse_and_interpret_request g r = parse r >>= fun r -> interpret_request g r
+
+let piprint g r =
+  match parse_and_interpret_request g r with
+  | Ok (_, out) -> Stdlib.Format.printf "%a" pp_output out
+  | Error err -> Stdlib.Format.printf "%a" pp_req_error err
+;;
+
+let g = create_empty_graph
+
+let%expect_test "Expr string comparators test" =
+  piprint
+    g
+    {| RETURN
+  "Hola" CONTAINS "ol",
+  "Boba" STARTS WITH "Bo",
+  "Yoba" ENDS WITH "ba",
+  "God" CONTAINS null,
+  null CONTAINS "God"
+  |};
+  [%expect
+    {|
+    ((0, 0), (0, 0),
+     [[("\"Hola\" CONTAINS \"ol\"", (OutConstant (Bool true)));
+        ("\"Boba\" STARTS_WITH \"Bo\"", (OutConstant (Bool true)));
+        ("\"Yoba\" ENDS_WITH \"ba\"", (OutConstant (Bool true)));
+        ("\"God\" CONTAINS <null>", (OutConstant Null));
+        ("<null> CONTAINS \"God\"", (OutConstant Null))]
+       ]) |}]
+;;
+
+let%expect_test "Expr string comparator fail test" =
+  piprint g {| RETURN 4 CONTAINS "4" |};
+  [%expect {| (Interpreter_err (Expr_err Type_mismatch)) |}]
+;;
+
+let%expect_test "Expr plus test" =
+  piprint
+    g
+    {| RETURN
+  4 + 5, 4 + 4.4, 4.4 + 4, 3.5 + 4.4,
+  null + true, 4 + null,
+  "4" + true, 4 + "4" |};
+  [%expect
+    {|
+    ((0, 0), (0, 0),
+     [[("4 + 5", (OutConstant (Int64 9L)));
+        ("4 + 4.4", (OutConstant (Float 8.4)));
+        ("4.4 + 4", (OutConstant (Float 8.4)));
+        ("3.5 + 4.4", (OutConstant (Float 7.9)));
+        ("<null> + true", (OutConstant Null));
+        ("4 + <null>", (OutConstant Null));
+        ("\"4\" + true", (OutConstant (String "4true")));
+        ("4 + \"4\"", (OutConstant (String "44")))]
+       ]) |}]
+;;
+
+let%expect_test "Expr plus fail test" =
+  piprint g {| RETURN true + 4 |};
+  [%expect {| (Interpreter_err (Expr_err Type_mismatch)) |}]
+;;
+
+let%expect_test "Expr minus asterisk caret test" =
+  piprint g {| RETURN 4 - -5, 6 * 6.6, 6.6 ^ 6, 0.5 ^ 0.5, null - true, "" * null |};
+  [%expect
+    {|
+    ((0, 0), (0, 0),
+     [[("4 - -5", (OutConstant (Int64 9L)));
+        ("6 * 6.6", (OutConstant (Float 39.6)));
+        ("6.6 ^ 6", (OutConstant (Float 82653.950016)));
+        ("0.5 ^ 0.5", (OutConstant (Float 0.707106781187)));
+        ("<null> - true", (OutConstant Null));
+        ("\"\" * <null>", (OutConstant Null))]
+       ]) |}]
+;;
+
+let%expect_test "Expr minus asterisk caret fail test" =
+  piprint g {| RETURN 4 - true |};
+  [%expect {| (Interpreter_err (Expr_err Type_mismatch)) |}]
+;;
+
+let%expect_test "Expr slash percent test" =
+  piprint g {| RETURN 4 % 4, 4 / -2.2, 2.2 % 4, 2.2 / 0.1,
+  null / 0, 0 % null |};
+  [%expect
+    {|
+    ((0, 0), (0, 0),
+     [[("4 % 4", (OutConstant (Int64 0L)));
+        ("4 / -2.2", (OutConstant (Float -1.81818181818)));
+        ("2.2 % 4", (OutConstant (Float 2.2)));
+        ("2.2 / 0.1", (OutConstant (Float 22.)));
+        ("<null> / 0", (OutConstant Null)); ("0 % <null>", (OutConstant Null))]
+       ]) |}]
+;;
+
+let%expect_test "Expr slash percent fail test1" =
+  piprint g {| RETURN 4 % 0 |};
+  [%expect {| (Interpreter_err (Expr_err Division_by_zero)) |}]
+;;
+
+let%expect_test "Expr slash percent fail test2" =
+  piprint g {| RETURN 4 / -0.0 |};
+  [%expect {| (Interpreter_err (Expr_err Division_by_zero)) |}]
+;;
+
+let%expect_test "Expr slash percent fail test3" =
+  piprint g {| RETURN 2.2 % 0 |};
+  [%expect {| (Interpreter_err (Expr_err Division_by_zero)) |}]
+;;
+
+let%expect_test "Expr slash percent fail test4" =
+  piprint g {| RETURN 2.2 / 0.000 |};
+  [%expect {| (Interpreter_err (Expr_err Division_by_zero)) |}]
+;;
+
+let%expect_test "Expr slash percent fail test5" =
+  piprint g {| RETURN 2.2 / "4" |};
+  [%expect {| (Interpreter_err (Expr_err Type_mismatch)) |}]
+;;
+
+let%expect_test "Expr AND OR XOR test" =
+  piprint
+    g
+    {| WITH TRUE AS T, FALSE AS F
+  RETURN T AND F, F AND T, T AND T, NULL AND T, T AND NULL,
+  T OR F, F OR T, F OR F, NULL OR F, F OR NULL,
+  T XOR F, NULL XOR T, F XOR NULL |};
+  [%expect
+    {|
+    ((0, 0), (0, 0),
+     [[("T AND F", (OutConstant (Bool false)));
+        ("F AND T", (OutConstant (Bool false)));
+        ("T AND T", (OutConstant (Bool true)));
+        ("<null> AND T", (OutConstant Null));
+        ("T AND <null>", (OutConstant Null));
+        ("T OR F", (OutConstant (Bool true)));
+        ("F OR T", (OutConstant (Bool true)));
+        ("F OR F", (OutConstant (Bool false)));
+        ("<null> OR F", (OutConstant Null)); ("F OR <null>", (OutConstant Null));
+        ("T XOR F", (OutConstant (Bool true)));
+        ("<null> XOR T", (OutConstant Null));
+        ("F XOR <null>", (OutConstant Null))]
+       ]) |}]
+;;
+
+let%expect_test "Expr AND fail test" =
+  piprint g {| RETURN 4 AND TRUE |};
+  [%expect {| (Interpreter_err (Expr_err Type_mismatch)) |}]
+;;
+
+let%expect_test "Expr OR fail test" =
+  piprint g {| RETURN 4 OR FALSE |};
+  [%expect {| (Interpreter_err (Expr_err Type_mismatch)) |}]
+;;
+
+let%expect_test "Expr XOR fail test" =
+  piprint g {| RETURN 4 XOR TRUE |};
+  [%expect {| (Interpreter_err (Expr_err Type_mismatch)) |}]
+;;
+
+let%expect_test "Expr neg (is null) (in not null) neg test" =
+  piprint
+    g
+    {| RETURN - (4), - (5.5), - null,
+  4 is null, null is null, 4 is not null, null is not null,
+  NOT TRUE, NOT NULL |};
+  [%expect
+    {|
+    ((0, 0), (0, 0),
+     [[("- 4", (OutConstant (Int64 -4L))); ("- 5.5", (OutConstant (Float -5.5)));
+        ("- <null>", (OutConstant Null));
+        ("4 IS NULL", (OutConstant (Bool false)));
+        ("<null> IS NULL", (OutConstant (Bool true)));
+        ("4 IS NOT NULL", (OutConstant (Bool true)));
+        ("<null> IS NOT NULL", (OutConstant (Bool false)));
+        ("NOT true", (OutConstant (Bool false)));
+        ("NOT <null>", (OutConstant Null))]
+       ]) |}]
+;;
+
+let%expect_test "Expr neg fail test" =
+  piprint g {| RETURN - "" |};
+  [%expect {| (Interpreter_err (Expr_err Type_mismatch)) |}]
+;;
+
+let%expect_test "Expr NOT fail test" =
+  piprint g {| RETURN NOT "" |};
+  [%expect {| (Interpreter_err (Expr_err Type_mismatch)) |}]
+;;
+
+let%expect_test "Expr list operators test" =
+  piprint
+    g
+    {| RETURN 4 < 5 > 3.4 >= 2 <= 5 = 5.0 <> 7.7,
+  null < 5,
+  4 = 4.0 < -5.0 = -4 |};
+  [%expect
+    {|
+    ((0, 0), (0, 0),
+     [[("4 < 5 > 3.4 >= 2 <= 5 = 5. <> 7.7", (OutConstant (Bool true)));
+        ("<null> < 5", (OutConstant Null));
+        ("4 = 4. < -5. = -4", (OutConstant (Bool false)))]
+       ]) |}]
+;;
+
+let%expect_test "WITH RETURN test" =
+  piprint g {| WITH 4 as four, 5 as five
+  RETURN *, 4, 5 |};
+  [%expect
+    {|
+    ((0, 0), (0, 0),
+     [[("five", (OutConstant (Int64 5L))); ("four", (OutConstant (Int64 4L)));
+        ("4", (OutConstant (Int64 4L))); ("5", (OutConstant (Int64 5L)))]
+       ]) |}]
+;;
+
+let%expect_test "WITH RETURN test" =
+  piprint g {| WITH 4 as four, 5 as five
+  RETURN 4, 5, four, five |};
+  [%expect
+    {|
+    ((0, 0), (0, 0),
+     [[("4", (OutConstant (Int64 4L))); ("5", (OutConstant (Int64 5L)));
+        ("four", (OutConstant (Int64 4L))); ("five", (OutConstant (Int64 5L)))]
+       ]) |}]
+;;
+
+let%expect_test "WITH RETURN fail test1" =
+  piprint g {| WITH r as five RETURN * |};
+  [%expect {|
+    (Interpreter_err (Expr_err (Undefined_id "r"))) |}]
+;;
+
+let%expect_test "WITH RETURN fail test2" =
+  piprint g {| WITH 4 as four, 5 as four RETURN * |};
+  [%expect {|
+    (Interpreter_err (Multiple_def "four")) |}]
+;;
+
+let%expect_test "CREATE test1" =
+  piprint g {| CREATE (n:Label{name: "Name"})-[r:Label{p:5}]->()<--(), ()-->() RETURN * |};
+  [%expect
+    {|
+    ((5, 3), (0, 0),
+     [[("n", (OutNode (1, ["Label"], [("name", (String "Name"))])));
+        ("r", (OutRel (1, (1, ["Label"], [("p", (Int64 5L))]), 2)))]
+       ]) |}]
+;;
+
+let%expect_test "CREATE test2" =
+  piprint g {| CREATE (n:Label{c:"c"})-[r]->(n)<-[]-(), (t) RETURN * |};
+  [%expect
+    {|
+    ((3, 2), (0, 0),
+     [[("n", (OutNode (1, ["Label"], [("c", (String "c"))])));
+        ("r", (OutRel (1, (1, [], []), 1))); ("t", (OutNode (3, [], [])))]
+       ]) |}]
+;;
+
+let%expect_test "CREATE fail test1" =
+  piprint g {| CREATE ()-[r]->()<-[r]-() RETURN * |};
+  [%expect {|
+    (Interpreter_err (Multiple_def "r")) |}]
+;;
+
+let%expect_test "CREATE fail test2" =
+  piprint g {| CREATE ()-[r]-() RETURN * |};
+  [%expect {|
+    (Interpreter_err Undirected_rel) |}]
+;;
+
+let%expect_test "CREATE DELETE test1" =
+  piprint
+    g
+    {| CREATE (n1)-[r1]->(n2)<-[r2]-(n3)
+  NODETACH DELETE r1, n2, n3, r2
+  RETURN n1 |};
+  [%expect {|
+    ((3, 2), (2, 2), [[("n1", (OutNode (1, [], [])))]]) |}]
+;;
+
+let%expect_test "CREATE DELETE test2" =
+  piprint g {| CREATE (n1)-[r]->(n2)<--(n3)
+  DETACH DELETE n2
+  RETURN n1 |};
+  [%expect {|
+    ((3, 2), (1, 0), [[("n1", (OutNode (1, [], [])))]]) |}]
+;;
+
+let%expect_test "CREATE DELETE fail test1" =
+  piprint g {| CREATE (n1)-[r]->(n2)<--(n3)
+  DELETE n2
+  RETURN n1 |};
+  [%expect {|
+    (Interpreter_err (Unable_node_deletion 2)) |}]
+;;
+
+let%expect_test "CREATE DELETE fail test2" =
+  piprint g {| CREATE (n1)-[r]->(n2)<--(n3)
+  DELETE n4
+  RETURN n1 |};
+  [%expect {|
+    (Interpreter_err (Undefined_id "n4")) |}]
+;;
+
+let%expect_test "WITH DELETE fail test" =
+  piprint g {| WITH "n4" AS n4
+  DELETE n4
+  RETURN n1 |};
+  [%expect {|
+    (Interpreter_err Type_mismatch) |}]
+;;
+
+let%expect_test "CREATE DELETE RETURN fail test1" =
+  piprint g {| CREATE (n)
+  DELETE n
+  RETURN n |};
+  [%expect {|
+    (Interpreter_err (Expr_err (Deleted_entity 1))) |}]
+;;
+
+let%expect_test "CREATE DELETE RETURN fail test2" =
+  piprint g {| CREATE (n)
+  DELETE n
+  RETURN * |};
+  [%expect {|
+    (Interpreter_err (Deleted_entity 1)) |}]
+;;
+
+let%expect_test "CREATE DELETE WITH RETURN fail test" =
+  piprint g {| CREATE (n)
+  DELETE n
+  WITH n as b
+  RETURN 4 |};
+  [%expect {|
+    (Interpreter_err (Expr_err (Deleted_entity 1))) |}]
+;;
+
+let%expect_test "many WITH CREATE DELETE test" =
+  piprint
+    g
+    {| 
+  WITH *, 5 AS R
+  CREATE (n1)
+  CREATE (n2)
+  WITH *, n1 AS n
+  DELETE n, (n2)
+  WITH 4 AS R
+  CREATE (n3)
+  WITH *
+  WITH *, n3 AS n
+  DETACH DELETE n
+  WITH *
+  WITH *
+  CREATE (n4)
+  DETACH DELETE (n3)
+  CREATE (n5{R:R})
+  WITH n5 as N
+  RETURN N |};
+  [%expect {|
+    ((5, 0), (4, 0), [[("N", (OutNode (1, [], [("R", (Int64 4L))])))]]) |}]
+;;
+
+let g =
+  match
+    parse_and_interpret_request
+      g
+      {|
+  CREATE
+  (charlie:Person {name: 'Charlie Sheen'}),
+  (martin:Person {name: 'Martin Sheen'}),
+  (michael:Person {name: 'Michael Douglas'}),
+  (oliver:Person {name: 'Oliver Stone'}),
+  (rob:Person {name: 'Rob Reiner'}),
+  (wallStreet:Movie:Wallstreet {title: 'Wall Street', year: 2011}),
+  (charlie)-[:ACTED_IN {role: 'Bud Fox'}]->(wallStreet),
+  (martin)-[:ACTED_IN {role: 'Carl Fox'}]->(wallStreet),
+  (michael)-[:ACTED_IN {role: 'Gordon Gekko'}]->(wallStreet),
+  (oliver)-[:DIRECTED]->(wallStreet),
+  (thePresident:Movie {title: 'The American President'}),
+  (martin)-[:ACTED_IN {role: 'A.J. MacInerney'}]->(thePresident),
+  (michael)-[:ACTED_IN {role: 'President Andrew Shepherd'}]->(thePresident),
+  (rob)-[:DIRECTED]->(thePresident),
+  (martin)-[:FATHER_OF]->(charlie)
+    |}
+  with
+  | Ok (g, _) -> g
+  | Error _ -> failwith "Unable to intialize db"
+;;
+
+let%expect_test "MATCH RETURN (ORDER BY) test1" =
+  piprint g {|
+  MATCH (n)
+  RETURN n ORDER BY n.name|};
+  [%expect
+    {|
+    ((0, 0), (0, 0),
+     [[("n", (OutNode (1, ["Person"], [("name", (String "Charlie Sheen"))])))];
+       [("n", (OutNode (2, ["Person"], [("name", (String "Martin Sheen"))])))];
+       [("n", (OutNode (3, ["Person"], [("name", (String "Michael Douglas"))])))];
+       [("n", (OutNode (4, ["Person"], [("name", (String "Oliver Stone"))])))];
+       [("n", (OutNode (5, ["Person"], [("name", (String "Rob Reiner"))])))];
+       [("n",
+         (OutNode (6, ["Movie"; "Wallstreet"],
+            [("year", (Int64 2011L)); ("title", (String "Wall Street"))])))
+         ];
+       [("n",
+         (OutNode (7, ["Movie"], [("title", (String "The American President"))])))
+         ]
+       ]) |}]
+;;
+
+let%expect_test "MATCH RETURN (ORDER BY) test2" =
+  piprint g {|
+  MATCH ()-[r:ACTED_IN]-()
+  RETURN r ORDER BY r.role|};
+  [%expect
+    {|
+    ((0, 0), (0, 0),
+     [[("r",
+        (OutRel (2, (5, ["ACTED_IN"], [("role", (String "A.J. MacInerney"))]), 7
+           )))
+        ];
+       [("r",
+         (OutRel (2, (5, ["ACTED_IN"], [("role", (String "A.J. MacInerney"))]), 7
+            )))
+         ];
+       [("r", (OutRel (1, (1, ["ACTED_IN"], [("role", (String "Bud Fox"))]), 6)))
+         ];
+       [("r", (OutRel (1, (1, ["ACTED_IN"], [("role", (String "Bud Fox"))]), 6)))
+         ];
+       [("r", (OutRel (2, (2, ["ACTED_IN"], [("role", (String "Carl Fox"))]), 6)))
+         ];
+       [("r", (OutRel (2, (2, ["ACTED_IN"], [("role", (String "Carl Fox"))]), 6)))
+         ];
+       [("r",
+         (OutRel (3, (3, ["ACTED_IN"], [("role", (String "Gordon Gekko"))]), 6)))
+         ];
+       [("r",
+         (OutRel (3, (3, ["ACTED_IN"], [("role", (String "Gordon Gekko"))]), 6)))
+         ];
+       [("r",
+         (OutRel (3,
+            (6, ["ACTED_IN"], [("role", (String "President Andrew Shepherd"))]),
+            7)))
+         ];
+       [("r",
+         (OutRel (3,
+            (6, ["ACTED_IN"], [("role", (String "President Andrew Shepherd"))]),
+            7)))
+         ]
+       ]) |}]
+;;
+
+let%expect_test "MATCH RETURN (ORDER BY) test3" =
+  piprint
+    g
+    {|
+  MATCH (p)-[r:ACTED_IN]->()
+  RETURN p, r ORDER BY p.name ASC, r.role DESC|};
+  [%expect
+    {|
+    ((0, 0), (0, 0),
+     [[("p", (OutNode (1, ["Person"], [("name", (String "Charlie Sheen"))])));
+        ("r", (OutRel (1, (1, ["ACTED_IN"], [("role", (String "Bud Fox"))]), 6)))
+        ];
+       [("p", (OutNode (2, ["Person"], [("name", (String "Martin Sheen"))])));
+         ("r",
+          (OutRel (2, (2, ["ACTED_IN"], [("role", (String "Carl Fox"))]), 6)))
+         ];
+       [("p", (OutNode (2, ["Person"], [("name", (String "Martin Sheen"))])));
+         ("r",
+          (OutRel (2, (5, ["ACTED_IN"], [("role", (String "A.J. MacInerney"))]),
+             7)))
+         ];
+       [("p", (OutNode (3, ["Person"], [("name", (String "Michael Douglas"))])));
+         ("r",
+          (OutRel (3,
+             (6, ["ACTED_IN"], [("role", (String "President Andrew Shepherd"))]),
+             7)))
+         ];
+       [("p", (OutNode (3, ["Person"], [("name", (String "Michael Douglas"))])));
+         ("r",
+          (OutRel (3, (3, ["ACTED_IN"], [("role", (String "Gordon Gekko"))]), 6)))
+         ]
+       ]) |}]
+;;
+
+let%expect_test "MATCH RETURN (ORDER BY) test4" =
+  piprint g {|
+  MATCH ()<-[r:ACTED_IN]-()
+  RETURN r ORDER BY r.role|};
+  [%expect
+    {|
+    ((0, 0), (0, 0),
+     [[("r",
+        (OutRel (2, (5, ["ACTED_IN"], [("role", (String "A.J. MacInerney"))]), 7
+           )))
+        ];
+       [("r", (OutRel (1, (1, ["ACTED_IN"], [("role", (String "Bud Fox"))]), 6)))
+         ];
+       [("r", (OutRel (2, (2, ["ACTED_IN"], [("role", (String "Carl Fox"))]), 6)))
+         ];
+       [("r",
+         (OutRel (3, (3, ["ACTED_IN"], [("role", (String "Gordon Gekko"))]), 6)))
+         ];
+       [("r",
+         (OutRel (3,
+            (6, ["ACTED_IN"], [("role", (String "President Andrew Shepherd"))]),
+            7)))
+         ]
+       ]) |}]
+;;
+
+let%expect_test "MATCH (WHERE) RETURN (ORDER BY) test1" =
+  piprint g {|
+  MATCH (n) WHERE n.name ENDS WITH "Sheen"
+  RETURN n ORDER BY n.name |};
+  [%expect
+    {|
+    ((0, 0), (0, 0),
+     [[("n", (OutNode (1, ["Person"], [("name", (String "Charlie Sheen"))])))];
+       [("n", (OutNode (2, ["Person"], [("name", (String "Martin Sheen"))])))]]) |}]
+;;
+
+let%expect_test "MATCH RETURN test1" =
+  piprint
+    g
+    {|
+  MATCH (n:Movie{title:"Wall Street"}), (n:Wallstreet{year:2011})
+  RETURN * |};
+  [%expect
+    {|
+    ((0, 0), (0, 0),
+     [[("n",
+        (OutNode (6, ["Movie"; "Wallstreet"],
+           [("year", (Int64 2011L)); ("title", (String "Wall Street"))])))
+        ]
+       ]) |}]
+;;
+
+let%expect_test "MATCH RETURN test2" =
+  piprint g {|
+  MATCH (:Person{name:"Martin Sheen"})-[:FATHER_OF]->(c)
+  RETURN * |};
+  [%expect
+    {|
+    ((0, 0), (0, 0),
+     [[("c", (OutNode (1, ["Person"], [("name", (String "Charlie Sheen"))])))]]) |}]
+;;
+
+let%expect_test "MATCH RETURN test3" =
+  piprint
+    g
+    {|
+  MATCH (:Person{name:"Martin Sheen"})-[:FATHER_OF]->(n)-[r:ACTED_IN]->(m1)
+  RETURN n, m1, r.role|};
+  [%expect
+    {|
+    ((0, 0), (0, 0),
+     [[("n", (OutNode (1, ["Person"], [("name", (String "Charlie Sheen"))])));
+        ("m1",
+         (OutNode (6, ["Movie"; "Wallstreet"],
+            [("year", (Int64 2011L)); ("title", (String "Wall Street"))])));
+        ("r.role", (OutConstant (String "Bud Fox")))]
+       ]) |}]
+;;
+
+let%expect_test "MATCH (WHERE) RETURN (ORDER_BY) test2" =
+  piprint
+    g
+    {|
+  MATCH (:Person{name:"Martin Sheen"})-[:FATHER_OF]->()-[:ACTED_IN]->(m1),
+  (m2)<-[:ACTED_IN]-(p:Person{name:"Michael Douglas"})
+  WHERE m1 <> m2
+  RETURN p, m2.title as movietitle ORDER BY movietitle |};
+  [%expect
+    {|
+    ((0, 0), (0, 0),
+     [[("p", (OutNode (3, ["Person"], [("name", (String "Michael Douglas"))])));
+        ("movietitle", (OutConstant (String "The American President")))]
+       ]) |}]
+;;
+
+let%expect_test "MATCH fail test" =
+  piprint g {|
+  MATCH ()-[r]-(), ()-[r]-()
+  RETURN * |};
+  [%expect {|
+    (Interpreter_err (Multiple_using_rel_var "r")) |}]
+;;
