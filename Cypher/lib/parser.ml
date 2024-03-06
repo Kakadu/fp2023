@@ -355,7 +355,7 @@ let properties =
 
 let pattern = lift2 (fun ls ps -> ls, ps) labels properties
 
-let path is_match =
+let path =
   let named_patt =
     lift2
       (fun n p -> n, p)
@@ -375,22 +375,14 @@ let path is_match =
       ; skip_spaces
           (char '-' *> (sq_brackets named_patt <|> return (None, ([], [])))
            <* skip_spaces @@ char '-'
-           >>= fun (n, p) ->
-           match is_match with
-           | true -> return (n, p, No)
-           | _ -> fail "Incorrect relationship direction")
+           >>= fun (n, p) -> return (n, p, No))
       ]
   in
   let node = parens named_patt in
   lift2 (fun n rns -> n, rns) node (many (lift2 (fun r n -> r, n) rel node))
 ;;
 
-let paths is_match =
-  lift2
-    (fun p ps -> p :: ps)
-    (path is_match)
-    (many (skip_spaces (char ',') *> path is_match))
-;;
+let paths = lift2 (fun p ps -> p :: ps) path (many (skip_spaces (char ',') *> path))
 
 let where =
   check_after
@@ -516,7 +508,7 @@ let cmatch =
         | "MATCH" -> return ()
         | _ -> fail ""))
     (fun c -> not @@ is_digit c)
-  *> lift2 (fun ps wh -> ps, wh) (paths true) where
+  *> lift2 (fun ps wh -> ps, wh) paths where
 ;;
 
 let ccreate =
@@ -528,7 +520,7 @@ let ccreate =
         | "CREATE" -> return ()
         | _ -> fail ""))
     (fun c -> not @@ is_digit c)
-  *> paths false
+  *> paths
 ;;
 
 let cdelete =
