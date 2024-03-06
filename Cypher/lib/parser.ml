@@ -201,6 +201,32 @@ let unot =
     (fun c -> not @@ is_digit c)
 ;;
 
+let bcontains =
+  check_after
+    (skip_spaces
+       (take_while is_letter
+        >>= fun op ->
+        match uc op with
+        | "CONTAINS" -> return (fun e1 e2 -> Bin_op (CONTAINS, e1, e2))
+        | _ -> fail ""))
+    (fun c -> not @@ is_digit c)
+;;
+
+let bstarts_ends_with =
+  check_after
+    (skip_spaces
+       (lift2
+          (fun s1 s2 -> s1, s2)
+          (take_while is_letter)
+          (skip_spaces (take_while is_letter))
+        >>= fun (s1, s2) ->
+        match uc s1, uc s2 with
+        | "STARTS", "WITH" -> return (fun e1 e2 -> Bin_op (STARTS_WITH, e1, e2))
+        | "ENDS", "WITH" -> return (fun e1 e2 -> Bin_op (ENDS_WITH, e1, e2))
+        | _ -> fail ""))
+    (fun c -> not @@ is_digit c)
+;;
+
 let bcaret = skip_spaces (char '^') *> return (fun e1 e2 -> Bin_op (Caret, e1, e2))
 let basterisk = skip_spaces (char '*') *> return (fun e1 e2 -> Bin_op (Asterisk, e1, e2))
 let bslash = skip_spaces (char '/') *> return (fun e1 e2 -> Bin_op (Slash, e1, e2))
@@ -291,8 +317,9 @@ let lgeq =
 
 let expr =
   fix (fun expr ->
-    let factor = choice [ parens expr; const; property; var; liter ] in
-    let null_or_not_null = un_chainl1 factor (uis_null <|> uis_not_null) in
+    let factor = choice [ parens expr; const; property; var ] in
+    let ss_comp_op = chainl1 factor (bcontains <|> bstarts_ends_with) in
+    let null_or_not_null = un_chainl1 ss_comp_op (uis_null <|> uis_not_null) in
     let minus = un_chainr1 null_or_not_null uminus in
     let caret = chainl1 minus bcaret in
     let asterisk_slash_percent = chainl1 caret (choice [ basterisk; bslash; bpercent ]) in
