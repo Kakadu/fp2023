@@ -14,14 +14,15 @@ let%expect_test _ =
   |};
   [%expect
     {|
-    [(EDeclaration ("f",
-        (EFun ((PVal "x"),
-           (EMatchWith ((EIdentifier "x"),
-              [((PConst (Int 0)), (EConst (String "zero")));
-                (PAny, (EConst (String "not zero")))]
+    [(SDeclaration
+        (DDeclaration ("f",
+           (EFun ((PVal "x"),
+              (EMatchWith ((EIdentifier "x"),
+                 [((PConst (Int 0)), (EConst (String "zero")));
+                   (PAny, (EConst (String "not zero")))]
+                 ))
               ))
-           )),
-        None))
+           )))
       ] |}]
 ;;
 
@@ -38,18 +39,20 @@ let%expect_test _ =
   |};
   [%expect
     {|
-    [(EDeclaration ("f",
-        (EFun ((PVal "x"),
-           (EMatchWith ((EIdentifier "x"),
-              [(PNill, (EConst (Int 0)));
-                ((PListCons ((PVal "hd"), (PVal "tl"))),
-                 (EMatchWith ((EIdentifier "hd"),
-                    [((PVal "x"), (EIdentifier "x")); (PAny, (EIdentifier "hd"))]
-                    )))
-                ]
+    [(SDeclaration
+        (DDeclaration ("f",
+           (EFun ((PVal "x"),
+              (EMatchWith ((EIdentifier "x"),
+                 [(PNill, (EConst (Int 0)));
+                   ((PListCons ((PVal "hd"), (PVal "tl"))),
+                    (EMatchWith ((EIdentifier "hd"),
+                       [((PVal "x"), (EIdentifier "x"));
+                         (PAny, (EIdentifier "hd"))]
+                       )))
+                   ]
+                 ))
               ))
-           )),
-        None))
+           )))
       ] |}]
 ;;
 
@@ -64,19 +67,20 @@ let%expect_test _ =
   |};
   [%expect
     {|
-    [(EDeclaration ("f",
-        (EFun ((PVal "x"),
-           (EMatchWith ((EIdentifier "x"),
-              [((PTuple [(PVal "x"); (PVal "y")]),
-                (EBinaryOperation (Add, (EIdentifier "x"), (EIdentifier "y"))));
-                ((PTuple [(PVal "x"); (PVal "y"); (PVal "z")]),
-                 (EBinaryOperation (Add,
-                    (EBinaryOperation (Add, (EIdentifier "x"), (EIdentifier "y")
-                       )),
-                    (EIdentifier "z"))));
-                (PAny, (EConst (Int 0)))]
+    [(SDeclaration
+        (DDeclaration ("f",
+           (EFun ((PVal "x"),
+              (EMatchWith ((EIdentifier "x"),
+                 [((PTuple [(PVal "x"); (PVal "y")]),
+                   (EBinaryOperation (Add, (EIdentifier "x"), (EIdentifier "y"))));
+                   ((PTuple [(PVal "x"); (PVal "y"); (PVal "z")]),
+                    (EBinaryOperation (Add,
+                       (EBinaryOperation (Add, (EIdentifier "x"),
+                          (EIdentifier "y"))),
+                       (EIdentifier "z"))));
+                   (PAny, (EConst (Int 0)))]
+                 ))
               ))
-           )),
-        None))
+           )))
       ] |}]
 ;;

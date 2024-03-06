@@ -3,9 +3,9 @@
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
 val inference_expr : Ast.expr -> unit
-val inference_program : Ast.expr list -> unit
+val inference_program : Ast.struct_item list -> unit
 val inference : string -> unit
 val interpret_expr : Ast.expr -> unit
-val interpret_program : Ast.expr list -> unit
+val interpret_program : Ast.struct_item list -> unit
 val interpret : string -> unit
 val parse_with_print : string -> unit

@@ -1,5 +1,5 @@
 # This example does not carry a strong semantic load, but is intended only to demonstrate how the effects work.
-  $ dune exec demo << EOF
+  $ ./demo.exe << EOF
   > 
   > effect GreaterThanThousand : int -> int effect ;;
   > effect LessThanThousand : int -> int effect ;;

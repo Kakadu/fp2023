@@ -1,4 +1,4 @@
-  $ dune exec demo << EOF
+  $ ./demo.exe<< EOF
   > 
   > let rec fact n = if n = 1 then 1 else n * fact (n - 1);;
   > let res = fact 5;;
@@ -14,10 +14,10 @@
   > EOF
   val fact : int -> int = <fun>
   val res : int = 120
-  val fack : int -> (int -> 'n) -> 'n = <fun>
+  val fack : int -> (int -> 'a) -> 'a = <fun>
   val res2 : int = 3628800
   val res3 : int * bool = (1, true)
-  val fix : (('y -> '|) -> 'y -> '|) -> 'y -> '| = <fun>
+  val fix : (('a -> 'b) -> 'a -> 'b) -> 'a -> 'b = <fun>
   val fib_open : (int -> int -> int -> int) -> int -> int -> int -> int = <fun>
   val fib : int -> int -> int -> int = <fun>
   val fib5 : int = 3

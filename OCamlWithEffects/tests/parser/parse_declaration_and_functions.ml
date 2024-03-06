@@ -9,7 +9,7 @@ open Ocaml_with_effects_lib.Run
 let%expect_test _ =
   parse_with_print {| let x = (1) |};
   [%expect {|
-    [(EDeclaration ("x", (EConst (Int 1)), None))] |}]
+    [(SDeclaration (DDeclaration ("x", (EConst (Int 1)))))] |}]
 ;;
 
 let%expect_test _ =
@@ -17,16 +17,18 @@ let%expect_test _ =
 let main = f 4 6|};
   [%expect
     {|
-  [(EDeclaration ("f",
-      (EFun ((PVal "x"),
-         (EFun ((PVal "y"),
-            (EBinaryOperation (Add, (EIdentifier "x"), (EIdentifier "y")))))
-         )),
-      None));
-    (EDeclaration ("main",
-       (EApplication ((EApplication ((EIdentifier "f"), (EConst (Int 4)))),
-          (EConst (Int 6)))),
-       None))
+  [(SDeclaration
+      (DDeclaration ("f",
+         (EFun ((PVal "x"),
+            (EFun ((PVal "y"),
+               (EBinaryOperation (Add, (EIdentifier "x"), (EIdentifier "y")))))
+            ))
+         )));
+    (SDeclaration
+       (DDeclaration ("main",
+          (EApplication ((EApplication ((EIdentifier "f"), (EConst (Int 4)))),
+             (EConst (Int 6))))
+          )))
     ] |}]
 ;;
 
@@ -44,12 +46,13 @@ let%expect_test _ =
   parse_with_print {| let rec f x = f (x - 1)|};
   [%expect
     {|
-    [(ERecDeclaration ("f",
-        (EFun ((PVal "x"),
-           (EApplication ((EIdentifier "f"),
-              (EBinaryOperation (Sub, (EIdentifier "x"), (EConst (Int 1))))))
-           )),
-        None))
+    [(SDeclaration
+        (DRecDeclaration ("f",
+           (EFun ((PVal "x"),
+              (EApplication ((EIdentifier "f"),
+                 (EBinaryOperation (Sub, (EIdentifier "x"), (EConst (Int 1))))))
+              ))
+           )))
       ] |}]
 ;;
 
@@ -64,13 +67,13 @@ let%expect_test _ =
   |};
   [%expect
     {|
-    [(EDeclaration ("f",
-        (EDeclaration ("x", (EConst (Int 5)),
-           (Some (EBinaryOperation (Add, (EConst (Int 1)),
-                    (EBinaryOperation (Mul, (EIdentifier "x"), (EConst (Int 3))))
-                    )))
-           )),
-        None))
+    [(SDeclaration
+        (DDeclaration ("f",
+           (ELetIn ("x", (EConst (Int 5)),
+              (EBinaryOperation (Add, (EConst (Int 1)),
+                 (EBinaryOperation (Mul, (EIdentifier "x"), (EConst (Int 3))))))
+              ))
+           )))
       ] |}]
 ;;
 
@@ -78,14 +81,16 @@ let%expect_test _ =
   parse_with_print {| let rec f x = f (x-1) ;; let g = f 5 in g |};
   [%expect
     {|
-    [(ERecDeclaration ("f",
-        (EFun ((PVal "x"),
-           (EApplication ((EIdentifier "f"),
-              (EBinaryOperation (Sub, (EIdentifier "x"), (EConst (Int 1))))))
-           )),
-        None));
-      (EDeclaration ("g", (EApplication ((EIdentifier "f"), (EConst (Int 5)))),
-         (Some (EIdentifier "g"))))
+    [(SDeclaration
+        (DRecDeclaration ("f",
+           (EFun ((PVal "x"),
+              (EApplication ((EIdentifier "f"),
+                 (EBinaryOperation (Sub, (EIdentifier "x"), (EConst (Int 1))))))
+              ))
+           )));
+      (SExpression
+         (ELetIn ("g", (EApplication ((EIdentifier "f"), (EConst (Int 5)))),
+            (EIdentifier "g"))))
       ] |}]
 ;;
 
@@ -97,8 +102,9 @@ let%expect_test _ =
   parse_with_print {| fun x -> x + 1 ;;|};
   [%expect
     {|
-    [(EFun ((PVal "x"),
-        (EBinaryOperation (Add, (EIdentifier "x"), (EConst (Int 1))))))
+    [(SExpression
+        (EFun ((PVal "x"),
+           (EBinaryOperation (Add, (EIdentifier "x"), (EConst (Int 1)))))))
       ] |}]
 ;;
 
@@ -106,10 +112,11 @@ let%expect_test _ =
   parse_with_print {| (fun x -> x + 1) 10000000 ;;|};
   [%expect
     {|
-    [(EApplication (
-        (EFun ((PVal "x"),
-           (EBinaryOperation (Add, (EIdentifier "x"), (EConst (Int 1)))))),
-        (EConst (Int 10000000))))
+    [(SExpression
+        (EApplication (
+           (EFun ((PVal "x"),
+              (EBinaryOperation (Add, (EIdentifier "x"), (EConst (Int 1)))))),
+           (EConst (Int 10000000)))))
       ] |}]
 ;;
 
@@ -117,8 +124,9 @@ let%expect_test _ =
   parse_with_print {| fun (a :: b) -> a :: b |};
   [%expect
     {|
-    [(EFun ((PListCons ((PVal "a"), (PVal "b"))),
-        (EListCons ((EIdentifier "a"), (EIdentifier "b")))))
+    [(SExpression
+        (EFun ((PListCons ((PVal "a"), (PVal "b"))),
+           (EListCons ((EIdentifier "a"), (EIdentifier "b"))))))
       ] |}]
 ;;
 
@@ -132,12 +140,13 @@ let%expect_test _ =
   |};
   [%expect
     {|
-    [(EFun ((PVal "x"),
-        (EMatchWith ((EIdentifier "x"),
-           [(PNill, (EConst (Int 0)));
-             ((PListCons ((PVal "hd"), (PVal "tl"))), (EConst (Int 1)))]
-           ))
-        ))
+    [(SExpression
+        (EFun ((PVal "x"),
+           (EMatchWith ((EIdentifier "x"),
+              [(PNill, (EConst (Int 0)));
+                ((PListCons ((PVal "hd"), (PVal "tl"))), (EConst (Int 1)))]
+              ))
+           )))
       ] |}]
 ;;
 

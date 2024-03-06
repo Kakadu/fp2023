@@ -10,19 +10,21 @@ let%expect_test _ =
   parse_with_print {| let rec fact n = if n = 1 then 1 else n * fact (n - 1) |};
   [%expect
     {|
-    [(ERecDeclaration ("fact",
-        (EFun ((PVal "n"),
-           (EIfThenElse (
-              (EBinaryOperation (Eq, (EIdentifier "n"), (EConst (Int 1)))),
-              (EConst (Int 1)),
-              (EBinaryOperation (Mul, (EIdentifier "n"),
-                 (EApplication ((EIdentifier "fact"),
-                    (EBinaryOperation (Sub, (EIdentifier "n"), (EConst (Int 1))))
+    [(SDeclaration
+        (DRecDeclaration ("fact",
+           (EFun ((PVal "n"),
+              (EIfThenElse (
+                 (EBinaryOperation (Eq, (EIdentifier "n"), (EConst (Int 1)))),
+                 (EConst (Int 1)),
+                 (EBinaryOperation (Mul, (EIdentifier "n"),
+                    (EApplication ((EIdentifier "fact"),
+                       (EBinaryOperation (Sub, (EIdentifier "n"),
+                          (EConst (Int 1))))
+                       ))
                     ))
                  ))
               ))
-           )),
-        None))
+           )))
       ] |}]
 ;;
 
@@ -48,36 +50,39 @@ let%expect_test _ =
   |};
   [%expect
     {|
-    [(EEffectDeclaration ("DevisionByZero", (AEffect AInt)));
-      (EDeclaration ("helper",
-         (EFun ((PVal "x"),
-            (EFun ((PVal "y"),
-               (EMatchWith ((EIdentifier "y"),
-                  [((PConst (Int 0)),
-                    (EEffectPerform (EEffectWithoutArguments "DevisionByZero")));
-                    ((PVal "other"),
-                     (EBinaryOperation (Div, (EIdentifier "x"),
-                        (EIdentifier "other"))))
-                    ]
+    [(SDeclaration (DEffectDeclaration ("DevisionByZero", (AEffect AInt))));
+      (SDeclaration
+         (DDeclaration ("helper",
+            (EFun ((PVal "x"),
+               (EFun ((PVal "y"),
+                  (EMatchWith ((EIdentifier "y"),
+                     [((PConst (Int 0)),
+                       (EEffectPerform (EEffectWithoutArguments "DevisionByZero")));
+                       ((PVal "other"),
+                        (EBinaryOperation (Div, (EIdentifier "x"),
+                           (EIdentifier "other"))))
+                       ]
+                     ))
                   ))
                ))
-            )),
-         None));
-      (EDeclaration ("div",
-         (EFun ((PVal "x"),
-            (EFun ((PVal "y"),
-               (ETryWith (
-                  (EApplication (
-                     (EApplication ((EIdentifier "helper"), (EIdentifier "x"))),
-                     (EIdentifier "y"))),
-                  [(EffectHandler ((PEffectWithoutArguments "DevisionByZero"),
-                      (EEffectContinue ((Continue "k"), (EConst (Int 0)))),
-                      (Continue "k")))
-                    ]
+            )));
+      (SDeclaration
+         (DDeclaration ("div",
+            (EFun ((PVal "x"),
+               (EFun ((PVal "y"),
+                  (ETryWith (
+                     (EApplication (
+                        (EApplication ((EIdentifier "helper"), (EIdentifier "x")
+                           )),
+                        (EIdentifier "y"))),
+                     [(EffectHandler ((PEffectWithoutArguments "DevisionByZero"),
+                         (EEffectContinue ((Continue "k"), (EConst (Int 0)))),
+                         (Continue "k")))
+                       ]
+                     ))
                   ))
                ))
-            )),
-         None))
+            )))
       ] |}]
 ;;
 
@@ -115,56 +120,62 @@ let%expect_test _ =
     |};
   [%expect
     {|
-    [(EEffectDeclaration ("NotDigit", (AArrow (AChar, (AEffect AInt)))));
-      (EDeclaration ("int_of_char",
-         (EFun ((PVal "c"),
-            (EMatchWith ((EIdentifier "c"),
-               [((PConst (Char '0')), (EConst (Int 0)));
-                 ((PConst (Char '1')), (EConst (Int 1)));
-                 ((PConst (Char '2')), (EConst (Int 2)));
-                 ((PConst (Char '3')), (EConst (Int 3)));
-                 ((PConst (Char '4')), (EConst (Int 4)));
-                 ((PConst (Char '5')), (EConst (Int 5)));
-                 ((PConst (Char '6')), (EConst (Int 6)));
-                 ((PConst (Char '7')), (EConst (Int 7)));
-                 ((PConst (Char '8')), (EConst (Int 8)));
-                 ((PConst (Char '9')), (EConst (Int 9)));
-                 ((PVal "c"),
-                  (EEffectPerform
-                     (EEffectWithArguments ("NotDigit", (EIdentifier "c")))))
+    [(SDeclaration
+        (DEffectDeclaration ("NotDigit", (AArrow (AChar, (AEffect AInt))))));
+      (SDeclaration
+         (DDeclaration ("int_of_char",
+            (EFun ((PVal "c"),
+               (EMatchWith ((EIdentifier "c"),
+                  [((PConst (Char '0')), (EConst (Int 0)));
+                    ((PConst (Char '1')), (EConst (Int 1)));
+                    ((PConst (Char '2')), (EConst (Int 2)));
+                    ((PConst (Char '3')), (EConst (Int 3)));
+                    ((PConst (Char '4')), (EConst (Int 4)));
+                    ((PConst (Char '5')), (EConst (Int 5)));
+                    ((PConst (Char '6')), (EConst (Int 6)));
+                    ((PConst (Char '7')), (EConst (Int 7)));
+                    ((PConst (Char '8')), (EConst (Int 8)));
+                    ((PConst (Char '9')), (EConst (Int 9)));
+                    ((PVal "c"),
+                     (EEffectPerform
+                        (EEffectWithArguments ("NotDigit", (EIdentifier "c")))))
+                    ]
+                  ))
+               ))
+            )));
+      (SDeclaration
+         (DRecDeclaration ("sum_up",
+            (EFun ((PVal "li"),
+               (EMatchWith ((EIdentifier "li"),
+                  [(PNill, (EConst (Int 0)));
+                    ((PListCons ((PVal "h"), (PVal "tl"))),
+                     (EBinaryOperation (Add,
+                        (EApplication ((EIdentifier "int_of_char"),
+                           (EIdentifier "h"))),
+                        (EApplication ((EIdentifier "sum_up"), (EIdentifier "tl")
+                           ))
+                        )))
+                    ]
+                  ))
+               ))
+            )));
+      (SDeclaration
+         (DDeclaration ("test_l",
+            (EList
+               [(EConst (Char '1')); (EConst (Char 'a')); (EConst (Char '0'));
+                 (EConst (Char '1')); (EConst (Char '5')); (EConst (Char '7'));
+                 (EConst (Char 'v')); (EConst (Char '2')); (EConst (Char '9'))])
+            )));
+      (SDeclaration
+         (DDeclaration ("res",
+            (ETryWith (
+               (EApplication ((EIdentifier "sum_up"), (EIdentifier "test_l"))),
+               [(EffectHandler ((PEffectWithArguments ("NotDigit", (PVal "x"))),
+                   (EEffectContinue ((Continue "k"), (EConst (Int 0)))),
+                   (Continue "k")))
                  ]
                ))
-            )),
-         None));
-      (ERecDeclaration ("sum_up",
-         (EFun ((PVal "li"),
-            (EMatchWith ((EIdentifier "li"),
-               [(PNill, (EConst (Int 0)));
-                 ((PListCons ((PVal "h"), (PVal "tl"))),
-                  (EBinaryOperation (Add,
-                     (EApplication ((EIdentifier "int_of_char"),
-                        (EIdentifier "h"))),
-                     (EApplication ((EIdentifier "sum_up"), (EIdentifier "tl")))
-                     )))
-                 ]
-               ))
-            )),
-         None));
-      (EDeclaration ("test_l",
-         (EList
-            [(EConst (Char '1')); (EConst (Char 'a')); (EConst (Char '0'));
-              (EConst (Char '1')); (EConst (Char '5')); (EConst (Char '7'));
-              (EConst (Char 'v')); (EConst (Char '2')); (EConst (Char '9'))]),
-         None));
-      (EDeclaration ("res",
-         (ETryWith (
-            (EApplication ((EIdentifier "sum_up"), (EIdentifier "test_l"))),
-            [(EffectHandler ((PEffectWithArguments ("NotDigit", (PVal "x"))),
-                (EEffectContinue ((Continue "k"), (EConst (Int 0)))),
-                (Continue "k")))
-              ]
-            )),
-         None))
+            )))
       ] |}]
 ;;
 
@@ -176,21 +187,24 @@ let%expect_test _ =
   parse_with_print {| let rec fib n = if n > 1 then fib (n - 1) + fib (n - 2) else 1;; |};
   [%expect
     {|
-    [(ERecDeclaration ("fib",
-        (EFun ((PVal "n"),
-           (EIfThenElse (
-              (EBinaryOperation (Gt, (EIdentifier "n"), (EConst (Int 1)))),
-              (EBinaryOperation (Add,
-                 (EApplication ((EIdentifier "fib"),
-                    (EBinaryOperation (Sub, (EIdentifier "n"), (EConst (Int 1))))
+    [(SDeclaration
+        (DRecDeclaration ("fib",
+           (EFun ((PVal "n"),
+              (EIfThenElse (
+                 (EBinaryOperation (Gt, (EIdentifier "n"), (EConst (Int 1)))),
+                 (EBinaryOperation (Add,
+                    (EApplication ((EIdentifier "fib"),
+                       (EBinaryOperation (Sub, (EIdentifier "n"),
+                          (EConst (Int 1))))
+                       )),
+                    (EApplication ((EIdentifier "fib"),
+                       (EBinaryOperation (Sub, (EIdentifier "n"),
+                          (EConst (Int 2))))
+                       ))
                     )),
-                 (EApplication ((EIdentifier "fib"),
-                    (EBinaryOperation (Sub, (EIdentifier "n"), (EConst (Int 2))))
-                    ))
-                 )),
-              (EConst (Int 1))))
-           )),
-        None))
+                 (EConst (Int 1))))
+              ))
+           )))
       ] |}]
 ;;
 

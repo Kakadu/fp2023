@@ -71,7 +71,7 @@ let%expect_test _ =
   inference {| 
       (1, (1,'a'), "name", 'a', true :: false :: [])
     |};
-  [%expect {| - : int * int * char * string * char * bool list |}]
+  [%expect {| - : int * (int * char) * string * char * bool list |}]
 ;;
 
 (* ---------------- *)
