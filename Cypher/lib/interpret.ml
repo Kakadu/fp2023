@@ -1371,11 +1371,10 @@ let%expect_test "many WITH CREATE DELETE test" =
     ((5, 0), (4, 0), [[("N", (OutNode (1, [], [("R", (Int64 4L))])))]]) |}]
 ;;
 
-let g =
-  match
-    parse_and_interpret_request
-      g
-      {|
+let init_res =
+  parse_and_interpret_request
+    g
+    {|
   CREATE
   (charlie:Person {name: 'Charlie Sheen'}),
   (martin:Person {name: 'Martin Sheen'}),
@@ -1393,15 +1392,14 @@ let g =
   (rob)-[:DIRECTED]->(thePresident),
   (martin)-[:FATHER_OF]->(charlie)
     |}
-  with
-  | Ok (g, _) -> g
-  | Error _ -> failwith "Unable to intialize db"
 ;;
 
 let%expect_test "MATCH RETURN (ORDER BY) test1" =
-  piprint g {|
+  (match init_res with
+   | Ok (g, _) -> piprint g {|
   MATCH (n)
-  RETURN n ORDER BY n.name|};
+  RETURN n ORDER BY n.name|}
+   | Error err -> Stdlib.Format.printf "Init error: %a" pp_req_error err);
   [%expect
     {|
     ((0, 0), (0, 0),
@@ -1421,9 +1419,11 @@ let%expect_test "MATCH RETURN (ORDER BY) test1" =
 ;;
 
 let%expect_test "MATCH RETURN (ORDER BY) test2" =
-  piprint g {|
+  (match init_res with
+   | Ok (g, _) -> piprint g {|
   MATCH ()-[r:ACTED_IN]-()
-  RETURN r ORDER BY r.role|};
+  RETURN r ORDER BY r.role|}
+   | Error err -> Stdlib.Format.printf "Init error: %a" pp_req_error err);
   [%expect
     {|
     ((0, 0), (0, 0),
@@ -1463,11 +1463,14 @@ let%expect_test "MATCH RETURN (ORDER BY) test2" =
 ;;
 
 let%expect_test "MATCH RETURN (ORDER BY) test3" =
-  piprint
-    g
-    {|
+  (match init_res with
+   | Ok (g, _) ->
+     piprint
+       g
+       {|
   MATCH (p)-[r:ACTED_IN]->()
-  RETURN p, r ORDER BY p.name ASC, r.role DESC|};
+  RETURN p, r ORDER BY p.name ASC, r.role DESC|}
+   | Error err -> Stdlib.Format.printf "Init error: %a" pp_req_error err);
   [%expect
     {|
     ((0, 0), (0, 0),
@@ -1497,9 +1500,11 @@ let%expect_test "MATCH RETURN (ORDER BY) test3" =
 ;;
 
 let%expect_test "MATCH RETURN (ORDER BY) test4" =
-  piprint g {|
+  (match init_res with
+   | Ok (g, _) -> piprint g {|
   MATCH ()<-[r:ACTED_IN]-()
-  RETURN r ORDER BY r.role|};
+  RETURN r ORDER BY r.role|}
+   | Error err -> Stdlib.Format.printf "Init error: %a" pp_req_error err);
   [%expect
     {|
     ((0, 0), (0, 0),
@@ -1523,9 +1528,12 @@ let%expect_test "MATCH RETURN (ORDER BY) test4" =
 ;;
 
 let%expect_test "MATCH (WHERE) RETURN (ORDER BY) test1" =
-  piprint g {|
+  (match init_res with
+   | Ok (g, _) ->
+     piprint g {|
   MATCH (n) WHERE n.name ENDS WITH "Sheen"
-  RETURN n ORDER BY n.name |};
+  RETURN n ORDER BY n.name |}
+   | Error err -> Stdlib.Format.printf "Init error: %a" pp_req_error err);
   [%expect
     {|
     ((0, 0), (0, 0),
@@ -1534,11 +1542,14 @@ let%expect_test "MATCH (WHERE) RETURN (ORDER BY) test1" =
 ;;
 
 let%expect_test "MATCH RETURN test1" =
-  piprint
-    g
-    {|
+  (match init_res with
+   | Ok (g, _) ->
+     piprint
+       g
+       {|
   MATCH (n:Movie{title:"Wall Street"}), (n:Wallstreet{year:2011})
-  RETURN * |};
+  RETURN * |}
+   | Error err -> Stdlib.Format.printf "Init error: %a" pp_req_error err);
   [%expect
     {|
     ((0, 0), (0, 0),
@@ -1550,9 +1561,12 @@ let%expect_test "MATCH RETURN test1" =
 ;;
 
 let%expect_test "MATCH RETURN test2" =
-  piprint g {|
+  (match init_res with
+   | Ok (g, _) ->
+     piprint g {|
   MATCH (:Person{name:"Martin Sheen"})-[:FATHER_OF]->(c)
-  RETURN * |};
+  RETURN * |}
+   | Error err -> Stdlib.Format.printf "Init error: %a" pp_req_error err);
   [%expect
     {|
     ((0, 0), (0, 0),
@@ -1560,11 +1574,14 @@ let%expect_test "MATCH RETURN test2" =
 ;;
 
 let%expect_test "MATCH RETURN test3" =
-  piprint
-    g
-    {|
+  (match init_res with
+   | Ok (g, _) ->
+     piprint
+       g
+       {|
   MATCH (:Person{name:"Martin Sheen"})-[:FATHER_OF]->(n)-[r:ACTED_IN]->(m1)
-  RETURN n, m1, r.role|};
+  RETURN n, m1, r.role|}
+   | Error err -> Stdlib.Format.printf "Init error: %a" pp_req_error err);
   [%expect
     {|
     ((0, 0), (0, 0),
@@ -1577,13 +1594,16 @@ let%expect_test "MATCH RETURN test3" =
 ;;
 
 let%expect_test "MATCH (WHERE) RETURN (ORDER_BY) test2" =
-  piprint
-    g
-    {|
+  (match init_res with
+   | Ok (g, _) ->
+     piprint
+       g
+       {|
   MATCH (:Person{name:"Martin Sheen"})-[:FATHER_OF]->()-[:ACTED_IN]->(m1),
   (m2)<-[:ACTED_IN]-(p:Person{name:"Michael Douglas"})
   WHERE m1 <> m2
-  RETURN p, m2.title as movietitle ORDER BY movietitle |};
+  RETURN p, m2.title as movietitle ORDER BY movietitle |}
+   | Error err -> Stdlib.Format.printf "Init error: %a" pp_req_error err);
   [%expect
     {|
     ((0, 0), (0, 0),
@@ -1593,9 +1613,11 @@ let%expect_test "MATCH (WHERE) RETURN (ORDER_BY) test2" =
 ;;
 
 let%expect_test "MATCH fail test" =
-  piprint g {|
+  (match init_res with
+   | Ok (g, _) -> piprint g {|
   MATCH ()-[r]-(), ()-[r]-()
-  RETURN * |};
+  RETURN * |}
+   | Error err -> Stdlib.Format.printf "Init error: %a" pp_req_error err);
   [%expect {|
     (Interpreter_err (Multiple_using_rel_var "r")) |}]
 ;;
