@@ -12,7 +12,7 @@ let run input =
   | Ok ast ->
     (match eval_program ast with
      | Ok res -> Format.printf "%s" (show_value res)
-     | Error e -> Format.printf "(Error while interpreting): %a" pp_error e)
+     | Error e -> Format.printf "(Error while interpreting): %a" pp_error_inter e)
   | Error e -> Format.printf "(Error while parsing): %s" e
 ;;
 

@@ -18,16 +18,16 @@ module R : sig
   val ( >>| ) : 'a t -> ('a -> 'b) -> 'b t
   val bind : 'a t -> f:('a -> 'b t) -> 'b t
   val return : 'a -> 'a t
-  val fail : Errorinter.error -> 'a t
+  val fail : Errorinter.error_infer -> 'a t
 
   module Syntax : sig
     val ( let* ) : 'a t -> ('a -> 'b t) -> 'b t
   end
 
   val fresh : int t
-  val run : 'a t -> ('a, Errorinter.error) result
+  val run : 'a t -> ('a, Errorinter.error_infer) result
 end = struct
-  type 'a t = int -> int * ('a, error) Result.t
+  type 'a t = int -> int * ('a, error_infer) Result.t
 
   let ( >>= ) : 'a 'b. 'a t -> ('a -> 'b t) -> 'b t =
     fun m f st ->
@@ -402,7 +402,7 @@ let check_types ?(env : environment = empty) e =
 
 let run_subst subst =
   match R.run subst with
-  | Result.Error e -> Format.printf "%a%!" pp_error e
+  | Result.Error e -> Format.printf "%a%!" pp_error_infer e
   | Ok subst -> Format.printf "%a%!" Subst.pp subst
 ;;
 
@@ -415,7 +415,7 @@ let%expect_test _ =
 ;;
 
 let run_infer = function
-  | Result.Error e -> Format.printf "Error: %a%!" pp_error e
+  | Result.Error e -> Format.printf "Error: %a%!" pp_error_infer e
   | Result.Ok (_, typed) -> Format.printf "%a%!" Typeandprinter.pp_typ_binder typed
 ;;
 
@@ -563,7 +563,7 @@ let%expect_test _ =
     let e = [] in
     check_types e |> run_infer
   in
-  [%expect {| Error: Error: the program was not provided or was empty |}]
+  [%expect {| Error: empty program |}]
 ;;
 
 let%expect_test _ =

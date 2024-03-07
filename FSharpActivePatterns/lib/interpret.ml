@@ -206,7 +206,7 @@ module Interpret (M : MonadFail) = struct
     eval_match cases
   ;;
 
-  let eval_program (program : expr list) : (value, error) t =
+  let eval_program (program : expr list) : (value, error_inter) t =
     let rec helper env = function
       | h :: [] -> eval h env
       | [] -> fail EmptyProgram

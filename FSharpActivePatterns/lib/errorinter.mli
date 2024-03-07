@@ -4,14 +4,7 @@
 
 open Typeandprinter
 
-type error =
-  | DivisionByZero (** Interpret Errors*)
-  | UnboundValue of string
-  | UnboundConstructor of string
-  | MatchFailure
-  | TypeError
-  | Unreachable
-  | StringOfLengthZero of string
+type error_infer =
   | OccursCheck (** Typing errors *)
   | NoVariable of string
   | UnificationFailed of typ * typ
@@ -19,4 +12,16 @@ type error =
   | EmptyProgram
   | NotImplemented
 
-val pp_error : Format.formatter -> error -> unit
+type error_inter =
+  | DivisionByZero (** Interpret Errors*)
+  | UnboundValue of string
+  | UnboundConstructor of string
+  | MatchFailure
+  | TypeError
+  | Unreachable
+  | StringOfLengthZero of string
+  | EmptyProgram
+  | NotImplemented
+
+val pp_error_infer : Format.formatter -> error_infer -> unit
+val pp_error_inter : Format.formatter -> error_inter -> unit
