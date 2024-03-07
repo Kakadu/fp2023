@@ -417,13 +417,7 @@ end = struct
     | Error e -> fail @@ Expr_err e
   ;;
 
-  let lreverse xs =
-    let rec helper acc = function
-      | [] -> acc
-      | x :: xs -> helper (x :: acc) xs
-    in
-    helper [] xs
-  ;;
+  let lreverse xs = List.fold_left xs ~init:[] ~f:(fun acc x -> x :: acc)
 
   let order_by ps ob =
     let rec helper nm1 nm2 ob acc =
@@ -624,10 +618,6 @@ end = struct
         path_to_delete ns nm nodes rels
         >>= fun (newnm, nodes, rels) -> paths_to_delete nms (newnm :: newnms) nodes rels
     in
-    let rec delete_rels g = function
-      | [] -> g
-      | rel :: rels -> delete_rels (G.remove_edge_e g rel) rels
-    in
     let rec detach_delete_nodes g = function
       | [] -> return g
       | node :: nodes -> detach_delete_nodes (G.remove_vertex g node) nodes
@@ -649,7 +639,7 @@ end = struct
     (match del_attr with
      | Detach -> detach_delete_nodes
      | Nodetach -> nodetach_delete_nodes)
-      (delete_rels g rels)
+      (List.fold_left rels ~init:g ~f:(fun g rel -> G.remove_edge_e g rel))
       nodes
     >>= fun g ->
     return
