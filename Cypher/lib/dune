@@ -1,18 +1,10 @@
 (library
  (name cypher_lib)
  (public_name Cypher.Lib)
- (modules Ast Parser)
+ (modules Ast Parser Interpret)
  (inline_tests)
- (libraries ppx_show.runtime angstrom)
+ (libraries ppx_show.runtime angstrom ocamlgraph)
  (preprocess
   (pps ppx_expect ppx_deriving.show ppx_deriving.eq))
  (instrumentation
   (backend bisect_ppx)))
-
-(library
- (name test)
- (modules test)
- (libraries base cypher_lib)
- (preprocess
-  (pps ppx_expect))
- (inline_tests))
