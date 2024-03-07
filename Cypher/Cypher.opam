@@ -11,9 +11,11 @@ bug-reports: "https://github.com/Arsene-Baitenov/fp2023/issues"
 depends: [
   "dune" {>= "3.7"}
   "angstrom"
+  "ocamlgraph"
   "ppx_inline_test" {with-test}
   "ppx_expect"
   "ppx_deriving"
+  "ppx_show"
   "bisect_ppx"
   "odoc" {with-doc}
   "ocamlformat" {build}
