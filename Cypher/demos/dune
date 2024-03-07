@@ -1,0 +1,8 @@
+(executable
+ (name demoParse)
+ (modules demoParse)
+ (public_name demoParse)
+ (libraries cypher_lib stdio))
+
+(cram
+ (deps ./demoParse.exe))
