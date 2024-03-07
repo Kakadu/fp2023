@@ -1,3 +1,7 @@
+(** Copyright 2023-2024, Arseniy Baytenov *)
+
+(** SPDX-License-Identifier: MIT *)
+
 type name = string
 
 val pp_name : Format.formatter -> name -> unit

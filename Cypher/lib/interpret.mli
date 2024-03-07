@@ -1,3 +1,7 @@
+(** Copyright 2023-2024, Arseniy Baytenov *)
+
+(** SPDX-License-Identifier: MIT *)
+
 module NameMap : sig
   type key = string
   type 'a t = 'a Map.Make(Base.String).t
