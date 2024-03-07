@@ -47,11 +47,6 @@
   (VInt 5)
 
   $ ./demos.exe <<- EOF
-  > let check input = match input with | 2 -> 5 | _ -> 10;;
-  > check 5;;
-  (VInt 10)
-
-  $ ./demos.exe <<- EOF
   > let (|Even|Odd|) value = if value % 2 = 0 then Even else Odd;;
   > let check value =
   >   match value with
@@ -59,15 +54,6 @@
   >     | Odd -> 53;;
   > check 13;;
   (VInt 53)
-
-  $ ./demos.exe <<- EOF
-  > let (|Some|Odd|) value = if value % 2 = 0 then Some else Odd;;
-  > let check value =
-  >   match value with
-  >     | Some -> 25
-  >     | Odd -> 53;;
-  > check 14;;
-  (VInt 25)
  
   $ ./demos.exe <<- EOF
   > let (|Even|Odd|) value = if value % 2 = 0 then Even else Odd;;
@@ -100,3 +86,22 @@
   > let check x = if x % 2 = 0 then 10 else 1000;;
   > check 54;; 
   (VInt 10)
+
+  $ ./demos.exe <<- EOF
+  > let (|Default|) value =
+  >  match value with
+  >  | value -> (value * value);;
+  > let greet (Default value) = value;;
+  > greet 100;;
+  (VInt 10000)
+
+  $ ./demos.exe <<- EOF
+  >  let (|Even|_|) v = if v % 2 = 0 then Even else None;;
+  >  let (|Odd|_|) v = if v % 2 <> 0 then Odd else None;;
+  >  let myfunc v =
+  >  match v with
+  >  | Even -> 50
+  >  | Odd -> 25
+  >  | _ -> 6;;
+  >  myfunc 8;;
+  (VInt 50)

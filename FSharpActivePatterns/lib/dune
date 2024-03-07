@@ -2,7 +2,7 @@
  (name FSharpActivePatterns_lib)
  (public_name FSharpActivePatterns.Lib)
  (inline_tests)
- (modules Ast Parser Errorinter Typedtree Interpret Inferencer)
+ (modules Ast Parser Errorinter Typeandprinter Interpret Inferencer)
  (libraries base angstrom)
  (preprocess
   (pps ppx_expect ppx_deriving.show ppx_deriving.eq))

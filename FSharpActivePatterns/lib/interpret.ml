@@ -6,6 +6,22 @@ open Ast
 open Base
 open Errorinter
 
+(** main program *)
+type program = expr list [@@deriving show { with_path = false }]
+
+type value =
+  | VString of string
+  | VBool of bool
+  | VInt of int
+  | VList of value list
+  | VTuple of value list
+  | VFun of pattern * expr * (name * value) list
+  | VLetWAPat of name * value
+  | VLetAPat of name list * value
+  | VCases of name
+  | VNone
+[@@deriving show { with_path = false }]
+
 module type MonadFail = sig
   include Base.Monad.S2
 
@@ -27,10 +43,13 @@ module Environment (M : MonadFail) = struct
   let empty = Map.empty (module Base.String)
 
   let find_val map key =
-    match Map.find map key with
-    | Some value -> return value
-    | None when is_constr @@ String.get key 0 -> fail (UnboundConstructor key)
-    | _ -> fail (UnboundValue key)
+    if String.length key = 0
+    then fail (StringOfLengthZero key)
+    else (
+      match Map.find map key with
+      | Some value -> return value
+      | None when is_constr @@ String.get key 0 -> fail (UnboundConstructor key)
+      | _ -> fail (UnboundValue key))
   ;;
 
   let add_bind map key value = Map.update map key ~f:(fun _ -> value)
@@ -101,7 +120,7 @@ module Interpret (M : MonadFail) = struct
     | AppExpr (func, arg) -> inter_app func arg env
     | LetExpr (is_rec, name, body) -> inter_let is_rec name body env
     | MatchExpr (expr_match, cases) -> inter_match expr_match cases env
-    | CaseExpr (constr_id, args) -> inter_case constr_id args env
+    | CaseExpr constr_id -> return @@ VCases constr_id
     | LetActExpr (act_name, body) -> inter_act_let act_name body env
 
   and inter_const = function
@@ -182,18 +201,9 @@ module Interpret (M : MonadFail) = struct
           (bind_fun_params ~env (pat, val_match))
           ~ok:(fun binds -> eval expr (add_binds env binds))
           ~err:(fun _ -> eval_match cases)
-      | [] -> fail NotImplemented
+      | [] -> fail Unreachable
     in
     eval_match cases
-
-  and inter_case constr_id args env =
-    match constr_id, args with
-    | "Some", arg :: [] ->
-      let* opt_val = eval arg env in
-      return opt_val
-    | "None", [] -> return VNone
-    | _, [] -> return @@ VCases constr_id
-    | _ -> fail TypeError
   ;;
 
   let eval_program (program : expr list) : (value, error) t =
@@ -324,7 +334,7 @@ let%test _ =
 
 (* Varis *)
 
-let test = [ CaseExpr ("Varis", []) ]
+let test = [ CaseExpr "Varis" ]
 
 let%test _ =
   match eval_program test with
@@ -440,8 +450,8 @@ let%test _ =
 ;;
 
 (*
-   let (|Even|_|) v = if v % 2 = 0 then Some(v) else None
-   let (|Odd|_|) v = if v % 2 <> 0 then Some(v) else None
+   let (|Even|_|) v = if v % 2 = 0 then Even else None
+   let (|Odd|_|) v = if v % 2 <> 0 then Odd else None
 
    let myfunc v =
    match v with
@@ -460,8 +470,8 @@ let test =
           , IfExpr
               ( BinExpr
                   (Eq, BinExpr (Mod, VarExpr "v", ConstExpr (CInt 2)), ConstExpr (CInt 0))
-              , CaseExpr ("Some", [ VarExpr "v" ])
-              , CaseExpr ("None", []) ) ) )
+              , CaseExpr "Even"
+              , CaseExpr "None" ) ) )
   ; LetActExpr
       ( [ "Odd"; "_" ]
       , FunExpr
@@ -469,8 +479,8 @@ let test =
           , IfExpr
               ( BinExpr
                   (NEq, BinExpr (Mod, VarExpr "v", ConstExpr (CInt 2)), ConstExpr (CInt 0))
-              , CaseExpr ("Some", [ VarExpr "v" ])
-              , CaseExpr ("None", []) ) ) )
+              , CaseExpr "Odd"
+              , CaseExpr "None" ) ) )
   ; LetExpr
       ( false
       , "myfunc"
@@ -478,8 +488,8 @@ let test =
           ( Var "c"
           , MatchExpr
               ( VarExpr "c"
-              , [ Case ("Even", [ Var "c" ]), ConstExpr (CInt 50)
-                ; Case ("Odd", [ Var "c" ]), ConstExpr (CInt 25)
+              , [ Case ("Even", []), ConstExpr (CInt 50)
+                ; Case ("Odd", []), ConstExpr (CInt 25)
                 ; Wild, ConstExpr (CInt 10)
                 ] ) ) )
   ; AppExpr (VarExpr "myfunc", ConstExpr (CInt 9))
@@ -542,8 +552,8 @@ let test =
                   ( Eq
                   , BinExpr (Mod, VarExpr "value", ConstExpr (CInt 2))
                   , ConstExpr (CInt 0) )
-              , CaseExpr ("Even", [])
-              , CaseExpr ("Odd", []) ) ) )
+              , CaseExpr "Even"
+              , CaseExpr "Odd" ) ) )
   ; LetExpr
       ( false
       , "check"
@@ -551,8 +561,8 @@ let test =
           ( Var "value"
           , MatchExpr
               ( VarExpr "value"
-              , [ Case ("Even", [ Var "c" ]), ConstExpr (CInt 25)
-                ; Case ("Odd", [ Var "c" ]), ConstExpr (CInt 53)
+              , [ Case ("Even", []), ConstExpr (CInt 25)
+                ; Case ("Odd", []), ConstExpr (CInt 53)
                 ] ) ) )
   ; AppExpr (VarExpr "check", ConstExpr (CInt 14))
   ]
@@ -574,8 +584,8 @@ let test =
                   ( Eq
                   , BinExpr (Mod, VarExpr "value", ConstExpr (CInt 2))
                   , ConstExpr (CInt 0) )
-              , CaseExpr ("Even", [])
-              , CaseExpr ("Odd", []) ) ) )
+              , CaseExpr "Even"
+              , CaseExpr "Odd" ) ) )
   ; LetExpr
       ( false
       , "check"
@@ -583,8 +593,8 @@ let test =
           ( Var "value"
           , MatchExpr
               ( VarExpr "value"
-              , [ Case ("Even", [ Var "c" ]), ConstExpr (CInt 25)
-                ; Case ("Odd", [ Var "c" ]), ConstExpr (CInt 53)
+              , [ Case ("Even", []), ConstExpr (CInt 25)
+                ; Case ("Odd", []), ConstExpr (CInt 53)
                 ] ) ) )
   ; AppExpr (VarExpr "check", ConstExpr (CInt 13))
   ]

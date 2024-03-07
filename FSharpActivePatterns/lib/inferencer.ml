@@ -8,7 +8,7 @@
     [here](https://gitlab.com/Kakadu/fp2020course-materials/-/blob/master/code/miniml/inferencer.ml) *)
 
 open Base
-open Typedtree
+open Typeandprinter
 open Errorinter
 
 module R : sig
@@ -90,7 +90,7 @@ module Subst = struct
   let pp ppf subst =
     let open Format in
     Map.Poly.iteri subst ~f:(fun ~key ~data ->
-      fprintf ppf "%d -> %a@\n" key Typedtree.pp_typ_binder data)
+      fprintf ppf "%d -> %a@\n" key Typeandprinter.pp_typ_binder data)
   ;;
 
   let empty = Map.Poly.empty
@@ -273,7 +273,7 @@ let infer =
       let* subst = unify ty1 ty2 in
       let finenv = TypeEnv.apply subst env in
       return (finenv, Subst.apply subst ty1)
-    | Case (_, _) -> fail NotImplemented
+    | Case _ -> fail NotImplemented
   in
   let rec (helper : TypeEnv.t -> Ast.expr -> (Subst.t * typ) R.t) =
     fun env -> function
@@ -283,7 +283,7 @@ let infer =
        | CBool _ -> return (Subst.empty, Prim "bool")
        | CInt _ -> return (Subst.empty, Prim "int")
        | CString _ -> return (Subst.empty, Prim "string")
-       | CNil -> return (Subst.empty, Prim "nil"))
+       | CNil -> return (Subst.empty, Prim "[]"))
     | BinExpr (op, left, right) ->
       let* subst_left, typ_left = helper env left in
       let* subst_right, typ_right = helper env right in
@@ -354,7 +354,7 @@ let infer =
       let t1 = List_typ t1 in
       let* subst = Subst.compose_all [ s1 ] in
       return (subst, Subst.apply subst t1)
-    | CaseExpr (_, _) -> fail NotImplemented
+    | CaseExpr _ -> fail NotImplemented
     | TupleExpr tuple ->
       let* s, t =
         List.fold
@@ -416,7 +416,7 @@ let%expect_test _ =
 
 let run_infer = function
   | Result.Error e -> Format.printf "Error: %a%!" pp_error e
-  | Result.Ok (_, typed) -> Format.printf "%a%!" Typedtree.pp_typ_binder typed
+  | Result.Ok (_, typed) -> Format.printf "%a%!" Typeandprinter.pp_typ_binder typed
 ;;
 
 let%expect_test _ =
@@ -533,7 +533,7 @@ let%expect_test _ =
     let e = [ ConstExpr CNil ] in
     check_types e |> run_infer
   in
-  [%expect {| nil |}]
+  [%expect {| [] |}]
 ;;
 
 let%expect_test _ =
@@ -611,5 +611,5 @@ let%expect_test _ =
     let e = [ ConstExpr CNil ] in
     check_types e |> run_infer
   in
-  [%expect {| nil |}]
+  [%expect {| [] |}]
 ;;
