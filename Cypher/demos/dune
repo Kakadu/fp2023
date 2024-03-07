@@ -4,5 +4,11 @@
  (public_name demoParse)
  (libraries cypher_lib stdio))
 
+(executable
+ (name demoInterpret)
+ (modules demoInterpret)
+ (public_name demoInterpret)
+ (libraries cypher_lib stdio))
+
 (cram
- (deps ./demoParse.exe))
+ (deps ./demoParse.exe ./demoInterpret.exe))
