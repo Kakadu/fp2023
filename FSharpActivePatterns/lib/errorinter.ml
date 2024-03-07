@@ -2,7 +2,7 @@
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-open Typedtree
+open Typeandprinter
 
 type error =
   | DivisionByZero (** Interpret Errors*)
@@ -11,6 +11,7 @@ type error =
   | MatchFailure
   | TypeError
   | Unreachable
+  | StringOfLengthZero of string
   | OccursCheck (** Typing errors *)
   | NoVariable of string
   | UnificationFailed of typ * typ
@@ -28,6 +29,7 @@ let pp_error fmt = function
   | TypeError -> Format.fprintf fmt "Error: type mismatch, a different type was expected"
   | Unreachable ->
     Format.fprintf fmt "Error: Unreachable error... Something went wrong..."
+  | StringOfLengthZero name -> Format.fprintf fmt "It must not be of length zero: %s" name
   | NotImplemented -> Format.fprintf fmt "This feature has not yet been implemented"
   | OccursCheck -> Format.fprintf fmt "Typechecker error: occurs check failed"
   | NoVariable s -> Format.fprintf fmt "Typechecker error: undefined variable '%s'" s
@@ -35,9 +37,9 @@ let pp_error fmt = function
     Format.fprintf
       fmt
       "Typechecker error: unification failed on %a and %a"
-      Typedtree.pp_typ_binder
+      Typeandprinter.pp_typ_binder
       l
-      Typedtree.pp_typ_binder
+      Typeandprinter.pp_typ_binder
       r
   | EmptyPattern -> Format.fprintf fmt "Typechecker error: empty pattern"
 ;;

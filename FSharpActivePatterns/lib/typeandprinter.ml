@@ -23,8 +23,7 @@ type typ =
 [@@deriving show { with_path = false }]
 
 let pp_list helper l sep =
-  let open Format in
-  pp_print_list ~pp_sep:(fun ppf _ -> fprintf ppf sep) (fun ppf ty -> helper ppf ty) l
+  Format.pp_print_list ~pp_sep:(fun ppf _ -> Format.fprintf ppf sep) helper l
 ;;
 
 let rec pp_typ_binder ppf =

@@ -2,6 +2,24 @@
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
+open Ast
+
+type program = expr list
+
+type value =
+  | VString of string (** "string" *)
+  | VBool of bool (** true *)
+  | VInt of int (** 42 *)
+  | VList of value list (** [1;2;3] *)
+  | VTuple of value list (** (1,2,3) *)
+  | VFun of pattern * expr * (name * value) list
+  | VLetWAPat of name * value (** Let without active patterns, let x y = y * 5 *)
+  | VLetAPat of name list * value
+  (** Let with active patterns, let (|Even|Odd|) value = .., let (|Even|_|) value = .., let (|Even|) value = ..*)
+  | VCases of name (** Even, Odd, ... *)
+  | VNone
+[@@deriving show { with_path = false }]
+
 module type MonadFail = sig
   include Base.Monad.S2
 
@@ -11,7 +29,7 @@ module type MonadFail = sig
 end
 
 module Interpret : functor (M : MonadFail) -> sig
-  val eval_program : Ast.expr list -> (Ast.value, Errorinter.error) M.t
+  val eval_program : Ast.expr list -> (value, Errorinter.error) M.t
 end
 
-val eval_program : Ast.program -> (Ast.value, Errorinter.error) result
+val eval_program : program -> (value, Errorinter.error) result

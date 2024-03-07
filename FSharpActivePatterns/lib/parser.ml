@@ -72,7 +72,7 @@ let parse_bool =
   parse_white_space
   *> ((fun _ -> CBool true)
       <$> string "true"
-      <|> ((fun _ -> CBool true) <$> string "false"))
+      <|> ((fun _ -> CBool false) <$> string "false"))
 ;;
 
 let parse_int =
@@ -209,13 +209,7 @@ let parse_tuple_expr parser =
     (sep_by1 (pstrtoken ",") parser)
 ;;
 
-let parse_cases_expr ps =
-  lift2
-    (fun id args -> CaseExpr (id, args))
-    (parse_token p_var_case)
-    (sep_by (pstrtoken "|") ps)
-;;
-
+let parse_cases_expr = lift (fun id -> CaseExpr id) (parse_token p_var_case)
 let parse_let_case = sep_by (pstrtoken "|") (p_var <|> p_var_case)
 let parse_let_name = sep_by (pstrtoken " ") p_var
 
@@ -241,7 +235,6 @@ type edispatch =
   ; matching_e : edispatch -> expr t
   ; bin_e : edispatch -> expr t
   ; expr_parsers : edispatch -> expr t
-  ; case_e : edispatch -> expr t
   ; act_pat_e : edispatch -> expr t
   }
 
@@ -257,7 +250,7 @@ let pack =
       ; pack.act_pat_e pack
       ; pack.app_e pack <|> parens @@ pack.app_e pack
       ; value_e
-      ; pack.case_e pack
+      ; parse_cases_expr
       ; parens @@ choice [ pack.tuple_e pack; pack.bin_e pack ]
       ]
   in
@@ -296,9 +289,6 @@ let pack =
        let case1 = lift2 constr_case (pat <* pstrtoken "->") (op_parsers pack) in
        let cases = lift2 (fun h tl -> h :: tl) (case1 <|> case2) (many case2) in
        cases)
-  in
-  let case_e pack =
-    fix @@ fun _ -> parse_cases_expr (expr_parsers pack <|> parens @@ pack.case_e pack)
   in
   let if_e pack =
     fix
@@ -357,7 +347,6 @@ let pack =
   ; expr_parsers
   ; matching_e
   ; bin_e
-  ; case_e
   ; act_pat_e
   }
 ;;
@@ -628,13 +617,13 @@ let%expect_test _ =
              (BinExpr (Eq,
                 (BinExpr (Mod, (VarExpr "input"), (ConstExpr (CInt 2)))),
                 (ConstExpr (CInt 0)))),
-             (CaseExpr ("Even", [])), (CaseExpr ("Odd", []))))
+             (CaseExpr "Even"), (CaseExpr "Odd")))
           ))
        )) |}]
 ;;
 
 let%expect_test _ =
-  let test = "let (|Even|_|) v = if v % 2 = 0 then Even else Some(v) " in
+  let test = "let (|Even|_|) v = if v % 2 = 0 then Even else None " in
   start_test parse show_expr test;
   [%expect
     {|
@@ -643,7 +632,7 @@ let%expect_test _ =
           (IfExpr (
              (BinExpr (Eq, (BinExpr (Mod, (VarExpr "v"), (ConstExpr (CInt 2)))),
                 (ConstExpr (CInt 0)))),
-             (CaseExpr ("Even", [])), (CaseExpr ("Some", [(VarExpr "v")]))))
+             (CaseExpr "Even"), (CaseExpr "None")))
           ))
        )) |}]
 ;;
@@ -674,23 +663,6 @@ let%expect_test _ =
 
 let%expect_test _ =
   let test =
-    "let (|Square|) value =\n    match value with\n        | value -> (value * value)"
-  in
-  start_test parse show_expr test;
-  [%expect
-    {|
-      (LetActExpr (["Square"],
-         (FunExpr ((Var "value"),
-            (MatchExpr ((VarExpr "value"),
-               [((Var "value"),
-                 (BinExpr (Mul, (VarExpr "value"), (VarExpr "value"))))]
-               ))
-            ))
-         )) |}]
-;;
-
-let%expect_test _ =
-  let test =
     "   let check value =\n   match value with\n   | Even -> 25\n   | Odd -> 53"
   in
   start_test parse show_expr test;
@@ -704,4 +676,27 @@ let%expect_test _ =
              ))
           ))
        )) |}]
+;;
+
+let%expect_test _ =
+  let test = "check 14" in
+  start_test parse show_expr test;
+  [%expect {| (AppExpr ((VarExpr "check"), (ConstExpr (CInt 14)))) |}]
+;;
+
+let%expect_test _ =
+  let test =
+    " let check value =\n     match value with\n       | Some v -> 25\n       | Odd -> 53"
+  in
+  start_test parse show_expr test;
+  [%expect
+    {|
+      (LetExpr (false, "check",
+         (FunExpr ((Var "value"),
+            (MatchExpr ((VarExpr "value"),
+               [((Case ("Some", [(Var "v")])), (ConstExpr (CInt 25)));
+                 ((Case ("Odd", [])), (ConstExpr (CInt 53)))]
+               ))
+            ))
+         )) |}]
 ;;

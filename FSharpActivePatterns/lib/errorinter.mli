@@ -2,7 +2,7 @@
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-open Typedtree
+open Typeandprinter
 
 type error =
   | DivisionByZero (** Interpret Errors*)
@@ -11,6 +11,7 @@ type error =
   | MatchFailure
   | TypeError
   | Unreachable
+  | StringOfLengthZero of string
   | OccursCheck (** Typing errors *)
   | NoVariable of string
   | UnificationFailed of typ * typ
