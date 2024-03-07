@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8"/>
     <title>ast.ml &mdash; Coverage report</title>
-    <meta name="description" content="82.98% coverage in lib/ast.ml">
+    <meta name="description" content="96.30% coverage in lib/ast.ml">
     <link rel="stylesheet" href="../coverage.css"/>
     <script src="../highlight.pack.js"></script>
     <script>hljs.initHighlightingOnLoad();</script>
@@ -15,13 +15,10 @@
           <span class="dirname">lib/</span>ast.ml
         </a>
       </h1>
-      <h2>82.98%</h2>
+      <h2>96.30%</h2>
     </div>
     <div id="navbar">
-      <span class="some-visited" style="top:8.45%"></span>
-      <span class="unvisited" style="bottom:19.72%"></span>
-      <span class="some-visited" style="bottom:8.45%"></span>
-      <span class="unvisited" style="bottom:5.63%"></span>
+      <span class="some-visited" style="top:11.11%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -78,25 +75,8 @@
 <a id="L50"></a><span > </span>
 <a id="L51"></a><span > </span>
 <a id="L52"></a><span class="visited"> </span>
-<a id="L53"></a><span class="visited"> </span>
+<a id="L53"></a><span > </span>
 <a id="L54"></a><span class="visited"> </span>
-<a id="L55"></a><span > </span>
-<a id="L56"></a><span > </span>
-<a id="L57"></a><span class="unvisited"> </span>
-<a id="L58"></a><span > </span>
-<a id="L59"></a><span class="visited"> </span>
-<a id="L60"></a><span class="visited"> </span>
-<a id="L61"></a><span class="visited"> </span>
-<a id="L62"></a><span class="visited"> </span>
-<a id="L63"></a><span class="visited"> </span>
-<a id="L64"></a><span class="visited"> </span>
-<a id="L65"></a><span class="some-visited"> </span>
-<a id="L66"></a><span > </span>
-<a id="L67"></a><span class="unvisited"> </span>
-<a id="L68"></a><span > </span>
-<a id="L69"></a><span > </span>
-<a id="L70"></a><span > </span>
-<a id="L71"></a><span class="visited"> </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -155,23 +135,6 @@
 <a href="#L52">52</a>
 <a href="#L53">53</a>
 <a href="#L54">54</a>
-<a href="#L55">55</a>
-<a href="#L56">56</a>
-<a href="#L57">57</a>
-<a href="#L58">58</a>
-<a href="#L59">59</a>
-<a href="#L60">60</a>
-<a href="#L61">61</a>
-<a href="#L62">62</a>
-<a href="#L63">63</a>
-<a href="#L64">64</a>
-<a href="#L65">65</a>
-<a href="#L66">66</a>
-<a href="#L67">67</a>
-<a href="#L68">68</a>
-<a href="#L69">69</a>
-<a href="#L70">70</a>
-<a href="#L71">71</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2023-2024, Vitaliy Dyachkov *)
 
@@ -180,14 +143,14 @@
 (** name var or fun *)
 <span data-count="0">t</span>ype name = <span data-count="74">s</span>tring [@@deriving show { with_path = false }]
 
-<span data-count="188">t</span>ype const =
+<span data-count="197">t</span>ype const =
   | CBool of boo<span data-count="2">l</span> (** true *)
-  | CInt of in<span data-count="58">t</span> (** 42 *)
+  | CInt of in<span data-count="61">t</span> (** 42 *)
   | CString of strin<span data-count="1">g</span> (** "string" *)
   | CNil (** () [] *)
 [@@deriving show { with_path = false }]
 
-<span data-count="25">t</span>ype binary_op =
+<span data-count="24">t</span>ype binary_op =
   | Add (** + *)
   | Sub (** - *)
   | Mul (** * *)
@@ -203,47 +166,30 @@
   | Or (** || *)
 [@@deriving show { with_path = false }]
 
-<span data-count="176">t</span>ype pattern =
+<span data-count="185">t</span>ype pattern =
   | Wild (** _ *)
   | Const of const (** string, bool or int *)
   | Var of name (** variable *)
   | Tuple of <span data-count="30">p</span>attern lis<span data-count="7">t</span> (** (a, b) *)
   | List of <span data-count="26">p</span>attern lis<span data-count="6">t</span> (** [1;2;3] *)
-  | Case of name * <span data-count="27">p</span>attern lis<span data-count="12">t</span> (** in patmatch *)
-[@@deriving show { with_path = false }<span data-count="104">]</span>
+  | Case of name * <span data-count="36">p</span>attern lis<span data-count="16">t</span> (** in patmatch *)
+[@@deriving show { with_path = false }<span data-count="110">]</span>
 
-<span data-count="852">t</span>ype expr =
+<span data-count="859">t</span>ype expr =
   | ConstExpr of const
   | VarExpr of name (** x = 5 *)
   | ListExpr of <span data-count="35">e</span>xpr lis<span data-count="8">t</span> (** [1;2;3]*)
   | TupleExpr of <span data-count="39">e</span>xpr lis<span data-count="9">t</span> (** (1,2,3)*)
   | BinExpr of binary_op * expr * expr (** 1 + 5 - 3*)
   | IfExpr of expr * expr * expr (** if a then b else c *)
-  | LetExpr of boo<span data-count="8">l</span> * name * expr (** let sq x = x * x, bool - is rec or not*)
-  | LetActExpr of <span data-count="28">n</span>ame lis<span data-count="6">t</span> * expr
-  (** let (|Even|Odd|) ..., let (|Even|_|) ..., let (|Even|)... *)
+  | LetExpr of boo<span data-count="9">l</span> * name * expr (** let sq x = x * x, bool - is rec or not*)
+  | LetActExpr of <span data-count="23">n</span>ame lis<span data-count="5">t</span> * expr
+  (** let (|Even|Odd|) value = ..., let (|Even|_|) value =  ..., let (|Even|) value = ... *)
   | AppExpr of expr * expr (** sq 5 *)
   | FunExpr of pattern * expr (** fun x -&gt; x * x *)
-  | MatchExpr of expr * <span data-count="36">(</span><span data-count="14">p</span>attern * expr) lis<span data-count="11">t</span> (** match input with | 2 -&gt; 5 | 5 -&gt; 10 *)
-  | CaseExpr of name * <span data-count="15">e</span>xpr lis<span data-count="8">t</span> (** (|Even|Odd|), Some x *)
-[@@deriving show { with_path = false }<span data-count="634">]</span>
-
-(** main program *)
-<span data-count="0">t</span>ype program = <span data-count="0">e</span>xpr lis<span data-count="0">t</span> [@@deriving show { with_path = false }<span data-count="0">]</span>
-
-<span data-count="131">t</span>ype value =
-  | VString of strin<span data-count="1">g</span> (** "string" *)
-  | VBool of boo<span data-count="1">l</span> (** true *)
-  | VInt of in<span data-count="25">t</span> (** 42 *)
-  | VList of <span data-count="26">v</span>alue lis<span data-count="6">t</span> (** [1;2;3] *)
-  | VTuple of <span data-count="30">v</span>alue lis<span data-count="7">t</span> (** (1,2,3) *)
-  | VFun of pattern * expr * <span data-count="3">(</span><span data-count="0">n</span>ame * value) lis<span data-count="2">t</span>
-  | VLetWAPat of name * value (** Let without active patterns, let x y = y * 5 *)
-  | VLetAPat of <span data-count="0">n</span>ame lis<span data-count="0">t</span> * value
-  (** Let with active patterns, let (|Even|Odd|) value = .., let (|Even|_|) value = .., let (|Even|) value = ..*)
-  | VCases of name (** Even, Odd, ... *)
-  | VNone
-[@@deriving show { with_path = false }<span data-count="31">]</span>
+  | MatchExpr of expr * <span data-count="40">(</span><span data-count="16">p</span>attern * expr) lis<span data-count="12">t</span> (** match input with | 2 -&gt; 5 | 5 -&gt; 10 *)
+  | CaseExpr of name (** (|Even|Odd|), Some x *)
+[@@deriving show { with_path = false }<span data-count="637">]</span>
 </code></pre>
       </div>
     </div>
