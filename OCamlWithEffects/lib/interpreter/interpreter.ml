@@ -223,7 +223,7 @@ module Interpreter (M : MONAD_ERROR) = struct
     | _ -> fail type_error
   ;;
 
-  let eval =
+  let eval_expr =
     let rec helper env handlers = function
       (* Environment in the return value is needed for type compatibility
          and correct operation of EDeclaration and ERecDeclaration. Passing
@@ -267,18 +267,12 @@ module Interpreter (M : MONAD_ERROR) = struct
           | _ -> fail type_error
         in
         return (env, vlist values)
-      | EDeclaration (name, expr, None) ->
-        let* env, v = helper env handlers expr in
-        let new_env = extend env name v in
-        return (new_env, v)
-      | EDeclaration (name, expr, Some expression) ->
+      | ELetIn (name, expr, expression) ->
         let* env, v = helper env handlers expr in
         let new_env = extend env name v in
         let* _, v = helper new_env handlers expression in
         return (env, v)
-      | ERecDeclaration (name, expr, None) ->
-        rec_declaration_helper env handlers name expr
-      | ERecDeclaration (name, expr, Some expression) ->
+      | ERecLetIn (name, expr, expression) ->
         let* new_env, _ = rec_declaration_helper env handlers name expr in
         let* _, v = helper new_env handlers expression in
         return (env, v)
@@ -297,10 +291,6 @@ module Interpreter (M : MONAD_ERROR) = struct
               application_helper flag fun_env pat_env env handlers exp
             | _ -> fail type_error)
          | _ -> fail type_error)
-      | EEffectDeclaration (name, _) ->
-        let v = veffect_declaration name in
-        let new_env = extend env name v in
-        return (new_env, v)
       | EEffectWithArguments (name, expr) ->
         let* _ = find_effect env name in
         let* _, v1 = helper env handlers expr in
@@ -385,7 +375,7 @@ module Interpreter (M : MONAD_ERROR) = struct
               (* Here evaluate the expression in the handler (there should be continue).
                  If it throws a value, we return it. If something else,
                  give an error, since ordinary exceptions are not processed. *)
-            | UnSuccessful -> fail type_error)
+            | UnSuccessful -> fail pattern_matching_failure)
          | _ -> fail type_error)
     and list_and_tuple_helper env = function
       | [] -> return (env, [])
@@ -413,8 +403,34 @@ module Interpreter (M : MONAD_ERROR) = struct
     helper
   ;;
 
+  let eval env handlers =
+    let rec_declaration_helper env handlers name expr =
+      let* env, v = eval_expr env handlers expr in
+      let res =
+        match v with
+        | VFun (_, _, _) -> vrecfun name v
+        | _ -> v
+      in
+      let new_env = extend env name res in
+      return (new_env, res)
+    in
+    function
+    | SDeclaration decl ->
+      (match decl with
+       | DDeclaration (name, expr) ->
+         let* env, v = eval_expr env handlers expr in
+         let new_env = extend env name v in
+         return (new_env, v)
+       | DRecDeclaration (name, expr) -> rec_declaration_helper env handlers name expr
+       | DEffectDeclaration (name, _) ->
+         let v = veffect_declaration name in
+         let new_env = extend env name v in
+         return (new_env, v))
+    | SExpression expr -> eval_expr env handlers expr
+  ;;
+
   let interpret_expr expr =
-    let* _, v = eval empty empty_handler expr in
+    let* _, v = eval_expr empty empty_handler expr in
     return v
   ;;
 

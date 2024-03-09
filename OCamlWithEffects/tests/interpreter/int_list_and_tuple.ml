@@ -61,7 +61,7 @@ let%expect_test _ =
   |};
   [%expect
     {|
-    val f : int * int * int list * string = (1, (1, [2; 3; 4; 5]), "some string") |}]
+    val f : int * (int * int list) * string = (1, (1, [2; 3; 4; 5]), "some string") |}]
 ;;
 
 (* ---------------- *)

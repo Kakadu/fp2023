@@ -45,8 +45,8 @@ type effect_types_annotation =
   | AEffect of effect_types_annotation (** int effect *)
 [@@deriving show { with_path = false }]
 
-(** continue k 0 - here k is continue variable *)
-type continue_val = Continue of id [@@deriving show { with_path = false }]
+type continue_val = Continue of id (** continue k 0 - here k is continue variable *)
+[@@deriving show { with_path = false }]
 
 type pattern =
   | PAny (** _ *)
@@ -71,10 +71,8 @@ and expr =
   | EIdentifier of id (** let f = 5 - here f is identifier *)
   | EApplication of expr * expr (** f x *)
   | EFun of pattern * expr (** fun x -> x *)
-  | EDeclaration of id * expr * expr option (** let f = 1 *)
-  | ERecDeclaration of id * expr * expr option (** let rec f x = f (x-1) *)
-  | EEffectDeclaration of id * effect_types_annotation
-  (** effect DevisionByZero : int effect *)
+  | ELetIn of id * expr * expr (** let f = 1 in E *)
+  | ERecLetIn of id * expr * expr (** let rec f x = f (x-1) in E *)
   | EEffectWithArguments of id * expr (** DevisionByZero 0 *)
   | EEffectWithoutArguments of id (** DevisionByZero *)
   | EIfThenElse of expr * expr * expr (** if x = 1 then x else x - 1 *)
@@ -89,4 +87,16 @@ and expr =
   | EEffectContinue of continue_val * expr (** continue k 0 *)
 [@@deriving show { with_path = false }]
 
-type program = expr list [@@deriving show { with_path = false }]
+type decl =
+  | DDeclaration of id * expr (** let f = 1 *)
+  | DRecDeclaration of id * expr (** let rec f x = f (x-1) *)
+  | DEffectDeclaration of id * effect_types_annotation
+  (** effect DevisionByZero : int effect *)
+[@@deriving show { with_path = false }]
+
+type struct_item =
+  | SDeclaration of decl (** Consructor for declarations *)
+  | SExpression of expr (** Constructor for expressions *)
+[@@deriving show { with_path = false }]
+
+type program = struct_item list [@@deriving show { with_path = false }]

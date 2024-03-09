@@ -47,10 +47,10 @@ let%expect_test _ =
     |};
   [%expect
     {|
-    val list_map : ('e -> 'f) -> 'm list -> 'n list = <fun>
+    val list_map : ('a -> 'b) -> 'c list -> 'd list = <fun>
     val increment : int -> int = <fun>
     val test_list : int list = [2; 4; 5; 3; 6; 3]
-    val res : 'n list = [3; 5; 6; 4; 7; 4] |}]
+    val res : 'a list = [3; 5; 6; 4; 7; 4] |}]
 ;;
 
 let%expect_test _ =

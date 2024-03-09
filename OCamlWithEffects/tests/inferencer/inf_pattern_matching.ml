@@ -80,7 +80,7 @@ let%expect_test _ =
       | _ -> true
     ;;
     |};
-  [%expect {| val f : bool * 'd -> bool |}]
+  [%expect {| val f : bool * 'a -> bool |}]
 ;;
 
 let%expect_test _ =
@@ -92,7 +92,7 @@ let%expect_test _ =
       | _ -> true
     ;;
     |};
-  [%expect {| val f : 'c * 'd -> bool |}]
+  [%expect {| val f : 'a * 'b -> bool |}]
 ;;
 
 let%expect_test _ =
@@ -141,7 +141,7 @@ let%expect_test _ =
       | _ -> 1
     |};
   [%expect {|
-    val f : 'e -> int list -> 'k * int * 'm -> int |}]
+    val f : 'a -> int list -> 'b * int * 'c -> int |}]
 ;;
 
 let%expect_test _ =
@@ -253,7 +253,7 @@ let%expect_test _ =
     |};
   [%expect
     {|
-    Type error: unification failed - type 'c list does not match expected type int |}]
+    Type error: unification failed - type 'a list does not match expected type int |}]
 ;;
 
 let%expect_test _ =

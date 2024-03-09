@@ -9,5 +9,5 @@ open Inf_errors
 val run_expr_inferencer : expr -> (typ, error) result
 
 val run_program_inferencer
-  :  expr list
+  :  struct_item list
   -> ((id, scheme, Base.String.comparator_witness) Base.Map.t * id list, error) result

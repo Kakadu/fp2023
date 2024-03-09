@@ -4,4 +4,4 @@
 
 open Ast
 
-val parse : id -> (expr list, id) result
+val parse : id -> (struct_item list, id) result
