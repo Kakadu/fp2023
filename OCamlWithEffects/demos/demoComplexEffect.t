@@ -35,3 +35,14 @@
   >    | E k -> continue k 10 + continue k 10;;
   > EOF
   Type error: unification failed - type continuation int does not match expected type int
+
+  $ ./demo.exe <<-EOF
+  >  effect Xchg: int -> int effect;;
+  > 
+  > let comp () = perform (Xchg 0) + perform (Xchg 1) 
+  > let exp = try comp () with
+  >  | (Xchg n) k -> continue k (n+1);;
+  > EOF
+  val Xchg : int -> int effect = <effect>
+  val comp : unit -> int = <fun>
+  val exp : int = 3
