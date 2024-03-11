@@ -78,13 +78,13 @@ open Typedtree
 type error =
   | Occurs_check of int * typ
   | Unbound_value of string
-  | Ivalid_format_concat of typ * typ
+  | Invalid_format_concat of typ * typ
 
 let pp_error fmt = function
   | <span data-count="0">O</span>ccurs_check (t, typ) -&gt;
     fprintf fmt "The type variable '%d occurs inside %a" t pp_typ typ
   | <span data-count="0">U</span>nbound_value x -&gt; fprintf fmt "Unbound value %s" x
-  | <span data-count="0">I</span>valid_format_concat (l, r) -&gt;
+  | <span data-count="0">I</span>nvalid_format_concat (l, r) -&gt;
     fprintf fmt "Failed to unify types %a and %a" pp_typ l pp_typ r
 ;;
 </code></pre>

@@ -814,7 +814,7 @@ module Subst = struct
       <span data-count="6">l</span>et* subs2 = unif<span data-count="6">y</span> (appl<span data-count="6">y</span> subs1 r1) (appl<span data-count="6">y</span> subs1 r2) in
       <span data-count="6">c</span>ompose subs1 subs2
     | <span data-count="0">T</span>List x1, TList x2 -&gt; unify x1 x2
-    | <span data-count="1">_</span> -&gt; fail (Ivalid_format_concat (l, r))
+    | <span data-count="1">_</span> -&gt; fail (Invalid_format_concat (l, r))
 
   and extend (subst : t) (k, v) : (t, error) R.t =
     <span data-count="62">m</span>atch Map.find subst k with
