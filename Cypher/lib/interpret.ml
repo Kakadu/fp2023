@@ -524,7 +524,7 @@ end = struct
     >>= fun ps ->
     order_by ps ob
     >>= (fun ps -> where ps (fun (nm1, nm2) -> eval_e2 nm1 nm2) wh)
-    >>= fun ps -> return ((g, List.map ps ~f:(fun (newnm, _) -> newnm), out), Some c)
+    >>= fun ps -> return ((g, List.map ps ~f:fst, out), Some c)
   ;;
 
   let creturn (g, nms, (cr, del, _)) s_opt al_opts ob =
