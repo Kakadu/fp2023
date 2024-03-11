@@ -778,18 +778,13 @@ end = struct
       | Null, Null -> true
       | _, _ -> false
     in
-    let rec ver_pr pr = function
-      | [] -> true
-      | (n, c) :: ncs ->
-        (match
-           cs_are_equal
-             (match NameMap.find_opt n pr with
-              | Some c -> c
-              | None -> Null)
-             c
-         with
-         | true -> ver_pr pr ncs
-         | false -> false)
+    let ver_pr pr ncs =
+      List.for_all ncs ~f:(fun (n, c) ->
+        cs_are_equal
+          (match NameMap.find_opt n pr with
+           | Some c -> c
+           | None -> Null)
+          c)
     in
     let ver_entity (lbl2, ncs) (_, lbl1, pr) =
       NameSet.subset lbl2 lbl1 && ver_pr pr ncs
