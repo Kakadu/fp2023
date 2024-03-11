@@ -104,7 +104,10 @@ module Eval_expr (M : MONADERROREXPR) = struct
       | _ -> false
     in
     let string_of_constant = function
-      | Float f -> Float.to_string f ^ if Stdlib.Float.is_integer f then "0" else ""
+      | Float f ->
+        if Stdlib.Float.is_integer f
+        then Int64.to_string @@ Float.to_int64 f
+        else Float.to_string f
       | Int64 i -> Int64.to_string i
       | String s -> s
       | Bool b -> Bool.to_string b
@@ -383,7 +386,10 @@ end = struct
     in
     let rec helper e =
       match e with
-      | Const (Float f) -> Float.to_string f
+      | Const (Float f) ->
+        if Stdlib.Float.is_integer f
+        then Int64.to_string @@ Float.to_int64 f
+        else Float.to_string f
       | Const (Int64 i) -> Int64.to_string i
       | Const (String s) -> {|"|} ^ s ^ {|"|}
       | Const (Bool b) -> Bool.to_string b
