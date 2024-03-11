@@ -84,10 +84,17 @@ type direction =
 val pp_direction : Format.formatter -> direction -> unit
 val show_direction : direction -> string
 
-(** Path pattern (n:Person)-->()<-\[:Loves\]-(\{name:"John"\}) *)
+(** Entity pattern: (node:Label1:Label2{some:"some"}), \[rel:Label1:Label2{some:"some"}\] *)
+type entity_pattern = name option * pattern
+
+val pp_entity_pattern : Format.formatter -> entity_pattern -> unit
+val show_entity_pattern : entity_pattern -> string
+
+(** Path pattern [(n:Person)]  [-->()]  [<-[:Loves]-(\{name:"John"\})] *)
 type path =
-  (name option * pattern)
-  * ((name option * pattern * direction) * (name option * pattern)) list
+  { start_node_pt : entity_pattern
+  ; rel_node_pts : ((entity_pattern * direction) * entity_pattern) list
+  }
 
 val pp_path : Format.formatter -> path -> unit
 val show_path : path -> string

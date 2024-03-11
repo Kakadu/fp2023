@@ -17,89 +17,122 @@
   > (martin)-[:FATHER_OF]->(charlie)
   > EOF
   (Create (
-     [(((Some "charlie"),
-        (["Person"], [("name", (Const (String "Charlie Sheen")))])),
-       []);
-       (((Some "martin"),
-         (["Person"], [("name", (Const (String "Martin Sheen")))])),
-        []);
-       (((Some "michael"),
-         (["Person"], [("name", (Const (String "Michael Douglas")))])),
-        []);
-       (((Some "oliver"),
-         (["Person"], [("name", (Const (String "Oliver Stone")))])),
-        []);
-       (((Some "rob"), (["Person"], [("name", (Const (String "Rob Reiner")))])),
-        []);
-       (((Some "wallStreet"),
-         (["Movie"], [("title", (Const (String "Wall Street")))])),
-        []);
-       (((Some "charlie"), ([], [])),
-        [((None, (["ACTED_IN"], [("role", (Const (String "Bud Fox")))]), Right),
-          ((Some "wallStreet"), ([], [])))]);
-       (((Some "martin"), ([], [])),
-        [((None, (["ACTED_IN"], [("role", (Const (String "Carl Fox")))]), Right),
-          ((Some "wallStreet"), ([], [])))]);
-       (((Some "michael"), ([], [])),
-        [((None, (["ACTED_IN"], [("role", (Const (String "Gordon Gekko")))]),
-           Right),
-          ((Some "wallStreet"), ([], [])))]);
-       (((Some "oliver"), ([], [])),
-        [((None, (["DIRECTED"], []), Right), ((Some "wallStreet"), ([], [])))]);
-       (((Some "thePresident"),
-         (["Movie"], [("title", (Const (String "The American President")))])),
-        []);
-       (((Some "martin"), ([], [])),
-        [((None,
-           (["ACTED_IN"], [("role", (Const (String "A.J. MacInerney")))]),
-           Right),
-          ((Some "thePresident"), ([], [])))]);
-       (((Some "michael"), ([], [])),
-        [((None,
-           (["ACTED_IN"],
-            [("role", (Const (String "President Andrew Shepherd")))]),
-           Right),
-          ((Some "thePresident"), ([], [])))]);
-       (((Some "rob"), ([], [])),
-        [((None, (["DIRECTED"], []), Right), ((Some "thePresident"), ([], [])))
-          ]);
-       (((Some "martin"), ([], [])),
-        [((None, (["FATHER_OF"], []), Right), ((Some "charlie"), ([], [])))])
+     [{ start_node_pt =
+        ((Some "charlie"),
+         (["Person"], [("name", (Const (String "Charlie Sheen")))]));
+        rel_node_pts = [] };
+       { start_node_pt =
+         ((Some "martin"),
+          (["Person"], [("name", (Const (String "Martin Sheen")))]));
+         rel_node_pts = [] };
+       { start_node_pt =
+         ((Some "michael"),
+          (["Person"], [("name", (Const (String "Michael Douglas")))]));
+         rel_node_pts = [] };
+       { start_node_pt =
+         ((Some "oliver"),
+          (["Person"], [("name", (Const (String "Oliver Stone")))]));
+         rel_node_pts = [] };
+       { start_node_pt =
+         ((Some "rob"), (["Person"], [("name", (Const (String "Rob Reiner")))]));
+         rel_node_pts = [] };
+       { start_node_pt =
+         ((Some "wallStreet"),
+          (["Movie"], [("title", (Const (String "Wall Street")))]));
+         rel_node_pts = [] };
+       { start_node_pt = ((Some "charlie"), ([], []));
+         rel_node_pts =
+         [(((None, (["ACTED_IN"], [("role", (Const (String "Bud Fox")))])),
+            Right),
+           ((Some "wallStreet"), ([], [])))]
+         };
+       { start_node_pt = ((Some "martin"), ([], []));
+         rel_node_pts =
+         [(((None, (["ACTED_IN"], [("role", (Const (String "Carl Fox")))])),
+            Right),
+           ((Some "wallStreet"), ([], [])))]
+         };
+       { start_node_pt = ((Some "michael"), ([], []));
+         rel_node_pts =
+         [(((None, (["ACTED_IN"], [("role", (Const (String "Gordon Gekko")))])),
+            Right),
+           ((Some "wallStreet"), ([], [])))]
+         };
+       { start_node_pt = ((Some "oliver"), ([], []));
+         rel_node_pts =
+         [(((None, (["DIRECTED"], [])), Right), ((Some "wallStreet"), ([], [])))
+           ]
+         };
+       { start_node_pt =
+         ((Some "thePresident"),
+          (["Movie"], [("title", (Const (String "The American President")))]));
+         rel_node_pts = [] };
+       { start_node_pt = ((Some "martin"), ([], []));
+         rel_node_pts =
+         [(((None,
+             (["ACTED_IN"], [("role", (Const (String "A.J. MacInerney")))])),
+            Right),
+           ((Some "thePresident"), ([], [])))]
+         };
+       { start_node_pt = ((Some "michael"), ([], []));
+         rel_node_pts =
+         [(((None,
+             (["ACTED_IN"],
+              [("role", (Const (String "President Andrew Shepherd")))])),
+            Right),
+           ((Some "thePresident"), ([], [])))]
+         };
+       { start_node_pt = ((Some "rob"), ([], []));
+         rel_node_pts =
+         [(((None, (["DIRECTED"], [])), Right),
+           ((Some "thePresident"), ([], [])))]
+         };
+       { start_node_pt = ((Some "martin"), ([], []));
+         rel_node_pts =
+         [(((None, (["FATHER_OF"], [])), Right), ((Some "charlie"), ([], [])))]
+         }
        ],
      None))
   $ ./demoParse.exe << EOF
   > MATCH (n)
   > RETURN n
   > EOF
-  (Match ([(((Some "n"), ([], [])), [])], [],
-     (Return (None, [((Var "n"), None)], []))))
+  (Match ([{ start_node_pt = ((Some "n"), ([], [])); rel_node_pts = [] }], 
+     [], (Return (None, [((Var "n"), None)], []))))
   $ ./demoParse.exe << EOF
   > MATCH (movie:Movie)
   > RETURN movie.title
   > EOF
-  (Match ([(((Some "movie"), (["Movie"], [])), [])], [],
-     (Return (None, [((Property ("movie", "title")), None)], []))))
+  (Match (
+     [{ start_node_pt = ((Some "movie"), (["Movie"], [])); rel_node_pts = [] }],
+     [], (Return (None, [((Property ("movie", "title")), None)], []))))
   $ ./demoParse.exe << EOF
   > MATCH (director {name: 'Oliver Stone'})--(movie)
   > RETURN movie.title
   > EOF
   (Match (
-     [(((Some "director"), ([], [("name", (Const (String "Oliver Stone")))])),
-       [((None, ([], []), No), ((Some "movie"), ([], [])))])],
+     [{ start_node_pt =
+        ((Some "director"), ([], [("name", (Const (String "Oliver Stone")))]));
+        rel_node_pts = [(((None, ([], [])), No), ((Some "movie"), ([], [])))] }
+       ],
      [], (Return (None, [((Property ("movie", "title")), None)], []))))
   $ ./demoParse.exe << EOF
   > MATCH (:Person {name: 'Oliver Stone'})--(movie:Movie)
   > RETURN movie.title
   > EOF
   (Match (
-     [((None, (["Person"], [("name", (Const (String "Oliver Stone")))])),
-       [((None, ([], []), No), ((Some "movie"), (["Movie"], [])))])],
+     [{ start_node_pt =
+        (None, (["Person"], [("name", (Const (String "Oliver Stone")))]));
+        rel_node_pts =
+        [(((None, ([], [])), No), ((Some "movie"), (["Movie"], [])))] }
+       ],
      [], (Return (None, [((Property ("movie", "title")), None)], []))))
   $ ./demoParse.exe << EOF
   > MATCH (n)
   > RETURN n.name AS name, n.title AS title
   > EOF
-  (Match ([(((Some "n"), ([], [])), [])], [],
+  (Match ([{ start_node_pt = ((Some "n"), ([], [])); rel_node_pts = [] }], 
+     [],
      (Return (None,
         [((Property ("n", "name")), (Some "name"));
           ((Property ("n", "title")), (Some "title"))],
@@ -110,25 +143,33 @@
   > RETURN movie.title
   > EOF
   (Match (
-     [((None, (["Person"], [("name", (Const (String "Oliver Stone")))])),
-       [((None, ([], []), Right), ((Some "movie"), ([], [])))])],
+     [{ start_node_pt =
+        (None, (["Person"], [("name", (Const (String "Oliver Stone")))]));
+        rel_node_pts =
+        [(((None, ([], [])), Right), ((Some "movie"), ([], [])))] }
+       ],
      [], (Return (None, [((Property ("movie", "title")), None)], []))))
   $ ./demoParse.exe << EOF
   > MATCH (:Person {name: 'Oliver Stone'})-[r]->(movie)
   > RETURN r
   > EOF
   (Match (
-     [((None, (["Person"], [("name", (Const (String "Oliver Stone")))])),
-       [(((Some "r"), ([], []), Right), ((Some "movie"), ([], [])))])],
+     [{ start_node_pt =
+        (None, (["Person"], [("name", (Const (String "Oliver Stone")))]));
+        rel_node_pts =
+        [((((Some "r"), ([], [])), Right), ((Some "movie"), ([], [])))] }
+       ],
      [], (Return (None, [((Var "r"), None)], []))))
   $ ./demoParse.exe << EOF
   > MATCH (a)-[:ACTED_IN {role: 'Bud Fox'}]-(b)
   > RETURN a, b
   > EOF
   (Match (
-     [(((Some "a"), ([], [])),
-       [((None, (["ACTED_IN"], [("role", (Const (String "Bud Fox")))]), No),
-         ((Some "b"), ([], [])))])
+     [{ start_node_pt = ((Some "a"), ([], []));
+        rel_node_pts =
+        [(((None, (["ACTED_IN"], [("role", (Const (String "Bud Fox")))])), No),
+          ((Some "b"), ([], [])))]
+        }
        ],
      [], (Return (None, [((Var "a"), None); ((Var "b"), None)], []))))
   $ ./demoParse.exe << EOF
@@ -136,25 +177,36 @@
   > RETURN actor.name
   > EOF
   (Match (
-     [(((Some "wallstreet"),
-        (["Movie"], [("title", (Const (String "Wall Street")))])),
-       [((None, (["ACTED_IN"], []), Left), ((Some "actor"), ([], [])))])],
+     [{ start_node_pt =
+        ((Some "wallstreet"),
+         (["Movie"], [("title", (Const (String "Wall Street")))]));
+        rel_node_pts =
+        [(((None, (["ACTED_IN"], [])), Left), ((Some "actor"), ([], [])))] }
+       ],
      [], (Return (None, [((Property ("actor", "name")), None)], []))))
   $ ./demoParse.exe << EOF
   > MATCH (wallstreet {title: 'Wall Street'})<-[]-(person)
   > RETURN person.name
   > EOF
   (Match (
-     [(((Some "wallstreet"), ([], [("title", (Const (String "Wall Street")))])),
-       [((None, ([], []), Left), ((Some "person"), ([], [])))])],
+     [{ start_node_pt =
+        ((Some "wallstreet"), ([], [("title", (Const (String "Wall Street")))]));
+        rel_node_pts =
+        [(((None, ([], [])), Left), ((Some "person"), ([], [])))] }
+       ],
      [], (Return (None, [((Property ("person", "name")), None)], []))))
   $ ./demoParse.exe << EOF
   > MATCH (wallstreet {title: 'Wall Street'})<-[r:ACTED_IN]-(actor)
   > RETURN r.role
   > EOF
   (Match (
-     [(((Some "wallstreet"), ([], [("title", (Const (String "Wall Street")))])),
-       [(((Some "r"), (["ACTED_IN"], []), Left), ((Some "actor"), ([], [])))])],
+     [{ start_node_pt =
+        ((Some "wallstreet"), ([], [("title", (Const (String "Wall Street")))]));
+        rel_node_pts =
+        [((((Some "r"), (["ACTED_IN"], [])), Left), ((Some "actor"), ([], [])))
+          ]
+        }
+       ],
      [], (Return (None, [((Property ("r", "role")), None)], []))))
   $ ./demoParse.exe << EOF
   > MATCH
@@ -163,17 +215,21 @@
   > CREATE (rob)-[:\`OLD FRIENDS\`]->(martin)
   > EOF
   (Match (
-     [(((Some "martin"),
-        (["Person"], [("name", (Const (String "Martin Sheen")))])),
-       []);
-       (((Some "rob"), (["Person"], [("name", (Const (String "Rob Reiner")))])),
-        [])
+     [{ start_node_pt =
+        ((Some "martin"),
+         (["Person"], [("name", (Const (String "Martin Sheen")))]));
+        rel_node_pts = [] };
+       { start_node_pt =
+         ((Some "rob"), (["Person"], [("name", (Const (String "Rob Reiner")))]));
+         rel_node_pts = [] }
        ],
      [],
      (Create (
-        [(((Some "rob"), ([], [])),
-          [((None, (["`OLD FRIENDS`"], []), Right), ((Some "martin"), ([], [])))
-            ])
+        [{ start_node_pt = ((Some "rob"), ([], []));
+           rel_node_pts =
+           [(((None, (["`OLD FRIENDS`"], [])), Right),
+             ((Some "martin"), ([], [])))]
+           }
           ],
         None))
      ))
@@ -182,17 +238,23 @@
   > RETURN r
   > EOF
   (Match (
-     [(((Some "n"), ([], [("name", (Const (String "Rob Reiner")))])),
-       [(((Some "r"), (["`OLD FRIENDS`"], []), Right), (None, ([], [])))])],
+     [{ start_node_pt =
+        ((Some "n"), ([], [("name", (Const (String "Rob Reiner")))]));
+        rel_node_pts =
+        [((((Some "r"), (["`OLD FRIENDS`"], [])), Right), (None, ([], [])))] }
+       ],
      [], (Return (None, [((Var "r"), None)], []))))
   $ ./demoParse.exe << EOF
   > MATCH (charlie {name: 'Charlie Sheen'})-[:ACTED_IN]->(movie)<-[:DIRECTED]-(director)
   > RETURN movie.title, director.name
   > EOF
   (Match (
-     [(((Some "charlie"), ([], [("name", (Const (String "Charlie Sheen")))])),
-       [((None, (["ACTED_IN"], []), Right), ((Some "movie"), ([], [])));
-         ((None, (["DIRECTED"], []), Left), ((Some "director"), ([], [])))])
+     [{ start_node_pt =
+        ((Some "charlie"), ([], [("name", (Const (String "Charlie Sheen")))]));
+        rel_node_pts =
+        [(((None, (["ACTED_IN"], [])), Right), ((Some "movie"), ([], [])));
+          (((None, (["DIRECTED"], [])), Left), ((Some "director"), ([], [])))]
+        }
        ],
      [],
      (Return (None,
@@ -209,26 +271,33 @@
   > (andy)-[:KNOWS {since: 1999}]->(peter)
   > EOF
   (Create (
-     [(((Some "andy"),
-        (["Swedish"; "Person"],
-         [("name", (Const (String "Andy"))); ("age", (Const (Int64 36L)));
-           ("belt", (Const (String "white")))])),
-       []);
-       (((Some "timothy"),
-         (["Person"],
-          [("name", (Const (String "Timothy"))); ("age", (Const (Int64 25L)))])),
-        []);
-       (((Some "peter"),
-         (["Person"],
-          [("name", (Const (String "Peter"))); ("age", (Const (Int64 35L)));
-            ("email", (Const (String "peter_n@example.com")))])),
-        []);
-       (((Some "andy"), ([], [])),
-        [((None, (["KNOWS"], [("since", (Const (Int64 2012L)))]), Right),
-          ((Some "timothy"), ([], [])))]);
-       (((Some "andy"), ([], [])),
-        [((None, (["KNOWS"], [("since", (Const (Int64 1999L)))]), Right),
-          ((Some "peter"), ([], [])))])
+     [{ start_node_pt =
+        ((Some "andy"),
+         (["Swedish"; "Person"],
+          [("name", (Const (String "Andy"))); ("age", (Const (Int64 36L)));
+            ("belt", (Const (String "white")))]));
+        rel_node_pts = [] };
+       { start_node_pt =
+         ((Some "timothy"),
+          (["Person"],
+           [("name", (Const (String "Timothy"))); ("age", (Const (Int64 25L)))]));
+         rel_node_pts = [] };
+       { start_node_pt =
+         ((Some "peter"),
+          (["Person"],
+           [("name", (Const (String "Peter"))); ("age", (Const (Int64 35L)));
+             ("email", (Const (String "peter_n@example.com")))]));
+         rel_node_pts = [] };
+       { start_node_pt = ((Some "andy"), ([], []));
+         rel_node_pts =
+         [(((None, (["KNOWS"], [("since", (Const (Int64 2012L)))])), Right),
+           ((Some "timothy"), ([], [])))]
+         };
+       { start_node_pt = ((Some "andy"), ([], []));
+         rel_node_pts =
+         [(((None, (["KNOWS"], [("since", (Const (Int64 1999L)))])), Right),
+           ((Some "peter"), ([], [])))]
+         }
        ],
      None))
   $ ./demoParse.exe << EOF
@@ -239,8 +308,11 @@
   > EOF
   (With (None, [((Const (Int64 30L)), "minAge")], [], [],
      (Match (
-        [(((Some "a"), (["Person"], [])),
-          [((None, (["KNOWS"], []), Right), ((Some "b"), (["Person"], [])))])],
+        [{ start_node_pt = ((Some "a"), (["Person"], []));
+           rel_node_pts =
+           [(((None, (["KNOWS"], [])), Right), ((Some "b"), (["Person"], [])))]
+           }
+          ],
         [(List_op ((Property ("a", "name")), [(Eq, (Const (String "Andy")))]));
           (List_op ((Property ("b", "age")), [(Greater, (Var "minAge"))]))],
         (Return (None, [((Property ("b", "name")), None)], []))))
@@ -250,8 +322,11 @@
   > RETURN b.name AS friend
   > EOF
   (Match (
-     [(((Some "a"), (["Person"], [("name", (Const (String "Andy")))])),
-       [((None, ([], []), Right), ((Some "b"), (["Person"], [])))])],
+     [{ start_node_pt =
+        ((Some "a"), (["Person"], [("name", (Const (String "Andy")))]));
+        rel_node_pts =
+        [(((None, ([], [])), Right), ((Some "b"), (["Person"], [])))] }
+       ],
      [], (Return (None, [((Property ("b", "name")), (Some "friend"))], []))))
   $ ./demoParse.exe << EOF
   > MATCH (n:Person)
@@ -261,7 +336,8 @@
   >   n.age AS age
   > ORDER BY name
   > EOF
-  (Match ([(((Some "n"), (["Person"], [])), [])],
+  (Match (
+     [{ start_node_pt = ((Some "n"), (["Person"], [])); rel_node_pts = [] }],
      [(Bin_op (OR,
          (Bin_op (XOR,
             (List_op ((Property ("n", "name")),
@@ -292,7 +368,9 @@
   > MATCH (n:Swedish)
   > RETURN n.name, n.age
   > EOF
-  (Match ([(((Some "n"), (["Swedish"], [])), [])], [],
+  (Match (
+     [{ start_node_pt = ((Some "n"), (["Swedish"], [])); rel_node_pts = [] }],
+     [],
      (Return (None,
         [((Property ("n", "name")), None); ((Property ("n", "age")), None)], 
         []))
@@ -302,7 +380,8 @@
   > WHERE n.age < 30
   > RETURN n.name, n.age
   > EOF
-  (Match ([(((Some "n"), (["Person"], [])), [])],
+  (Match (
+     [{ start_node_pt = ((Some "n"), (["Person"], [])); rel_node_pts = [] }],
      [(List_op ((Property ("n", "age")), [(Less, (Const (Int64 30L)))]))],
      (Return (None,
         [((Property ("n", "name")), None); ((Property ("n", "age")), None)], 
@@ -314,8 +393,10 @@
   > RETURN f.name, f.age, f.email
   > EOF
   (Match (
-     [(((Some "n"), (["Person"], [])),
-       [(((Some "k"), (["KNOWS"], []), Right), ((Some "f"), ([], [])))])],
+     [{ start_node_pt = ((Some "n"), (["Person"], []));
+        rel_node_pts =
+        [((((Some "k"), (["KNOWS"], [])), Right), ((Some "f"), ([], [])))] }
+       ],
      [(List_op ((Property ("k", "since")), [(Less, (Const (Int64 2000L)))]))],
      (Return (None,
         [((Property ("f", "name")), None); ((Property ("f", "age")), None);
@@ -327,7 +408,8 @@
   > WHERE n.age < 30
   > RETURN n.name, n.age
   > EOF
-  (Match ([(((Some "n"), (["Person"], [])), [])],
+  (Match (
+     [{ start_node_pt = ((Some "n"), (["Person"], [])); rel_node_pts = [] }],
      [(List_op ((Property ("n", "age")), [(Less, (Const (Int64 30L)))]))],
      (Return (None,
         [((Property ("n", "name")), None); ((Property ("n", "age")), None)], 
@@ -338,7 +420,8 @@
   > WHERE n.belt IS NOT NULL
   > RETURN n.name, n.belt
   > EOF
-  (Match ([(((Some "n"), (["Person"], [])), [])],
+  (Match (
+     [{ start_node_pt = ((Some "n"), (["Person"], [])); rel_node_pts = [] }],
      [(Un_op (IS_NOT_NULL, (Property ("n", "belt"))))],
      (Return (None,
         [((Property ("n", "name")), None); ((Property ("n", "belt")), None)],
@@ -350,7 +433,9 @@
   > WHERE n.age = 25
   > RETURN name
   > EOF
-  (Match ([(((Some "n"), (["Person"], [])), [])], [],
+  (Match (
+     [{ start_node_pt = ((Some "n"), (["Person"], [])); rel_node_pts = [] }],
+     [],
      (With (None, [((Property ("n", "name")), "name")], [],
         [(List_op ((Property ("n", "age")), [(Eq, (Const (Int64 25L)))]))],
         (Return (None, [((Var "name"), None)], []))))
@@ -360,7 +445,8 @@
   > WHERE n.name STARTS WITH 'Pet'
   > RETURN n.name, n.age
   > EOF
-  (Match ([(((Some "n"), (["Person"], [])), [])],
+  (Match (
+     [{ start_node_pt = ((Some "n"), (["Person"], [])); rel_node_pts = [] }],
      [(Bin_op (STARTS_WITH, (Property ("n", "name")), (Const (String "Pet"))))],
      (Return (None,
         [((Property ("n", "name")), None); ((Property ("n", "age")), None)], 
@@ -371,7 +457,8 @@
   > WHERE n.name ENDS WITH 'ter'
   > RETURN n.name, n.age
   > EOF
-  (Match ([(((Some "n"), (["Person"], [])), [])],
+  (Match (
+     [{ start_node_pt = ((Some "n"), (["Person"], [])); rel_node_pts = [] }],
      [(Bin_op (ENDS_WITH, (Property ("n", "name")), (Const (String "ter"))))],
      (Return (None,
         [((Property ("n", "name")), None); ((Property ("n", "age")), None)], 
@@ -382,7 +469,8 @@
   > WHERE n.name CONTAINS 'ete'
   > RETURN n.name, n.age
   > EOF
-  (Match ([(((Some "n"), (["Person"], [])), [])],
+  (Match (
+     [{ start_node_pt = ((Some "n"), (["Person"], [])); rel_node_pts = [] }],
      [(Bin_op (CONTAINS, (Property ("n", "name")), (Const (String "ete"))))],
      (Return (None,
         [((Property ("n", "name")), None); ((Property ("n", "age")), None)], 
@@ -393,7 +481,8 @@
   > WHERE NOT n.name ENDS WITH 'y'
   > RETURN n.name, n.age
   > EOF
-  (Match ([(((Some "n"), (["Person"], [])), [])],
+  (Match (
+     [{ start_node_pt = ((Some "n"), (["Person"], [])); rel_node_pts = [] }],
      [(Un_op (NOT,
          (Bin_op (ENDS_WITH, (Property ("n", "name")), (Const (String "y"))))))
        ],
@@ -407,8 +496,11 @@
   > RETURN other.name, other.age
   > EOF
   (Match (
-     [(((Some "timothy"), (["Person"], [("name", (Const (String "Timothy")))])),
-       [((None, ([], []), Left), ((Some "other"), (["Person"], [])))])],
+     [{ start_node_pt =
+        ((Some "timothy"), (["Person"], [("name", (Const (String "Timothy")))]));
+        rel_node_pts =
+        [(((None, ([], [])), Left), ((Some "other"), (["Person"], [])))] }
+       ],
      [],
      (Return (None,
         [((Property ("other", "name")), None);
@@ -423,9 +515,12 @@
   > RETURN other.name, other.age
   > EOF
   (Match (
-     [(((Some "peter"), (["Person"], [("name", (Const (String "Peter")))])), []);
-       (((Some "other"), (["Person"], [])),
-        [((None, ([], []), Right), ((Some "notpeter"), ([], [])))])
+     [{ start_node_pt =
+        ((Some "peter"), (["Person"], [("name", (Const (String "Peter")))]));
+        rel_node_pts = [] };
+       { start_node_pt = ((Some "other"), (["Person"], []));
+         rel_node_pts =
+         [(((None, ([], [])), Right), ((Some "notpeter"), ([], [])))] }
        ],
      [(Un_op (NOT, (List_op ((Var "notpeter"), [(Eq, (Var "peter"))]))))],
      (Return (None,
@@ -438,9 +533,11 @@
   > RETURN other.name, other.age
   > EOF
   (Match (
-     [(((Some "other"), (["Person"], [])),
-       [((None, (["KNOWS"], []), No),
-         (None, ([], [("name", (Const (String "Timothy")))])))])
+     [{ start_node_pt = ((Some "other"), (["Person"], []));
+        rel_node_pts =
+        [(((None, (["KNOWS"], [])), No),
+          (None, ([], [("name", (Const (String "Timothy")))])))]
+        }
        ],
      [],
      (Return (None,
@@ -453,7 +550,8 @@
   > WHERE a.name = 'Peter' OR a.name = 'Timothy'
   > RETURN a.name, a.age
   > EOF
-  (Match ([(((Some "a"), (["Person"], [])), [])],
+  (Match (
+     [{ start_node_pt = ((Some "a"), (["Person"], [])); rel_node_pts = [] }],
      [(Bin_op (OR,
          (List_op ((Property ("a", "name")), [(Eq, (Const (String "Peter")))])),
          (List_op ((Property ("a", "name")), [(Eq, (Const (String "Timothy")))]
@@ -469,7 +567,8 @@
   > WHERE n.belt = 'white'
   > RETURN n.name, n.age, n.belt
   > EOF
-  (Match ([(((Some "n"), (["Person"], [])), [])],
+  (Match (
+     [{ start_node_pt = ((Some "n"), (["Person"], [])); rel_node_pts = [] }],
      [(List_op ((Property ("n", "belt")), [(Eq, (Const (String "white")))]))],
      (Return (None,
         [((Property ("n", "name")), None); ((Property ("n", "age")), None);
@@ -482,7 +581,8 @@
   > RETURN n.name, n.age, n.belt
   > ORDER BY n.name
   > EOF
-  (Match ([(((Some "n"), (["Person"], [])), [])],
+  (Match (
+     [{ start_node_pt = ((Some "n"), (["Person"], [])); rel_node_pts = [] }],
      [(Bin_op (OR,
          (List_op ((Property ("n", "belt")), [(Eq, (Const (String "white")))])),
          (Un_op (IS_NULL, (Property ("n", "belt"))))))
@@ -497,7 +597,10 @@
   > WHERE person.name = 'Peter' AND person.belt IS NULL
   > RETURN person.name, person.age, person.belt
   > EOF
-  (Match ([(((Some "person"), (["Person"], [])), [])],
+  (Match (
+     [{ start_node_pt = ((Some "person"), (["Person"], [])); rel_node_pts = []
+        }
+       ],
      [(Bin_op (AND,
          (List_op ((Property ("person", "name")),
             [(Eq, (Const (String "Peter")))])),
@@ -514,7 +617,8 @@
   > WHERE a.name >= 'Peter'
   > RETURN a.name, a.age
   > EOF
-  (Match ([(((Some "a"), (["Person"], [])), [])],
+  (Match (
+     [{ start_node_pt = ((Some "a"), (["Person"], [])); rel_node_pts = [] }],
      [(List_op ((Property ("a", "name")), [(GEq, (Const (String "Peter")))]))],
      (Return (None,
         [((Property ("a", "name")), None); ((Property ("a", "age")), None)], 
@@ -525,7 +629,8 @@
   > WHERE a.name > 'Andy' AND a.name < 'Timothy'
   > RETURN a.name, a.age
   > EOF
-  (Match ([(((Some "a"), (["Person"], [])), [])],
+  (Match (
+     [{ start_node_pt = ((Some "a"), (["Person"], [])); rel_node_pts = [] }],
      [(Bin_op (AND,
          (List_op ((Property ("a", "name")),
             [(Greater, (Const (String "Andy")))])),
@@ -545,9 +650,11 @@
   > EOF
   (With (None, [((Const (Int64 2000L)), "minYear")], [], [],
      (Match (
-        [(((Some "a"), (["Person"], [])),
-          [(((Some "r"), (["KNOWS"], []), Right),
-            ((Some "b"), (["Person"], [])))])
+        [{ start_node_pt = ((Some "a"), (["Person"], []));
+           rel_node_pts =
+           [((((Some "r"), (["KNOWS"], [])), Right),
+             ((Some "b"), (["Person"], [])))]
+           }
           ],
         [(List_op ((Property ("r", "since")), [(Less, (Var "minYear"))]))],
         (Return (None, [((Property ("r", "since")), None)], []))))
@@ -560,9 +667,12 @@
   > EOF
   (With (None, [((Const (Int64 2000L)), "minYear")], [], [],
      (Match (
-        [(((Some "a"), (["Person"], [("name", (Const (String "Andy")))])),
-          [(((Some "r"), (["KNOWS"], []), Right),
-            ((Some "b"), (["Person"], [])))])
+        [{ start_node_pt =
+           ((Some "a"), (["Person"], [("name", (Const (String "Andy")))]));
+           rel_node_pts =
+           [((((Some "r"), (["KNOWS"], [])), Right),
+             ((Some "b"), (["Person"], [])))]
+           }
           ],
         [(List_op ((Property ("r", "since")), [(Less, (Var "minYear"))]))],
         (Return (None, [((Property ("r", "since")), (Some "years"))], []))))

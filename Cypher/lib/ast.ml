@@ -61,9 +61,12 @@ type direction =
   | No
 [@@deriving show { with_path = false }] [@@deriving show { with_path = false }]
 
+type entity_pattern = name option * pattern [@@deriving show { with_path = false }]
+
 type path =
-  (name option * pattern)
-  * ((name option * pattern * direction) * (name option * pattern)) list
+  { start_node_pt : entity_pattern
+  ; rel_node_pts : ((entity_pattern * direction) * entity_pattern) list
+  }
 [@@deriving show { with_path = false }]
 
 type where = expression list [@@deriving show { with_path = false }]

@@ -708,7 +708,7 @@ end = struct
         add_node g nm node2
         >>= fun (g, nm, node2, pn) ->
         (match rel with
-         | Some n, (lbl, nes), dir ->
+         | (Some n, (lbl, nes)), dir ->
            (match NameMap.mem n nm with
             | true -> fail @@ Multiple_def n
             | false ->
@@ -720,12 +720,12 @@ end = struct
                 (NameMap.add n (Rel rel) nm)
                 (cr_nodes + pn, cr_rels + 1)
                 rns)
-         | None, (lbl, nes), dir ->
+         | (None, (lbl, nes)), dir ->
            create_rel g nm lbl nes node node2 dir
            >>= fun rel ->
            path node2 (G.add_edge_e g rel) nm (cr_nodes + pn, cr_rels + 1) rns)
     in
-    let path g nm (node, rns) =
+    let path g nm { start_node_pt = node; rel_node_pts = rns } =
       add_node g nm node >>= fun (g, nm, node, pn) -> path node g nm (pn, 0) rns
     in
     let rec paths g nm cr_nodes cr_rels = function
@@ -760,13 +760,13 @@ end = struct
     in
     let rec rns_to_mrns nm mrns = function
       | [] -> return @@ lreverse mrns
-      | ((rn_opt, rpt, dir), (nn_opt, npt)) :: rns ->
+      | (((rn_opt, rpt), dir), (nn_opt, npt)) :: rns ->
         pt_to_mpt nm rpt
         >>= fun rpt ->
         pt_to_mpt nm npt
         >>= fun npt -> rns_to_mrns nm (((rn_opt, rpt, dir), (nn_opt, npt)) :: mrns) rns
     in
-    let p_to_mp nm ((n_opt, pt), rns) =
+    let p_to_mp nm { start_node_pt = n_opt, pt; rel_node_pts = rns } =
       pt_to_mpt nm pt
       >>= fun pt -> rns_to_mrns nm [] rns >>= fun mrns -> return ((n_opt, pt), mrns)
     in

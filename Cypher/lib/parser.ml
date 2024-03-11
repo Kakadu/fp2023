@@ -367,19 +367,22 @@ let path =
       [ skip_spaces
           (string "<-" *> (sq_brackets named_patt <|> return (None, ([], [])))
            <* skip_spaces @@ char '-'
-           >>= fun (n, p) -> return (n, p, Left))
+           >>= fun (n, p) -> return ((n, p), Left))
       ; skip_spaces
           (char '-' *> (sq_brackets named_patt <|> return (None, ([], [])))
            <* skip_spaces @@ string "->"
-           >>= fun (n, p) -> return (n, p, Right))
+           >>= fun (n, p) -> return ((n, p), Right))
       ; skip_spaces
           (char '-' *> (sq_brackets named_patt <|> return (None, ([], [])))
            <* skip_spaces @@ char '-'
-           >>= fun (n, p) -> return (n, p, No))
+           >>= fun (n, p) -> return ((n, p), No))
       ]
   in
   let node = parens named_patt in
-  lift2 (fun n rns -> n, rns) node (many (lift2 (fun r n -> r, n) rel node))
+  lift2
+    (fun n rns -> { start_node_pt = n; rel_node_pts = rns })
+    node
+    (many (lift2 (fun r n -> r, n) rel node))
 ;;
 
 let paths = lift2 (fun p ps -> p :: ps) path (many (skip_spaces (char ',') *> path))
@@ -777,7 +780,9 @@ let%expect_test "MATCH clause test1" =
     (With ((Some All), [], [], [],
        (With (None, [((Const (Int64 4L)), "four"); ((Const (Int64 5L)), "five")],
           [], [],
-          (Match ([((None, ([], [])), [])], [], (Return ((Some All), [], []))))))
+          (Match ([{ start_node_pt = (None, ([], [])); rel_node_pts = [] }],
+             [], (Return ((Some All), [], []))))
+          ))
        )) |}]
 ;;
 
@@ -790,11 +795,14 @@ let%expect_test "MATCH clause test2" =
     {|
     (With (None, [((Const (Int64 5L)), "f")], [], [],
        (Match (
-          [((None, ([], [])), [((None, ([], []), No), (None, ([], [])))]);
-            ((None, ([], [])),
-             [((None, ([], []), No), (None, ([], [])));
-               ((None, ([], []), Right), (None, ([], [])));
-               ((None, ([], []), Left), (None, ([], [])))])
+          [{ start_node_pt = (None, ([], []));
+             rel_node_pts = [(((None, ([], [])), No), (None, ([], [])))] };
+            { start_node_pt = (None, ([], []));
+              rel_node_pts =
+              [(((None, ([], [])), No), (None, ([], [])));
+                (((None, ([], [])), Right), (None, ([], [])));
+                (((None, ([], [])), Left), (None, ([], [])))]
+              }
             ],
           [], (Return ((Some All), [], []))))
        )) |}]
@@ -808,11 +816,15 @@ let%expect_test "MATCH clause test3" =
   [%expect
     {|
     (Match (
-       [((None, (["L1"; "L2"], [("name", (Const (String "Sasha")))])),
-         [(((Some "r1"),
-            (["L1"], [("d", (Const (Int64 5L))); ("f", (Const (Int64 6L)))]), No),
-           ((Some "n1"), ([], [])));
-           ((None, ([], []), Right), ((Some "n2"), ([], [])))])
+       [{ start_node_pt =
+          (None, (["L1"; "L2"], [("name", (Const (String "Sasha")))]));
+          rel_node_pts =
+          [((((Some "r1"),
+              (["L1"], [("d", (Const (Int64 5L))); ("f", (Const (Int64 6L)))])),
+             No),
+            ((Some "n1"), ([], [])));
+            (((None, ([], [])), Right), ((Some "n2"), ([], [])))]
+          }
          ],
        [], (Return ((Some All), [], [])))) |}]
 ;;
@@ -830,12 +842,15 @@ let%expect_test "CREATE clause test1" =
        (With (None, [((Const (Int64 4L)), "four"); ((Const (Int64 5L)), "five")],
           [], [],
           (Create (
-             [((None, ([], [])), []);
-               ((None, ([], [])), [((None, ([], []), Right), (None, ([], [])))]);
-               ((None, ([], [])),
-                [((None, ([], []), Left), (None, ([], [])));
-                  ((None, ([], []), Right), (None, ([], [])));
-                  ((None, ([], []), Left), (None, ([], [])))])
+             [{ start_node_pt = (None, ([], [])); rel_node_pts = [] };
+               { start_node_pt = (None, ([], []));
+                 rel_node_pts = [(((None, ([], [])), Right), (None, ([], [])))] };
+               { start_node_pt = (None, ([], []));
+                 rel_node_pts =
+                 [(((None, ([], [])), Left), (None, ([], [])));
+                   (((None, ([], [])), Right), (None, ([], [])));
+                   (((None, ([], [])), Left), (None, ([], [])))]
+                 }
                ],
              None))
           ))
@@ -852,12 +867,15 @@ let%expect_test "CREATE clause test2" =
     {|
     (With (None, [((Const (Int64 5L)), "f")], [], [],
        (Create (
-          [((None, (["L1"; "L2"], [("name", (Const (String "Sasha")))])),
-            [(((Some "r1"),
-               (["L1"], [("d", (Const (Int64 5L))); ("f", (Const (Int64 6L)))]),
-               Left),
-              ((Some "n1"), ([], [])));
-              ((None, ([], []), Right), ((Some "n2"), ([], [])))])
+          [{ start_node_pt =
+             (None, (["L1"; "L2"], [("name", (Const (String "Sasha")))]));
+             rel_node_pts =
+             [((((Some "r1"),
+                 (["L1"], [("d", (Const (Int64 5L))); ("f", (Const (Int64 6L)))])),
+                Left),
+               ((Some "n1"), ([], [])));
+               (((None, ([], [])), Right), ((Some "n2"), ([], [])))]
+             }
             ],
           None))
        )) |}]
@@ -877,8 +895,10 @@ let%expect_test "DELETE clause test" =
        (With (None, [((Const (Int64 4L)), "four"); ((Const (Int64 5L)), "five")],
           [], [],
           (Match (
-             [(((Some "n1"), ([], [])),
-               [(((Some "r"), ([], []), No), ((Some "n2"), ([], [])))])],
+             [{ start_node_pt = ((Some "n1"), ([], []));
+                rel_node_pts =
+                [((((Some "r"), ([], [])), No), ((Some "n2"), ([], [])))] }
+               ],
              [], (Delete (Nodetach, ["n1"; "r"; "n2"], None))))
           ))
        )) |}]
@@ -890,7 +910,7 @@ CREATE (n)
 DETACH DELETE n |};
   [%expect
     {|
-    (Create ([(((Some "n"), ([], [])), [])],
+    (Create ([{ start_node_pt = ((Some "n"), ([], [])); rel_node_pts = [] }],
        (Some (Delete (Detach, ["n"], None))))) |}]
 ;;
 
@@ -900,7 +920,7 @@ CREATE (n)
 NODETACH DELETE n |};
   [%expect
     {|
-    (Create ([(((Some "n"), ([], [])), [])],
+    (Create ([{ start_node_pt = ((Some "n"), ([], [])); rel_node_pts = [] }],
        (Some (Delete (Nodetach, ["n"], None))))) |}]
 ;;
 
@@ -917,16 +937,24 @@ let%expect_test "many DELETE and CREATE clauses test" =
   |};
   [%expect
     {|
-    (Create ([(((Some "n1"), ([], [])), [])],
-       (Some (Create ([(((Some "n2"), ([], [])), [])],
+    (Create ([{ start_node_pt = ((Some "n1"), ([], [])); rel_node_pts = [] }],
+       (Some (Create (
+                [{ start_node_pt = ((Some "n2"), ([], [])); rel_node_pts = [] }],
                 (Some (Delete (Nodetach, ["n1"],
                          (Some (Delete (Nodetach, ["n2"],
-                                  (Some (Create ([(((Some "n3"), ([], [])), [])],
+                                  (Some (Create (
+                                           [{ start_node_pt =
+                                              ((Some "n3"), ([], []));
+                                              rel_node_pts = [] }
+                                             ],
                                            (Some (Delete (Nodetach, ["n3"],
                                                     (Some (Create (
-                                                             [(((Some "n4"),
-                                                                ([], [])),
-                                                               [])],
+                                                             [{ start_node_pt =
+                                                                ((Some "n4"),
+                                                                 ([], []));
+                                                                rel_node_pts = []
+                                                                }
+                                                               ],
                                                              None)))
                                                     )))
                                            )))
@@ -957,28 +985,37 @@ let%expect_test "Read-write request test" =
   [%expect
     {|
     (With ((Some All), [], [], [],
-       (Match ([((None, ([], [])), [])], [],
+       (Match ([{ start_node_pt = (None, ([], [])); rel_node_pts = [] }],
+          [],
           (With ((Some All), [], [], [],
              (With ((Some All), [], [], [],
-                (Create ([(((Some "n1"), ([], [])), [])],
-                   (Some (Create ([(((Some "n2"), ([], [])), [])],
+                (Create (
+                   [{ start_node_pt = ((Some "n1"), ([], [])); rel_node_pts = []
+                      }
+                     ],
+                   (Some (Create (
+                            [{ start_node_pt = ((Some "n2"), ([], []));
+                               rel_node_pts = [] }
+                              ],
                             (Some (With ((Some All), [], [], [],
                                      (With ((Some All), [], [], [],
                                         (Delete (Nodetach, ["n1"],
                                            (Some (Delete (Nodetach, ["n2"],
                                                     (Some (Create (
-                                                             [(((Some "n3"),
-                                                                ([], [])),
-                                                               [])],
+                                                             [{ start_node_pt =
+                                                                ((Some "n3"),
+                                                                 ([], []));
+                                                                rel_node_pts = []
+                                                                }
+                                                               ],
                                                              (Some (Delete (
                                                                       Nodetach,
                                                                       ["n3"],
                                                                       (Some (
                                                                       Create (
-                                                                        [((
-                                                                        (Some "n4"),
-                                                                        (
-                                                                        [],
+                                                                        [{ start_node_pt =
+                                                                        ((Some "n4"),
+                                                                        ([],
                                                                         [("name",
                                                                         (Const
                                                                         (String
@@ -986,8 +1023,9 @@ let%expect_test "Read-write request test" =
                                                                         ("id",
                                                                         (Const
                                                                         (Int64 1L)))
-                                                                        ])),
-                                                                        [])],
+                                                                        ]));
+                                                                        rel_node_pts =
+                                                                        [] }],
                                                                         (Some (
                                                                         Return (
                                                                         (Some All),
