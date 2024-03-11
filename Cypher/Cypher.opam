@@ -15,7 +15,6 @@ depends: [
   "ppx_inline_test" {with-test}
   "ppx_expect"
   "ppx_deriving"
-  "ppx_show"
   "bisect_ppx"
   "odoc" {with-doc}
   "ocamlformat" {build}
