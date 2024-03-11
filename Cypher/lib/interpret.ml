@@ -894,14 +894,14 @@ end = struct
       | [] -> return @@ List.fold gnms ~init:acc ~f:(fun nms (_, nm) -> nm :: nms)
       | mp :: mps -> match_mp gnms mp >>= fun gnms -> match_mps acc gnms mps
     in
-    let rec match_ps ps newnms = function
-      | [] -> return newnms
-      | nm :: nms ->
-        ps_to_mps nm [] ps
-        >>= (fun mps -> match_mps newnms [ g, nm ] mps)
-        >>= fun newnms -> match_ps ps newnms nms
+    let match_ps ps newnms nm =
+      ps_to_mps nm [] ps >>= fun mps -> match_mps newnms [ g, nm ] mps
     in
-    match_ps ps [] nms
+    let rec match_ps_many ps newnms = function
+      | [] -> return newnms
+      | nm :: nms -> match_ps ps newnms nm >>= fun newnms -> match_ps_many ps newnms nms
+    in
+    match_ps_many ps [] nms
     >>= (fun nms -> where nms (fun nm -> eval_e nm) wh)
     >>= fun nms -> return ((g, nms, out), Some c)
   ;;
