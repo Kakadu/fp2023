@@ -69,7 +69,7 @@ type req_error =
   | Interpreter_err of interpreter_error
 [@@deriving show { with_path = false }]
 
-module type MONAD = sig
+module type Monad = sig
   type 'a t
 
   val return : 'a -> 'a t
@@ -77,19 +77,19 @@ module type MONAD = sig
   val ( <|> ) : 'a t -> 'a t -> 'a t
 end
 
-module type MONADERROR = sig
-  include MONAD
+module type MonadError = sig
+  include Monad
 
   type error
 
   val fail : error -> 'a t
 end
 
-module type MONADERROREXPR = MONADERROR with type error = expr_error
-module type MONADERRORINTERPRETER = MONADERROR with type error = interpreter_error
-module type MONADERRORREQ = MONADERROR with type error = req_error
+module type MonadErrorExpr = MonadError with type error = expr_error
+module type MonadErrorInterpreter = MonadError with type error = interpreter_error
+module type MonadErrorReq = MonadError with type error = req_error
 
-module Eval_expr (M : MONADERROREXPR) = struct
+module Eval_expr (M : MonadErrorExpr) = struct
   open M
 
   let eval_expr v_from_env p_from_env =
@@ -298,7 +298,7 @@ module Eval_expr (M : MONADERROREXPR) = struct
   ;;
 end
 
-module Expr (M : MONADERROREXPR) : sig
+module Expr (M : MonadErrorExpr) : sig
   open M
 
   val eval_e : value NameMap.t -> expression -> value t
@@ -333,7 +333,7 @@ end = struct
   let eval_e2 nm1 nm2 = eval_expr (v_from_nm2 nm1 nm2) (p_from_nm2 nm1 nm2)
 end
 
-module ExprResult : MONADERROREXPR with type 'a t = ('a, expr_error) Result.t = struct
+module ExprResult : MonadErrorExpr with type 'a t = ('a, expr_error) Result.t = struct
   type 'a t = ('a, expr_error) Result.t
   type error = expr_error
 
@@ -353,7 +353,7 @@ module ExprResult : MONADERROREXPR with type 'a t = ('a, expr_error) Result.t = 
   ;;
 end
 
-module Interpreter (M : MONADERRORINTERPRETER) : sig
+module Interpreter (M : MonadErrorInterpreter) : sig
   open M
 
   val interpret_request : graph -> clause -> (graph * output) t
@@ -946,7 +946,7 @@ end = struct
 end
 
 module InterpreterResult :
-  MONADERRORINTERPRETER with type 'a t = ('a, interpreter_error) Result.t = struct
+  MonadErrorInterpreter with type 'a t = ('a, interpreter_error) Result.t = struct
   type 'a t = ('a, interpreter_error) Result.t
   type error = interpreter_error
 
@@ -968,7 +968,7 @@ end
 
 open Parser
 
-module ReqResult : MONADERRORREQ with type 'a t = ('a, req_error) Result.t = struct
+module ReqResult : MonadErrorReq with type 'a t = ('a, req_error) Result.t = struct
   type 'a t = ('a, req_error) Result.t
   type error = req_error
 
@@ -1205,9 +1205,9 @@ let%expect_test "Expr list operators test" =
   [%expect
     {|
     ((0, 0), (0, 0),
-     [[("4 < 5 > 3.4 >= 2 <= 5 = 5. <> 7.7", (OutConstant (Bool true)));
+     [[("4 < 5 > 3.4 >= 2 <= 5 = 5 <> 7.7", (OutConstant (Bool true)));
         ("<null> < 5", (OutConstant Null));
-        ("4 = 4. < -5. = -4", (OutConstant (Bool false)))]
+        ("4 = 4 < -5 = -4", (OutConstant (Bool false)))]
        ]) |}]
 ;;
 
