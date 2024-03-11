@@ -60,13 +60,10 @@ val show_expr_error : expr_error -> string
 type interpreter_error =
   | Type_mismatch
   | Multiple_def of string
-  | Undefined_id of string
-  | Deleted_entity of int
   | Expr_err of expr_error
   | Unable_node_deletion of int
   | ID_overflow
   | Undirected_rel
-  | Multiple_using_rel_var of string
 
 val pp_interpreter_error : Format.formatter -> interpreter_error -> unit
 val show_interpreter_error : interpreter_error -> string

@@ -33,8 +33,7 @@ type value =
   | Constant of constant
   | Node of G.vertex
   | Rel of G.edge
-  | DeletedNode of int
-  | DeletedRel of int
+  | DeletedEntity of int
 
 type outvalue =
   | OutConstant of constant
@@ -55,13 +54,10 @@ type expr_error =
 type interpreter_error =
   | Type_mismatch
   | Multiple_def of string
-  | Undefined_id of string
-  | Deleted_entity of int
   | Expr_err of expr_error
   | Unable_node_deletion of int
   | ID_overflow
   | Undirected_rel
-  | Multiple_using_rel_var of string
 [@@deriving show { with_path = false }]
 
 type req_error =
@@ -311,7 +307,6 @@ end = struct
 
   let v_from_nm nm n =
     match NameMap.find_opt n nm with
-    | Some (DeletedNode id) | Some (DeletedRel id) -> fail @@ Deleted_entity id
     | Some v -> return v
     | None -> fail @@ Undefined_id n
   ;;
@@ -324,7 +319,7 @@ end = struct
       (match NameMap.find_opt p pm with
        | None -> return @@ Constant Null
        | Some v -> return @@ Constant v)
-    | Some (DeletedNode id) | Some (DeletedRel id) -> fail @@ Deleted_entity id
+    | Some (DeletedEntity id) -> fail @@ Deleted_entity id
     | _ -> fail @@ Undefined_id e
   ;;
 
@@ -548,7 +543,7 @@ end = struct
                , NameSet.elements lbl
                , NameMap.fold (fun n c acc -> (n, c) :: acc) pr [] )
              , nid2 )
-      | DeletedNode id | DeletedRel id -> fail @@ Deleted_entity id
+      | DeletedEntity id -> fail (Expr_err (Deleted_entity id))
     in
     let rec path newnm nm al_opts novs =
       match al_opts with
@@ -587,11 +582,7 @@ end = struct
   ;;
 
   let cdelete (g, nms, (cr, (del_nodes, del_rels), tbl)) del_attr ns c_opt =
-    let delete_from_nm nm n =
-      match NameMap.find_opt n nm with
-      | Some v -> return v
-      | None -> fail @@ Undefined_id n
-    in
+    let delete_from_nm nm n = eval_e nm (Var n) in
     let rec path_to_delete ns nm nodes rels =
       match ns with
       | [] -> return (nm, nodes, rels)
@@ -601,17 +592,16 @@ end = struct
          | Node (id, lbl, pr) ->
            path_to_delete
              ns
-             (NameMap.add n (DeletedNode id) nm)
+             (NameMap.add n (DeletedEntity id) nm)
              ((id, lbl, pr) :: nodes)
              rels
          | Rel (n1, (id, lbl, pr), n2) ->
            path_to_delete
              ns
-             (NameMap.add n (DeletedRel id) nm)
+             (NameMap.add n (DeletedEntity id) nm)
              nodes
              ((n1, (id, lbl, pr), n2) :: rels)
-         | DeletedNode _ -> path_to_delete ns nm nodes rels
-         | DeletedRel _ -> path_to_delete ns nm nodes rels
+         | DeletedEntity _ -> path_to_delete ns nm nodes rels
          | _ -> fail Type_mismatch)
     in
     let rec paths_to_delete nms newnms nodes rels =
@@ -828,7 +818,7 @@ end = struct
       (match rn_opt with
        | Some n ->
          (match NameMap.find_opt n nm with
-          | Some _ -> fail @@ Multiple_using_rel_var n
+          | Some _ -> fail @@ Multiple_def n
           | None ->
             (match rnn_opt with
              | Some rnn ->
@@ -1308,7 +1298,7 @@ let%expect_test "CREATE DELETE fail test2" =
   DELETE n4
   RETURN n1 |};
   [%expect {|
-    (Interpreter_err (Undefined_id "n4")) |}]
+    (Interpreter_err (Expr_err (Undefined_id "n4"))) |}]
 ;;
 
 let%expect_test "WITH DELETE fail test" =
@@ -1332,16 +1322,16 @@ let%expect_test "CREATE DELETE RETURN fail test2" =
   DELETE n
   RETURN * |};
   [%expect {|
-    (Interpreter_err (Deleted_entity 1)) |}]
+    (Interpreter_err (Expr_err (Deleted_entity 1))) |}]
 ;;
 
-let%expect_test "CREATE DELETE WITH RETURN fail test" =
+let%expect_test "CREATE DELETE WITH RETURN test" =
   piprint g {| CREATE (n)
   DELETE n
   WITH n as b
   RETURN 4 |};
   [%expect {|
-    (Interpreter_err (Expr_err (Deleted_entity 1))) |}]
+    ((1, 0), (1, 0), [[("4", (OutConstant (Int64 4L)))]]) |}]
 ;;
 
 let%expect_test "many WITH CREATE DELETE test" =
@@ -1617,5 +1607,5 @@ let%expect_test "MATCH fail test" =
   RETURN * |}
    | Error err -> Stdlib.Format.printf "Init error: %a" pp_req_error err);
   [%expect {|
-    (Interpreter_err (Multiple_using_rel_var "r")) |}]
+    (Interpreter_err (Multiple_def "r")) |}]
 ;;
