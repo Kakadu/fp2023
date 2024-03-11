@@ -557,20 +557,17 @@ end = struct
         >>= (fun v -> v_to_ov v)
         >>= fun ov -> path newnm nm al_opts ((expression_to_name e, ov) :: novs)
     in
+    let star_path newnm nm al_opts = function
+      | Some All ->
+        path newnm nm (NameMap.fold (fun n _ acc -> (Var n, Some n) :: acc) newnm []) []
+        >>= fun novs -> path newnm nm al_opts novs
+      | None -> path newnm nm al_opts []
+    in
     let rec paths nmps al_opts novss =
       match nmps with
       | [] -> return (lreverse novss)
       | (newnm, nm) :: nmps ->
-        (match s_opt with
-         | Some All ->
-           path
-             newnm
-             nm
-             (NameMap.fold (fun n _ acc -> (Var n, Some n) :: acc) newnm [])
-             []
-         | None -> return [])
-        >>= (fun novs -> path newnm nm al_opts novs)
-        >>= fun novs -> paths nmps al_opts (novs :: novss)
+        star_path newnm nm al_opts s_opt >>= fun novs -> paths nmps al_opts (novs :: novss)
     in
     nm_pair_from_nm
       nms
