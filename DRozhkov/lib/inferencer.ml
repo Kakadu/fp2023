@@ -87,7 +87,7 @@ module Subst = struct
       let* subs2 = unify (apply subs1 r1) (apply subs1 r2) in
       compose subs1 subs2
     | TList x1, TList x2 -> unify x1 x2
-    | _ -> fail (Ivalid_format_concat (l, r))
+    | _ -> fail (Invalid_format_concat (l, r))
 
   and extend (subst : t) (k, v) : (t, error) R.t =
     match Map.find subst k with
