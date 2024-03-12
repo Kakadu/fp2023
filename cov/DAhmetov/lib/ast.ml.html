@@ -216,7 +216,7 @@
 <span data-count="37">t</span>ype id = <span data-count="20">s</span>tring [@@deriving eq, show { with_path = false }]
 <span data-count="13">t</span>ype decl_rec = <span data-count="7">b</span>ool [@@deriving eq, show { with_path = false }]
 
-<span data-count="18">t</span>ype binOp =
+<span data-count="18">t</span>ype bin_op =
   <span data-count="3">|</span> Plus (* + *)
   <span data-count="3">|</span> Minus (* - *)
   <span data-count="1">|</span> Multi (* * *)
@@ -257,14 +257,14 @@ let ppbool bool = <span data-count="0">P</span>Bool bool
 let ppstring str = <span data-count="0">P</span>String str
 let ppint int = <span data-count="10">P</span>Int int
 let pptuple pattern_list = <span data-count="5">P</span>Tuple pattern_list
-let ppvar id = <span data-count="36">P</span>Var id
+let ppvar id = <span data-count="44">P</span>Var id
 
 <span data-count="278">t</span>ype expr =
   <span data-count="44">|</span> EInt of in<span data-count="10">t</span>
   <span data-count="6">|</span> EString of strin<span data-count="3">g</span>
   <span data-count="6">|</span> EBool of boo<span data-count="3">l</span>
   <span data-count="51">|</span> EVar of i<span data-count="17">d</span> (* Выражения имен переменных *)
-  <span data-count="108">|</span> EBinop of binOp * expr * exp<span data-count="60">r</span> (* Выражения бинарных операций *)
+  <span data-count="108">|</span> EBinop of bin_op * expr * exp<span data-count="60">r</span> (* Выражения бинарных операций *)
   <span data-count="36">|</span> EIfThenElse of expr * expr * exp<span data-count="20">r</span> (* Условный оператор If then else *)
   <span data-count="33">|</span> ETuple of <span data-count="13">e</span>xpr lis<span data-count="13">t</span>
   <span data-count="36">|</span> EApp of expr * exp<span data-count="18">r</span>
@@ -273,23 +273,23 @@ let ppvar id = <span data-count="36">P</span>Var id
   <span data-count="36">|</span> EFun of pattern * exp<span data-count="18">r</span>
 [@@deriving eq, show { with_path = false }<span data-count="133">]</span>
 
-let e_int int = <span data-count="95">E</span>Int int
+let e_int int = <span data-count="103">E</span>Int int
 let e_string string = <span data-count="16">E</span>String string
 let e_bool bool = <span data-count="11">E</span>Bool bool
-let e_var str = <span data-count="66">E</span>Var str
-let e_binop op exp1 exp2 = <span data-count="47">E</span>Binop (op, exp1, exp2)
-let e_ifthenelse exp1 expr2 expr3 = <span data-count="11">E</span>IfThenElse (exp1, expr2, expr3)
+let e_var str = <span data-count="86">E</span>Var str
+let e_binop op exp1 exp2 = <span data-count="53">E</span>Binop (op, exp1, exp2)
+let e_ifthenelse exp1 expr2 expr3 = <span data-count="13">E</span>IfThenElse (exp1, expr2, expr3)
 let e_tuple expr_list = <span data-count="11">E</span>Tuple expr_list
-let e_app expr1 expr2 = <span data-count="23">E</span>App (expr1, expr2)
+let e_app expr1 expr2 = <span data-count="35">E</span>App (expr1, expr2)
 let e_match expr lst = <span data-count="5">E</span>Match (expr, lst)
 let e_let bool id exp1 exp2 = <span data-count="0">E</span>Let (bool, id, exp1, exp2)
-let e_fun id exp = <span data-count="24">E</span>Fun (id, exp)
+let e_fun id exp = <span data-count="32">E</span>Fun (id, exp)
 
 (* let drec bool = DRec bool *)
 
 <span data-count="69">t</span>ype decl = <span data-count="117">D</span>eclLet of decl_rec * id * exp<span data-count="65">r</span> [@@deriving eq, show { with_path = false }<span data-count="56">]</span>
 
-let d_decl bool id exp = <span data-count="62">D</span>eclLet (bool, id, exp)
+let d_decl bool id exp = <span data-count="68">D</span>eclLet (bool, id, exp)
 
 <span data-count="7">t</span>ype program = <span data-count="34">d</span>ecl lis<span data-count="7">t</span> [@@deriving eq, show { with_path = false }<span data-count="14">]</span>
 </code></pre>

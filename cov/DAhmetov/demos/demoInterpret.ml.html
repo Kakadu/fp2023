@@ -55,10 +55,10 @@
 
 let () =
   let s = Stdio.In_channel.input_all Stdlib.stdin in
-  <span data-count="5">m</span>atch Parser.parse s with
-  | <span data-count="5">O</span>k parse_result -&gt;
+  <span data-count="6">m</span>atch Parser.parse s with
+  | <span data-count="6">O</span>k parse_result -&gt;
     (match Interpret.InterpretResult.exec_program parse_result with
-     | <span data-count="5">O</span>k actual -&gt; Format.print<span data-count="5">f</span> "%a" Interpret.pp_env actual
+     | <span data-count="6">O</span>k actual -&gt; Format.print<span data-count="6">f</span> "%a" Interpret.pp_env actual
      | <span data-count="0">E</span>rror err -&gt; Format.print<span data-count="0">f</span> "%a" Interpret.print_failure err)
   | <span data-count="0">E</span>rror err -&gt; Format.print<span data-count="0">f</span> "Parsing error: %s\n " err
 ;;
