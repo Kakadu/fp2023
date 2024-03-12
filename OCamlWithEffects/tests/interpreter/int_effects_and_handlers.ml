@@ -78,7 +78,7 @@ let%expect_test _ =
     {|
     val E : char -> int effect = <effect>
     val G : int -> int effect = <effect>
-    val f : 'a effect -> 'a = <fun>
+    val f : 'b effect -> 'b = <fun>
     val res1 : int = 0
     val res2 : int = 1
     val res3 : int = 2

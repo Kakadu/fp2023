@@ -6,29 +6,19 @@ open Ocaml_with_effects_lib.Run
 
 let%expect_test _ =
   inference_expr
-  (Ocaml_with_effects_lib.Ast.ELetIn ("f",
-    Ocaml_with_effects_lib.Ast.EFun (Ocaml_with_effects_lib.Ast.PVal "x",
-     Ocaml_with_effects_lib.Ast.EIdentifier "x"),
-    Ocaml_with_effects_lib.Ast.EApplication
-     (Ocaml_with_effects_lib.Ast.EIdentifier "f",
-     Ocaml_with_effects_lib.Ast.EConst (Ocaml_with_effects_lib.Ast.Int 5))));
+    (Ocaml_with_effects_lib.Ast.EDeclaration
+       ("f", Ocaml_with_effects_lib.Ast.EConst (Ocaml_with_effects_lib.Ast.Int 5), None));
   [%expect {|
     - : int |}]
-  ;;
+;;
 
 let%expect_test _ =
   interpret_expr
-  (Ocaml_with_effects_lib.Ast.ELetIn ("f",
-    Ocaml_with_effects_lib.Ast.EFun (Ocaml_with_effects_lib.Ast.PVal "x",
-     Ocaml_with_effects_lib.Ast.EIdentifier "x"),
-    Ocaml_with_effects_lib.Ast.EApplication
-     (Ocaml_with_effects_lib.Ast.EIdentifier "f",
-     Ocaml_with_effects_lib.Ast.EUnaryOperation
-      (Ocaml_with_effects_lib.Ast.Not,
-      Ocaml_with_effects_lib.Ast.EConst (Ocaml_with_effects_lib.Ast.Bool true)))));
+    (Ocaml_with_effects_lib.Ast.EDeclaration
+       ("f", Ocaml_with_effects_lib.Ast.EConst (Ocaml_with_effects_lib.Ast.Int 5), None));
   [%expect {|
-    - : bool = false |}]
-  ;;
+    - : int = 5 |}]
+;;
 
 let%expect_test _ =
   inference_expr
@@ -106,34 +96,33 @@ let%expect_test _ =
 
 let%expect_test _ =
   inference_program
-    [ Ocaml_with_effects_lib.Ast.SDeclaration
-        (Ocaml_with_effects_lib.Ast.DDeclaration
-           ( "f"
-           , Ocaml_with_effects_lib.Ast.EFun
-               ( Ocaml_with_effects_lib.Ast.PVal "x"
-               , Ocaml_with_effects_lib.Ast.EIdentifier "x" ) ))
-    ; Ocaml_with_effects_lib.Ast.SDeclaration
-        (Ocaml_with_effects_lib.Ast.DDeclaration
-           ( "g"
-           , Ocaml_with_effects_lib.Ast.EFun
-               ( Ocaml_with_effects_lib.Ast.PVal "x"
-               , Ocaml_with_effects_lib.Ast.EBinaryOperation
-                   ( Ocaml_with_effects_lib.Ast.Add
-                   , Ocaml_with_effects_lib.Ast.EApplication
-                       ( Ocaml_with_effects_lib.Ast.EIdentifier "f"
-                       , Ocaml_with_effects_lib.Ast.EConst
-                           (Ocaml_with_effects_lib.Ast.Int 5) )
-                   , Ocaml_with_effects_lib.Ast.EIdentifier "x" ) ) ))
-    ; Ocaml_with_effects_lib.Ast.SDeclaration
-        (Ocaml_with_effects_lib.Ast.DDeclaration
-           ( "z"
-           , Ocaml_with_effects_lib.Ast.EBinaryOperation
-               ( Ocaml_with_effects_lib.Ast.Gt
-               , Ocaml_with_effects_lib.Ast.EApplication
-                   ( Ocaml_with_effects_lib.Ast.EIdentifier "g"
-                   , Ocaml_with_effects_lib.Ast.EConst (Ocaml_with_effects_lib.Ast.Int 5)
-                   )
-               , Ocaml_with_effects_lib.Ast.EConst (Ocaml_with_effects_lib.Ast.Int 1) ) ))
+    [ Ocaml_with_effects_lib.Ast.EDeclaration
+        ( "f"
+        , Ocaml_with_effects_lib.Ast.EFun
+            ( Ocaml_with_effects_lib.Ast.PVal "x"
+            , Ocaml_with_effects_lib.Ast.EIdentifier "x" )
+        , None )
+    ; Ocaml_with_effects_lib.Ast.EDeclaration
+        ( "g"
+        , Ocaml_with_effects_lib.Ast.EFun
+            ( Ocaml_with_effects_lib.Ast.PVal "x"
+            , Ocaml_with_effects_lib.Ast.EBinaryOperation
+                ( Ocaml_with_effects_lib.Ast.Add
+                , Ocaml_with_effects_lib.Ast.EApplication
+                    ( Ocaml_with_effects_lib.Ast.EIdentifier "f"
+                    , Ocaml_with_effects_lib.Ast.EConst (Ocaml_with_effects_lib.Ast.Int 5)
+                    )
+                , Ocaml_with_effects_lib.Ast.EIdentifier "x" ) )
+        , None )
+    ; Ocaml_with_effects_lib.Ast.EDeclaration
+        ( "z"
+        , Ocaml_with_effects_lib.Ast.EBinaryOperation
+            ( Ocaml_with_effects_lib.Ast.Gt
+            , Ocaml_with_effects_lib.Ast.EApplication
+                ( Ocaml_with_effects_lib.Ast.EIdentifier "g"
+                , Ocaml_with_effects_lib.Ast.EConst (Ocaml_with_effects_lib.Ast.Int 5) )
+            , Ocaml_with_effects_lib.Ast.EConst (Ocaml_with_effects_lib.Ast.Int 1) )
+        , None )
     ];
   [%expect {|
     val f : 'a -> 'a
@@ -143,34 +132,33 @@ let%expect_test _ =
 
 let%expect_test _ =
   interpret_program
-    [ Ocaml_with_effects_lib.Ast.SDeclaration
-        (Ocaml_with_effects_lib.Ast.DDeclaration
-           ( "f"
-           , Ocaml_with_effects_lib.Ast.EFun
-               ( Ocaml_with_effects_lib.Ast.PVal "x"
-               , Ocaml_with_effects_lib.Ast.EIdentifier "x" ) ))
-    ; Ocaml_with_effects_lib.Ast.SDeclaration
-        (Ocaml_with_effects_lib.Ast.DDeclaration
-           ( "g"
-           , Ocaml_with_effects_lib.Ast.EFun
-               ( Ocaml_with_effects_lib.Ast.PVal "x"
-               , Ocaml_with_effects_lib.Ast.EBinaryOperation
-                   ( Ocaml_with_effects_lib.Ast.Add
-                   , Ocaml_with_effects_lib.Ast.EApplication
-                       ( Ocaml_with_effects_lib.Ast.EIdentifier "f"
-                       , Ocaml_with_effects_lib.Ast.EConst
-                           (Ocaml_with_effects_lib.Ast.Int 5) )
-                   , Ocaml_with_effects_lib.Ast.EIdentifier "x" ) ) ))
-    ; Ocaml_with_effects_lib.Ast.SDeclaration
-        (Ocaml_with_effects_lib.Ast.DDeclaration
-           ( "z"
-           , Ocaml_with_effects_lib.Ast.EBinaryOperation
-               ( Ocaml_with_effects_lib.Ast.Gt
-               , Ocaml_with_effects_lib.Ast.EApplication
-                   ( Ocaml_with_effects_lib.Ast.EIdentifier "g"
-                   , Ocaml_with_effects_lib.Ast.EConst (Ocaml_with_effects_lib.Ast.Int 5)
-                   )
-               , Ocaml_with_effects_lib.Ast.EConst (Ocaml_with_effects_lib.Ast.Int 1) ) ))
+    [ Ocaml_with_effects_lib.Ast.EDeclaration
+        ( "f"
+        , Ocaml_with_effects_lib.Ast.EFun
+            ( Ocaml_with_effects_lib.Ast.PVal "x"
+            , Ocaml_with_effects_lib.Ast.EIdentifier "x" )
+        , None )
+    ; Ocaml_with_effects_lib.Ast.EDeclaration
+        ( "g"
+        , Ocaml_with_effects_lib.Ast.EFun
+            ( Ocaml_with_effects_lib.Ast.PVal "x"
+            , Ocaml_with_effects_lib.Ast.EBinaryOperation
+                ( Ocaml_with_effects_lib.Ast.Add
+                , Ocaml_with_effects_lib.Ast.EApplication
+                    ( Ocaml_with_effects_lib.Ast.EIdentifier "f"
+                    , Ocaml_with_effects_lib.Ast.EConst (Ocaml_with_effects_lib.Ast.Int 5)
+                    )
+                , Ocaml_with_effects_lib.Ast.EIdentifier "x" ) )
+        , None )
+    ; Ocaml_with_effects_lib.Ast.EDeclaration
+        ( "z"
+        , Ocaml_with_effects_lib.Ast.EBinaryOperation
+            ( Ocaml_with_effects_lib.Ast.Gt
+            , Ocaml_with_effects_lib.Ast.EApplication
+                ( Ocaml_with_effects_lib.Ast.EIdentifier "g"
+                , Ocaml_with_effects_lib.Ast.EConst (Ocaml_with_effects_lib.Ast.Int 5) )
+            , Ocaml_with_effects_lib.Ast.EConst (Ocaml_with_effects_lib.Ast.Int 1) )
+        , None )
     ];
   [%expect
     {|
@@ -181,15 +169,13 @@ let%expect_test _ =
 
 let%expect_test _ =
   interpret_program
-    [ Ocaml_with_effects_lib.Ast.SDeclaration
-        (Ocaml_with_effects_lib.Ast.DDeclaration
-           ("f", Ocaml_with_effects_lib.Ast.EConst (Ocaml_with_effects_lib.Ast.Int 5)))
-    ; Ocaml_with_effects_lib.Ast.SDeclaration
-        (Ocaml_with_effects_lib.Ast.DDeclaration
-           ( "g"
-           , Ocaml_with_effects_lib.Ast.EUnaryOperation
-               (Ocaml_with_effects_lib.Ast.Not, Ocaml_with_effects_lib.Ast.EIdentifier "f")
-           ))
+    [ Ocaml_with_effects_lib.Ast.EDeclaration
+        ("f", Ocaml_with_effects_lib.Ast.EConst (Ocaml_with_effects_lib.Ast.Int 5), None)
+    ; Ocaml_with_effects_lib.Ast.EDeclaration
+        ( "g"
+        , Ocaml_with_effects_lib.Ast.EUnaryOperation
+            (Ocaml_with_effects_lib.Ast.Not, Ocaml_with_effects_lib.Ast.EIdentifier "f")
+        , None )
     ];
   [%expect
     {|

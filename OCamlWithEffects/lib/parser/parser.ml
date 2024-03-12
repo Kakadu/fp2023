@@ -233,7 +233,7 @@ let parse_type_annotation =
 
 let parse_effect_declaration =
   lift2
-    deffect_declaration
+    eeffect_declaration
     (skip_wspace *> string "effect" *> parse_capitalized_name)
     (skip_wspace *> string ":" *> parse_type_annotation)
 ;;
@@ -398,7 +398,6 @@ let parse_un_op pack =
       ; parens @@ pack.parse_application pack
       ; parens @@ pack.parse_if_then_else pack
       ; parens @@ pack.parse_perform pack
-      ; parens @@ pack.parse_continue pack
       ; parse_const
       ; parse_ident
       ; parens @@ pack.parse_bin_op pack
@@ -411,7 +410,6 @@ let parse_un_op pack =
       ; parens @@ pack.parse_application pack
       ; parens @@ pack.parse_if_then_else pack
       ; parens @@ pack.parse_perform pack
-      ; parens @@ pack.parse_continue pack
       ; parse_const
       ; parse_ident
       ]
@@ -439,7 +437,6 @@ let parse_bin_op pack =
       ; pack.parse_let_in pack
       ; pack.parse_match_with pack
       ; pack.parse_perform pack
-      ; pack.parse_continue pack
       ; pack.parse_if_then_else pack
       ; parse_const
       ; parse_ident
@@ -580,7 +577,7 @@ let parse_list pack =
       ]
   in
   let content = skip_wspace *> many (parse_expr <* list_sep) in
-  parens self <|> lift elist @@ sqr_parens content
+  parens self <|> lift elist @@ sqr_parens @@ content
 ;;
 
 let parse_tuple pack =
@@ -638,7 +635,7 @@ let parse_declaration pack =
       ]
   in
   let helper constr =
-    lift2
+    lift3
       constr
       parse_uncapitalized_name
       (many parse_pattern
@@ -650,11 +647,12 @@ let parse_declaration pack =
        match List.rev args with
        | h :: tl -> return @@ List.fold_left (fun acc x -> efun x acc) (efun h expr) tl
        | _ -> return expr)
+      (return None)
   in
   skip_wspace *> string "let" *> skip_wspace1 *> option "" (string "rec" <* skip_wspace1)
   >>= function
-  | "rec" -> helper drec_declaration
-  | _ -> helper ddeclaration
+  | "rec" -> helper erec_declaration
+  | _ -> helper edeclaration
 ;;
 
 let parse_let_in pack =
@@ -694,12 +692,12 @@ let parse_let_in pack =
        match List.rev args with
        | h :: tl -> return @@ List.fold_left (fun acc x -> efun x acc) (efun h expr) tl
        | _ -> return expr)
-      (skip_wspace *> string "in" *> parse_expr)
+      (skip_wspace *> string "in" *> parse_expr >>| fun e -> Some e)
   in
   skip_wspace *> string "let" *> skip_wspace1 *> option "" (string "rec" <* skip_wspace1)
   >>= function
-  | "rec" -> helper erec_let_in
-  | _ -> helper elet_in
+  | "rec" -> helper erec_declaration
+  | _ -> helper edeclaration
 ;;
 
 let parse_application pack =
@@ -794,37 +792,29 @@ let default =
   }
 ;;
 
-let expr_parsers input =
-  let helper =
-    choice
-      [ parse_let_in input
-      ; parse_bin_op input
-      ; parse_un_op input
-      ; parse_list input
-      ; parse_list_cons input
-      ; parse_tuple input
-      ; parse_application input
-      ; parse_fun input
-      ; parse_match_with input
-      ; parse_try_with input
-      ; parse_if_then_else input
-      ; parse_effect_without_arguments
-      ; parse_effect_with_arguments input
-      ; parse_perform input
-      ; parse_continue input
-      ; parse_ident
-      ; parse_const
-      ]
-  in
-  lift sexpression helper
+let parsers input =
+  choice
+    [ parse_let_in input
+    ; parse_declaration input
+    ; parse_bin_op input
+    ; parse_un_op input
+    ; parse_list input
+    ; parse_list_cons input
+    ; parse_tuple input
+    ; parse_application input
+    ; parse_fun input
+    ; parse_match_with input
+    ; parse_try_with input
+    ; parse_if_then_else input
+    ; parse_effect_without_arguments
+    ; parse_effect_with_arguments input
+    ; parse_perform input
+    ; parse_continue input
+    ; parse_ident
+    ; parse_const
+    ; parse_effect_declaration
+    ]
 ;;
-
-let decl_parsers input =
-  let helper = choice [ parse_declaration input; parse_effect_declaration ] in
-  lift sdeclaration helper
-;;
-
-let parsers input = expr_parsers input <|> decl_parsers input
 
 let parse input =
   let del = (skip_wspace *> string ";;" *> skip_wspace <|> skip_wspace) *> skip_wspace in

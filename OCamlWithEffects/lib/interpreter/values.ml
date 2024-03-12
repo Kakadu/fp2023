@@ -26,7 +26,7 @@ type value =
 and enviroment = (string, value, Base.String.comparator_witness) Base.Map.t
 
 (* Handlers contain effect handlers for effects that may occur in a given trywith block. *)
-type handlers =
+and handlers =
   (string, pattern * expr * continue_val, Base.String.comparator_witness) Base.Map.t
 
 (* Constructors for values *)

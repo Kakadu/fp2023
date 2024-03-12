@@ -1,4 +1,4 @@
-  $ ./demo.exe << EOF
+  $ dune exec demo << EOF
   > 
   > effect NotDigit: char -> int effect
   > 

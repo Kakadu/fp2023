@@ -1,4 +1,4 @@
-  $ ./demo.exe << EOF
+  $ dune exec demo << EOF
   > 
   > let rec fold_left f acc l = 
   >   match l with
@@ -26,8 +26,8 @@
   > let abs_result = replace_negatives [-1 ; 5 ; -4 ; 3 ; -6 ; -(-(+2)) ; 0]
   > 
   > EOF
-  val fold_left : ('a -> 'b -> 'a) -> 'a -> 'b list -> 'a = <fun>
-  val reverse : 'a list -> 'a list = <fun>
+  val fold_left : ('l -> 'f -> 'l) -> 'l -> 'f list -> 'l = <fun>
+  val reverse : 't list -> 't list = <fun>
   val lst : int list = [1; 2; 3; 4; 5]
   val reverse_res : int list = [5; 4; 3; 2; 1]
   val abs_if_negative : int -> int = <fun>

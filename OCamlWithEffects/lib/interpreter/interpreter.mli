@@ -20,7 +20,7 @@ val run_expr_interpreter
        result
 
 val run_program_interpreter
-  :  struct_item list
+  :  expr list
   -> ( (id, value, Base.String.comparator_witness) Base.Map.t
        , [> `Division_by_zero
          | `Handler_without_continue of id

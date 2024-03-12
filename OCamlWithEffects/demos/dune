@@ -9,4 +9,4 @@
   (backend bisect_ppx)))
 
 (cram
- (deps ./demo.exe))
+ (deps %{bin:demo}))

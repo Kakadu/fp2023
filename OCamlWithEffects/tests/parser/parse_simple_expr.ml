@@ -10,9 +10,8 @@ let%expect_test _ =
   parse_with_print {| 1 + 5 * 3 |};
   [%expect
     {|
-    [(SExpression
-        (EBinaryOperation (Add, (EConst (Int 1)),
-           (EBinaryOperation (Mul, (EConst (Int 5)), (EConst (Int 3)))))))
+    [(EBinaryOperation (Add, (EConst (Int 1)),
+        (EBinaryOperation (Mul, (EConst (Int 5)), (EConst (Int 3))))))
       ] |}]
 ;;
 
@@ -20,11 +19,10 @@ let%expect_test _ =
   parse_with_print {| 1 * (+5) / (-3) |};
   [%expect
     {|
-    [(SExpression
-        (EBinaryOperation (Div,
-           (EBinaryOperation (Mul, (EConst (Int 1)),
-              (EUnaryOperation (Plus, (EConst (Int 5)))))),
-           (EUnaryOperation (Minus, (EConst (Int 3)))))))
+    [(EBinaryOperation (Div,
+        (EBinaryOperation (Mul, (EConst (Int 1)),
+           (EUnaryOperation (Plus, (EConst (Int 5)))))),
+        (EUnaryOperation (Minus, (EConst (Int 3))))))
       ] |}]
 ;;
 
@@ -35,23 +33,21 @@ let%expect_test _ =
 let%expect_test _ =
   parse_with_print {| -1 |};
   [%expect {|
-    [(SExpression (EUnaryOperation (Minus, (EConst (Int 1)))))] |}]
+    [(EUnaryOperation (Minus, (EConst (Int 1))))] |}]
 ;;
 
 let%expect_test _ =
   parse_with_print {| not true |};
   [%expect {|
-    [(SExpression (EUnaryOperation (Not, (EConst (Bool true)))))] |}]
+    [(EUnaryOperation (Not, (EConst (Bool true))))] |}]
 ;;
 
 let%expect_test _ =
   parse_with_print {| +(-(+3)) |};
   [%expect
     {|
-    [(SExpression
-        (EUnaryOperation (Plus,
-           (EUnaryOperation (Minus, (EUnaryOperation (Plus, (EConst (Int 3))))))
-           )))
+    [(EUnaryOperation (Plus,
+        (EUnaryOperation (Minus, (EUnaryOperation (Plus, (EConst (Int 3))))))))
       ] |}]
 ;;
 
@@ -63,13 +59,12 @@ let%expect_test _ =
   parse_with_print {| if false || true && not false then "Yes" else "No" |};
   [%expect
     {|
-    [(SExpression
-        (EIfThenElse (
-           (EBinaryOperation (Or, (EConst (Bool false)),
-              (EBinaryOperation (And, (EConst (Bool true)),
-                 (EUnaryOperation (Not, (EConst (Bool false))))))
-              )),
-           (EConst (String "Yes")), (EConst (String "No")))))
+    [(EIfThenElse (
+        (EBinaryOperation (Or, (EConst (Bool false)),
+           (EBinaryOperation (And, (EConst (Bool true)),
+              (EUnaryOperation (Not, (EConst (Bool false))))))
+           )),
+        (EConst (String "Yes")), (EConst (String "No"))))
       ] |}]
 ;;
 

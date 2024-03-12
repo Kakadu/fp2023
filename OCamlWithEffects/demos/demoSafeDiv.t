@@ -1,5 +1,5 @@
 # If the denominator is equal to zero, we consider the expression equal to zero.
-  $ ./demo.exe << EOF
+  $ dune exec demo << EOF
   > 
   > effect DevisionByZero : int effect ;;
   > 

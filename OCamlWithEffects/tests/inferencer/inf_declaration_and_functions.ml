@@ -38,7 +38,7 @@ let%expect_test _ =
     let f = f 5
   |};
   [%expect {|
-    val g : 'a -> 'a
+    val g : 'c -> 'c
     val f : int |}]
 ;;
 

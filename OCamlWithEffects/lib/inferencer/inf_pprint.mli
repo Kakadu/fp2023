@@ -10,6 +10,7 @@ val print_inferencer_error
      | `Handler_without_effect
      | `Not_effect_with_args of string
      | `Not_effect_without_args of string
+     | `Not_reachable
      | `Occurs_check
      | `Perform_with_no_effect
      | `Several_bounds of string

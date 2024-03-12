@@ -1,6 +1,6 @@
 # An simulated example that is intended only to demonstrate how you can work with effects with complex types.
 # Doesn't carry any special meaning.
-  $ ./demo.exe << EOF
+  $ dune exec demo << EOF
   > 
   > effect E : (int list -> int) -> int effect
   > ;;
@@ -13,9 +13,9 @@
   >   in helper 0 lt
   > ;;
   > 
-  > let list_sum_with_effect int_list =
+  > let list_sum_with_effect int_list = 
   >   try perform E list_sum with
-  >   | (E f) k ->
+  >   | (E f) k -> 
   >     let res = f int_list in
   >     continue k res
   > ;;
@@ -26,12 +26,6 @@
   > EOF
   val E : (int list -> int) -> int effect = <effect>
   val list_sum : int list -> int = <fun>
-  val list_sum_with_effect : 'a -> int = <fun>
+  val list_sum_with_effect : 'n -> int = <fun>
   val result1 : int = 15
   val result2 : int = 5
-  $ ./demo.exe <<-EOF
-  >  effect E: int effect;;
-  >  let exp = try perform E with
-  >    | E k -> continue k 10 + continue k 10;;
-  > EOF
-  Type error: unification failed - type continuation int does not match expected type int

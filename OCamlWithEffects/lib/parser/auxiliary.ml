@@ -8,21 +8,27 @@ open Angstrom
 (* Determinant of the type of a steamed expression *)
 
 type ast_type =
-  | DeclarationList (* [SDeclaration (...) ; SDeclaration (...) ; SDeclaration (...)] *)
-  | MixedList (* [SDeclaration (...) ; SExpression (...)]*)
-  | FreeExpression (* SExpression (...) *)
+  | DeclarationList
+    (* [EDeclaration(...), ERecDeclaration(...), EFfectDeclaration(...)] *)
+  | MixedList (* [EDeclaration(...), EBinaryOperation(...)]*)
+  | FreeExpression (* UnaryOperation(...) *)
 
 (* This function, given an ast, determines whether ast is a program (a list of declarations),
    a free expression, or a list containing arbitrary expressions. *)
 let determine_ast_type ast =
   match ast with
-  | [ SExpression _ ] -> FreeExpression
+  | [ expr ] ->
+    (match expr with
+     | EDeclaration (_, _, None) | ERecDeclaration (_, _, None) | EEffectDeclaration _ ->
+       DeclarationList
+     | _ -> FreeExpression)
   | _ ->
     let rec helper = function
       | [] -> DeclarationList
       | hd :: tl ->
         (match hd with
-         | SDeclaration _ -> helper tl
+         | EDeclaration (_, _, None) | ERecDeclaration (_, _, None) | EEffectDeclaration _
+           -> helper tl
          | _ -> MixedList)
     in
     helper ast
@@ -100,31 +106,21 @@ let etuple cont = ETuple cont
 let eidentifier x = EIdentifier x
 let eapplication f x = EApplication (f, x)
 let efun var expression = EFun (var, expression)
-let elet_in func_name expression exp_in = ELetIn (func_name, expression, exp_in)
-let erec_let_in func_name expression exp_in = ERecLetIn (func_name, expression, exp_in)
+let edeclaration func_name expression exp_in = EDeclaration (func_name, expression, exp_in)
+
+let erec_declaration func_name expression exp_in =
+  ERecDeclaration (func_name, expression, exp_in)
+;;
+
 let eif_then_else condition true_b false_b = EIfThenElse (condition, true_b, false_b)
 let ematch_with expression cases = EMatchWith (expression, cases)
 let etry_with expression handlers = ETryWith (expression, handlers)
 let eeffect_without_arguments name = EEffectWithoutArguments name
 let eefect_with_arguments name arg = EEffectWithArguments (name, arg)
+let eeffect_declaration name typ = EEffectDeclaration (name, typ)
 let eeffect_perform expr = EEffectPerform expr
 let eeffect_continue cont expr = EEffectContinue (cont, expr)
 let econt_val n = Continue n
-
-(* ---------------- *)
-
-(* Constructors for declarations *)
-
-let ddeclaration func_name expression = DDeclaration (func_name, expression)
-let drec_declaration func_name expression = DRecDeclaration (func_name, expression)
-let deffect_declaration name typ = DEffectDeclaration (name, typ)
-
-(* ---------------- *)
-
-(* Constructors for structure items *)
-
-let sdeclaration decl = SDeclaration decl
-let sexpression expr = SExpression expr
 
 (* ---------------- *)
 

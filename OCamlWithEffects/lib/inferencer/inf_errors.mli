@@ -11,6 +11,7 @@ type error =
   | `Unification_failed of typ * typ (* Castable types are not compatible. *)
   | `Unbound_variable of id (* An undeclared variable is used. *)
   | `Unbound_effect of id (* An undeclared effect is used. *)
+  | `Not_reachable (* Sections of code that will never be reached. *)
   | `Several_bounds of id (* A type variable is assigned more than one constraint. *)
   | `Wrong_effect_typ of id * typ (* The effect type in the ad is not an effect. *)
   | `Not_effect_with_args of

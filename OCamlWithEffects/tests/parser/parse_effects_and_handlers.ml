@@ -9,7 +9,7 @@ let%expect_test _ =
     effect E1 : int -> int effect
   |};
   [%expect {|
-    [(SDeclaration (DEffectDeclaration ("E1", (AArrow (AInt, (AEffect AInt))))))] |}]
+    [(EEffectDeclaration ("E1", (AArrow (AInt, (AEffect AInt)))))] |}]
 ;;
 
 let%expect_test _ =
@@ -26,9 +26,8 @@ let%expect_test _ =
   |};
   [%expect
     {|
-    [(SDeclaration
-        (DEffectDeclaration ("E1",
-           (AArrow ((AArrow (AInt, AInt)), (AEffect AInt))))))
+    [(EEffectDeclaration ("E1", (AArrow ((AArrow (AInt, AInt)), (AEffect AInt)))
+        ))
       ] |}]
 ;;
 
@@ -39,21 +38,20 @@ let%expect_test _ =
   |};
   [%expect
     {|
-    [(SDeclaration
-        (DEffectDeclaration ("E1",
-           (AArrow (
-              (AArrow (AInt,
-                 (AArrow ((AArrow (ABool, ABool)),
-                    (AArrow (ABool,
-                       (AArrow (
-                          (AArrow (AString,
-                             (AArrow ((AArrow (AChar, ABool)), AString)))),
-                          AString))
-                       ))
+    [(EEffectDeclaration ("E1",
+        (AArrow (
+           (AArrow (AInt,
+              (AArrow ((AArrow (ABool, ABool)),
+                 (AArrow (ABool,
+                    (AArrow (
+                       (AArrow (AString,
+                          (AArrow ((AArrow (AChar, ABool)), AString)))),
+                       AString))
                     ))
-                 )),
-              (AEffect ABool)))
-           )))
+                 ))
+              )),
+           (AEffect ABool)))
+        ))
       ] |}]
 ;;
 
@@ -63,10 +61,8 @@ let%expect_test _ =
   |};
   [%expect
     {|
-    [(SDeclaration
-        (DEffectDeclaration ("E1",
-           (AEffect (AArrow (AInt, (AArrow ((AArrow (AChar, ABool)), AString)))))
-           )))
+    [(EEffectDeclaration ("E1",
+        (AEffect (AArrow (AInt, (AArrow ((AArrow (AChar, ABool)), AString)))))))
       ] |}]
 ;;
 
@@ -77,13 +73,11 @@ let%expect_test _ =
   |};
   [%expect
     {|
-    [(SDeclaration
-        (DEffectDeclaration ("E1",
-           (AArrow ((AArrow (AInt, (AArrow (AString, AChar)))),
-              (AEffect
-                 (AArrow (AInt, (AArrow ((AArrow (AChar, ABool)), AString)))))
-              ))
-           )))
+    [(EEffectDeclaration ("E1",
+        (AArrow ((AArrow (AInt, (AArrow (AString, AChar)))),
+           (AEffect (AArrow (AInt, (AArrow ((AArrow (AChar, ABool)), AString)))))
+           ))
+        ))
       ] |}]
 ;;
 
@@ -106,11 +100,9 @@ let%expect_test _ =
   |};
   [%expect
     {|
-    [(SDeclaration
-        (DDeclaration ("f1", (EEffectPerform (EEffectWithoutArguments "E")))));
-      (SDeclaration
-         (DDeclaration ("f2",
-            (EEffectPerform (EEffectWithArguments ("E", (EIdentifier "x")))))))
+    [(EDeclaration ("f1", (EEffectPerform (EEffectWithoutArguments "E")), None));
+      (EDeclaration ("f2",
+         (EEffectPerform (EEffectWithArguments ("E", (EIdentifier "x")))), None))
       ] |}]
 ;;
 
@@ -130,26 +122,24 @@ let%expect_test _ =
   |};
   [%expect
     {|
-    [(SDeclaration (DEffectDeclaration ("E1", (AArrow (AInt, (AEffect AInt))))));
-      (SDeclaration (DEffectDeclaration ("E2", (AArrow (AInt, (AEffect AInt))))));
-      (SDeclaration
-         (DDeclaration ("f",
-            (EFun ((PVal "x"),
-               (ETryWith ((EIdentifier "x"),
-                  [(EffectHandler ((PEffectWithoutArguments "E1"),
-                      (EEffectContinue ((Continue "k"), (EConst (Int 0)))),
-                      (Continue "k")));
-                    (EffectHandler ((PEffectWithoutArguments "E2"),
-                       (EEffectContinue ((Continue "k"), (EConst (Int 5)))),
-                       (Continue "k")))
-                    ]
-                  ))
+    [(EEffectDeclaration ("E1", (AArrow (AInt, (AEffect AInt)))));
+      (EEffectDeclaration ("E2", (AArrow (AInt, (AEffect AInt)))));
+      (EDeclaration ("f",
+         (EFun ((PVal "x"),
+            (ETryWith ((EIdentifier "x"),
+               [(EffectHandler ((PEffectWithoutArguments "E1"),
+                   (EEffectContinue ((Continue "k"), (EConst (Int 0)))),
+                   (Continue "k")));
+                 (EffectHandler ((PEffectWithoutArguments "E2"),
+                    (EEffectContinue ((Continue "k"), (EConst (Int 5)))),
+                    (Continue "k")))
+                 ]
                ))
-            )));
-      (SExpression
-         (ELetIn ("res",
-            (EApplication ((EIdentifier "f"),
-               (EEffectPerform (EEffectWithoutArguments "E1")))),
-            (EIdentifier "res"))))
+            )),
+         None));
+      (EDeclaration ("res",
+         (EApplication ((EIdentifier "f"),
+            (EEffectPerform (EEffectWithoutArguments "E1")))),
+         (Some (EIdentifier "res"))))
       ] |}]
 ;;
