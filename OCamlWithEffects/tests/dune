@@ -1,0 +1,8 @@
+(library
+ (name tests)
+ (libraries ocaml_with_effects_lib)
+ (inline_tests)
+ (preprocess
+  (pps ppx_expect ppx_deriving.show))
+ (instrumentation
+  (backend bisect_ppx)))
