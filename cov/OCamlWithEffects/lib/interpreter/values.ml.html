@@ -153,25 +153,25 @@ type value =
 and enviroment = (string, value, Base.String.comparator_witness) Base.Map.t
 
 (* Handlers contain effect handlers for effects that may occur in a given trywith block. *)
-type handlers =
+and handlers =
   (string, pattern * expr * continue_val, Base.String.comparator_witness) Base.Map.t
 
 (* Constructors for values *)
 
-let vint c = <span data-count="522">V</span>Int c
-let vbool c = <span data-count="276">V</span>Bool c
+let vint c = <span data-count="456">V</span>Int c
+let vbool c = <span data-count="258">V</span>Bool c
 let vchar c = <span data-count="39">V</span>Char c
 let vstring c = <span data-count="17">V</span>String c
 let vunit = VUnit
-let vtuple l = <span data-count="15">V</span>Tuple l
+let vtuple l = <span data-count="14">V</span>Tuple l
 let vlist l = <span data-count="68">V</span>List l
-let vfun pat exp env = <span data-count="174">V</span>Fun (pat, exp, env)
-let vrecfun ident v = <span data-count="15">V</span>RecFun (ident, v)
-let veffect_declaration n = <span data-count="16">V</span>EffectDeclaration n
-let veffect_with_arguments n a = <span data-count="17">V</span>EffectWithArguments (n, a)
+let vfun pat exp env = <span data-count="127">V</span>Fun (pat, exp, env)
+let vrecfun ident v = <span data-count="13">V</span>RecFun (ident, v)
+let veffect_declaration n = <span data-count="15">V</span>EffectDeclaration n
+let veffect_with_arguments n a = <span data-count="15">V</span>EffectWithArguments (n, a)
 let veffect_without_arguments n = <span data-count="5">V</span>EffectWithoutArguments n
-let veffect_continue k = <span data-count="18">V</span>EffectContinue k
-let vthrowing_value v = <span data-count="18">V</span>ThrowingValue v
+let veffect_continue k = <span data-count="16">V</span>EffectContinue k
+let vthrowing_value v = <span data-count="16">V</span>ThrowingValue v
 
 (* ---------------- *)
 </code></pre>

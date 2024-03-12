@@ -240,10 +240,10 @@ let%expect_test _ =
     |};
   <span data-count="1">[</span>%expect
     {|
-    val list_map : ('a -&gt; 'b) -&gt; 'c list -&gt; 'd list = &lt;fun&gt;
+    val list_map : ('e -&gt; 'f) -&gt; 'm list -&gt; 'n list = &lt;fun&gt;
     val increment : int -&gt; int = &lt;fun&gt;
     val test_list : int list = [2; 4; 5; 3; 6; 3]
-    val res : 'a list = [3; 5; 6; 4; 7; 4] |}<span data-count="15">]</span>
+    val res : 'n list = [3; 5; 6; 4; 7; 4] |}<span data-count="15">]</span>
 ;;
 
 let%expect_test _ =
