@@ -1,0 +1,16 @@
+(library
+ (name inf_tests)
+ (modules
+  Inf_complex_expr
+  Inf_declaration_and_functions
+  Inf_effects_and_handlers
+  Inf_list_and_tuple
+  Inf_pattern_matching
+  Inf_polymorphysm
+  Inf_simple_expr)
+ (libraries ocaml_with_effects_lib)
+ (inline_tests)
+ (preprocess
+  (pps ppx_expect ppx_deriving.show))
+ (instrumentation
+  (backend bisect_ppx)))

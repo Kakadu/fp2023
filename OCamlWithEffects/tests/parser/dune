@@ -1,0 +1,15 @@
+(library
+ (name parser_tests)
+ (modules
+  Parse_complex_expr
+  Parse_declaration_and_functions
+  Parse_effects_and_handlers
+  Parse_list_and_tuple
+  Parse_pattern_matching
+  Parse_simple_expr)
+ (libraries ocaml_with_effects_lib)
+ (inline_tests)
+ (preprocess
+  (pps ppx_expect ppx_deriving.show))
+ (instrumentation
+  (backend bisect_ppx)))

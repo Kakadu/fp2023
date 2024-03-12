@@ -1,10 +1,12 @@
 (executable
- (name demoFact)
- (modules demoFact)
- (public_name demoFact)
- (libraries OCamlWithEffects.Lib)
+ (name demo)
+ (public_name demo)
+ (modules demo)
+ (libraries ocaml_with_effects_lib stdio)
+ (preprocess
+  (pps ppx_show ppx_deriving.eq))
  (instrumentation
   (backend bisect_ppx)))
 
 (cram
- (deps %{bin:demoFact}))
+ (deps ./demo.exe))
