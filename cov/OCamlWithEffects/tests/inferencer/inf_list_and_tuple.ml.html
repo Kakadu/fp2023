@@ -254,7 +254,7 @@ let%expect_test _ =
   <span data-count="1">i</span>nference {| 
       (1, (1,'a'), "name", 'a', true :: false :: [])
     |};
-  <span data-count="1">[</span>%expect {| - : int * int * char * string * char * bool list |}<span data-count="17">]</span>
+  <span data-count="1">[</span>%expect {| - : int * (int * char) * string * char * bool list |}<span data-count="17">]</span>
 ;;
 
 (* ---------------- *)

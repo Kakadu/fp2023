@@ -18,8 +18,8 @@
       <h2>92.98%</h2>
     </div>
     <div id="navbar">
-      <span class="unvisited" style="bottom:49.04%"></span>
-      <span class="unvisited" style="bottom:5.77%"></span>
+      <span class="unvisited" style="bottom:48.54%"></span>
+      <span class="unvisited" style="bottom:5.83%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -40,10 +40,10 @@
 <a id="L14"></a><span > </span>
 <a id="L15"></a><span > </span>
 <a id="L16"></a><span > </span>
-<a id="L17"></a><span class="visited"> </span>
+<a id="L17"></a><span > </span>
 <a id="L18"></a><span class="visited"> </span>
 <a id="L19"></a><span class="visited"> </span>
-<a id="L20"></a><span > </span>
+<a id="L20"></a><span class="visited"> </span>
 <a id="L21"></a><span > </span>
 <a id="L22"></a><span > </span>
 <a id="L23"></a><span > </span>
@@ -86,48 +86,47 @@
 <a id="L60"></a><span > </span>
 <a id="L61"></a><span > </span>
 <a id="L62"></a><span > </span>
-<a id="L63"></a><span > </span>
-<a id="L64"></a><span class="visited"> </span>
-<a id="L65"></a><span > </span>
-<a id="L66"></a><span class="visited"> </span>
-<a id="L67"></a><span > </span>
+<a id="L63"></a><span class="visited"> </span>
+<a id="L64"></a><span > </span>
+<a id="L65"></a><span class="visited"> </span>
+<a id="L66"></a><span > </span>
+<a id="L67"></a><span class="visited"> </span>
 <a id="L68"></a><span class="visited"> </span>
 <a id="L69"></a><span class="visited"> </span>
-<a id="L70"></a><span class="visited"> </span>
+<a id="L70"></a><span > </span>
 <a id="L71"></a><span > </span>
 <a id="L72"></a><span > </span>
 <a id="L73"></a><span > </span>
 <a id="L74"></a><span > </span>
 <a id="L75"></a><span > </span>
-<a id="L76"></a><span > </span>
-<a id="L77"></a><span class="visited"> </span>
-<a id="L78"></a><span > </span>
-<a id="L79"></a><span class="visited"> </span>
-<a id="L80"></a><span > </span>
+<a id="L76"></a><span class="visited"> </span>
+<a id="L77"></a><span > </span>
+<a id="L78"></a><span class="visited"> </span>
+<a id="L79"></a><span > </span>
+<a id="L80"></a><span class="visited"> </span>
 <a id="L81"></a><span class="visited"> </span>
 <a id="L82"></a><span class="visited"> </span>
-<a id="L83"></a><span class="visited"> </span>
+<a id="L83"></a><span > </span>
 <a id="L84"></a><span > </span>
 <a id="L85"></a><span > </span>
 <a id="L86"></a><span > </span>
 <a id="L87"></a><span > </span>
 <a id="L88"></a><span > </span>
-<a id="L89"></a><span > </span>
+<a id="L89"></a><span class="visited"> </span>
 <a id="L90"></a><span class="visited"> </span>
-<a id="L91"></a><span class="visited"> </span>
-<a id="L92"></a><span > </span>
-<a id="L93"></a><span class="visited"> </span>
-<a id="L94"></a><span > </span>
-<a id="L95"></a><span class="visited"> </span>
-<a id="L96"></a><span > </span>
-<a id="L97"></a><span class="visited"> </span>
-<a id="L98"></a><span class="unvisited"> </span>
+<a id="L91"></a><span > </span>
+<a id="L92"></a><span class="visited"> </span>
+<a id="L93"></a><span > </span>
+<a id="L94"></a><span class="visited"> </span>
+<a id="L95"></a><span > </span>
+<a id="L96"></a><span class="visited"> </span>
+<a id="L97"></a><span class="unvisited"> </span>
+<a id="L98"></a><span class="visited"> </span>
 <a id="L99"></a><span class="visited"> </span>
 <a id="L100"></a><span class="visited"> </span>
-<a id="L101"></a><span class="visited"> </span>
+<a id="L101"></a><span > </span>
 <a id="L102"></a><span > </span>
 <a id="L103"></a><span > </span>
-<a id="L104"></a><span > </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -235,12 +234,12 @@
 <a href="#L101">101</a>
 <a href="#L102">102</a>
 <a href="#L103">103</a>
-<a href="#L104">104</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2021-2024, DmitryPilyuk and raf-nr *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
+open Ast
 open Auxiliary
 open Parser
 open Parser_errors
@@ -259,8 +258,7 @@ let parse_with_print code =
 ;;
 
 let inference_program ast =
-  (* Here AST is a list of expressions like
-     EDeclaration(_,_,None), ERecDeclaration(_,_,None), EEffectDeclaration _. *)
+  (* Here AST is a list of SDeclarations. *)
   <span data-count="67">l</span>et typ =
     match run_program_inferencer ast with
     | <span data-count="42">O</span>k (env, names_list) -&gt; print_program_typ<span data-count="42">e</span> env names_list
@@ -288,7 +286,7 @@ let inference program =
       (match determine_ast_type ast with
        | <span data-count="10">F</span>reeExpression -&gt;
          (match ast with
-          | <span data-count="10">[</span> x ] -&gt; inference_exp<span data-count="10">r</span> x
+          | <span data-count="10">[</span> SExpression e ] -&gt; inference_exp<span data-count="10">r</span> e
           | <span data-count="0">_</span> -&gt; print_parser_erro<span data-count="0">r</span> syntax_error)
        | <span data-count="66">D</span>eclarationList -&gt; inference_progra<span data-count="66">m</span> ast
        | <span data-count="1">M</span>ixedList -&gt; print_parser_erro<span data-count="1">r</span> syntax_error)
@@ -298,15 +296,14 @@ let inference program =
 ;;
 
 let interpret_program ast =
-  (* Here AST is a list of expressions like
-     EDeclaration(_,_,None), ERecDeclaration(_,_,None), EEffectDeclaration _. *)
-  <span data-count="33">l</span>et res =
+  (* Here AST is a list of SDeclarations. *)
+  <span data-count="35">l</span>et res =
     match run_program_inferencer ast with
-    | <span data-count="30">O</span>k (typ_env, names_list) -&gt;
+    | <span data-count="31">O</span>k (typ_env, names_list) -&gt;
       (match run_program_interpreter ast with
-       | <span data-count="27">O</span>k val_env -&gt; print_program_valu<span data-count="27">e</span> val_env typ_env names_list
+       | <span data-count="28">O</span>k val_env -&gt; print_program_valu<span data-count="28">e</span> val_env typ_env names_list
        | <span data-count="3">E</span>rror e -&gt; print_interpreter_erro<span data-count="3">r</span> e)
-    | <span data-count="3">E</span>rror e -&gt; print_inferencer_erro<span data-count="3">r</span> e
+    | <span data-count="4">E</span>rror e -&gt; print_inferencer_erro<span data-count="4">r</span> e
   in
   res
 ;;
@@ -326,16 +323,16 @@ let interpret_expr ast =
 
 let interpret program =
   (* Main function for inference + interpret. *)
-  <span data-count="67">l</span>et ast = parse program in
-  <span data-count="67">l</span>et res =
+  <span data-count="69">l</span>et ast = parse program in
+  <span data-count="69">l</span>et res =
     match ast with
-    | <span data-count="66">O</span>k ast -&gt;
+    | <span data-count="68">O</span>k ast -&gt;
       (match determine_ast_type ast with
        | <span data-count="34">F</span>reeExpression -&gt;
          (match ast with
-          | <span data-count="34">[</span> x ] -&gt; interpret_exp<span data-count="34">r</span> x
+          | <span data-count="34">[</span> SExpression x ] -&gt; interpret_exp<span data-count="34">r</span> x
           | <span data-count="0">_</span> -&gt; print_parser_erro<span data-count="0">r</span> syntax_error)
-       | <span data-count="31">D</span>eclarationList -&gt; interpret_progra<span data-count="31">m</span> ast
+       | <span data-count="33">D</span>eclarationList -&gt; interpret_progra<span data-count="33">m</span> ast
        | <span data-count="1">M</span>ixedList -&gt; print_parser_erro<span data-count="1">r</span> syntax_error)
     | <span data-count="1">E</span>rror _ -&gt; print_parser_erro<span data-count="1">r</span> syntax_error
   in

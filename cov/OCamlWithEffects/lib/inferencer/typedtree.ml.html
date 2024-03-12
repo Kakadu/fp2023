@@ -18,12 +18,12 @@
       <h2>50.00%</h2>
     </div>
     <div id="navbar">
-      <span class="unvisited" style="top:14.58%"></span>
-      <span class="unvisited" style="top:16.67%"></span>
-      <span class="unvisited" style="top:18.75%"></span>
-      <span class="unvisited" style="top:20.83%"></span>
-      <span class="unvisited" style="top:22.92%"></span>
-      <span class="unvisited" style="top:25.00%"></span>
+      <span class="unvisited" style="top:14.29%"></span>
+      <span class="unvisited" style="top:16.33%"></span>
+      <span class="unvisited" style="top:18.37%"></span>
+      <span class="unvisited" style="top:20.41%"></span>
+      <span class="unvisited" style="top:22.45%"></span>
+      <span class="unvisited" style="top:24.49%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -67,15 +67,16 @@
 <a id="L37"></a><span > </span>
 <a id="L38"></a><span > </span>
 <a id="L39"></a><span > </span>
-<a id="L40"></a><span class="visited"> </span>
+<a id="L40"></a><span > </span>
 <a id="L41"></a><span class="visited"> </span>
 <a id="L42"></a><span class="visited"> </span>
 <a id="L43"></a><span class="visited"> </span>
 <a id="L44"></a><span class="visited"> </span>
-<a id="L45"></a><span > </span>
-<a id="L46"></a><span class="visited"> </span>
-<a id="L47"></a><span > </span>
+<a id="L45"></a><span class="visited"> </span>
+<a id="L46"></a><span > </span>
+<a id="L47"></a><span class="visited"> </span>
 <a id="L48"></a><span > </span>
+<a id="L49"></a><span > </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -128,6 +129,7 @@
 <a href="#L46">46</a>
 <a href="#L47">47</a>
 <a href="#L48">48</a>
+<a href="#L49">49</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2021-2024, DmitryPilyuk and raf-nr *)
 
@@ -151,7 +153,8 @@ type typ =
   | TList of typ (* 'a list *)
   | TEffect of typ (* 'a effect *)
   | TContinuePoint (* continue k 0 - here k type is continue point *)
-  | TContinuation of typ * typ (* expression 'continue k x' type is continuation *)
+  | TContinuation of
+      typ (* expression 'continue k x' type is continuation ; typ = x type *)
 
 module TVarSet = Stdlib.Set.Make (Int) (* Set, that storing type variables. *)
 module VarSet = Stdlib.Set.Make (String)
@@ -168,13 +171,13 @@ let tbool = TPrim Bool
 let tunit = TPrim Unit
 let tchar = TPrim Char
 let tstring = TPrim String
-let tvar x = <span data-count="2240">T</span>Var x
-let tarrow left right = <span data-count="1425">T</span>Arr (left, right)
-let ttuple x = <span data-count="195">T</span>Tuple x
-let tlist x = <span data-count="1255">T</span>List x
-let teffect x = <span data-count="74">T</span>Effect x
+let tvar x = <span data-count="2635">T</span>Var x
+let tarrow left right = <span data-count="1981">T</span>Arr (left, right)
+let ttuple x = <span data-count="232">T</span>Tuple x
+let tlist x = <span data-count="1304">T</span>List x
+let teffect x = <span data-count="113">T</span>Effect x
 let tcontinue_point = TContinuePoint
-let tcontinuation cont expr = <span data-count="14">T</span>Continuation (cont, expr)
+let tcontinuation expr = <span data-count="18">T</span>Continuation expr
 let ( @-&gt; ) = tarrow
 (* ---------------- *)
 </code></pre>

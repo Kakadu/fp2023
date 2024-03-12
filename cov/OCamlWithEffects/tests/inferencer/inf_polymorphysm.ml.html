@@ -100,17 +100,17 @@ let%expect_test _ =
 
 let%expect_test _ =
   <span data-count="1">i</span>nference {| let f g x y = g x y |};
-  <span data-count="1">[</span>%expect {| val f : ('b -&gt; 'c -&gt; 'e) -&gt; 'b -&gt; 'c -&gt; 'e |}<span data-count="17">]</span>
+  <span data-count="1">[</span>%expect {| val f : ('a -&gt; 'b -&gt; 'c) -&gt; 'a -&gt; 'b -&gt; 'c |}<span data-count="17">]</span>
 ;;
 
 let%expect_test _ =
   <span data-count="1">i</span>nference {| let f x y z= let id x = x in [id x; id y; id z] |};
-  <span data-count="1">[</span>%expect {| val f : 'e -&gt; 'e -&gt; 'e -&gt; 'e list |}<span data-count="17">]</span>
+  <span data-count="1">[</span>%expect {| val f : 'a -&gt; 'a -&gt; 'a -&gt; 'a list |}<span data-count="17">]</span>
 ;;
 
 let%expect_test _ =
   <span data-count="1">i</span>nference {| let f x = let helper a b = (a, b) in helper x |};
-  <span data-count="1">[</span>%expect {| val f : 'a -&gt; 'e -&gt; 'a * 'e |}<span data-count="17">]</span>
+  <span data-count="1">[</span>%expect {| val f : 'a -&gt; 'b -&gt; 'a * 'b |}<span data-count="17">]</span>
 ;;
 
 (* ---------------- *)
