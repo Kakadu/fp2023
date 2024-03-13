@@ -1,4 +1,20 @@
   $ ./demoInterpret.exe << EOF
+  > WITH 4 as four, 5 as five
+  > RETURN *, 4, 5
+  > EOF
+  ((0, 0), (0, 0),
+   [[("five", (OutConstant (Int64 5L))); ("four", (OutConstant (Int64 4L)));
+      ("4", (OutConstant (Int64 4L))); ("5", (OutConstant (Int64 5L)))]
+     ])
+  $ ./demoInterpret.exe << EOF
+  > WITH 4 as four, 5 as five
+  > RETURN 4, 5, four, five
+  > EOF
+  ((0, 0), (0, 0),
+   [[("4", (OutConstant (Int64 4L))); ("5", (OutConstant (Int64 5L)));
+      ("four", (OutConstant (Int64 4L))); ("five", (OutConstant (Int64 5L)))]
+     ])
+  $ ./demoInterpret.exe << EOF
   > CREATE
   > (charlie:Person {name: 'Charlie Sheen'}),
   > (martin:Person {name: 'Martin Sheen'}),

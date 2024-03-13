@@ -1,4 +1,24 @@
   $ ./demoParse.exe << EOF
+  > WITH 4 as four, 5 as five
+  > RETURN *, 4, 5
+  > EOF
+  (With (None, [((Const (Int64 4L)), "four"); ((Const (Int64 5L)), "five")],
+     [], [],
+     (Return ((Some All),
+        [((Const (Int64 4L)), None); ((Const (Int64 5L)), None)], []))
+     ))
+  $ ./demoParse.exe << EOF
+  > WITH 4 as four, 5 as five
+  > RETURN 4, 5, four, five
+  > EOF
+  (With (None, [((Const (Int64 4L)), "four"); ((Const (Int64 5L)), "five")],
+     [], [],
+     (Return (None,
+        [((Const (Int64 4L)), None); ((Const (Int64 5L)), None);
+          ((Var "four"), None); ((Var "five"), None)],
+        []))
+     ))
+  $ ./demoParse.exe << EOF
   > CREATE
   > (charlie:Person {name: 'Charlie Sheen'}),
   > (martin:Person {name: 'Martin Sheen'}),
