@@ -578,6 +578,7 @@ let request =
          ws
          (Return (s_opt, als, o_b))
   in
+  let r_opt = r >>= (fun r -> return @@ Some r) <|> return None in
   let c = many cwith >>= fun ws -> ccreate >>= fun ps -> return (C ps, ws) in
   let d =
     many cwith >>= fun ws -> cdelete >>= fun (attr, ns) -> return (D (attr, ns), ws)
@@ -585,9 +586,7 @@ let request =
   let cds =
     many (c <|> d)
     >>= fun cdwss ->
-    r
-    >>= (fun r -> return @@ Some r)
-    <|> return None
+    r_opt
     >>= fun r_opt ->
     return
     @@ List.fold_right
