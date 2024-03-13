@@ -3346,7 +3346,7 @@ type entity = int * NameSet.t * constant NameMap.t
 module Node = struct
   type t = entity
 
-  let compare (id1, _, _) (id2, _, _) = <span data-count="8845">i</span>d1 - id2
+  let compare (id1, _, _) (id2, _, _) = <span data-count="9125">i</span>d1 - id2
   let hash (id, _, _) = <span data-count="0">i</span>d
   let equal (id1, _, _) (id2, _, _) = <span data-count="2">i</span>d1 = id2
 end
@@ -3369,14 +3369,14 @@ type value =
   | Rel of G.edge
   | DeletedEntity of int
 
-<span data-count="1106">t</span>ype outvalue =
+<span data-count="1138">t</span>ype outvalue =
   | OutConstant of constant
   | OutNode of in<span data-count="36">t</span> * <span data-count="216">n</span>ame lis<span data-count="75">t</span> * <span data-count="219">(</span><span data-count="72">n</span>ame * constant) lis<span data-count="75">t</span>
   | OutRel of in<span data-count="24">t</span> * (<span data-count="72">i</span>n<span data-count="24">t</span> * <span data-count="141">n</span>ame lis<span data-count="48">t</span> * <span data-count="135">(</span><span data-count="42">n</span>ame * constant) lis<span data-count="72">t</span>) * <span data-count="24">i</span>n<span data-count="48">t</span>
-[@@deriving show { with_path = false }<span data-count="709">]</span>
+[@@deriving show { with_path = false }<span data-count="725">]</span>
 
-<span data-count="1156">t</span>ype output = <span data-count="200">(</span><span data-count="200">i</span>n<span data-count="100">t</span> * <span data-count="100">i</span>n<span data-count="200">t</span>) * (<span data-count="300">i</span>n<span data-count="100">t</span> * <span data-count="100">i</span>n<span data-count="300">t</span>) * <span data-count="1660">(</span><span data-count="428">n</span>ame * outvalue) lis<span data-count="214">t</span> lis<span data-count="252">t</span>
-[@@deriving show { with_path = false }<span data-count="1070">]</span>
+<span data-count="1194">t</span>ype output = <span data-count="204">(</span><span data-count="204">i</span>n<span data-count="102">t</span> * <span data-count="102">i</span>n<span data-count="204">t</span>) * (<span data-count="306">i</span>n<span data-count="102">t</span> * <span data-count="102">i</span>n<span data-count="306">t</span>) * <span data-count="1706">(</span><span data-count="444">n</span>ame * outvalue) lis<span data-count="222">t</span> lis<span data-count="256">t</span>
+[@@deriving show { with_path = false }<span data-count="1110">]</span>
 
 <span data-count="25">t</span>ype expr_error =
   | Type_mismatch
@@ -3399,7 +3399,7 @@ type value =
   | Interpreter_err of interpreter_error
 [@@deriving show { with_path = false }<span data-count="46">]</span>
 
-module type Monad = sig
+module type MonadAlt = sig
   type 'a t
 
   val return : 'a -&gt; 'a t
@@ -3407,23 +3407,23 @@ module type Monad = sig
   val ( &lt;|&gt; ) : 'a t -&gt; 'a t -&gt; 'a t
 end
 
-module type MonadError = sig
-  include Monad
+module type MonadAltError = sig
+  include MonadAlt
 
   type error
 
   val fail : error -&gt; 'a t
 end
 
-module type MonadErrorExpr = MonadError with type error = expr_error
-module type MonadErrorInterpreter = MonadError with type error = interpreter_error
-module type MonadErrorReq = MonadError with type error = req_error
+module type MonadAltErrorExpr = MonadAltError with type error = expr_error
+module type MonadAltErrorInterpreter = MonadAltError with type error = interpreter_error
+module type MonadAltErrorReq = MonadAltError with type error = req_error
 
-module Eval_expr (M : MonadErrorExpr) = struct
+module Eval_expr (M : MonadAltErrorExpr) = struct
   open M
 
   let eval_expr v_from_env p_from_env =
-    <span data-count="1307">l</span>et same v1 v2 =
+    <span data-count="1343">l</span>et same v1 v2 =
       <span data-count="4">m</span>atch v1, v2 with
       | <span data-count="0">C</span>onstant (Float c1), Constant (Float c2) -&gt; Float.( = ) c1 c2
       | <span data-count="0">C</span>onstant (Int64 c1), Constant (Int64 c2) -&gt; Int64.( = ) c1 c2
@@ -3444,8 +3444,8 @@ module Eval_expr (M : MonadErrorExpr) = struct
       | <span data-count="0">N</span>ull -&gt; ""
     in
     let rec helper = function
-      | <span data-count="1135">C</span>onst c -&gt; return @@ Constant c
-      | <span data-count="116">V</span>ar n -&gt; v_from_env n
+      | <span data-count="1169">C</span>onst c -&gt; return @@ Constant c
+      | <span data-count="118">V</span>ar n -&gt; v_from_env n
       | <span data-count="220">P</span>roperty (entity, p) -&gt; p_from_env (entity, p)
       | <span data-count="92">B</span>in_op (op, e1, e2) -&gt;
         let h f =
@@ -3628,7 +3628,7 @@ module Eval_expr (M : MonadErrorExpr) = struct
   ;;
 end
 
-module Expr (M : MonadErrorExpr) : sig
+module Expr (M : MonadAltErrorExpr) : sig
   open M
 
   val eval_e : value NameMap.t -&gt; expression -&gt; value t
@@ -3640,8 +3640,8 @@ end = struct
   let eval_expr = E.eval_expr
 
   let v_from_nm nm n =
-    <span data-count="120">m</span>atch NameMap.find_opt n nm with
-    | <span data-count="114">S</span>ome v -&gt; return v
+    <span data-count="122">m</span>atch NameMap.find_opt n nm with
+    | <span data-count="116">S</span>ome v -&gt; return v
     | <span data-count="6">N</span>one -&gt; fail @@ Undefined_id n
   ;;
 
@@ -3658,15 +3658,15 @@ end = struct
   ;;
 
   let p_from_nm2 nm1 nm2 ep = <span data-count="40">p</span>_from_n<span data-count="40">m</span> nm1 ep &lt;|&gt; p_from_n<span data-count="40">m</span> nm2 ep
-  let eval_e nm = <span data-count="1263">e</span>val_expr (v_from_n<span data-count="1263">m</span> nm) (p_from_n<span data-count="1263">m</span> nm)
+  let eval_e nm = <span data-count="1299">e</span>val_expr (v_from_n<span data-count="1299">m</span> nm) (p_from_n<span data-count="1299">m</span> nm)
   let eval_e2 nm1 nm2 = <span data-count="44">e</span>val_expr (v_from_nm<span data-count="44">2</span> nm1 nm2) (p_from_nm<span data-count="44">2</span> nm1 nm2)
 end
 
-module ExprResult : MonadErrorExpr with type 'a t = ('a, expr_error) Result.t = struct
+module ExprResult : MonadAltErrorExpr with type 'a t = ('a, expr_error) Result.t = struct
   type 'a t = ('a, expr_error) Result.t
   type error = expr_error
 
-  let return a = <span data-count="1789">O</span>k a
+  let return a = <span data-count="1825">O</span>k a
   let fail e = <span data-count="59">E</span>rror e
 
   let ( &gt;&gt;= ) r f =
@@ -3682,7 +3682,7 @@ module ExprResult : MonadErrorExpr with type 'a t = ('a, expr_error) Result.t = 
   ;;
 end
 
-module Interpreter (M : MonadErrorInterpreter) : sig
+module Interpreter (M : MonadAltErrorInterpreter) : sig
   open M
 
   val interpret_request : graph -&gt; clause -&gt; (graph * output) t
@@ -3691,7 +3691,7 @@ end = struct
   module E = Expr (ExprResult)
 
   let expression_to_name e =
-    <span data-count="181">l</span>et bin_op_to_name = function
+    <span data-count="187">l</span>et bin_op_to_name = function
       | <span data-count="3">C</span>ONTAINS -&gt; " CONTAINS "
       | <span data-count="1">S</span>TARTS_WITH -&gt; " STARTS_WITH "
       | <span data-count="1">E</span>NDS_WITH -&gt; " ENDS_WITH "
@@ -3714,16 +3714,16 @@ end = struct
       | <span data-count="1">G</span>Eq -&gt; " &gt;= "
     in
     let rec helper e =
-      <span data-count="289">m</span>atch e with
+      <span data-count="295">m</span>atch e with
       | <span data-count="18">C</span>onst (Float f) -&gt;
         if Stdlib.Float.is_integer f
         then <span data-count="3">I</span>nt64.to_string @@ Float.to_int6<span data-count="3">4</span> f
         else <span data-count="15">F</span>loat.to_string f
-      | <span data-count="31">C</span>onst (Int64 i) -&gt; Int64.to_string i
+      | <span data-count="35">C</span>onst (Int64 i) -&gt; Int64.to_string i
       | <span data-count="11">C</span>onst (String s) -&gt; {|"|} ^ s ^ {|"|}
       | <span data-count="4">C</span>onst (Bool b) -&gt; Bool.to_string b
       | <span data-count="19">C</span>onst Null -&gt; "&lt;null&gt;"
-      | <span data-count="76">V</span>ar n -&gt; n
+      | <span data-count="78">V</span>ar n -&gt; n
       | <span data-count="70">P</span>roperty (en, pr) -&gt; en ^ "." ^ pr
       | <span data-count="38">B</span>in_op (bop, e1, e2) -&gt; helpe<span data-count="38">r</span> e1 ^ bin_op_to_nam<span data-count="38">e</span> bop ^ helpe<span data-count="38">r</span> e2
       | <span data-count="3">U</span>n_op (Minus, e) -&gt; "- " ^ helpe<span data-count="3">r</span> e
@@ -3741,8 +3741,8 @@ end = struct
   ;;
 
   let eval_e nm e =
-    <span data-count="1263">m</span>atch E.eval_e nm e with
-    | <span data-count="1248">O</span>k v -&gt; return v
+    <span data-count="1299">m</span>atch E.eval_e nm e with
+    | <span data-count="1284">O</span>k v -&gt; return v
     | <span data-count="15">E</span>rror e -&gt; fail @@ Expr_err e
   ;;
 
@@ -3752,21 +3752,21 @@ end = struct
     | <span data-count="0">E</span>rror e -&gt; fail @@ Expr_err e
   ;;
 
-  let lreverse xs = <span data-count="783">L</span>ist.fold_left xs ~init:[] ~f:(fun acc x -&gt; <span data-count="977">x</span> :: acc)
+  let lreverse xs = <span data-count="804">L</span>ist.fold_left xs ~init:[] ~f:(fun acc x -&gt; <span data-count="1001">x</span> :: acc)
 
   let order_by ps ob =
-    <span data-count="93">l</span>et rec helper nm1 nm2 ob acc =
-      <span data-count="229">m</span>atch ob with
-      | <span data-count="147">[</span>] -&gt; return (lrevers<span data-count="147">e</span> acc)
+    <span data-count="97">l</span>et rec helper nm1 nm2 ob acc =
+      <span data-count="233">m</span>atch ob with
+      | <span data-count="151">[</span>] -&gt; return (lrevers<span data-count="151">e</span> acc)
       | <span data-count="41">(</span>[], _) :: ob -&gt; helper nm1 nm2 ob acc
       | <span data-count="41">(</span>e :: es, c) :: ob -&gt;
         eval_e<span data-count="41">2</span> nm1 nm2 e &gt;&gt;= fun v -&gt; <span data-count="41">h</span>elper nm1 nm2 ((es, c) :: ob) ((v, c) :: acc)
     in
     let rec ts_from_ps ps ts =
-      <span data-count="240">m</span>atch ps with
-      | <span data-count="93">[</span>] -&gt; return (lrevers<span data-count="93">e</span> ts)
-      | <span data-count="147">(</span>nm1, nm2) :: ps -&gt;
-        helpe<span data-count="147">r</span> nm1 nm2 ob [] &gt;&gt;= fun vs -&gt; <span data-count="147">t</span>s_from_ps ps ((nm1, nm2, vs) :: ts)
+      <span data-count="248">m</span>atch ps with
+      | <span data-count="97">[</span>] -&gt; return (lrevers<span data-count="97">e</span> ts)
+      | <span data-count="151">(</span>nm1, nm2) :: ps -&gt;
+        helpe<span data-count="151">r</span> nm1 nm2 ob [] &gt;&gt;= fun vs -&gt; <span data-count="151">t</span>s_from_ps ps ((nm1, nm2, vs) :: ts)
     in
     let cmp v1 v2 =
       <span data-count="56">m</span>atch v1, v2 with
@@ -3802,15 +3802,15 @@ end = struct
          | <span data-count="2">r</span> -&gt; r)
     in
     let ts_cmp (_, _, vcs1) (_, _, vcs2) = <span data-count="91">v</span>cs_cmp_helper vcs1 vcs2 in
-    ts_from_p<span data-count="93">s</span> ps []
+    ts_from_p<span data-count="97">s</span> ps []
     &gt;&gt;= fun ts -&gt;
-    <span data-count="93">r</span>eturn (List.ma<span data-count="93">p</span> (List.sor<span data-count="93">t</span> ts ~compare:ts_cmp) ~f:(fun (nm1, nm2, _) -&gt; <span data-count="147">n</span>m1, nm2))
+    <span data-count="97">r</span>eturn (List.ma<span data-count="97">p</span> (List.sor<span data-count="97">t</span> ts ~compare:ts_cmp) ~f:(fun (nm1, nm2, _) -&gt; <span data-count="151">n</span>m1, nm2))
   ;;
 
   let where ms eval_e wh =
-    <span data-count="65">l</span>et rec helper eval_e es =
-      <span data-count="185">m</span>atch es with
-      | <span data-count="119">[</span>] -&gt; return true
+    <span data-count="67">l</span>et rec helper eval_e es =
+      <span data-count="187">m</span>atch es with
+      | <span data-count="121">[</span>] -&gt; return true
       | <span data-count="66">e</span> :: es -&gt;
         eval_<span data-count="66">e</span> e
         &gt;&gt;= (function
@@ -3819,52 +3819,52 @@ end = struct
          | <span data-count="0">_</span> -&gt; fail Type_mismatch)
     in
     let rec filter ms acc =
-      <span data-count="219">m</span>atch ms with
-      | <span data-count="65">[</span>] -&gt; return (lrevers<span data-count="65">e</span> acc)
-      | <span data-count="154">m</span> :: ms -&gt;
-        helpe<span data-count="154">r</span> (eval_<span data-count="154">e</span> m) wh
+      <span data-count="223">m</span>atch ms with
+      | <span data-count="67">[</span>] -&gt; return (lrevers<span data-count="67">e</span> acc)
+      | <span data-count="156">m</span> :: ms -&gt;
+        helpe<span data-count="156">r</span> (eval_<span data-count="156">e</span> m) wh
         &gt;&gt;= (function
-         | <span data-count="119">t</span>rue -&gt; filter ms (m :: acc)
+         | <span data-count="121">t</span>rue -&gt; filter ms (m :: acc)
          | <span data-count="35">f</span>alse -&gt; filter ms acc)
     in
     filter ms []
   ;;
 
   let nm_pair_from_nm nms s_opt als =
-    <span data-count="95">l</span>et rec path newnm nm als =
-      <span data-count="193">m</span>atch als with
-      | <span data-count="147">[</span>] -&gt; return (newnm, nm)
-      | <span data-count="46">(</span>e, n) :: als -&gt;
+    <span data-count="99">l</span>et rec path newnm nm als =
+      <span data-count="201">m</span>atch als with
+      | <span data-count="151">[</span>] -&gt; return (newnm, nm)
+      | <span data-count="50">(</span>e, n) :: als -&gt;
         (match NameMap.mem n newnm with
          | <span data-count="1">t</span>rue -&gt; fail (Multiple_def n)
-         | <span data-count="45">f</span>alse -&gt; eval_<span data-count="45">e</span> nm e &gt;&gt;= fun v -&gt; <span data-count="44">p</span>ath (NameMap.ad<span data-count="44">d</span> n v newnm) nm als)
+         | <span data-count="49">f</span>alse -&gt; eval_<span data-count="49">e</span> nm e &gt;&gt;= fun v -&gt; <span data-count="48">p</span>ath (NameMap.ad<span data-count="48">d</span> n v newnm) nm als)
     in
     let rec paths nms ps s_opt als =
-      <span data-count="242">m</span>atch nms with
-      | <span data-count="93">[</span>] -&gt; return (lrevers<span data-count="93">e</span> ps)
-      | <span data-count="149">n</span>m :: nms -&gt;
-        pat<span data-count="149">h</span>
+      <span data-count="250">m</span>atch nms with
+      | <span data-count="97">[</span>] -&gt; return (lrevers<span data-count="97">e</span> ps)
+      | <span data-count="153">n</span>m :: nms -&gt;
+        pat<span data-count="153">h</span>
           (match s_opt with
-           | <span data-count="12">S</span>ome All -&gt; nm
-           | <span data-count="137">N</span>one -&gt; NameMap.empty)
+           | <span data-count="13">S</span>ome All -&gt; nm
+           | <span data-count="140">N</span>one -&gt; NameMap.empty)
           nm
           als
-        &gt;&gt;= fun pair -&gt; <span data-count="147">p</span>aths nms (pair :: ps) s_opt als
+        &gt;&gt;= fun pair -&gt; <span data-count="151">p</span>aths nms (pair :: ps) s_opt als
     in
     paths nms [] s_opt als
   ;;
 
   let cwith (g, nms, out) s_opt als ob wh c =
-    <span data-count="19">n</span>m_pair_from_n<span data-count="19">m</span> nms s_opt als
+    <span data-count="21">n</span>m_pair_from_n<span data-count="21">m</span> nms s_opt als
     &gt;&gt;= fun ps -&gt;
-    <span data-count="17">o</span>rder_b<span data-count="17">y</span> ps ob
-    &gt;&gt;<span data-count="17">=</span> (fun ps -&gt; <span data-count="17">w</span>here ps (fun (nm1, nm2) -&gt; <span data-count="19">e</span>val_e2 nm1 nm2) wh)
-    &gt;&gt;= fun ps -&gt; <span data-count="17">r</span>eturn ((g, List.ma<span data-count="17">p</span> ps ~f:fst, out), Some c)
+    <span data-count="19">o</span>rder_b<span data-count="19">y</span> ps ob
+    &gt;&gt;<span data-count="19">=</span> (fun ps -&gt; <span data-count="19">w</span>here ps (fun (nm1, nm2) -&gt; <span data-count="21">e</span>val_e2 nm1 nm2) wh)
+    &gt;&gt;= fun ps -&gt; <span data-count="19">r</span>eturn ((g, List.ma<span data-count="19">p</span> ps ~f:fst, out), Some c)
   ;;
 
   let creturn (g, nms, (cr, del, _)) s_opt al_opts ob =
-    <span data-count="76">l</span>et v_to_ov = function
-      | <span data-count="154">C</span>onstant c -&gt; return @@ OutConstant c
+    <span data-count="78">l</span>et v_to_ov = function
+      | <span data-count="162">C</span>onstant c -&gt; return @@ OutConstant c
       | <span data-count="36">N</span>ode (id, lbl, pr) -&gt;
         return
         @@ OutNode
@@ -3880,39 +3880,39 @@ end = struct
       | <span data-count="2">D</span>eletedEntity id -&gt; fail (Expr_err (Deleted_entity id))
     in
     let rec path newnm nm al_opts novs =
-      <span data-count="347">m</span>atch al_opts with
-      | <span data-count="118">[</span>] -&gt; return (lrevers<span data-count="118">e</span> novs)
-      | <span data-count="34">(</span>e, Some n) :: al_opts -&gt;
+      <span data-count="358">m</span>atch al_opts with
+      | <span data-count="121">[</span>] -&gt; return (lrevers<span data-count="121">e</span> novs)
+      | <span data-count="36">(</span>e, Some n) :: al_opts -&gt;
         (match NameMap.find_opt n newnm with
-         | <span data-count="34">S</span>ome v -&gt; v_to_o<span data-count="34">v</span> v
+         | <span data-count="36">S</span>ome v -&gt; v_to_o<span data-count="36">v</span> v
          | <span data-count="0">N</span>one -&gt; eval_<span data-count="0">e</span> nm e &gt;&gt;<span data-count="0">=</span> fun v -&gt; <span data-count="0">v</span>_to_ov v)
-        &gt;&gt;= fun ov -&gt; <span data-count="33">p</span>ath newnm nm al_opts ((n, ov) :: novs)
-      | <span data-count="195">(</span>e, None) :: al_opts -&gt;
-        eval_<span data-count="195">e</span> nm e
-        &gt;&gt;<span data-count="195">=</span> (fun v -&gt; <span data-count="182">v</span>_to_ov v)
-        &gt;&gt;= fun ov -&gt; <span data-count="181">p</span>ath newnm nm al_opts ((expression_to_nam<span data-count="181">e</span> e, ov) :: novs)
+        &gt;&gt;= fun ov -&gt; <span data-count="35">p</span>ath newnm nm al_opts ((n, ov) :: novs)
+      | <span data-count="201">(</span>e, None) :: al_opts -&gt;
+        eval_<span data-count="201">e</span> nm e
+        &gt;&gt;<span data-count="201">=</span> (fun v -&gt; <span data-count="188">v</span>_to_ov v)
+        &gt;&gt;= fun ov -&gt; <span data-count="187">p</span>ath newnm nm al_opts ((expression_to_nam<span data-count="187">e</span> e, ov) :: novs)
     in
     let star_path newnm nm al_opts = function
-      | <span data-count="6">S</span>ome All -&gt;
-        pat<span data-count="6">h</span> newnm nm (NameMap.fol<span data-count="6">d</span> (fun n _ acc -&gt; <span data-count="10">(</span>Var n, Some n) :: acc) newnm []) []
-        &gt;&gt;= fun novs -&gt; <span data-count="5">p</span>ath newnm nm al_opts novs
-      | <span data-count="122">N</span>one -&gt; path newnm nm al_opts []
+      | <span data-count="7">S</span>ome All -&gt;
+        pat<span data-count="7">h</span> newnm nm (NameMap.fol<span data-count="7">d</span> (fun n _ acc -&gt; <span data-count="12">(</span>Var n, Some n) :: acc) newnm []) []
+        &gt;&gt;= fun novs -&gt; <span data-count="6">p</span>ath newnm nm al_opts novs
+      | <span data-count="123">N</span>one -&gt; path newnm nm al_opts []
     in
     let rec paths nmps al_opts novss =
-      <span data-count="189">m</span>atch nmps with
-      | <span data-count="61">[</span>] -&gt; return (lrevers<span data-count="61">e</span> novss)
-      | <span data-count="128">(</span>newnm, nm) :: nmps -&gt;
-        star_pat<span data-count="128">h</span> newnm nm al_opts s_opt &gt;&gt;= fun novs -&gt; <span data-count="113">p</span>aths nmps al_opts (novs :: novss)
+      <span data-count="193">m</span>atch nmps with
+      | <span data-count="63">[</span>] -&gt; return (lrevers<span data-count="63">e</span> novss)
+      | <span data-count="130">(</span>newnm, nm) :: nmps -&gt;
+        star_pat<span data-count="130">h</span> newnm nm al_opts s_opt &gt;&gt;= fun novs -&gt; <span data-count="115">p</span>aths nmps al_opts (novs :: novss)
     in
-    nm_pair_from_n<span data-count="76">m</span>
+    nm_pair_from_n<span data-count="78">m</span>
       nms
       s_opt
-      (List.filter_ma<span data-count="76">p</span> al_opts ~f:(function
+      (List.filter_ma<span data-count="78">p</span> al_opts ~f:(function
         | <span data-count="7">e</span>, Some n -&gt; Some (e, n)
-        | <span data-count="141">_</span>, None -&gt; None))
-    &gt;&gt;<span data-count="76">=</span> (fun ps -&gt; <span data-count="76">o</span>rder_by ps ob)
-    &gt;&gt;<span data-count="76">=</span> (fun ps -&gt; <span data-count="76">p</span>aths ps al_opts [])
-    &gt;&gt;= fun novss -&gt; <span data-count="61">r</span>eturn ((g, nms, (cr, del, novss)), None)
+        | <span data-count="147">_</span>, None -&gt; None))
+    &gt;&gt;<span data-count="78">=</span> (fun ps -&gt; <span data-count="78">o</span>rder_by ps ob)
+    &gt;&gt;<span data-count="78">=</span> (fun ps -&gt; <span data-count="78">p</span>aths ps al_opts [])
+    &gt;&gt;= fun novss -&gt; <span data-count="63">r</span>eturn ((g, nms, (cr, del, novss)), None)
   ;;
 
   let cdelete (g, nms, (cr, (del_nodes, del_rels), tbl)) del_attr ns c_opt =
@@ -3977,61 +3977,61 @@ end = struct
   ;;
 
   let ccreate (g, nms, ((cr_nodes, cr_rels), del, tbl)) ps c_opt =
-    <span data-count="95">l</span>et next_node_id g =
-      <span data-count="476">l</span>et max_id = G.fold_vertex (fun (id, _, _) acc -&gt; <span data-count="1215">I</span>nt.max id acc) g 0 in
-      <span data-count="476">m</span>atch max_id = max_int with
+    <span data-count="97">l</span>et next_node_id g =
+      <span data-count="490">l</span>et max_id = G.fold_vertex (fun (id, _, _) acc -&gt; <span data-count="1257">I</span>nt.max id acc) g 0 in
+      <span data-count="490">m</span>atch max_id = max_int with
       | <span data-count="0">t</span>rue -&gt; fail ID_overflow
-      | <span data-count="476">f</span>alse -&gt; return (max_id + 1)
+      | <span data-count="490">f</span>alse -&gt; return (max_id + 1)
     in
     let next_rel_id g =
-      <span data-count="489">l</span>et max_id = G.fold_edges_e (fun (_, (id, _, _), _) acc -&gt; <span data-count="1532">I</span>nt.max id acc) g 0 in
-      <span data-count="489">m</span>atch max_id = max_int with
+      <span data-count="505">l</span>et max_id = G.fold_edges_e (fun (_, (id, _, _), _) acc -&gt; <span data-count="1588">I</span>nt.max id acc) g 0 in
+      <span data-count="505">m</span>atch max_id = max_int with
       | <span data-count="0">t</span>rue -&gt; fail ID_overflow
-      | <span data-count="489">f</span>alse -&gt; return (max_id + 1)
+      | <span data-count="505">f</span>alse -&gt; return (max_id + 1)
     in
     let rec nes_to_pr nm pr = function
-      | <span data-count="965">[</span>] -&gt; return pr
-      | <span data-count="920">(</span>n, e) :: nes -&gt;
-        eval_<span data-count="920">e</span> nm e
+      | <span data-count="995">[</span>] -&gt; return pr
+      | <span data-count="946">(</span>n, e) :: nes -&gt;
+        eval_<span data-count="946">e</span> nm e
         &gt;&gt;= (function
-         | <span data-count="920">C</span>onstant c -&gt; nes_to_pr nm (NameMap.ad<span data-count="920">d</span> n c pr) nes
+         | <span data-count="946">C</span>onstant c -&gt; nes_to_pr nm (NameMap.ad<span data-count="946">d</span> n c pr) nes
          | <span data-count="0">_</span> -&gt; fail Type_mismatch)
     in
     let create_rel g nm lbl nes node1 node2 dir =
-      <span data-count="489">n</span>es_to_p<span data-count="489">r</span> nm NameMap.empty nes
+      <span data-count="505">n</span>es_to_p<span data-count="505">r</span> nm NameMap.empty nes
       &gt;&gt;= fun pr -&gt;
-      <span data-count="489">n</span>ext_rel_i<span data-count="489">d</span> g
+      <span data-count="505">n</span>ext_rel_i<span data-count="505">d</span> g
       &gt;&gt;= fun id -&gt;
-      <span data-count="489">r</span>etur<span data-count="489">n</span> (id, NameSet.of_lis<span data-count="489">t</span> lbl, pr)
+      <span data-count="505">r</span>etur<span data-count="505">n</span> (id, NameSet.of_lis<span data-count="505">t</span> lbl, pr)
       &gt;&gt;= fun en -&gt;
-      <span data-count="489">m</span>atch dir with
+      <span data-count="505">m</span>atch dir with
       | <span data-count="6">L</span>eft -&gt; return (node2, en, node1)
-      | <span data-count="482">R</span>ight -&gt; return (node1, en, node2)
+      | <span data-count="498">R</span>ight -&gt; return (node1, en, node2)
       | <span data-count="1">N</span>o -&gt; fail Undirected_rel
     in
     let create_node g nm lbl nes =
-      <span data-count="476">n</span>es_to_p<span data-count="476">r</span> nm NameMap.empty nes
-      &gt;&gt;= fun pr -&gt; <span data-count="476">n</span>ext_node_i<span data-count="476">d</span> g &gt;&gt;= fun id -&gt; <span data-count="476">r</span>eturn (id, NameSet.of_lis<span data-count="476">t</span> lbl, pr)
+      <span data-count="490">n</span>es_to_p<span data-count="490">r</span> nm NameMap.empty nes
+      &gt;&gt;= fun pr -&gt; <span data-count="490">n</span>ext_node_i<span data-count="490">d</span> g &gt;&gt;= fun id -&gt; <span data-count="490">r</span>eturn (id, NameSet.of_lis<span data-count="490">t</span> lbl, pr)
     in
     let add_node g nm = function
-      | <span data-count="1415">S</span>ome n, (lbl, nes) -&gt;
-        (match NameMap.find_op<span data-count="1415">t</span> n nm, lbl, nes with
-         | <span data-count="949">S</span>ome (Node node2), [], [] -&gt; return (g, nm, node2, 0)
+      | <span data-count="1461">S</span>ome n, (lbl, nes) -&gt;
+        (match NameMap.find_op<span data-count="1461">t</span> n nm, lbl, nes with
+         | <span data-count="981">S</span>ome (Node node2), [], [] -&gt; return (g, nm, node2, 0)
          | <span data-count="0">S</span>ome _, _, _ -&gt; fail @@ Multiple_def n
-         | <span data-count="466">N</span>one, lbl, nes -&gt;
-           create_nod<span data-count="466">e</span> g nm lbl nes
+         | <span data-count="480">N</span>one, lbl, nes -&gt;
+           create_nod<span data-count="480">e</span> g nm lbl nes
            &gt;&gt;= fun node2 -&gt;
-           <span data-count="466">r</span>eturn (G.add_verte<span data-count="466">x</span> g node2, NameMap.ad<span data-count="466">d</span> n (Node node2) nm, node2, 1))
+           <span data-count="480">r</span>eturn (G.add_verte<span data-count="480">x</span> g node2, NameMap.ad<span data-count="480">d</span> n (Node node2) nm, node2, 1))
       | <span data-count="10">N</span>one, (lbl, nes) -&gt;
         create_nod<span data-count="10">e</span> g nm lbl nes
         &gt;&gt;= fun node2 -&gt; <span data-count="10">r</span>eturn (G.add_verte<span data-count="10">x</span> g node2, nm, node2, 1)
     in
     let rec path node g nm (cr_nodes, cr_rels) = function
-      | <span data-count="933">[</span>] -&gt; return (g, nm, (cr_nodes, cr_rels))
-      | <span data-count="490">(</span>rel, node2) :: rns -&gt;
-        add_nod<span data-count="490">e</span> g nm node2
+      | <span data-count="963">[</span>] -&gt; return (g, nm, (cr_nodes, cr_rels))
+      | <span data-count="506">(</span>rel, node2) :: rns -&gt;
+        add_nod<span data-count="506">e</span> g nm node2
         &gt;&gt;= fun (g, nm, node2, pn) -&gt;
-        <span data-count="490">(</span>match rel with
+        <span data-count="506">(</span>match rel with
          | <span data-count="10">(</span>Some n, (lbl, nes)), dir -&gt;
            (match NameMap.mem n nm with
             | <span data-count="1">t</span>rue -&gt; fail @@ Multiple_def n
@@ -4044,30 +4044,30 @@ end = struct
                 (NameMap.ad<span data-count="8">d</span> n (Rel rel) nm)
                 (cr_nodes + pn, cr_rels + 1)
                 rns)
-         | <span data-count="480">(</span>None, (lbl, nes)), dir -&gt;
-           create_re<span data-count="480">l</span> g nm lbl nes node node2 dir
+         | <span data-count="496">(</span>None, (lbl, nes)), dir -&gt;
+           create_re<span data-count="496">l</span> g nm lbl nes node node2 dir
            &gt;&gt;= fun rel -&gt;
-           <span data-count="480">p</span>ath node2 (G.add_edge_<span data-count="480">e</span> g rel) nm (cr_nodes + pn, cr_rels + 1) rns)
+           <span data-count="496">p</span>ath node2 (G.add_edge_<span data-count="496">e</span> g rel) nm (cr_nodes + pn, cr_rels + 1) rns)
     in
     let path g nm { start_node_pt = node; rel_node_pts = rns } =
-      <span data-count="935">a</span>dd_nod<span data-count="935">e</span> g nm node &gt;&gt;= fun (g, nm, node, pn) -&gt; <span data-count="935">p</span>ath node g nm (pn, 0) rns
+      <span data-count="965">a</span>dd_nod<span data-count="965">e</span> g nm node &gt;&gt;= fun (g, nm, node, pn) -&gt; <span data-count="965">p</span>ath node g nm (pn, 0) rns
     in
     let rec paths g nm cr_nodes cr_rels = function
-      | <span data-count="93">[</span>] -&gt; return (g, nm, (cr_nodes, cr_rels))
-      | <span data-count="935">p</span> :: ps -&gt;
-        pat<span data-count="935">h</span> g nm p
-        &gt;&gt;= fun (g, nm, (crns, crrs)) -&gt; <span data-count="933">p</span>aths g nm (cr_nodes + crns) (cr_rels + crrs) ps
+      | <span data-count="95">[</span>] -&gt; return (g, nm, (cr_nodes, cr_rels))
+      | <span data-count="965">p</span> :: ps -&gt;
+        pat<span data-count="965">h</span> g nm p
+        &gt;&gt;= fun (g, nm, (crns, crrs)) -&gt; <span data-count="963">p</span>aths g nm (cr_nodes + crns) (cr_rels + crrs) ps
     in
     let rec helper g newnms cr_nodes cr_rels = function
-      | <span data-count="93">[</span>] -&gt; return (g, lrevers<span data-count="93">e</span> newnms, (cr_nodes, cr_rels))
-      | <span data-count="95">n</span>m :: nms -&gt;
-        path<span data-count="95">s</span> g nm 0 0 ps
+      | <span data-count="95">[</span>] -&gt; return (g, lrevers<span data-count="95">e</span> newnms, (cr_nodes, cr_rels))
+      | <span data-count="97">n</span>m :: nms -&gt;
+        path<span data-count="97">s</span> g nm 0 0 ps
         &gt;&gt;= fun (g, newnm, (crns, crrs)) -&gt;
-        <span data-count="93">h</span>elper g (newnm :: newnms) (cr_nodes + crns) (cr_rels + crrs) nms
+        <span data-count="95">h</span>elper g (newnm :: newnms) (cr_nodes + crns) (cr_rels + crrs) nms
     in
-    helpe<span data-count="95">r</span> g [] 0 0 nms
+    helpe<span data-count="97">r</span> g [] 0 0 nms
     &gt;&gt;= fun (g, newnms, (crns, crrs)) -&gt;
-    <span data-count="93">r</span>eturn ((g, newnms, ((cr_nodes + crns, cr_rels + crrs), del, tbl)), c_opt)
+    <span data-count="95">r</span>eturn ((g, newnms, ((cr_nodes + crns, cr_rels + crrs), del, tbl)), c_opt)
   ;;
 
   let cmatch (g, nms, out) ps wh c =
@@ -4237,49 +4237,49 @@ end = struct
   ;;
 
   let interpret_request g request =
-    <span data-count="163">l</span>et rec mwith = function
-      | <span data-count="19">g</span>nmsout, Some (With (s_opt, als, ob, wh, c)) -&gt;
-        cwit<span data-count="19">h</span> gnmsout s_opt als ob wh c &gt;&gt;= fun state -&gt; <span data-count="17">m</span>with state
-      | <span data-count="577">s</span>tate -&gt; return state
+    <span data-count="167">l</span>et rec mwith = function
+      | <span data-count="21">g</span>nmsout, Some (With (s_opt, als, ob, wh, c)) -&gt;
+        cwit<span data-count="21">h</span> gnmsout s_opt als ob wh c &gt;&gt;= fun state -&gt; <span data-count="19">m</span>with state
+      | <span data-count="591">s</span>tate -&gt; return state
     in
     let withreturn state =
-      <span data-count="155">m</span>wit<span data-count="155">h</span> state
+      <span data-count="159">m</span>wit<span data-count="159">h</span> state
       &gt;&gt;= function
-      | <span data-count="76">g</span>nmsout, Some (Return (s_opt, al_opts, ob)) -&gt;
-        cretur<span data-count="76">n</span> gnmsout s_opt al_opts ob &gt;&gt;= fun ((g, _, out), _) -&gt; <span data-count="61">r</span>eturn (g, out)
-      | <span data-count="79">(</span>g, _, out), _ -&gt; return (g, out)
+      | <span data-count="78">g</span>nmsout, Some (Return (s_opt, al_opts, ob)) -&gt;
+        cretur<span data-count="78">n</span> gnmsout s_opt al_opts ob &gt;&gt;= fun ((g, _, out), _) -&gt; <span data-count="63">r</span>eturn (g, out)
+      | <span data-count="81">(</span>g, _, out), _ -&gt; return (g, out)
     in
     let rec withcrdelret state =
-      <span data-count="261">m</span>wit<span data-count="261">h</span> state
+      <span data-count="267">m</span>wit<span data-count="267">h</span> state
       &gt;&gt;= function
-      | <span data-count="95">g</span>nmsout, Some (Create (ps, c_opt)) -&gt;
-        ccreat<span data-count="95">e</span> gnmsout ps c_opt &gt;&gt;= fun state -&gt; <span data-count="93">w</span>ithcrdelret state
+      | <span data-count="97">g</span>nmsout, Some (Create (ps, c_opt)) -&gt;
+        ccreat<span data-count="97">e</span> gnmsout ps c_opt &gt;&gt;= fun state -&gt; <span data-count="95">w</span>ithcrdelret state
       | <span data-count="11">g</span>nmsout, Some (Delete (del_attr, ns, c_opt)) -&gt;
         cdelet<span data-count="11">e</span> gnmsout del_attr ns c_opt &gt;&gt;= fun state -&gt; <span data-count="8">w</span>ithcrdelret state
-      | <span data-count="155">s</span>tate -&gt; withreturn state
+      | <span data-count="159">s</span>tate -&gt; withreturn state
     in
     let withmatchcdr state =
-      <span data-count="163">m</span>wit<span data-count="163">h</span> state
+      <span data-count="167">m</span>wit<span data-count="167">h</span> state
       &gt;&gt;= function
       | <span data-count="49">g</span>mnsout, Some (Match (ps, wh, c)) -&gt;
         cmatc<span data-count="49">h</span> gmnsout ps wh c &gt;&gt;= fun state -&gt; <span data-count="48">w</span>ithcrdelret state
-      | <span data-count="112">s</span>tate -&gt; withcrdelret state
+      | <span data-count="116">s</span>tate -&gt; withcrdelret state
     in
     withmatchcdr ((g, [ NameMap.empty ], ((0, 0), (0, 0), [])), Some request)
   ;;
 end
 
 module InterpreterResult :
-  MonadErrorInterpreter with type 'a t = ('a, interpreter_error) Result.t = struct
+  MonadAltErrorInterpreter with type 'a t = ('a, interpreter_error) Result.t = struct
   type 'a t = ('a, interpreter_error) Result.t
   type error = interpreter_error
 
-  let return a = <span data-count="10437">O</span>k a
+  let return a = <span data-count="10720">O</span>k a
   let fail e = <span data-count="23">E</span>rror e
 
   let ( &gt;&gt;= ) r f =
-    <span data-count="10407">m</span>atch r with
-    | <span data-count="10297">O</span>k v -&gt; f v
+    <span data-count="10686">m</span>atch r with
+    | <span data-count="10576">O</span>k v -&gt; f v
     | <span data-count="110">E</span>rror e -&gt; Error e
   ;;
 
@@ -4292,16 +4292,16 @@ end
 
 open Parser
 
-module ReqResult : MonadErrorReq with type 'a t = ('a, req_error) Result.t = struct
+module ReqResult : MonadAltErrorReq with type 'a t = ('a, req_error) Result.t = struct
   type 'a t = ('a, req_error) Result.t
   type error = req_error
 
-  let return a = <span data-count="303">O</span>k a
+  let return a = <span data-count="311">O</span>k a
   let fail e = <span data-count="23">E</span>rror e
 
   let ( &gt;&gt;= ) r f =
-    <span data-count="163">m</span>atch r with
-    | <span data-count="163">O</span>k v -&gt; f v
+    <span data-count="167">m</span>atch r with
+    | <span data-count="167">O</span>k v -&gt; f v
     | <span data-count="0">E</span>rror e -&gt; Error e
   ;;
 
@@ -4319,18 +4319,18 @@ let create_empty_graph = G.empty
 module I = Interpreter (InterpreterResult)
 
 let parse r =
-  <span data-count="163">m</span>atch parse_request r with
-  | <span data-count="163">O</span>k r -&gt; return r
+  <span data-count="167">m</span>atch parse_request r with
+  | <span data-count="167">O</span>k r -&gt; return r
   | <span data-count="0">E</span>rror msg -&gt; fail @@ Parser_err msg
 ;;
 
 let interpret_request g r =
-  <span data-count="163">m</span>atch I.interpret_request g r with
-  | <span data-count="140">O</span>k res -&gt; return res
+  <span data-count="167">m</span>atch I.interpret_request g r with
+  | <span data-count="144">O</span>k res -&gt; return res
   | <span data-count="23">E</span>rror err -&gt; fail @@ Interpreter_err err
 ;;
 
-let parse_and_interpret_request g r = <span data-count="163">p</span>ars<span data-count="163">e</span> r &gt;&gt;= fun r -&gt; <span data-count="163">i</span>nterpret_request g r
+let parse_and_interpret_request g r = <span data-count="167">p</span>ars<span data-count="167">e</span> r &gt;&gt;= fun r -&gt; <span data-count="167">i</span>nterpret_request g r
 
 let piprint g r =
   <span data-count="47">m</span>atch parse_and_interpret_request g r with
@@ -4358,12 +4358,12 @@ let%expect_test "Expr string comparators test" =
         ("\"Yoba\" ENDS_WITH \"ba\"", (OutConstant (Bool true)));
         ("\"God\" CONTAINS &lt;null&gt;", (OutConstant Null));
         ("&lt;null&gt; CONTAINS \"God\"", (OutConstant Null))]
-       ]) |}<span data-count="81">]</span>
+       ]) |}<span data-count="85">]</span>
 ;;
 
 let%expect_test "Expr string comparator fail test" =
   <span data-count="1">p</span>iprint g {| RETURN 4 CONTAINS "4" |};
-  <span data-count="1">[</span>%expect {| (Interpreter_err (Expr_err Type_mismatch)) |}<span data-count="81">]</span>
+  <span data-count="1">[</span>%expect {| (Interpreter_err (Expr_err Type_mismatch)) |}<span data-count="85">]</span>
 ;;
 
 let%expect_test "Expr plus test" =
@@ -4384,12 +4384,12 @@ let%expect_test "Expr plus test" =
         ("4 + &lt;null&gt;", (OutConstant Null));
         ("\"4\" + true", (OutConstant (String "4true")));
         ("4 + \"4\"", (OutConstant (String "44")))]
-       ]) |}<span data-count="81">]</span>
+       ]) |}<span data-count="85">]</span>
 ;;
 
 let%expect_test "Expr plus fail test" =
   <span data-count="1">p</span>iprint g {| RETURN true + 4 |};
-  <span data-count="1">[</span>%expect {| (Interpreter_err (Expr_err Type_mismatch)) |}<span data-count="81">]</span>
+  <span data-count="1">[</span>%expect {| (Interpreter_err (Expr_err Type_mismatch)) |}<span data-count="85">]</span>
 ;;
 
 let%expect_test "Expr minus asterisk caret test" =
@@ -4403,12 +4403,12 @@ let%expect_test "Expr minus asterisk caret test" =
         ("0.5 ^ 0.5", (OutConstant (Float 0.707106781187)));
         ("&lt;null&gt; - true", (OutConstant Null));
         ("\"\" * &lt;null&gt;", (OutConstant Null))]
-       ]) |}<span data-count="81">]</span>
+       ]) |}<span data-count="85">]</span>
 ;;
 
 let%expect_test "Expr minus asterisk caret fail test" =
   <span data-count="1">p</span>iprint g {| RETURN 4 - true |};
-  <span data-count="1">[</span>%expect {| (Interpreter_err (Expr_err Type_mismatch)) |}<span data-count="81">]</span>
+  <span data-count="1">[</span>%expect {| (Interpreter_err (Expr_err Type_mismatch)) |}<span data-count="85">]</span>
 ;;
 
 let%expect_test "Expr slash percent test" =
@@ -4422,32 +4422,32 @@ let%expect_test "Expr slash percent test" =
         ("2.2 % 4", (OutConstant (Float 2.2)));
         ("2.2 / 0.1", (OutConstant (Float 22.)));
         ("&lt;null&gt; / 0", (OutConstant Null)); ("0 % &lt;null&gt;", (OutConstant Null))]
-       ]) |}<span data-count="81">]</span>
+       ]) |}<span data-count="85">]</span>
 ;;
 
 let%expect_test "Expr slash percent fail test1" =
   <span data-count="1">p</span>iprint g {| RETURN 4 % 0 |};
-  <span data-count="1">[</span>%expect {| (Interpreter_err (Expr_err Division_by_zero)) |}<span data-count="81">]</span>
+  <span data-count="1">[</span>%expect {| (Interpreter_err (Expr_err Division_by_zero)) |}<span data-count="85">]</span>
 ;;
 
 let%expect_test "Expr slash percent fail test2" =
   <span data-count="1">p</span>iprint g {| RETURN 4 / -0.0 |};
-  <span data-count="1">[</span>%expect {| (Interpreter_err (Expr_err Division_by_zero)) |}<span data-count="81">]</span>
+  <span data-count="1">[</span>%expect {| (Interpreter_err (Expr_err Division_by_zero)) |}<span data-count="85">]</span>
 ;;
 
 let%expect_test "Expr slash percent fail test3" =
   <span data-count="1">p</span>iprint g {| RETURN 2.2 % 0 |};
-  <span data-count="1">[</span>%expect {| (Interpreter_err (Expr_err Division_by_zero)) |}<span data-count="81">]</span>
+  <span data-count="1">[</span>%expect {| (Interpreter_err (Expr_err Division_by_zero)) |}<span data-count="85">]</span>
 ;;
 
 let%expect_test "Expr slash percent fail test4" =
   <span data-count="1">p</span>iprint g {| RETURN 2.2 / 0.000 |};
-  <span data-count="1">[</span>%expect {| (Interpreter_err (Expr_err Division_by_zero)) |}<span data-count="81">]</span>
+  <span data-count="1">[</span>%expect {| (Interpreter_err (Expr_err Division_by_zero)) |}<span data-count="85">]</span>
 ;;
 
 let%expect_test "Expr slash percent fail test5" =
   <span data-count="1">p</span>iprint g {| RETURN 2.2 / "4" |};
-  <span data-count="1">[</span>%expect {| (Interpreter_err (Expr_err Type_mismatch)) |}<span data-count="81">]</span>
+  <span data-count="1">[</span>%expect {| (Interpreter_err (Expr_err Type_mismatch)) |}<span data-count="85">]</span>
 ;;
 
 let%expect_test "Expr AND OR XOR test" =
@@ -4472,22 +4472,22 @@ let%expect_test "Expr AND OR XOR test" =
         ("T XOR F", (OutConstant (Bool true)));
         ("&lt;null&gt; XOR T", (OutConstant Null));
         ("F XOR &lt;null&gt;", (OutConstant Null))]
-       ]) |}<span data-count="81">]</span>
+       ]) |}<span data-count="85">]</span>
 ;;
 
 let%expect_test "Expr AND fail test" =
   <span data-count="1">p</span>iprint g {| RETURN 4 AND TRUE |};
-  <span data-count="1">[</span>%expect {| (Interpreter_err (Expr_err Type_mismatch)) |}<span data-count="81">]</span>
+  <span data-count="1">[</span>%expect {| (Interpreter_err (Expr_err Type_mismatch)) |}<span data-count="85">]</span>
 ;;
 
 let%expect_test "Expr OR fail test" =
   <span data-count="1">p</span>iprint g {| RETURN 4 OR FALSE |};
-  <span data-count="1">[</span>%expect {| (Interpreter_err (Expr_err Type_mismatch)) |}<span data-count="81">]</span>
+  <span data-count="1">[</span>%expect {| (Interpreter_err (Expr_err Type_mismatch)) |}<span data-count="85">]</span>
 ;;
 
 let%expect_test "Expr XOR fail test" =
   <span data-count="1">p</span>iprint g {| RETURN 4 XOR TRUE |};
-  <span data-count="1">[</span>%expect {| (Interpreter_err (Expr_err Type_mismatch)) |}<span data-count="81">]</span>
+  <span data-count="1">[</span>%expect {| (Interpreter_err (Expr_err Type_mismatch)) |}<span data-count="85">]</span>
 ;;
 
 let%expect_test "Expr neg (is null) (in not null) neg test" =
@@ -4507,17 +4507,17 @@ let%expect_test "Expr neg (is null) (in not null) neg test" =
         ("&lt;null&gt; IS NOT NULL", (OutConstant (Bool false)));
         ("NOT true", (OutConstant (Bool false)));
         ("NOT &lt;null&gt;", (OutConstant Null))]
-       ]) |}<span data-count="81">]</span>
+       ]) |}<span data-count="85">]</span>
 ;;
 
 let%expect_test "Expr neg fail test" =
   <span data-count="1">p</span>iprint g {| RETURN - "" |};
-  <span data-count="1">[</span>%expect {| (Interpreter_err (Expr_err Type_mismatch)) |}<span data-count="81">]</span>
+  <span data-count="1">[</span>%expect {| (Interpreter_err (Expr_err Type_mismatch)) |}<span data-count="85">]</span>
 ;;
 
 let%expect_test "Expr NOT fail test" =
   <span data-count="1">p</span>iprint g {| RETURN NOT "" |};
-  <span data-count="1">[</span>%expect {| (Interpreter_err (Expr_err Type_mismatch)) |}<span data-count="81">]</span>
+  <span data-count="1">[</span>%expect {| (Interpreter_err (Expr_err Type_mismatch)) |}<span data-count="85">]</span>
 ;;
 
 let%expect_test "Expr list operators test" =
@@ -4532,7 +4532,7 @@ let%expect_test "Expr list operators test" =
      [[("4 &lt; 5 &gt; 3.4 &gt;= 2 &lt;= 5 = 5 &lt;&gt; 7.7", (OutConstant (Bool true)));
         ("&lt;null&gt; &lt; 5", (OutConstant Null));
         ("4 = 4 &lt; -5 = -4", (OutConstant (Bool false)))]
-       ]) |}<span data-count="81">]</span>
+       ]) |}<span data-count="85">]</span>
 ;;
 
 let%expect_test "WITH RETURN test" =
@@ -4543,7 +4543,7 @@ let%expect_test "WITH RETURN test" =
     ((0, 0), (0, 0),
      [[("five", (OutConstant (Int64 5L))); ("four", (OutConstant (Int64 4L)));
         ("4", (OutConstant (Int64 4L))); ("5", (OutConstant (Int64 5L)))]
-       ]) |}<span data-count="81">]</span>
+       ]) |}<span data-count="85">]</span>
 ;;
 
 let%expect_test "WITH RETURN test" =
@@ -4554,19 +4554,19 @@ let%expect_test "WITH RETURN test" =
     ((0, 0), (0, 0),
      [[("4", (OutConstant (Int64 4L))); ("5", (OutConstant (Int64 5L)));
         ("four", (OutConstant (Int64 4L))); ("five", (OutConstant (Int64 5L)))]
-       ]) |}<span data-count="81">]</span>
+       ]) |}<span data-count="85">]</span>
 ;;
 
 let%expect_test "WITH RETURN fail test1" =
   <span data-count="1">p</span>iprint g {| WITH r as five RETURN * |};
   <span data-count="1">[</span>%expect {|
-    (Interpreter_err (Expr_err (Undefined_id "r"))) |}<span data-count="81">]</span>
+    (Interpreter_err (Expr_err (Undefined_id "r"))) |}<span data-count="85">]</span>
 ;;
 
 let%expect_test "WITH RETURN fail test2" =
   <span data-count="1">p</span>iprint g {| WITH 4 as four, 5 as four RETURN * |};
   <span data-count="1">[</span>%expect {|
-    (Interpreter_err (Multiple_def "four")) |}<span data-count="81">]</span>
+    (Interpreter_err (Multiple_def "four")) |}<span data-count="85">]</span>
 ;;
 
 let%expect_test "CREATE test1" =
@@ -4576,7 +4576,7 @@ let%expect_test "CREATE test1" =
     ((5, 3), (0, 0),
      [[("n", (OutNode (1, ["Label"], [("name", (String "Name"))])));
         ("r", (OutRel (1, (1, ["Label"], [("p", (Int64 5L))]), 2)))]
-       ]) |}<span data-count="81">]</span>
+       ]) |}<span data-count="85">]</span>
 ;;
 
 let%expect_test "CREATE test2" =
@@ -4586,19 +4586,19 @@ let%expect_test "CREATE test2" =
     ((3, 2), (0, 0),
      [[("n", (OutNode (1, ["Label"], [("c", (String "c"))])));
         ("r", (OutRel (1, (1, [], []), 1))); ("t", (OutNode (3, [], [])))]
-       ]) |}<span data-count="81">]</span>
+       ]) |}<span data-count="85">]</span>
 ;;
 
 let%expect_test "CREATE fail test1" =
   <span data-count="1">p</span>iprint g {| CREATE ()-[r]-&gt;()&lt;-[r]-() RETURN * |};
   <span data-count="1">[</span>%expect {|
-    (Interpreter_err (Multiple_def "r")) |}<span data-count="81">]</span>
+    (Interpreter_err (Multiple_def "r")) |}<span data-count="85">]</span>
 ;;
 
 let%expect_test "CREATE fail test2" =
   <span data-count="1">p</span>iprint g {| CREATE ()-[r]-() RETURN * |};
   <span data-count="1">[</span>%expect {|
-    (Interpreter_err Undirected_rel) |}<span data-count="81">]</span>
+    (Interpreter_err Undirected_rel) |}<span data-count="85">]</span>
 ;;
 
 let%expect_test "CREATE DELETE test1" =
@@ -4608,7 +4608,7 @@ let%expect_test "CREATE DELETE test1" =
   NODETACH DELETE r1, n2, n3, r2
   RETURN n1 |};
   <span data-count="1">[</span>%expect {|
-    ((3, 2), (2, 2), [[("n1", (OutNode (1, [], [])))]]) |}<span data-count="81">]</span>
+    ((3, 2), (2, 2), [[("n1", (OutNode (1, [], [])))]]) |}<span data-count="85">]</span>
 ;;
 
 let%expect_test "CREATE DELETE test2" =
@@ -4616,7 +4616,7 @@ let%expect_test "CREATE DELETE test2" =
   DETACH DELETE n2
   RETURN n1 |};
   <span data-count="1">[</span>%expect {|
-    ((3, 2), (1, 0), [[("n1", (OutNode (1, [], [])))]]) |}<span data-count="81">]</span>
+    ((3, 2), (1, 0), [[("n1", (OutNode (1, [], [])))]]) |}<span data-count="85">]</span>
 ;;
 
 let%expect_test "CREATE DELETE fail test1" =
@@ -4624,7 +4624,7 @@ let%expect_test "CREATE DELETE fail test1" =
   DELETE n2
   RETURN n1 |};
   <span data-count="1">[</span>%expect {|
-    (Interpreter_err (Unable_node_deletion 2)) |}<span data-count="81">]</span>
+    (Interpreter_err (Unable_node_deletion 2)) |}<span data-count="85">]</span>
 ;;
 
 let%expect_test "CREATE DELETE fail test2" =
@@ -4632,7 +4632,7 @@ let%expect_test "CREATE DELETE fail test2" =
   DELETE n4
   RETURN n1 |};
   <span data-count="1">[</span>%expect {|
-    (Interpreter_err (Expr_err (Undefined_id "n4"))) |}<span data-count="81">]</span>
+    (Interpreter_err (Expr_err (Undefined_id "n4"))) |}<span data-count="85">]</span>
 ;;
 
 let%expect_test "WITH DELETE fail test" =
@@ -4640,7 +4640,7 @@ let%expect_test "WITH DELETE fail test" =
   DELETE n4
   RETURN n1 |};
   <span data-count="1">[</span>%expect {|
-    (Interpreter_err Type_mismatch) |}<span data-count="81">]</span>
+    (Interpreter_err Type_mismatch) |}<span data-count="85">]</span>
 ;;
 
 let%expect_test "CREATE DELETE RETURN fail test1" =
@@ -4648,7 +4648,7 @@ let%expect_test "CREATE DELETE RETURN fail test1" =
   DELETE n
   RETURN n |};
   <span data-count="1">[</span>%expect {|
-    (Interpreter_err (Expr_err (Deleted_entity 1))) |}<span data-count="81">]</span>
+    (Interpreter_err (Expr_err (Deleted_entity 1))) |}<span data-count="85">]</span>
 ;;
 
 let%expect_test "CREATE DELETE RETURN fail test2" =
@@ -4656,7 +4656,7 @@ let%expect_test "CREATE DELETE RETURN fail test2" =
   DELETE n
   RETURN * |};
   <span data-count="1">[</span>%expect {|
-    (Interpreter_err (Expr_err (Deleted_entity 1))) |}<span data-count="81">]</span>
+    (Interpreter_err (Expr_err (Deleted_entity 1))) |}<span data-count="85">]</span>
 ;;
 
 let%expect_test "CREATE DELETE WITH RETURN test" =
@@ -4665,7 +4665,7 @@ let%expect_test "CREATE DELETE WITH RETURN test" =
   WITH n as b
   RETURN 4 |};
   <span data-count="1">[</span>%expect {|
-    ((1, 0), (1, 0), [[("4", (OutConstant (Int64 4L)))]]) |}<span data-count="81">]</span>
+    ((1, 0), (1, 0), [[("4", (OutConstant (Int64 4L)))]]) |}<span data-count="85">]</span>
 ;;
 
 let%expect_test "many WITH CREATE DELETE test" =
@@ -4690,11 +4690,11 @@ let%expect_test "many WITH CREATE DELETE test" =
   WITH n5 as N
   RETURN N |};
   <span data-count="1">[</span>%expect {|
-    ((5, 0), (4, 0), [[("N", (OutNode (1, [], [("R", (Int64 4L))])))]]) |}<span data-count="81">]</span>
+    ((5, 0), (4, 0), [[("N", (OutNode (1, [], [("R", (Int64 4L))])))]]) |}<span data-count="85">]</span>
 ;;
 
 let init_res =
-  parse_and_interpret_reques<span data-count="40">t</span>
+  parse_and_interpret_reques<span data-count="42">t</span>
     g
     {|
   CREATE
@@ -4737,7 +4737,7 @@ let%expect_test "MATCH RETURN (ORDER BY) test1" =
        [("n",
          (OutNode (7, ["Movie"], [("title", (String "The American President"))])))
          ]
-       ]) |}<span data-count="81">]</span>
+       ]) |}<span data-count="85">]</span>
 ;;
 
 let%expect_test "MATCH RETURN (ORDER BY) test2" =
@@ -4781,7 +4781,7 @@ let%expect_test "MATCH RETURN (ORDER BY) test2" =
             (6, ["ACTED_IN"], [("role", (String "President Andrew Shepherd"))]),
             7)))
          ]
-       ]) |}<span data-count="81">]</span>
+       ]) |}<span data-count="85">]</span>
 ;;
 
 let%expect_test "MATCH RETURN (ORDER BY) test3" =
@@ -4818,7 +4818,7 @@ let%expect_test "MATCH RETURN (ORDER BY) test3" =
          ("r",
           (OutRel (3, (3, ["ACTED_IN"], [("role", (String "Gordon Gekko"))]), 6)))
          ]
-       ]) |}<span data-count="81">]</span>
+       ]) |}<span data-count="85">]</span>
 ;;
 
 let%expect_test "MATCH RETURN (ORDER BY) test4" =
@@ -4846,7 +4846,7 @@ let%expect_test "MATCH RETURN (ORDER BY) test4" =
             (6, ["ACTED_IN"], [("role", (String "President Andrew Shepherd"))]),
             7)))
          ]
-       ]) |}<span data-count="81">]</span>
+       ]) |}<span data-count="85">]</span>
 ;;
 
 let%expect_test "MATCH (WHERE) RETURN (ORDER BY) test1" =
@@ -4860,7 +4860,7 @@ let%expect_test "MATCH (WHERE) RETURN (ORDER BY) test1" =
     {|
     ((0, 0), (0, 0),
      [[("n", (OutNode (1, ["Person"], [("name", (String "Charlie Sheen"))])))];
-       [("n", (OutNode (2, ["Person"], [("name", (String "Martin Sheen"))])))]]) |}<span data-count="81">]</span>
+       [("n", (OutNode (2, ["Person"], [("name", (String "Martin Sheen"))])))]]) |}<span data-count="85">]</span>
 ;;
 
 let%expect_test "MATCH RETURN test1" =
@@ -4879,7 +4879,7 @@ let%expect_test "MATCH RETURN test1" =
         (OutNode (6, ["Movie"; "Wallstreet"],
            [("year", (Int64 2011L)); ("title", (String "Wall Street"))])))
         ]
-       ]) |}<span data-count="81">]</span>
+       ]) |}<span data-count="85">]</span>
 ;;
 
 let%expect_test "MATCH RETURN test2" =
@@ -4892,7 +4892,7 @@ let%expect_test "MATCH RETURN test2" =
   [%expect
     {|
     ((0, 0), (0, 0),
-     [[("c", (OutNode (1, ["Person"], [("name", (String "Charlie Sheen"))])))]]) |}<span data-count="81">]</span>
+     [[("c", (OutNode (1, ["Person"], [("name", (String "Charlie Sheen"))])))]]) |}<span data-count="85">]</span>
 ;;
 
 let%expect_test "MATCH RETURN test3" =
@@ -4912,7 +4912,7 @@ let%expect_test "MATCH RETURN test3" =
          (OutNode (6, ["Movie"; "Wallstreet"],
             [("year", (Int64 2011L)); ("title", (String "Wall Street"))])));
         ("r.role", (OutConstant (String "Bud Fox")))]
-       ]) |}<span data-count="81">]</span>
+       ]) |}<span data-count="85">]</span>
 ;;
 
 let%expect_test "MATCH (WHERE) RETURN (ORDER_BY) test2" =
@@ -4931,7 +4931,7 @@ let%expect_test "MATCH (WHERE) RETURN (ORDER_BY) test2" =
     ((0, 0), (0, 0),
      [[("p", (OutNode (3, ["Person"], [("name", (String "Michael Douglas"))])));
         ("movietitle", (OutConstant (String "The American President")))]
-       ]) |}<span data-count="81">]</span>
+       ]) |}<span data-count="85">]</span>
 ;;
 
 let%expect_test "MATCH fail test" =
@@ -4941,7 +4941,7 @@ let%expect_test "MATCH fail test" =
   RETURN * |}
    | <span data-count="0">E</span>rror err -&gt; Stdlib.Format.print<span data-count="0">f</span> "Init error: %a" pp_req_error err);
   [%expect {|
-    (Interpreter_err (Multiple_def "r")) |}<span data-count="81">]</span>
+    (Interpreter_err (Multiple_def "r")) |}<span data-count="85">]</span>
 ;;
 </code></pre>
       </div>

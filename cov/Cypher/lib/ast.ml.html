@@ -222,11 +222,11 @@
 
 (** SPDX-License-Identifier: MIT *)
 
-<span data-count="0">t</span>ype name = <span data-count="794">s</span>tring [@@deriving show { with_path = false }]
+<span data-count="0">t</span>ype name = <span data-count="808">s</span>tring [@@deriving show { with_path = false }]
 
-<span data-count="937">t</span>ype constant =
+<span data-count="985">t</span>ype constant =
   | Float of floa<span data-count="13">t</span>
-  | Int64 of int6<span data-count="96">4</span>
+  | Int64 of int6<span data-count="112">4</span>
   | String of strin<span data-count="175">g</span>
   | Bool of boo<span data-count="19">l</span>
   | Null
@@ -263,14 +263,14 @@
   | GEq
 [@@deriving show { with_path = false }]
 
-<span data-count="1646">t</span>ype expression =
+<span data-count="1686">t</span>ype expression =
   | Const of constant
   | Var of name
   | Property of name * name
   | Bin_op of bin_op * expression * expression
   | Un_op of un_op * expression
   | List_op of expression * <span data-count="182">(</span><span data-count="64">l</span>ist_op * expression) lis<span data-count="59">t</span>
-[@@deriving show { with_path = false }<span data-count="1249">]</span>
+[@@deriving show { with_path = false }<span data-count="1269">]</span>
 
 <span data-count="432">t</span>ype pattern = <span data-count="902">n</span>ame lis<span data-count="170">t</span> * <span data-count="650">(</span><span data-count="94">n</span>ame * expression) lis<span data-count="342">t</span>
 [@@deriving show { with_path = false }<span data-count="389">]</span>
@@ -289,30 +289,30 @@
   }
 [@@deriving show { with_path = false }<span data-count="668">]</span>
 
-<span data-count="21">t</span>ype where = <span data-count="190">e</span>xpression lis<span data-count="64">t</span> [@@deriving show { with_path = false }<span data-count="42">]</span>
+<span data-count="21">t</span>ype where = <span data-count="194">e</span>xpression lis<span data-count="66">t</span> [@@deriving show { with_path = false }<span data-count="42">]</span>
 
 <span data-count="2">t</span>ype order_by_cond =
   | Asc
   | Desc
 [@@deriving show { with_path = false }]
 
-<span data-count="8">t</span>ype order_by = <span data-count="152">(</span><span data-count="14">e</span>xpression lis<span data-count="2">t</span> * order_by_cond) lis<span data-count="73">t</span>
+<span data-count="8">t</span>ype order_by = <span data-count="160">(</span><span data-count="14">e</span>xpression lis<span data-count="2">t</span> * order_by_cond) lis<span data-count="77">t</span>
 [@@deriving show { with_path = false }<span data-count="10">]</span>
 
-<span data-count="19">t</span>ype star = All [@@deriving show { with_path = false }]
+<span data-count="20">t</span>ype star = All [@@deriving show { with_path = false }]
 
 <span data-count="9">t</span>ype delete_attr =
   | Detach
   | Nodetach
 [@@deriving show { with_path = false }]
 
-<span data-count="1177">t</span>ype clause =
-  | With of <span data-count="40">s</span>tar option * <span data-count="109">(</span><span data-count="30">e</span>xpression * name) lis<span data-count="44">t</span> * order_by * where * clause
+<span data-count="1234">t</span>ype clause =
+  | With of <span data-count="42">s</span>tar option * <span data-count="129">(</span><span data-count="38">e</span>xpression * name) lis<span data-count="50">t</span> * order_by * where * clause
   | Match of <span data-count="227">p</span>ath lis<span data-count="46">t</span> * where * clause
   | Create of <span data-count="155">p</span>ath lis<span data-count="35">t</span> * <span data-count="48">c</span>lause optio<span data-count="15">n</span>
   | Delete of delete_attr * <span data-count="62">n</span>ame lis<span data-count="20">t</span> * <span data-count="30">c</span>lause optio<span data-count="9">n</span>
-  | Return of <span data-count="71">s</span>tar option * <span data-count="421">(</span><span data-count="154">e</span>xpression * <span data-count="174">n</span>ame optio<span data-count="77">n</span>) lis<span data-count="137">t</span> * order_by
-[@@deriving show { with_path = false }<span data-count="1116">]</span>
+  | Return of <span data-count="75">s</span>tar option * <span data-count="449">(</span><span data-count="166">e</span>xpression * <span data-count="186">n</span>ame optio<span data-count="83">n</span>) lis<span data-count="145">t</span> * order_by
+[@@deriving show { with_path = false }<span data-count="1174">]</span>
 </code></pre>
       </div>
     </div>
