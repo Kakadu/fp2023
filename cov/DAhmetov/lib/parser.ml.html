@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8"/>
     <title>parser.ml &mdash; Coverage report</title>
-    <meta name="description" content="88.68% coverage in lib/parser.ml">
+    <meta name="description" content="88.99% coverage in lib/parser.ml">
     <link rel="stylesheet" href="../coverage.css"/>
     <script src="../highlight.pack.js"></script>
     <script>hljs.initHighlightingOnLoad();</script>
@@ -15,7 +15,7 @@
           <span class="dirname">lib/</span>parser.ml
         </a>
       </h1>
-      <h2>88.68%</h2>
+      <h2>88.99%</h2>
     </div>
     <div id="navbar">
       <span class="some-visited" style="top:4.38%"></span>
@@ -563,27 +563,27 @@ open Ast
 type input = char list
 
 let is_empty = function
-  | <span data-count="3999">'</span> ' | <span data-count="0">'</span>\t' | <span data-count="730">'</span>\n' | <span data-count="0">'</span>\r' -&gt; true
-  | <span data-count="9626">_</span> -&gt; false
+  | <span data-count="4868">'</span> ' | <span data-count="0">'</span>\t' | <span data-count="878">'</span>\n' | <span data-count="0">'</span>\r' -&gt; true
+  | <span data-count="15109">_</span> -&gt; false
 ;;
 
 let is_digit = function
-  | <span data-count="120">'</span>0' .. '9' -&gt; true
-  | <span data-count="1215">_</span> -&gt; false
+  | <span data-count="132">'</span>0' .. '9' -&gt; true
+  | <span data-count="1880">_</span> -&gt; false
 ;;
 
 let is_letter = function
-  | <span data-count="635">'</span>a' .. 'z' -&gt; true
-  | <span data-count="815">_</span> -&gt; false
+  | <span data-count="815">'</span>a' .. 'z' -&gt; true
+  | <span data-count="1363">_</span> -&gt; false
 ;;
 
 let is_Uletter = function
   | <span data-count="0">'</span>A' .. 'Z' -&gt; true
-  | <span data-count="273">_</span> -&gt; false
+  | <span data-count="357">_</span> -&gt; false
 ;;
 
 let is_keyword = function
-  | <span data-count="23">"</span>let"
+  | <span data-count="29">"</span>let"
   | <span data-count="0">"</span>rec"
   | <span data-count="0">"</span>fun"
   | <span data-count="0">"</span>true"
@@ -595,213 +595,213 @@ let is_keyword = function
   | <span data-count="0">"</span>match"
   | <span data-count="5">"</span>with"
   | <span data-count="0">"</span>if"
-  | <span data-count="13">"</span>then"
-  | <span data-count="13">"</span>else" -&gt; true
-  | <span data-count="154">_</span> -&gt; false
+  | <span data-count="16">"</span>then"
+  | <span data-count="16">"</span>else" -&gt; true
+  | <span data-count="205">_</span> -&gt; false
 ;;
 
 let chainl1 e op =
-  <span data-count="196">l</span>et rec go acc = <span data-count="2530">l</span>ift<span data-count="2530">2</span> (fun f x -&gt; <span data-count="88">f</span> acc x) op e &gt;&gt;<span data-count="2530">=</span> go &lt;|&gt; retur<span data-count="2530">n</span> acc in
-  e &gt;&gt;= fun init -&gt; <span data-count="2442">g</span>o init
+  <span data-count="210">l</span>et rec go acc = <span data-count="3345">l</span>ift<span data-count="3345">2</span> (fun f x -&gt; <span data-count="122">f</span> acc x) op e &gt;&gt;<span data-count="3345">=</span> go &lt;|&gt; retur<span data-count="3345">n</span> acc in
+  e &gt;&gt;= fun init -&gt; <span data-count="3223">g</span>o init
 ;;
 
 let rec chainr1 e op = <span data-count="0">e</span> &gt;&gt;= fun a -&gt; <span data-count="0">o</span>p &gt;&gt;<span data-count="0">=</span> (fun f -&gt; <span data-count="0">c</span>hainr<span data-count="0">1</span> e op &gt;&gt;| <span data-count="0">f</span> a) &lt;|&gt; retur<span data-count="0">n</span> a
 
 let is_iddent_symbol = function
-  | <span data-count="177">c</span> -&gt; is_digi<span data-count="177">t</span> <span data-count="0">c</span> || is_lette<span data-count="177">r</span> <span data-count="112">c</span> || is_Ulette<span data-count="65">r</span> <span data-count="0">c</span> || Char.equal c '_'
+  | <span data-count="228">c</span> -&gt; is_digi<span data-count="228">t</span> <span data-count="0">c</span> || is_lette<span data-count="228">r</span> <span data-count="142">c</span> || is_Ulette<span data-count="86">r</span> <span data-count="0">c</span> || Char.equal c '_'
 ;;
 
-let empty = take_whil<span data-count="15">e</span> is_empty
-let trim p = <span data-count="389">e</span>mpty *&gt; p
-let trimchar c = <span data-count="14">e</span>mpty *&gt; cha<span data-count="14">r</span> c
-let trimstr s = <span data-count="95">t</span>rim @@ strin<span data-count="95">g</span> s
-let token s = <span data-count="476">e</span>mpty *&gt; strin<span data-count="476">g</span> s
-let between p = <span data-count="24">t</span>oke<span data-count="24">n</span> "(" *<span data-count="24">&gt;</span> p &lt;* toke<span data-count="24">n</span> ")"
-let emptylist = trimst<span data-count="15">r</span> "[]" *<span data-count="15">&gt;</span> retur<span data-count="15">n</span> true
+let empty = take_whil<span data-count="16">e</span> is_empty
+let trim p = <span data-count="417">e</span>mpty *&gt; p
+let trimchar c = <span data-count="15">e</span>mpty *&gt; cha<span data-count="15">r</span> c
+let trimstr s = <span data-count="102">t</span>rim @@ strin<span data-count="102">g</span> s
+let token s = <span data-count="510">e</span>mpty *&gt; strin<span data-count="510">g</span> s
+let between p = <span data-count="26">t</span>oke<span data-count="26">n</span> "(" *<span data-count="26">&gt;</span> p &lt;* toke<span data-count="26">n</span> ")"
+let emptylist = trimst<span data-count="16">r</span> "[]" *<span data-count="16">&gt;</span> retur<span data-count="16">n</span> true
 
 let pIdent =
-  tri<span data-count="15">m</span>
-  @@ lift<span data-count="15">2</span>
-       (fun hd tl -&gt; <span data-count="208">C</span>har.escape<span data-count="208">d</span> hd ^ tl)
-       (satisf<span data-count="15">y</span> (fun ch -&gt; <span data-count="750">c</span>h = '_<span data-count="0">'</span> || is_letter ch))
-       (take_whil<span data-count="15">e</span> (fun ch -&gt; <span data-count="523">c</span>h = '_<span data-count="0">'</span> || is_lette<span data-count="523">r</span> c<span data-count="315">h</span> || is_Ulette<span data-count="208">r</span> c<span data-count="0">h</span> || is_digit ch))
-  &gt;&gt;<span data-count="15">=</span> fun s -&gt;
-  <span data-count="208">i</span>f is_keyword s
-  then <span data-count="54">f</span>ail "keyword reserved"
-  else <span data-count="154">i</span>f s = "_"
+  tri<span data-count="16">m</span>
+  @@ lift<span data-count="16">2</span>
+       (fun hd tl -&gt; <span data-count="271">C</span>har.escape<span data-count="271">d</span> hd ^ tl)
+       (satisf<span data-count="16">y</span> (fun ch -&gt; <span data-count="1277">c</span>h = '_<span data-count="0">'</span> || is_letter ch))
+       (take_whil<span data-count="16">e</span> (fun ch -&gt; <span data-count="679">c</span>h = '_<span data-count="6">'</span> || is_lette<span data-count="673">r</span> c<span data-count="402">h</span> || is_Ulette<span data-count="271">r</span> c<span data-count="0">h</span> || is_digit ch))
+  &gt;&gt;<span data-count="16">=</span> fun s -&gt;
+  <span data-count="271">i</span>f is_keyword s
+  then <span data-count="66">f</span>ail "keyword reserved"
+  else <span data-count="205">i</span>f s = "_"
   then <span data-count="0">f</span>ail "wildcard `_` not supported"
-  else <span data-count="154">r</span>eturn s
+  else <span data-count="205">r</span>eturn s
 ;;
 
 (*-------------------------------------------------------------------*)
 (* types *)
-let pvar = tri<span data-count="15">m</span> @@ take_whil<span data-count="15">e</span> is_iddent_symbol
-let pstring = tri<span data-count="15">m</span> @@ (toke<span data-count="15">n</span> "\"" *<span data-count="15">&gt;</span> take_whil<span data-count="15">e</span> is_iddent_symbol) &lt;<span data-count="15">*</span> toke<span data-count="15">n</span> "\""
-let pint = int_of_string &lt;$<span data-count="15">&gt;</span> tri<span data-count="15">m</span> @@ take_while<span data-count="15">1</span> is_digit
-let pbool = choic<span data-count="15">e</span> [ toke<span data-count="15">n</span> "true" *<span data-count="15">&gt;</span> retur<span data-count="15">n</span> true; toke<span data-count="15">n</span> "false" *<span data-count="15">&gt;</span> retur<span data-count="15">n</span> false ]
+let pvar = tri<span data-count="16">m</span> @@ take_whil<span data-count="16">e</span> is_iddent_symbol
+let pstring = tri<span data-count="16">m</span> @@ (toke<span data-count="16">n</span> "\"" *<span data-count="16">&gt;</span> take_whil<span data-count="16">e</span> is_iddent_symbol) &lt;<span data-count="16">*</span> toke<span data-count="16">n</span> "\""
+let pint = int_of_string &lt;$<span data-count="16">&gt;</span> tri<span data-count="16">m</span> @@ take_while<span data-count="16">1</span> is_digit
+let pbool = choic<span data-count="16">e</span> [ toke<span data-count="16">n</span> "true" *<span data-count="16">&gt;</span> retur<span data-count="16">n</span> true; toke<span data-count="16">n</span> "false" *<span data-count="16">&gt;</span> retur<span data-count="16">n</span> false ]
 (* let plist pe = tlist &lt;$&gt; pe &lt;* trimchunk "list" *)
 
 (* Pattern *)
-let pnil = toke<span data-count="15">n</span> "[]" *<span data-count="15">&gt;</span> retur<span data-count="15">n</span> ppnill
+let pnil = toke<span data-count="16">n</span> "[]" *<span data-count="16">&gt;</span> retur<span data-count="16">n</span> ppnill
 
 let pptuple pp =
-  <span data-count="10">s</span>ep_b<span data-count="10">y</span> (trimst<span data-count="10">r</span> ",") pp
+  <span data-count="11">s</span>ep_b<span data-count="11">y</span> (trimst<span data-count="11">r</span> ",") pp
   &gt;&gt;= function
   | <span data-count="0">[</span>] -&gt; pp
-  | <span data-count="47">[</span> h ] -&gt; return h
-  | <span data-count="5">h</span> :: tl -&gt; return (pptupl<span data-count="5">e</span> (h :: tl))
+  | <span data-count="65">[</span> h ] -&gt; return h
+  | <span data-count="8">h</span> :: tl -&gt; return (pptupl<span data-count="8">e</span> (h :: tl))
 ;;
 
 let ppbase ppatern =
-  <span data-count="10">c</span>hoice
-    [ betwee<span data-count="10">n</span> ppatern
-    ; ppint &lt;$<span data-count="10">&gt;</span> tri<span data-count="10">m</span> pint
-    ; ppbool &lt;$<span data-count="10">&gt;</span> pbool
-    ; ppvar &lt;$<span data-count="10">&gt;</span> pvar
-    ; ppstring &lt;$<span data-count="10">&gt;</span> pstring
+  <span data-count="11">c</span>hoice
+    [ betwee<span data-count="11">n</span> ppatern
+    ; ppint &lt;$<span data-count="11">&gt;</span> tri<span data-count="11">m</span> pint
+    ; ppbool &lt;$<span data-count="11">&gt;</span> pbool
+    ; ppvar &lt;$<span data-count="11">&gt;</span> pvar
+    ; ppstring &lt;$<span data-count="11">&gt;</span> pstring
     ]
 ;;
 
 let ppattern =
-  fi<span data-count="15">x</span>
+  fi<span data-count="16">x</span>
   @@ fun ppatern -&gt;
-  <span data-count="10">l</span>et pp = ppbase ppatern in
-  <span data-count="10">l</span>et pp = pnil &lt;|&gt; pp in
-  <span data-count="10">l</span>et pp = pptupl<span data-count="10">e</span> pp &lt;|&gt; pp in
-  <span data-count="10">p</span>p
+  <span data-count="11">l</span>et pp = ppbase ppatern in
+  <span data-count="11">l</span>et pp = pnil &lt;|&gt; pp in
+  <span data-count="11">l</span>et pp = pptupl<span data-count="11">e</span> pp &lt;|&gt; pp in
+  <span data-count="11">p</span>p
 ;;
 
 (* Operation *)
 let peMul pe =
-  <span data-count="14">c</span>hainl1 pe (tri<span data-count="14">m</span> @@ (toke<span data-count="14">n</span> "*" *<span data-count="14">&gt;</span> retur<span data-count="14">n</span> (fun ex1 ex2 -&gt; <span data-count="9">e</span>_binop Multi ex1 ex2)))
+  <span data-count="15">c</span>hainl1 pe (tri<span data-count="15">m</span> @@ (toke<span data-count="15">n</span> "*" *<span data-count="15">&gt;</span> retur<span data-count="15">n</span> (fun ex1 ex2 -&gt; <span data-count="12">e</span>_binop Multi ex1 ex2)))
 ;;
 
 let peDiv pe =
-  <span data-count="14">c</span>hainl1 pe (tri<span data-count="14">m</span> @@ (toke<span data-count="14">n</span> "/" *<span data-count="14">&gt;</span> retur<span data-count="14">n</span> (fun ex1 ex2 -&gt; <span data-count="5">e</span>_binop Division ex1 ex2)))
+  <span data-count="15">c</span>hainl1 pe (tri<span data-count="15">m</span> @@ (toke<span data-count="15">n</span> "/" *<span data-count="15">&gt;</span> retur<span data-count="15">n</span> (fun ex1 ex2 -&gt; <span data-count="5">e</span>_binop Division ex1 ex2)))
 ;;
 
 let pePlus pe =
-  <span data-count="14">c</span>hainl1 pe (tri<span data-count="14">m</span> @@ (toke<span data-count="14">n</span> "+" *<span data-count="14">&gt;</span> retur<span data-count="14">n</span> (fun ex1 ex2 -&gt; <span data-count="13">e</span>_binop Plus ex1 ex2)))
+  <span data-count="15">c</span>hainl1 pe (tri<span data-count="15">m</span> @@ (toke<span data-count="15">n</span> "+" *<span data-count="15">&gt;</span> retur<span data-count="15">n</span> (fun ex1 ex2 -&gt; <span data-count="13">e</span>_binop Plus ex1 ex2)))
 ;;
 
 let peMinus pe =
-  <span data-count="14">c</span>hainl1 pe (tri<span data-count="14">m</span> @@ (toke<span data-count="14">n</span> "-" *<span data-count="14">&gt;</span> retur<span data-count="14">n</span> (fun ex1 ex2 -&gt; <span data-count="8">e</span>_binop Minus ex1 ex2)))
+  <span data-count="15">c</span>hainl1 pe (tri<span data-count="15">m</span> @@ (toke<span data-count="15">n</span> "-" *<span data-count="15">&gt;</span> retur<span data-count="15">n</span> (fun ex1 ex2 -&gt; <span data-count="11">e</span>_binop Minus ex1 ex2)))
 ;;
 
 let peEq pe =
-  <span data-count="14">c</span>hainl1 pe (tri<span data-count="14">m</span> @@ (toke<span data-count="14">n</span> "=" *<span data-count="14">&gt;</span> retur<span data-count="14">n</span> (fun ex1 ex2 -&gt; <span data-count="4">e</span>_binop Equal ex1 ex2)))
+  <span data-count="15">c</span>hainl1 pe (tri<span data-count="15">m</span> @@ (toke<span data-count="15">n</span> "=" *<span data-count="15">&gt;</span> retur<span data-count="15">n</span> (fun ex1 ex2 -&gt; <span data-count="4">e</span>_binop Equal ex1 ex2)))
 ;;
 
 let peNotEq pe =
-  <span data-count="14">c</span>hainl1 pe (tri<span data-count="14">m</span> @@ (toke<span data-count="14">n</span> "&lt;&gt;" *<span data-count="14">&gt;</span> retur<span data-count="14">n</span> (fun ex1 ex2 -&gt; <span data-count="0">e</span>_binop NotEqual ex1 ex2)))
+  <span data-count="15">c</span>hainl1 pe (tri<span data-count="15">m</span> @@ (toke<span data-count="15">n</span> "&lt;&gt;" *<span data-count="15">&gt;</span> retur<span data-count="15">n</span> (fun ex1 ex2 -&gt; <span data-count="0">e</span>_binop NotEqual ex1 ex2)))
 ;;
 
 let peLt pe =
-  <span data-count="14">c</span>hainl1 pe (tri<span data-count="14">m</span> @@ (toke<span data-count="14">n</span> "&lt;" *<span data-count="14">&gt;</span> retur<span data-count="14">n</span> (fun ex1 ex2 -&gt; <span data-count="5">e</span>_binop Lt ex1 ex2)))
+  <span data-count="15">c</span>hainl1 pe (tri<span data-count="15">m</span> @@ (toke<span data-count="15">n</span> "&lt;" *<span data-count="15">&gt;</span> retur<span data-count="15">n</span> (fun ex1 ex2 -&gt; <span data-count="5">e</span>_binop Lt ex1 ex2)))
 ;;
 
 let peLtq pe =
-  <span data-count="14">c</span>hainl1 pe (tri<span data-count="14">m</span> @@ (toke<span data-count="14">n</span> "&lt;=" *<span data-count="14">&gt;</span> retur<span data-count="14">n</span> (fun ex1 ex2 -&gt; <span data-count="3">e</span>_binop Ltq ex1 ex2)))
+  <span data-count="15">c</span>hainl1 pe (tri<span data-count="15">m</span> @@ (toke<span data-count="15">n</span> "&lt;=" *<span data-count="15">&gt;</span> retur<span data-count="15">n</span> (fun ex1 ex2 -&gt; <span data-count="6">e</span>_binop Ltq ex1 ex2)))
 ;;
 
 let peGt pe =
-  <span data-count="28">c</span>hainl1 pe (tri<span data-count="28">m</span> @@ (toke<span data-count="28">n</span> "&gt;" *<span data-count="28">&gt;</span> retur<span data-count="28">n</span> (fun ex1 ex2 -&gt; <span data-count="0">e</span>_binop Gt ex1 ex2)))
+  <span data-count="30">c</span>hainl1 pe (tri<span data-count="30">m</span> @@ (toke<span data-count="30">n</span> "&gt;" *<span data-count="30">&gt;</span> retur<span data-count="30">n</span> (fun ex1 ex2 -&gt; <span data-count="0">e</span>_binop Gt ex1 ex2)))
 ;;
 
 let peGtq pe =
-  <span data-count="14">c</span>hainl1 pe (tri<span data-count="14">m</span> @@ (toke<span data-count="14">n</span> "&gt;=" *<span data-count="14">&gt;</span> retur<span data-count="14">n</span> (fun ex1 ex2 -&gt; <span data-count="0">e</span>_binop Gtq ex1 ex2)))
+  <span data-count="15">c</span>hainl1 pe (tri<span data-count="15">m</span> @@ (toke<span data-count="15">n</span> "&gt;=" *<span data-count="15">&gt;</span> retur<span data-count="15">n</span> (fun ex1 ex2 -&gt; <span data-count="0">e</span>_binop Gtq ex1 ex2)))
 ;;
 
 let peAnd pe =
-  <span data-count="14">c</span>hainl1 pe (tri<span data-count="14">m</span> @@ (toke<span data-count="14">n</span> "&amp;&amp;" *<span data-count="14">&gt;</span> retur<span data-count="14">n</span> (fun ex1 ex2 -&gt; <span data-count="3">e</span>_binop And ex1 ex2)))
+  <span data-count="15">c</span>hainl1 pe (tri<span data-count="15">m</span> @@ (toke<span data-count="15">n</span> "&amp;&amp;" *<span data-count="15">&gt;</span> retur<span data-count="15">n</span> (fun ex1 ex2 -&gt; <span data-count="3">e</span>_binop And ex1 ex2)))
 ;;
 
 let peOr pe =
-  <span data-count="14">c</span>hainl1 pe (tri<span data-count="14">m</span> @@ (toke<span data-count="14">n</span> "||" *<span data-count="14">&gt;</span> retur<span data-count="14">n</span> (fun ex1 ex2 -&gt; <span data-count="3">e</span>_binop Or ex1 ex2)))
+  <span data-count="15">c</span>hainl1 pe (tri<span data-count="15">m</span> @@ (toke<span data-count="15">n</span> "||" *<span data-count="15">&gt;</span> retur<span data-count="15">n</span> (fun ex1 ex2 -&gt; <span data-count="3">e</span>_binop Or ex1 ex2)))
 ;;
 
 (* Same operation*)
 
-let peApp pe = <span data-count="14">c</span>hainl1 pe (retur<span data-count="14">n</span> (fun exp1 exp2 -&gt; <span data-count="35">e</span>_app exp1 exp2))
+let peApp pe = <span data-count="15">c</span>hainl1 pe (retur<span data-count="15">n</span> (fun exp1 exp2 -&gt; <span data-count="60">e</span>_app exp1 exp2))
 
 let pif pe =
-  <span data-count="14">t</span>rim @@ lift<span data-count="14">3</span> e_ifthenelse (toke<span data-count="14">n</span> "if" *<span data-count="14">&gt;</span> pe) (toke<span data-count="14">n</span> "then" *<span data-count="14">&gt;</span> pe) (toke<span data-count="14">n</span> "else" *<span data-count="14">&gt;</span> pe)
+  <span data-count="15">t</span>rim @@ lift<span data-count="15">3</span> e_ifthenelse (toke<span data-count="15">n</span> "if" *<span data-count="15">&gt;</span> pe) (toke<span data-count="15">n</span> "then" *<span data-count="15">&gt;</span> pe) (toke<span data-count="15">n</span> "else" *<span data-count="15">&gt;</span> pe)
 ;;
 
 let pematch expr =
-  <span data-count="14">l</span>et first_parse expr =
-    <span data-count="14">l</span>ift2 (fun pattern result -&gt; <span data-count="0">p</span>attern, result) (ppattern &lt;<span data-count="14">*</span> trimst<span data-count="14">r</span> "-&gt;") expr
+  <span data-count="15">l</span>et first_parse expr =
+    <span data-count="15">l</span>ift2 (fun pattern result -&gt; <span data-count="0">p</span>attern, result) (ppattern &lt;<span data-count="15">*</span> trimst<span data-count="15">r</span> "-&gt;") expr
   in
   let elem_parse expr =
-    <span data-count="14">l</span>ift2
+    <span data-count="15">l</span>ift2
       (fun pattern result -&gt; <span data-count="15">p</span>attern, result)
-      (trimcha<span data-count="14">r</span> '|' *<span data-count="14">&gt;</span> ppattern &lt;<span data-count="14">*</span> trimst<span data-count="14">r</span> "-&gt;")
+      (trimcha<span data-count="15">r</span> '|' *<span data-count="15">&gt;</span> ppattern &lt;<span data-count="15">*</span> trimst<span data-count="15">r</span> "-&gt;")
       expr
   in
   lift2
     e_match
-    (trimst<span data-count="14">r</span> "match" *<span data-count="14">&gt;</span> expr &lt;<span data-count="14">*</span> trimst<span data-count="14">r</span> "with")
-    (many<span data-count="14">1</span> (elem_pars<span data-count="14">e</span> expr)
-     &lt;|<span data-count="14">&gt;</span> (first_pars<span data-count="14">e</span> expr &gt;&gt;<span data-count="14">=</span> fun h -&gt; <span data-count="0">m</span>an<span data-count="0">y</span> (elem_pars<span data-count="0">e</span> expr) &gt;&gt;| fun tl -&gt; <span data-count="0">h</span> :: tl))
+    (trimst<span data-count="15">r</span> "match" *<span data-count="15">&gt;</span> expr &lt;<span data-count="15">*</span> trimst<span data-count="15">r</span> "with")
+    (many<span data-count="15">1</span> (elem_pars<span data-count="15">e</span> expr)
+     &lt;|<span data-count="15">&gt;</span> (first_pars<span data-count="15">e</span> expr &gt;&gt;<span data-count="15">=</span> fun h -&gt; <span data-count="0">m</span>an<span data-count="0">y</span> (elem_pars<span data-count="0">e</span> expr) &gt;&gt;| fun tl -&gt; <span data-count="0">h</span> :: tl))
 ;;
 
 let petuple pe =
-  <span data-count="14">s</span>ep_b<span data-count="14">y</span> (trimst<span data-count="14">r</span> ",") pe
+  <span data-count="15">s</span>ep_b<span data-count="15">y</span> (trimst<span data-count="15">r</span> ",") pe
   &gt;&gt;= function
   | <span data-count="0">[</span>] -&gt; pe
-  | <span data-count="128">[</span> h ] -&gt; return h
-  | <span data-count="11">h</span> :: tl -&gt; return (e_tupl<span data-count="11">e</span> (h :: tl))
+  | <span data-count="171">[</span> h ] -&gt; return h
+  | <span data-count="16">h</span> :: tl -&gt; return (e_tupl<span data-count="16">e</span> (h :: tl))
 ;;
 
-let pefun pe = <span data-count="14">t</span>rim @@ (toke<span data-count="14">n</span> "fun" *<span data-count="14">&gt;</span> lift<span data-count="14">2</span> e_fun ppattern (tri<span data-count="14">m</span> @@ (toke<span data-count="14">n</span> "-&gt;" *<span data-count="14">&gt;</span> pe)))
+let pefun pe = <span data-count="15">t</span>rim @@ (toke<span data-count="15">n</span> "fun" *<span data-count="15">&gt;</span> lift<span data-count="15">2</span> e_fun ppattern (tri<span data-count="15">m</span> @@ (toke<span data-count="15">n</span> "-&gt;" *<span data-count="15">&gt;</span> pe)))
 
 let pelet pe =
-  <span data-count="14">t</span>oke<span data-count="14">n</span> "let"
-  *&gt; lift<span data-count="14">4</span>
+  <span data-count="15">t</span>oke<span data-count="15">n</span> "let"
+  *&gt; lift<span data-count="15">4</span>
        e_let
-       (toke<span data-count="14">n</span> "rec" *<span data-count="14">&gt;</span> retur<span data-count="14">n</span> true &lt;|<span data-count="14">&gt;</span> retur<span data-count="14">n</span> false)
+       (toke<span data-count="15">n</span> "rec" *<span data-count="15">&gt;</span> retur<span data-count="15">n</span> true &lt;|<span data-count="15">&gt;</span> retur<span data-count="15">n</span> false)
        pIdent
-       (toke<span data-count="14">n</span> "=" *<span data-count="14">&gt;</span> pe)
-       (toke<span data-count="14">n</span> "in" *<span data-count="14">&gt;</span> pe)
+       (toke<span data-count="15">n</span> "=" *<span data-count="15">&gt;</span> pe)
+       (toke<span data-count="15">n</span> "in" *<span data-count="15">&gt;</span> pe)
 ;;
 
 let pexp =
-  fi<span data-count="15">x</span>
+  fi<span data-count="16">x</span>
   @@ fun pexp -&gt;
-  <span data-count="14">l</span>et pe = between pexp in
-  <span data-count="14">l</span>et pe = e_string &lt;$<span data-count="14">&gt;</span> pstring &lt;|&gt; pe in
-  <span data-count="14">l</span>et pe = e_var &lt;$<span data-count="14">&gt;</span> pIdent &lt;|&gt; pe in
-  <span data-count="14">l</span>et pe = e_bool &lt;$<span data-count="14">&gt;</span> pbool &lt;|&gt; pe in
-  <span data-count="14">l</span>et pe = e_int &lt;$<span data-count="14">&gt;</span> pint &lt;|&gt; pe in
-  <span data-count="14">l</span>et pe = peAp<span data-count="14">p</span> pe &lt;|&gt; pe in
-  <span data-count="14">l</span>et pe = pePlu<span data-count="14">s</span> pe &lt;|&gt; pe in
-  <span data-count="14">l</span>et pe = peMinu<span data-count="14">s</span> pe &lt;|&gt; pe in
-  <span data-count="14">l</span>et pe = peMu<span data-count="14">l</span> pe &lt;|&gt; pe in
-  <span data-count="14">l</span>et pe = peDi<span data-count="14">v</span> pe &lt;|&gt; pe in
-  <span data-count="14">l</span>et pe = peE<span data-count="14">q</span> pe &lt;|&gt; pe in
-  <span data-count="14">l</span>et pe = peNotE<span data-count="14">q</span> pe &lt;|&gt; pe in
-  <span data-count="14">l</span>et pe = peL<span data-count="14">t</span> pe &lt;|&gt; pe in
-  <span data-count="14">l</span>et pe = peLt<span data-count="14">q</span> pe &lt;|&gt; pe in
-  <span data-count="14">l</span>et pe = peG<span data-count="14">t</span> pe &lt;|&gt; pe in
-  <span data-count="14">l</span>et pe = peG<span data-count="14">t</span> pe &lt;|&gt; pe in
-  <span data-count="14">l</span>et pe = peGt<span data-count="14">q</span> pe &lt;|&gt; pe in
-  <span data-count="14">l</span>et pe = peAn<span data-count="14">d</span> pe &lt;|&gt; pe in
-  <span data-count="14">l</span>et pe = peO<span data-count="14">r</span> pe &lt;|&gt; pe in
-  <span data-count="14">l</span>et pe = petupl<span data-count="14">e</span> pe &lt;|&gt; pe in
-  <span data-count="14">l</span>et pe = pi<span data-count="14">f</span> pe &lt;|&gt; pe in
-  <span data-count="14">l</span>et pe = pematc<span data-count="14">h</span> pe &lt;|&gt; pe in
-  <span data-count="14">l</span>et pe = pefu<span data-count="14">n</span> pe &lt;|&gt; pe in
-  <span data-count="14">l</span>et pe = pele<span data-count="14">t</span> pe &lt;|&gt; pe in
-  <span data-count="14">p</span>e
+  <span data-count="15">l</span>et pe = between pexp in
+  <span data-count="15">l</span>et pe = e_string &lt;$<span data-count="15">&gt;</span> pstring &lt;|&gt; pe in
+  <span data-count="15">l</span>et pe = e_var &lt;$<span data-count="15">&gt;</span> pIdent &lt;|&gt; pe in
+  <span data-count="15">l</span>et pe = e_bool &lt;$<span data-count="15">&gt;</span> pbool &lt;|&gt; pe in
+  <span data-count="15">l</span>et pe = e_int &lt;$<span data-count="15">&gt;</span> pint &lt;|&gt; pe in
+  <span data-count="15">l</span>et pe = peAp<span data-count="15">p</span> pe &lt;|&gt; pe in
+  <span data-count="15">l</span>et pe = pePlu<span data-count="15">s</span> pe &lt;|&gt; pe in
+  <span data-count="15">l</span>et pe = peMinu<span data-count="15">s</span> pe &lt;|&gt; pe in
+  <span data-count="15">l</span>et pe = peMu<span data-count="15">l</span> pe &lt;|&gt; pe in
+  <span data-count="15">l</span>et pe = peDi<span data-count="15">v</span> pe &lt;|&gt; pe in
+  <span data-count="15">l</span>et pe = peE<span data-count="15">q</span> pe &lt;|&gt; pe in
+  <span data-count="15">l</span>et pe = peNotE<span data-count="15">q</span> pe &lt;|&gt; pe in
+  <span data-count="15">l</span>et pe = peL<span data-count="15">t</span> pe &lt;|&gt; pe in
+  <span data-count="15">l</span>et pe = peLt<span data-count="15">q</span> pe &lt;|&gt; pe in
+  <span data-count="15">l</span>et pe = peG<span data-count="15">t</span> pe &lt;|&gt; pe in
+  <span data-count="15">l</span>et pe = peG<span data-count="15">t</span> pe &lt;|&gt; pe in
+  <span data-count="15">l</span>et pe = peGt<span data-count="15">q</span> pe &lt;|&gt; pe in
+  <span data-count="15">l</span>et pe = peAn<span data-count="15">d</span> pe &lt;|&gt; pe in
+  <span data-count="15">l</span>et pe = peO<span data-count="15">r</span> pe &lt;|&gt; pe in
+  <span data-count="15">l</span>et pe = petupl<span data-count="15">e</span> pe &lt;|&gt; pe in
+  <span data-count="15">l</span>et pe = pi<span data-count="15">f</span> pe &lt;|&gt; pe in
+  <span data-count="15">l</span>et pe = pematc<span data-count="15">h</span> pe &lt;|&gt; pe in
+  <span data-count="15">l</span>et pe = pefu<span data-count="15">n</span> pe &lt;|&gt; pe in
+  <span data-count="15">l</span>et pe = pele<span data-count="15">t</span> pe &lt;|&gt; pe in
+  <span data-count="15">p</span>e
 ;;
 
 let pdecl =
-  toke<span data-count="15">n</span> "let"
-  *<span data-count="15">&gt;</span> lift<span data-count="15">3</span> d_decl (toke<span data-count="15">n</span> "rec" *<span data-count="15">&gt;</span> retur<span data-count="15">n</span> true &lt;|<span data-count="15">&gt;</span> retur<span data-count="15">n</span> false) pIdent (toke<span data-count="15">n</span> "=" *<span data-count="15">&gt;</span> pexp)
+  toke<span data-count="16">n</span> "let"
+  *<span data-count="16">&gt;</span> lift<span data-count="16">3</span> d_decl (toke<span data-count="16">n</span> "rec" *<span data-count="16">&gt;</span> retur<span data-count="16">n</span> true &lt;|<span data-count="16">&gt;</span> retur<span data-count="16">n</span> false) pIdent (toke<span data-count="16">n</span> "=" *<span data-count="16">&gt;</span> pexp)
 ;;
 
-let parse_program = man<span data-count="15">y</span> pdecl &lt;<span data-count="15">*</span> empty
-let parse str = <span data-count="45">p</span>arse_string ~consume:All parse_program str
+let parse_program = man<span data-count="16">y</span> pdecl &lt;<span data-count="16">*</span> empty
+let parse str = <span data-count="48">p</span>arse_string ~consume:All parse_program str
 
 (*========================================================================================*)
 </code></pre>

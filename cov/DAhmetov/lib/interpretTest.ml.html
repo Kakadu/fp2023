@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8"/>
     <title>interpretTest.ml &mdash; Coverage report</title>
-    <meta name="description" content="98.65% coverage in lib/interpretTest.ml">
+    <meta name="description" content="98.70% coverage in lib/interpretTest.ml">
     <link rel="stylesheet" href="../coverage.css"/>
     <script src="../highlight.pack.js"></script>
     <script>hljs.initHighlightingOnLoad();</script>
@@ -15,10 +15,10 @@
           <span class="dirname">lib/</span>interpretTest.ml
         </a>
       </h1>
-      <h2>98.65%</h2>
+      <h2>98.70%</h2>
     </div>
     <div id="navbar">
-      <span class="unvisited" style="top:7.10%"></span>
+      <span class="unvisited" style="top:6.34%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -206,6 +206,28 @@
 <a id="L181"></a><span > </span>
 <a id="L182"></a><span class="visited"> </span>
 <a id="L183"></a><span > </span>
+<a id="L184"></a><span > </span>
+<a id="L185"></a><span > </span>
+<a id="L186"></a><span > </span>
+<a id="L187"></a><span > </span>
+<a id="L188"></a><span > </span>
+<a id="L189"></a><span > </span>
+<a id="L190"></a><span > </span>
+<a id="L191"></a><span > </span>
+<a id="L192"></a><span > </span>
+<a id="L193"></a><span > </span>
+<a id="L194"></a><span class="visited"> </span>
+<a id="L195"></a><span > </span>
+<a id="L196"></a><span > </span>
+<a id="L197"></a><span > </span>
+<a id="L198"></a><span > </span>
+<a id="L199"></a><span > </span>
+<a id="L200"></a><span > </span>
+<a id="L201"></a><span class="visited"> </span>
+<a id="L202"></a><span > </span>
+<a id="L203"></a><span > </span>
+<a id="L204"></a><span class="visited"> </span>
+<a id="L205"></a><span > </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -393,6 +415,28 @@
 <a href="#L181">181</a>
 <a href="#L182">182</a>
 <a href="#L183">183</a>
+<a href="#L184">184</a>
+<a href="#L185">185</a>
+<a href="#L186">186</a>
+<a href="#L187">187</a>
+<a href="#L188">188</a>
+<a href="#L189">189</a>
+<a href="#L190">190</a>
+<a href="#L191">191</a>
+<a href="#L192">192</a>
+<a href="#L193">193</a>
+<a href="#L194">194</a>
+<a href="#L195">195</a>
+<a href="#L196">196</a>
+<a href="#L197">197</a>
+<a href="#L198">198</a>
+<a href="#L199">199</a>
+<a href="#L200">200</a>
+<a href="#L201">201</a>
+<a href="#L202">202</a>
+<a href="#L203">203</a>
+<a href="#L204">204</a>
+<a href="#L205">205</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2023-2024, Lesh79 *)
 
@@ -401,10 +445,10 @@
 open Interpret
 
 let parse_and_interpret str =
-  <span data-count="23">m</span>atch Parser.parse str with
-  | <span data-count="23">O</span>k parse_result -&gt;
+  <span data-count="24">m</span>atch Parser.parse str with
+  | <span data-count="24">O</span>k parse_result -&gt;
     (match InterpretResult.exec_program parse_result with
-     | <span data-count="20">O</span>k actual -&gt; Format.printf "%a" pp_env actual
+     | <span data-count="21">O</span>k actual -&gt; Format.printf "%a" pp_env actual
      | <span data-count="3">E</span>rror err -&gt; Format.printf "%a" print_failure err)
   | <span data-count="0">E</span>rror err -&gt; Format.printf "Parsing error: %s\n " err
 ;;
@@ -576,6 +620,28 @@ let%expect_test _ =
 a: 720
 fac: &lt;fun&gt;
 fix: &lt;rec fun&gt;|}<span data-count="7">]</span>
+;;
+
+(* let%expect_test _ =
+   let _ = parse_and_interpret "let x = fun (y,a) -&gt; y + a\n      let res = x(5,5)" in
+   [%expect {|
+a: 720
+fac: &lt;fun&gt;
+fix: &lt;rec fun&gt;|}]
+   ;; *)
+
+let%expect_test _ =
+  <span data-count="1">l</span>et _ =
+    parse_and_interpret
+      "let rec fix = (fun f -&gt; (fun x -&gt; f (fix f) x))\n\
+       let fac_cps = fix (fun self -&gt; (fun (n, k) -&gt; if n &lt;= 1 then k 1 else self ((n - \
+       1), (fun x -&gt; k (n * x)))))\n\
+       let a = fac_cps (6, (fun x -&gt; x))"
+  in
+  <span data-count="1">[</span>%expect {|
+    a: 720
+    fac_cps: &lt;fun&gt;
+    fix: &lt;rec fun&gt; |}<span data-count="7">]</span>
 ;;
 </code></pre>
       </div>

@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8"/>
     <title>parserTest.ml &mdash; Coverage report</title>
-    <meta name="description" content="77.78% coverage in lib/parserTest.ml">
+    <meta name="description" content="78.95% coverage in lib/parserTest.ml">
     <link rel="stylesheet" href="../coverage.css"/>
     <script src="../highlight.pack.js"></script>
     <script>hljs.initHighlightingOnLoad();</script>
@@ -15,12 +15,12 @@
           <span class="dirname">lib/</span>parserTest.ml
         </a>
       </h1>
-      <h2>77.78%</h2>
+      <h2>78.95%</h2>
     </div>
     <div id="navbar">
-      <span class="some-visited" style="top:9.76%"></span>
-      <span class="unvisited" style="top:11.38%"></span>
-      <span class="unvisited" style="top:13.01%"></span>
+      <span class="some-visited" style="top:7.50%"></span>
+      <span class="unvisited" style="top:8.75%"></span>
+      <span class="unvisited" style="top:10.00%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -148,6 +148,43 @@
 <a id="L121"></a><span > </span>
 <a id="L122"></a><span class="visited"> </span>
 <a id="L123"></a><span > </span>
+<a id="L124"></a><span > </span>
+<a id="L125"></a><span > </span>
+<a id="L126"></a><span class="visited"> </span>
+<a id="L127"></a><span > </span>
+<a id="L128"></a><span > </span>
+<a id="L129"></a><span > </span>
+<a id="L130"></a><span > </span>
+<a id="L131"></a><span > </span>
+<a id="L132"></a><span > </span>
+<a id="L133"></a><span > </span>
+<a id="L134"></a><span > </span>
+<a id="L135"></a><span > </span>
+<a id="L136"></a><span > </span>
+<a id="L137"></a><span > </span>
+<a id="L138"></a><span > </span>
+<a id="L139"></a><span > </span>
+<a id="L140"></a><span > </span>
+<a id="L141"></a><span > </span>
+<a id="L142"></a><span > </span>
+<a id="L143"></a><span > </span>
+<a id="L144"></a><span > </span>
+<a id="L145"></a><span > </span>
+<a id="L146"></a><span > </span>
+<a id="L147"></a><span > </span>
+<a id="L148"></a><span > </span>
+<a id="L149"></a><span > </span>
+<a id="L150"></a><span > </span>
+<a id="L151"></a><span > </span>
+<a id="L152"></a><span > </span>
+<a id="L153"></a><span > </span>
+<a id="L154"></a><span > </span>
+<a id="L155"></a><span > </span>
+<a id="L156"></a><span > </span>
+<a id="L157"></a><span > </span>
+<a id="L158"></a><span > </span>
+<a id="L159"></a><span > </span>
+<a id="L160"></a><span > </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -275,6 +312,43 @@
 <a href="#L121">121</a>
 <a href="#L122">122</a>
 <a href="#L123">123</a>
+<a href="#L124">124</a>
+<a href="#L125">125</a>
+<a href="#L126">126</a>
+<a href="#L127">127</a>
+<a href="#L128">128</a>
+<a href="#L129">129</a>
+<a href="#L130">130</a>
+<a href="#L131">131</a>
+<a href="#L132">132</a>
+<a href="#L133">133</a>
+<a href="#L134">134</a>
+<a href="#L135">135</a>
+<a href="#L136">136</a>
+<a href="#L137">137</a>
+<a href="#L138">138</a>
+<a href="#L139">139</a>
+<a href="#L140">140</a>
+<a href="#L141">141</a>
+<a href="#L142">142</a>
+<a href="#L143">143</a>
+<a href="#L144">144</a>
+<a href="#L145">145</a>
+<a href="#L146">146</a>
+<a href="#L147">147</a>
+<a href="#L148">148</a>
+<a href="#L149">149</a>
+<a href="#L150">150</a>
+<a href="#L151">151</a>
+<a href="#L152">152</a>
+<a href="#L153">153</a>
+<a href="#L154">154</a>
+<a href="#L155">155</a>
+<a href="#L156">156</a>
+<a href="#L157">157</a>
+<a href="#L158">158</a>
+<a href="#L159">159</a>
+<a href="#L160">160</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2023-2024, Lesh79 *)
 
@@ -284,10 +358,10 @@ open Ast
 open Parser
 
 let test_parse str expected =
-  <span data-count="10">m</span>atch parse str with
-  | <span data-count="10">O</span>k actual -&gt;
+  <span data-count="11">m</span>atch parse str with
+  | <span data-count="11">O</span>k actual -&gt;
     let is_eq = List.equal equal_decl expected actual in
-    <span data-count="10">i</span>f is_eq then <span data-count="10">(</span>) else <span data-count="0">F</span>ormat.print<span data-count="0">f</span> "Actual %a\n" pp_program actual;
+    <span data-count="11">i</span>f is_eq then <span data-count="11">(</span>) else <span data-count="0">F</span>ormat.print<span data-count="0">f</span> "Actual %a\n" pp_program actual;
     is_eq
   | <span data-count="0">E</span>rror err -&gt;
     Format.printf "%s\n" err;
@@ -398,6 +472,43 @@ let%test _ =
 
 let%test _ =
   <span data-count="1">t</span>est_parse "let x = (1, 2)" [ DeclLet (false, "x", ETuple [ EInt 1; EInt 2 ]) ]
+;;
+
+let%test _ =
+  <span data-count="1">t</span>est_parse
+    "let rec fix = (fun f -&gt; (fun x -&gt; f (fix f) x))\n\
+    \  let fac_cps = (fix (fun self -&gt; (fun (n,k) -&gt; if n &lt;= 1 then k 1 else self (n - \
+     1) (fun x -&gt; k (n * x)))))\n\
+    \  let a = fac_cps (6, (fun x -&gt; x))"
+    [ DeclLet
+        ( true
+        , "fix"
+        , EFun
+            ( PVar "f"
+            , EFun
+                (PVar "x", EApp (EApp (EVar "f", EApp (EVar "fix", EVar "f")), EVar "x"))
+            ) )
+    ; DeclLet
+        ( false
+        , "fac_cps"
+        , EApp
+            ( EVar "fix"
+            , EFun
+                ( PVar "self"
+                , EFun
+                    ( PTuple [ PVar "n"; PVar "k" ]
+                    , EIfThenElse
+                        ( EBinop (Ltq, EVar "n", EInt 1)
+                        , EApp (EVar "k", EInt 1)
+                        , EApp
+                            ( EApp (EVar "self", EBinop (Minus, EVar "n", EInt 1))
+                            , EFun
+                                ( PVar "x"
+                                , EApp (EVar "k", EBinop (Multi, EVar "n", EVar "x")) ) )
+                        ) ) ) ) )
+    ; DeclLet
+        (false, "a", EApp (EVar "fac_cps", ETuple [ EInt 6; EFun (PVar "x", EVar "x") ]))
+    ]
 ;;
 </code></pre>
       </div>
