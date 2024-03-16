@@ -1,7 +1,3 @@
-(** Copyright 2021-2023, Kakadu, RozhkovAleksandr *)
-
-(** SPDX-License-Identifier: LGPL-3.0-or-later *)
-
 module R : sig
   type ('a, 'e) t = int -> int * ('a, 'e) result
 
@@ -282,7 +278,11 @@ module Subst : sig
   type t = (int, Typedtree.typ, Base.Int.comparator_witness) Base.Map.t
 
   val empty : (int, 'a, Base.Int.comparator_witness) Base.Map.t
-  val singleton : int * 'a -> ((int, 'a, Base.Int.comparator_witness) Base.Map.t, 'b) R.t
+
+  val singleton
+    :  int * Typedtree.typ
+    -> ((int, Typedtree.typ, Base.Int.comparator_witness) Base.Map.t, Errors.error) R.t
+
   val apply : t -> Typedtree.typ -> Typedtree.typ
 
   val unify

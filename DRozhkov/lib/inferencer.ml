@@ -62,7 +62,12 @@ module Subst = struct
   type t = (int, typ, Int.comparator_witness) Map.t
 
   let empty = Map.empty (module Int)
-  let singleton (k, v) = return (Map.singleton (module Int) k v)
+
+  let singleton (k, v) =
+    if Type.occurs_in k v
+    then fail Occurs_check
+    else return (Map.singleton (module Int) k v)
+  ;;
 
   let apply (subst : t) =
     let rec helper = function
@@ -87,7 +92,7 @@ module Subst = struct
       let* subs2 = unify (apply subs1 r1) (apply subs1 r2) in
       compose subs1 subs2
     | TList x1, TList x2 -> unify x1 x2
-    | _ -> fail (Invalid_format_concat (l, r))
+    | _ -> fail (Unification_failed (l, r))
 
   and extend (subst : t) (k, v) : (t, error) R.t =
     match Map.find subst k with
@@ -101,7 +106,7 @@ module Subst = struct
         let* acc = acc in
         let v = apply subst2 v in
         if Type.occurs_in k v
-        then fail (Occurs_check (k, v))
+        then fail Occurs_check
         else return (Map.set acc ~key:k ~data:v))
 
   and compose subst1 subst2 =
@@ -181,7 +186,7 @@ let lookup_env env id =
         return (Subst.apply subst typ))
     in
     return (Subst.empty, typ)
-  | None -> fail (Unbound_value id)
+  | None -> fail (No_variable id)
 ;;
 
 let inferencer =

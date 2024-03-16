@@ -6,14 +6,13 @@ open Format
 open Typedtree
 
 type error =
-  | Occurs_check of int * typ
-  | Unbound_value of string
-  | Invalid_format_concat of typ * typ
+  | Occurs_check
+  | No_variable of string
+  | Unification_failed of typ * typ
 
-let pp_error fmt = function
-  | Occurs_check (t, typ) ->
-    fprintf fmt "The type variable '%d occurs inside %a" t pp_typ typ
-  | Unbound_value x -> fprintf fmt "Unbound value %s" x
-  | Invalid_format_concat (l, r) ->
-    fprintf fmt "Failed to unify types %a and %a" pp_typ l pp_typ r
+let pp_error ppf : error -> _ = function
+  | Occurs_check -> fprintf ppf "Occurs check failed"
+  | No_variable s -> Format.fprintf ppf "Undefined variable: '%s'" s
+  | Unification_failed (l, r) ->
+    Format.fprintf ppf "Unification fail on %a and %a" pp_typ l pp_typ r
 ;;
