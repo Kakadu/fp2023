@@ -18,9 +18,10 @@
       <h2>0.00%</h2>
     </div>
     <div id="navbar">
-      <span class="unvisited" style="bottom:26.32%"></span>
-      <span class="unvisited" style="bottom:15.79%"></span>
-      <span class="unvisited" style="bottom:10.53%"></span>
+      <span class="unvisited" style="bottom:27.78%"></span>
+      <span class="unvisited" style="bottom:22.22%"></span>
+      <span class="unvisited" style="bottom:16.67%"></span>
+      <span class="unvisited" style="bottom:11.11%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -37,13 +38,12 @@
 <a id="L10"></a><span > </span>
 <a id="L11"></a><span > </span>
 <a id="L12"></a><span > </span>
-<a id="L13"></a><span > </span>
+<a id="L13"></a><span class="unvisited"> </span>
 <a id="L14"></a><span class="unvisited"> </span>
-<a id="L15"></a><span > </span>
+<a id="L15"></a><span class="unvisited"> </span>
 <a id="L16"></a><span class="unvisited"> </span>
-<a id="L17"></a><span class="unvisited"> </span>
+<a id="L17"></a><span > </span>
 <a id="L18"></a><span > </span>
-<a id="L19"></a><span > </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -66,7 +66,6 @@
 <a href="#L16">16</a>
 <a href="#L17">17</a>
 <a href="#L18">18</a>
-<a href="#L19">19</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2021-2023, Kakadu, RozhkovAleksandr*)
 
@@ -76,16 +75,15 @@ open Format
 open Typedtree
 
 type error =
-  | Occurs_check of int * typ
-  | Unbound_value of string
-  | Invalid_format_concat of typ * typ
+  | Occurs_check
+  | No_variable of string
+  | Unification_failed of typ * typ
 
-let pp_error fmt = function
-  | <span data-count="0">O</span>ccurs_check (t, typ) -&gt;
-    fprintf fmt "The type variable '%d occurs inside %a" t pp_typ typ
-  | <span data-count="0">U</span>nbound_value x -&gt; fprintf fmt "Unbound value %s" x
-  | <span data-count="0">I</span>nvalid_format_concat (l, r) -&gt;
-    fprintf fmt "Failed to unify types %a and %a" pp_typ l pp_typ r
+let pp_error ppf : error -&gt; _ = <span data-count="0">f</span>unction
+  | <span data-count="0">O</span>ccurs_check -&gt; fprintf ppf "Occurs check failed"
+  | <span data-count="0">N</span>o_variable s -&gt; Format.fprintf ppf "Undefined variable: '%s'" s
+  | <span data-count="0">U</span>nification_failed (l, r) -&gt;
+    Format.fprintf ppf "Unification fail on %a and %a" pp_typ l pp_typ r
 ;;
 </code></pre>
       </div>
