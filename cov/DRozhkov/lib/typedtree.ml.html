@@ -92,12 +92,12 @@
 open Format
 
 type typ =
-  | TInt
-  | TBool
-  | TEmpty
-  | TVar of int
-  | TList of typ
-  | TArrow of typ * typ
+  | TInt (* Type: Intenger*)
+  | TBool (* Type: Bool*)
+  | TEmpty (* Type: ()*)
+  | TVar of int (* Type: var *)
+  | TList of typ (* Type: list *)
+  | TArrow of typ * typ (* Type: function *)
 
 let rec pp_typ fmt = function
   | <span data-count="0">T</span>Int -&gt; fprintf fmt "int"
@@ -107,8 +107,8 @@ let rec pp_typ fmt = function
   | <span data-count="0">T</span>List x -&gt; fprintf fmt "%a list" pp_typ x
   | <span data-count="0">T</span>Arrow (l, r) -&gt;
     (match l, r with
-     | <span data-count="0">T</span>Arrow (_, _), _ -&gt; fprintf fmt "(%a) -&gt; %a" pp_typ l pp_typ r
-     | <span data-count="0">_</span>, _ -&gt; fprintf fmt "%a -&gt; %a" pp_typ l pp_typ r)
+     | <span data-count="0">T</span>Arrow _, _ -&gt; fprintf fmt "(%a) -&gt; %a" pp_typ l pp_typ r
+     | <span data-count="0">_</span> -&gt; fprintf fmt "%a -&gt; %a" pp_typ l pp_typ r)
 ;;
 </code></pre>
       </div>

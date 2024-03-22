@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8"/>
     <title>inferencer.ml &mdash; Coverage report</title>
-    <meta name="description" content="78.97% coverage in lib/inferencer.ml">
+    <meta name="description" content="78.69% coverage in lib/inferencer.ml">
     <link rel="stylesheet" href="../coverage.css"/>
     <script src="../highlight.pack.js"></script>
     <script>hljs.initHighlightingOnLoad();</script>
@@ -15,7 +15,7 @@
           <span class="dirname">lib/</span>inferencer.ml
         </a>
       </h1>
-      <h2>78.97%</h2>
+      <h2>78.69%</h2>
     </div>
     <div id="navbar">
       <span class="some-visited" style="top:12.08%"></span>
@@ -931,7 +931,7 @@ let inferencer =
   let rec helper env = function
     | <span data-count="31">C</span>onst (Int _) -&gt; return (Subst.empty, TInt)
     | <span data-count="5">C</span>onst (Bool _) -&gt; return (Subst.empty, TBool)
-    | <span data-count="0">C</span>onst Empty -&gt; return (Subst.empty, TEmpty)
+    | <span data-count="0">C</span>onst Empty | <span data-count="0">N</span>othing -&gt; return (Subst.empty, TEmpty)
     | <span data-count="16">V</span>ar x -&gt; lookup_env env x
     | <span data-count="6">F</span>un (x, e) -&gt;
       let* tv = varf in
@@ -964,8 +964,8 @@ let inferencer =
       <span data-count="1">l</span>et* subst5 = Subst.unif<span data-count="1">y</span> typ2 typ3 in
       <span data-count="1">l</span>et* final_subst = Subst.compose_al<span data-count="1">l</span> [ subst1; subst2; subst3; subst4; subst5 ] in
       <span data-count="1">r</span>eturn (final_subst, Subst.appl<span data-count="1">y</span> subst5 typ3)
-    | <span data-count="18">L</span>et (NoRec, _, e1, None) -&gt; helper env e1
-    | <span data-count="2">L</span>et (NoRec, x, e1, Some e2) -&gt;
+    | <span data-count="18">L</span>et (NoRec, _, e1, Nothing) -&gt; helper env e1
+    | <span data-count="2">L</span>et (NoRec, x, e1, e2) -&gt;
       let* subst1, typ1 = helpe<span data-count="2">r</span> env e1 in
       <span data-count="2">l</span>et env2 = Map.map env ~f:(fun sch -&gt; <span data-count="1">S</span>cheme.apply sch subst1) in
       <span data-count="2">l</span>et typ2 = generalize env2 typ1 in
@@ -973,10 +973,10 @@ let inferencer =
       <span data-count="2">l</span>et* subst2, typ3 = helpe<span data-count="2">r</span> env3 e2 in
       <span data-count="2">l</span>et* final_subst = Subst.compos<span data-count="2">e</span> subst1 subst2 in
       <span data-count="2">r</span>eturn (final_subst, typ3)
-    | <span data-count="1">L</span>et (Rec, x, e1, None) -&gt;
+    | <span data-count="1">L</span>et (Rec, x, e1, Nothing) -&gt;
       let* final_subst, tv = infer_recursivel<span data-count="1">y</span> env x e1 in
       <span data-count="1">r</span>eturn (final_subst, Subst.appl<span data-count="1">y</span> final_subst tv)
-    | <span data-count="0">L</span>et (Rec, x, e1, Some e2) -&gt;
+    | <span data-count="0">L</span>et (Rec, x, e1, e2) -&gt;
       let* final_subst1, typ1 = infer_with_bindin<span data-count="0">g</span> env x e1 in
       <span data-count="0">l</span>et env_after_bind = apply_substitution_to_env env final_subst1 in
       <span data-count="0">l</span>et typ2 = generalize env_after_bind (Subst.appl<span data-count="0">y</span> final_subst1 typ1) in
@@ -1049,7 +1049,7 @@ let infer env program =
   <span data-count="12">l</span>et check_expr env e =
     <span data-count="20">l</span>et* _, typ = inference<span data-count="20">r</span> env e in
     <span data-count="19">m</span>atch e with
-    | <span data-count="18">L</span>et (_, x, _, None) -&gt;
+    | <span data-count="18">L</span>et (_, x, _, Nothing) -&gt;
       let env = TypeEnv.extend env (x, Scheme.S (VarSet.empty, typ)) in
       <span data-count="18">r</span>eturn (env, typ)
     | <span data-count="1">_</span> -&gt; return (env, typ)
