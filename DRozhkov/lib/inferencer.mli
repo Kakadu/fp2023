@@ -8,6 +8,7 @@ module VarSet : sig
   type t = (int, Base.Int.comparator_witness) Using_comparator.t
 
   val empty : (int, Base.Int.comparator_witness) Base.Set.t
+end
 
 module Subst : sig
   type t = (int, Typedtree.typ, Base.Int.comparator_witness) Base.Map.t
