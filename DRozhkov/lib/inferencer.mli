@@ -2,7 +2,6 @@
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-
 module VarSet : sig
   module Using_comparator = Base.Set.Using_comparator
 

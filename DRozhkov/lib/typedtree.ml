@@ -19,7 +19,7 @@ let rec pp_typ fmt = function
   | TVar x -> fprintf fmt "'%d" x
   | TList x -> fprintf fmt "%a list" pp_typ x
   | TArrow (l, r) ->
-    match l, r with
-    | TArrow _, _ -> fprintf fmt "(%a) -> %a" pp_typ l pp_typ r
-    | _ -> fprintf fmt "%a -> %a" pp_typ l pp_typ r
+    (match l, r with
+     | TArrow _, _ -> fprintf fmt "(%a) -> %a" pp_typ l pp_typ r
+     | _ -> fprintf fmt "%a -> %a" pp_typ l pp_typ r)
 ;;
