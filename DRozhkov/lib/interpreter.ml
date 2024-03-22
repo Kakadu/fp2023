@@ -33,7 +33,6 @@ let rec pp_value fmt = function
 
 type error =
   | Division_by_zero
-  | Let_bundle
   | Pattern_matching_error
   | Unbound_value of id
   | Incorrect_type of value
@@ -42,7 +41,6 @@ let pp_error fmt = function
   | Division_by_zero -> fprintf fmt "Division by zero"
   | Unbound_value id -> fprintf fmt "Unbound value %s" id
   | Incorrect_type v -> fprintf fmt "Value %a has incorrect type in expression" pp_value v
-  | Let_bundle -> fprintf fmt "Let without in is not allowed in this part of expression"
   | Pattern_matching_error ->
     fprintf fmt "Value can't be match with any case in this expression"
 ;;
@@ -68,8 +66,8 @@ module Interpret (M : MONAD_ERROR) = struct
     | Sub, VInt l, VInt r -> return (VInt (l - r))
     | Eq, VInt l, VInt r -> return (VBool (l = r))
     | Eq, VBool l, VBool r -> return (VBool (l <> r))
-    | Neq, VInt l, VInt r -> return (VBool (l <> r))
-    | Neq, VBool l, VBool r -> return (VBool (l = r))
+    | Neq, VInt l, VInt r -> return (VBool (l = r))
+    | Neq, VBool l, VBool r -> return (VBool (l <> r))
     | Les, VInt l, VInt r -> return (VBool (l < r))
     | Leq, VInt l, VInt r -> return (VBool (l <= r))
     | Gre, VInt l, VInt r -> return (VBool (l > r))
@@ -82,6 +80,7 @@ module Interpret (M : MONAD_ERROR) = struct
 
   let eval =
     let rec helper env = function
+      | Nothing -> return VUnit
       | Const c ->
         (match c with
          | Int x -> return (VInt x)
@@ -144,21 +143,18 @@ module Interpret (M : MONAD_ERROR) = struct
            let* v = helper updated_env e in
            return v
          | _ -> fail (Incorrect_type fv))
-      | Let (_, name, e1, maybe_e2) ->
-        (match maybe_e2 with
-         | None -> fail Let_bundle
-         | Some e2 ->
-           let* v1 = helper env e1 in
-           let env = Base.Map.set env ~key:name ~data:v1 in
-           let* v2 = helper env e2 in
-           return v2)
+      | Let (_, name, e1, e2) ->
+        let* v1 = helper env e1 in
+        let env' = Base.Map.set env ~key:name ~data:v1 in
+        let* v2 = helper env' e2 in
+        return v2
     in
     helper
   ;;
 
   let interpret p =
     let eval_let env = function
-      | Let (_, id, e, None) ->
+      | Let (_, id, e, Nothing) ->
         let* v = eval env e in
         let env' = Base.Map.update env id ~f:(function _ -> v) in
         return (env', v)

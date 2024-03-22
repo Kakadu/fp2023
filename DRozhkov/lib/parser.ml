@@ -131,7 +131,7 @@ let let_pars pexpr =
        (token "rec" *> return Rec <|> return NoRec)
        (token "()" <|> ident)
        (token "=" *> pexpr <|> fun_pars pexpr)
-       (token "in" *> pexpr >>| (fun x -> Some x) <|> return None)
+       (token "in" *> pexpr >>| (fun x -> x) <|> return Nothing)
 ;;
 
 let list_pars pexpr =

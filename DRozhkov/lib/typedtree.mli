@@ -3,11 +3,11 @@
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
 type typ =
-  | TInt
-  | TBool
-  | TEmpty
-  | TVar of int
-  | TList of typ
-  | TArrow of typ * typ
+  | TInt (* Type: Intenger*)
+  | TBool (* Type: Bool*)
+  | TEmpty (* Type: ()*)
+  | TVar of int (* Type: var *)
+  | TList of typ (* Type: list *)
+  | TArrow of typ * typ (* Type: function *)
 
 val pp_typ : Format.formatter -> typ -> unit

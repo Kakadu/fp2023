@@ -35,6 +35,7 @@ type fun_rec =
 [@@deriving show { with_path = false }]
 
 type expression =
+  | Nothing (** nothing in let *)
   | Var of id (** string *)
   | Const of const (** const *)
   | IfThenElse of expression * expression * expression (** if ... then ... else ... *)
@@ -43,7 +44,7 @@ type expression =
   | List of expression list (** [1; 2; 3]*)
   | Match of expression * (pattern * expression) list (** match *)
   | App of expression * expression (** f x *)
-  | Let of fun_rec * id * expression * expression option (** let ...*)
+  | Let of fun_rec * id * expression * expression (** let ...*)
 [@@deriving show { with_path = false }]
 
 type expr_list = expression list [@@deriving show { with_path = false }]

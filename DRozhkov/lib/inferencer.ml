@@ -193,7 +193,7 @@ let inferencer =
   let rec helper env = function
     | Const (Int _) -> return (Subst.empty, TInt)
     | Const (Bool _) -> return (Subst.empty, TBool)
-    | Const Empty -> return (Subst.empty, TEmpty)
+    | Const Empty | Nothing -> return (Subst.empty, TEmpty)
     | Var x -> lookup_env env x
     | Fun (x, e) ->
       let* tv = varf in
@@ -226,8 +226,8 @@ let inferencer =
       let* subst5 = Subst.unify typ2 typ3 in
       let* final_subst = Subst.compose_all [ subst1; subst2; subst3; subst4; subst5 ] in
       return (final_subst, Subst.apply subst5 typ3)
-    | Let (NoRec, _, e1, None) -> helper env e1
-    | Let (NoRec, x, e1, Some e2) ->
+    | Let (NoRec, _, e1, Nothing) -> helper env e1
+    | Let (NoRec, x, e1, e2) ->
       let* subst1, typ1 = helper env e1 in
       let env2 = Map.map env ~f:(fun sch -> Scheme.apply sch subst1) in
       let typ2 = generalize env2 typ1 in
@@ -235,10 +235,10 @@ let inferencer =
       let* subst2, typ3 = helper env3 e2 in
       let* final_subst = Subst.compose subst1 subst2 in
       return (final_subst, typ3)
-    | Let (Rec, x, e1, None) ->
+    | Let (Rec, x, e1, Nothing) ->
       let* final_subst, tv = infer_recursively env x e1 in
       return (final_subst, Subst.apply final_subst tv)
-    | Let (Rec, x, e1, Some e2) ->
+    | Let (Rec, x, e1, e2) ->
       let* final_subst1, typ1 = infer_with_binding env x e1 in
       let env_after_bind = apply_substitution_to_env env final_subst1 in
       let typ2 = generalize env_after_bind (Subst.apply final_subst1 typ1) in
@@ -311,7 +311,7 @@ let infer env program =
   let check_expr env e =
     let* _, typ = inferencer env e in
     match e with
-    | Let (_, x, _, None) ->
+    | Let (_, x, _, Nothing) ->
       let env = TypeEnv.extend env (x, Scheme.S (VarSet.empty, typ)) in
       return (env, typ)
     | _ -> return (env, typ)

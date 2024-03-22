@@ -5,12 +5,12 @@
 open Format
 
 type typ =
-  | TInt
-  | TBool
-  | TEmpty
-  | TVar of int
-  | TList of typ
-  | TArrow of typ * typ
+  | TInt (* Type: Intenger*)
+  | TBool (* Type: Bool*)
+  | TEmpty (* Type: ()*)
+  | TVar of int (* Type: var *)
+  | TList of typ (* Type: list *)
+  | TArrow of typ * typ (* Type: function *)
 
 let rec pp_typ fmt = function
   | TInt -> fprintf fmt "int"
@@ -19,7 +19,7 @@ let rec pp_typ fmt = function
   | TVar x -> fprintf fmt "'%d" x
   | TList x -> fprintf fmt "%a list" pp_typ x
   | TArrow (l, r) ->
-    (match l, r with
-     | TArrow (_, _), _ -> fprintf fmt "(%a) -> %a" pp_typ l pp_typ r
-     | _, _ -> fprintf fmt "%a -> %a" pp_typ l pp_typ r)
+    match l, r with
+    | TArrow _, _ -> fprintf fmt "(%a) -> %a" pp_typ l pp_typ r
+    | _ -> fprintf fmt "%a -> %a" pp_typ l pp_typ r
 ;;

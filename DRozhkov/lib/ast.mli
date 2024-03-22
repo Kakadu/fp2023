@@ -46,6 +46,7 @@ val pp_fun_rec : Format.formatter -> fun_rec -> unit
 val show_fun_rec : fun_rec -> string
 
 type expression =
+  | Nothing (** nothing in let *)
   | Var of id (** string *)
   | Const of const (** const *)
   | IfThenElse of expression * expression * expression (** if ... then ... else ... *)
@@ -54,7 +55,7 @@ type expression =
   | List of expression list (** [1; 2; 3]*)
   | Match of expression * (pattern * expression) list (** match *)
   | App of expression * expression (** f x *)
-  | Let of fun_rec * id * expression * expression option (** let ...*)
+  | Let of fun_rec * id * expression * expression (** let ...*)
 
 val pp_expression : Format.formatter -> expression -> unit
 val show_expression : expression -> string
