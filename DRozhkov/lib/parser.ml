@@ -142,5 +142,4 @@ let pexpr =
     choice [ bundle pexpr; exp; conditions pexpr ])
 ;;
 
-let parser = parse_string ~consume:Consume.All (pexpr <* skip_whitespace)
 let parse = parse_string ~consume:Consume.All (many1 (bundle pexpr) <* skip_whitespace)

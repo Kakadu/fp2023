@@ -45,3 +45,6 @@ type expr =
   | EList of expr list (** [a; b; c]*)
   | EMatch of expr * (pattern * expr) list (** math ... with*)
 [@@deriving show { with_path = false }]
+
+type exprs = expr list
+[@@deriving show { with_path = false }]
