@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8"/>
     <title>ast.ml &mdash; Coverage report</title>
-    <meta name="description" content="0.00% coverage in lib/ast.ml">
+    <meta name="description" content="65.22% coverage in lib/ast.ml">
     <link rel="stylesheet" href="../coverage.css"/>
     <script src="../highlight.pack.js"></script>
     <script>hljs.initHighlightingOnLoad();</script>
@@ -15,22 +15,15 @@
           <span class="dirname">lib/</span>ast.ml
         </a>
       </h1>
-      <h2>0.00%</h2>
+      <h2>65.22%</h2>
     </div>
     <div id="navbar">
-      <span class="unvisited" style="top:10.00%"></span>
-      <span class="unvisited" style="top:14.00%"></span>
-      <span class="unvisited" style="top:16.00%"></span>
-      <span class="unvisited" style="top:18.00%"></span>
-      <span class="unvisited" style="top:26.00%"></span>
-      <span class="unvisited" style="top:34.00%"></span>
-      <span class="unvisited" style="top:38.00%"></span>
-      <span class="unvisited" style="bottom:36.00%"></span>
-      <span class="unvisited" style="bottom:26.00%"></span>
-      <span class="unvisited" style="bottom:12.00%"></span>
-      <span class="unvisited" style="bottom:10.00%"></span>
-      <span class="unvisited" style="bottom:4.00%"></span>
-      <span class="unvisited" style="bottom:0.00%"></span>
+      <span class="unvisited" style="top:14.29%"></span>
+      <span class="unvisited" style="top:20.41%"></span>
+      <span class="unvisited" style="top:26.53%"></span>
+      <span class="unvisited" style="top:28.57%"></span>
+      <span class="unvisited" style="bottom:12.24%"></span>
+      <span class="unvisited" style="bottom:6.12%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -39,21 +32,21 @@
 <a id="L2"></a><span > </span>
 <a id="L3"></a><span > </span>
 <a id="L4"></a><span > </span>
-<a id="L5"></a><span class="unvisited"> </span>
-<a id="L6"></a><span > </span>
+<a id="L5"></a><span class="visited"> </span>
+<a id="L6"></a><span class="visited"> </span>
 <a id="L7"></a><span class="unvisited"> </span>
-<a id="L8"></a><span class="unvisited"> </span>
-<a id="L9"></a><span class="unvisited"> </span>
-<a id="L10"></a><span > </span>
+<a id="L8"></a><span > </span>
+<a id="L9"></a><span > </span>
+<a id="L10"></a><span class="unvisited"> </span>
 <a id="L11"></a><span > </span>
 <a id="L12"></a><span > </span>
 <a id="L13"></a><span class="unvisited"> </span>
-<a id="L14"></a><span > </span>
+<a id="L14"></a><span class="unvisited"> </span>
 <a id="L15"></a><span > </span>
-<a id="L16"></a><span > </span>
-<a id="L17"></a><span class="unvisited"> </span>
+<a id="L16"></a><span class="visited"> </span>
+<a id="L17"></a><span > </span>
 <a id="L18"></a><span > </span>
-<a id="L19"></a><span class="unvisited"> </span>
+<a id="L19"></a><span > </span>
 <a id="L20"></a><span > </span>
 <a id="L21"></a><span > </span>
 <a id="L22"></a><span > </span>
@@ -65,26 +58,25 @@
 <a id="L28"></a><span > </span>
 <a id="L29"></a><span > </span>
 <a id="L30"></a><span > </span>
-<a id="L31"></a><span > </span>
-<a id="L32"></a><span class="unvisited"> </span>
+<a id="L31"></a><span class="visited"> </span>
+<a id="L32"></a><span > </span>
 <a id="L33"></a><span > </span>
 <a id="L34"></a><span > </span>
 <a id="L35"></a><span > </span>
-<a id="L36"></a><span > </span>
-<a id="L37"></a><span class="unvisited"> </span>
+<a id="L36"></a><span class="visited"> </span>
+<a id="L37"></a><span class="visited"> </span>
 <a id="L38"></a><span > </span>
 <a id="L39"></a><span > </span>
 <a id="L40"></a><span > </span>
-<a id="L41"></a><span > </span>
+<a id="L41"></a><span class="visited"> </span>
 <a id="L42"></a><span > </span>
-<a id="L43"></a><span > </span>
-<a id="L44"></a><span class="unvisited"> </span>
-<a id="L45"></a><span class="unvisited"> </span>
-<a id="L46"></a><span > </span>
-<a id="L47"></a><span > </span>
-<a id="L48"></a><span class="unvisited"> </span>
-<a id="L49"></a><span > </span>
-<a id="L50"></a><span class="unvisited"> </span>
+<a id="L43"></a><span class="unvisited"> </span>
+<a id="L44"></a><span > </span>
+<a id="L45"></a><span class="visited"> </span>
+<a id="L46"></a><span class="unvisited"> </span>
+<a id="L47"></a><span class="visited"> </span>
+<a id="L48"></a><span > </span>
+<a id="L49"></a><span class="visited"> </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -138,58 +130,56 @@
 <a href="#L47">47</a>
 <a href="#L48">48</a>
 <a href="#L49">49</a>
-<a href="#L50">50</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2021-2023, Kakadu, RozhkovAleksandr *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-<span data-count="0">t</span>ype id = <span data-count="0">s</span>tring [@@deriving show { with_path = false }]
-
-<span data-count="0">t</span>ype const =
-  | Int of in<span data-count="0">t</span> (** int *)
+<span data-count="33">t</span>ype const =
+  | Int of in<span data-count="11">t</span> (** int *)
   | Bool of boo<span data-count="0">l</span> (** bool *)
-  | Empty (** () *)
 [@@deriving show { with_path = false }]
 
 <span data-count="0">t</span>ype pattern =
-  | PAny (** _ *)
   | PConst of const (** const *)
-  | PVar of id (** string *)
+  | PDash (** _ *)
+  | PVar of strin<span data-count="0">g</span>
 [@@deriving show { with_path = false }<span data-count="0">]</span>
 
-<span data-count="0">t</span>ype bin_op =
-  | Add (** [+] *)
-  | Sub (** [-] *)
-  | Mul (** [*] *)
-  | Div (** [/] *)
-  | Eq (** [=] *)
-  | Neq (** [!=] *)
-  | Les (** [&lt;] *)
-  | Leq (** [&lt;=] *)
-  | Gre (** [&gt;] *)
-  | Geq (** [&gt;=] *)
+<span data-count="6">t</span>ype binop =
+  | Plus (** + *)
+  | Minus (** - *)
+  | Equally (** == *)
+  | NEqually (**&lt;&gt;*)
+  | And (** &amp;&amp; *)
+  | Or (** || *)
+  | Split (** / *)
+  | Mult (** * *)
+  | More (** &gt; *)
+  | MoEq (** &gt;= *)
+  | Less (** &lt; *)
+  | LeEq (** &lt;= *)
 [@@deriving show { with_path = false }]
 
-<span data-count="0">t</span>ype fun_rec =
-  | Rec (** let rec f *)
-  | NoRec (** let f *)
+<span data-count="6">t</span>ype rec_flag =
+  | Rec (** recursive *)
+  | NoRec (** non recursive *)
 [@@deriving show { with_path = false }]
 
-<span data-count="0">t</span>ype expression =
-  | Nothing (** nothing in let *)
-  | Var of id (** string *)
-  | Const of const (** const *)
-  | IfThenElse of expression * expression * expression (** if ... then ... else ... *)
-  | Binop of bin_op * expression * expression (** 1 + 2 *)
-  | Fun of id * expression (** fun *)
-  | List of <span data-count="0">e</span>xpression lis<span data-count="0">t</span> (** [1; 2; 3]*)
-  | Match of expression * <span data-count="0">(</span><span data-count="0">p</span>attern * expression) lis<span data-count="0">t</span> (** match *)
-  | App of expression * expression (** f x *)
-  | Let of fun_rec * id * expression * expression (** let ...*)
-[@@deriving show { with_path = false }<span data-count="0">]</span>
+<span data-count="183">t</span>ype expr =
+  | Var of strin<span data-count="6">g</span>
+  | EConst of const (** const *)
+  | EBinop of expr * binop * expr (** a + b *)
+  | EIfThenElse of expr * expr * expr (** if then else*)
+  | ELet of rec_flag * <span data-count="6">s</span>trin<span data-count="12">g</span> * expr * expr (**let ...*)
+  | Nothing (** for in ... and else ... *)
+  | EFun of strin<span data-count="0">g</span> * expr (** fun *)
+  | EApp of expr * expr (** f x *)
+  | EList of <span data-count="13">e</span>xpr lis<span data-count="3">t</span> (** [a; b; c]*)
+  | EMatch of expr * <span data-count="0">(</span><span data-count="0">p</span>attern * expr) lis<span data-count="0">t</span> (** math ... with*)
+[@@deriving show { with_path = false }<span data-count="137">]</span>
 
-<span data-count="0">t</span>ype expr_list = <span data-count="0">e</span>xpression lis<span data-count="0">t</span> [@@deriving show { with_path = false }<span data-count="0">]</span>
+<span data-count="5">t</span>ype exprs = <span data-count="23">e</span>xpr lis<span data-count="5">t</span> [@@deriving show { with_path = false }<span data-count="10">]</span>
 </code></pre>
       </div>
     </div>

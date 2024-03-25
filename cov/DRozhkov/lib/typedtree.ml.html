@@ -18,14 +18,18 @@
       <h2>0.00%</h2>
     </div>
     <div id="navbar">
-      <span class="unvisited" style="bottom:36.00%"></span>
-      <span class="unvisited" style="bottom:32.00%"></span>
-      <span class="unvisited" style="bottom:28.00%"></span>
-      <span class="unvisited" style="bottom:24.00%"></span>
-      <span class="unvisited" style="bottom:20.00%"></span>
-      <span class="unvisited" style="bottom:16.00%"></span>
-      <span class="unvisited" style="bottom:8.00%"></span>
-      <span class="unvisited" style="bottom:4.00%"></span>
+      <span class="unvisited" style="top:41.67%"></span>
+      <span class="unvisited" style="top:44.44%"></span>
+      <span class="unvisited" style="top:47.22%"></span>
+      <span class="unvisited" style="top:50.00%"></span>
+      <span class="unvisited" style="bottom:47.22%"></span>
+      <span class="unvisited" style="bottom:44.44%"></span>
+      <span class="unvisited" style="bottom:38.89%"></span>
+      <span class="unvisited" style="bottom:36.11%"></span>
+      <span class="unvisited" style="bottom:13.89%"></span>
+      <span class="unvisited" style="bottom:11.11%"></span>
+      <span class="unvisited" style="bottom:8.33%"></span>
+      <span class="unvisited" style="bottom:5.56%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -44,17 +48,28 @@
 <a id="L12"></a><span > </span>
 <a id="L13"></a><span > </span>
 <a id="L14"></a><span > </span>
-<a id="L15"></a><span > </span>
+<a id="L15"></a><span class="unvisited"> </span>
 <a id="L16"></a><span class="unvisited"> </span>
 <a id="L17"></a><span class="unvisited"> </span>
 <a id="L18"></a><span class="unvisited"> </span>
 <a id="L19"></a><span class="unvisited"> </span>
 <a id="L20"></a><span class="unvisited"> </span>
-<a id="L21"></a><span class="unvisited"> </span>
-<a id="L22"></a><span > </span>
+<a id="L21"></a><span > </span>
+<a id="L22"></a><span class="unvisited"> </span>
 <a id="L23"></a><span class="unvisited"> </span>
-<a id="L24"></a><span class="unvisited"> </span>
+<a id="L24"></a><span > </span>
 <a id="L25"></a><span > </span>
+<a id="L26"></a><span > </span>
+<a id="L27"></a><span > </span>
+<a id="L28"></a><span > </span>
+<a id="L29"></a><span > </span>
+<a id="L30"></a><span > </span>
+<a id="L31"></a><span class="unvisited"> </span>
+<a id="L32"></a><span class="unvisited"> </span>
+<a id="L33"></a><span class="unvisited"> </span>
+<a id="L34"></a><span class="unvisited"> </span>
+<a id="L35"></a><span > </span>
+<a id="L36"></a><span > </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -84,31 +99,53 @@
 <a href="#L23">23</a>
 <a href="#L24">24</a>
 <a href="#L25">25</a>
+<a href="#L26">26</a>
+<a href="#L27">27</a>
+<a href="#L28">28</a>
+<a href="#L29">29</a>
+<a href="#L30">30</a>
+<a href="#L31">31</a>
+<a href="#L32">32</a>
+<a href="#L33">33</a>
+<a href="#L34">34</a>
+<a href="#L35">35</a>
+<a href="#L36">36</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2021-2023, Kakadu, RozhkovAleksandr *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
-
 open Format
 
 type typ =
-  | TInt (* Type: Intenger*)
-  | TBool (* Type: Bool*)
-  | TEmpty (* Type: ()*)
-  | TVar of int (* Type: var *)
-  | TList of typ (* Type: list *)
-  | TArrow of typ * typ (* Type: function *)
+  | TInt (** int type *)
+  | TBool (** bools type *)
+  | TNothing (** else ... and in ... type *)
+  | TArrow of typ * typ (** type -&gt; type *)
+  | TVar of int (** var type *)
+  | TList of typ (* list type *)
 
 let rec pp_typ fmt = function
   | <span data-count="0">T</span>Int -&gt; fprintf fmt "int"
   | <span data-count="0">T</span>Bool -&gt; fprintf fmt "bool"
-  | <span data-count="0">T</span>Empty -&gt; fprintf fmt "empty"
+  | <span data-count="0">T</span>Nothing -&gt; fprintf fmt "nothing"
   | <span data-count="0">T</span>Var x -&gt; fprintf fmt "'%d" x
   | <span data-count="0">T</span>List x -&gt; fprintf fmt "%a list" pp_typ x
   | <span data-count="0">T</span>Arrow (l, r) -&gt;
     (match l, r with
      | <span data-count="0">T</span>Arrow _, _ -&gt; fprintf fmt "(%a) -&gt; %a" pp_typ l pp_typ r
      | <span data-count="0">_</span> -&gt; fprintf fmt "%a -&gt; %a" pp_typ l pp_typ r)
+;;
+
+type error =
+  | Occurs_check
+  | No_variable of string
+  | Unification_failed of typ * typ
+
+let pp_error ppf : error -&gt; _ = <span data-count="0">f</span>unction
+  | <span data-count="0">O</span>ccurs_check -&gt; fprintf ppf "Occurs check failed"
+  | <span data-count="0">N</span>o_variable s -&gt; fprintf ppf "Undefined variable '%s'" s
+  | <span data-count="0">U</span>nification_failed (l, r) -&gt;
+    Format.fprintf ppf "Unification fail on %a and %a" pp_typ l pp_typ r
 ;;
 </code></pre>
       </div>
