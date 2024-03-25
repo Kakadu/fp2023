@@ -14,13 +14,11 @@ let test_parse input =
 ;;
 
 let%expect_test _ =
-  test_parse
-    {|
+  test_parse {|
         let x = 5 + 6
         let y = 7 + 8
         let z = x + y
       |};
-
   [%expect
     {|
       [(ELet (NoRec, "x", (EBinop ((EConst (Int 5)), Plus, (EConst (Int 6)))),
@@ -37,7 +35,6 @@ let%expect_test _ =
         let x = 5 in
         let rec fact = if x < 1 then 1 else x * fact (x - 1)
       |};
-
   [%expect
     {|
         [(ELet (NoRec, "x", (EConst (Int 5)),
@@ -56,11 +53,9 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  test_parse
-    {|
+  test_parse {|
         let x = [1; 2; 3]
       |};
-
   [%expect
     {|
         [(ELet (NoRec, "x",
@@ -68,5 +63,3 @@ let%expect_test _ =
           ]
     |}]
 ;;
-
-

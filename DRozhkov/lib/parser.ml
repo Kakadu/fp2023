@@ -140,7 +140,9 @@ let pexpr =
     in
     let exp = plbinop apply (mult <|> split) in
     let exp = plbinop exp (plus <|> min) in
-    let exp = plbinop exp (choice [ less; moeq; more; equally; nequally; leeq; orr; andd ]) in
+    let exp =
+      plbinop exp (choice [ less; moeq; more; equally; nequally; leeq; orr; andd ])
+    in
     choice [ bundle pexpr; exp; conditions pexpr ])
 ;;
 
