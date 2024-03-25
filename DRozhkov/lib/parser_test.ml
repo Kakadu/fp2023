@@ -35,7 +35,7 @@ let%expect_test _ =
   test_parse
     {|
         let x = 5 in
-        let rec fact = if x < 1 then 1 else fact (x - 1)
+        let rec fact = if x < 1 then 1 else x * fact (x - 1)
       |};
 
   [%expect
@@ -44,7 +44,9 @@ let%expect_test _ =
             (ELet (Rec, "fact",
                (EIfThenElse ((EBinop ((Var "x"), Less, (EConst (Int 1)))),
                   (EConst (Int 1)),
-                  (EApp ((Var "fact"), (EBinop ((Var "x"), Minus, (EConst (Int 1))))
+                  (EBinop ((Var "x"), Mult,
+                     (EApp ((Var "fact"),
+                        (EBinop ((Var "x"), Minus, (EConst (Int 1))))))
                      ))
                   )),
                Nothing))

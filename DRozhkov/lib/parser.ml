@@ -60,6 +60,8 @@ let more = token ">" *> return More
 let moeq = token ">=" *> return MoEq
 let equally = token "==" *> return Equally
 let nequally = token "<>" *> return NEqually
+let orr = token "||" *> return Or
+let andd = token "&&" *> return And
 
 let low = function
   | 'a' .. 'z' -> true
@@ -138,7 +140,7 @@ let pexpr =
     in
     let exp = plbinop apply (mult <|> split) in
     let exp = plbinop exp (plus <|> min) in
-    let exp = plbinop exp (choice [ less; moeq; more; equally; nequally; leeq ]) in
+    let exp = plbinop exp (choice [ less; moeq; more; equally; nequally; leeq; orr; andd ]) in
     choice [ bundle pexpr; exp; conditions pexpr ])
 ;;
 

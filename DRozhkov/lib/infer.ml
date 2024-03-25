@@ -204,7 +204,7 @@ let inferencer =
       let* l_subst, l_typ = helper env l in
       let* r_subst, r_typ = helper env r in
       (match op with
-       | Less | LeEq | More | MoEq | Equally | NEqually ->
+       | Less | LeEq | More | MoEq | Equally | NEqually | Or | And ->
          let* sub = Subst.unify l_typ r_typ in
          let* final_sub = Subst.compose_all [ l_subst; r_subst; sub ] in
          return (final_sub, TBool)
@@ -213,6 +213,30 @@ let inferencer =
          let* sub2 = Subst.unify r_typ TInt in
          let* final_sub = Subst.compose_all [ l_subst; r_subst; sub1; sub2 ] in
          return (final_sub, TInt))
+    | EList x ->
+      (match x with
+       | [] ->
+         let* tv = varf in
+         return (Subst.empty, TList tv)
+       | h :: tl ->
+         let* final_sub, res_typ =
+           List.fold_left tl ~init:(helper env h) ~f:(fun acc expr ->
+             let* sub, typ = acc in
+             let* sub1, typ1 = helper env expr in
+             let* sub2 = Subst.unify typ typ1 in
+             let* final_sub = Subst.compose_all [ sub; sub1; sub2 ] in
+             let res_typ = Subst.apply final_sub typ in
+             return (final_sub, res_typ))
+         in
+         return (final_sub, TList res_typ))
+    | EIfThenElse (bin_op, e1, e2) ->
+      let* sub1, typ1 = helper env bin_op in
+      let* sub2, typ2 = helper env e1 in
+      let* sub3, typ3 = helper env e2 in
+      let* sub4 = Subst.unify typ1 TBool in
+      let* sub5 = Subst.unify typ2 typ3 in
+      let* final_sub = Subst.compose_all [ sub1; sub2; sub3; sub4; sub5 ] in
+      return (final_sub, Subst.apply sub5 typ3)
     | EApp (e1, e2) ->
       let* sub1, typ1 = helper env e1 in
       let env' = Map.map env ~f:(fun sch -> Scheme.apply sch sub1) in
@@ -245,6 +269,31 @@ let inferencer =
       let* sub2, ty2 = helper TypeEnv.(extend (apply env sub) (x, ty2)) e2 in
       let* final_sub = Subst.compose sub sub2 in
       return (final_sub, ty2)
+    | EMatch (c, list) ->
+      let* c_sub, c_typ = helper env c in
+      let* tv = varf in
+      let* e_sub, e_typ =
+        List.fold_left
+          list
+          ~init:(return (c_sub, tv))
+          ~f:(fun acc (pat, expr) ->
+            let* sub, typ = acc in
+            let* pat_env, pat_typ = infer_pattern env pat in
+            let* sub2 = Subst.unify c_typ pat_typ in
+            let* sub3, e_typ = helper pat_env expr in
+            let* sub4 = Subst.unify typ e_typ in
+            let* final_sub = Subst.compose_all [ sub; sub2; sub3; sub4 ] in
+            return (final_sub, Subst.apply final_sub typ))
+      in
+      let* final_sub = Subst.compose c_sub e_sub in
+      return (final_sub, Subst.apply final_sub e_typ)
+  and infer_recursively env x expr =
+    let* tv = varf in
+    let env = TypeEnv.extend env (x, S (VarSet.empty, tv)) in
+    let* sub1, typ1 = helper env expr in
+    let* sub2 = Subst.unify (Subst.apply sub1 tv) typ1 in
+    let* final_sub = Subst.compose sub1 sub2 in
+    return (final_sub, tv)
   in
   helper
 ;;
