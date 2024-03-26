@@ -137,7 +137,7 @@
 <span data-count="9">t</span>ype pattern =
   | PConst of const (** const *)
   | PDash (** _ *)
-  | PVar of strin<span data-count="1">g</span>
+  | PVar of strin<span data-count="1">g</span> (** var -&gt; ... *)
 [@@deriving show { with_path = false }<span data-count="2">]</span>
 
 <span data-count="6">t</span>ype binop =
@@ -161,7 +161,7 @@
 [@@deriving show { with_path = false }]
 
 <span data-count="305">t</span>ype expr =
-  | Var of strin<span data-count="9">g</span>
+  | Var of strin<span data-count="9">g</span> (** var *)
   | EConst of const (** const *)
   | EBinop of expr * binop * expr (** a + b *)
   | EIfThenElse of expr * expr * expr (** if then else*)
