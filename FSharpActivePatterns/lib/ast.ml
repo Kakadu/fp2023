@@ -9,7 +9,6 @@ type const =
   | CBool of bool (** true *)
   | CInt of int (** 42 *)
   | CString of string (** "string" *)
-  | CNil (** () [] *)
 [@@deriving show { with_path = false }]
 
 type binary_op =
@@ -46,7 +45,7 @@ type expr =
   | IfExpr of expr * expr * expr (** if a then b else c *)
   | LetExpr of bool * name * expr (** let sq x = x * x, bool - is rec or not*)
   | LetActExpr of name list * expr
-  (** let (|Even|Odd|) value = ..., let (|Even|_|) value =  ..., let (|Even|) value = ... *)
+  (** let (|Even|Odd|) value =  if value % 2 = 0 then Even else Odd *)
   | AppExpr of expr * expr (** sq 5 *)
   | FunExpr of pattern * expr (** fun x -> x * x *)
   | MatchExpr of expr * (pattern * expr) list (** match input with | 2 -> 5 | 5 -> 10 *)

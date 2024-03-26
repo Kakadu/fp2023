@@ -1,8 +1,6 @@
 (** Copyright 2023-2024, Vitaliy Dyachkov *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
-open FSharpActivePatterns_lib.Ast
-
 open FSharpActivePatterns_lib.Interpret
 open FSharpActivePatterns_lib.Parser
 open FSharpActivePatterns_lib.Errorinter
