@@ -10,7 +10,7 @@ type const =
 type pattern =
   | PConst of const (** const *)
   | PDash (** _ *)
-  | PVar of string
+  | PVar of string (** var -> ... *)
 [@@deriving show { with_path = false }]
 
 type binop =
@@ -34,7 +34,7 @@ type rec_flag =
 [@@deriving show { with_path = false }]
 
 type expr =
-  | Var of string
+  | Var of string (** var *)
   | EConst of const (** const *)
   | EBinop of expr * binop * expr (** a + b *)
   | EIfThenElse of expr * expr * expr (** if then else*)
