@@ -109,99 +109,82 @@ module Interpret (M : MonadFail) = struct
 
   and eval expr env =
     match expr with
-    | ConstExpr v -> return @@ inter_const v
-    | BinExpr (op, l, r) -> inter_binary op l r env
+    | ConstExpr v ->
+      (match v with
+       | CBool b -> return @@ VBool b
+       | CInt i -> return @@ VInt i
+       | CString s -> return @@ VString s)
+    | BinExpr (op, l, r) ->
+      let* rigth_val = eval r env in
+      let* left_val = eval l env in
+      (match op, left_val, rigth_val with
+       | Div, VInt _, VInt 0 -> fail DivisionByZero
+       | Mod, VInt _, VInt 0 -> fail DivisionByZero
+       | Add, VInt l, VInt r -> return @@ VInt (l + r)
+       | Sub, VInt l, VInt r -> return @@ VInt (l - r)
+       | Mul, VInt l, VInt r -> return @@ VInt (l * r)
+       | Div, VInt l, VInt r -> return @@ VInt (l / r)
+       | Mod, VInt l, VInt r -> return @@ VInt (l % r)
+       | Less, VInt l, VInt r -> return @@ VBool (l < r)
+       | LEq, VInt l, VInt r -> return @@ VBool (l <= r)
+       | Gre, VInt l, VInt r -> return @@ VBool (l > r)
+       | GEq, VInt l, VInt r -> return @@ VBool (l >= r)
+       | Eq, VInt l, VInt r -> return @@ VBool (l = r)
+       | NEq, VInt l, VInt r -> return @@ VBool (l <> r)
+       | _ -> fail TypeError)
     | VarExpr id -> find_val env id
-    | ListExpr l -> inter_list l env
-    | TupleExpr t -> inter_tuple t env
-    | IfExpr (cond, e_then, e_else) -> inter_if cond e_then e_else env
+    | ListExpr l ->
+      let* eval_list = all (List.map l ~f:(fun expr -> eval expr env)) in
+      return @@ VList eval_list
+    | TupleExpr t ->
+      let* eval_list = all (List.map t ~f:(fun expr -> eval expr env)) in
+      return @@ VTuple eval_list
+    | IfExpr (cond, e_then, e_else) ->
+      let* cond_branch = eval cond env in
+      (match cond_branch with
+       | VBool b -> eval (if b then e_then else e_else) env
+       | _ -> fail TypeError)
     | FunExpr (pat, expr) -> return @@ VFun (pat, expr, Map.to_alist env)
-    | AppExpr (func, arg) -> inter_app func arg env
-    | LetExpr (is_rec, name, body) -> inter_let is_rec name body env
-    | MatchExpr (expr_match, cases) -> inter_match expr_match cases env
+    | AppExpr (func, arg) ->
+      let* fun_to_apply = eval func env in
+      (match fun_to_apply with
+       | VFun (pat, expr, fun_env) ->
+         let* arg_to_apply = eval arg env in
+         let* res = bind_fun_params ~env (pat, arg_to_apply) in
+         eval expr (add_binds (add_binds empty fun_env) res)
+       | VLetWAPat (name, VFun (pat, expr, fun_env)) ->
+         let* arg_to_apply = eval arg env in
+         let* res = bind_fun_params ~env (pat, arg_to_apply) in
+         eval
+           expr
+           (add_binds
+              (add_bind
+                 (add_binds empty fun_env)
+                 name
+                 (VLetWAPat (name, VFun (pat, expr, fun_env))))
+              res)
+       | _ -> fail TypeError)
+    | LetExpr (is_rec, name, body) ->
+      if is_rec
+      then
+        let* func_body = eval body env in
+        return @@ VLetWAPat (name, func_body)
+      else eval body env
+    | MatchExpr (expr_match, cases) ->
+      let* val_match = eval expr_match env in
+      let rec eval_match = function
+        | (pat, expr) :: cases ->
+          run
+            (bind_fun_params ~env (pat, val_match))
+            ~ok:(fun binds -> eval expr (add_binds env binds))
+            ~err:(fun _ -> eval_match cases)
+        | [] -> fail Unreachable
+      in
+      eval_match cases
     | CaseExpr constr_id -> return @@ VCases constr_id
-    | LetActExpr (act_name, body) -> inter_act_let act_name body env
-
-  and inter_const = function
-    | CBool b -> VBool b
-    | CInt i -> VInt i
-    | CString s -> VString s
-
-  and inter_act_let pat_name body env =
-    let* fun_pat = eval body env in
-    return @@ VLetAPat (pat_name, fun_pat)
-
-  and inter_list l env =
-    let* eval_list = all (List.map l ~f:(fun expr -> eval expr env)) in
-    return @@ VList eval_list
-
-  and inter_tuple t env =
-    let* eval_list = all (List.map t ~f:(fun expr -> eval expr env)) in
-    return @@ VTuple eval_list
-
-  and inter_binary op l r env =
-    let* rigth_val = eval r env in
-    let* left_val = eval l env in
-    match op, left_val, rigth_val with
-    | Div, VInt _, VInt 0 -> fail DivisionByZero
-    | Mod, VInt _, VInt 0 -> fail DivisionByZero
-    | Add, VInt l, VInt r -> return @@ VInt (l + r)
-    | Sub, VInt l, VInt r -> return @@ VInt (l - r)
-    | Mul, VInt l, VInt r -> return @@ VInt (l * r)
-    | Div, VInt l, VInt r -> return @@ VInt (l / r)
-    | Mod, VInt l, VInt r -> return @@ VInt (l % r)
-    | Less, VInt l, VInt r -> return @@ VBool (l < r)
-    | LEq, VInt l, VInt r -> return @@ VBool (l <= r)
-    | Gre, VInt l, VInt r -> return @@ VBool (l > r)
-    | GEq, VInt l, VInt r -> return @@ VBool (l >= r)
-    | Eq, VInt l, VInt r -> return @@ VBool (l = r)
-    | NEq, VInt l, VInt r -> return @@ VBool (l <> r)
-    | _ -> fail TypeError
-
-  and inter_if cond e_then e_else env =
-    let* cond_branch = eval cond env in
-    match cond_branch with
-    | VBool b -> eval (if b then e_then else e_else) env
-    | _ -> fail TypeError
-
-  and inter_let is_rec name body env =
-    if is_rec
-    then
-      let* func_body = eval body env in
-      return @@ VLetWAPat (name, func_body)
-    else eval body env
-
-  and inter_app func arg env =
-    let* fun_to_apply = eval func env in
-    match fun_to_apply with
-    | VFun (pat, expr, fun_env) ->
-      let* arg_to_apply = eval arg env in
-      let* res = bind_fun_params ~env (pat, arg_to_apply) in
-      eval expr (add_binds (add_binds empty fun_env) res)
-    | VLetWAPat (name, VFun (pat, expr, fun_env)) ->
-      let* arg_to_apply = eval arg env in
-      let* res = bind_fun_params ~env (pat, arg_to_apply) in
-      eval
-        expr
-        (add_binds
-           (add_bind
-              (add_binds empty fun_env)
-              name
-              (VLetWAPat (name, VFun (pat, expr, fun_env))))
-           res)
-    | _ -> fail TypeError
-
-  and inter_match expr_match cases env =
-    let* val_match = eval expr_match env in
-    let rec eval_match = function
-      | (pat, expr) :: cases ->
-        run
-          (bind_fun_params ~env (pat, val_match))
-          ~ok:(fun binds -> eval expr (add_binds env binds))
-          ~err:(fun _ -> eval_match cases)
-      | [] -> fail Unreachable
-    in
-    eval_match cases
+    | LetActExpr (act_name, body) ->
+      let* fun_pat = eval body env in
+      return @@ VLetAPat (act_name, fun_pat)
   ;;
 
   let eval_program (program : expr list) : (value, error_inter) t =

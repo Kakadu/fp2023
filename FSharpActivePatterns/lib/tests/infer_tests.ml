@@ -4,12 +4,6 @@
 
 open FSharpActivePatterns_lib
 open Inferencer
-open Errorinter
-
-let run_infer = function
-  | Result.Error e -> Format.printf "Error: %a%!" pp_error_infer e
-  | Result.Ok (_, typed) -> Format.printf "%a%!" Typeandprinter.pp_typ_binder typed
-;;
 
 let%expect_test _ =
   let open Ast in

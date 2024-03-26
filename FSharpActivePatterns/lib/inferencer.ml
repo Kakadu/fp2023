@@ -398,3 +398,8 @@ let check_types env program =
 let check_types ?(env : environment = empty) e =
   Result.map (run (check_types env e)) ~f:Fun.id
 ;;
+
+let run_infer = function
+  | Result.Error e -> Format.printf "Error: %a%!" pp_error_infer e
+  | Result.Ok (_, typed) -> Format.printf "%a%!" Typeandprinter.pp_typ_binder typed
+;;
