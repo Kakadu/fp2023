@@ -1,0 +1,9 @@
+(library
+ (name tests)
+ (modules Pars_tests Inter_tests Infer_tests)
+ (libraries FSharpActivePatterns_lib)
+ (preprocess
+  (pps ppx_expect ppx_deriving.show))
+ (instrumentation
+  (backend bisect_ppx))
+ (inline_tests))

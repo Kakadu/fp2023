@@ -24,7 +24,7 @@ module R : sig
 end
 
 module VarSet : sig
-  type elt = fresh
+  type elt
   type t
 
   val fold_left_m : ('a -> elt -> 'a R.t) -> t -> 'a R.t -> 'a R.t
