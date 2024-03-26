@@ -185,7 +185,7 @@
   | AppExpr of expr * expr (** sq 5 *)
   | FunExpr of pattern * expr (** fun x -&gt; x * x *)
   | MatchExpr of expr * <span data-count="40">(</span><span data-count="16">p</span>attern * expr) lis<span data-count="12">t</span> (** match input with | 2 -&gt; 5 | 5 -&gt; 10 *)
-  | CaseExpr of name (** (|Even|Odd|), Some x *)
+  | CaseExpr of name (** (|Even|Odd|) *)
 [@@deriving show { with_path = false }<span data-count="635">]</span>
 </code></pre>
       </div>
