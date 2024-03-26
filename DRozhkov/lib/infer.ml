@@ -123,7 +123,7 @@ open R
 
 type scheme = S of VarSet.t * typ
 
-let varf = fresh >>= fun x -> return (TVar x)
+let fresh_v = fresh >>= fun x -> return (TVar x)
 
 module Scheme = struct
   type t = scheme
@@ -146,10 +146,7 @@ module TypeEnv = struct
       VarSet.union acc (Scheme.free_vars sch))
   ;;
 
-  let apply =
-    fun env sub -> Base.Map.map env ~f:(fun sch -> Scheme.apply sch sub)
-  ;;
-
+  let apply env sub = Base.Map.map env ~f:(fun sch -> Scheme.apply sch sub)
   let extend env (id, sch) = Map.set env ~key:id ~data:sch
 end
 
@@ -158,22 +155,19 @@ let generalize env typ =
   S (free, typ)
 ;;
 
-let infer_pattern =
-  let helper env = function
-    | PDash ->
-      let* tv = varf in
-      return (env, tv)
-    | PConst (Int _) -> return (env, TInt)
-    | PConst (Bool _) -> return (env, TBool)
-    | PVar x ->
-      (match Map.find env x with
-       | None ->
-         let* tv = varf in
-         let env = TypeEnv.extend env (x, S (VarSet.empty, tv)) in
-         return (env, tv)
-       | Some (S (_, typ)) -> return (env, typ))
-  in
-  helper
+let infer_pattern env = function
+  | PDash ->
+    let* tv = fresh_v in
+    return (env, tv)
+  | PConst (Int _) -> return (env, TInt)
+  | PConst (Bool _) -> return (env, TBool)
+  | PVar x ->
+    (match Map.find env x with
+     | None ->
+       let* tv = fresh_v in
+       let env = TypeEnv.extend env (x, S (VarSet.empty, tv)) in
+       return (env, tv)
+     | Some (S (_, typ)) -> return (env, typ))
 ;;
 
 let inferencer =
@@ -183,19 +177,19 @@ let inferencer =
     | Nothing -> return (Subst.empty, TNothing)
     | Var x ->
       (match Map.find env x with
-       | Some sch ->
+       | Some schem ->
          let* typ =
-           let (S (s, typ)) = sch in
+           let (S (s, typ)) = schem in
            VarSet.fold s ~init:(return typ) ~f:(fun typ name ->
              let* typ = typ in
-             let* fv = varf in
+             let* fv = fresh_v in
              let* sub = Subst.singleton (name, fv) in
              return (Subst.apply sub typ))
          in
          return (Subst.empty, typ)
        | None -> fail (No_variable x))
     | EFun (x, expr) ->
-      let* tv = varf in
+      let* tv = fresh_v in
       let env2 = TypeEnv.extend env (x, S (VarSet.empty, tv)) in
       let* s, typ = helper env2 expr in
       let res_typ = TArrow (Subst.apply s tv, typ) in
@@ -216,7 +210,7 @@ let inferencer =
     | EList x ->
       (match x with
        | [] ->
-         let* tv = varf in
+         let* tv = fresh_v in
          return (Subst.empty, TList tv)
        | h :: tl ->
          let* final_sub, res_typ =
@@ -241,7 +235,7 @@ let inferencer =
       let* sub1, typ1 = helper env e1 in
       let env' = Map.map env ~f:(fun sch -> Scheme.apply sch sub1) in
       let* sub2, typ2 = helper env' e2 in
-      let* tv = varf in
+      let* tv = fresh_v in
       let* sub3 = Subst.unify (Subst.apply sub2 typ1) (TArrow (typ2, tv)) in
       let res_typ = Subst.apply sub3 tv in
       let* final_sub = Subst.compose_all [ sub1; sub2; sub3 ] in
@@ -258,8 +252,8 @@ let inferencer =
     | ELet (Rec, x, e1, Nothing) ->
       let* final_sub, tv = infer_recursively env x e1 in
       return (final_sub, Subst.apply final_sub tv)
-    | ELet (Rec, x, e1,  e2) ->
-      let* tv = varf in
+    | ELet (Rec, x, e1, e2) ->
+      let* tv = fresh_v in
       let env = TypeEnv.extend env (x, S (VarSet.empty, tv)) in
       let* sub1, ty1 = helper env e1 in
       let* sub2 = Subst.unify (Subst.apply sub1 tv) ty1 in
@@ -271,7 +265,7 @@ let inferencer =
       return (final_sub, ty2)
     | EMatch (c, list) ->
       let* c_sub, c_typ = helper env c in
-      let* tv = varf in
+      let* tv = fresh_v in
       let* e_sub, e_typ =
         List.fold_left
           list
@@ -288,7 +282,7 @@ let inferencer =
       let* final_sub = Subst.compose c_sub e_sub in
       return (final_sub, Subst.apply final_sub e_typ)
   and infer_recursively env x expr =
-    let* tv = varf in
+    let* tv = fresh_v in
     let env = TypeEnv.extend env (x, S (VarSet.empty, tv)) in
     let* sub1, typ1 = helper env expr in
     let* sub2 = Subst.unify (Subst.apply sub1 tv) typ1 in
@@ -319,4 +313,4 @@ let infer env program =
   return (env, List.rev tys)
 ;;
 
-let run_infer ?(env = TypeEnv.empty) program = run (infer env program) 
+let run_infer ?(env = TypeEnv.empty) program = run (infer env program)

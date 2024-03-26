@@ -14,13 +14,11 @@ let test_parse input =
 ;;
 
 let%expect_test _ =
-  test_parse
-    {|
+  test_parse {|
         let x = 5 + 6
         let y = 7 + 8
         let z = x + y
       |};
-
   [%expect
     {|
       [(ELet (NoRec, "x", (EBinop ((EConst (Int 5)), Plus, (EConst (Int 6)))),
@@ -37,7 +35,6 @@ let%expect_test _ =
         let x = 5 in
         let rec fact = if x < 1 then 1 else x * fact (x - 1)
       |};
-
   [%expect
     {|
         [(ELet (NoRec, "x", (EConst (Int 5)),
@@ -56,11 +53,9 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  test_parse
-    {|
+  test_parse {|
         let x = [1; 2; 3]
       |};
-
   [%expect
     {|
         [(ELet (NoRec, "x",
@@ -69,4 +64,59 @@ let%expect_test _ =
     |}]
 ;;
 
+let%expect_test _ =
+  test_parse {|
+        let x = true
+      |};
+  [%expect
+    {|
+        [(ELet (NoRec, "x", (EConst (Bool true)), Nothing))]
+    |}]
+;;
 
+let%expect_test _ =
+  test_parse
+    {|
+      let mymatch x =
+        match x with
+          | 1 -> true
+          | _ -> false
+ 
+      let result = mymatch 2
+       |};
+  [%expect {| 
+        [(ELet (NoRec, "mymatch",
+            (EFun ("x",
+               (EMatch ((Var "x"),
+                  [((PConst (Int 1)), (EConst (Bool true)));
+                    (PDash, (EConst (Bool false)))]
+                  ))
+               )),
+            Nothing));
+          (ELet (NoRec, "result", (EApp ((Var "mymatch"), (EConst (Int 2)))), Nothing
+             ))
+          ]
+      |}]
+;;
+
+let%expect_test _ =
+  test_parse
+    {|
+      let x = true
+    
+      let mymatch x =
+        match x with
+          | z -> 100
+          | _ -> 99
+       |};
+  [%expect {| 
+        [(ELet (NoRec, "x", (EConst (Bool true)), Nothing));
+          (ELet (NoRec, "mymatch",
+             (EFun ("x",
+                (EMatch ((Var "x"),
+                   [((PVar "z"), (EConst (Int 100))); (PDash, (EConst (Int 99)))]))
+                )),
+             Nothing))
+          ]
+      |}]
+;;
