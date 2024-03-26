@@ -58,7 +58,7 @@ let less = token "<" *> return Less
 let leeq = token "<=" *> return LeEq
 let more = token ">" *> return More
 let moeq = token ">=" *> return MoEq
-let equally = token "==" *> return Equally
+let equally = token "=" *> return Equally
 let nequally = token "<>" *> return NEqually
 let orr = token "||" *> return Or
 let andd = token "&&" *> return And

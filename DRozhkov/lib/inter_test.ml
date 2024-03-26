@@ -76,3 +76,69 @@ let%expect_test _ =
         false
       |}]
 ;;
+
+let%expect_test _ =
+  run_inter {|
+      let f x y = if x = y then 100 else 33
+
+      let a = f 5 4
+       |};
+  [%expect {| 
+        <fun>
+        33
+      |}]
+;;
+
+let%expect_test _ =
+  run_inter {|
+      let f x y = if x = y then 100 else 33
+
+      let a = f 5 4
+       |};
+  [%expect {| 
+        <fun>
+        33
+      |}]
+;;
+
+let%expect_test _ =
+  run_inter {|
+      let f x y = if x < y then 100 else 33
+
+      let a = f 5 4
+       |};
+  [%expect {| 
+        <fun>
+        33
+      |}]
+;;
+
+let%expect_test _ =
+  run_inter {|
+      let f x y = if x > y then 100 else 33
+
+      let a = f 5 4
+       |};
+  [%expect {| 
+        <fun>
+        100
+      |}]
+;;
+
+let%expect_test _ =
+  run_inter {|
+      let x = 100 / 0
+       |};
+  [%expect {| 
+        Interpretation error
+      |}]
+;;
+
+let%expect_test _ =
+  run_inter {|
+      let x = y / 1
+       |};
+  [%expect {| 
+        Typecheck error
+      |}]
+;;
