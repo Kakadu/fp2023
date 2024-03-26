@@ -3,7 +3,7 @@
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
 open FSharpActivePatterns_lib
-open Ast 
+open Ast
 open Parser
 
 (* TESTS  PARSER*)

@@ -41,7 +41,7 @@ let%expect_test _ =
 let%expect_test _ =
   let open Ast in
   let _ =
-    let e = [ (ListExpr []) ] in
+    let e = [ ListExpr [] ] in
     check_types e |> run_infer
   in
   [%expect {| 'a list |}]

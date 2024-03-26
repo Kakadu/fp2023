@@ -127,7 +127,6 @@ module Interpret (M : MonadFail) = struct
     | CInt i -> VInt i
     | CString s -> VString s
 
-
   and inter_act_let pat_name body env =
     let* fun_pat = eval body env in
     return @@ VLetAPat (pat_name, fun_pat)
@@ -237,4 +236,3 @@ module InterpretResult = Interpret (struct
   end)
 
 let eval_program = InterpretResult.eval_program
-
