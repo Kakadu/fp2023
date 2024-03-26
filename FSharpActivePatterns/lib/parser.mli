@@ -1,5 +1,13 @@
-(** Copyright 2021-2023, Vitaliy Dyachkov *)
+(** Copyright 2023-2024, Vitaliy Dyachkov *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-val parse : Ast.expr Angstrom.t
+open Angstrom
+open Ast
+
+val start_parsing : 'a t -> string -> ('a, string) result
+val parse_const : const t
+val parse_var : pattern t
+val pat : pattern t
+val parse : expr t
+val main_parse : string -> (Ast.expr list, string) result
