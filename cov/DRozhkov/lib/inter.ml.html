@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8"/>
     <title>inter.ml &mdash; Coverage report</title>
-    <meta name="description" content="64.42% coverage in lib/inter.ml">
+    <meta name="description" content="69.94% coverage in lib/inter.ml">
     <link rel="stylesheet" href="../coverage.css"/>
     <script src="../highlight.pack.js"></script>
     <script>hljs.initHighlightingOnLoad();</script>
@@ -15,7 +15,7 @@
           <span class="dirname">lib/</span>inter.ml
         </a>
       </h1>
-      <h2>64.42%</h2>
+      <h2>69.94%</h2>
     </div>
     <div id="navbar">
       <span class="unvisited" style="top:9.61%"></span>
@@ -31,12 +31,9 @@
       <span class="unvisited" style="top:31.88%"></span>
       <span class="unvisited" style="top:32.31%"></span>
       <span class="unvisited" style="top:32.75%"></span>
-      <span class="some-visited" style="top:35.37%"></span>
-      <span class="unvisited" style="top:37.12%"></span>
       <span class="unvisited" style="top:37.55%"></span>
       <span class="some-visited" style="top:38.43%"></span>
       <span class="unvisited" style="top:39.30%"></span>
-      <span class="unvisited" style="top:39.74%"></span>
       <span class="unvisited" style="top:40.17%"></span>
       <span class="unvisited" style="top:40.61%"></span>
       <span class="unvisited" style="top:44.54%"></span>
@@ -57,10 +54,6 @@
       <span class="unvisited" style="bottom:23.58%"></span>
       <span class="unvisited" style="bottom:23.14%"></span>
       <span class="unvisited" style="bottom:14.85%"></span>
-      <span class="unvisited" style="bottom:12.66%"></span>
-      <span class="unvisited" style="bottom:11.35%"></span>
-      <span class="unvisited" style="bottom:1.31%"></span>
-      <span class="unvisited" style="bottom:0.87%"></span>
       <span class="unvisited" style="bottom:0.44%"></span>
     </div>
     <div id="report">
@@ -146,17 +139,17 @@
 <a id="L78"></a><span > </span>
 <a id="L79"></a><span class="visited"> </span>
 <a id="L80"></a><span class="visited"> </span>
-<a id="L81"></a><span class="some-visited"> </span>
+<a id="L81"></a><span class="visited"> </span>
 <a id="L82"></a><span class="visited"> </span>
 <a id="L83"></a><span class="visited"> </span>
 <a id="L84"></a><span class="visited"> </span>
-<a id="L85"></a><span class="unvisited"> </span>
+<a id="L85"></a><span class="visited"> </span>
 <a id="L86"></a><span class="unvisited"> </span>
 <a id="L87"></a><span class="visited"> </span>
 <a id="L88"></a><span class="some-visited"> </span>
 <a id="L89"></a><span class="visited"> </span>
 <a id="L90"></a><span class="unvisited"> </span>
-<a id="L91"></a><span class="unvisited"> </span>
+<a id="L91"></a><span class="visited"> </span>
 <a id="L92"></a><span class="unvisited"> </span>
 <a id="L93"></a><span class="unvisited"> </span>
 <a id="L94"></a><span > </span>
@@ -265,10 +258,10 @@
 <a id="L197"></a><span > </span>
 <a id="L198"></a><span class="visited"> </span>
 <a id="L199"></a><span class="visited"> </span>
-<a id="L200"></a><span class="unvisited"> </span>
+<a id="L200"></a><span class="visited"> </span>
 <a id="L201"></a><span > </span>
 <a id="L202"></a><span > </span>
-<a id="L203"></a><span class="unvisited"> </span>
+<a id="L203"></a><span class="visited"> </span>
 <a id="L204"></a><span > </span>
 <a id="L205"></a><span > </span>
 <a id="L206"></a><span > </span>
@@ -291,8 +284,8 @@
 <a id="L223"></a><span class="visited"> </span>
 <a id="L224"></a><span class="visited"> </span>
 <a id="L225"></a><span > </span>
-<a id="L226"></a><span class="unvisited"> </span>
-<a id="L227"></a><span class="unvisited"> </span>
+<a id="L226"></a><span class="visited"> </span>
+<a id="L227"></a><span class="visited"> </span>
 <a id="L228"></a><span class="unvisited"> </span>
 <a id="L229"></a><span > </span>
 </pre>
@@ -546,9 +539,9 @@ type value =
 and env = (string, value, Base.String.comparator_witness) Base.Map.t
 
 let rec pp_value ppf =
-  <span data-count="11">l</span>et open Stdlib.Format in
+  <span data-count="19">l</span>et open Stdlib.Format in
   function
-  | <span data-count="4">V</span>Int x -&gt; fprintf ppf "%d" x
+  | <span data-count="8">V</span>Int x -&gt; fprintf ppf "%d" x
   | <span data-count="4">V</span>Bool b -&gt; fprintf ppf "%b" b
   | <span data-count="0">V</span>Nothing -&gt; fprintf ppf "()"
   | <span data-count="1">V</span>List vl -&gt;
@@ -557,7 +550,7 @@ let rec pp_value ppf =
       "[%a]"
       (pp_print_lis<span data-count="1">t</span> ~pp_sep:(fun ppf () -&gt; <span data-count="1">f</span>printf ppf "; ") pp_value)
       vl
-  | <span data-count="2">V</span>Fun _ -&gt; fprintf ppf "&lt;fun&gt;"
+  | <span data-count="6">V</span>Fun _ -&gt; fprintf ppf "&lt;fun&gt;"
 ;;
 
 type error =
@@ -583,8 +576,8 @@ module type MONADERROR = sig
   val ( let* ) : ('a, 'err) t -&gt; ('a -&gt; ('b, 'err) t) -&gt; ('b, 'err) t
 end
 
-let vint x = <span data-count="35">V</span>Int x
-let vbool b = <span data-count="14">V</span>Bool b
+let vint x = <span data-count="49">V</span>Int x
+let vbool b = <span data-count="18">V</span>Bool b
 let vnothing = VNothing
 let vlist l = <span data-count="0">V</span>List l
 let vfun s e env = <span data-count="0">V</span>Fun (s, e, env)
@@ -607,46 +600,46 @@ module Inter (M : MONADERROR) = struct
   ;;
 
   let eval_binop (v1, bop, v2) =
-    <span data-count="22">m</span>atch v1, bop, v2 with
+    <span data-count="27">m</span>atch v1, bop, v2 with
     | <span data-count="6">V</span>Int x, Mult, VInt y -&gt; return (vin<span data-count="6">t</span> (x * y))
-    | <span data-count="1">V</span>Int _, Split, VInt y when y = 0 -&gt; <span data-count="0">f</span>ail Division_by_zero
+    | <span data-count="2">V</span>Int _, Split, VInt y when y = 0 -&gt; <span data-count="1">f</span>ail Division_by_zero
     | <span data-count="1">V</span>Int x, Split, VInt y -&gt; return (vin<span data-count="1">t</span> (x / y))
     | <span data-count="1">V</span>Int x, Plus, VInt y -&gt; return (vin<span data-count="1">t</span> (x + y))
     | <span data-count="6">V</span>Int x, Minus, VInt y -&gt; return (vin<span data-count="6">t</span> (x - y))
-    | <span data-count="0">V</span>Int x, Equally, VInt y -&gt; return (vboo<span data-count="0">l</span> (x = y))
+    | <span data-count="2">V</span>Int x, Equally, VInt y -&gt; return (vboo<span data-count="2">l</span> (x = y))
     | <span data-count="0">V</span>Int x, NEqually, VInt y -&gt; return (vboo<span data-count="0">l</span> (x &lt;&gt; y))
     | <span data-count="1">V</span>Bool x, And, VBool y -&gt; return (vboo<span data-count="1">l</span> (x &amp;&amp; <span data-count="1">y</span>))
     | <span data-count="1">V</span>Bool x, Or, VBool y -&gt; return (vboo<span data-count="1">l</span> (<span data-count="1">x</span> || <span data-count="0">y</span>))
-    | <span data-count="6">V</span>Int x, Less, VInt y -&gt; return (vboo<span data-count="6">l</span> (x &lt; y))
+    | <span data-count="7">V</span>Int x, Less, VInt y -&gt; return (vboo<span data-count="7">l</span> (x &lt; y))
     | <span data-count="0">V</span>Int x, LeEq, VInt y -&gt; return (vboo<span data-count="0">l</span> (x &lt;= y))
-    | <span data-count="0">V</span>Int x, More, VInt y -&gt; return (vboo<span data-count="0">l</span> (x &gt; y))
+    | <span data-count="1">V</span>Int x, More, VInt y -&gt; return (vboo<span data-count="1">l</span> (x &gt; y))
     | <span data-count="0">V</span>Int x, MoEq, VInt y -&gt; return (vboo<span data-count="0">l</span> (x &gt;= y))
     | <span data-count="0">_</span> -&gt; fail (Incorrect_type v1)
   ;;
 
   let eval_expr =
     let rec helper env = function
-      | <span data-count="27">E</span>Const c -&gt;
+      | <span data-count="41">E</span>Const c -&gt;
         (match c with
-         | <span data-count="21">I</span>nt i -&gt; return (vin<span data-count="21">t</span> i)
+         | <span data-count="35">I</span>nt i -&gt; return (vin<span data-count="35">t</span> i)
          | <span data-count="6">B</span>ool b -&gt; return (vboo<span data-count="6">l</span> b))
       | <span data-count="0">N</span>othing -&gt; return vnothing
-      | <span data-count="24">V</span>ar id -&gt;
+      | <span data-count="36">V</span>ar id -&gt;
         let* v =
           match Base.Map.find env id with
           | <span data-count="0">N</span>one -&gt; fai<span data-count="0">l</span> (Unbound_value id)
-          | <span data-count="24">S</span>ome v -&gt; retur<span data-count="24">n</span> v
+          | <span data-count="36">S</span>ome v -&gt; retur<span data-count="36">n</span> v
         in
-        <span data-count="24">r</span>eturn v
-      | <span data-count="22">E</span>Binop (e1, op, e2) -&gt;
-        let* v1 = helpe<span data-count="22">r</span> env e1 in
-        <span data-count="22">l</span>et* v2 = helpe<span data-count="22">r</span> env e2 in
-        <span data-count="22">e</span>val_binop (v1, op, v2)
-      | <span data-count="6">E</span>IfThenElse (c, t, f) -&gt;
-        let* cv = helpe<span data-count="6">r</span> env c in
-        <span data-count="6">(</span>match cv with
-         | <span data-count="1">V</span>Bool true -&gt; helper env t
-         | <span data-count="5">V</span>Bool false -&gt; helper env f
+        <span data-count="36">r</span>eturn v
+      | <span data-count="27">E</span>Binop (e1, op, e2) -&gt;
+        let* v1 = helpe<span data-count="27">r</span> env e1 in
+        <span data-count="27">l</span>et* v2 = helpe<span data-count="27">r</span> env e2 in
+        <span data-count="27">e</span>val_binop (v1, op, v2)
+      | <span data-count="10">E</span>IfThenElse (c, t, f) -&gt;
+        let* cv = helpe<span data-count="10">r</span> env c in
+        <span data-count="10">(</span>match cv with
+         | <span data-count="2">V</span>Bool true -&gt; helper env t
+         | <span data-count="8">V</span>Bool false -&gt; helper env f
          | <span data-count="0">_</span> -&gt; fail (Incorrect_type cv))
       | <span data-count="1">E</span>Match (e, cases) -&gt;
         let* v = helpe<span data-count="1">r</span> env e in
@@ -670,19 +663,19 @@ module Inter (M : MONADERROR) = struct
         <span data-count="0">l</span>et env' = Base.Map.set env ~key:name ~data:v1 in
         <span data-count="0">l</span>et* v2 = helpe<span data-count="0">r</span> env' e2 in
         <span data-count="0">r</span>eturn v2
-      | <span data-count="2">E</span>Fun (id, e) -&gt; return (VFun (id, e, env))
-      | <span data-count="7">E</span>App (f, e) -&gt;
-        let* fv = helpe<span data-count="7">r</span> env f in
-        <span data-count="7">l</span>et* ev = helpe<span data-count="7">r</span> env e in
-        <span data-count="7">(</span>match fv with
-         | <span data-count="7">V</span>Fun (id, e, fenv) -&gt;
+      | <span data-count="10">E</span>Fun (id, e) -&gt; return (VFun (id, e, env))
+      | <span data-count="15">E</span>App (f, e) -&gt;
+        let* fv = helpe<span data-count="15">r</span> env f in
+        <span data-count="15">l</span>et* ev = helpe<span data-count="15">r</span> env e in
+        <span data-count="15">(</span>match fv with
+         | <span data-count="15">V</span>Fun (id, e, fenv) -&gt;
            let fenv = Base.Map.set fenv ~key:id ~data:ev in
-           <span data-count="7">l</span>et updated_env =
+           <span data-count="15">l</span>et updated_env =
              Base.Map.fold fenv ~init:env ~f:(fun ~key ~data acc_env -&gt;
-               <span data-count="7">B</span>ase.Map.set acc_env ~key ~data)
+               <span data-count="23">B</span>ase.Map.set acc_env ~key ~data)
            in
-           <span data-count="7">l</span>et* v = helpe<span data-count="7">r</span> updated_env e in
-           <span data-count="7">r</span>eturn v
+           <span data-count="15">l</span>et* v = helpe<span data-count="15">r</span> updated_env e in
+           <span data-count="15">r</span>eturn v
          | <span data-count="0">_</span> -&gt; fail (Incorrect_type fv))
       | <span data-count="1">E</span>List es -&gt;
         let* vs =
@@ -697,65 +690,65 @@ module Inter (M : MONADERROR) = struct
   ;;
 
   let interpret p =
-    <span data-count="7">l</span>et eval_let env = function
-      | <span data-count="9">E</span>Let (_, id, e, Nothing) -&gt;
-        let* v = eval_exp<span data-count="9">r</span> env e in
-        <span data-count="9">l</span>et env' = Base.Map.update env id ~f:(function <span data-count="9">_</span> -&gt; v) in
-        <span data-count="9">r</span>eturn (env', v)
+    <span data-count="12">l</span>et eval_let env = function
+      | <span data-count="18">E</span>Let (_, id, e, Nothing) -&gt;
+        let* v = eval_exp<span data-count="18">r</span> env e in
+        <span data-count="17">l</span>et env' = Base.Map.update env id ~f:(function <span data-count="17">_</span> -&gt; v) in
+        <span data-count="17">r</span>eturn (env', v)
       | <span data-count="0">e</span>xpression -&gt;
         let* v = eval_exp<span data-count="0">r</span> env expression in
         <span data-count="0">r</span>eturn (env, v)
     in
     let* env, rs =
-      Base.List.fold_lef<span data-count="7">t</span>
+      Base.List.fold_lef<span data-count="12">t</span>
         p
-        ~init:(retur<span data-count="7">n</span> (empty, []))
+        ~init:(retur<span data-count="12">n</span> (empty, []))
         ~f:(fun acc e -&gt;
-          <span data-count="9">l</span>et* env, rs = acc in
-          <span data-count="9">l</span>et* env, res = eval_le<span data-count="9">t</span> env e in
-          <span data-count="9">r</span>eturn (env, res :: rs))
+          <span data-count="18">l</span>et* env, rs = acc in
+          <span data-count="18">l</span>et* env, res = eval_le<span data-count="18">t</span> env e in
+          <span data-count="17">r</span>eturn (env, res :: rs))
     in
-    <span data-count="7">r</span>eturn (env, List.re<span data-count="7">v</span> rs)
+    <span data-count="11">r</span>eturn (env, List.re<span data-count="11">v</span> rs)
   ;;
 end
 
 module MONAD_RESULT : MONADERROR with type ('a, 'err) t = ('a, 'err) Result.t = struct
   type ('a, 'err) t = ('a, 'err) Result.t
 
-  let return x = <span data-count="142">O</span>k x
+  let return x = <span data-count="225">O</span>k x
   let fail err = <span data-count="0">E</span>rror err
 
   let ( &gt;&gt;= ) m f =
-    <span data-count="135">m</span>atch m with
-    | <span data-count="135">O</span>k x -&gt; f x
-    | <span data-count="0">E</span>rror e -&gt; Error e
+    <span data-count="217">m</span>atch m with
+    | <span data-count="214">O</span>k x -&gt; f x
+    | <span data-count="3">E</span>rror e -&gt; Error e
   ;;
 
-  let fail e = <span data-count="0">E</span>rror e
+  let fail e = <span data-count="1">E</span>rror e
   let ( let* ) = ( &gt;&gt;= )
 end
 
 module Interpret = Inter (MONAD_RESULT)
 
 let run_inter input =
-  <span data-count="7">m</span>atch Parser.parse input with
-  | <span data-count="7">R</span>esult.Ok tree -&gt;
+  <span data-count="13">m</span>atch Parser.parse input with
+  | <span data-count="13">R</span>esult.Ok tree -&gt;
     let infer_result = Infer.run_infer tree in
-    <span data-count="7">i</span>f Result.is_ok infer_result
-    then <span data-count="7">(</span>
+    <span data-count="13">i</span>f Result.is_ok infer_result
+    then <span data-count="12">(</span>
       let _, et = Result.get_ok infer_result in
-      <span data-count="7">l</span>et interpret_result = Interpret.interpret (List.ma<span data-count="7">p</span> (fun (expr, _) -&gt; <span data-count="9">e</span>xpr) et) in
-      <span data-count="7">i</span>f Result.is_ok interpret_result
-      then <span data-count="7">(</span>
+      <span data-count="12">l</span>et interpret_result = Interpret.interpret (List.ma<span data-count="12">p</span> (fun (expr, _) -&gt; <span data-count="18">e</span>xpr) et) in
+      <span data-count="12">i</span>f Result.is_ok interpret_result
+      then <span data-count="11">(</span>
         let _, vl = Result.get_ok interpret_result in
-        <span data-count="7">L</span>ist.iter
+        <span data-count="11">L</span>ist.iter
           (fun value -&gt;
-            <span data-count="9">p</span>p_value Format.std_formatter value;
-            <span data-count="9">F</span>ormat.pp_print_flush Format.std_formatter ();
-            <span data-count="9">p</span>rintf "\n")
+            <span data-count="17">p</span>p_value Format.std_formatter value;
+            <span data-count="17">F</span>ormat.pp_print_flush Format.std_formatter ();
+            <span data-count="17">p</span>rintf "\n")
           vl)
-      else <span data-count="0">p</span>rintf "Interpretation error\n")
-    else <span data-count="0">p</span>rintf "Typecheck error\n"
+      else <span data-count="1">p</span>rintf "Interpretation error\n")
+    else <span data-count="1">p</span>rintf "Typecheck error\n"
   | <span data-count="0">_</span> -&gt; printf "Parsing error\n"
 ;;
 </code></pre>
