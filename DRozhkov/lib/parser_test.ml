@@ -68,8 +68,7 @@ let%expect_test _ =
   test_parse {|
         let x = true
       |};
-  [%expect
-    {|
+  [%expect {|
         [(ELet (NoRec, "x", (EConst (Bool true)), Nothing))]
     |}]
 ;;
@@ -84,7 +83,8 @@ let%expect_test _ =
  
       let result = mymatch 2
        |};
-  [%expect {| 
+  [%expect
+    {| 
         [(ELet (NoRec, "mymatch",
             (EFun ("x",
                (EMatch ((Var "x"),
@@ -109,7 +109,8 @@ let%expect_test _ =
           | z -> 100
           | _ -> 99
        |};
-  [%expect {| 
+  [%expect
+    {| 
         [(ELet (NoRec, "x", (EConst (Bool true)), Nothing));
           (ELet (NoRec, "mymatch",
              (EFun ("x",
