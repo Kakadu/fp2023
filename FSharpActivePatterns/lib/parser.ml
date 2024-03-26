@@ -85,7 +85,7 @@ let parse_str =
   char '"' *> take_while (fun a -> a != '"') <* char '"' >>| fun a -> CString a
 ;;
 
-let parse_const = choice [ parse_int; parse_bool; parse_str]
+let parse_const = choice [ parse_int; parse_bool; parse_str ]
 
 (* Parse var *)
 
@@ -351,4 +351,3 @@ let parse = pack.expr_parsers pack
 
 let program = many1 (parse_token parse <* parse_token (many1 (pstrtoken ";;")))
 let main_parse str = start_parsing program (String.strip str)
-

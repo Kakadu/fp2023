@@ -348,11 +348,13 @@ let infer =
       let* finalmatchsub = Subst.compose cond_sub match_sub in
       return (finalmatchsub, Subst.apply finalmatchsub match_ty)
     | ListExpr a ->
-      if (List.length a == 0) then return (Subst.empty, Prim "'a list") else 
-      let* s1, t1 = helper env (List.hd_exn a) in
-      let t1 = List_typ t1 in
-      let* subst = Subst.compose_all [ s1 ] in
-      return (subst, Subst.apply subst t1)
+      if List.length a == 0
+      then return (Subst.empty, Prim "'a list")
+      else
+        let* s1, t1 = helper env (List.hd_exn a) in
+        let t1 = List_typ t1 in
+        let* subst = Subst.compose_all [ s1 ] in
+        return (subst, Subst.apply subst t1)
     | CaseExpr _ -> fail NotImplemented
     | TupleExpr tuple ->
       let* s, t =
