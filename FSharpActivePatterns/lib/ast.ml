@@ -49,5 +49,5 @@ type expr =
   | AppExpr of expr * expr (** sq 5 *)
   | FunExpr of pattern * expr (** fun x -> x * x *)
   | MatchExpr of expr * (pattern * expr) list (** match input with | 2 -> 5 | 5 -> 10 *)
-  | CaseExpr of name (** (|Even|Odd|), Some x *)
+  | CaseExpr of name (** (|Even|Odd|) *)
 [@@deriving show { with_path = false }]

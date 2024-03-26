@@ -8,19 +8,6 @@ type fresh = int
 
 module R : sig
   type 'a t
-
-  val ( >>= ) : 'a t -> ('a -> 'b t) -> 'b t
-  val ( >>| ) : 'a t -> ('a -> 'b) -> 'b t
-  val bind : 'a t -> f:('a -> 'b t) -> 'b t
-  val return : 'a -> 'a t
-  val fail : Errorinter.error_infer -> 'a t
-
-  module Syntax : sig
-    val ( let* ) : 'a t -> ('a -> 'b t) -> 'b t
-  end
-
-  val fresh : int t
-  val run : 'a t -> ('a, Errorinter.error_infer) result
 end
 
 module VarSet : sig
@@ -38,3 +25,5 @@ val check_types
   :  ?env:environment
   -> Ast.expr list
   -> (environment * typ, Errorinter.error_infer) result
+
+val run_infer : ('a * typ, Errorinter.error_infer) result -> unit
