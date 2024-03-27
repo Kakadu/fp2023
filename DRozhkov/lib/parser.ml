@@ -104,10 +104,13 @@ let conditions arg =
 ;;
 
 let lists arg = sqbracket (sep_by (token ";") arg >>| fun x -> EList x)
+let plists arg = sqbracket (sep_by (token ";") arg >>| fun x -> PList x)
 
 let patterns =
   fix (fun x ->
-    let a = choice [ pvars; pconst; (token "_" >>| fun _ -> PDash); staples x ] in
+    let a =
+      choice [ pvars; pconst; (token "_" >>| fun _ -> PDash); staples x; plists x ]
+    in
     a)
 ;;
 

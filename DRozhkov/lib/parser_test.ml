@@ -121,3 +121,21 @@ let%expect_test _ =
           ]
       |}]
 ;;
+
+let%expect_test _ =
+  test_parse {|
+      let f a = match a with | [hd; tl] -> hd | _ -> 0
+       |};
+  [%expect
+    {| 
+        [(ELet (NoRec, "f",
+            (EFun ("a",
+               (EMatch ((Var "a"),
+                  [((PList [(PVar "hd"); (PVar "tl")]), (Var "hd"));
+                    (PDash, (EConst (Int 0)))]
+                  ))
+               )),
+            Nothing))
+          ]
+      |}]
+;;

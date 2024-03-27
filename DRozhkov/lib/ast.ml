@@ -11,6 +11,7 @@ type pattern =
   | PConst of const (** const *)
   | PDash (** _ *)
   | PVar of string (** var -> ... *)
+  | PList of pattern list (** x :: xs *)
 [@@deriving show { with_path = false }]
 
 type binop =

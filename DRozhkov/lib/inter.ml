@@ -67,14 +67,6 @@ module Inter (M : MONADERROR) = struct
   open M
   open Env (M)
 
-  let check_match env = function
-    | PDash, _ -> Some env
-    | PConst (Int i1), VInt i2 when i1 = i2 -> Some env
-    | PConst (Bool b1), VBool b2 when Bool.equal b1 b2 -> Some env
-    | PVar x, v -> Some (extend env x v)
-    | _ -> None
-  ;;
-
   let eval_binop (v1, bop, v2) =
     match v1, bop, v2 with
     | VInt x, Mult, VInt y -> return (vint (x * y))
@@ -126,11 +118,9 @@ module Inter (M : MONADERROR) = struct
              | PVar id, v' ->
                let env' = Base.Map.set env ~key:id ~data:v' in
                helper env' expr
-             | PConst const, cvalue ->
-               (match const, cvalue with
-                | Bool e1, VBool e2 when Bool.equal e1 e2 -> helper env expr
-                | Int e1, VInt e2 when e1 = e2 -> helper env expr
-                | _ -> match_cases env v tl))
+             | PConst  Bool e1, VBool e2 when Bool.equal e1 e2 -> helper env expr
+             | PConst Int e1, VInt e2 when e1 = e2 -> helper env expr
+             | _ -> match_cases env v tl)
           | [] -> fail Pattern_matching_error
         in
         match_cases env v cases
