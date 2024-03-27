@@ -118,8 +118,8 @@ module Inter (M : MONADERROR) = struct
              | PVar id, v' ->
                let env' = Base.Map.set env ~key:id ~data:v' in
                helper env' expr
-             | PConst  Bool e1, VBool e2 when Bool.equal e1 e2 -> helper env expr
-             | PConst Int e1, VInt e2 when e1 = e2 -> helper env expr
+             | PConst (Bool e1), VBool e2 when Bool.equal e1 e2 -> helper env expr
+             | PConst (Int e1), VInt e2 when e1 = e2 -> helper env expr
              | _ -> match_cases env v tl)
           | [] -> fail Pattern_matching_error
         in
