@@ -281,15 +281,15 @@ module St_Interpreter = struct
     | Method of methods * statement
   [@@deriving show { with_path = false }<span data-count="0">]</span>
 
-  <span data-count="64">t</span>ype el =
+  <span data-count="48">t</span>ype el =
     | IClass of adr
     | IValue of value
-  [@@deriving show { with_path = false }<span data-count="32">]</span>
+  [@@deriving show { with_path = false }<span data-count="24">]</span>
 
-  <span data-count="64">t</span>ype vl =
+  <span data-count="48">t</span>ype vl =
     | Init of el
     | Not_init
-  [@@deriving show { with_path = false }<span data-count="32">]</span>
+  [@@deriving show { with_path = false }<span data-count="24">]</span>
 
   type local_el =
     | Code of code

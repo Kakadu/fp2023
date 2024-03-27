@@ -18,7 +18,7 @@
       <h2>98.15%</h2>
     </div>
     <div id="navbar">
-      <span class="unvisited" style="top:1.30%"></span>
+      <span class="unvisited" style="top:1.32%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -787,9 +787,9 @@
 <a id="L762"></a><span > </span>
 <a id="L763"></a><span > </span>
 <a id="L764"></a><span > </span>
-<a id="L765"></a><span > </span>
+<a id="L765"></a><span class="visited"> </span>
 <a id="L766"></a><span > </span>
-<a id="L767"></a><span class="visited"> </span>
+<a id="L767"></a><span > </span>
 <a id="L768"></a><span > </span>
 <a id="L769"></a><span > </span>
 <a id="L770"></a><span > </span>
@@ -852,22 +852,13 @@
 <a id="L827"></a><span > </span>
 <a id="L828"></a><span > </span>
 <a id="L829"></a><span > </span>
-<a id="L830"></a><span > </span>
+<a id="L830"></a><span class="visited"> </span>
 <a id="L831"></a><span > </span>
 <a id="L832"></a><span > </span>
 <a id="L833"></a><span > </span>
-<a id="L834"></a><span > </span>
-<a id="L835"></a><span > </span>
+<a id="L834"></a><span class="visited"> </span>
+<a id="L835"></a><span class="visited"> </span>
 <a id="L836"></a><span > </span>
-<a id="L837"></a><span > </span>
-<a id="L838"></a><span > </span>
-<a id="L839"></a><span class="visited"> </span>
-<a id="L840"></a><span > </span>
-<a id="L841"></a><span > </span>
-<a id="L842"></a><span > </span>
-<a id="L843"></a><span class="visited"> </span>
-<a id="L844"></a><span class="visited"> </span>
-<a id="L845"></a><span > </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -1708,15 +1699,6 @@
 <a href="#L834">834</a>
 <a href="#L835">835</a>
 <a href="#L836">836</a>
-<a href="#L837">837</a>
-<a href="#L838">838</a>
-<a href="#L839">839</a>
-<a href="#L840">840</a>
-<a href="#L841">841</a>
-<a href="#L842">842</a>
-<a href="#L843">843</a>
-<a href="#L844">844</a>
-<a href="#L845">845</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2023-2024, Julia Kononova *)
 
@@ -2467,8 +2449,6 @@ let%expect_test _ =
   <span data-count="1">t</span>est_ast
     {|
   public interface Animal {
-    string name;
-    int age;
     void animalSound();
     void run();
   }
@@ -2491,16 +2471,9 @@ let%expect_test _ =
            { i_modifier = (Some Public); i_name = (Name "Animal");
              i_parent = None;
              i_body =
-             [(IField
-                 { f_modifier = None; f_type = (TVar TString);
-                   f_name = (Name "name") });
-               (IField
-                  { f_modifier = None; f_type = (TVar TInt);
-                    f_name = (Name "age") });
-               (IMethod
-                  { m_acc_modifier = None; m_poly_modifier = None;
-                    m_type = TVoid; m_name = (Name "animalSound");
-                    m_params = (Params []) });
+             [(IMethod
+                 { m_acc_modifier = None; m_poly_modifier = None; m_type = TVoid;
+                   m_name = (Name "animalSound"); m_params = (Params []) });
                (IMethod
                   { m_acc_modifier = None; m_poly_modifier = None;
                     m_type = TVoid; m_name = (Name "run"); m_params = (Params [])
