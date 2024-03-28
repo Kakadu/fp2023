@@ -175,10 +175,45 @@
 <a id="L151"></a><span > </span>
 <a id="L152"></a><span > </span>
 <a id="L153"></a><span > </span>
-<a id="L154"></a><span class="visited"> </span>
+<a id="L154"></a><span > </span>
 <a id="L155"></a><span > </span>
 <a id="L156"></a><span class="visited"> </span>
 <a id="L157"></a><span > </span>
+<a id="L158"></a><span > </span>
+<a id="L159"></a><span class="visited"> </span>
+<a id="L160"></a><span > </span>
+<a id="L161"></a><span > </span>
+<a id="L162"></a><span > </span>
+<a id="L163"></a><span class="visited"> </span>
+<a id="L164"></a><span > </span>
+<a id="L165"></a><span > </span>
+<a id="L166"></a><span > </span>
+<a id="L167"></a><span > </span>
+<a id="L168"></a><span > </span>
+<a id="L169"></a><span > </span>
+<a id="L170"></a><span > </span>
+<a id="L171"></a><span > </span>
+<a id="L172"></a><span class="visited"> </span>
+<a id="L173"></a><span > </span>
+<a id="L174"></a><span > </span>
+<a id="L175"></a><span class="visited"> </span>
+<a id="L176"></a><span > </span>
+<a id="L177"></a><span > </span>
+<a id="L178"></a><span > </span>
+<a id="L179"></a><span class="visited"> </span>
+<a id="L180"></a><span > </span>
+<a id="L181"></a><span > </span>
+<a id="L182"></a><span > </span>
+<a id="L183"></a><span > </span>
+<a id="L184"></a><span > </span>
+<a id="L185"></a><span > </span>
+<a id="L186"></a><span > </span>
+<a id="L187"></a><span > </span>
+<a id="L188"></a><span class="visited"> </span>
+<a id="L189"></a><span > </span>
+<a id="L190"></a><span > </span>
+<a id="L191"></a><span class="visited"> </span>
+<a id="L192"></a><span > </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -340,6 +375,41 @@
 <a href="#L155">155</a>
 <a href="#L156">156</a>
 <a href="#L157">157</a>
+<a href="#L158">158</a>
+<a href="#L159">159</a>
+<a href="#L160">160</a>
+<a href="#L161">161</a>
+<a href="#L162">162</a>
+<a href="#L163">163</a>
+<a href="#L164">164</a>
+<a href="#L165">165</a>
+<a href="#L166">166</a>
+<a href="#L167">167</a>
+<a href="#L168">168</a>
+<a href="#L169">169</a>
+<a href="#L170">170</a>
+<a href="#L171">171</a>
+<a href="#L172">172</a>
+<a href="#L173">173</a>
+<a href="#L174">174</a>
+<a href="#L175">175</a>
+<a href="#L176">176</a>
+<a href="#L177">177</a>
+<a href="#L178">178</a>
+<a href="#L179">179</a>
+<a href="#L180">180</a>
+<a href="#L181">181</a>
+<a href="#L182">182</a>
+<a href="#L183">183</a>
+<a href="#L184">184</a>
+<a href="#L185">185</a>
+<a href="#L186">186</a>
+<a href="#L187">187</a>
+<a href="#L188">188</a>
+<a href="#L189">189</a>
+<a href="#L190">190</a>
+<a href="#L191">191</a>
+<a href="#L192">192</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2021-2023, Kakadu, RozhkovAleksandr *)
 
@@ -491,11 +561,46 @@ let%expect_test _ =
     {|
       let mymatch x =
         match x with
-          | hd :: [] -&gt; hd
+          | hd :: tl -&gt; tl
           | _ -&gt; 0
+
+      let a = mymatch [1; 2; 3]
        |};
   <span data-count="1">[</span>%expect {| 
          &lt;fun&gt;
+         [2; 3]
+      |}<span data-count="7">]</span>
+;;
+
+let%expect_test _ =
+  <span data-count="1">r</span>un_inter
+    {|
+      let mymatch x =
+        match x with
+          | hd :: tl -&gt; hd
+          | _ -&gt; 0
+
+      let a = mymatch [1; 2; 3]
+       |};
+  <span data-count="1">[</span>%expect {| 
+         &lt;fun&gt;
+         1
+      |}<span data-count="7">]</span>
+;;
+
+let%expect_test _ =
+  <span data-count="1">r</span>un_inter
+    {|
+      let mymatch x =
+        match x with
+          | hd :: tl -&gt; hd
+          | _ -&gt; 0
+
+      let a = mymatch []
+       |};
+  <span data-count="1">[</span>%expect {| 
+         &lt;fun&gt;
+         0
       |}<span data-count="7">]</span>
 ;;
 </code></pre>

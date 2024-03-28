@@ -133,19 +133,19 @@
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-<span data-count="60">t</span>ype const =
-  | Int of in<span data-count="16">t</span> (** int *)
+<span data-count="66">t</span>ype const =
+  | Int of in<span data-count="18">t</span> (** int *)
   | Bool of boo<span data-count="4">l</span> (** bool *)
   | Unit (** unit () *)
   | Nil (** [] *)
 [@@deriving show { with_path = false }]
 
-<span data-count="22">t</span>ype pattern =
+<span data-count="48">t</span>ype pattern =
   | PConst of const (** const *)
   | PDash (** _ *)
-  | PVar of strin<span data-count="3">g</span> (** var -&gt; ... *)
+  | PVar of strin<span data-count="7">g</span> (** var -&gt; ... *)
   | PList of pattern * pattern (** x :: xs *)
-[@@deriving show { with_path = false }<span data-count="7">]</span>
+[@@deriving show { with_path = false }<span data-count="17">]</span>
 
 <span data-count="6">t</span>ype binop =
   | Plus (** + *)
@@ -162,24 +162,24 @@
   | LeEq (** &lt;= *)
 [@@deriving show { with_path = false }]
 
-<span data-count="12">t</span>ype rec_flag =
+<span data-count="14">t</span>ype rec_flag =
   | Rec (** recursive *)
   | NoRec (** non recursive *)
 [@@deriving show { with_path = false }]
 
-<span data-count="307">t</span>ype expr =
-  | Var of strin<span data-count="11">g</span> (** var *)
+<span data-count="373">t</span>ype expr =
+  | Var of strin<span data-count="15">g</span> (** var *)
   | EConst of const (** const *)
   | EBinop of expr * binop * expr (** a + b *)
   | EIfThenElse of expr * expr * expr (** if then else*)
-  | ELet of rec_flag * <span data-count="12">s</span>trin<span data-count="24">g</span> * expr * <span data-count="26">e</span>xpr optio<span data-count="12">n</span> (**let ... *)
-  | EFun of strin<span data-count="3">g</span> * expr (** fun *)
+  | ELet of rec_flag * <span data-count="14">s</span>trin<span data-count="28">g</span> * expr * <span data-count="30">e</span>xpr optio<span data-count="14">n</span> (**let ... *)
+  | EFun of strin<span data-count="5">g</span> * expr (** fun *)
   | EApp of expr * expr (** f x *)
   | EList of <span data-count="13">e</span>xpr lis<span data-count="3">t</span> (** [a; b; c]*)
-  | EMatch of expr * <span data-count="30">(</span><span data-count="12">p</span>attern * expr) lis<span data-count="9">t</span> (** math ... with*)
-[@@deriving show { with_path = false }<span data-count="217">]</span>
+  | EMatch of expr * <span data-count="50">(</span><span data-count="20">p</span>attern * expr) lis<span data-count="15">t</span> (** math ... with*)
+[@@deriving show { with_path = false }<span data-count="261">]</span>
 
-<span data-count="11">t</span>ype exprs = <span data-count="51">e</span>xpr lis<span data-count="11">t</span> [@@deriving show { with_path = false }<span data-count="22">]</span>
+<span data-count="13">t</span>ype exprs = <span data-count="61">e</span>xpr lis<span data-count="13">t</span> [@@deriving show { with_path = false }<span data-count="26">]</span>
 </code></pre>
       </div>
     </div>
