@@ -142,7 +142,6 @@ let%expect_test _ =
       |}]
 ;;
 
-
 let%expect_test _ =
   test_parse
     {|
@@ -178,7 +177,7 @@ let%expect_test _ =
          [(ELet (NoRec, "mymatch",
              (EFun ("x",
                 (EMatch ((Var "x"),
-                   [((PList ((PVar "hd"), (PConst Nil))), (Var "hd"));
+                   [((PList ((PVar "hd"), (PVar "tl"))), (Var "hd"));
                      (PDash, (EConst (Int 0)))]
                    ))
                 )),

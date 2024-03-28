@@ -176,7 +176,7 @@ let infer_pattern =
     | PList (t1, t2) ->
       let* env, tt1 = helper env t1 in
       let* env', tt2 = helper env t2 in
-      let* subst = Subst.unify (TList tt1) tt2 in
+      let* subst = Subst.unify tt1 tt2 in
       let env'' = TypeEnv.apply env' subst in
       return (env'', TList (Subst.apply subst tt1))
   in
