@@ -1374,8 +1374,8 @@ module Monad_Interpreter = struct
   type st = State_type.St_Interpreter.st_interpreter
   type ('a, 'r) t = st -&gt; st * ('a, 'r, error) result
 
-  let pipe : 'a -&gt; ('a, 'r) t = fun x st -&gt; <span data-count="15576">s</span>t, Signal (Pipe x)
-  let return : 'r -&gt; ('a, 'r) t = fun x st -&gt; <span data-count="186">s</span>t, Signal (Return x)
+  let return : 'a -&gt; ('a, 'r) t = fun x st -&gt; <span data-count="15576">s</span>t, Signal (Pipe x)
+  let fun_return : 'r -&gt; ('a, 'r) t = fun x st -&gt; <span data-count="186">s</span>t, Signal (Return x)
   let fail : 'e -&gt; ('a, 'r) t = fun er st -&gt; <span data-count="174">s</span>t, IError er
 
   let ( &gt;&gt;= ) : ('a, 'r) t -&gt; ('a -&gt; ('b, 'r) t) -&gt; ('b, 'r) t =
@@ -1383,7 +1383,7 @@ module Monad_Interpreter = struct
     <span data-count="15712">l</span>et st, x = x st in
     <span data-count="15712">m</span>atch x with
     | <span data-count="15497">S</span>ignal (Pipe x) -&gt; f x st
-    | <span data-count="151">S</span>ignal (Return r) -&gt; return r st
+    | <span data-count="151">S</span>ignal (Return r) -&gt; fun_return r st
     | <span data-count="64">I</span>Error er -&gt; fail er st
   ;;
 
@@ -1398,8 +1398,8 @@ module Monad_Interpreter = struct
     fun x f st -&gt;
     <span data-count="41">l</span>et st, x = x st in
     <span data-count="41">m</span>atch x with
-    | <span data-count="41">S</span>ignal (Pipe x) -&gt; pipe (<span data-count="41">f</span> x) st
-    | <span data-count="0">S</span>ignal (Return r) -&gt; return r st
+    | <span data-count="41">S</span>ignal (Pipe x) -&gt; return (<span data-count="41">f</span> x) st
+    | <span data-count="0">S</span>ignal (Return r) -&gt; fun_return r st
     | <span data-count="0">I</span>Error er -&gt; fail er st
   ;;
 
@@ -1407,9 +1407,9 @@ module Monad_Interpreter = struct
     fun x1 x2 st -&gt;
     <span data-count="1120">l</span>et st, x = x1 st in
     <span data-count="1120">m</span>atch x with
-    | <span data-count="1014">S</span>ignal (Pipe x) -&gt; pipe x st
+    | <span data-count="1014">S</span>ignal (Pipe x) -&gt; return x st
     | <span data-count="106">I</span>Error _ -&gt; x2 st
-    | <span data-count="0">S</span>ignal (Return r) -&gt; return r st
+    | <span data-count="0">S</span>ignal (Return r) -&gt; fun_return r st
   ;;
 
   let ( *&gt; ) : ('a, 'r) t -&gt; ('b, 'r) t -&gt; ('b, 'r) t = fun x1 x2 -&gt; <span data-count="1928">x</span>1 &gt;&gt;= fun _ -&gt; <span data-count="2053">x</span>2
@@ -1418,63 +1418,63 @@ module Monad_Interpreter = struct
     fun x1 x2 -&gt; <span data-count="0">x</span>1 &gt;&gt;= fun x -&gt; <span data-count="0">x</span>2 &gt;&gt;| fun _ -&gt; <span data-count="0">x</span>
   ;;
 
-  let read : (st, 'r) t = fun st -&gt; <span data-count="3816">p</span>ipe st st
+  let read : (st, 'r) t = fun st -&gt; <span data-count="3816">r</span>eturn st st
   let write : st -&gt; (unit, 'r) t = fun new_st _ -&gt; <span data-count="1020">n</span>ew_st, Signal (Pipe ())
 
   let run : ('a, 'r) t -&gt; st * ('a, 'r, error) result =
     fun f -&gt; <span data-count="14">f</span> (MapName.empty, (Idx 0, MapName.empty), Adr 0, (Adr 0, MapAdr.empty))
   ;;
 
-  let lift2 f a b = <span data-count="187">a</span> &gt;&gt;= fun r_a -&gt; <span data-count="390">b</span> &gt;&gt;= fun r_b -&gt; <span data-count="390">p</span>ipe @@ <span data-count="390">f</span> r_a r_b
+  let lift2 f a b = <span data-count="187">a</span> &gt;&gt;= fun r_a -&gt; <span data-count="390">b</span> &gt;&gt;= fun r_b -&gt; <span data-count="390">r</span>eturn @@ <span data-count="390">f</span> r_a r_b
   let lift3 f a b c = <span data-count="0">l</span>ift<span data-count="0">2</span> f a b &gt;&gt;= fun f -&gt; <span data-count="0">c</span> &gt;&gt;| f
   let lift4 f a b c d = <span data-count="0">l</span>ift<span data-count="0">3</span> f a b c &gt;&gt;= fun f -&gt; <span data-count="0">d</span> &gt;&gt;| f
 
   let map f list =
-    <span data-count="41">l</span>et f' acc el = <span data-count="40">a</span>cc &gt;&gt;= fun acc -&gt; <span data-count="80">f</span> el &gt;&gt;= fun el -&gt; <span data-count="40">p</span>ipe (el :: acc) in
-    List.fold_lef<span data-count="41">t</span> f' (pip<span data-count="41">e</span> []) list &gt;&gt;| List.rev
+    <span data-count="41">l</span>et f' acc el = <span data-count="40">a</span>cc &gt;&gt;= fun acc -&gt; <span data-count="80">f</span> el &gt;&gt;= fun el -&gt; <span data-count="40">r</span>eturn (el :: acc) in
+    List.fold_lef<span data-count="41">t</span> f' (retur<span data-count="41">n</span> []) list &gt;&gt;| List.rev
   ;;
 
   let iter f list =
-    <span data-count="163">l</span>et f' acc el = <span data-count="238">a</span>cc *<span data-count="238">&gt;</span> <span data-count="238">f</span> el *&gt; pip<span data-count="238">e</span> () in
-    List.fold_left f' (pip<span data-count="163">e</span> ()) list
+    <span data-count="163">l</span>et f' acc el = <span data-count="238">a</span>cc *<span data-count="238">&gt;</span> <span data-count="238">f</span> el *&gt; retur<span data-count="238">n</span> () in
+    List.fold_left f' (retur<span data-count="163">n</span> ()) list
   ;;
 
   let fold_left f acc l =
-    <span data-count="69">l</span>et f' acc a = <span data-count="130">a</span>cc &gt;&gt;= fun acc -&gt; <span data-count="260">f</span> acc a &gt;&gt;= pipe in
-    List.fold_left f' (pip<span data-count="69">e</span> acc) l
+    <span data-count="69">l</span>et f' acc a = <span data-count="130">a</span>cc &gt;&gt;= fun acc -&gt; <span data-count="260">f</span> acc a &gt;&gt;= return in
+    List.fold_left f' (retur<span data-count="69">n</span> acc) l
   ;;
 
   let iter2 f l1 l2 =
-    <span data-count="76">l</span>et f' acc el1 el2 = <span data-count="42">a</span>cc *<span data-count="42">&gt;</span> <span data-count="42">f</span> el1 el2 *&gt; pip<span data-count="42">e</span> () in
-    List.fold_left2 f' (pip<span data-count="76">e</span> ()) l1 l2
+    <span data-count="76">l</span>et f' acc el1 el2 = <span data-count="42">a</span>cc *<span data-count="42">&gt;</span> <span data-count="42">f</span> el1 el2 *&gt; retur<span data-count="42">n</span> () in
+    List.fold_left2 f' (retur<span data-count="76">n</span> ()) l1 l2
   ;;
 
   (* State read/write operations *)
   let pipe_name_with_fail (Name n) = function
-    | <span data-count="1061">S</span>ome x -&gt; pipe x
+    | <span data-count="1061">S</span>ome x -&gt; return x
     | <span data-count="93">N</span>one -&gt; fail (Interpret_error (No_variable n))
   ;;
 
   let pipe_adr_with_fail (Adr a) = function
-    | <span data-count="337">S</span>ome x -&gt; pipe x
+    | <span data-count="337">S</span>ome x -&gt; return x
     | <span data-count="0">N</span>one -&gt; fail (Interpret_error (Address_not_found a))
   ;;
 
   let read_local =
     read
     &gt;&gt;<span data-count="17">=</span> function
-    | <span data-count="1853">_</span>, l, _, _ -&gt; pipe l
+    | <span data-count="1853">_</span>, l, _, _ -&gt; return l
   ;;
 
   let read_local_el f name = <span data-count="659">r</span>ead_local &gt;&gt;= fun (_, l) -&gt; <span data-count="968">M</span>apName.find_opt name l |&gt; <span data-count="968">f</span>
-  let read_local_el_opt name = <span data-count="102">r</span>ead_local_el pipe name
+  let read_local_el_opt name = <span data-count="102">r</span>ead_local_el return name
   let read_local_el name = <span data-count="557">r</span>ead_local_el (pipe_name_with_fai<span data-count="557">l</span> name) name
-  let read_idx = read_local &gt;&gt;<span data-count="17">=</span> fun (idx, _) -&gt; <span data-count="128">p</span>ipe idx
+  let read_idx = read_local &gt;&gt;<span data-count="17">=</span> fun (idx, _) -&gt; <span data-count="128">r</span>eturn idx
 
   let read_global =
     read
     &gt;&gt;<span data-count="17">=</span> function
-    | <span data-count="137">g</span>, _, _, _ -&gt; pipe g
+    | <span data-count="137">g</span>, _, _, _ -&gt; return g
   ;;
 
   let read_global_el name =
@@ -1484,16 +1484,16 @@ module Monad_Interpreter = struct
   let read_local_adr =
     read
     &gt;&gt;<span data-count="17">=</span> function
-    | <span data-count="100">_</span>, _, adr, _ -&gt; pipe adr
+    | <span data-count="100">_</span>, _, adr, _ -&gt; return adr
   ;;
 
   let read_memory =
     read
     &gt;&gt;<span data-count="17">=</span> function
-    | <span data-count="706">_</span>, _, _, m -&gt; pipe m
+    | <span data-count="706">_</span>, _, _, m -&gt; return m
   ;;
 
-  let read_cur_adr = read_memory &gt;&gt;<span data-count="17">=</span> fun (a, _) -&gt; <span data-count="131">p</span>ipe a
+  let read_cur_adr = read_memory &gt;&gt;<span data-count="17">=</span> fun (a, _) -&gt; <span data-count="131">r</span>eturn a
 
   let read_memory_obj adr =
     <span data-count="394">r</span>ead_memory &gt;&gt;= fun (_, m) -&gt; <span data-count="337">M</span>apAdr.find_opt adr m |&gt; <span data-count="337">p</span>ipe_adr_with_fail adr
@@ -1506,7 +1506,7 @@ module Monad_Interpreter = struct
   ;;
 
   let write_idx new_idx =
-    <span data-count="128">r</span>ead_local &gt;&gt;= fun (_, l) -&gt; <span data-count="128">w</span>rite_loca<span data-count="128">l</span> (new_idx, l) *&gt; pip<span data-count="128">e</span> new_idx
+    <span data-count="128">r</span>ead_local &gt;&gt;= fun (_, l) -&gt; <span data-count="128">w</span>rite_loca<span data-count="128">l</span> (new_idx, l) *&gt; retur<span data-count="128">n</span> new_idx
   ;;
 
   let write_local_el el_name el_ctx =
@@ -1543,7 +1543,7 @@ module Monad_Interpreter = struct
   ;;
 
   let write_cur_adr new_adr =
-    <span data-count="145">r</span>ead_memory &gt;&gt;= fun (_, m) -&gt; <span data-count="145">w</span>rite_memor<span data-count="145">y</span> (new_adr, m) *&gt; pip<span data-count="145">e</span> new_adr
+    <span data-count="145">r</span>ead_memory &gt;&gt;= fun (_, m) -&gt; <span data-count="145">w</span>rite_memor<span data-count="145">y</span> (new_adr, m) *&gt; retur<span data-count="145">n</span> new_adr
   ;;
 
   let write_memory_obj obj_adr obj_ctx =
@@ -1556,7 +1556,7 @@ module Monad_Interpreter = struct
       &gt;&gt;= fun obj -&gt;
       <span data-count="72">M</span>apName.find_opt name obj.mems
       |&gt; <span data-count="72">f</span>unction
-      | <span data-count="57">S</span>ome (_, vl) -&gt; pipe (Value (vl, None))
+      | <span data-count="57">S</span>ome (_, vl) -&gt; return (Value (vl, None))
       | <span data-count="15">N</span>one -&gt;
         (match obj.p_adr with
          | <span data-count="8">S</span>ome p_adr -&gt; find_memory_obj p_adr
@@ -1565,8 +1565,8 @@ module Monad_Interpreter = struct
     let find_global_el adr =
       <span data-count="64">l</span>et f acc = function
         | <span data-count="15">C</span>Method (m, b) when equal_nam<span data-count="15">e</span> m.m_name name -&gt;
-          <span data-count="7">p</span>ipe (Some (Code (Method (m, b))))
-        | <span data-count="8">_</span> -&gt; pipe acc
+          <span data-count="7">r</span>eturn (Some (Code (Method (m, b))))
+        | <span data-count="8">_</span> -&gt; return acc
       in
       read_memory_ob<span data-count="64">j</span> adr
       &gt;&gt;= fun obj -&gt;
@@ -1575,7 +1575,7 @@ module Monad_Interpreter = struct
       | <span data-count="7">I</span>nt_Class cl -&gt;
         fold_lef<span data-count="7">t</span> f None cl.cl_body
         &gt;&gt;= (function
-         | <span data-count="7">S</span>ome vl -&gt; pipe vl
+         | <span data-count="7">S</span>ome vl -&gt; return vl
          | <span data-count="0">N</span>one -&gt;
            (match name with
             | <span data-count="0">N</span>ame n -&gt; fail (Interpret_error (No_variable n))))
@@ -1604,7 +1604,7 @@ module Monad_Interpreter = struct
     <span data-count="99">r</span>ead_local
     &gt;&gt;= fun (idx, old_l) -&gt;
     <span data-count="99">d</span>owngrade_loca<span data-count="99">l</span> old_l *<span data-count="99">&gt;</span> read_cur_adr
-    &gt;&gt;= fun old_adr -&gt; <span data-count="99">w</span>rite_local_ad<span data-count="99">r</span> adr *&gt; pip<span data-count="99">e</span> (idx, old_l, old_adr)
+    &gt;&gt;= fun old_adr -&gt; <span data-count="99">w</span>rite_local_ad<span data-count="99">r</span> adr *&gt; retur<span data-count="99">n</span> (idx, old_l, old_adr)
   ;;
 
   let reset adr idx l = <span data-count="97">w</span>rite_cur_ad<span data-count="97">r</span> adr *&gt; write_loca<span data-count="97">l</span> (idx, l)
@@ -1620,10 +1620,10 @@ module Monad_Interpreter = struct
              <span data-count="23">i</span>_exp<span data-count="23">r</span> e
              &gt;&gt;= (function
               | <span data-count="23">V</span>alue (vl, _) -&gt;
-                rese<span data-count="23">t</span> old_adr idx old_l *&gt; pip<span data-count="23">e</span> (MapName.ad<span data-count="23">d</span> f.f_name (f, vl) acc)
+                rese<span data-count="23">t</span> old_adr idx old_l *&gt; retur<span data-count="23">n</span> (MapName.ad<span data-count="23">d</span> f.f_name (f, vl) acc)
               | <span data-count="0">_</span> -&gt; rese<span data-count="0">t</span> old_adr idx old_l *&gt; fai<span data-count="0">l</span> (Interpret_error Mismatch))
-           | <span data-count="9">N</span>one -&gt; pipe (MapName.ad<span data-count="9">d</span> f.f_name (f, Not_init) acc))
-        | <span data-count="33">_</span> -&gt; pipe acc
+           | <span data-count="9">N</span>one -&gt; return (MapName.ad<span data-count="9">d</span> f.f_name (f, Not_init) acc))
+        | <span data-count="33">_</span> -&gt; return acc
       in
       read_global_e<span data-count="32">l</span> n
       &gt;&gt;= function
@@ -1638,7 +1638,7 @@ module Monad_Interpreter = struct
       <span data-count="32">w</span>rite_memory_ob<span data-count="32">j</span>
         adr
         { mems = fields; cl_name = constr.c_name; p_adr = None; inh_adr }
-      *&gt; pip<span data-count="32">e</span> adr
+      *&gt; retur<span data-count="32">n</span> adr
     in
     let update_p_adr my_adr p_adr =
       <span data-count="32">r</span>ead_memory_ob<span data-count="32">j</span> my_adr &gt;&gt;= fun obj -&gt; <span data-count="32">w</span>rite_memory_obj my_adr { obj with p_adr }
@@ -1646,7 +1646,7 @@ module Monad_Interpreter = struct
     let rec create_p_obj constr adr =
       <span data-count="32">r</span>ead_global_e<span data-count="32">l</span> constr.c_name
       &gt;&gt;= function
-      | <span data-count="0">I</span>nt_Interface _ -&gt; pipe None
+      | <span data-count="0">I</span>nt_Interface _ -&gt; return None
       | <span data-count="32">I</span>nt_Class cl -&gt;
         (match cl.cl_parent with
          | <span data-count="7">S</span>ome n -&gt;
@@ -1656,14 +1656,14 @@ module Monad_Interpreter = struct
               create_obj<span data-count="7">_</span> sign adr
               &gt;&gt;= fun my_adr -&gt;
               <span data-count="7">c</span>reate_p_ob<span data-count="7">j</span> sign adr
-              &gt;&gt;= fun p_adr -&gt; <span data-count="7">u</span>pdate_p_ad<span data-count="7">r</span> my_adr p_adr *&gt; pip<span data-count="7">e</span> (Some my_adr)
+              &gt;&gt;= fun p_adr -&gt; <span data-count="7">u</span>pdate_p_ad<span data-count="7">r</span> my_adr p_adr *&gt; retur<span data-count="7">n</span> (Some my_adr)
             | <span data-count="0">_</span> -&gt; fail (Interpret_error (Other "Can't find constructor")))
-         | <span data-count="25">N</span>one -&gt; pipe None)
+         | <span data-count="25">N</span>one -&gt; return None)
     in
     create_obj<span data-count="25">_</span> constr None
     &gt;&gt;= fun my_adr -&gt;
     <span data-count="25">c</span>reate_p_ob<span data-count="25">j</span> constr (Some my_adr)
-    &gt;&gt;= fun p_adr -&gt; <span data-count="25">u</span>pdate_p_ad<span data-count="25">r</span> my_adr p_adr *&gt; pip<span data-count="25">e</span> my_adr
+    &gt;&gt;= fun p_adr -&gt; <span data-count="25">u</span>pdate_p_ad<span data-count="25">r</span> my_adr p_adr *&gt; retur<span data-count="25">n</span> my_adr
   ;;
 
   let write_args_to_local args (Params params) =
@@ -1677,8 +1677,8 @@ module Monad_Interpreter = struct
     <span data-count="69">w</span>rite_args_to_loca<span data-count="69">l</span> args params *<span data-count="69">&gt;</span> body_f
     |&gt;&gt;= fun sign -&gt;
     <span data-count="67">m</span>atch sign, ret_tp with
-    | <span data-count="32">P</span>ipe _, TVoid -&gt; rese<span data-count="32">t</span> old_adr idx old_l *&gt; pip<span data-count="32">e</span> None
-    | <span data-count="35">R</span>eturn x, TReturn _ -&gt; rese<span data-count="35">t</span> old_adr idx old_l *&gt; pip<span data-count="35">e</span> x
+    | <span data-count="32">P</span>ipe _, TVoid -&gt; rese<span data-count="32">t</span> old_adr idx old_l *&gt; retur<span data-count="32">n</span> None
+    | <span data-count="35">R</span>eturn x, TReturn _ -&gt; rese<span data-count="35">t</span> old_adr idx old_l *&gt; retur<span data-count="35">n</span> x
     | <span data-count="0">_</span> -&gt;
       rese<span data-count="0">t</span> old_adr idx old_l
       *&gt; fai<span data-count="0">l</span> (Interpret_error (Other "Error in the function return value"))
@@ -1699,13 +1699,13 @@ module Monad_Interpreter = struct
               new_loca<span data-count="7">l</span> fake_adr
               &gt;&gt;<span data-count="7">=</span> fun (idx, old_l, old_adr) -&gt;
               <span data-count="7">w</span>rite_args_to_loca<span data-count="7">l</span> args c.c_params *<span data-count="7">&gt;</span> get_arg<span data-count="7">s</span> p_args
-              &gt;&gt;= fun p_args -&gt; <span data-count="7">r</span>ese<span data-count="7">t</span> old_adr idx old_l *<span data-count="7">&gt;</span> eva<span data-count="7">l</span> p_args p_adr *&gt; pip<span data-count="7">e</span> ()
+              &gt;&gt;= fun p_args -&gt; <span data-count="7">r</span>ese<span data-count="7">t</span> old_adr idx old_l *<span data-count="7">&gt;</span> eva<span data-count="7">l</span> p_args p_adr *&gt; retur<span data-count="7">n</span> ()
             | <span data-count="0">N</span>one -&gt; fai<span data-count="0">l</span> (Interpret_error (Impossible_result "Check during typecheck")))
-         | <span data-count="25">N</span>one -&gt; pip<span data-count="25">e</span> ())
+         | <span data-count="25">N</span>one -&gt; retur<span data-count="25">n</span> ())
         *&gt; run_metho<span data-count="32">d</span> args c.c_params adr TVoid (i_statemen<span data-count="32">t</span> b)
       | <span data-count="0">_</span> -&gt; fail (Interpret_error (Impossible_result "EEECheck during typecheck"))
     in
-    eva<span data-count="25">l</span> args adr *&gt; pip<span data-count="25">e</span> adr
+    eva<span data-count="25">l</span> args adr *&gt; retur<span data-count="25">n</span> adr
   ;;
 
   let allocate_object constr args i_expr i_statement =

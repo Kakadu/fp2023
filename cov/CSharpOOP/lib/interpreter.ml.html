@@ -890,40 +890,40 @@ open State_type.St_Interpreter
 open Monad.Monad_Interpreter
 
 let is_val = function
-  | <span data-count="1046">V</span>alue (x, _) -&gt; pipe x
+  | <span data-count="1046">V</span>alue (x, _) -&gt; return x
   | <span data-count="0">_</span> -&gt; fail (Interpret_error (Other "It's not a value"))
 ;;
 
 let is_init x =
   <span data-count="129">i</span>s_va<span data-count="129">l</span> x
   &gt;&gt;= function
-  | <span data-count="129">I</span>nit x -&gt; pipe x
+  | <span data-count="129">I</span>nit x -&gt; return x
   | <span data-count="0">_</span> -&gt; fail (Interpret_error (Other "Value is not initialized"))
 ;;
 
 let is_init_val x =
   <span data-count="882">i</span>s_va<span data-count="882">l</span> x
   &gt;&gt;= function
-  | <span data-count="880">I</span>nit (IValue x) -&gt; pipe x
+  | <span data-count="880">I</span>nit (IValue x) -&gt; return x
   | <span data-count="2">_</span> -&gt; fail (Interpret_error (Other "Value is not initialized"))
 ;;
 
 let is_code = function
-  | <span data-count="34">C</span>ode c -&gt; pipe c
+  | <span data-count="34">C</span>ode c -&gt; return c
   | <span data-count="0">_</span> -&gt; fail (Interpret_error (Other "It's not a method/constructor"))
 ;;
 
 let is_int x =
   <span data-count="733">i</span>s_init_va<span data-count="733">l</span> x
   &gt;&gt;= function
-  | <span data-count="731">V</span>Int x -&gt; pipe x
+  | <span data-count="731">V</span>Int x -&gt; return x
   | <span data-count="0">_</span> -&gt; fail (Interpret_error Mismatch)
 ;;
 
 let is_bool x =
   <span data-count="115">i</span>s_init_va<span data-count="115">l</span> x
   &gt;&gt;= function
-  | <span data-count="115">V</span>Bool x -&gt; pipe x
+  | <span data-count="115">V</span>Bool x -&gt; return x
   | <span data-count="0">_</span> -&gt; fail (Interpret_error Mismatch)
 ;;
 
@@ -931,13 +931,13 @@ let v_int x = <span data-count="276">V</span>Int x
 let v_bool x = <span data-count="114">V</span>Bool x
 let v_bool_not x = <span data-count="0">V</span>Bool (not x)
 let v_int_minus x = <span data-count="1">V</span>Int (<span data-count="1">-</span>x)
-let i_const c = <span data-count="99">p</span>ipe (Value (Init (IValue c), None))
+let i_const c = <span data-count="99">r</span>eturn (Value (Init (IValue c), None))
 let i_name n = <span data-count="138">f</span>ind_local_el n
 
 let get_meth_from_class cl name =
   <span data-count="30">l</span>et f acc = function
-    | <span data-count="34">C</span>Method (m, b) when equal_nam<span data-count="34">e</span> m.m_name name -&gt; <span data-count="30">p</span>ipe (Some (m, b))
-    | <span data-count="20">_</span> -&gt; pipe acc
+    | <span data-count="34">C</span>Method (m, b) when equal_nam<span data-count="34">e</span> m.m_name name -&gt; <span data-count="30">r</span>eturn (Some (m, b))
+    | <span data-count="20">_</span> -&gt; return acc
   in
   fold_left f None cl.cl_body
 ;;
@@ -950,13 +950,13 @@ let i_access_by_point e1 e2 =
     | <span data-count="163">E</span>xp_Name n -&gt;
       MapName.find_opt n obj.mems
       |&gt; <span data-count="163">p</span>ipe_name_with_fai<span data-count="163">l</span> n
-      &gt;&gt;<span data-count="163">=</span> (fun (_, vl) -&gt; <span data-count="147">p</span>ipe (Value (vl, None), adr, n))
+      &gt;&gt;<span data-count="163">=</span> (fun (_, vl) -&gt; <span data-count="147">r</span>eturn (Value (vl, None), adr, n))
       &lt;|&gt; (read_global_e<span data-count="163">l</span> obj.cl_name
            &gt;&gt;<span data-count="163">=</span> function
            | <span data-count="16">I</span>nt_Class cl -&gt;
              get_meth_from_clas<span data-count="16">s</span> cl n
              &gt;&gt;= (function
-              | <span data-count="16">S</span>ome (m, b) -&gt; pipe (Code (Method (m, b)), adr, m.m_name)
+              | <span data-count="16">S</span>ome (m, b) -&gt; return (Code (Method (m, b)), adr, m.m_name)
               | <span data-count="0">N</span>one -&gt;
                 fail (Interpret_error (Impossible_result "Check during typecheck")))
            | <span data-count="0">_</span> -&gt; fail (Interpret_error (Impossible_result "Object creation checking")))
@@ -994,7 +994,7 @@ let i_method_invoke args i_expr code i_statement =
 
 let i_assign e1 e2 i_expr =
   <span data-count="30">l</span>et is_val_with_idx = function
-    | <span data-count="100">V</span>alue (_, i) -&gt; pipe i
+    | <span data-count="100">V</span>alue (_, i) -&gt; return i
     | <span data-count="0">_</span> -&gt;
       fail
         (Interpret_error
@@ -1030,7 +1030,7 @@ let i_assign e1 e2 i_expr =
        |&gt; <span data-count="16">p</span>ipe_name_with_fai<span data-count="16">l</span> name
        &gt;&gt;= fun (f, _) -&gt;
        <span data-count="16">w</span>rite_memory_ob<span data-count="16">j</span> adr { obj with mems = MapName.ad<span data-count="16">d</span> name (f, Init v) obj.mems }
-       *&gt; pip<span data-count="16">e</span> (Value (Init v, None)))
+       *&gt; retur<span data-count="16">n</span> (Value (Init v, None)))
   | <span data-count="0">_</span> -&gt;
     fail
       (Interpret_error
@@ -1050,7 +1050,7 @@ let i_constructor_invoke e a i_expr i_statement =
 let i_bin_op bin_op e1 e2 i_expr =
   <span data-count="217">l</span>et r_val op v f =
     <span data-count="187">l</span>ift<span data-count="187">2</span> (fun e1 e2 -&gt; <span data-count="390">e</span>1, e2) (i_exp<span data-count="187">r</span> e1 &gt;&gt;<span data-count="187">=</span> f) (i_exp<span data-count="187">r</span> e2 &gt;&gt;<span data-count="187">=</span> f)
-    &gt;&gt;= fun (c1, c2) -&gt; <span data-count="390">p</span>ipe (Value (Init (IValue (<span data-count="390">v</span> (o<span data-count="390">p</span> c1 c2))), None))
+    &gt;&gt;= fun (c1, c2) -&gt; <span data-count="390">r</span>eturn (Value (Init (IValue (<span data-count="390">v</span> (o<span data-count="390">p</span> c1 c2))), None))
   in
   let int_r_int op = <span data-count="144">r</span>_val op v_int is_int in
   let int_r_bool op = <span data-count="21">r</span>_val op v_bool is_int in
@@ -1088,13 +1088,13 @@ let i_un_op un_op e i_expr i_statement =
     (match e with
      | <span data-count="11">M</span>ethod_invoke (e, Args args) -&gt;
        i_constructor_invok<span data-count="11">e</span> e args i_expr i_statement
-       &gt;&gt;= fun adr -&gt; <span data-count="11">p</span>ipe (Value (Init (IClass adr), None))
+       &gt;&gt;= fun adr -&gt; <span data-count="11">r</span>eturn (Value (Init (IClass adr), None))
      | <span data-count="0">_</span> -&gt; fail (Interpret_error (Other "'new' can be used only with constructor")))
 ;;
 
 let i_expr i_statement =
   <span data-count="124">l</span>et check_return = function
-    | <span data-count="23">S</span>ome x -&gt; pipe (Value (x, None))
+    | <span data-count="23">S</span>ome x -&gt; return (Value (x, None))
     | <span data-count="0">N</span>one -&gt; fail (Interpret_error (Other "Void cannot be used with expr"))
   in
   let rec i_expr_ = function
@@ -1112,7 +1112,7 @@ let i_expr i_statement =
          &gt;&gt;= fun (vl, adr, _) -&gt;
          <span data-count="16">w</span>rite_cur_ad<span data-count="16">r</span> adr *<span data-count="16">&gt;</span> i_method_invok<span data-count="16">e</span> args i_expr_ vl i_statement &gt;&gt;= check_return
        | <span data-count="0">_</span> -&gt; fail (Interpret_error (Impossible_result "Check during typecheck")))
-    | <span data-count="120">A</span>ccess_By_Point (e1, e2) -&gt; i_access_by_poin<span data-count="120">t</span> e1 e2 &gt;&gt;= fun (vl, _, _) -&gt; <span data-count="131">p</span>ipe vl
+    | <span data-count="120">A</span>ccess_By_Point (e1, e2) -&gt; i_access_by_poin<span data-count="120">t</span> e1 e2 &gt;&gt;= fun (vl, _, _) -&gt; <span data-count="131">r</span>eturn vl
   in
   i_expr_
 ;;
@@ -1124,10 +1124,10 @@ let i_sexpr expr i_expr i_statement =
     &gt;&gt;= fun code -&gt;
     <span data-count="0">i</span>_method_invok<span data-count="0">e</span> args i_expr code i_statement
     &gt;&gt;= (function
-     | <span data-count="0">N</span>one -&gt; pipe ()
+     | <span data-count="0">N</span>one -&gt; return ()
      | <span data-count="0">S</span>ome _ -&gt;
        fail (Interpret_error (Other "The statement can only have a method of void type")))
-  | <span data-count="27">B</span>in_op (Assign, _, _) -&gt; i_exp<span data-count="27">r</span> expr *&gt; pip<span data-count="27">e</span> ()
+  | <span data-count="27">B</span>in_op (Assign, _, _) -&gt; i_exp<span data-count="27">r</span> expr *&gt; retur<span data-count="27">n</span> ()
   | <span data-count="0">_</span> -&gt; fail (Interpret_error Mismatch)
 ;;
 
@@ -1156,14 +1156,14 @@ let i_if_state i_statement e b s_opt =
   | <span data-count="6">f</span>alse -&gt;
     (match s_opt with
      | <span data-count="6">S</span>ome b -&gt; i_statement b
-     | <span data-count="0">N</span>one -&gt; pipe ())
+     | <span data-count="0">N</span>one -&gt; return ())
 ;;
 
 let rec iteration f1 f2 =
   <span data-count="69">f</span>1
   &gt;&gt;= function
   | <span data-count="64">t</span>rue -&gt; f2 *&gt; iteratio<span data-count="64">n</span> f1 f2
-  | <span data-count="13">f</span>alse -&gt; pipe ()
+  | <span data-count="13">f</span>alse -&gt; return ()
 ;;
 
 let i_while_state i_statement e s = <span data-count="2">i</span>teration (bool_exp<span data-count="2">r</span> i_statement e) (i_statemen<span data-count="2">t</span> s)
@@ -1172,14 +1172,14 @@ let i_for_state i_statement init cond iter b =
   <span data-count="3">l</span>et get_init =
     match init with
     | <span data-count="3">S</span>ome init -&gt; i_statemen<span data-count="3">t</span> init
-    | <span data-count="0">N</span>one -&gt; pip<span data-count="0">e</span> ()
+    | <span data-count="0">N</span>one -&gt; retur<span data-count="0">n</span> ()
   in
   let get_cond =
     match cond, iter with
     | <span data-count="3">S</span>ome c, Some i -&gt; i_exp<span data-count="3">r</span> i_statement i *<span data-count="3">&gt;</span> bool_exp<span data-count="3">r</span> i_statement c
     | <span data-count="0">S</span>ome c, None -&gt; bool_exp<span data-count="0">r</span> i_statement c
-    | <span data-count="0">N</span>one, Some i -&gt; i_exp<span data-count="0">r</span> i_statement i *<span data-count="0">&gt;</span> pip<span data-count="0">e</span> true
-    | <span data-count="0">N</span>one, None -&gt; pip<span data-count="0">e</span> true
+    | <span data-count="0">N</span>one, Some i -&gt; i_exp<span data-count="0">r</span> i_statement i *<span data-count="0">&gt;</span> retur<span data-count="0">n</span> true
+    | <span data-count="0">N</span>one, None -&gt; retur<span data-count="0">n</span> true
   in
   get_init *&gt; iteratio<span data-count="3">n</span> get_cond (i_statemen<span data-count="3">t</span> b)
 ;;
@@ -1199,8 +1199,8 @@ let i_statement =
        | <span data-count="2">N</span>one -&gt; write_new_local_el n (Value (Not_init, Some new_idx)))
     | <span data-count="37">R</span>eturn e -&gt;
       (match e with
-       | <span data-count="37">S</span>ome e -&gt; i_exp<span data-count="37">r</span> i_statement_ e &gt;&gt;<span data-count="37">=</span> is_val &gt;&gt;= fun r -&gt; <span data-count="35">r</span>eturn (Some r)
-       | <span data-count="0">N</span>one -&gt; return None)
+       | <span data-count="37">S</span>ome e -&gt; i_exp<span data-count="37">r</span> i_statement_ e &gt;&gt;<span data-count="37">=</span> is_val &gt;&gt;= fun r -&gt; <span data-count="35">f</span>un_return (Some r)
+       | <span data-count="0">N</span>one -&gt; fun_return None)
     | <span data-count="2">W</span>hile (e, s) -&gt; local (i_while_stat<span data-count="2">e</span> i_statement_ e s)
     | <span data-count="3">F</span>or (init, cond, iter, b) -&gt; local (i_for_stat<span data-count="3">e</span> i_statement_ init cond iter b)
     | <span data-count="11">I</span>f (e, b, s_opt) -&gt; local (i_if_stat<span data-count="11">e</span> i_statement_ e b s_opt)
@@ -1223,9 +1223,9 @@ let run_interpreter cl_with_main g_env =
            &gt;&gt;= (function
             | <span data-count="1">I</span>nt_Interface _ -&gt;
               write_global_el cl.cl_name (Int_Class { cl with cl_parent = None })
-            | <span data-count="5">_</span> -&gt; pipe ())
-         | <span data-count="21">N</span>one -&gt; pipe ())
-      | <span data-count="2">I</span>nterface _ -&gt; pipe ()
+            | <span data-count="5">_</span> -&gt; return ())
+         | <span data-count="21">N</span>one -&gt; return ())
+      | <span data-count="2">I</span>nterface _ -&gt; return ()
     in
     ite<span data-count="14">r</span> f g_env *<span data-count="14">&gt;</span> ite<span data-count="14">r</span> g g_env
   in
@@ -1233,7 +1233,7 @@ let run_interpreter cl_with_main g_env =
     let save_constr cl =
       <span data-count="27">l</span>et f = function
         | <span data-count="6">C</span>Constructor (c, b) -&gt; write_new_local_el c.c_name (Code (Constructor (c, b)))
-        | <span data-count="49">_</span> -&gt; pipe ()
+        | <span data-count="49">_</span> -&gt; return ()
       in
       ite<span data-count="27">r</span> f cl.cl_body
       *&gt; (write_new_local_e<span data-count="27">l</span>
@@ -1246,11 +1246,11 @@ let run_interpreter cl_with_main g_env =
                     ; c_base = None
                     }
                   , Body [] )))
-          &lt;|<span data-count="27">&gt;</span> pip<span data-count="27">e</span> ())
+          &lt;|<span data-count="27">&gt;</span> retur<span data-count="27">n</span> ())
     in
     let f = function
       | <span data-count="27">C</span>lass cl -&gt; save_constr cl
-      | <span data-count="2">I</span>nterface _ -&gt; pipe ()
+      | <span data-count="2">I</span>nterface _ -&gt; return ()
     in
     ite<span data-count="14">r</span> f g_env
   in
@@ -1281,7 +1281,7 @@ let interpreter str =
         | <span data-count="2">_</span>, IError er -&gt; Result.Error er
         | <span data-count="0">_</span>, _ -&gt;
           Result.Error
-            (Interpret_error (Impossible_result "Run_method returns pipe or error")))
+            (Interpret_error (Impossible_result "Run_method returns return or error")))
      | <span data-count="1">N</span>one, Result.Ok _ -&gt; Result.Error (Interpret_error (Other "Main method not found"))
      | <span data-count="6">_</span>, Result.Error er -&gt; Result.Error er)
   | <span data-count="0">R</span>esult.Error er -&gt; Result.Error (Typecheck_error (Other er))
