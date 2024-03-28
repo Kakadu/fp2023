@@ -1,20 +1,19 @@
 (library
- (name lambda_lib)
+ (name csharp_lib)
  (public_name CSharpOOP.Lib)
- (modules Ast Lambda Interpret Parser Printast Pprintast utils)
- (modules_without_implementation ast)
- (libraries base angstrom)
+ (modules Ast Parser Type_checker Monad State_type Interpreter)
+ (libraries base angstrom str)
  (preprocess
-  (pps ppx_deriving.show))
+  (pps ppx_deriving.show ppx_deriving.eq))
  (instrumentation
   (backend bisect_ppx)))
 
 (library
  (name tests)
- (modules tests)
- (libraries lambda_lib)
+ (modules p_tests tc_tests i_tests)
+ (libraries csharp_lib)
  (preprocess
-  (pps ppx_expect ppx_deriving.show))
+  (pps ppx_expect ppx_inline_test ppx_deriving.show ppx_deriving.eq))
  (instrumentation
   (backend bisect_ppx))
  (inline_tests))
