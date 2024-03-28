@@ -122,15 +122,15 @@ open Format
 type typ =
   | TInt (** int type *)
   | TBool (** bools type *)
-  | TNothing (** else ... and in ... type *)
   | TArrow of typ * typ (** type -&gt; type *)
   | TVar of int (** var type *)
+  | TUnit (** unit () *)
   | TList of typ (* list type *)
 
 let rec pp_typ fmt = function
   | <span data-count="0">T</span>Int -&gt; fprintf fmt "int"
   | <span data-count="0">T</span>Bool -&gt; fprintf fmt "bool"
-  | <span data-count="0">T</span>Nothing -&gt; fprintf fmt "nothing"
+  | <span data-count="0">T</span>Unit -&gt; fprintf fmt "unit"
   | <span data-count="0">T</span>Var x -&gt; fprintf fmt "'%d" x
   | <span data-count="0">T</span>List x -&gt; fprintf fmt "%a list" pp_typ x
   | <span data-count="0">T</span>Arrow (l, r) -&gt;

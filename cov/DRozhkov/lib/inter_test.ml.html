@@ -166,6 +166,19 @@
 <a id="L142"></a><span > </span>
 <a id="L143"></a><span class="visited"> </span>
 <a id="L144"></a><span > </span>
+<a id="L145"></a><span > </span>
+<a id="L146"></a><span > </span>
+<a id="L147"></a><span class="visited"> </span>
+<a id="L148"></a><span > </span>
+<a id="L149"></a><span > </span>
+<a id="L150"></a><span > </span>
+<a id="L151"></a><span > </span>
+<a id="L152"></a><span > </span>
+<a id="L153"></a><span > </span>
+<a id="L154"></a><span class="visited"> </span>
+<a id="L155"></a><span > </span>
+<a id="L156"></a><span class="visited"> </span>
+<a id="L157"></a><span > </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -314,6 +327,19 @@
 <a href="#L142">142</a>
 <a href="#L143">143</a>
 <a href="#L144">144</a>
+<a href="#L145">145</a>
+<a href="#L146">146</a>
+<a href="#L147">147</a>
+<a href="#L148">148</a>
+<a href="#L149">149</a>
+<a href="#L150">150</a>
+<a href="#L151">151</a>
+<a href="#L152">152</a>
+<a href="#L153">153</a>
+<a href="#L154">154</a>
+<a href="#L155">155</a>
+<a href="#L156">156</a>
+<a href="#L157">157</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2021-2023, Kakadu, RozhkovAleksandr *)
 
@@ -457,6 +483,19 @@ let%expect_test _ =
        |};
   <span data-count="1">[</span>%expect {| 
         Typecheck error
+      |}<span data-count="7">]</span>
+;;
+
+let%expect_test _ =
+  <span data-count="1">r</span>un_inter
+    {|
+      let mymatch x =
+        match x with
+          | hd :: [] -&gt; hd
+          | _ -&gt; 0
+       |};
+  <span data-count="1">[</span>%expect {| 
+         &lt;fun&gt;
       |}<span data-count="7">]</span>
 ;;
 </code></pre>

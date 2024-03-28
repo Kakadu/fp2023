@@ -18,7 +18,7 @@
       <h2>95.83%</h2>
     </div>
     <div id="navbar">
-      <span class="unvisited" style="top:9.22%"></span>
+      <span class="unvisited" style="top:9.09%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -119,22 +119,22 @@
 <a id="L94"></a><span > </span>
 <a id="L95"></a><span > </span>
 <a id="L96"></a><span > </span>
-<a id="L97"></a><span > </span>
+<a id="L97"></a><span class="visited"> </span>
 <a id="L98"></a><span > </span>
-<a id="L99"></a><span class="visited"> </span>
+<a id="L99"></a><span > </span>
 <a id="L100"></a><span > </span>
-<a id="L101"></a><span > </span>
+<a id="L101"></a><span class="visited"> </span>
 <a id="L102"></a><span > </span>
-<a id="L103"></a><span class="visited"> </span>
+<a id="L103"></a><span > </span>
 <a id="L104"></a><span > </span>
 <a id="L105"></a><span > </span>
 <a id="L106"></a><span > </span>
 <a id="L107"></a><span > </span>
 <a id="L108"></a><span > </span>
 <a id="L109"></a><span > </span>
-<a id="L110"></a><span > </span>
+<a id="L110"></a><span class="visited"> </span>
 <a id="L111"></a><span > </span>
-<a id="L112"></a><span class="visited"> </span>
+<a id="L112"></a><span > </span>
 <a id="L113"></a><span > </span>
 <a id="L114"></a><span > </span>
 <a id="L115"></a><span > </span>
@@ -142,18 +142,18 @@
 <a id="L117"></a><span > </span>
 <a id="L118"></a><span > </span>
 <a id="L119"></a><span > </span>
-<a id="L120"></a><span > </span>
+<a id="L120"></a><span class="visited"> </span>
 <a id="L121"></a><span > </span>
-<a id="L122"></a><span class="visited"> </span>
+<a id="L122"></a><span > </span>
 <a id="L123"></a><span > </span>
-<a id="L124"></a><span > </span>
+<a id="L124"></a><span class="visited"> </span>
 <a id="L125"></a><span > </span>
-<a id="L126"></a><span class="visited"> </span>
+<a id="L126"></a><span > </span>
 <a id="L127"></a><span > </span>
 <a id="L128"></a><span > </span>
-<a id="L129"></a><span class="visited"> </span>
+<a id="L129"></a><span > </span>
 <a id="L130"></a><span > </span>
-<a id="L131"></a><span > </span>
+<a id="L131"></a><span class="visited"> </span>
 <a id="L132"></a><span > </span>
 <a id="L133"></a><span > </span>
 <a id="L134"></a><span > </span>
@@ -162,8 +162,10 @@
 <a id="L137"></a><span > </span>
 <a id="L138"></a><span > </span>
 <a id="L139"></a><span > </span>
-<a id="L140"></a><span class="visited"> </span>
+<a id="L140"></a><span > </span>
 <a id="L141"></a><span > </span>
+<a id="L142"></a><span class="visited"> </span>
+<a id="L143"></a><span > </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -309,6 +311,8 @@
 <a href="#L139">139</a>
 <a href="#L140">140</a>
 <a href="#L141">141</a>
+<a href="#L142">142</a>
+<a href="#L143">143</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2021-2023, Kakadu, RozhkovAleksandr *)
 
@@ -333,11 +337,11 @@ let%expect_test _ =
       |};
   <span data-count="1">[</span>%expect
     {|
-      [(ELet (NoRec, "x", (EBinop ((EConst (Int 5)), Plus, (EConst (Int 6)))),
-          Nothing));
+      [(ELet (NoRec, "x", (EBinop ((EConst (Int 5)), Plus, (EConst (Int 6)))), None
+          ));
         (ELet (NoRec, "y", (EBinop ((EConst (Int 7)), Plus, (EConst (Int 8)))),
-           Nothing));
-        (ELet (NoRec, "z", (EBinop ((Var "x"), Plus, (Var "y"))), Nothing))]
+           None));
+        (ELet (NoRec, "z", (EBinop ((Var "x"), Plus, (Var "y"))), None))]
     |}<span data-count="7">]</span>
 ;;
 
@@ -350,15 +354,15 @@ let%expect_test _ =
   <span data-count="1">[</span>%expect
     {|
         [(ELet (NoRec, "x", (EConst (Int 5)),
-            (ELet (Rec, "fact",
-               (EIfThenElse ((EBinop ((Var "x"), Less, (EConst (Int 1)))),
-                  (EConst (Int 1)),
-                  (EBinop ((Var "x"), Mult,
-                     (EApp ((Var "fact"),
-                        (EBinop ((Var "x"), Minus, (EConst (Int 1))))))
-                     ))
-                  )),
-               Nothing))
+            (Some (ELet (Rec, "fact",
+                     (EIfThenElse ((EBinop ((Var "x"), Less, (EConst (Int 1)))),
+                        (EConst (Int 1)),
+                        (EBinop ((Var "x"), Mult,
+                           (EApp ((Var "fact"),
+                              (EBinop ((Var "x"), Minus, (EConst (Int 1))))))
+                           ))
+                        )),
+                     None)))
             ))
           ]
     |}<span data-count="7">]</span>
@@ -371,7 +375,7 @@ let%expect_test _ =
   <span data-count="1">[</span>%expect
     {|
         [(ELet (NoRec, "x",
-            (EList [(EConst (Int 1)); (EConst (Int 2)); (EConst (Int 3))]), Nothing))
+            (EList [(EConst (Int 1)); (EConst (Int 2)); (EConst (Int 3))]), None))
           ]
     |}<span data-count="7">]</span>
 ;;
@@ -381,7 +385,7 @@ let%expect_test _ =
         let x = true
       |};
   <span data-count="1">[</span>%expect {|
-        [(ELet (NoRec, "x", (EConst (Bool true)), Nothing))]
+        [(ELet (NoRec, "x", (EConst (Bool true)), None))]
     |}<span data-count="7">]</span>
 ;;
 
@@ -404,10 +408,8 @@ let%expect_test _ =
                     (PDash, (EConst (Bool false)))]
                   ))
                )),
-            Nothing));
-          (ELet (NoRec, "result", (EApp ((Var "mymatch"), (EConst (Int 2)))), Nothing
-             ))
-          ]
+            None));
+          (ELet (NoRec, "result", (EApp ((Var "mymatch"), (EConst (Int 2)))), None))]
       |}<span data-count="7">]</span>
 ;;
 
@@ -423,32 +425,36 @@ let%expect_test _ =
        |};
   <span data-count="1">[</span>%expect
     {| 
-        [(ELet (NoRec, "x", (EConst (Bool true)), Nothing));
+        [(ELet (NoRec, "x", (EConst (Bool true)), None));
           (ELet (NoRec, "mymatch",
              (EFun ("x",
                 (EMatch ((Var "x"),
                    [((PVar "z"), (EConst (Int 100))); (PDash, (EConst (Int 99)))]))
                 )),
-             Nothing))
+             None))
           ]
       |}<span data-count="7">]</span>
 ;;
 
 let%expect_test _ =
-  <span data-count="1">t</span>est_parse {|
-      let f a = match a with | [hd; tl] -&gt; hd | _ -&gt; 0
+  <span data-count="1">t</span>est_parse
+    {|
+      let mymatch x =
+        match x with
+          | hd :: tl -&gt; hd
+          | _ -&gt; 0
        |};
   <span data-count="1">[</span>%expect
     {| 
-        [(ELet (NoRec, "f",
-            (EFun ("a",
-               (EMatch ((Var "a"),
-                  [((PList [(PVar "hd"); (PVar "tl")]), (Var "hd"));
-                    (PDash, (EConst (Int 0)))]
-                  ))
-               )),
-            Nothing))
-          ]
+         [(ELet (NoRec, "mymatch",
+             (EFun ("x",
+                (EMatch ((Var "x"),
+                   [((PList ((PVar "hd"), (PVar "tl"))), (Var "hd"));
+                     (PDash, (EConst (Int 0)))]
+                   ))
+                )),
+             None))
+           ]
       |}<span data-count="7">]</span>
 ;;
 </code></pre>
