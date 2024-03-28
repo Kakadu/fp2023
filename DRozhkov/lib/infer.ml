@@ -34,7 +34,7 @@ end
 
 module Type = struct
   let rec occurs_in v = function
-    | TBool | TInt | TNothing -> false
+    | TBool | TInt | TUnit -> false
     | TVar b -> b = v
     | TList x -> occurs_in v x
     | TArrow (l, r) -> occurs_in v l || occurs_in v r
@@ -42,7 +42,7 @@ module Type = struct
 
   let free_vars =
     let rec helper acc = function
-      | TBool | TInt | TNothing -> acc
+      | TBool | TInt | TUnit -> acc
       | TVar b -> VarSet.add acc b
       | TList x -> helper acc x
       | TArrow (l, r) ->
@@ -68,7 +68,7 @@ module Subst = struct
 
   let apply (sub : t) =
     let rec helper = function
-      | (TInt | TBool | TNothing) as other -> other
+      | (TInt | TBool | TUnit) as other -> other
       | TVar b ->
         (match Map.find sub b with
          | Some v -> v
@@ -81,7 +81,7 @@ module Subst = struct
 
   let rec unify l r =
     match l, r with
-    | TInt, TInt | TBool, TBool | TNothing, TNothing -> return empty
+    | TInt, TInt | TBool, TBool | TUnit, TUnit -> return empty
     | TVar l, TVar r when l = r -> return empty
     | TVar b, t | t, TVar b -> singleton (b, t)
     | TArrow (l1, r1), TArrow (l2, r2) ->
@@ -155,26 +155,42 @@ let generalize env typ =
   S (free, typ)
 ;;
 
-let infer_pattern env = function
-  | PDash ->
-    let* tv = fresh_v in
-    return (env, tv)
-  | PConst (Int _) -> return (env, TInt)
-  | PConst (Bool _) -> return (env, TBool)
-  | PVar x ->
-    (match Map.find env x with
-     | None ->
-       let* tv = fresh_v in
-       let env = TypeEnv.extend env (x, S (VarSet.empty, tv)) in
-       return (env, tv)
-     | Some (S (_, typ)) -> return (env, typ))
+let infer_pattern =
+  let rec helper env = function
+    | PDash ->
+      let* tv = fresh_v in
+      return (env, tv)
+    | PConst (Int _) -> return (env, TInt)
+    | PConst (Bool _) -> return (env, TBool)
+    | PConst Unit -> return (env, TUnit)
+    | PConst Nil ->
+      let* typ = fresh_v in
+      return (env, TList typ)
+    | PVar x ->
+      (match Map.find env x with
+       | None ->
+         let* tv = fresh_v in
+         let env = TypeEnv.extend env (x, S (VarSet.empty, tv)) in
+         return (env, tv)
+       | Some (S (_, typ)) -> return (env, typ))
+    | PList (t1, t2) ->
+      let* env, tt1 = helper env t1 in
+      let* env', tt2 = helper env t2 in
+      let* subst = Subst.unify (TList tt1) tt2 in
+      let env'' = TypeEnv.apply env' subst in
+      return (env'', TList (Subst.apply subst tt1))
+  in
+  helper
 ;;
 
 let inferencer =
   let rec helper env = function
     | EConst (Int _) -> return (Subst.empty, TInt)
+    | EConst Nil ->
+      let* tv = fresh_v in
+      return (Subst.empty, TList tv)
     | EConst (Bool _) -> return (Subst.empty, TBool)
-    | Nothing -> return (Subst.empty, TNothing)
+    | EConst Unit -> return (Subst.empty, TBool)
     | Var x ->
       (match Map.find env x with
        | Some schem ->
@@ -240,8 +256,8 @@ let inferencer =
       let res_typ = Subst.apply sub3 tv in
       let* final_sub = Subst.compose_all [ sub1; sub2; sub3 ] in
       return (final_sub, res_typ)
-    | ELet (NoRec, _, e1, Nothing) -> helper env e1
-    | ELet (NoRec, x, e1, e2) ->
+    | ELet (NoRec, _, e1, None) -> helper env e1
+    | ELet (NoRec, x, e1, Some e2) ->
       let* sub1, typ1 = helper env e1 in
       let env2 = Map.map env ~f:(fun sch -> Scheme.apply sch sub1) in
       let typ2 = generalize env2 typ1 in
@@ -249,10 +265,10 @@ let inferencer =
       let* sub2, typ3 = helper env3 e2 in
       let* final_sub = Subst.compose sub1 sub2 in
       return (final_sub, typ3)
-    | ELet (Rec, x, e1, Nothing) ->
+    | ELet (Rec, x, e1, None) ->
       let* final_sub, tv = infer_recursively env x e1 in
       return (final_sub, Subst.apply final_sub tv)
-    | ELet (Rec, x, e1, e2) ->
+    | ELet (Rec, x, e1, Some e2) ->
       let* tv = fresh_v in
       let env = TypeEnv.extend env (x, S (VarSet.empty, tv)) in
       let* sub1, ty1 = helper env e1 in
@@ -296,7 +312,7 @@ let infer env program =
   let check_expr env expr =
     let* _, typ = inferencer env expr in
     match expr with
-    | ELet (_, x, _, Nothing) ->
+    | ELet (_, x, _, None) ->
       let env = TypeEnv.extend env (x, S (VarSet.empty, typ)) in
       return (env, typ)
     | _ -> return (env, typ)

@@ -142,3 +142,16 @@ let%expect_test _ =
         Typecheck error
       |}]
 ;;
+
+let%expect_test _ =
+  run_inter
+    {|
+      let mymatch x =
+        match x with
+          | hd :: [] -> hd
+          | _ -> 0
+       |};
+  [%expect {| 
+         <fun>
+      |}]
+;;

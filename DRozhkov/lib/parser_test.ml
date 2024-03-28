@@ -21,11 +21,11 @@ let%expect_test _ =
       |};
   [%expect
     {|
-      [(ELet (NoRec, "x", (EBinop ((EConst (Int 5)), Plus, (EConst (Int 6)))),
-          Nothing));
+      [(ELet (NoRec, "x", (EBinop ((EConst (Int 5)), Plus, (EConst (Int 6)))), None
+          ));
         (ELet (NoRec, "y", (EBinop ((EConst (Int 7)), Plus, (EConst (Int 8)))),
-           Nothing));
-        (ELet (NoRec, "z", (EBinop ((Var "x"), Plus, (Var "y"))), Nothing))]
+           None));
+        (ELet (NoRec, "z", (EBinop ((Var "x"), Plus, (Var "y"))), None))]
     |}]
 ;;
 
@@ -38,15 +38,15 @@ let%expect_test _ =
   [%expect
     {|
         [(ELet (NoRec, "x", (EConst (Int 5)),
-            (ELet (Rec, "fact",
-               (EIfThenElse ((EBinop ((Var "x"), Less, (EConst (Int 1)))),
-                  (EConst (Int 1)),
-                  (EBinop ((Var "x"), Mult,
-                     (EApp ((Var "fact"),
-                        (EBinop ((Var "x"), Minus, (EConst (Int 1))))))
-                     ))
-                  )),
-               Nothing))
+            (Some (ELet (Rec, "fact",
+                     (EIfThenElse ((EBinop ((Var "x"), Less, (EConst (Int 1)))),
+                        (EConst (Int 1)),
+                        (EBinop ((Var "x"), Mult,
+                           (EApp ((Var "fact"),
+                              (EBinop ((Var "x"), Minus, (EConst (Int 1))))))
+                           ))
+                        )),
+                     None)))
             ))
           ]
     |}]
@@ -59,7 +59,7 @@ let%expect_test _ =
   [%expect
     {|
         [(ELet (NoRec, "x",
-            (EList [(EConst (Int 1)); (EConst (Int 2)); (EConst (Int 3))]), Nothing))
+            (EList [(EConst (Int 1)); (EConst (Int 2)); (EConst (Int 3))]), None))
           ]
     |}]
 ;;
@@ -69,7 +69,7 @@ let%expect_test _ =
         let x = true
       |};
   [%expect {|
-        [(ELet (NoRec, "x", (EConst (Bool true)), Nothing))]
+        [(ELet (NoRec, "x", (EConst (Bool true)), None))]
     |}]
 ;;
 
@@ -92,10 +92,8 @@ let%expect_test _ =
                     (PDash, (EConst (Bool false)))]
                   ))
                )),
-            Nothing));
-          (ELet (NoRec, "result", (EApp ((Var "mymatch"), (EConst (Int 2)))), Nothing
-             ))
-          ]
+            None));
+          (ELet (NoRec, "result", (EApp ((Var "mymatch"), (EConst (Int 2)))), None))]
       |}]
 ;;
 
@@ -111,31 +109,35 @@ let%expect_test _ =
        |};
   [%expect
     {| 
-        [(ELet (NoRec, "x", (EConst (Bool true)), Nothing));
+        [(ELet (NoRec, "x", (EConst (Bool true)), None));
           (ELet (NoRec, "mymatch",
              (EFun ("x",
                 (EMatch ((Var "x"),
                    [((PVar "z"), (EConst (Int 100))); (PDash, (EConst (Int 99)))]))
                 )),
-             Nothing))
+             None))
           ]
       |}]
 ;;
 
 let%expect_test _ =
-  test_parse {|
-      let f a = match a with | [hd; tl] -> hd | _ -> 0
+  test_parse
+    {|
+      let mymatch x =
+        match x with
+          | hd :: tl -> hd
+          | _ -> 0
        |};
   [%expect
     {| 
-        [(ELet (NoRec, "f",
-            (EFun ("a",
-               (EMatch ((Var "a"),
-                  [((PList [(PVar "hd"); (PVar "tl")]), (Var "hd"));
-                    (PDash, (EConst (Int 0)))]
-                  ))
-               )),
-            Nothing))
-          ]
+         [(ELet (NoRec, "mymatch",
+             (EFun ("x",
+                (EMatch ((Var "x"),
+                   [((PList ((PVar "hd"), (PVar "tl"))), (Var "hd"));
+                     (PDash, (EConst (Int 0)))]
+                   ))
+                )),
+             None))
+           ]
       |}]
 ;;

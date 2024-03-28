@@ -5,13 +5,15 @@
 type const =
   | Int of int (** int *)
   | Bool of bool (** bool *)
+  | Unit (** unit () *)
+  | Nil (** [] *)
 [@@deriving show { with_path = false }]
 
 type pattern =
   | PConst of const (** const *)
   | PDash (** _ *)
   | PVar of string (** var -> ... *)
-  | PList of pattern list (** x :: xs *)
+  | PList of pattern * pattern (** x :: xs *)
 [@@deriving show { with_path = false }]
 
 type binop =
@@ -39,8 +41,7 @@ type expr =
   | EConst of const (** const *)
   | EBinop of expr * binop * expr (** a + b *)
   | EIfThenElse of expr * expr * expr (** if then else*)
-  | ELet of rec_flag * string * expr * expr (**let ...*)
-  | Nothing (** for in ... and else ... *)
+  | ELet of rec_flag * string * expr * expr option (**let ...*)
   | EFun of string * expr (** fun *)
   | EApp of expr * expr (** f x *)
   | EList of expr list (** [a; b; c]*)

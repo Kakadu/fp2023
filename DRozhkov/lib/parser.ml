@@ -91,7 +91,7 @@ let bundle pexpr =
        (token "rec" *> return Rec <|> return NoRec)
        (ptoken (token "()") <|> identifier)
        (ptoken (token "=") *> pexpr <|> fun_bundle pexpr)
-       (token "in" *> pexpr >>| (fun x -> x) <|> return Nothing)
+       (token "in" *> pexpr >>| (fun x -> Some x) <|> return None)
 ;;
 
 let conditions arg =
@@ -100,31 +100,44 @@ let conditions arg =
        (fun i t e -> EIfThenElse (i, t, e))
        (token "if" *> arg)
        (token "then" *> arg)
-       (token "else" *> arg <|> return Nothing))
+       (token "else" *> arg <|> return (EConst Unit)))
 ;;
 
 let lists arg = sqbracket (sep_by (token ";") arg >>| fun x -> EList x)
-let plists arg = sqbracket (sep_by (token ";") arg >>| fun x -> PList x)
-
-let patterns =
-  fix (fun x ->
-    let a =
-      choice [ pvars; pconst; (token "_" >>| fun _ -> PDash); staples x; plists x ]
-    in
-    a)
-;;
 
 let chainl1 e op =
   let rec go a = lift2 (fun f x -> f a x) op e >>= go <|> return a in
   e >>= fun init -> go init
 ;;
 
+let patterns =
+  fix (fun x ->
+    let pattern =
+      choice
+        [ staples x
+        ; pconst
+        ; pvars
+        ; (token "_" >>| fun _ -> PDash)
+        ; (token "[]" >>| fun _ -> PConst Nil)
+        ]
+    in
+    let pattern =
+      lift2
+        (fun p -> function
+          | h :: _ -> PList (p, h)
+          | _ -> p)
+        pattern
+        (many (token "::" *> pattern))
+    in
+    pattern)
+;;
+
 let pebinop chain1 e pbinop = chain1 e (pbinop >>| fun op e1 e2 -> EBinop (e1, op, e2))
 let plbinop = pebinop chainl1
 
 let matching pexpr =
-  let pcase ppattern pexpr =
-    lift2 (fun p e -> p, e) (token "|" *> ppattern) (token "->" *> pexpr)
+  let pcase patterns pexpr =
+    lift2 (fun p e -> p, e) (token "|" *> patterns) (token "->" *> pexpr)
   in
   lift2
     (fun expr cases -> EMatch (expr, cases))

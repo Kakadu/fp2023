@@ -8,7 +8,7 @@ open Format
 type value =
   | VInt of int
   | VBool of bool
-  | VNothing
+  | VUnit
   | VList of value list
   | VFun of string * expr * env
 
@@ -19,7 +19,7 @@ let rec pp_value ppf =
   function
   | VInt x -> fprintf ppf "%d" x
   | VBool b -> fprintf ppf "%b" b
-  | VNothing -> fprintf ppf "()"
+  | VUnit -> fprintf ppf "()"
   | VList vl ->
     fprintf
       ppf
@@ -34,6 +34,7 @@ type error =
   | Pattern_matching_error
   | Unbound_value of string
   | Incorrect_type of value
+  | In_occurrence
 
 let pp_error fmt = function
   | Division_by_zero -> fprintf fmt "Division by zero"
@@ -41,6 +42,7 @@ let pp_error fmt = function
   | Incorrect_type v -> fprintf fmt "Value %a has incorrect type in expression" pp_value v
   | Pattern_matching_error ->
     fprintf fmt "Value can't be match with any case in this expression"
+  | In_occurrence -> fprintf fmt "Let is impossible without in"
 ;;
 
 module type MONADERROR = sig
@@ -54,13 +56,12 @@ end
 
 let vint x = VInt x
 let vbool b = VBool b
-let vnothing = VNothing
+let vunit = VUnit
 let vlist l = VList l
 let vfun s e env = VFun (s, e, env)
 
 module Env (M : MONADERROR) = struct
   let empty = Base.Map.empty (module Base.String)
-  let extend env k v = Base.Map.update env k ~f:(fun _ -> v)
 end
 
 module Inter (M : MONADERROR) = struct
@@ -85,13 +86,26 @@ module Inter (M : MONADERROR) = struct
     | _ -> fail (Incorrect_type v1)
   ;;
 
+  let rec match_pattern env = function
+    | PDash, _ -> Some env
+    | PConst (Int i1), VInt i2 when i1 = i2 -> Some env
+    | PConst (Bool b1), VBool b2 when Bool.equal b1 b2 -> Some env
+    | PVar id, v -> Some (Base.Map.set env ~key:id ~data:v)
+    | PList (p1, p2), VList (h :: tl) ->
+      (match match_pattern env (p1, h) with
+       | Some env -> match_pattern env (p2, VList tl)
+       | None -> None)
+    | _ -> None
+  ;;
+
   let eval_expr =
     let rec helper env = function
       | EConst c ->
         (match c with
          | Int i -> return (vint i)
-         | Bool b -> return (vbool b))
-      | Nothing -> return vnothing
+         | Bool b -> return (vbool b)
+         | Unit -> return vunit
+         | Nil -> return (VList []))
       | Var id ->
         let* v =
           match Base.Map.find env id with
@@ -113,22 +127,18 @@ module Inter (M : MONADERROR) = struct
         let* v = helper env e in
         let rec match_cases env v = function
           | (pat, expr) :: tl ->
-            (match pat, v with
-             | PDash, _ -> helper env expr
-             | PVar id, v' ->
-               let env' = Base.Map.set env ~key:id ~data:v' in
-               helper env' expr
-             | PConst (Bool e1), VBool e2 when Bool.equal e1 e2 -> helper env expr
-             | PConst (Int e1), VInt e2 when e1 = e2 -> helper env expr
-             | _ -> match_cases env v tl)
+            (match match_pattern env (pat, v) with
+             | Some env' -> helper env' expr
+             | None -> match_cases env v tl)
           | [] -> fail Pattern_matching_error
         in
         match_cases env v cases
-      | ELet (_, name, e1, e2) ->
+      | ELet (_, name, e1, Some e2) ->
         let* v1 = helper env e1 in
         let env' = Base.Map.set env ~key:name ~data:v1 in
         let* v2 = helper env' e2 in
         return v2
+      | ELet (_, _, _, None) -> fail In_occurrence
       | EFun (id, e) -> return (VFun (id, e, env))
       | EApp (f, e) ->
         let* fv = helper env f in
@@ -157,7 +167,7 @@ module Inter (M : MONADERROR) = struct
 
   let interpret p =
     let eval_let env = function
-      | ELet (_, id, e, Nothing) ->
+      | ELet (_, id, e, None) ->
         let* v = eval_expr env e in
         let env' = Base.Map.update env id ~f:(function _ -> v) in
         return (env', v)

@@ -7,15 +7,15 @@ open Format
 type typ =
   | TInt (** int type *)
   | TBool (** bools type *)
-  | TNothing (** else ... and in ... type *)
   | TArrow of typ * typ (** type -> type *)
   | TVar of int (** var type *)
+  | TUnit (** unit () *)
   | TList of typ (* list type *)
 
 let rec pp_typ fmt = function
   | TInt -> fprintf fmt "int"
   | TBool -> fprintf fmt "bool"
-  | TNothing -> fprintf fmt "nothing"
+  | TUnit -> fprintf fmt "unit"
   | TVar x -> fprintf fmt "'%d" x
   | TList x -> fprintf fmt "%a list" pp_typ x
   | TArrow (l, r) ->

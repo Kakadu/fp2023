@@ -3,12 +3,12 @@
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
 type typ =
-  | TInt
-  | TBool
-  | TNothing
-  | TArrow of typ * typ
-  | TVar of int
-  | TList of typ
+  | TInt (** int type *)
+  | TBool (** bools type *)
+  | TArrow of typ * typ (** type -> type *)
+  | TVar of int (** var type *)
+  | TUnit (** unit *)
+  | TList of typ (* list type *)
 
 type error =
   | Occurs_check
