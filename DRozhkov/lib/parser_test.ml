@@ -141,3 +141,48 @@ let%expect_test _ =
            ]
       |}]
 ;;
+
+
+let%expect_test _ =
+  test_parse
+    {|
+      let mymatch x =
+        match x with
+          | hd :: tl -> tl
+          | _ -> 0
+       |};
+  [%expect
+    {| 
+         [(ELet (NoRec, "mymatch",
+             (EFun ("x",
+                (EMatch ((Var "x"),
+                   [((PList ((PVar "hd"), (PVar "tl"))), (Var "tl"));
+                     (PDash, (EConst (Int 0)))]
+                   ))
+                )),
+             None))
+           ]
+      |}]
+;;
+
+let%expect_test _ =
+  test_parse
+    {|
+      let mymatch x =
+        match x with
+          | hd :: tl -> hd
+          | _ -> 0
+       |};
+  [%expect
+    {| 
+         [(ELet (NoRec, "mymatch",
+             (EFun ("x",
+                (EMatch ((Var "x"),
+                   [((PList ((PVar "hd"), (PConst Nil))), (Var "hd"));
+                     (PDash, (EConst (Int 0)))]
+                   ))
+                )),
+             None))
+           ]
+      |}]
+;;

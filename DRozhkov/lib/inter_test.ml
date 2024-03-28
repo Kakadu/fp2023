@@ -148,10 +148,45 @@ let%expect_test _ =
     {|
       let mymatch x =
         match x with
-          | hd :: [] -> hd
+          | hd :: tl -> tl
           | _ -> 0
+
+      let a = mymatch [1; 2; 3]
        |};
   [%expect {| 
          <fun>
+         [2; 3]
+      |}]
+;;
+
+let%expect_test _ =
+  run_inter
+    {|
+      let mymatch x =
+        match x with
+          | hd :: tl -> hd
+          | _ -> 0
+
+      let a = mymatch [1; 2; 3]
+       |};
+  [%expect {| 
+         <fun>
+         1
+      |}]
+;;
+
+let%expect_test _ =
+  run_inter
+    {|
+      let mymatch x =
+        match x with
+          | hd :: tl -> hd
+          | _ -> 0
+
+      let a = mymatch []
+       |};
+  [%expect {| 
+         <fun>
+         0
       |}]
 ;;
