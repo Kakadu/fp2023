@@ -112,15 +112,7 @@ let chainl1 e op =
 
 let patterns =
   fix (fun x ->
-    let pattern =
-      choice
-        [ staples x
-        ; pconst
-        ; pvars
-        ; (token "_" >>| fun _ -> PDash)
-        ; (token "[]" >>| fun _ -> PConst Nil)
-        ]
-    in
+    let pattern = choice [ staples x; pconst; pvars; (token "_" >>| fun _ -> PDash) ] in
     let pattern =
       lift2
         (fun p -> function

@@ -100,8 +100,7 @@ module Inter (M : MONADERROR) = struct
       | EConst c ->
         (match c with
          | Int i -> return (vint i)
-         | Bool b -> return (vbool b)
-         | Nil -> return (VList []))
+         | Bool b -> return (vbool b))
       | Var id ->
         let* v =
           match Base.Map.find env id with

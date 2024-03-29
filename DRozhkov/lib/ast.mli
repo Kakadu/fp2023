@@ -5,7 +5,6 @@
 type const =
   | Int of int (** int *)
   | Bool of bool (** bool *)
-  | Nil (** [] *)
 [@@deriving show { with_path = false }]
 
 type pattern =

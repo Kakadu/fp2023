@@ -162,9 +162,6 @@ let infer_pattern =
       return (env, tv)
     | PConst (Int _) -> return (env, TInt)
     | PConst (Bool _) -> return (env, TBool)
-    | PConst Nil ->
-      let* typ = fresh_v in
-      return (env, TList typ)
     | PVar x ->
       (match Map.find env x with
        | None ->
@@ -185,9 +182,6 @@ let infer_pattern =
 let inferencer =
   let rec helper env = function
     | EConst (Int _) -> return (Subst.empty, TInt)
-    | EConst Nil ->
-      let* tv = fresh_v in
-      return (Subst.empty, TList tv)
     | EConst (Bool _) -> return (Subst.empty, TBool)
     | Var x ->
       (match Map.find env x with
