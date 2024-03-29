@@ -18,18 +18,17 @@
       <h2>0.00%</h2>
     </div>
     <div id="navbar">
-      <span class="unvisited" style="top:43.24%"></span>
-      <span class="unvisited" style="top:45.95%"></span>
-      <span class="unvisited" style="top:48.65%"></span>
-      <span class="unvisited" style="bottom:48.65%"></span>
-      <span class="unvisited" style="bottom:45.95%"></span>
-      <span class="unvisited" style="bottom:43.24%"></span>
-      <span class="unvisited" style="bottom:37.84%"></span>
-      <span class="unvisited" style="bottom:35.14%"></span>
-      <span class="unvisited" style="bottom:13.51%"></span>
-      <span class="unvisited" style="bottom:10.81%"></span>
-      <span class="unvisited" style="bottom:8.11%"></span>
-      <span class="unvisited" style="bottom:5.41%"></span>
+      <span class="unvisited" style="top:42.86%"></span>
+      <span class="unvisited" style="top:45.71%"></span>
+      <span class="unvisited" style="top:48.57%"></span>
+      <span class="unvisited" style="bottom:48.57%"></span>
+      <span class="unvisited" style="bottom:45.71%"></span>
+      <span class="unvisited" style="bottom:40.00%"></span>
+      <span class="unvisited" style="bottom:37.14%"></span>
+      <span class="unvisited" style="bottom:14.29%"></span>
+      <span class="unvisited" style="bottom:11.43%"></span>
+      <span class="unvisited" style="bottom:8.57%"></span>
+      <span class="unvisited" style="bottom:5.71%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -48,29 +47,27 @@
 <a id="L12"></a><span > </span>
 <a id="L13"></a><span > </span>
 <a id="L14"></a><span > </span>
-<a id="L15"></a><span > </span>
+<a id="L15"></a><span class="unvisited"> </span>
 <a id="L16"></a><span class="unvisited"> </span>
 <a id="L17"></a><span class="unvisited"> </span>
 <a id="L18"></a><span class="unvisited"> </span>
 <a id="L19"></a><span class="unvisited"> </span>
-<a id="L20"></a><span class="unvisited"> </span>
+<a id="L20"></a><span > </span>
 <a id="L21"></a><span class="unvisited"> </span>
-<a id="L22"></a><span > </span>
-<a id="L23"></a><span class="unvisited"> </span>
-<a id="L24"></a><span class="unvisited"> </span>
+<a id="L22"></a><span class="unvisited"> </span>
+<a id="L23"></a><span > </span>
+<a id="L24"></a><span > </span>
 <a id="L25"></a><span > </span>
 <a id="L26"></a><span > </span>
 <a id="L27"></a><span > </span>
 <a id="L28"></a><span > </span>
 <a id="L29"></a><span > </span>
-<a id="L30"></a><span > </span>
-<a id="L31"></a><span > </span>
+<a id="L30"></a><span class="unvisited"> </span>
+<a id="L31"></a><span class="unvisited"> </span>
 <a id="L32"></a><span class="unvisited"> </span>
 <a id="L33"></a><span class="unvisited"> </span>
-<a id="L34"></a><span class="unvisited"> </span>
-<a id="L35"></a><span class="unvisited"> </span>
-<a id="L36"></a><span > </span>
-<a id="L37"></a><span > </span>
+<a id="L34"></a><span > </span>
+<a id="L35"></a><span > </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -110,8 +107,6 @@
 <a href="#L33">33</a>
 <a href="#L34">34</a>
 <a href="#L35">35</a>
-<a href="#L36">36</a>
-<a href="#L37">37</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2021-2023, Kakadu, RozhkovAleksandr *)
 
@@ -124,13 +119,11 @@ type typ =
   | TBool (** bools type *)
   | TArrow of typ * typ (** type -&gt; type *)
   | TVar of int (** var type *)
-  | TUnit (** unit () *)
   | TList of typ (* list type *)
 
 let rec pp_typ fmt = function
   | <span data-count="0">T</span>Int -&gt; fprintf fmt "int"
   | <span data-count="0">T</span>Bool -&gt; fprintf fmt "bool"
-  | <span data-count="0">T</span>Unit -&gt; fprintf fmt "unit"
   | <span data-count="0">T</span>Var x -&gt; fprintf fmt "'%d" x
   | <span data-count="0">T</span>List x -&gt; fprintf fmt "%a list" pp_typ x
   | <span data-count="0">T</span>Arrow (l, r) -&gt;
