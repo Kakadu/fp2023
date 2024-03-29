@@ -7,7 +7,6 @@ type typ =
   | TBool (** bools type *)
   | TArrow of typ * typ (** type -> type *)
   | TVar of int (** var type *)
-  | TUnit (** unit *)
   | TList of typ (* list type *)
 
 type error =

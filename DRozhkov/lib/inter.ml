@@ -8,7 +8,6 @@ open Format
 type value =
   | VInt of int
   | VBool of bool
-  | VUnit
   | VList of value list
   | VFun of string * expr * env
 
@@ -19,7 +18,6 @@ let rec pp_value ppf =
   function
   | VInt x -> fprintf ppf "%d" x
   | VBool b -> fprintf ppf "%b" b
-  | VUnit -> fprintf ppf "()"
   | VList vl ->
     fprintf
       ppf
@@ -56,7 +54,6 @@ end
 
 let vint x = VInt x
 let vbool b = VBool b
-let vunit = VUnit
 let vlist l = VList l
 let vfun s e env = VFun (s, e, env)
 
@@ -104,7 +101,6 @@ module Inter (M : MONADERROR) = struct
         (match c with
          | Int i -> return (vint i)
          | Bool b -> return (vbool b)
-         | Unit -> return vunit
          | Nil -> return (VList []))
       | Var id ->
         let* v =

@@ -5,7 +5,6 @@
 type const =
   | Int of int (** int *)
   | Bool of bool (** bool *)
-  | Unit (** unit () *)
   | Nil (** [] *)
 [@@deriving show { with_path = false }]
 

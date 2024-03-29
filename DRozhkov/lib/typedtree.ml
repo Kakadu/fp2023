@@ -9,13 +9,11 @@ type typ =
   | TBool (** bools type *)
   | TArrow of typ * typ (** type -> type *)
   | TVar of int (** var type *)
-  | TUnit (** unit () *)
   | TList of typ (* list type *)
 
 let rec pp_typ fmt = function
   | TInt -> fprintf fmt "int"
   | TBool -> fprintf fmt "bool"
-  | TUnit -> fprintf fmt "unit"
   | TVar x -> fprintf fmt "'%d" x
   | TList x -> fprintf fmt "%a list" pp_typ x
   | TArrow (l, r) ->

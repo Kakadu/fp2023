@@ -34,7 +34,7 @@ end
 
 module Type = struct
   let rec occurs_in v = function
-    | TBool | TInt | TUnit -> false
+    | TBool | TInt -> false
     | TVar b -> b = v
     | TList x -> occurs_in v x
     | TArrow (l, r) -> occurs_in v l || occurs_in v r
@@ -42,7 +42,7 @@ module Type = struct
 
   let free_vars =
     let rec helper acc = function
-      | TBool | TInt | TUnit -> acc
+      | TBool | TInt -> acc
       | TVar b -> VarSet.add acc b
       | TList x -> helper acc x
       | TArrow (l, r) ->
@@ -68,7 +68,7 @@ module Subst = struct
 
   let apply (sub : t) =
     let rec helper = function
-      | (TInt | TBool | TUnit) as other -> other
+      | (TInt | TBool) as other -> other
       | TVar b ->
         (match Map.find sub b with
          | Some v -> v
@@ -81,7 +81,7 @@ module Subst = struct
 
   let rec unify l r =
     match l, r with
-    | TInt, TInt | TBool, TBool | TUnit, TUnit -> return empty
+    | TInt, TInt | TBool, TBool -> return empty
     | TVar l, TVar r when l = r -> return empty
     | TVar b, t | t, TVar b -> singleton (b, t)
     | TArrow (l1, r1), TArrow (l2, r2) ->
@@ -162,7 +162,6 @@ let infer_pattern =
       return (env, tv)
     | PConst (Int _) -> return (env, TInt)
     | PConst (Bool _) -> return (env, TBool)
-    | PConst Unit -> return (env, TUnit)
     | PConst Nil ->
       let* typ = fresh_v in
       return (env, TList typ)
@@ -190,7 +189,6 @@ let inferencer =
       let* tv = fresh_v in
       return (Subst.empty, TList tv)
     | EConst (Bool _) -> return (Subst.empty, TBool)
-    | EConst Unit -> return (Subst.empty, TBool)
     | Var x ->
       (match Map.find env x with
        | Some schem ->

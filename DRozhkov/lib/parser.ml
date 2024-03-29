@@ -100,7 +100,7 @@ let conditions arg =
        (fun i t e -> EIfThenElse (i, t, e))
        (token "if" *> arg)
        (token "then" *> arg)
-       (token "else" *> arg <|> return (EConst Unit)))
+       (token "else" *> arg ))
 ;;
 
 let lists arg = sqbracket (sep_by (token ";") arg >>| fun x -> EList x)
