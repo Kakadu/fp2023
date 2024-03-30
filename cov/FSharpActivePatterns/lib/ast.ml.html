@@ -18,7 +18,7 @@
       <h2>96.30%</h2>
     </div>
     <div id="navbar">
-      <span class="some-visited" style="top:11.32%"></span>
+      <span class="some-visited" style="top:11.11%"></span>
     </div>
     <div id="report">
       <div id="lines-layer">
@@ -69,13 +69,14 @@
 <a id="L44"></a><span > </span>
 <a id="L45"></a><span > </span>
 <a id="L46"></a><span class="visited"> </span>
-<a id="L47"></a><span class="visited"> </span>
-<a id="L48"></a><span > </span>
+<a id="L47"></a><span > </span>
+<a id="L48"></a><span class="visited"> </span>
 <a id="L49"></a><span > </span>
 <a id="L50"></a><span > </span>
-<a id="L51"></a><span class="visited"> </span>
-<a id="L52"></a><span > </span>
-<a id="L53"></a><span class="visited"> </span>
+<a id="L51"></a><span > </span>
+<a id="L52"></a><span class="visited"> </span>
+<a id="L53"></a><span > </span>
+<a id="L54"></a><span class="visited"> </span>
 </pre>
       </div>
       <div id="text-layer">
@@ -133,21 +134,22 @@
 <a href="#L51">51</a>
 <a href="#L52">52</a>
 <a href="#L53">53</a>
+<a href="#L54">54</a>
 </pre>
 <pre><code class="ocaml">(** Copyright 2023-2024, Vitaliy Dyachkov *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
 (** name var or fun *)
-<span data-count="0">t</span>ype name = <span data-count="74">s</span>tring [@@deriving show { with_path = false }]
+<span data-count="0">t</span>ype name = <span data-count="72">s</span>tring [@@deriving show { with_path = false }]
 
-<span data-count="196">t</span>ype const =
+<span data-count="166">t</span>ype const =
   | CBool of boo<span data-count="2">l</span> (** true *)
-  | CInt of in<span data-count="61">t</span> (** 42 *)
+  | CInt of in<span data-count="51">t</span> (** 42 *)
   | CString of strin<span data-count="1">g</span> (** "string" *)
 [@@deriving show { with_path = false }]
 
-<span data-count="24">t</span>ype binary_op =
+<span data-count="26">t</span>ype binary_op =
   | Add (** + *)
   | Sub (** - *)
   | Mul (** * *)
@@ -163,30 +165,31 @@
   | Or (** || *)
 [@@deriving show { with_path = false }]
 
-<span data-count="185">t</span>ype pattern =
+<span data-count="175">t</span>ype pattern =
   | Wild (** _ *)
   | Const of const (** string, bool or int *)
   | Var of name (** variable *)
   | Tuple of <span data-count="30">p</span>attern lis<span data-count="7">t</span> (** (a, b) *)
   | List of <span data-count="26">p</span>attern lis<span data-count="6">t</span> (** [1;2;3] *)
-  | Case of name * <span data-count="36">p</span>attern lis<span data-count="16">t</span> (** in patmatch *)
-[@@deriving show { with_path = false }<span data-count="110">]</span>
+  | Case of name * <span data-count="21">p</span>attern lis<span data-count="10">t</span> (** in patmatch *)
+[@@deriving show { with_path = false }<span data-count="102">]</span>
 
-<span data-count="858">t</span>ype expr =
+<span data-count="816">t</span>ype expr =
   | ConstExpr of const
   | VarExpr of name (** x = 5 *)
-  | ListExpr of <span data-count="37">e</span>xpr lis<span data-count="9">t</span> (** [1;2;3]*)
-  | TupleExpr of <span data-count="39">e</span>xpr lis<span data-count="9">t</span> (** (1,2,3)*)
+  | ListExpr of <span data-count="28">e</span>xpr lis<span data-count="7">t</span> (** [1;2;3]*)
+  | TupleExpr of <span data-count="13">e</span>xpr lis<span data-count="3">t</span> (** (1,2,3)*)
   | BinExpr of binary_op * expr * expr (** 1 + 5 - 3*)
   | IfExpr of expr * expr * expr (** if a then b else c *)
-  | LetExpr of boo<span data-count="9">l</span> * name * expr (** let sq x = x * x, bool - is rec or not*)
+  | LetExpr of boo<span data-count="8">l</span> * name * expr (** let sq x = x * x, bool - is rec or not*)
+  | LetInExpr of expr * expr (** let plusfive x = let plus a = a + 5 in plus 10 *)
   | LetActExpr of <span data-count="23">n</span>ame lis<span data-count="5">t</span> * expr
   (** let (|Even|Odd|) value =  if value % 2 = 0 then Even else Odd *)
   | AppExpr of expr * expr (** sq 5 *)
   | FunExpr of pattern * expr (** fun x -&gt; x * x *)
-  | MatchExpr of expr * <span data-count="40">(</span><span data-count="16">p</span>attern * expr) lis<span data-count="12">t</span> (** match input with | 2 -&gt; 5 | 5 -&gt; 10 *)
+  | MatchExpr of expr * <span data-count="30">(</span><span data-count="12">p</span>attern * expr) lis<span data-count="9">t</span> (** match input with | 2 -&gt; 5 | 5 -&gt; 10 *)
   | CaseExpr of name (** (|Even|Odd|) *)
-[@@deriving show { with_path = false }<span data-count="635">]</span>
+[@@deriving show { with_path = false }<span data-count="617">]</span>
 </code></pre>
       </div>
     </div>
