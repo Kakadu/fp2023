@@ -105,3 +105,17 @@
   >  | _ -> 6;;
   >  myfunc 8;;
   (VInt 50)
+
+cps factorial  
+  $ ./demos.exe <<- EOF
+  > let rec fact x k = if x = 1 then k x else fact (x - 1) (fun n -> n * k x);;
+  > fact 5 (fun x -> x);;
+  (VInt 120)
+
+
+  $ ./demos.exe <<- EOF
+  > let mul x =    
+  >   fun y -> x * y
+  >   in mul 123 321;;
+  (VInt 39483)
+

@@ -182,6 +182,14 @@ module Interpret (M : MonadFail) = struct
       in
       eval_match cases
     | CaseExpr constr_id -> return @@ VCases constr_id
+    | LetInExpr (expr1, expr2) ->
+      let for_let = function
+        | LetExpr (_, name, _) ->
+          let* v_let = eval expr1 env in
+          eval expr2 (add_bind env name v_let)
+        | _ -> fail Unreachable
+      in
+      for_let expr1
     | LetActExpr (act_name, body) ->
       let* fun_pat = eval body env in
       return @@ VLetAPat (act_name, fun_pat)

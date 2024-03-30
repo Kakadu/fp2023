@@ -44,6 +44,7 @@ type expr =
   | BinExpr of binary_op * expr * expr (** 1 + 5 - 3*)
   | IfExpr of expr * expr * expr (** if a then b else c *)
   | LetExpr of bool * name * expr (** let sq x = x * x, bool - is rec or not*)
+  | LetInExpr of expr * expr (** let plusfive x = let plus a = a + 5 in plus 10 *)
   | LetActExpr of name list * expr
   (** let (|Even|Odd|) value =  if value % 2 = 0 then Even else Odd *)
   | AppExpr of expr * expr (** sq 5 *)

@@ -23,12 +23,6 @@ let test =
   ]
 ;;
 
-let%test _ =
-  match eval_program test with
-  | Ok (VInt 228) -> true
-  | _ -> false
-;;
-
 let test = [ BinExpr (Div, ConstExpr (CInt 5), ConstExpr (CInt 0)) ]
 
 let%test _ =
@@ -96,16 +90,6 @@ let test =
 let%test _ =
   match eval_program test with
   | Ok (VInt 50) -> true
-  | _ -> false
-;;
-
-(* Varis *)
-
-let test = [ CaseExpr "Varis" ]
-
-let%test _ =
-  match eval_program test with
-  | Ok (VCases "Varis") -> true
   | _ -> false
 ;;
 

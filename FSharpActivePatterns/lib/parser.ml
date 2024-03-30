@@ -226,6 +226,7 @@ type edispatch =
   ; let_e : edispatch -> expr t
   ; app_e : edispatch -> expr t
   ; if_e : edispatch -> expr t
+  ; let_in_e : edispatch -> expr t
   ; matching_e : edispatch -> expr t
   ; bin_e : edispatch -> expr t
   ; expr_parsers : edispatch -> expr t
@@ -237,12 +238,13 @@ let pack =
   let value_e = fix @@ fun _ -> parse_evar <|> parse_econst in
   let op_parsers pack =
     choice
-      [ pack.fun_e pack
-      ; pack.if_e pack
+      [ pack.if_e pack
       ; pack.list_e pack
+      ; pack.fun_e pack
+      ; pack.let_in_e pack
+      ; pack.app_e pack <|> parens @@ pack.app_e pack
       ; pack.let_e pack
       ; pack.act_pat_e pack
-      ; pack.app_e pack <|> parens @@ pack.app_e pack
       ; value_e
       ; parse_cases_expr
       ; parens @@ choice [ pack.tuple_e pack; pack.bin_e pack ]
@@ -257,6 +259,7 @@ let pack =
              ; pack.tuple_e pack
              ; pack.fun_e pack
              ; pack.app_e pack
+             ; pack.let_in_e pack
              ]
       ; value_e
       ]
@@ -316,6 +319,14 @@ let pack =
       (plet_body parse_fun_args (expr_parsers pack <|> parens @@ expr_parsers pack)
        <|> pstrtoken "=" *> value_e)
   in
+  let let_in_e pack =
+    fix
+    @@ fun _ ->
+    lift2
+      (fun expr1 expr2 -> LetInExpr (expr1, expr2))
+      (let_e pack)
+      (pstrtoken "in" *> expr_parsers pack)
+  in
   let fun_e pack =
     fix
     @@ fun _ ->
@@ -335,6 +346,7 @@ let pack =
   { list_e
   ; tuple_e
   ; fun_e
+  ; let_in_e
   ; let_e
   ; app_e
   ; if_e

@@ -356,6 +356,7 @@ let infer =
         let* subst = Subst.compose_all [ s1 ] in
         return (subst, Subst.apply subst t1)
     | CaseExpr _ -> fail NotImplemented
+    | LetInExpr _ -> fail NotImplemented
     | TupleExpr tuple ->
       let* s, t =
         List.fold
