@@ -10,6 +10,7 @@ type const =
 type pattern =
   | PConst of const (** const *)
   | PDash (** _ *)
+  | PNill (* [] *)
   | PVar of string (** var -> ... *)
   | PList of pattern * pattern (** x :: xs *)
 [@@deriving show { with_path = false }]
@@ -42,8 +43,16 @@ type expr =
   | ELet of rec_flag * string * expr * expr option (**let ... *)
   | EFun of string * expr (** fun *)
   | EApp of expr * expr (** f x *)
-  | EList of expr list (** [a; b; c]*)
+  | EList of expr * expr (** [a; b; c]*)
+  | Nil (** [] *)
   | EMatch of expr * (pattern * expr) list (** math ... with*)
 [@@deriving show { with_path = false }]
 
-type exprs = expr list [@@deriving show { with_path = false }]
+and decl = rec_flag * string * expr [@@deriving show { with_path = false }]
+
+type basic =
+  | Decl of decl (** let ... *)
+  | Expr of expr (** expression *)
+[@@deriving show { with_path = false }]
+
+type expressions = basic list [@@deriving show { with_path = false }]

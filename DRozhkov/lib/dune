@@ -1,7 +1,7 @@
 (library
  (name DRozhkov_lib)
  (public_name DRozhkov.Lib)
- (modules Parser Ast Parser_test Infer Typedtree Inter Inter_test)
+ (modules Parser Ast Parser_test Infer Inter Inter_test)
  (inline_tests)
  (preprocess
   (pps ppx_expect ppx_deriving.show))

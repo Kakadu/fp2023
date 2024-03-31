@@ -4,6 +4,7 @@
 
 open Ast
 open Format
+open Base
 
 type value =
   | VInt of int
@@ -11,7 +12,7 @@ type value =
   | VList of value list
   | VFun of string * expr * env
 
-and env = (string, value, Base.String.comparator_witness) Base.Map.t
+and env = (string, value, String.comparator_witness) Map.t
 
 let rec pp_value ppf =
   let open Stdlib.Format in
@@ -58,7 +59,8 @@ let vlist l = VList l
 let vfun s e env = VFun (s, e, env)
 
 module Env (M : MONADERROR) = struct
-  let empty = Base.Map.empty (module Base.String)
+  let empty = Base.Map.empty (module String)
+  let extend env k v = Base.Map.update env k ~f:(fun _ -> v)
 end
 
 module Inter (M : MONADERROR) = struct
@@ -112,6 +114,7 @@ module Inter (M : MONADERROR) = struct
         let* v1 = helper env e1 in
         let* v2 = helper env e2 in
         eval_binop (v1, op, v2)
+      | Nil -> return (VList [])
       | EIfThenElse (c, t, f) ->
         let* cv = helper env c in
         (match cv with
@@ -135,6 +138,12 @@ module Inter (M : MONADERROR) = struct
         return v2
       | ELet (_, _, _, None) -> fail In_occurrence
       | EFun (id, e) -> return (VFun (id, e, env))
+      | EList (h, tl) ->
+        let* h = helper env h in
+        let* tl = helper env tl in
+        (match tl with
+         | VList tl -> return (VList (h :: tl))
+         | _ -> fail (Incorrect_type tl))
       | EApp (f, e) ->
         let* fv = helper env f in
         let* ev = helper env e in
@@ -148,38 +157,38 @@ module Inter (M : MONADERROR) = struct
            let* v = helper updated_env e in
            return v
          | _ -> fail (Incorrect_type fv))
-      | EList es ->
-        let* vs =
-          Base.List.fold_right es ~init:(return []) ~f:(fun e acc ->
-            let* v = helper env e in
-            let* acc = acc in
-            return (v :: acc))
-        in
-        return (VList vs)
     in
     helper
   ;;
 
-  let interpret p =
-    let eval_let env = function
-      | ELet (_, id, e, None) ->
-        let* v = eval_expr env e in
-        let env' = Base.Map.update env id ~f:(function _ -> v) in
-        return (env', v)
-      | expression ->
-        let* v = eval_expr env expression in
-        return (env, v)
-    in
-    let* env, rs =
-      Base.List.fold_left
-        p
-        ~init:(return (empty, []))
-        ~f:(fun acc e ->
-          let* env, rs = acc in
-          let* env, res = eval_let env e in
-          return (env, res :: rs))
-    in
-    return (env, List.rev rs)
+  let eval_base env = function
+    | Expr e ->
+      let* _ = eval_expr env e in
+      return env
+    | Decl (NoRec, x, e) ->
+      let* v = eval_expr env e in
+      let env = extend env x v in
+      return env
+    | Decl (Rec, x, e) ->
+      let* v = eval_expr env e in
+      let env1 = extend env x v in
+      let v =
+        match v with
+        | VFun (p, e, _) -> VFun (p, e, env1)
+        | _ -> v
+      in
+      let env = extend env x v in
+      return env
+  ;;
+
+  let eval_exprs (expr : expressions) =
+    List.fold_left
+      ~f:(fun env item ->
+        let* env = env in
+        let* env = eval_base env item in
+        return env)
+      ~init:(return empty)
+      expr
   ;;
 end
 
@@ -201,24 +210,19 @@ end
 
 module Interpret = Inter (MONAD_RESULT)
 
-let run_inter input =
-  match Parser.parse input with
-  | Result.Ok tree ->
-    let infer_result = Infer.run_infer tree in
-    if Result.is_ok infer_result
-    then (
-      let _, et = Result.get_ok infer_result in
-      let interpret_result = Interpret.interpret (List.map (fun (expr, _) -> expr) et) in
-      if Result.is_ok interpret_result
-      then (
-        let _, vl = Result.get_ok interpret_result in
-        List.iter
-          (fun value ->
-            pp_value Format.std_formatter value;
-            Format.pp_print_flush Format.std_formatter ();
-            printf "\n")
-          vl)
-      else printf "Interpretation error\n")
-    else printf "Typecheck error\n"
-  | _ -> printf "Parsing error\n"
+let run_inter s =
+  let open Stdlib.Format in
+  match Parser.parse s with
+  | Ok parsed ->
+    (match Infer.run_infer parsed with
+     | Ok _ ->
+       (match Interpret.eval_exprs parsed with
+        | Ok final_env ->
+          let pp_env _ env =
+            Base.Map.iteri env ~f:(fun ~key ~data -> printf "%s: %a\n" key pp_value data)
+          in
+          pp_env Format.std_formatter final_env
+        | Error e -> printf "Interpreter error: %a\n" pp_error e)
+     | Error e -> printf "Typecheck error: %a\n" Infer.pp_error e)
+  | Error e -> printf "Parsing error: %s\n" e
 ;;

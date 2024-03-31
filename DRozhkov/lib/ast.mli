@@ -10,6 +10,7 @@ type const =
 type pattern =
   | PConst of const (** const *)
   | PDash (** _ *)
+  | PNill (* [] *)
   | PVar of string (** var -> ... *)
   | PList of pattern * pattern (** x :: xs *)
 [@@deriving show { with_path = false }]
@@ -39,13 +40,21 @@ type expr =
   | EConst of const (** const *)
   | EBinop of expr * binop * expr (** a + b *)
   | EIfThenElse of expr * expr * expr (** if then else*)
-  | ELet of rec_flag * string * expr * expr option (**let ...*)
+  | ELet of rec_flag * string * expr * expr option (**let ... *)
   | EFun of string * expr (** fun *)
   | EApp of expr * expr (** f x *)
-  | EList of expr list (** [a; b; c]*)
+  | EList of expr * expr (** [a; b; c]*)
+  | Nil (** [] *)
   | EMatch of expr * (pattern * expr) list (** math ... with*)
 [@@deriving show { with_path = false }]
 
-type exprs = expr list
+and decl = rec_flag * string * expr [@@deriving show { with_path = false }]
 
-val pp_exprs : Format.formatter -> exprs -> unit
+type basic =
+  | Decl of decl (** let ... *)
+  | Expr of expr (** expression *)
+[@@deriving show { with_path = false }]
+
+type expressions = basic list
+
+val pp_expressions : Format.formatter -> expressions -> unit

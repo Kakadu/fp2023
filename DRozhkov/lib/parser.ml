@@ -16,7 +16,6 @@ let ptoken p = skip_while is_space *> p
 let skip_whitespace = take_while is_space
 let token s = spaces *> string s
 let staples p = token "(" *> p <* token ")"
-let sqbracket p = token "[" *> p <* token "]"
 
 let keywords = function
   | "match" | "with" | "let" | "true" | "false" | "if" | "then" | "else" | "rec" | "in" ->
@@ -103,7 +102,18 @@ let conditions arg =
        (token "else" *> arg))
 ;;
 
-let lists arg = sqbracket (sep_by (token ";") arg >>| fun x -> EList x)
+let parse_nill = token "[]" >>| fun _ -> Nil
+
+let parse_list arg =
+  token "["
+  *> fix (fun x ->
+    choice
+      [ (arg <* skip_whitespace <* char ']' >>| fun expr -> EList (expr, Nil))
+      ; (arg <* skip_whitespace <* char ';' >>= fun expr -> x >>| fun l -> EList (expr, l))
+      ])
+;;
+
+let lists arg = parse_nill <|> parse_list arg
 
 let chainl1 e op =
   let rec go a = lift2 (fun f x -> f a x) op e >>= go <|> return a in
@@ -112,7 +122,15 @@ let chainl1 e op =
 
 let patterns =
   fix (fun x ->
-    let pattern = choice [ staples x; pconst; pvars; (token "_" >>| fun _ -> PDash) ] in
+    let pattern =
+      choice
+        [ staples x
+        ; pconst
+        ; pvars
+        ; (token "_" >>| fun _ -> PDash)
+        ; (token "[]" >>| fun _ -> PNill)
+        ]
+    in
     let pattern =
       lift2
         (fun p -> function
@@ -154,4 +172,21 @@ let pexpr =
     choice [ bundle pexpr; exp; conditions pexpr ])
 ;;
 
-let parse = parse_string ~consume:Consume.All (many1 (bundle pexpr) <* skip_whitespace)
+let decl =
+  let rec fun_bundle expr =
+    identifier
+    >>= fun id -> fun_bundle expr <|> token "=" *> expr >>| fun e -> EFun (id, e)
+  in
+  token "let"
+  *> lift3
+       (fun rec_flag name pexpr -> Decl (rec_flag, name, pexpr))
+       (token "rec" *> return Rec <|> return NoRec)
+       (ptoken (token "()") <|> identifier)
+       (ptoken (token "=") *> pexpr <|> fun_bundle pexpr)
+;;
+
+let expr_top = pexpr >>| fun e -> Expr e
+
+let parse =
+  parse_string ~consume:Consume.All (many1 (decl <|> expr_top) <* skip_whitespace)
+;;

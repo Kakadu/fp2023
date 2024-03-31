@@ -4,7 +4,37 @@
 
 open Ast
 open Base
-open Typedtree
+open Format
+
+type typ =
+  | TInt (** int type *)
+  | TBool (** bools type *)
+  | TArrow of typ * typ (** type -> type *)
+  | TVar of int (** var type *)
+  | TList of typ (* list type *)
+
+let rec pp_typ fmt = function
+  | TInt -> fprintf fmt "int"
+  | TBool -> fprintf fmt "bool"
+  | TVar x -> fprintf fmt "'%d" x
+  | TList x -> fprintf fmt "%a list" pp_typ x
+  | TArrow (l, r) ->
+    (match l, r with
+     | TArrow _, _ -> fprintf fmt "(%a) -> %a" pp_typ l pp_typ r
+     | _ -> fprintf fmt "%a -> %a" pp_typ l pp_typ r)
+;;
+
+type error =
+  | Occurs_check
+  | No_variable of string
+  | Unification_failed of typ * typ
+
+let pp_error ppf : error -> _ = function
+  | Occurs_check -> fprintf ppf "Occurs check failed"
+  | No_variable s -> fprintf ppf "Undefined variable '%s'" s
+  | Unification_failed (l, r) ->
+    Format.fprintf ppf "Unification fail on %a and %a" pp_typ l pp_typ r
+;;
 
 module VarSet = struct
   include Set
@@ -162,6 +192,9 @@ let infer_pattern =
       return (env, tv)
     | PConst (Int _) -> return (env, TInt)
     | PConst (Bool _) -> return (env, TBool)
+    | PNill ->
+      let* typ = fresh_v in
+      return (env, TList typ)
     | PVar x ->
       (match Map.find env x with
        | None ->
@@ -215,22 +248,15 @@ let inferencer =
          let* sub2 = Subst.unify r_typ TInt in
          let* final_sub = Subst.compose_all [ l_subst; r_subst; sub1; sub2 ] in
          return (final_sub, TInt))
-    | EList x ->
-      (match x with
-       | [] ->
-         let* tv = fresh_v in
-         return (Subst.empty, TList tv)
-       | h :: tl ->
-         let* final_sub, res_typ =
-           List.fold_left tl ~init:(helper env h) ~f:(fun acc expr ->
-             let* sub, typ = acc in
-             let* sub1, typ1 = helper env expr in
-             let* sub2 = Subst.unify typ typ1 in
-             let* final_sub = Subst.compose_all [ sub; sub1; sub2 ] in
-             let res_typ = Subst.apply final_sub typ in
-             return (final_sub, res_typ))
-         in
-         return (final_sub, TList res_typ))
+    | Nil ->
+      let* tv = fresh_v in
+      return (Subst.empty, TList tv)
+    | EList (e1, e2) ->
+      let* sub1, typ1 = helper env e1 in
+      let* sub2, typ2 = helper (TypeEnv.apply env sub1) e2 in
+      let* sub3 = Subst.unify (TList typ1) typ2 in
+      let* final_sub = Subst.compose_all [ sub1; sub2; sub3 ] in
+      return (final_sub, Subst.apply sub3 typ2)
     | EIfThenElse (bin_op, e1, e2) ->
       let* sub1, typ1 = helper env bin_op in
       let* sub2, typ2 = helper env e1 in
@@ -300,25 +326,37 @@ let inferencer =
   helper
 ;;
 
-let infer env program =
-  let check_expr env expr =
-    let* _, typ = inferencer env expr in
-    match expr with
-    | ELet (_, x, _, None) ->
-      let env = TypeEnv.extend env (x, S (VarSet.empty, typ)) in
-      return (env, typ)
-    | _ -> return (env, typ)
-  in
-  let* env, tys =
-    List.fold_left
-      program
-      ~init:(return (env, []))
-      ~f:(fun acc expr ->
-        let* env, program = acc in
-        let* env, typ = check_expr env expr in
-        return (env, (expr, typ) :: program))
-  in
-  return (env, List.rev tys)
+let infer_base env = function
+  | Decl (NoRec, x, expr) ->
+    let* sub, ty = inferencer env expr in
+    let env = TypeEnv.apply env sub in
+    let gen_scheme = generalize env ty in
+    let env = TypeEnv.extend env (x, gen_scheme) in
+    return env
+  | Decl (Rec, x, expr) ->
+    let* tv = fresh_v in
+    let env' = TypeEnv.extend env (x, S (VarSet.empty, tv)) in
+    let* sub1, typ1 = inferencer env' expr in
+    let* sub2 = Subst.unify typ1 tv in
+    let* sub3 = Subst.compose sub1 sub2 in
+    let env'' = TypeEnv.apply env' sub3 in
+    let typ2 = Subst.apply sub3 typ1 in
+    let gen_scheme = generalize env'' typ2 in
+    let env_final = TypeEnv.extend env'' (x, gen_scheme) in
+    return env_final
+  | Expr expr ->
+    let* _, _ = inferencer env expr in
+    return env
 ;;
 
-let run_infer ?(env = TypeEnv.empty) program = run (infer env program)
+let infer_exprs expr =
+  List.fold_left
+    ~f:(fun acc item ->
+      let* env = acc in
+      let* env = infer_base env item in
+      return env)
+    ~init:(return TypeEnv.empty)
+    expr
+;;
+
+let run_infer s = run (infer_exprs s)
