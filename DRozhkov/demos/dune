@@ -1,0 +1,10 @@
+(executable
+ (name demo)
+ (modules demo)
+ (public_name demo)
+ (libraries DRozhkov_lib stdio)
+ (instrumentation
+  (backend bisect_ppx)))
+
+(cram
+ (deps %{bin:demo}))
