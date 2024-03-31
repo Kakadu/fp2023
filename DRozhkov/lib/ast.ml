@@ -10,7 +10,7 @@ type const =
 type pattern =
   | PConst of const (** const *)
   | PDash (** _ *)
-  | PNill (* [] *)
+  | PNill (** [] *)
   | PVar of string (** var -> ... *)
   | PList of pattern * pattern (** x :: xs *)
 [@@deriving show { with_path = false }]
@@ -48,7 +48,7 @@ type expr =
   | EMatch of expr * (pattern * expr) list (** math ... with*)
 [@@deriving show { with_path = false }]
 
-and decl = rec_flag * string * expr [@@deriving show { with_path = false }]
+type decl = (rec_flag * string * expr)[@@deriving show { with_path = false }]
 
 type basic =
   | Decl of decl (** let ... *)
