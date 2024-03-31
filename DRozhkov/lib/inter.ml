@@ -33,7 +33,6 @@ type error =
   | Pattern_matching_error
   | Unbound_value of string
   | Incorrect_type of value
-  | In_occurrence
 
 let pp_error fmt = function
   | Division_by_zero -> fprintf fmt "Division by zero"
@@ -41,7 +40,6 @@ let pp_error fmt = function
   | Incorrect_type v -> fprintf fmt "Value %a has incorrect type in expression" pp_value v
   | Pattern_matching_error ->
     fprintf fmt "Value can't be match with any case in this expression"
-  | In_occurrence -> fprintf fmt "Let is impossible without in"
 ;;
 
 module type MONADERROR = sig
@@ -90,7 +88,7 @@ module Inter (M : MONADERROR) = struct
     | PConst (Int i1), VInt i2 when i1 = i2 -> Some env
     | PConst (Bool b1), VBool b2 when Bool.equal b1 b2 -> Some env
     | PVar id, v -> Some (Base.Map.set env ~key:id ~data:v)
-    | PList (p1, p2), VList (h :: tl) ->
+    | PCons (p1, p2), VList (h :: tl) ->
       (match match_pattern env (p1, h) with
        | Some env -> match_pattern env (p2, VList tl)
        | None -> None)
@@ -131,12 +129,11 @@ module Inter (M : MONADERROR) = struct
           | [] -> fail Pattern_matching_error
         in
         match_cases env v cases
-      | ELet (_, name, e1, Some e2) ->
+      | ELet (_, name, e1, e2) ->
         let* v1 = helper env e1 in
         let env' = Base.Map.set env ~key:name ~data:v1 in
         let* v2 = helper env' e2 in
         return v2
-      | ELet (_, _, _, None) -> fail In_occurrence
       | EFun (id, e) -> return (VFun (id, e, env))
       | EList (h, tl) ->
         let* h = helper env h in
@@ -215,13 +212,19 @@ let run_inter s =
   match Parser.parse s with
   | Ok parsed ->
     (match Infer.run_infer parsed with
-     | Ok _ ->
+     | Ok env_inf ->
        (match Interpret.eval_exprs parsed with
         | Ok final_env ->
-          let pp_env _ env =
-            Base.Map.iteri env ~f:(fun ~key ~data -> printf "%s: %a\n" key pp_value data)
+          let pp_env env =
+            Base.Map.iteri
+              ~f:(fun ~key ~data ->
+                match Base.Map.find env_inf key with
+                | Some (S (_, ty)) ->
+                  printf "val %s : %a = %a\n" key Infer.pp_typ ty pp_value data
+                | None -> printf "val %s = %a\n" key pp_value data)
+              env
           in
-          pp_env Format.std_formatter final_env
+          pp_env final_env
         | Error e -> printf "Interpreter error: %a\n" pp_error e)
      | Error e -> printf "Typecheck error: %a\n" Infer.pp_error e)
   | Error e -> printf "Parsing error: %s\n" e

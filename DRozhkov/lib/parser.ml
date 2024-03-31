@@ -90,7 +90,7 @@ let bundle pexpr =
        (token "rec" *> return Rec <|> return NoRec)
        (ptoken (token "()") <|> identifier)
        (ptoken (token "=") *> pexpr <|> fun_bundle pexpr)
-       (token "in" *> pexpr >>| (fun x -> Some x) <|> return None)
+       (token "in" *> pexpr >>| fun x -> x)
 ;;
 
 let conditions arg =
@@ -134,7 +134,7 @@ let patterns =
     let pattern =
       lift2
         (fun p -> function
-          | h :: _ -> PList (p, h)
+          | h :: _ -> PCons (p, h)
           | _ -> p)
         pattern
         (many (token "::" *> pattern))

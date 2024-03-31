@@ -202,7 +202,7 @@ let infer_pattern =
          let env = TypeEnv.extend env (x, S (VarSet.empty, tv)) in
          return (env, tv)
        | Some (S (_, typ)) -> return (env, typ))
-    | PList (t1, t2) ->
+    | PCons (t1, t2) ->
       let* env, tt1 = helper env t1 in
       let* env', tt2 = helper env t2 in
       let* subst = Subst.unify tt1 tt2 in
@@ -274,8 +274,7 @@ let inferencer =
       let res_typ = Subst.apply sub3 tv in
       let* final_sub = Subst.compose_all [ sub1; sub2; sub3 ] in
       return (final_sub, res_typ)
-    | ELet (NoRec, _, e1, None) -> helper env e1
-    | ELet (NoRec, x, e1, Some e2) ->
+    | ELet (NoRec, x, e1, e2) ->
       let* sub1, typ1 = helper env e1 in
       let env2 = Map.map env ~f:(fun sch -> Scheme.apply sch sub1) in
       let typ2 = generalize env2 typ1 in
@@ -283,10 +282,7 @@ let inferencer =
       let* sub2, typ3 = helper env3 e2 in
       let* final_sub = Subst.compose sub1 sub2 in
       return (final_sub, typ3)
-    | ELet (Rec, x, e1, None) ->
-      let* final_sub, tv = infer_recursively env x e1 in
-      return (final_sub, Subst.apply final_sub tv)
-    | ELet (Rec, x, e1, Some e2) ->
+    | ELet (Rec, x, e1, e2) ->
       let* tv = fresh_v in
       let env = TypeEnv.extend env (x, S (VarSet.empty, tv)) in
       let* sub1, ty1 = helper env e1 in
@@ -315,13 +311,6 @@ let inferencer =
       in
       let* final_sub = Subst.compose c_sub e_sub in
       return (final_sub, Subst.apply final_sub e_typ)
-  and infer_recursively env x expr =
-    let* tv = fresh_v in
-    let env = TypeEnv.extend env (x, S (VarSet.empty, tv)) in
-    let* sub1, typ1 = helper env expr in
-    let* sub2 = Subst.unify (Subst.apply sub1 tv) typ1 in
-    let* final_sub = Subst.compose sub1 sub2 in
-    return (final_sub, tv)
   in
   helper
 ;;

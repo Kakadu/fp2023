@@ -1,10 +1,19 @@
+(include_subdirs unqualified)
+
 (library
  (name DRozhkov_lib)
  (public_name DRozhkov.Lib)
- (modules Parser Ast Parser_test Infer Inter Inter_test)
- (inline_tests)
+ (modules Parser Ast Infer Inter)
  (preprocess
   (pps ppx_expect ppx_deriving.show))
  (libraries base angstrom)
  (instrumentation
   (backend bisect_ppx)))
+
+(library
+ (name tests)
+ (modules Parser_test Inter_test)
+ (libraries DRozhkov_lib)
+ (inline_tests)
+ (preprocess
+  (pps ppx_expect ppx_deriving.show)))

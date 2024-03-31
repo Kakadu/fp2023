@@ -2,4 +2,4 @@
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-val parse : string -> (Ast.basic list, string) result
+val parse : string -> (Ast.statement list, string) result

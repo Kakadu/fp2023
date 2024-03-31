@@ -27,5 +27,5 @@ end
 type scheme = S of VarSet.t * typ
 
 val run_infer
-  :  Ast.basic list
+  :  Ast.statement list
   -> ((string, scheme, Base.String.comparator_witness) Base.Map.t, error) result
