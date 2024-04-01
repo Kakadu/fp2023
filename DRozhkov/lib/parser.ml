@@ -160,9 +160,8 @@ let rec fun_bundle pexpr =
 ;;
 
 let parse_fun pexpr =
-  token "fun" *> patterns >>= fun x ->
-  token "->" *> pexpr >>= fun e ->
-  return (EFun(x, e))
+  token "fun" *> patterns
+  >>= fun x -> token "->" *> pexpr >>= fun e -> return (EFun (x, e))
 ;;
 
 let bundle pexpr =
