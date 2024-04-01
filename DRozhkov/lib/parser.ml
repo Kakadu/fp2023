@@ -79,20 +79,6 @@ let identifier =
 let vars = identifier >>| fun x -> Var x
 let pvars = identifier >>| fun x -> PVar x
 
-let bundle pexpr =
-  let rec fun_bundle pexpr =
-    identifier
-    >>= fun id -> fun_bundle pexpr <|> token "=" *> pexpr >>| fun e -> EFun (id, e)
-  in
-  token "let"
-  *> lift4
-       (fun r id e1 e2 -> ELet (r, id, e1, e2))
-       (token "rec" *> return Rec <|> return NoRec)
-       (ptoken (token "()") <|> identifier)
-       (ptoken (token "=") *> pexpr <|> fun_bundle pexpr)
-       (token "in" *> pexpr >>| fun x -> x)
-;;
-
 let conditions arg =
   ptoken
     (lift3
@@ -155,6 +141,25 @@ let matching pexpr =
     (many1 (pcase patterns pexpr))
 ;;
 
+let rec fun_bundle pexpr =
+  let pattern_expr = identifier >>| fun var -> PVar var in
+  let expr_with_pattern =
+    pattern_expr
+    >>= fun pat -> fun_bundle pexpr <|> token "=" *> pexpr >>| fun e -> EFun (pat, e)
+  in
+  expr_with_pattern
+;;
+
+let bundle pexpr =
+  token "let"
+  *> lift4
+       (fun r id e1 e2 -> ELet (r, id, e1, e2))
+       (token "rec" *> return Rec <|> return NoRec)
+       (ptoken (token "()") <|> identifier)
+       (ptoken (token "=") *> pexpr <|> fun_bundle pexpr)
+       (token "in" *> pexpr >>| fun x -> x)
+;;
+
 let pexpr =
   fix (fun pexpr ->
     let exp = choice [ staples pexpr; const; vars; lists pexpr; matching pexpr ] in
@@ -173,10 +178,6 @@ let pexpr =
 ;;
 
 let decl =
-  let rec fun_bundle expr =
-    identifier
-    >>= fun id -> fun_bundle expr <|> token "=" *> expr >>| fun e -> EFun (id, e)
-  in
   token "let"
   *> lift3
        (fun rec_flag name pexpr -> Decl (rec_flag, name, pexpr))

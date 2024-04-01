@@ -13,7 +13,7 @@ val pp_typ : Format.formatter -> typ -> unit
 
 type error =
   | Occurs_check
-  | No_variable of string
+  | Undefined_var of string
   | Unification_failed of typ * typ
 
 val pp_error : Format.formatter -> error -> unit

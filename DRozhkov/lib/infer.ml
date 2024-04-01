@@ -26,12 +26,12 @@ let rec pp_typ fmt = function
 
 type error =
   | Occurs_check
-  | No_variable of string
+  | Undefined_var of string
   | Unification_failed of typ * typ
 
 let pp_error ppf : error -> _ = function
   | Occurs_check -> fprintf ppf "Occurs check failed"
-  | No_variable s -> fprintf ppf "Undefined variable '%s'" s
+  | Undefined_var s -> fprintf ppf "Undefined variable '%s'" s
   | Unification_failed (l, r) ->
     Format.fprintf ppf "Unification fail on %a and %a" pp_typ l pp_typ r
 ;;
@@ -228,13 +228,11 @@ let inferencer =
              return (Subst.apply sub typ))
          in
          return (Subst.empty, typ)
-       | None -> fail (No_variable x))
-    | EFun (x, expr) ->
-      let* tv = fresh_v in
-      let env2 = TypeEnv.extend env (x, S (VarSet.empty, tv)) in
-      let* s, typ = helper env2 expr in
-      let res_typ = TArrow (Subst.apply s tv, typ) in
-      return (s, res_typ)
+       | None -> fail (Undefined_var x))
+    | EFun (pat, expr) ->
+      let* env, t = infer_pattern env pat in
+      let* sub, t1 = helper env expr in
+      return (sub, Subst.apply sub (TArrow (t, t1)))
     | EBinop (l, op, r) ->
       let* l_subst, l_typ = helper env l in
       let* r_subst, r_typ = helper env r in

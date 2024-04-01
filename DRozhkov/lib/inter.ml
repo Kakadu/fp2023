@@ -10,7 +10,7 @@ type value =
   | VInt of int
   | VBool of bool
   | VList of value list
-  | VFun of string * expr * env
+  | VFun of pattern * expr * env
 
 and env = (string, value, String.comparator_witness) Map.t
 
@@ -145,14 +145,13 @@ module Inter (M : MONADERROR) = struct
         let* fv = helper env f in
         let* ev = helper env e in
         (match fv with
-         | VFun (id, e, fenv) ->
-           let fenv = Base.Map.set fenv ~key:id ~data:ev in
-           let updated_env =
-             Base.Map.fold fenv ~init:env ~f:(fun ~key ~data acc_env ->
-               Base.Map.set acc_env ~key ~data)
+         | VFun (p, e, _) ->
+           let* env' =
+             match match_pattern env (p, ev) with
+             | Some env -> return env
+             | None -> fail Pattern_matching_error
            in
-           let* v = helper updated_env e in
-           return v
+           helper env' e
          | _ -> fail (Incorrect_type fv))
     in
     helper

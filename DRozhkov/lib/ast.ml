@@ -41,7 +41,7 @@ type expr =
   | EBinop of expr * binop * expr (** a + b *)
   | EIfThenElse of expr * expr * expr (** if then else*)
   | ELet of rec_flag * string * expr * expr (**let ... *)
-  | EFun of string * expr (** fun *)
+  | EFun of pattern * expr (** fun *)
   | EApp of expr * expr (** f x *)
   | EList of expr * expr (** [a; b; c]*)
   | Nil (** [] *)
