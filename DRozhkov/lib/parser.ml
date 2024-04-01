@@ -18,8 +18,17 @@ let token s = spaces *> string s
 let staples p = token "(" *> p <* token ")"
 
 let keywords = function
-  | "match" | "with" | "let" | "true" | "false" | "if" | "then" | "else" | "rec" | "in" ->
-    true
+  | "match"
+  | "with"
+  | "let"
+  | "true"
+  | "false"
+  | "if"
+  | "then"
+  | "else"
+  | "rec"
+  | "in"
+  | "fun" -> true
   | _ -> false
 ;;
 
@@ -150,6 +159,12 @@ let rec fun_bundle pexpr =
   expr_with_pattern
 ;;
 
+let parse_fun pexpr =
+  token "fun" *> patterns >>= fun x ->
+  token "->" *> pexpr >>= fun e ->
+  return (EFun(x, e))
+;;
+
 let bundle pexpr =
   token "let"
   *> lift4
@@ -174,7 +189,7 @@ let pexpr =
     let exp =
       plbinop exp (choice [ less; moeq; more; equally; nequally; leeq; orr; andd ])
     in
-    choice [ bundle pexpr; exp; conditions pexpr ])
+    choice [ bundle pexpr; exp; conditions pexpr; parse_fun pexpr ])
 ;;
 
 let decl =

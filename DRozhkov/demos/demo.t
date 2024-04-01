@@ -29,3 +29,8 @@
   > let res = bin 12
   val bin : int -> int = <fun>
   val res : int = 1728
+  $ cat << EOF | dune exec demo -
+  > let rec fact = fun x -> if x = 1 then 1 else x * fact (x - 1)
+  > let a = fact 10
+  val a : int = 3628800
+  val fact : int -> int = <fun>
