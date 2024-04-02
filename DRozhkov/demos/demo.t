@@ -37,7 +37,6 @@
   $ cat << EOF | dune exec demo -
   > let fst = [1; 3; 5; 7; 9]
   > let f l = match l with
-  > | h :: [] -> []
   > | h :: tl -> tl
   > | _ -> []
   > let a =  f fst
@@ -45,8 +44,12 @@
   > | h :: tl -> h + 10
   > | _ -> 0
   > let b = func a
+  > let fff x y = x && y
+  > let c = fff true true
   val a : int list = [3; 5; 7; 9]
   val b : int = 13
-  val f : '9 list -> '9 list = <fun>
+  val c : bool = true
+  val f : '6 list -> '6 list = <fun>
+  val fff : '16 -> '16 -> bool = <fun>
   val fst : int list = [1; 3; 5; 7; 9]
   val func : int list -> int = <fun>

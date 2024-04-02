@@ -57,7 +57,16 @@ let vlist l = VList l
 let vfun s e env = VFun (s, e, env)
 
 module Env (M : MONADERROR) = struct
+  open M
+
   let empty = Base.Map.empty (module String)
+
+  let find env name =
+    match Base.Map.find env name with
+    | Some x -> return x
+    | None -> fail (Unbound_value name)
+  ;;
+
   let extend env k v = Base.Map.update env k ~f:(fun _ -> v)
 end
 
@@ -102,10 +111,11 @@ module Inter (M : MONADERROR) = struct
          | Int i -> return (vint i)
          | Bool b -> return (vbool b))
       | Var id ->
-        let* v =
-          match Base.Map.find env id with
-          | None -> fail (Unbound_value id)
-          | Some v -> return v
+        let* v = find env id in
+        let v =
+          match v with
+          | VFun (p, e, env) -> VFun (p, e, extend env id v)
+          | _ -> v
         in
         return v
       | EBinop (e1, op, e2) ->
@@ -145,7 +155,7 @@ module Inter (M : MONADERROR) = struct
         let* fv = helper env f in
         let* ev = helper env e in
         (match fv with
-         | VFun (p, e, _) ->
+         | VFun (p, e, env) ->
            let* env' =
              match match_pattern env (p, ev) with
              | Some env -> return env
