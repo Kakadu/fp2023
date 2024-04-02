@@ -456,14 +456,14 @@ open Angstrom
 open Base
 
 let is_space = function
-  | <span data-count="5518">'</span> ' | <span data-count="0">'</span>\t' | <span data-count="1229">'</span>\n' | <span data-count="0">'</span>\r' -&gt; true
-  | <span data-count="3066">_</span> -&gt; false
+  | <span data-count="5538">'</span> ' | <span data-count="0">'</span>\t' | <span data-count="1242">'</span>\n' | <span data-count="0">'</span>\r' -&gt; true
+  | <span data-count="3123">_</span> -&gt; false
 ;;
 
 let spaces = skip_whil<span data-count="10">e</span> is_space
 let ptoken p = <span data-count="76">s</span>kip_whil<span data-count="76">e</span> is_space *&gt; p
 let skip_whitespace = take_whil<span data-count="10">e</span> is_space
-let token s = <span data-count="455">s</span>paces *&gt; strin<span data-count="455">g</span> s
+let token s = <span data-count="461">s</span>paces *&gt; strin<span data-count="461">g</span> s
 let staples p = <span data-count="14">t</span>oke<span data-count="14">n</span> "(" *<span data-count="14">&gt;</span> p &lt;* toke<span data-count="14">n</span> ")"
 
 let keywords = function
@@ -478,12 +478,12 @@ let keywords = function
   | <span data-count="0">"</span>rec"
   | <span data-count="1">"</span>in"
   | <span data-count="2">"</span>fun" -&gt; true
-  | <span data-count="124">_</span> -&gt; false
+  | <span data-count="130">_</span> -&gt; false
 ;;
 
 let digit = function
   | <span data-count="79">'</span>0' .. '9' -&gt; true
-  | <span data-count="225">_</span> -&gt; false
+  | <span data-count="228">_</span> -&gt; false
 ;;
 
 let pnumber =
@@ -503,7 +503,7 @@ let number =
 
 let bools =
   skip_whitespace *<span data-count="10">&gt;</span> choic<span data-count="10">e</span> [ toke<span data-count="10">n</span> "true" *<span data-count="10">&gt;</span> retur<span data-count="10">n</span> true; toke<span data-count="10">n</span> "false" *<span data-count="10">&gt;</span> retur<span data-count="10">n</span> false ]
-  &gt;&gt;<span data-count="10">=</span> fun x -&gt; <span data-count="9">r</span>eturn (EConst (Bool x))
+  &gt;&gt;<span data-count="10">=</span> fun x -&gt; <span data-count="11">r</span>eturn (EConst (Bool x))
 ;;
 
 let const = choic<span data-count="10">e</span> [ number; bools ]
@@ -521,21 +521,21 @@ let orr = toke<span data-count="10">n</span> "||" *<span data-count="10">&gt;</s
 let andd = toke<span data-count="10">n</span> "&amp;&amp;" *<span data-count="10">&gt;</span> retur<span data-count="10">n</span> And
 
 let low = function
-  | <span data-count="565">'</span>a' .. 'z' -&gt; true
-  | <span data-count="212">_</span> -&gt; false
+  | <span data-count="581">'</span>a' .. 'z' -&gt; true
+  | <span data-count="218">_</span> -&gt; false
 ;;
 
 let identifier =
   skip_whitespace *<span data-count="10">&gt;</span> peek_char
   &gt;&gt;<span data-count="10">=</span> function
-  | <span data-count="212">S</span>ome x when lo<span data-count="212">w</span> x -&gt;
-    <span data-count="154">t</span>ake_whil<span data-count="154">e</span> low
-    &gt;&gt;= fun a -&gt; <span data-count="154">i</span>f keywords a then <span data-count="30">f</span>ail "Identifier matches a keyword" else <span data-count="124">r</span>eturn a
+  | <span data-count="218">S</span>ome x when lo<span data-count="218">w</span> x -&gt;
+    <span data-count="160">t</span>ake_whil<span data-count="160">e</span> low
+    &gt;&gt;= fun a -&gt; <span data-count="160">i</span>f keywords a then <span data-count="30">f</span>ail "Identifier matches a keyword" else <span data-count="130">r</span>eturn a
   | <span data-count="82">_</span> -&gt; fail "Invalid first char"
 ;;
 
-let vars = identifier &gt;&gt;<span data-count="10">|</span> fun x -&gt; <span data-count="56">V</span>ar x
-let pvars = identifier &gt;&gt;<span data-count="10">|</span> fun x -&gt; <span data-count="16">P</span>Var x
+let vars = identifier &gt;&gt;<span data-count="10">|</span> fun x -&gt; <span data-count="59">V</span>ar x
+let pvars = identifier &gt;&gt;<span data-count="10">|</span> fun x -&gt; <span data-count="15">P</span>Var x
 
 let conditions arg =
   <span data-count="9">p</span>token
@@ -546,7 +546,7 @@ let conditions arg =
        (toke<span data-count="9">n</span> "else" *<span data-count="9">&gt;</span> arg))
 ;;
 
-let parse_nill = toke<span data-count="10">n</span> "[]" &gt;&gt;<span data-count="10">|</span> fun _ -&gt; <span data-count="3">N</span>il
+let parse_nill = toke<span data-count="10">n</span> "[]" &gt;&gt;<span data-count="10">|</span> fun _ -&gt; <span data-count="2">N</span>il
 
 let parse_list arg =
   <span data-count="9">t</span>oke<span data-count="9">n</span> "["
@@ -560,8 +560,8 @@ let parse_list arg =
 let lists arg = <span data-count="9">p</span>arse_nill &lt;|&gt; parse_lis<span data-count="9">t</span> arg
 
 let chainl1 e op =
-  <span data-count="27">l</span>et rec go a = <span data-count="378">l</span>ift<span data-count="378">2</span> (fun f x -&gt; <span data-count="23">f</span> a x) op e &gt;&gt;<span data-count="378">=</span> go &lt;|&gt; retur<span data-count="378">n</span> a in
-  e &gt;&gt;= fun init -&gt; <span data-count="355">g</span>o init
+  <span data-count="27">l</span>et rec go a = <span data-count="384">l</span>ift<span data-count="384">2</span> (fun f x -&gt; <span data-count="24">f</span> a x) op e &gt;&gt;<span data-count="384">=</span> go &lt;|&gt; retur<span data-count="384">n</span> a in
+  e &gt;&gt;= fun init -&gt; <span data-count="360">g</span>o init
 ;;
 
 let patterns =
@@ -572,13 +572,13 @@ let patterns =
         ; pconst
         ; pvars
         ; (toke<span data-count="5">n</span> "_" &gt;&gt;<span data-count="5">|</span> fun _ -&gt; <span data-count="9">P</span>Dash)
-        ; (toke<span data-count="5">n</span> "[]" &gt;&gt;<span data-count="5">|</span> fun _ -&gt; <span data-count="2">P</span>Nill)
+        ; (toke<span data-count="5">n</span> "[]" &gt;&gt;<span data-count="5">|</span> fun _ -&gt; <span data-count="1">P</span>Nill)
         ]
     in
     <span data-count="5">l</span>et pattern =
       lift2
         (fun p -&gt; function
-          | <span data-count="8">h</span> :: _ -&gt; PCons (p, h)
+          | <span data-count="7">h</span> :: _ -&gt; PCons (p, h)
           | <span data-count="14">_</span> -&gt; p)
         pattern
         (man<span data-count="5">y</span> (toke<span data-count="5">n</span> "::" *<span data-count="5">&gt;</span> pattern))
@@ -586,12 +586,12 @@ let patterns =
     <span data-count="5">p</span>attern)
 ;;
 
-let pebinop chain1 e pbinop = <span data-count="27">c</span>hain1 e (pbinop &gt;&gt;<span data-count="27">|</span> fun op e1 e2 -&gt; <span data-count="23">E</span>Binop (e1, op, e2))
+let pebinop chain1 e pbinop = <span data-count="27">c</span>hain1 e (pbinop &gt;&gt;<span data-count="27">|</span> fun op e1 e2 -&gt; <span data-count="24">E</span>Binop (e1, op, e2))
 let plbinop = pebino<span data-count="10">p</span> chainl1
 
 let matching pexpr =
   <span data-count="9">l</span>et pcase patterns pexpr =
-    <span data-count="9">l</span>ift2 (fun p e -&gt; <span data-count="20">p</span>, e) (toke<span data-count="9">n</span> "|" *<span data-count="9">&gt;</span> patterns) (toke<span data-count="9">n</span> "-&gt;" *<span data-count="9">&gt;</span> pexpr)
+    <span data-count="9">l</span>ift2 (fun p e -&gt; <span data-count="19">p</span>, e) (toke<span data-count="9">n</span> "|" *<span data-count="9">&gt;</span> patterns) (toke<span data-count="9">n</span> "-&gt;" *<span data-count="9">&gt;</span> pexpr)
   in
   lift2
     (fun expr cases -&gt; <span data-count="9">E</span>Match (expr, cases))
@@ -600,17 +600,17 @@ let matching pexpr =
 ;;
 
 let parse_fun pexpr =
-  <span data-count="40">t</span>oke<span data-count="40">n</span> "fun" *<span data-count="40">&gt;</span> patterns
+  <span data-count="42">t</span>oke<span data-count="42">n</span> "fun" *<span data-count="42">&gt;</span> patterns
   &gt;&gt;= fun x -&gt; <span data-count="2">t</span>oke<span data-count="2">n</span> "-&gt;" *<span data-count="2">&gt;</span> pexpr &gt;&gt;= fun e -&gt; <span data-count="2">r</span>eturn (EFun (x, e))
 ;;
 
 let rec fun_bundle pexpr =
-  <span data-count="31">l</span>et pattern_expr = identifier &gt;&gt;| fun var -&gt; <span data-count="12">P</span>Var var in
-  <span data-count="31">l</span>et expr_with_pattern =
+  <span data-count="33">l</span>et pattern_expr = identifier &gt;&gt;| fun var -&gt; <span data-count="14">P</span>Var var in
+  <span data-count="33">l</span>et expr_with_pattern =
     pattern_expr
-    &gt;&gt;= fun pat -&gt; <span data-count="12">f</span>un_bundl<span data-count="12">e</span> pexpr &lt;|<span data-count="12">&gt;</span> toke<span data-count="12">n</span> "=" *<span data-count="12">&gt;</span> pexpr &gt;&gt;| fun e -&gt; <span data-count="12">E</span>Fun (pat, e)
+    &gt;&gt;= fun pat -&gt; <span data-count="14">f</span>un_bundl<span data-count="14">e</span> pexpr &lt;|<span data-count="14">&gt;</span> toke<span data-count="14">n</span> "=" *<span data-count="14">&gt;</span> pexpr &gt;&gt;| fun e -&gt; <span data-count="14">E</span>Fun (pat, e)
   in
-  <span data-count="31">e</span>xpr_with_pattern &lt;|&gt; toke<span data-count="31">n</span> "fun" *<span data-count="31">&gt;</span> parse_fu<span data-count="31">n</span> pexpr
+  <span data-count="33">e</span>xpr_with_pattern &lt;|&gt; toke<span data-count="33">n</span> "fun" *<span data-count="33">&gt;</span> parse_fu<span data-count="33">n</span> pexpr
 ;;
 
 let bundle pexpr =
@@ -628,7 +628,7 @@ let pexpr =
     <span data-count="9">l</span>et exp = choice [ staple<span data-count="9">s</span> pexpr; const; vars; list<span data-count="9">s</span> pexpr; matchin<span data-count="9">g</span> pexpr ] in
     <span data-count="9">l</span>et apply =
       lift2
-        (fun f args -&gt; <span data-count="135">L</span>ist.fold_left ~f:(fun f arg -&gt; <span data-count="17">E</span>App (f, arg)) ~init:f args)
+        (fun f args -&gt; <span data-count="137">L</span>ist.fold_left ~f:(fun f arg -&gt; <span data-count="19">E</span>App (f, arg)) ~init:f args)
         exp
         (man<span data-count="9">y</span> (cha<span data-count="9">r</span> ' ' *<span data-count="9">&gt;</span> ptoke<span data-count="9">n</span> exp))
     in
@@ -643,7 +643,7 @@ let pexpr =
 let decl =
   toke<span data-count="10">n</span> "let"
   *<span data-count="10">&gt;</span> lift<span data-count="10">3</span>
-       (fun rec_flag name pexpr -&gt; <span data-count="39">D</span>ecl (rec_flag, name, pexpr))
+       (fun rec_flag name pexpr -&gt; <span data-count="41">D</span>ecl (rec_flag, name, pexpr))
        (toke<span data-count="10">n</span> "rec" *<span data-count="10">&gt;</span> retur<span data-count="10">n</span> Rec &lt;|<span data-count="10">&gt;</span> retur<span data-count="10">n</span> NoRec)
        (ptoke<span data-count="10">n</span> (toke<span data-count="10">n</span> "()") &lt;|<span data-count="10">&gt;</span> identifier)
        (ptoke<span data-count="10">n</span> (toke<span data-count="10">n</span> "=") *<span data-count="10">&gt;</span> pexpr &lt;|<span data-count="10">&gt;</span> fun_bundl<span data-count="10">e</span> pexpr)
