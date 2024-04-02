@@ -769,9 +769,9 @@ let rec check_pattern pat arg m =
 
 let rec interpret_expression expr =
   <span data-count="636">m</span>atch expr with
-  | <span data-count="102">E</span>Const (CInt i) -&gt; return @@ vin<span data-count="102">t</span> i
-  | <span data-count="0">E</span>Const (CBool f) -&gt; return @@ vboo<span data-count="0">l</span> f
-  | <span data-count="0">E</span>Const CUnit -&gt; return @@ vunit
+  | <span data-count="102">E</span>Const (CInt i) -&gt; return (vin<span data-count="102">t</span> i)
+  | <span data-count="0">E</span>Const (CBool f) -&gt; return (vboo<span data-count="0">l</span> f)
+  | <span data-count="0">E</span>Const CUnit -&gt; return vunit
   | <span data-count="244">E</span>Var v -&gt; fun c -&gt; <span data-count="244">r</span>eturn (get_va<span data-count="244">l</span> v c) c
   | <span data-count="18">E</span>Fun { args; expr } -&gt; return @@ vfu<span data-count="18">n</span> args expr []
   | <span data-count="20">E</span>LetIn bnd -&gt; interpret_letin bnd

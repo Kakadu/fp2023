@@ -910,7 +910,7 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  <span data-count="1">l</span>et a = etuple (econs<span data-count="1">t</span> @@ cin<span data-count="1">t</span> 42) (econs<span data-count="1">t</span> @@ cunit) [] in
+  <span data-count="1">l</span>et a = etuple (econs<span data-count="1">t</span> @@ cin<span data-count="1">t</span> 42) (econs<span data-count="1">t</span> cunit) [] in
   <span data-count="1">l</span>et f =
     efun (mptupl<span data-count="1">e</span> (mpva<span data-count="1">r</span> "a") (mpva<span data-count="1">r</span> "b") [], []) (etupl<span data-count="1">e</span> (eva<span data-count="1">r</span> "a") (eva<span data-count="1">r</span> "b") [])
   in
@@ -921,21 +921,21 @@ let%expect_test _ =
 let%expect_test _ =
   <span data-count="1">l</span>et n = mpvar "foo" in
   <span data-count="1">l</span>et v = elist [] in
-  <span data-count="1">e</span>letin n NoRec v (econs<span data-count="1">t</span> @@ cunit) |&gt; <span data-count="1">c</span>heck;
+  <span data-count="1">e</span>letin n NoRec v (econs<span data-count="1">t</span> cunit) |&gt; <span data-count="1">c</span>heck;
   <span data-count="1">[</span>%expect {| Typed |}<span data-count="5">]</span>
 ;;
 
 let%expect_test _ =
   <span data-count="1">l</span>et n = mplist [ mpva<span data-count="1">r</span> "a"; mpva<span data-count="1">r</span> "b"; mpva<span data-count="1">r</span> "c" ] in
-  <span data-count="1">l</span>et v = elist [ econs<span data-count="1">t</span> @@ cin<span data-count="1">t</span> 42 ] in
-  <span data-count="1">e</span>letin n NoRec v (econs<span data-count="1">t</span> @@ cunit) |&gt; <span data-count="1">c</span>heck;
+  <span data-count="1">l</span>et v = elist [ econs<span data-count="1">t</span> (cin<span data-count="1">t</span> 42) ] in
+  <span data-count="1">e</span>letin n NoRec v (econs<span data-count="1">t</span> cunit) |&gt; <span data-count="1">c</span>heck;
   <span data-count="1">[</span>%expect {| Typed |}<span data-count="5">]</span>
 ;;
 
 let%expect_test _ =
   <span data-count="1">l</span>et n = mplist [ mpva<span data-count="1">r</span> "a"; mpva<span data-count="1">r</span> "b"; mpva<span data-count="1">r</span> "c" ] in
-  <span data-count="1">l</span>et v = elist [ econs<span data-count="1">t</span> @@ cin<span data-count="1">t</span> 42; econs<span data-count="1">t</span> @@ cboo<span data-count="1">l</span> false ] in
-  <span data-count="1">e</span>letin n NoRec v (econs<span data-count="1">t</span> @@ cunit) |&gt; <span data-count="1">c</span>heck;
+  <span data-count="1">l</span>et v = elist [ econs<span data-count="1">t</span> (cin<span data-count="1">t</span> 42); econs<span data-count="1">t</span> (cboo<span data-count="1">l</span> false) ] in
+  <span data-count="1">e</span>letin n NoRec v (econs<span data-count="1">t</span> cunit) |&gt; <span data-count="1">c</span>heck;
   <span data-count="1">[</span>%expect {| Unify fail |}<span data-count="5">]</span>
 ;;
 
@@ -978,8 +978,8 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  <span data-count="1">l</span>et m = econst @@ cin<span data-count="1">t</span> 42 in
-  <span data-count="1">l</span>et p = mpcons<span data-count="1">t</span> @@ cunit, econs<span data-count="1">t</span> @@ cin<span data-count="1">t</span> 42 in
+  <span data-count="1">l</span>et m = econst (cin<span data-count="1">t</span> 42) in
+  <span data-count="1">l</span>et p = mpcons<span data-count="1">t</span> cunit, econs<span data-count="1">t</span> (cin<span data-count="1">t</span> 42) in
   let ps = [] in
   epattern m (p, ps) |&gt; <span data-count="1">c</span>heck;
   <span data-count="1">[</span>%expect {| Unify fail |}<span data-count="5">]</span>
@@ -994,17 +994,17 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  <span data-count="1">l</span>et m = econst @@ cin<span data-count="1">t</span> 41 in
-  <span data-count="1">l</span>et p = mpcons<span data-count="1">t</span> @@ cin<span data-count="1">t</span> 42, econs<span data-count="1">t</span> @@ cunit in
-  let ps = [ mpcons<span data-count="1">t</span> @@ cunit, econs<span data-count="1">t</span> @@ cunit ] in
+  <span data-count="1">l</span>et m = econst (cin<span data-count="1">t</span> 41) in
+  <span data-count="1">l</span>et p = mpcons<span data-count="1">t</span> (cin<span data-count="1">t</span> 42), econs<span data-count="1">t</span> cunit in
+  let ps = [ mpcons<span data-count="1">t</span> cunit, econs<span data-count="1">t</span> cunit ] in
   epattern m (p, ps) |&gt; <span data-count="1">c</span>heck;
   <span data-count="1">[</span>%expect {| Unify fail |}<span data-count="5">]</span>
 ;;
 
 let%expect_test _ =
-  <span data-count="1">l</span>et m = econst @@ cin<span data-count="1">t</span> 41 in
-  <span data-count="1">l</span>et p = mpcons<span data-count="1">t</span> @@ cin<span data-count="1">t</span> 42, econs<span data-count="1">t</span> @@ cin<span data-count="1">t</span> 43 in
-  let ps = [ mpcons<span data-count="1">t</span> @@ cin<span data-count="1">t</span> 44, econs<span data-count="1">t</span> @@ cunit ] in
+  <span data-count="1">l</span>et m = econst (cin<span data-count="1">t</span> 41) in
+  <span data-count="1">l</span>et p = mpcons<span data-count="1">t</span> (cin<span data-count="1">t</span> 42), econs<span data-count="1">t</span> (cin<span data-count="1">t</span> 43) in
+  let ps = [ mpcons<span data-count="1">t</span> (cin<span data-count="1">t</span> 44), econs<span data-count="1">t</span> cunit ] in
   epattern m (p, ps) |&gt; <span data-count="1">c</span>heck;
   <span data-count="1">[</span>%expect {| Unify fail |}<span data-count="5">]</span>
 ;;
