@@ -1,4 +1,4 @@
-(** Copyright 2021-2023, Kakadu, RozhkovAleksandr *)
+(** Copyright 2021-2023, RozhkovAleksandr *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
@@ -128,9 +128,19 @@ let%expect_test _ =
 
       let a = mymatch [1; 2; 3]
        |};
-  [%expect
-    {| 
-         val a : int = [2; 3]
-         val mymatch : int list -> int = <fun>
+  [%expect {| 
+         Typecheck error: Unification fail on '2 list and int
+      |}]
+;;
+
+let%expect_test _ =
+  run_inter
+    {|
+    let lst xs = match xs with 
+      | h :: [] -> false
+      | _ -> true
+       |};
+  [%expect {| 
+         val lst : '3 list -> bool = <fun>
       |}]
 ;;

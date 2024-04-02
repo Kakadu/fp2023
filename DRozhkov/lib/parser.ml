@@ -1,4 +1,4 @@
-(** Copyright 2021-2023, Kakadu, RozhkovAleksandr *)
+(** Copyright 2021-2023, RozhkovAleksandr *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
@@ -150,18 +150,18 @@ let matching pexpr =
     (many1 (pcase patterns pexpr))
 ;;
 
+let parse_fun pexpr =
+  token "fun" *> patterns
+  >>= fun x -> token "->" *> pexpr >>= fun e -> return (EFun (x, e))
+;;
+
 let rec fun_bundle pexpr =
   let pattern_expr = identifier >>| fun var -> PVar var in
   let expr_with_pattern =
     pattern_expr
     >>= fun pat -> fun_bundle pexpr <|> token "=" *> pexpr >>| fun e -> EFun (pat, e)
   in
-  expr_with_pattern
-;;
-
-let parse_fun pexpr =
-  token "fun" *> patterns
-  >>= fun x -> token "->" *> pexpr >>= fun e -> return (EFun (x, e))
+  expr_with_pattern <|> token "fun" *> parse_fun pexpr
 ;;
 
 let bundle pexpr =

@@ -1,4 +1,4 @@
-(** Copyright 2021-2023, Kakadu, RozhkovAleksandr *)
+(** Copyright 2021-2023, RozhkovAleksandr *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
@@ -185,6 +185,12 @@ let generalize env typ =
   S (free, typ)
 ;;
 
+let generalize_rec env ty x =
+  let env = Base.Map.remove env x in
+  let free = VarSet.diff (Type.free_vars ty) (TypeEnv.free_vars env) in
+  S (free, ty)
+;;
+
 let infer_pattern =
   let rec helper env = function
     | PDash ->
@@ -205,7 +211,7 @@ let infer_pattern =
     | PCons (t1, t2) ->
       let* env, tt1 = helper env t1 in
       let* env', tt2 = helper env t2 in
-      let* subst = Subst.unify tt1 tt2 in
+      let* subst = Subst.unify (TList tt1) tt2 in
       let env'' = TypeEnv.apply env' subst in
       return (env'', TList (Subst.apply subst tt1))
   in
@@ -287,7 +293,7 @@ let inferencer =
       let* sub2 = Subst.unify (Subst.apply sub1 tv) ty1 in
       let* sub = Subst.compose sub1 sub2 in
       let env = TypeEnv.apply env sub in
-      let ty2 = generalize env (Subst.apply sub tv) in
+      let ty2 = generalize_rec env (Subst.apply sub tv) x in
       let* sub2, ty2 = helper TypeEnv.(extend (apply env sub) (x, ty2)) e2 in
       let* final_sub = Subst.compose sub sub2 in
       return (final_sub, ty2)
@@ -328,7 +334,7 @@ let infer_base env = function
     let* sub3 = Subst.compose sub1 sub2 in
     let env'' = TypeEnv.apply env' sub3 in
     let typ2 = Subst.apply sub3 typ1 in
-    let gen_scheme = generalize env'' typ2 in
+    let gen_scheme = generalize_rec env'' typ2 x in
     let env_final = TypeEnv.extend env'' (x, gen_scheme) in
     return env_final
   | Expr expr ->
