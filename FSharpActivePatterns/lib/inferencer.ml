@@ -313,13 +313,11 @@ let infer =
       let* s5 = unify t2 t3 in
       let* final_subst = Subst.compose_all [ s5; s4; s3; s2; s1 ] in
       return (final_subst, Subst.apply final_subst t2)
-    | LetExpr (is_rec, name, expr) ->
-      if not is_rec
-      then helper env expr
-      else
-        let* tv = fresh_var in
-        let env = TypeEnv.extend env (name, S (VarSet.empty, tv)) in
-        helper env expr
+    | LetExpr (is_rec, _, expr) when not is_rec -> helper env expr
+    | LetExpr (_, name, expr) ->
+      let* tv = fresh_var in
+      let env = TypeEnv.extend env (name, S (VarSet.empty, tv)) in
+      helper env expr
     | FunExpr (arg, e) ->
       let* env, t1 = pattern_helper env arg in
       let* s, t2 = helper env e in
@@ -347,14 +345,12 @@ let infer =
       let* match_sub, match_ty, _ = matches_helper matches in
       let* finalmatchsub = Subst.compose cond_sub match_sub in
       return (finalmatchsub, Subst.apply finalmatchsub match_ty)
+    | ListExpr a when List.length a == 0 -> return (Subst.empty, Prim "'a list")
     | ListExpr a ->
-      if List.length a == 0
-      then return (Subst.empty, Prim "'a list")
-      else
-        let* s1, t1 = helper env (List.hd_exn a) in
-        let t1 = List_typ t1 in
-        let* subst = Subst.compose_all [ s1 ] in
-        return (subst, Subst.apply subst t1)
+      let* s1, t1 = helper env (List.hd_exn a) in
+      let t1 = List_typ t1 in
+      let* subst = Subst.compose_all [ s1 ] in
+      return (subst, Subst.apply subst t1)
     | CaseExpr _ -> fail NotImplemented
     | LetInExpr _ -> fail NotImplemented
     | TupleExpr tuple ->
