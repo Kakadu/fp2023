@@ -53,3 +53,19 @@
   val fff : '16 -> '16 -> bool = <fun>
   val fst : int list = [1; 3; 5; 7; 9]
   val func : int list -> int = <fun>
+  $ cat << EOF | dune exec demo -
+  > let addn n = let adder m = m + n in adder
+  > let a  = addn 5
+  > let b = a 6
+  val a : int -> int = <fun>
+  val addn : int -> int -> int = <fun>
+  val b : int = 11
+  $ cat << EOF | dune exec demo -
+  > let a = 1
+  > let b = [2; 3]
+  > let lst = a :: b
+  > let tupl = (1, 2, 3)
+  val a : int = 1
+  val b : int list = [2; 3]
+  val lst : int list = [1; 2; 3]
+  val tupl : (int * int * int) = (1, 2, 3)

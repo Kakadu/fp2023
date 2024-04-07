@@ -10,6 +10,7 @@ type value =
   | VInt of int
   | VBool of bool
   | VList of value list
+  | VTuple of value list
   | VFun of pattern * expr * env
 
 and env = (string, value, String.comparator_witness) Map.t
@@ -25,6 +26,12 @@ let rec pp_value ppf =
       "[%a]"
       (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf "; ") pp_value)
       vl
+  | VTuple lst ->
+    fprintf
+      ppf
+      "(%a)"
+      (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf ", ") pp_value)
+      lst
   | VFun _ -> fprintf ppf "<fun>"
 ;;
 
@@ -139,6 +146,17 @@ module Inter (M : MONADERROR) = struct
           | [] -> fail Pattern_matching_error
         in
         match_cases env v cases
+      | ETuple el ->
+        let* vl =
+          List.fold_left
+            ~f:(fun acc e ->
+              let* acc = acc in
+              let* v = helper env e in
+              return (v :: acc))
+            ~init:(return [])
+            el
+        in
+        return (VTuple (List.rev vl))
       | ELet (_, name, e1, e2) ->
         let* v1 = helper env e1 in
         let env' = Base.Map.set env ~key:name ~data:v1 in

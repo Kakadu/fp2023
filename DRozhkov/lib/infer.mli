@@ -7,7 +7,8 @@ type typ =
   | TBool (** bools type *)
   | TArrow of typ * typ (** type -> type *)
   | TVar of int (** var type *)
-  | TList of typ (* list type *)
+  | TList of typ (** list type *)
+  | TTuple of typ list (** tuple type *)
 
 val pp_typ : Format.formatter -> typ -> unit
 

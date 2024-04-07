@@ -108,7 +108,9 @@ let parse_list arg =
       ])
 ;;
 
+let parse_cons = token "::" *> return (fun e1 e2 -> EList (e1, e2))
 let lists arg = parse_nill <|> parse_list arg
+let tuples pexpr = staples (sep_by (token ",") pexpr >>| fun x -> ETuple x)
 
 let chainl1 e op =
   let rec go a = lift2 (fun f x -> f a x) op e >>= go <|> return a in
@@ -176,7 +178,9 @@ let bundle pexpr =
 
 let pexpr =
   fix (fun pexpr ->
-    let exp = choice [ staples pexpr; const; vars; lists pexpr; matching pexpr ] in
+    let exp =
+      choice [ staples pexpr; const; vars; lists pexpr; matching pexpr; tuples pexpr ]
+    in
     let apply =
       lift2
         (fun f args -> List.fold_left ~f:(fun f arg -> EApp (f, arg)) ~init:f args)
@@ -185,6 +189,7 @@ let pexpr =
     in
     let exp = plbinop apply (mult <|> split) in
     let exp = plbinop exp (plus <|> min) in
+    let exp = chainl1 exp parse_cons in
     let exp =
       plbinop exp (choice [ less; moeq; more; equally; nequally; leeq; orr; andd ])
     in

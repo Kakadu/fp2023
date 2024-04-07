@@ -49,3 +49,17 @@ let%expect_test _ =
         [(Expr (EBinop ((EConst (Int 5)), Plus, (EConst (Int 6)))))]
     |}]
 ;;
+
+let%expect_test _ =
+  test_parse {|
+        let a = 4::[5; 6]
+      |};
+  [%expect
+    {|
+        [(Decl
+            (NoRec, "a",
+             (EList ((EConst (Int 4)),
+                (EList ((EConst (Int 5)), (EList ((EConst (Int 6)), Nil))))))))
+          ]
+    |}]
+;;

@@ -43,7 +43,8 @@ type expr =
   | ELet of rec_flag * string * expr * expr (**let ... *)
   | EFun of pattern * expr (** fun *)
   | EApp of expr * expr (** f x *)
-  | EList of expr * expr (** [a; b; c]*)
+  | ETuple of expr list (** (1, 2) *)
+  | EList of expr * expr (** [a; b; c], a :: [b; c]*)
   | Nil (** [] *)
   | EMatch of expr * (pattern * expr) list (** math ... with*)
 [@@deriving show { with_path = false }]

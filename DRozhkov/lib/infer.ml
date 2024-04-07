@@ -11,7 +11,8 @@ type typ =
   | TBool (** bools type *)
   | TArrow of typ * typ (** type -> type *)
   | TVar of int (** var type *)
-  | TList of typ (* list type *)
+  | TList of typ (** list type *)
+  | TTuple of typ list (** tuple type *)
 
 let rec pp_typ fmt = function
   | TInt -> fprintf fmt "int"
@@ -22,6 +23,17 @@ let rec pp_typ fmt = function
     (match l, r with
      | TArrow _, _ -> fprintf fmt "(%a) -> %a" pp_typ l pp_typ r
      | _ -> fprintf fmt "%a -> %a" pp_typ l pp_typ r)
+  | TTuple lst ->
+    fprintf
+      fmt
+      "(%a)"
+      (pp_print_list
+         ~pp_sep:(fun _ _ -> fprintf fmt " * ")
+         (fun fmt typ ->
+           match typ with
+           | TArrow _ -> fprintf fmt "(%a)" pp_typ typ
+           | _ -> fprintf fmt "%a" pp_typ typ))
+      lst
 ;;
 
 type error =
@@ -68,6 +80,7 @@ module Type = struct
     | TVar b -> b = v
     | TList x -> occurs_in v x
     | TArrow (l, r) -> occurs_in v l || occurs_in v r
+    | TTuple lst -> Base.List.exists lst ~f:(occurs_in v)
   ;;
 
   let free_vars =
@@ -78,6 +91,7 @@ module Type = struct
       | TArrow (l, r) ->
         let lvars = helper acc l in
         helper lvars r
+      | TTuple lst -> List.fold_left ~f:helper ~init:acc lst
     in
     helper VarSet.empty
   ;;
@@ -105,6 +119,7 @@ module Subst = struct
          | None -> TVar b)
       | TList x -> TList (helper x)
       | TArrow (l, r) -> TArrow (helper l, helper r)
+      | TTuple lst -> TTuple (List.map ~f:helper lst)
     in
     helper
   ;;
@@ -119,6 +134,17 @@ module Subst = struct
       let* sub2 = unify (apply sub1 r1) (apply sub1 r2) in
       compose sub1 sub2
     | TList x1, TList x2 -> unify x1 x2
+    | TTuple lst1, TTuple lst2 ->
+      (match Base.List.zip lst1 lst2 with
+       | Base.List.Or_unequal_lengths.Ok lists ->
+         List.fold_right
+           lists
+           ~f:(fun (typ1, typ2) acc ->
+             let* subst = unify typ1 typ2 in
+             let* acc = acc in
+             compose subst acc)
+           ~init:(return empty)
+       | Base.List.Or_unequal_lengths.Unequal_lengths -> fail (Unification_failed (l, r)))
     | _ -> fail (Unification_failed (l, r))
 
   and extend (sub : t) (k, v) : (t, error) R.t =
@@ -255,6 +281,18 @@ let inferencer =
     | Nil ->
       let* tv = fresh_v in
       return (Subst.empty, TList tv)
+    | ETuple lst ->
+      let* sub, typl =
+        List.fold_left
+          ~f:(fun acc e ->
+            let* sub, typl = acc in
+            let* sub1, typ1 = helper env e in
+            let* sub2 = Subst.compose sub sub1 in
+            return (sub2, typ1 :: typl))
+          ~init:(return (Subst.empty, []))
+          lst
+      in
+      return (sub, TTuple (List.rev_map ~f:(Subst.apply sub) typl))
     | EList (e1, e2) ->
       let* sub1, typ1 = helper env e1 in
       let* sub2, typ2 = helper (TypeEnv.apply env sub1) e2 in
