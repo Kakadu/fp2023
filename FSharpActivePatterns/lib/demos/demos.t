@@ -114,13 +114,15 @@ cps factorial
 
 
   $ ./demos.exe <<- EOF
-  > let rec list_fold list acc f =
-  >   let rec helper l acc =
-  >     match l with
-  >       | [] -> acc
-  >       | hd :: tl -> helper tl (f acc hd)
-  >   in helper list acc;;
-  > let result = list_fold [1; 2; 3; 4; 5] 0 (fun acc el -> acc + el);;
+  > let list_rev list = 
+  >   let rec helper acc l = 
+  >     match l with 
+  >      | [] -> acc 
+  >      | hd :: tl -> (helper (hd :: acc) tl) in 
+  >   helper [] list;;
+  > list_rev [1; 2; 3; 4; 5];;
+
+
 
   $ ./demos.exe <<- EOF
   > let plusfive x =

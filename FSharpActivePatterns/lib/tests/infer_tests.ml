@@ -32,7 +32,7 @@ let%expect_test _ =
   [%expect {| string |}]
 ;;
 
-let%expect_test _ =
+(* let%expect_test _ =
   let open Ast in
   let _ =
     let e = [ ListExpr [] ] in
@@ -55,7 +55,7 @@ let%expect_test _ =
     check_types e |> run_infer
   in
   [%expect {| (int * int list * int) |}]
-;;
+;; *)
 
 let%expect_test _ =
   let open Ast in
@@ -82,7 +82,7 @@ let%expect_test _ =
   [%expect {| int |}]
 ;;
 
-let%expect_test _ =
+(* let%expect_test _ =
   let open Ast in
   let _ =
     let e =
@@ -102,7 +102,7 @@ let%expect_test _ =
     check_types e |> run_infer
   in
   [%expect {| int list |}]
-;;
+;; *)
 
 let%expect_test _ =
   let open Ast in

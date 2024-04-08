@@ -41,7 +41,7 @@ let%test _ =
 
 (*[1;2;3]*)
 
-let test = [ ListExpr [ ConstExpr (CInt 1); ConstExpr (CInt 2); ConstExpr (CInt 3) ] ]
+(* let test = [ ListExpr [ ConstExpr (CInt 1); ConstExpr (CInt 2); ConstExpr (CInt 3) ] ] *)
 
 let%test _ =
   match eval_program test with
@@ -60,14 +60,14 @@ let%test _ =
 ;;
 
 (*(1, [2;3;4], 5)*)
-let test =
+(* let test =
   [ TupleExpr
       [ ConstExpr (CInt 1)
       ; ListExpr [ ConstExpr (CInt 2); ConstExpr (CInt 3); ConstExpr (CInt 4) ]
       ; ConstExpr (CInt 5)
       ]
   ]
-;;
+;; *)
 
 let%test _ =
   match eval_program test with

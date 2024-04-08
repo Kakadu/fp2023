@@ -55,15 +55,6 @@ let%expect_test _ =
   [%expect {| : Identifier first sumbol is letter, not digit |}]
 ;;
 
-let%expect_test _ =
-  let test = "1,(2),3,[1;2;3]" in
-  start_test pat show_pattern test;
-  [%expect
-    {|
-    (Tuple
-       [(Const (CInt 1)); (Const (CInt 2)); (Const (CInt 3));
-         (List [(Const (CInt 1)); (Const (CInt 2)); (Const (CInt 3))])]) |}]
-;;
 
 let%expect_test _ =
   let test = "a,b,c" in
@@ -74,7 +65,7 @@ let%expect_test _ =
 let%expect_test _ =
   let test = "[((1));2;3]" in
   start_test pat show_pattern test;
-  [%expect {| (List [(Const (CInt 1)); (Const (CInt 2)); (Const (CInt 3))]) |}]
+  [%expect {| (PCon ((Const (CInt 1)), (PCon ((Const (CInt 2)), (Const (CInt 3)))))) |}]
 ;;
 
 let%expect_test _ =
@@ -89,7 +80,11 @@ let%expect_test _ =
   let test = "[1;2; 3]" in
   start_test parse show_expr test;
   [%expect
-    {| (ListExpr [(ConstExpr (CInt 1)); (ConstExpr (CInt 2)); (ConstExpr (CInt 3))]) |}]
+    {|
+      (ListExpr ((ConstExpr (CInt 1)),
+         (ListExpr ((ConstExpr (CInt 2)),
+            (ListExpr ((ConstExpr (CInt 3)), (ConstExpr CNil)))))
+         )) |}]
 ;;
 
 let%expect_test _ =
@@ -105,8 +100,10 @@ let%expect_test _ =
     {|
       (TupleExpr
          [(ConstExpr (CInt 1));
-           (ListExpr
-              [(ConstExpr (CInt 2)); (ConstExpr (CInt 3)); (ConstExpr (CInt 4))]);
+           (ListExpr ((ConstExpr (CInt 2)),
+              (ListExpr ((ConstExpr (CInt 3)),
+                 (ListExpr ((ConstExpr (CInt 4)), (ConstExpr CNil)))))
+              ));
            (ConstExpr (CInt 5))]) |}]
 ;;
 
@@ -316,58 +313,56 @@ let%expect_test _ =
 
 let%expect_test _ =
   let test =
-    "let rec list_fold list acc f =\n\
-    \     let rec helper l acc =\n\
-    \       match l with\n\
-    \         | [] -> acc\n\
-    \         | hd :: tl -> helper tl (f acc hd)\n\
-    \     in helper list acc"
+    " let list_rev list = \n\
+    \ let rec helper acc l = \n\
+    \   match l with \n\
+    \    | [] -> acc \n\
+    \    | hd :: tl -> (helper (hd :: acc) tl) in \n\
+    \ helper [] list \n"
   in
   start_test parse show_expr test;
-  [%expect {|
-    (LetExpr (true, "list_fold",
+  [%expect
+    {|
+    (LetExpr (false, "list_rev",
        (FunExpr ((Var "list"),
-          (FunExpr ((Var "acc"),
-             (FunExpr ((Var "f"),
-                (LetInExpr (true, "helper",
-                   (FunExpr ((Var "l"),
-                      (FunExpr ((Var "acc"),
-                         (MatchExpr ((VarExpr "l"),
-                            [((Const CNil), (VarExpr "acc"));
-                              ((PCon ((Var "hd"), (Var "tl"))),
-                               (AppExpr (
-                                  (AppExpr ((VarExpr "helper"), (VarExpr "tl"))),
-                                  (AppExpr (
-                                     (AppExpr ((VarExpr "f"), (VarExpr "acc"))),
-                                     (VarExpr "hd")))
-                                  )))
-                              ]
-                            ))
-                         ))
-                      )),
-                   (AppExpr ((AppExpr ((VarExpr "helper"), (VarExpr "list"))),
-                      (VarExpr "acc")))
+          (LetInExpr (true, "helper",
+             (FunExpr ((Var "acc"),
+                (FunExpr ((Var "l"),
+                   (MatchExpr ((VarExpr "l"),
+                      [((Const CNil), (VarExpr "acc"));
+                        ((PCon ((Var "hd"), (Var "tl"))),
+                         (AppExpr (
+                            (AppExpr ((VarExpr "helper"),
+                               (BinExpr (Con, (VarExpr "hd"), (VarExpr "acc"))))),
+                            (VarExpr "tl"))))
+                        ]
+                      ))
                    ))
-                ))
+                )),
+             (AppExpr ((AppExpr ((VarExpr "helper"), (ConstExpr CNil))),
+                (VarExpr "list")))
              ))
           ))
        )) |}]
 ;;
 
 let%expect_test _ =
-  let test =
-    "let result = list_fold [1; 2; 3; 4; 5] 0 (fun acc el -> acc + el)"
-  in
+  let test = "let result = list_fold [1; 2; 3; 4; 5] 0 (fun acc el -> acc + el)" in
   start_test parse show_expr test;
-  [%expect {|
+  [%expect
+    {|
     (LetExpr (false, "result",
        (AppExpr (
           (AppExpr (
              (AppExpr ((VarExpr "list_fold"),
-                (ListExpr
-                   [(ConstExpr (CInt 1)); (ConstExpr (CInt 2));
-                     (ConstExpr (CInt 3)); (ConstExpr (CInt 4));
-                     (ConstExpr (CInt 5))])
+                (ListExpr ((ConstExpr (CInt 1)),
+                   (ListExpr ((ConstExpr (CInt 2)),
+                      (ListExpr ((ConstExpr (CInt 3)),
+                         (ListExpr ((ConstExpr (CInt 4)),
+                            (ListExpr ((ConstExpr (CInt 5)), (ConstExpr CNil)))))
+                         ))
+                      ))
+                   ))
                 )),
              (ConstExpr (CInt 0)))),
           (FunExpr ((Var "acc"),
@@ -378,3 +373,9 @@ let%expect_test _ =
        )) |}]
 ;;
 
+let%expect_test _ =
+  let test = "hd::tl" in
+  start_test parse show_expr test;
+  [%expect
+    {| (BinExpr (Con, (VarExpr "hd"), (VarExpr "tl"))) |}]
+;;

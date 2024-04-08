@@ -274,13 +274,6 @@ let infer =
     | Wild ->
       let* ty = fresh_var in
       return (env, ty)
-    | List a ->
-      let* env, ty1 = pattern_helper env (List.hd_exn a) in
-      let ty1 = List_typ ty1 in
-      let* env, ty2 = pattern_helper env (List.hd_exn (List.tl_exn a)) in
-      let* subst = unify ty1 ty2 in
-      let finenv = TypeEnv.apply subst env in
-      return (finenv, Subst.apply subst ty1)
     | Case _ -> fail NotImplemented
   in
   let rec (helper : TypeEnv.t -> Ast.expr -> (Subst.t * typ) R.t) =
@@ -304,7 +297,7 @@ let infer =
            Subst.compose_all [ subst'; subst''; subst_left; subst_right ]
          in
          return (final_subst, Prim "int")
-       | Eq | Less | LEq | Gre | GEq | NEq | And | Or ->
+       | Eq | Less | LEq | Gre | GEq | NEq | And | Or | Con ->
          let* subst' = unify typ_left typ_right in
          let* final_subst = Subst.compose_all [ subst'; subst_left; subst_right ] in
          return (final_subst, Prim "bool"))
@@ -355,12 +348,13 @@ let infer =
       let* match_sub, match_ty, _ = matches_helper matches in
       let* finalmatchsub = Subst.compose cond_sub match_sub in
       return (finalmatchsub, Subst.apply finalmatchsub match_ty)
-    | ListExpr a when List.length a == 0 -> return (Subst.empty, Prim "'a list")
+      | ListExpr _ -> fail NotImplemented
+    (* | ListExpr a when List.length a == 0 -> return (Subst.empty, Prim "'a list")
     | ListExpr a ->
       let* s1, t1 = helper env (List.hd_exn a) in
       let t1 = List_typ t1 in
       let* subst = Subst.compose_all [ s1 ] in
-      return (subst, Subst.apply subst t1)
+      return (subst, Subst.apply subst t1) *)
     | CaseExpr _ -> fail NotImplemented
     | LetInExpr _ -> fail NotImplemented
     | TupleExpr tuple ->

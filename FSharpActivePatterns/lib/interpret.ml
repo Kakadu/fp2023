@@ -107,7 +107,7 @@ module Interpret (M : MonadFail) = struct
        | Const CNil, p1 ->
          (match p1 with
           | Const CNil when List.is_empty vl -> return []
-          | Wild | Var _ | List _ -> bind_fun_params ~env (p1, VList vl)
+          | Wild | Var _ -> bind_fun_params ~env (p1, VList vl)
           | _ -> fail MatchFailure)
        | PCon (_, _), p1 ->
          (match p1 with
@@ -120,7 +120,7 @@ module Interpret (M : MonadFail) = struct
                return (head_bind @ tail_bind)
              | _ -> fail MatchFailure))
        | _ -> fail Unreachable)
-    | Tuple pl, VTuple vl | List pl, VList vl -> bind_pat_list pl vl
+    | Tuple pl, VTuple vl -> bind_pat_list pl vl
     | Case (acase_id, _), value_to_match ->
       let* apat = find_val env acase_id in
       (match apat with
@@ -150,6 +150,11 @@ module Interpret (M : MonadFail) = struct
     | BinExpr (op, l, r) ->
       let* rigth_val = eval r env in
       let* left_val = eval l env in
+            (* Format.printf "%s" (show_binary_op op); 
+
+      Format.printf "%s" (show_value left_val); 
+            Format.printf "%s" (show_value rigth_val);  *)
+
       (match op, left_val, rigth_val with
        | Div, VInt _, VInt 0 -> fail DivisionByZero
        | Mod, VInt _, VInt 0 -> fail DivisionByZero
@@ -164,11 +169,27 @@ module Interpret (M : MonadFail) = struct
        | GEq, VInt l, VInt r -> return @@ VBool (l >= r)
        | Eq, VInt l, VInt r -> return @@ VBool (l = r)
        | NEq, VInt l, VInt r -> return @@ VBool (l <> r)
+       | Con,  h, VList tl -> return @@ VList (h :: tl)
+       | Con, h, VNil -> return @@ VList (h :: [])
        | _ -> fail TypeError)
     | VarExpr id -> find_val env id
-    | ListExpr l ->
-      let* eval_list = all (List.map l ~f:(fun expr -> eval expr env)) in
-      return @@ VList eval_list
+    | ListExpr (h, t) ->
+        let* evaled = eval h env in
+      let rec helper acc expr =
+        match expr with
+        | ConstExpr CNil -> acc
+        | ListExpr (hd, tl) ->
+          let* acc = acc in
+          let* evaled = eval hd env in
+          helper (return (evaled :: acc)) tl
+        | _ ->
+          let* acc = acc in
+          let* evaled = eval expr env in
+          return (evaled :: acc)
+      in
+      let* res = helper (return [ evaled ]) t in
+      let res = VList (List.rev res) in
+      return res
     | TupleExpr t ->
       let* eval_list = all (List.map t ~f:(fun expr -> eval expr env)) in
       return @@ VTuple eval_list
@@ -204,8 +225,11 @@ module Interpret (M : MonadFail) = struct
       else eval body env
     | MatchExpr (expr_match, cases) ->
       let* val_match = eval expr_match env in
+      (* Format.printf "%s\n" (show_value val_match); *)
       let rec eval_match = function
         | (pat, expr) :: cases ->
+          (* Format.printf "%s\n" (show_pattern pat);
+          Format.printf "%s\n" (show_expr expr); *)
           run
             (bind_fun_params ~env (pat, val_match))
             ~ok:(fun binds -> eval expr (add_binds env binds))

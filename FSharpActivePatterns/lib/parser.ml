@@ -127,10 +127,6 @@ let parse_tuple parser =
   lift2 (fun a b -> Tuple (a :: b)) (parse_token parser) (many1 (pstrtoken "," *> parser))
 ;;
 
-let parse_list ps =
-  (fun v -> List v) <$> (pstrtoken "[" *> sep_by1 (pstrtoken ";") ps <* pstrtoken "]")
-;;
-
 let rec constr_con = function
   | [] -> Const CNil
   | hd :: [] when equal_pattern hd (Const CNil) -> Const CNil
@@ -141,8 +137,12 @@ let rec constr_con = function
 let parser_con c =
   lift2
     (fun a b -> constr_con @@ (a :: b))
-    (c <* pstrtoken "::")
-    (sep_by (pstrtoken "::") c)
+    (c <* pstrtoken "::" <|> (parens c <* pstrtoken "::"))
+    (sep_by (pstrtoken "::") (c <|> parens c))
+;;
+
+let parse_con_2 parser constructor =
+  constructor <$> (pstrtoken "[" *> sep_by1 (pstrtoken ";") parser <* pstrtoken "]")
 ;;
 
 let parse_cases ps =
@@ -158,26 +158,26 @@ type pdispatch =
   { value : pdispatch -> pattern t
   ; tuple : pdispatch -> pattern t
   ; con : pdispatch -> pattern t
-  ; list : pdispatch -> pattern t
   ; pattern : pdispatch -> pattern t
   ; case : pdispatch -> pattern t
   }
 
 let pack =
   let pattern pack =
-    choice
-      [ pack.tuple pack
-      ; pack.con pack
-      ; pack.value pack
-      ; pack.case pack
-      ; pack.list pack
-      ; pack.value pack
-      ]
+    choice [ pack.con pack; pack.tuple pack; pack.value pack; pack.case pack ]
   in
   let parse pack =
-    choice [ pack.value pack; pack.case pack; pack.list pack; parens @@ pack.tuple pack ]
+    choice [ pack.value pack; pack.case pack; parens @@ pack.tuple pack ]
   in
-  let con pack = fix @@ fun _ -> parser_con @@ parse pack in
+  let con pack =
+    fix
+    @@ fun _ ->
+    parser_con (parse pack <|> parens @@ pack.con pack)
+    <|> parse_con_2 (parse pack <|> parens @@ pack.con pack) constr_con
+  in
+  (*
+     let list pack = fix @@ fun _ -> parse_list (parse pack <|> parens @@ pack.list pack) in
+  *)
   let value pack =
     fix @@ fun _ -> parse_wild <|> parse_Const <|> parse_var <|> parens @@ pack.value pack
   in
@@ -185,8 +185,7 @@ let pack =
     fix @@ fun _ -> parse_tuple (parse pack <|> parens @@ pack.tuple pack)
   in
   let case pack = fix @@ fun _ -> parse_cases (parse pack <|> parens @@ pack.case pack) in
-  let list pack = fix @@ fun _ -> parse_list (parse pack <|> parens @@ pack.list pack) in
-  { value; tuple; list; pattern; case; con }
+  { value; tuple; pattern; case; con }
 ;;
 
 let pat = pack.pattern pack
@@ -195,6 +194,7 @@ let pat = pack.pattern pack
 
 let p_op char_op op = pstrtoken char_op *> return (fun e1 e2 -> BinExpr (op, e1, e2))
 let pmulti = p_op "*" Mul <|> p_op "/" Div <|> p_op "%" Mod
+let pcons = p_op "::" Con
 let padd = p_op "+" Add <|> p_op "-" Sub
 let pcomp = p_op ">=" GEq <|> p_op ">" Gre <|> p_op "<=" LEq <|> p_op "<" Less
 let peq = p_op "=" Eq <|> p_op "<>" NEq
@@ -207,11 +207,11 @@ let parse_evar = (fun v -> VarExpr v) <$> p_var
 
 let parse_fun_args =
   fix
-  @@ fun p -> many1 (pack.list pack <|> pack.case pack <|> pack.value pack) <|> parens p
+  @@ fun p -> many1 (pack.con pack <|> pack.case pack <|> pack.value pack) <|> parens p
 ;;
 
-let parse_list_expr ps =
-  (fun v -> ListExpr v) <$> pstrtoken "[" *> sep_by (pstrtoken ";") ps <* pstrtoken "]"
+let parse_cons_semicolon_expr parser constructor =
+  constructor <$> (pstrtoken "[" *> sep_by1 (pstrtoken ";") parser <* pstrtoken "]")
 ;;
 
 let parse_tuple_expr parser =
@@ -233,7 +233,7 @@ let plet_body pargs pexpr =
 let parse_fun_args =
   fix
   @@ fun p ->
-  many1 (pack.list pack <|> pack.value pack <|> pack.case pack <|> pack.value pack)
+  many1 (pack.con pack <|> pack.value pack <|> pack.case pack <|> pack.value pack)
   <|> parens p
 ;;
 
@@ -257,14 +257,14 @@ let pack =
   let op_parsers pack =
     choice
       [ pack.if_e pack
-        ; pack.let_in_e pack
+      ; pack.let_in_e pack
       ; pack.let_e pack
       ; pack.fun_e pack
       ; pack.app_e pack <|> parens @@ pack.app_e pack
-      ; value_e
-      ; pack.act_pat_e pack
-      ; pack.list_e pack
       ; parens @@ choice [ pack.tuple_e pack; pack.bin_e pack ]
+      ; pack.act_pat_e pack
+      ; value_e
+      ; pack.list_e pack
       ]
   in
   let app_args_parsers pack =
@@ -287,7 +287,8 @@ let pack =
     @@ fun _ ->
     let multi = chainl1 (op_parsers pack) pmulti in
     let add = chainl1 multi padd in
-    let comp = chainl1 add pcomp in
+    let cons = chainl1 add pcons in
+    let comp = chainl1 cons pcomp in
     let eq = chainl1 comp peq in
     let conj = chainl1 eq pconj in
     chainl1 conj pdisj <* parse_white_space
@@ -314,7 +315,16 @@ let pack =
       (pstrtoken "then" *> expr_parsers pack)
       (pstrtoken "else" *> expr_parsers pack)
   in
-  let list_e pack = fix @@ fun _ -> parse_list_expr (expr_parsers pack) in
+  let list_e pack =
+    fix
+    @@ fun _ ->
+    let rec create_cons_sc = function
+      | [] -> ConstExpr CNil
+      | hd :: [] when equal_expr hd (ConstExpr CNil) -> ConstExpr CNil
+      | hd :: tl -> ListExpr (hd, create_cons_sc tl)
+    in
+    parse_cons_semicolon_expr (expr_parsers pack) create_cons_sc
+  in
   let tuple_e pack = fix @@ fun _ -> parse_tuple_expr (expr_parsers pack) in
   let act_pat_e pack =
     fix
