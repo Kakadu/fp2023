@@ -3,13 +3,14 @@
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
 (** name var or fun *)
-type name = string [@@deriving show { with_path = false }]
+type name = string [@@deriving eq, show { with_path = false }]
 
 type const =
   | CBool of bool (** true *)
   | CInt of int (** 42 *)
   | CString of string (** "string" *)
-[@@deriving show { with_path = false }]
+  | CNil
+[@@deriving eq, show { with_path = false }]
 
 type binary_op =
   | Add (** + *)
@@ -33,8 +34,9 @@ type pattern =
   | Var of name (** variable *)
   | Tuple of pattern list (** (a, b) *)
   | List of pattern list (** [1;2;3] *)
+  | PCon of pattern * pattern (** hd::tl *)
   | Case of name * pattern list (** in patmatch *)
-[@@deriving show { with_path = false }]
+[@@deriving eq, show  { with_path = false }]
 
 type expr =
   | ConstExpr of const

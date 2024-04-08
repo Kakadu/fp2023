@@ -85,7 +85,9 @@ let parse_str =
   char '"' *> take_while (fun a -> a != '"') <* char '"' >>| fun a -> CString a
 ;;
 
-let parse_const = choice [ parse_int; parse_bool; parse_str ]
+let parse_nil =  ((fun _ -> CNil) <$> string "[]")
+
+let parse_const = choice [ parse_nil; parse_int; parse_bool; parse_str; ]
 
 (* Parse var *)
 
@@ -130,11 +132,25 @@ let parse_list ps =
   (fun v -> List v) <$> (pstrtoken "[" *> sep_by1 (pstrtoken ";") ps <* pstrtoken "]")
 ;;
 
+let rec constr_con = function
+  | [] -> Const CNil
+  | hd :: [] when equal_pattern hd (Const CNil) -> Const CNil
+  | [ f; s ] -> PCon (f, s)
+  | hd :: tl -> PCon(hd, (constr_con tl))
+;;
+
+let parser_con c =
+  lift2
+    (fun a b -> constr_con @@ (a :: b))
+    (c <* pstrtoken "::")
+    (sep_by (pstrtoken "::") c)
+;;
+
 let parse_cases ps =
   lift2
     (fun id args -> Case (id, args))
     p_var_case
-    (sep_by (pstrtoken "|") ps <|> sep_by (pstrtoken " ") ps)
+    (sep_by1 (pstrtoken "|") ps <|> sep_by (pstrtoken " ") ps)
 ;;
 
 let parse_let_case = sep_by (pstrtoken "|") (p_var_case <|> p_var) <* pstrtoken "|)"
@@ -142,6 +158,7 @@ let parse_let_case = sep_by (pstrtoken "|") (p_var_case <|> p_var) <* pstrtoken 
 type pdispatch =
   { value : pdispatch -> pattern t
   ; tuple : pdispatch -> pattern t
+  ; con : pdispatch -> pattern t 
   ; list : pdispatch -> pattern t
   ; pattern : pdispatch -> pattern t
   ; case : pdispatch -> pattern t
@@ -151,6 +168,7 @@ let pack =
   let pattern pack =
     choice
       [ pack.tuple pack
+      ; pack.con pack
       ; pack.value pack
       ; pack.case pack
       ; pack.list pack
@@ -160,6 +178,8 @@ let pack =
   let parse pack =
     choice [ pack.value pack; pack.case pack; pack.list pack; parens @@ pack.tuple pack ]
   in
+  let con pack = fix @@ fun _ -> parser_con @@ parse pack  
+  in
   let value pack =
     fix @@ fun _ -> parse_wild <|> parse_Const <|> parse_var <|> parens @@ pack.value pack
   in
@@ -168,7 +188,7 @@ let pack =
   in
   let case pack = fix @@ fun _ -> parse_cases (parse pack <|> parens @@ pack.case pack) in
   let list pack = fix @@ fun _ -> parse_list (parse pack <|> parens @@ pack.list pack) in
-  { value; tuple; list; pattern; case }
+  { value; tuple; list; pattern; case; con}
 ;;
 
 let pat = pack.pattern pack
@@ -239,7 +259,6 @@ let pack =
   let op_parsers pack =
     choice
       [ pack.if_e pack
-      ; pack.list_e pack
       ; pack.fun_e pack
       ; pack.let_in_e pack
       ; pack.app_e pack <|> parens @@ pack.app_e pack
@@ -247,6 +266,7 @@ let pack =
       ; pack.act_pat_e pack
       ; value_e
       ; parse_cases_expr
+      ; pack.list_e pack
       ; parens @@ choice [ pack.tuple_e pack; pack.bin_e pack ]
       ]
   in

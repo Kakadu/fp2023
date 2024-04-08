@@ -77,6 +77,13 @@ let%expect_test _ =
   [%expect {| (List [(Const (CInt 1)); (Const (CInt 2)); (Const (CInt 3))]) |}]
 ;;
 
+let%expect_test _ =
+  let test = "hd::tl" in
+  start_test pat show_pattern test;
+  [%expect {| (PCon ((Var "hd"), (Var "tl"))) |}]
+;;
+
+
 (* Test expr *)
 
 let%expect_test _ =
@@ -131,7 +138,7 @@ let%expect_test _ =
 let%expect_test _ =
   let test = "[]" in
   start_test parse show_expr test;
-  [%expect {| (ListExpr []) |}]
+  [%expect {| (ConstExpr CNil) |}]
 ;;
 
 let%expect_test _ =
@@ -307,4 +314,24 @@ let%expect_test _ =
                ))
             ))
          )) |}]
+;;
+
+let%expect_test _ =
+  let test =
+    "let (|Even|Odd|) input = fun input -> if input % 2 = 0 then Even else Odd"
+  in
+  start_test parse show_expr test;
+  [%expect
+    {|
+    (LetActExpr (["Even"; "Odd"],
+       (FunExpr ((Var "input"),
+          (FunExpr ((Var "input"),
+             (IfExpr (
+                (BinExpr (Eq,
+                   (BinExpr (Mod, (VarExpr "input"), (ConstExpr (CInt 2)))),
+                   (ConstExpr (CInt 0)))),
+                (CaseExpr "Even"), (CaseExpr "Odd")))
+             ))
+          ))
+       )) |}]
 ;;

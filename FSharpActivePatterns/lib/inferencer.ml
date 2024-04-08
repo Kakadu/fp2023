@@ -265,6 +265,7 @@ let infer =
     | Wild ->
       let* ty = fresh_var in
       return (env, ty)
+    | List a when List.length a == 0 -> return (env, Prim "'a list")
     | List a ->
       let* env, ty1 = pattern_helper env (List.hd_exn a) in
       let ty1 = List_typ ty1 in
