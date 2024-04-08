@@ -17,7 +17,7 @@ type value =
   | VLetAPat of name list * value
   (** Let with active patterns, let (|Even|Odd|) value = .., let (|Even|_|) value = .., let (|Even|) value = ..*)
   | VCases of name (** Even, Odd, ... *)
-  | VNone
+  | VNil
 [@@deriving show { with_path = false }]
 
 module type MonadFail = sig

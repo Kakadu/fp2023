@@ -85,9 +85,8 @@ let parse_str =
   char '"' *> take_while (fun a -> a != '"') <* char '"' >>| fun a -> CString a
 ;;
 
-let parse_nil =  ((fun _ -> CNil) <$> string "[]")
-
-let parse_const = choice [ parse_nil; parse_int; parse_bool; parse_str; ]
+let parse_nil = parse_white_space *> ((fun _ -> CNil) <$> string "[]")
+let parse_const = choice [ parse_nil; parse_int; parse_bool; parse_str ]
 
 (* Parse var *)
 
@@ -136,7 +135,7 @@ let rec constr_con = function
   | [] -> Const CNil
   | hd :: [] when equal_pattern hd (Const CNil) -> Const CNil
   | [ f; s ] -> PCon (f, s)
-  | hd :: tl -> PCon(hd, (constr_con tl))
+  | hd :: tl -> PCon (hd, constr_con tl)
 ;;
 
 let parser_con c =
@@ -158,7 +157,7 @@ let parse_let_case = sep_by (pstrtoken "|") (p_var_case <|> p_var) <* pstrtoken 
 type pdispatch =
   { value : pdispatch -> pattern t
   ; tuple : pdispatch -> pattern t
-  ; con : pdispatch -> pattern t 
+  ; con : pdispatch -> pattern t
   ; list : pdispatch -> pattern t
   ; pattern : pdispatch -> pattern t
   ; case : pdispatch -> pattern t
@@ -178,8 +177,7 @@ let pack =
   let parse pack =
     choice [ pack.value pack; pack.case pack; pack.list pack; parens @@ pack.tuple pack ]
   in
-  let con pack = fix @@ fun _ -> parser_con @@ parse pack  
-  in
+  let con pack = fix @@ fun _ -> parser_con @@ parse pack in
   let value pack =
     fix @@ fun _ -> parse_wild <|> parse_Const <|> parse_var <|> parens @@ pack.value pack
   in
@@ -188,7 +186,7 @@ let pack =
   in
   let case pack = fix @@ fun _ -> parse_cases (parse pack <|> parens @@ pack.case pack) in
   let list pack = fix @@ fun _ -> parse_list (parse pack <|> parens @@ pack.list pack) in
-  { value; tuple; list; pattern; case; con}
+  { value; tuple; list; pattern; case; con }
 ;;
 
 let pat = pack.pattern pack
@@ -255,17 +253,16 @@ type edispatch =
 
 let pack =
   let expr_parsers pack = pack.bin_e pack <|> pack.matching_e pack in
-  let value_e = fix @@ fun _ -> parse_evar <|> parse_econst in
+  let value_e = fix @@ fun _ -> parse_evar <|> parse_econst <|> parse_cases_expr in
   let op_parsers pack =
     choice
       [ pack.if_e pack
-      ; pack.fun_e pack
-      ; pack.let_in_e pack
-      ; pack.app_e pack <|> parens @@ pack.app_e pack
+        ; pack.let_in_e pack
       ; pack.let_e pack
-      ; pack.act_pat_e pack
+      ; pack.fun_e pack
+      ; pack.app_e pack <|> parens @@ pack.app_e pack
       ; value_e
-      ; parse_cases_expr
+      ; pack.act_pat_e pack
       ; pack.list_e pack
       ; parens @@ choice [ pack.tuple_e pack; pack.bin_e pack ]
       ]
@@ -276,10 +273,11 @@ let pack =
       ; parens
         @@ choice
              [ pack.expr_parsers pack
-             ; pack.tuple_e pack
-             ; pack.fun_e pack
-             ; pack.app_e pack
              ; pack.let_in_e pack
+             ; pack.let_e pack
+             ; pack.app_e pack
+             ; pack.fun_e pack
+             ; pack.tuple_e pack
              ]
       ; value_e
       ]
@@ -330,22 +328,60 @@ let pack =
   let let_e pack =
     fix
     @@ fun _ ->
-    lift3
-      (fun a c d -> LetExpr (a, c, d))
+    lift4
+      (fun flag name args body ->
+        let body = constr_efun args body in
+        LetExpr (flag, name, body))
       (pstrtoken "let"
        *> option false (parse_token (string "rec") <* parse_white_space1 >>| fun _ -> true)
       )
       p_var
-      (plet_body parse_fun_args (expr_parsers pack <|> parens @@ expr_parsers pack)
-       <|> pstrtoken "=" *> value_e)
+      (parse_white_space *> many (pat <|> parens pat))
+      (pstrtoken "=" *> expr_parsers pack)
+    (*
+       let eletfun pexpr =
+       empty
+       *> lift4
+       (fun flag name args body ->
+       let body = construct_efun args body in
+       if flag then eletrec name body else elet name body)
+       parse_rec_or_not
+       psIdent
+       pargs
+       (pstoken "=" *> pexpr)
+       ;;
+    *)
   in
   let let_in_e pack =
+    let lift5 f p1 p2 p3 p4 p5 = f <$> p1 <*> p2 <*> p3 <*> p4 <*> p5 in
     fix
     @@ fun _ ->
-    lift2
-      (fun expr1 expr2 -> LetInExpr (expr1, expr2))
-      (let_e pack)
+    lift5
+      (fun is_rec name args expr1 expr2 ->
+        let expr = constr_efun args expr1 in
+        LetInExpr (is_rec, name, expr, expr2))
+      (pstrtoken "let"
+       *> option false (parse_token (string "rec") <* parse_white_space1 >>| fun _ -> true)
+      )
+      p_var
+      (many pat)
+      (pstrtoken1 "=" *> expr_parsers pack)
       (pstrtoken "in" *> expr_parsers pack)
+    (*
+       let eletdecl pexpr =
+       let lift5 f p1 p2 p3 p4 p5 = f <$> p1 <*> p2 <*> p3 <*> p4 <*> p5 in
+       empty
+       *> lift5
+       (fun flag name args body1 body2 ->
+       let body1 = construct_efun args body1 in
+       if flag then eletrecin name body1 body2 else eletin name body1 body2)
+       parse_rec_or_not
+       psIdent
+       pargs
+       (pstoken1 "=" *> pexpr)
+       (pstoken1 "in" *> pexpr)
+       ;;
+    *)
   in
   let fun_e pack =
     fix

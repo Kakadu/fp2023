@@ -19,7 +19,7 @@ type value =
   | VLetWAPat of name * value
   | VLetAPat of name list * value
   | VCases of name
-  | VNone
+  | VNil
 [@@deriving show { with_path = false }]
 
 module type MonadFail = sig
@@ -50,6 +50,19 @@ module Environment (M : MonadFail) = struct
       | Some value -> return value
       | None when is_constr @@ String.get key 0 -> fail (UnboundConstructor key)
       | _ -> fail (UnboundValue key))
+  ;;
+
+  let extend_by_one id value env =
+    match Map.add env ~key:id ~data:value with
+    | `Ok env -> env
+    | `Duplicate ->
+      Map.mapi env ~f:(fun ~key:name ~data:old_value ->
+        if Poly.( = ) id name then value else old_value)
+  ;;
+
+  let extend env bindings =
+    return
+    @@ List.fold ~f:(fun env (id, value) -> extend_by_one id value env) bindings ~init:env
   ;;
 
   let add_bind map key value = Map.update map key ~f:(fun _ -> value)
@@ -86,8 +99,27 @@ module Interpret (M : MonadFail) = struct
        | CBool b1, VBool b2 when Bool.equal b1 b2 -> return []
        | CInt i1, VInt i2 when i1 = i2 -> return []
        | CString s1, VString s2 when String.equal s1 s2 -> return []
+       | CNil, VNil -> return []
        | _ -> fail Unreachable)
     | Var var, app_arg -> return [ var, app_arg ]
+    | PCon (p1, p2), VList vl ->
+      (match p2, p1 with
+       | Const CNil, p1 ->
+         (match p1 with
+          | Const CNil when List.is_empty vl -> return []
+          | Wild | Var _ | List _ -> bind_fun_params ~env (p1, VList vl)
+          | _ -> fail MatchFailure)
+       | PCon (_, _), p1 ->
+         (match p1 with
+          | PCon (_, _) -> fail Unreachable
+          | _ ->
+            (match vl with
+             | h :: tl ->
+               let* head_bind = bind_fun_params ~env (p1, h) in
+               let* tail_bind = bind_fun_params ~env (p2, VList tl) in
+               return (head_bind @ tail_bind)
+             | _ -> fail MatchFailure))
+       | _ -> fail Unreachable)
     | Tuple pl, VTuple vl | List pl, VList vl -> bind_pat_list pl vl
     | Case (acase_id, _), value_to_match ->
       let* apat = find_val env acase_id in
@@ -113,7 +145,8 @@ module Interpret (M : MonadFail) = struct
       (match v with
        | CBool b -> return @@ VBool b
        | CInt i -> return @@ VInt i
-       | CString s -> return @@ VString s)
+       | CString s -> return @@ VString s
+       | CNil -> return VNil)
     | BinExpr (op, l, r) ->
       let* rigth_val = eval r env in
       let* left_val = eval l env in
@@ -147,14 +180,13 @@ module Interpret (M : MonadFail) = struct
     | FunExpr (pat, expr) -> return @@ VFun (pat, expr, Map.to_alist env)
     | AppExpr (func, arg) ->
       let* fun_to_apply = eval func env in
+      let* evaled_arg = eval arg env in
       (match fun_to_apply with
        | VFun (pat, expr, fun_env) ->
-         let* arg_to_apply = eval arg env in
-         let* res = bind_fun_params ~env (pat, arg_to_apply) in
+         let* res = bind_fun_params ~env (pat, evaled_arg) in
          eval expr (add_binds (add_binds empty fun_env) res)
        | VLetWAPat (name, VFun (pat, expr, fun_env)) ->
-         let* arg_to_apply = eval arg env in
-         let* res = bind_fun_params ~env (pat, arg_to_apply) in
+         let* res = bind_fun_params ~env (pat, evaled_arg) in
          eval
            expr
            (add_binds
@@ -182,14 +214,9 @@ module Interpret (M : MonadFail) = struct
       in
       eval_match cases
     | CaseExpr constr_id -> return @@ VCases constr_id
-    | LetInExpr (expr1, expr2) ->
-      let for_let = function
-        | LetExpr (_, name, _) ->
-          let* v_let = eval expr1 env in
-          eval expr2 (add_bind env name v_let)
-        | _ -> fail Unreachable
-      in
-      for_let expr1
+    | LetInExpr (_, name, expr1, expr2) ->
+      let* evaled_expr1 = eval expr1 env in
+      eval expr2 (add_bind env name evaled_expr1)
     | LetActExpr (act_name, body) ->
       let* fun_pat = eval body env in
       return @@ VLetAPat (act_name, fun_pat)
@@ -203,7 +230,7 @@ module Interpret (M : MonadFail) = struct
         let* eval_h = eval h env in
         let eval_env =
           match h with
-          | LetExpr (_, f, _) -> add_bind env f eval_h
+          | LetExpr (_, f, _) | LetInExpr (_, f, _, _) -> add_bind env f eval_h
           | LetActExpr (fl, _) ->
             List.fold_right ~f:(fun h acc -> add_bind acc h eval_h) ~init:env fl
           | _ -> env

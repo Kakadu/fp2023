@@ -36,7 +36,7 @@ type pattern =
   | List of pattern list (** [1;2;3] *)
   | PCon of pattern * pattern (** hd::tl *)
   | Case of name * pattern list (** in patmatch *)
-[@@deriving eq, show  { with_path = false }]
+[@@deriving eq, show { with_path = false }]
 
 type expr =
   | ConstExpr of const
@@ -46,7 +46,8 @@ type expr =
   | BinExpr of binary_op * expr * expr (** 1 + 5 - 3*)
   | IfExpr of expr * expr * expr (** if a then b else c *)
   | LetExpr of bool * name * expr (** let sq x = x * x, bool - is rec or not*)
-  | LetInExpr of expr * expr (** let plusfive x = let plus a = a + 5 in plus 10 *)
+  | LetInExpr of bool * name * expr * expr
+  (** let plusfive x = let five a = a + 5 in five x*)
   | LetActExpr of name list * expr
   (** let (|Even|Odd|) value =  if value % 2 = 0 then Even else Odd *)
   | AppExpr of expr * expr (** sq 5 *)

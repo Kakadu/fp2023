@@ -13,8 +13,7 @@ Functions performed:
 
 Features under development: 
 - Type checker: 
-    Active Pattern 
-- Cram test 
+    Active Pattern  
 
 (TODO: Поменять readme, может даже не забуду)
 ##### Замечания по стилю кодирования

@@ -114,8 +114,17 @@ cps factorial
 
 
   $ ./demos.exe <<- EOF
-  > let mul x =    
-  >   fun y -> x * y
-  >   in mul 123 321;;
-  (VInt 39483)
+  > let rec list_fold list acc f =
+  >   let rec helper l acc =
+  >     match l with
+  >       | [] -> acc
+  >       | hd :: tl -> helper tl (f acc hd)
+  >   in helper list acc;;
+  > let result = list_fold [1; 2; 3; 4; 5] 0 (fun acc el -> acc + el);;
 
+  $ ./demos.exe <<- EOF
+  > let plusfive x =
+  >    let five a = a + 5
+  >    in five x;;
+  > plusfive 570;;
+  (VInt 575)

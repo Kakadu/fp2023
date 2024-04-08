@@ -250,11 +250,20 @@ let infer =
         return (envtl, tyhd :: tytl)
     in
     function
+    | PCon (head, tail) ->
+      let* env, ty1 = pattern_helper env head in
+      let ty1 = List_typ ty1 in
+      let* env, ty2 = pattern_helper env tail in
+      let* subst = unify ty1 ty2 in
+      let finenv = TypeEnv.apply subst env in
+      return (finenv, Subst.apply subst ty1)
     | Const const ->
       (match const with
        | CBool _ -> return (env, Prim "bool")
        | CInt _ -> return (env, Prim "int")
-       | CString _ -> return (env, Prim "string"))
+       | CString _ -> return (env, Prim "string")
+       | CNil -> return (env, Prim "'a list")
+       )
     | Var id ->
       let* tv = fresh_var in
       let env = TypeEnv.extend env (id, S (VarSet.empty, tv)) in
@@ -265,7 +274,6 @@ let infer =
     | Wild ->
       let* ty = fresh_var in
       return (env, ty)
-    | List a when List.length a == 0 -> return (env, Prim "'a list")
     | List a ->
       let* env, ty1 = pattern_helper env (List.hd_exn a) in
       let ty1 = List_typ ty1 in
@@ -282,7 +290,9 @@ let infer =
       (match const with
        | CBool _ -> return (Subst.empty, Prim "bool")
        | CInt _ -> return (Subst.empty, Prim "int")
-       | CString _ -> return (Subst.empty, Prim "string"))
+       | CString _ -> return (Subst.empty, Prim "string")
+       | CNil -> return (Subst.empty, Prim "'a list")
+       )
     | BinExpr (op, left, right) ->
       let* subst_left, typ_left = helper env left in
       let* subst_right, typ_right = helper env right in
@@ -314,7 +324,6 @@ let infer =
       let* s5 = unify t2 t3 in
       let* final_subst = Subst.compose_all [ s5; s4; s3; s2; s1 ] in
       return (final_subst, Subst.apply final_subst t2)
-    | LetExpr (is_rec, _, expr) when not is_rec -> helper env expr
     | LetExpr (_, name, expr) ->
       let* tv = fresh_var in
       let env = TypeEnv.extend env (name, S (VarSet.empty, tv)) in
