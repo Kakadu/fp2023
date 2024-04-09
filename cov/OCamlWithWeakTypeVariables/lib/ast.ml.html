@@ -543,8 +543,8 @@
 
 (** smart constructors *)
 module Constr = struct
-  let cint i = <span data-count="181">C</span>Int i
-  let cbool f = <span data-count="26">C</span>Bool f
+  let cint i = <span data-count="237">C</span>Int i
+  let cbool f = <span data-count="30">C</span>Bool f
   let cunit = CUnit
   let badd = BAdd
   let bsub = BSub
@@ -563,21 +563,21 @@ module Constr = struct
   let unnot = UnNot
   let mpwildcard = MPWildcard
   let mpconst c = <span data-count="6">M</span>PConst c
-  let mpvar n = <span data-count="151">M</span>PVar n
+  let mpvar n = <span data-count="221">M</span>PVar n
   let mptuple m1 m2 ms = <span data-count="6">M</span>PTuple (m1, m2, ms)
-  let mplist ms = <span data-count="18">M</span>PList ms
+  let mplist ms = <span data-count="19">M</span>PList ms
   let mphdtl head tail = <span data-count="13">M</span>PHdTl { head; tail }
-  let econst c = <span data-count="187">E</span>Const c
-  let evar n = <span data-count="255">E</span>Var n
-  let eapply left right = <span data-count="137">E</span>Apply (left, right)
-  let ebinop op left right = <span data-count="76">E</span>BinOp { op; left; right }
+  let econst c = <span data-count="243">E</span>Const c
+  let evar n = <span data-count="587">E</span>Var n
+  let eapply left right = <span data-count="207">E</span>Apply (left, right)
+  let ebinop op left right = <span data-count="238">E</span>BinOp { op; left; right }
   let eunop op arg = <span data-count="2">E</span>UnOp { op; arg }
-  let elist es = <span data-count="11">E</span>List es
+  let elist es = <span data-count="12">E</span>List es
   let etuple e1 e2 es = <span data-count="7">E</span>Tuple (e1, e2, es)
   let eite cond th el = <span data-count="0">E</span>ite { cond; th; el }
-  let efun args expr = <span data-count="22">E</span>Fun { args; expr }
+  let efun args expr = <span data-count="71">E</span>Fun { args; expr }
   let epattern match_expr matches = <span data-count="10">E</span>Pattern { match_expr; matches }
-  let eletin name rec_flag value expr = <span data-count="30">E</span>LetIn { name; rec_flag; value; expr }
+  let eletin name rec_flag value expr = <span data-count="31">E</span>LetIn { name; rec_flag; value; expr }
 end
 </code></pre>
       </div>
