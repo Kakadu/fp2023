@@ -41,6 +41,16 @@
   (Error while interpreting): Exception: Division_by_zero.
 
   $ ./demos.exe <<- EOF
+  > let test x = 4 * x;;
+  > tes 4;;
+  (Error while interpreting): Error: Unbound value tes
+
+
+  $ ./demos.exe <<- EOF
+  > 
+  (Error while parsing): : not enough input
+
+  $ ./demos.exe <<- EOF
   > let rec fact n = if n = 1 then 1 else n * (fact (n - 1));;
   > fact 5;;
   (VInt 120)

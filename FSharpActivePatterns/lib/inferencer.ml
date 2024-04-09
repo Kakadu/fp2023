@@ -283,7 +283,9 @@ let infer =
        | CBool _ -> return (Subst.empty, Prim "bool")
        | CInt _ -> return (Subst.empty, Prim "int")
        | CString _ -> return (Subst.empty, Prim "string")
-       | CNil -> return (Subst.empty, Prim "'a list"))
+       | CNil ->
+         let* var = fresh_var in
+         return (Subst.empty, List_typ var))
     | BinExpr (op, left, right) ->
       let* subst_left, typ_left = helper env left in
       let* subst_right, typ_right = helper env right in
@@ -346,13 +348,13 @@ let infer =
       let* match_sub, match_ty, _ = matches_helper matches in
       let* finalmatchsub = Subst.compose cond_sub match_sub in
       return (finalmatchsub, Subst.apply finalmatchsub match_ty)
-    | ListExpr _ -> fail NotImplemented
-    (* | ListExpr a when List.length a == 0 -> return (Subst.empty, Prim "'a list")
-       | ListExpr a ->
-       let* s1, t1 = helper env (List.hd_exn a) in
-       let t1 = List_typ t1 in
-       let* subst = Subst.compose_all [ s1 ] in
-       return (subst, Subst.apply subst t1) *)
+    | ListExpr (h, t) ->
+      let* s1, t1 = helper env h in
+      let t1 = List_typ t1 in
+      let* s2, t2 = helper env t in
+      let* s3 = unify t1 t2 in
+      let* subst = Subst.compose_all [ s1; s2; s3 ] in
+      return (subst, Subst.apply subst t1)
     | CaseExpr _ -> fail NotImplemented
     | LetInExpr _ -> fail NotImplemented
     | TupleExpr tuple ->

@@ -298,7 +298,7 @@ let%test _ =
 ;;
 
 (*
-   let (|Even|Odd|) value = if value%2 = 0 then Even else Odd)
+   let (|Even|Odd|) value = if value % 2 = 0 then Even else Odd)
 
    let check value =
    match value with

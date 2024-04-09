@@ -13,20 +13,20 @@ type const =
 [@@deriving eq, show { with_path = false }]
 
 type binary_op =
-  | Add (** + *)
-  | Sub (** - *)
-  | Mul (** * *)
-  | Div (** / *)
-  | Mod (** % *)
-  | Less (** < *)
-  | LEq (**  <= *)
-  | Gre (** > *)
-  | GEq (**  >= *)
-  | Eq (** = *)
-  | NEq (** <> *)
-  | And (** && *)
-  | Or (** || *)
-  | Con (**  :: *)
+  | Add (** 1 + 1 *)
+  | Sub (** 2 - 1 *)
+  | Mul (** 5 * 4 *)
+  | Div (** 8 / 2 *)
+  | Mod (** 10 % 5 *)
+  | Less (** 7 < 10 *)
+  | LEq (** 10 <= 10 *)
+  | Gre (** 7 > 5 *)
+  | GEq (** 7 >= 7 *)
+  | Eq (** 5 = 5 *)
+  | NEq (** 4 <> 3 *)
+  | And (** true && true *)
+  | Or (** true || false *)
+  | Con (** hd::tl *)
 [@@deriving eq, show { with_path = false }]
 
 type pattern =
