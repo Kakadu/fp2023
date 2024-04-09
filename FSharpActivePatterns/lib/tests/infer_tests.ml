@@ -32,31 +32,6 @@ let%expect_test _ =
   [%expect {| string |}]
 ;;
 
-(* let%expect_test _ =
-  let open Ast in
-  let _ =
-    let e = [ ListExpr [] ] in
-    check_types e |> run_infer
-  in
-  [%expect {| 'a list |}]
-;;
-
-let%expect_test _ =
-  let open Ast in
-  let _ =
-    let e =
-      [ TupleExpr
-          [ ConstExpr (CInt 1)
-          ; ListExpr [ ConstExpr (CInt 2); ConstExpr (CInt 3); ConstExpr (CInt 4) ]
-          ; ConstExpr (CInt 5)
-          ]
-      ]
-    in
-    check_types e |> run_infer
-  in
-  [%expect {| (int * int list * int) |}]
-;; *)
-
 let%expect_test _ =
   let open Ast in
   let _ =
@@ -83,26 +58,26 @@ let%expect_test _ =
 ;;
 
 (* let%expect_test _ =
-  let open Ast in
-  let _ =
-    let e =
-      [ ListExpr
+   let open Ast in
+   let _ =
+   let e =
+   [ ListExpr
           [ ConstExpr (CString "1"); ConstExpr (CString "2"); ConstExpr (CString " 3") ]
       ]
-    in
-    check_types e |> run_infer
-  in
-  [%expect {| string list |}]
-;;
+   in
+   check_types e |> run_infer
+   in
+   [%expect {| string list |}]
+   ;;
 
-let%expect_test _ =
-  let open Ast in
-  let _ =
-    let e = [ ListExpr [ ConstExpr (CInt 1); ConstExpr (CInt 2); ConstExpr (CInt 3) ] ] in
-    check_types e |> run_infer
-  in
-  [%expect {| int list |}]
-;; *)
+   let%expect_test _ =
+   let open Ast in
+   let _ =
+   let e = [ ListExpr [ ConstExpr (CInt 1); ConstExpr (CInt 2); ConstExpr (CInt 3) ] ] in
+   check_types e |> run_infer
+   in
+   [%expect {| int list |}]
+   ;; *)
 
 let%expect_test _ =
   let open Ast in

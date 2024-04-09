@@ -55,7 +55,6 @@ let%expect_test _ =
   [%expect {| : Identifier first sumbol is letter, not digit |}]
 ;;
 
-
 let%expect_test _ =
   let test = "a,b,c" in
   start_test pat show_pattern test;
@@ -374,8 +373,29 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  let test = "hd::tl" in
+  let test =
+    "  \n\
+    \   let rec listmap f list =\n\
+    \       match list with\n\
+    \         | [] -> []\n\
+    \         | hd :: tl -> ((f hd) :: (listmap f tl))"
+  in
   start_test parse show_expr test;
   [%expect
-    {| (BinExpr (Con, (VarExpr "hd"), (VarExpr "tl"))) |}]
+    {|
+    (LetExpr (true, "listmap",
+       (FunExpr ((Var "f"),
+          (FunExpr ((Var "list"),
+             (MatchExpr ((VarExpr "list"),
+                [((Const CNil), (ConstExpr CNil));
+                  ((PCon ((Var "hd"), (Var "tl"))),
+                   (BinExpr (Con, (AppExpr ((VarExpr "f"), (VarExpr "hd"))),
+                      (AppExpr ((AppExpr ((VarExpr "listmap"), (VarExpr "f"))),
+                         (VarExpr "tl")))
+                      )))
+                  ]
+                ))
+             ))
+          ))
+       )) |}]
 ;;

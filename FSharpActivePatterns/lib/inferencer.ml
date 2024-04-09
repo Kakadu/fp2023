@@ -262,8 +262,7 @@ let infer =
        | CBool _ -> return (env, Prim "bool")
        | CInt _ -> return (env, Prim "int")
        | CString _ -> return (env, Prim "string")
-       | CNil -> return (env, Prim "'a list")
-       )
+       | CNil -> return (env, Prim "'a list"))
     | Var id ->
       let* tv = fresh_var in
       let env = TypeEnv.extend env (id, S (VarSet.empty, tv)) in
@@ -284,8 +283,7 @@ let infer =
        | CBool _ -> return (Subst.empty, Prim "bool")
        | CInt _ -> return (Subst.empty, Prim "int")
        | CString _ -> return (Subst.empty, Prim "string")
-       | CNil -> return (Subst.empty, Prim "'a list")
-       )
+       | CNil -> return (Subst.empty, Prim "'a list"))
     | BinExpr (op, left, right) ->
       let* subst_left, typ_left = helper env left in
       let* subst_right, typ_right = helper env right in
@@ -348,13 +346,13 @@ let infer =
       let* match_sub, match_ty, _ = matches_helper matches in
       let* finalmatchsub = Subst.compose cond_sub match_sub in
       return (finalmatchsub, Subst.apply finalmatchsub match_ty)
-      | ListExpr _ -> fail NotImplemented
+    | ListExpr _ -> fail NotImplemented
     (* | ListExpr a when List.length a == 0 -> return (Subst.empty, Prim "'a list")
-    | ListExpr a ->
-      let* s1, t1 = helper env (List.hd_exn a) in
-      let t1 = List_typ t1 in
-      let* subst = Subst.compose_all [ s1 ] in
-      return (subst, Subst.apply subst t1) *)
+       | ListExpr a ->
+       let* s1, t1 = helper env (List.hd_exn a) in
+       let t1 = List_typ t1 in
+       let* subst = Subst.compose_all [ s1 ] in
+       return (subst, Subst.apply subst t1) *)
     | CaseExpr _ -> fail NotImplemented
     | LetInExpr _ -> fail NotImplemented
     | TupleExpr tuple ->

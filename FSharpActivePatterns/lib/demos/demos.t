@@ -112,21 +112,17 @@ cps factorial
   > fact 5 (fun x -> x);;
   (VInt 120)
 
-
-  $ ./demos.exe <<- EOF
-  > let list_rev list = 
-  >   let rec helper acc l = 
-  >     match l with 
-  >      | [] -> acc 
-  >      | hd :: tl -> (helper (hd :: acc) tl) in 
-  >   helper [] list;;
-  > list_rev [1; 2; 3; 4; 5];;
-
-
-
   $ ./demos.exe <<- EOF
   > let plusfive x =
   >    let five a = a + 5
   >    in five x;;
   > plusfive 570;;
   (VInt 575)
+
+  $ ./demos.exe <<- EOF
+  > let rec listmap f list =
+  >     match list with
+  >       | [] -> []
+  >       | hd :: tl -> ((f hd) :: (listmap f tl));;
+  > let result = listmap (fun x -> x * x) [1; 2; 3; 4; 5];;
+  (VList [(VInt 1); (VInt 4); (VInt 9); (VInt 16); (VInt 25)])

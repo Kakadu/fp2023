@@ -99,27 +99,19 @@ module Interpret (M : MonadFail) = struct
        | CBool b1, VBool b2 when Bool.equal b1 b2 -> return []
        | CInt i1, VInt i2 when i1 = i2 -> return []
        | CString s1, VString s2 when String.equal s1 s2 -> return []
-       | CNil, VNil -> return []
+       | CNil, VList v ->
+         (match v with
+          | [] -> return []
+          | _ -> fail MatchFailure)
        | _ -> fail Unreachable)
     | Var var, app_arg -> return [ var, app_arg ]
-    | PCon (p1, p2), VList vl ->
-      (match p2, p1 with
-       | Const CNil, p1 ->
-         (match p1 with
-          | Const CNil when List.is_empty vl -> return []
-          | Wild | Var _ -> bind_fun_params ~env (p1, VList vl)
-          | _ -> fail MatchFailure)
-       | PCon (_, _), p1 ->
-         (match p1 with
-          | PCon (_, _) -> fail Unreachable
-          | _ ->
-            (match vl with
-             | h :: tl ->
-               let* head_bind = bind_fun_params ~env (p1, h) in
-               let* tail_bind = bind_fun_params ~env (p2, VList tl) in
-               return (head_bind @ tail_bind)
-             | _ -> fail MatchFailure))
-       | _ -> fail Unreachable)
+    | (PCon _ as pl), VList vl ->
+      (match pl, vl with
+       | PCon (h, t), hd :: tl ->
+         let* evaledhd = bind_fun_params (h, hd) in
+         let* evaledtl = bind_fun_params (t, VList tl) in
+         return @@ evaledhd @ evaledtl
+       | _ -> fail MatchFailure)
     | Tuple pl, VTuple vl -> bind_pat_list pl vl
     | Case (acase_id, _), value_to_match ->
       let* apat = find_val env acase_id in
@@ -150,11 +142,6 @@ module Interpret (M : MonadFail) = struct
     | BinExpr (op, l, r) ->
       let* rigth_val = eval r env in
       let* left_val = eval l env in
-            (* Format.printf "%s" (show_binary_op op); 
-
-      Format.printf "%s" (show_value left_val); 
-            Format.printf "%s" (show_value rigth_val);  *)
-
       (match op, left_val, rigth_val with
        | Div, VInt _, VInt 0 -> fail DivisionByZero
        | Mod, VInt _, VInt 0 -> fail DivisionByZero
@@ -169,12 +156,12 @@ module Interpret (M : MonadFail) = struct
        | GEq, VInt l, VInt r -> return @@ VBool (l >= r)
        | Eq, VInt l, VInt r -> return @@ VBool (l = r)
        | NEq, VInt l, VInt r -> return @@ VBool (l <> r)
-       | Con,  h, VList tl -> return @@ VList (h :: tl)
+       | Con, h, VList tl -> return @@ VList (h :: tl)
        | Con, h, VNil -> return @@ VList (h :: [])
        | _ -> fail TypeError)
     | VarExpr id -> find_val env id
     | ListExpr (h, t) ->
-        let* evaled = eval h env in
+      let* evaled = eval h env in
       let rec helper acc expr =
         match expr with
         | ConstExpr CNil -> acc
@@ -225,14 +212,14 @@ module Interpret (M : MonadFail) = struct
       else eval body env
     | MatchExpr (expr_match, cases) ->
       let* val_match = eval expr_match env in
-      (* Format.printf "%s\n" (show_value val_match); *)
       let rec eval_match = function
         | (pat, expr) :: cases ->
-          (* Format.printf "%s\n" (show_pattern pat);
-          Format.printf "%s\n" (show_expr expr); *)
+          let res = bind_fun_params ~env (pat, val_match) in
           run
-            (bind_fun_params ~env (pat, val_match))
-            ~ok:(fun binds -> eval expr (add_binds env binds))
+            res
+            ~ok:(fun binds ->
+              let* env = extend env binds in
+              eval expr env)
             ~err:(fun _ -> eval_match cases)
         | [] -> fail Unreachable
       in
@@ -240,7 +227,8 @@ module Interpret (M : MonadFail) = struct
     | CaseExpr constr_id -> return @@ VCases constr_id
     | LetInExpr (_, name, expr1, expr2) ->
       let* evaled_expr1 = eval expr1 env in
-      eval expr2 (add_bind env name evaled_expr1)
+      let env = add_bind env name evaled_expr1 in
+      eval expr2 env
     | LetActExpr (act_name, body) ->
       let* fun_pat = eval body env in
       return @@ VLetAPat (act_name, fun_pat)
