@@ -9,7 +9,7 @@ type const =
   | CBool of bool (** true *)
   | CInt of int (** 42 *)
   | CString of string (** "string" *)
-  | CNil
+  | CNil (** [] *)
 [@@deriving eq, show { with_path = false }]
 
 type binary_op =

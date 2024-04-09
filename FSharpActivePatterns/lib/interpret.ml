@@ -7,7 +7,6 @@ open Base
 open Errorinter
 
 (** main program *)
-type program = expr list [@@deriving show { with_path = false }]
 
 type value =
   | VString of string

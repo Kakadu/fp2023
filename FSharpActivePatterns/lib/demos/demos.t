@@ -15,6 +15,10 @@
   (VInt 951753)
 
   $ ./demos.exe <<- EOF
+  > (1,2,3,4,5);;
+  (VTuple [(VInt 1); (VInt 2); (VInt 3); (VInt 4); (VInt 5)])
+
+  $ ./demos.exe <<- EOF
   > (1,(2),3,[1;2;3]);;
   (VTuple
      [(VInt 1); (VInt 2); (VInt 3); (VList [(VInt 1); (VInt 2); (VInt 3)])])
