@@ -54,6 +54,14 @@ let%test _ =
   | _ -> false
 ;;
 
+let test = [ TupleExpr [ ConstExpr (CInt 1); ConstExpr (CInt 2); ConstExpr (CInt 3) ] ]
+
+let%test _ =
+  match eval_program test with
+  | Ok (VTuple [ VInt 1; VInt 2; VInt 3 ]) -> true
+  | _ -> false
+;;
+
 (* 5 = 5 *)
 
 let test = [ BinExpr (Eq, ConstExpr (CInt 5), ConstExpr (CInt 5)) ]

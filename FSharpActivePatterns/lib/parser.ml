@@ -152,8 +152,6 @@ let parse_cases ps =
     (sep_by1 (pstrtoken "|") ps <|> sep_by (pstrtoken " ") ps)
 ;;
 
-let parse_let_case = sep_by (pstrtoken "|") (p_var_case <|> p_var) <* pstrtoken "|)"
-
 type pdispatch =
   { value : pdispatch -> pattern t
   ; tuple : pdispatch -> pattern t
@@ -175,9 +173,6 @@ let pack =
     parser_con (parse pack <|> parens @@ pack.con pack)
     <|> parse_con_2 (parse pack <|> parens @@ pack.con pack) constr_con
   in
-  (*
-     let list pack = fix @@ fun _ -> parse_list (parse pack <|> parens @@ pack.list pack) in
-  *)
   let value pack =
     fix @@ fun _ -> parse_wild <|> parse_Const <|> parse_var <|> parens @@ pack.value pack
   in
@@ -204,11 +199,6 @@ let constr_case pat expr = pat, expr
 let constr_efun pl e = List.fold_right ~init:e ~f:(fun p e -> FunExpr (p, e)) pl
 let parse_econst = (fun v -> ConstExpr v) <$> parse_const
 let parse_evar = (fun v -> VarExpr v) <$> p_var
-
-let parse_fun_args =
-  fix
-  @@ fun p -> many1 (pack.con pack <|> pack.case pack <|> pack.value pack) <|> parens p
-;;
 
 let parse_cons_semicolon_expr parser constructor =
   constructor <$> (pstrtoken "[" *> sep_by1 (pstrtoken ";") parser <* pstrtoken "]")
@@ -348,19 +338,6 @@ let pack =
       p_var
       (parse_white_space *> many (pat <|> parens pat))
       (pstrtoken "=" *> expr_parsers pack)
-    (*
-       let eletfun pexpr =
-       empty
-       *> lift4
-       (fun flag name args body ->
-       let body = construct_efun args body in
-       if flag then eletrec name body else elet name body)
-       parse_rec_or_not
-       psIdent
-       pargs
-       (pstoken "=" *> pexpr)
-       ;;
-    *)
   in
   let let_in_e pack =
     let lift5 f p1 p2 p3 p4 p5 = f <$> p1 <*> p2 <*> p3 <*> p4 <*> p5 in
@@ -377,21 +354,6 @@ let pack =
       (many pat)
       (pstrtoken1 "=" *> expr_parsers pack)
       (pstrtoken "in" *> expr_parsers pack)
-    (*
-       let eletdecl pexpr =
-       let lift5 f p1 p2 p3 p4 p5 = f <$> p1 <*> p2 <*> p3 <*> p4 <*> p5 in
-       empty
-       *> lift5
-       (fun flag name args body1 body2 ->
-       let body1 = construct_efun args body1 in
-       if flag then eletrecin name body1 body2 else eletin name body1 body2)
-       parse_rec_or_not
-       psIdent
-       pargs
-       (pstoken1 "=" *> pexpr)
-       (pstoken1 "in" *> pexpr)
-       ;;
-    *)
   in
   let fun_e pack =
     fix

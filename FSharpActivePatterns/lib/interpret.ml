@@ -18,7 +18,7 @@ type value =
   | VLetWAPat of name * value
   | VLetAPat of name list * value
   | VCases of name
-  | VNil
+  | VNil (** [] *)
 [@@deriving show { with_path = false }]
 
 module type MonadFail = sig
@@ -49,19 +49,6 @@ module Environment (M : MonadFail) = struct
       | Some value -> return value
       | None when is_constr @@ String.get key 0 -> fail (UnboundConstructor key)
       | _ -> fail (UnboundValue key))
-  ;;
-
-  let extend_by_one id value env =
-    match Map.add env ~key:id ~data:value with
-    | `Ok env -> env
-    | `Duplicate ->
-      Map.mapi env ~f:(fun ~key:name ~data:old_value ->
-        if Poly.( = ) id name then value else old_value)
-  ;;
-
-  let extend env bindings =
-    return
-    @@ List.fold ~f:(fun env (id, value) -> extend_by_one id value env) bindings ~init:env
   ;;
 
   let add_bind map key value = Map.update map key ~f:(fun _ -> value)
@@ -213,14 +200,11 @@ module Interpret (M : MonadFail) = struct
       let* val_match = eval expr_match env in
       let rec eval_match = function
         | (pat, expr) :: cases ->
-          let res = bind_fun_params ~env (pat, val_match) in
           run
-            res
-            ~ok:(fun binds ->
-              let* env = extend env binds in
-              eval expr env)
+            (bind_fun_params ~env (pat, val_match))
+            ~ok:(fun binds -> eval expr (add_binds env binds))
             ~err:(fun _ -> eval_match cases)
-        | [] -> fail Unreachable
+        | [] -> fail MatchFailure
       in
       eval_match cases
     | CaseExpr constr_id -> return @@ VCases constr_id
