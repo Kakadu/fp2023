@@ -73,7 +73,7 @@ let%expect_test _ =
     in
     check_types e |> run_infer
   in
-  [%expect {| string list |}]
+  [%expect {| (int * int list * int) |}]
 ;;
 
 let%expect_test _ =
