@@ -581,10 +581,10 @@ open Errorinter
 
 (** main program *)
 
-<span data-count="219">t</span>ype value =
+<span data-count="215">t</span>ype value =
   | VString of strin<span data-count="1">g</span>
   | VBool of boo<span data-count="1">l</span>
-  | VInt of in<span data-count="44">t</span>
+  | VInt of in<span data-count="43">t</span>
   | VList of <span data-count="72">v</span>alue lis<span data-count="17">t</span>
   | VTuple of <span data-count="51">v</span>alue lis<span data-count="12">t</span>
   | VFun of pattern * expr * <span data-count="3">(</span><span data-count="0">n</span>ame * value) lis<span data-count="2">t</span>
@@ -612,22 +612,22 @@ type environment = (name, value, String.comparator_witness) Map.t
 module Environment (M : MonadFail) = struct
   open M
 
-  let empty = Map.empt<span data-count="33">y</span> (module Base.String)
+  let empty = Map.empt<span data-count="32">y</span> (module Base.String)
 
   let find_val map key =
-    <span data-count="243">i</span>f String.lengt<span data-count="243">h</span> key = 0
+    <span data-count="239">i</span>f String.lengt<span data-count="239">h</span> key = 0
     then <span data-count="0">f</span>ail (StringOfLengthZero key)
-    else <span data-count="243">(</span>
+    else <span data-count="239">(</span>
       match Map.find map key with
-      | <span data-count="242">S</span>ome value -&gt; return value
+      | <span data-count="238">S</span>ome value -&gt; return value
       | <span data-count="1">N</span>one when is_const<span data-count="1">r</span> @@ String.ge<span data-count="1">t</span> key 0 -&gt; <span data-count="0">f</span>ail (UnboundConstructor key)
       | <span data-count="1">_</span> -&gt; fail (UnboundValue key))
   ;;
 
-  let add_bind map key value = <span data-count="325">M</span>ap.update map key ~f:(fun _ -&gt; <span data-count="325">v</span>alue)
+  let add_bind map key value = <span data-count="315">M</span>ap.update map key ~f:(fun _ -&gt; <span data-count="315">v</span>alue)
 
   let add_binds map binds =
-    <span data-count="244">L</span>ist.fold ~f:(fun map (k, v) -&gt; <span data-count="251">a</span>dd_bind map k v) ~init:map binds
+    <span data-count="239">L</span>ist.fold ~f:(fun map (k, v) -&gt; <span data-count="246">a</span>dd_bind map k v) ~init:map binds
   ;;
 end
 
@@ -636,7 +636,7 @@ module Interpret (M : MonadFail) = struct
   open Environment (M)
 
   let rec bind_fun_params ?(env = <span data-count="26">e</span>mpty) =
-    <span data-count="179">l</span>et bind_pat_list patl argl =
+    <span data-count="176">l</span>et bind_pat_list patl argl =
       <span data-count="0">l</span>et binded_list =
         List.fold2
           patl
@@ -663,7 +663,7 @@ module Interpret (M : MonadFail) = struct
           | <span data-count="3">[</span>] -&gt; return []
           | <span data-count="13">_</span> -&gt; fail MatchFailure)
        | <span data-count="1">_</span> -&gt; fail Unreachable)
-    | <span data-count="135">V</span>ar var, app_arg -&gt; return [ var, app_arg ]
+    | <span data-count="133">V</span>ar var, app_arg -&gt; return [ var, app_arg ]
     | <span data-count="13">(</span>PCon _ as pl), VList vl -&gt;
       (match pl, vl with
        | <span data-count="13">P</span>Con (h, t), hd :: tl -&gt;
@@ -672,16 +672,16 @@ module Interpret (M : MonadFail) = struct
          <span data-count="13">r</span>eturn @@ evaledhd @ evaledtl
        | <span data-count="0">_</span> -&gt; fail MatchFailure)
     | <span data-count="0">T</span>uple pl, VTuple vl -&gt; bind_pat_list pl vl
-    | <span data-count="12">C</span>ase (acase_id, _), value_to_match -&gt;
-      let* apat = find_va<span data-count="12">l</span> env acase_id in
-      <span data-count="12">(</span>match apat with
-       | <span data-count="12">V</span>LetAPat (_, VFun (apat_arg, apat_expr, apat_env)) -&gt;
-         let* bind_matching_val = bind_fun_param<span data-count="12">s</span> ~env (apat_arg, value_to_match) in
-         <span data-count="12">l</span>et* eval_res_apat =
-           eva<span data-count="12">l</span> apat_expr (add_bind<span data-count="12">s</span> (add_bind<span data-count="12">s</span> empty apat_env) bind_matching_val)
+    | <span data-count="11">C</span>ase (acase_id, _), value_to_match -&gt;
+      let* apat = find_va<span data-count="11">l</span> env acase_id in
+      <span data-count="11">(</span>match apat with
+       | <span data-count="11">V</span>LetAPat (_, VFun (apat_arg, apat_expr, apat_env)) -&gt;
+         let* bind_matching_val = bind_fun_param<span data-count="11">s</span> ~env (apat_arg, value_to_match) in
+         <span data-count="11">l</span>et* eval_res_apat =
+           eva<span data-count="11">l</span> apat_expr (add_bind<span data-count="11">s</span> (add_bind<span data-count="11">s</span> empty apat_env) bind_matching_val)
          in
-         <span data-count="12">(</span>match eval_res_apat with
-          | <span data-count="10">V</span>Cases a when String.( = <span data-count="10">)</span> a acase_id -&gt; <span data-count="6">r</span>eturn []
+         <span data-count="11">(</span>match eval_res_apat with
+          | <span data-count="9">V</span>Cases a when String.( = <span data-count="9">)</span> a acase_id -&gt; <span data-count="5">r</span>eturn []
           | <span data-count="2">V</span>Int _ | <span data-count="0">V</span>String _ | <span data-count="0">V</span>List _ | <span data-count="0">V</span>Tuple _ | <span data-count="0">V</span>Bool _ -&gt;
             (match apat_arg with
              | <span data-count="2">V</span>ar name -&gt; return [ name, eval_res_apat ]
@@ -691,47 +691,47 @@ module Interpret (M : MonadFail) = struct
     | <span data-count="0">_</span> -&gt; fail MatchFailure
 
   and eval_binding bind env =
-    <span data-count="78">m</span>atch bind with
-    | <span data-count="26">L</span>et (is_rec, name, body) -&gt;
+    <span data-count="74">m</span>atch bind with
+    | <span data-count="25">L</span>et (is_rec, name, body) -&gt;
       if is_rec
       then
         <span data-count="6">l</span>et* func_body = eva<span data-count="6">l</span> body env in
         <span data-count="6">r</span>eturn @@ VLetWAPat (name, func_body)
-      else <span data-count="20">e</span>val body env
-    | <span data-count="10">L</span>etAct (act_name, body) -&gt;
-      let* fun_pat = eva<span data-count="10">l</span> body env in
-      <span data-count="10">r</span>eturn @@ VLetAPat (act_name, fun_pat)
-    | <span data-count="42">E</span>xpression expr -&gt; eval expr env
+      else <span data-count="19">e</span>val body env
+    | <span data-count="8">L</span>etAct (act_name, body) -&gt;
+      let* fun_pat = eva<span data-count="8">l</span> body env in
+      <span data-count="8">r</span>eturn @@ VLetAPat (act_name, fun_pat)
+    | <span data-count="41">E</span>xpression expr -&gt; eval expr env
 
   and eval expr env =
-    <span data-count="754">m</span>atch expr with
-    | <span data-count="163">C</span>onstExpr v -&gt;
+    <span data-count="738">m</span>atch expr with
+    | <span data-count="159">C</span>onstExpr v -&gt;
       (match v with
        | <span data-count="1">C</span>Bool b -&gt; return @@ VBool b
-       | <span data-count="159">C</span>Int i -&gt; return @@ VInt i
+       | <span data-count="155">C</span>Int i -&gt; return @@ VInt i
        | <span data-count="2">C</span>String s -&gt; return @@ VString s
        | <span data-count="1">C</span>Nil -&gt; return VNil)
-    | <span data-count="110">B</span>inExpr (op, l, r) -&gt;
-      let* rigth_val = eva<span data-count="110">l</span> r env in
-      <span data-count="110">l</span>et* left_val = eva<span data-count="110">l</span> l env in
-      <span data-count="110">(</span>match op, left_val, rigth_val with
+    | <span data-count="108">B</span>inExpr (op, l, r) -&gt;
+      let* rigth_val = eva<span data-count="108">l</span> r env in
+      <span data-count="108">l</span>et* left_val = eva<span data-count="108">l</span> l env in
+      <span data-count="108">(</span>match op, left_val, rigth_val with
        | <span data-count="2">D</span>iv, VInt _, VInt 0 -&gt; fail DivisionByZero
        | <span data-count="1">M</span>od, VInt _, VInt 0 -&gt; fail DivisionByZero
        | <span data-count="14">A</span>dd, VInt l, VInt r -&gt; return @@ VInt (l + r)
        | <span data-count="16">S</span>ub, VInt l, VInt r -&gt; return @@ VInt (l - r)
        | <span data-count="28">M</span>ul, VInt l, VInt r -&gt; return @@ VInt (l * r)
        | <span data-count="2">D</span>iv, VInt l, VInt r -&gt; return @@ VInt (l / r)
-       | <span data-count="11">M</span>od, VInt l, VInt r -&gt; return @@ VInt (l <span data-count="11">%</span> r)
+       | <span data-count="10">M</span>od, VInt l, VInt r -&gt; return @@ VInt (l <span data-count="10">%</span> r)
        | <span data-count="0">L</span>ess, VInt l, VInt r -&gt; return @@ VBool (l &lt; r)
        | <span data-count="0">L</span>Eq, VInt l, VInt r -&gt; return @@ VBool (l &lt;= r)
        | <span data-count="1">G</span>re, VInt l, VInt r -&gt; return @@ VBool (l &gt; r)
        | <span data-count="0">G</span>Eq, VInt l, VInt r -&gt; return @@ VBool (l &gt;= r)
-       | <span data-count="26">E</span>q, VInt l, VInt r -&gt; return @@ VBool (l = r)
+       | <span data-count="25">E</span>q, VInt l, VInt r -&gt; return @@ VBool (l = r)
        | <span data-count="1">N</span>Eq, VInt l, VInt r -&gt; return @@ VBool (l &lt;&gt; r)
        | <span data-count="7">C</span>on, h, VList tl -&gt; return @@ VList (h :: tl)
        | <span data-count="1">C</span>on, h, VNil -&gt; return @@ VList (h :: [])
        | <span data-count="0">_</span> -&gt; fail TypeError)
-    | <span data-count="231">V</span>arExpr id -&gt; find_val env id
+    | <span data-count="228">V</span>arExpr id -&gt; find_val env id
     | <span data-count="8">L</span>istExpr (h, t) -&gt;
       let* evaled = eva<span data-count="8">l</span> h env in
       <span data-count="8">l</span>et rec helper acc expr =
@@ -752,19 +752,19 @@ module Interpret (M : MonadFail) = struct
     | <span data-count="5">T</span>upleExpr t -&gt;
       let* eval_list = al<span data-count="5">l</span> (List.ma<span data-count="5">p</span> t ~f:(fun expr -&gt; <span data-count="18">e</span>val expr env)) in
       <span data-count="5">r</span>eturn @@ VTuple eval_list
-    | <span data-count="26">I</span>fExpr (cond, e_then, e_else) -&gt;
-      let* cond_branch = eva<span data-count="26">l</span> cond env in
-      <span data-count="26">(</span>match cond_branch with
-       | <span data-count="26">V</span>Bool b -&gt; eval (if b then <span data-count="7">e</span>_then else <span data-count="19">e</span>_else) env
+    | <span data-count="25">I</span>fExpr (cond, e_then, e_else) -&gt;
+      let* cond_branch = eva<span data-count="25">l</span> cond env in
+      <span data-count="25">(</span>match cond_branch with
+       | <span data-count="25">V</span>Bool b -&gt; eval (if b then <span data-count="6">e</span>_then else <span data-count="19">e</span>_else) env
        | <span data-count="0">_</span> -&gt; fail TypeError)
-    | <span data-count="76">F</span>unExpr (pat, expr) -&gt; return @@ VFun (pat, expr, Map.to_alis<span data-count="76">t</span> env)
-    | <span data-count="98">A</span>ppExpr (func, arg) -&gt;
-      let* fun_to_apply = eva<span data-count="98">l</span> func env in
-      <span data-count="97">l</span>et* evaled_arg = eva<span data-count="97">l</span> arg env in
-      <span data-count="97">(</span>match fun_to_apply with
-       | <span data-count="66">V</span>Fun (pat, expr, fun_env) -&gt;
-         let* res = bind_fun_param<span data-count="66">s</span> ~env (pat, evaled_arg) in
-         <span data-count="66">e</span>val expr (add_bind<span data-count="66">s</span> (add_bind<span data-count="66">s</span> empty fun_env) res)
+    | <span data-count="73">F</span>unExpr (pat, expr) -&gt; return @@ VFun (pat, expr, Map.to_alis<span data-count="73">t</span> env)
+    | <span data-count="97">A</span>ppExpr (func, arg) -&gt;
+      let* fun_to_apply = eva<span data-count="97">l</span> func env in
+      <span data-count="96">l</span>et* evaled_arg = eva<span data-count="96">l</span> arg env in
+      <span data-count="96">(</span>match fun_to_apply with
+       | <span data-count="65">V</span>Fun (pat, expr, fun_env) -&gt;
+         let* res = bind_fun_param<span data-count="65">s</span> ~env (pat, evaled_arg) in
+         <span data-count="65">e</span>val expr (add_bind<span data-count="65">s</span> (add_bind<span data-count="65">s</span> empty fun_env) res)
        | <span data-count="31">V</span>LetWAPat (name, VFun (pat, expr, fun_env)) -&gt;
          let* res = bind_fun_param<span data-count="31">s</span> ~env (pat, evaled_arg) in
          <span data-count="31">e</span>val
@@ -776,18 +776,18 @@ module Interpret (M : MonadFail) = struct
                  (VLetWAPat (name, VFun (pat, expr, fun_env))))
               res)
        | <span data-count="0">_</span> -&gt; fail TypeError)
-    | <span data-count="26">M</span>atchExpr (expr_match, cases) -&gt;
-      let* val_match = eva<span data-count="26">l</span> expr_match env in
-      <span data-count="26">l</span>et rec eval_match = function
-        | <span data-count="44">(</span>pat, expr) :: cases -&gt;
+    | <span data-count="25">M</span>atchExpr (expr_match, cases) -&gt;
+      let* val_match = eva<span data-count="25">l</span> expr_match env in
+      <span data-count="25">l</span>et rec eval_match = function
+        | <span data-count="43">(</span>pat, expr) :: cases -&gt;
           run
-            (bind_fun_param<span data-count="44">s</span> ~env (pat, val_match))
-            ~ok:(fun binds -&gt; <span data-count="26">e</span>val expr (add_bind<span data-count="26">s</span> env binds))
+            (bind_fun_param<span data-count="43">s</span> ~env (pat, val_match))
+            ~ok:(fun binds -&gt; <span data-count="25">e</span>val expr (add_bind<span data-count="25">s</span> env binds))
             ~err:(fun _ -&gt; <span data-count="18">e</span>val_match cases)
         | <span data-count="0">[</span>] -&gt; fail MatchFailure
       in
       eval_match cases
-    | <span data-count="10">C</span>aseExpr constr_id -&gt; return @@ VCases constr_id
+    | <span data-count="9">C</span>aseExpr constr_id -&gt; return @@ VCases constr_id
     | <span data-count="1">L</span>etInExpr (_, name, expr1, expr2) -&gt;
       let* v_let = eva<span data-count="1">l</span> expr1 env in
       <span data-count="1">l</span>et env = add_bind env name v_let in
@@ -795,16 +795,16 @@ module Interpret (M : MonadFail) = struct
   ;;
 
   let eval_program (program : struct_inter list) : (value, error_inter) t =
-    <span data-count="44">l</span>et rec helper env = function
-      | <span data-count="44">h</span> :: [] -&gt; eval_binding h env
+    <span data-count="43">l</span>et rec helper env = function
+      | <span data-count="43">h</span> :: [] -&gt; eval_binding h env
       | <span data-count="0">[</span>] -&gt; fail EmptyProgram
-      | <span data-count="34">h</span> :: tl -&gt;
-        let* eval_h = eval_bindin<span data-count="34">g</span> h env in
-        <span data-count="34">l</span>et eval_env =
+      | <span data-count="31">h</span> :: tl -&gt;
+        let* eval_h = eval_bindin<span data-count="31">g</span> h env in
+        <span data-count="31">l</span>et eval_env =
           match h with
-          | <span data-count="24">L</span>et (_, f, _) -&gt; add_bin<span data-count="24">d</span> env f eval_h
-          | <span data-count="10">L</span>etAct (fl, _) -&gt;
-            List.fold_righ<span data-count="10">t</span> ~f:(fun h acc -&gt; <span data-count="18">a</span>dd_bind acc h eval_h) ~init:env fl
+          | <span data-count="23">L</span>et (_, f, _) -&gt; add_bin<span data-count="23">d</span> env f eval_h
+          | <span data-count="8">L</span>etAct (fl, _) -&gt;
+            List.fold_righ<span data-count="8">t</span> ~f:(fun h acc -&gt; <span data-count="14">a</span>dd_bind acc h eval_h) ~init:env fl
           | <span data-count="0">_</span> -&gt; env
         in
         helper eval_env tl
@@ -817,12 +817,12 @@ module InterpretResult = Interpret (struct
     include Result
 
     let run x ~ok ~err =
-      <span data-count="44">m</span>atch x with
-      | <span data-count="26">O</span>k v -&gt; ok v
+      <span data-count="43">m</span>atch x with
+      | <span data-count="25">O</span>k v -&gt; ok v
       | <span data-count="18">E</span>rror e -&gt; err e
     ;;
 
-    let ( let* ) monad f = <span data-count="738">b</span>ind monad ~f
+    let ( let* ) monad f = <span data-count="721">b</span>ind monad ~f
   end)
 
 let eval_program = InterpretResult.eval_program
