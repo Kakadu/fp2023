@@ -1,10 +1,20 @@
 (library
  (name ocaml_pv)
  (public_name OCaml+PolymorphicVariants.Lib)
- (modules Ast Parser)
+ (modules Ast Parser Infer Interpreter Typedtree)
  (inline_tests)
  (libraries base angstrom)
  (preprocess
   (pps ppx_expect ppx_deriving.show))
  (instrumentation
   (backend bisect_ppx)))
+
+(library
+ (name tests)
+ (modules tests)
+ (libraries ocaml_pv)
+ (preprocess
+  (pps ppx_expect ppx_deriving.show))
+ (instrumentation
+  (backend bisect_ppx))
+ (inline_tests))

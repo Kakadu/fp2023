@@ -1,7 +1,16 @@
 (executable
- (name interpret)
- (public_name interpret)
- (libraries base ast parser))
-
-(cram
- (deps ./interpret.exe %{bin:interpret}))
+ (public_name repl)
+ (libraries
+  base
+  stdio
+  lwt
+  react
+  zed
+  lambda-term
+  misc
+  ast
+  parse
+  types
+  infer
+  eval
+  builtin))

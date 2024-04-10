@@ -1,0 +1,23 @@
+(executable
+ (name demoParse)
+ (modules demoParse)
+ (public_name demoParse)
+ (libraries DAhmetov.Lib stdio)
+ (instrumentation
+  (backend bisect_ppx)))
+
+(executable
+ (name demoInterpret)
+ (modules demoInterpret)
+ (public_name demoInterpret)
+ (libraries DAhmetov.Lib stdio)
+ (instrumentation
+  (backend bisect_ppx)))
+
+(cram
+ (applies_to demoParse)
+ (deps ./demoParse.exe))
+
+(cram
+ (applies_to demoInterpret)
+ (deps ./demoInterpret.exe))

@@ -1,5 +1,8 @@
 (library
  (name ast)
  (public_name OCamlTyEff.Ast)
+ (libraries base misc types)
  (preprocess
-  (pps ppx_deriving.show ppx_deriving.eq)))
+  (pps ppx_deriving.show ppx_deriving.eq))
+ (instrumentation
+  (backend bisect_ppx)))

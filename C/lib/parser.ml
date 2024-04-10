@@ -1,4 +1,4 @@
-(** Copyright 2021-2023, PavlushaSource *)
+(** Copyright 2023-2024, PavlushaSource *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
@@ -28,7 +28,6 @@ let is_keywords = function
   | "return"
   | "char"
   | "const"
-  | "double"
   | "float"
   | "int"
   | "int32_t"
@@ -103,7 +102,7 @@ let p_type =
   let parse_simple_type t err =
     match t with
     | "int" ->
-        return ID_int
+        return ID_int32
     | "int32_t" ->
         return ID_int32
     | "int16_t" ->
@@ -194,7 +193,7 @@ let p_index_array expr =
 
 let var_name = (fun c -> Var_name c) <$> whitespace *> p_ident
 
-let null = token "NULL" *> (return @@ V_null)
+let null = token "NULL" *> return V_null
 
 let p_const : expr t = p_number <|> p_char <|> null >>| fun c -> Const c
 
@@ -234,7 +233,7 @@ let p_cast expr =
 
 let p_not expr = token "!" *> expr >>= fun c -> return @@ Unary_expr (Not, c)
 
-let p_expr : expr t =
+let p_expr =
   fix (fun expr ->
       let term =
         choice
@@ -342,7 +341,7 @@ let%expect_test "cast priority test" =
   pp pp_expr p_expr "(int) 2 + 2";
   [%expect
     {|
-    (Bin_expr (Add, (Cast (ID_int, (Const (V_int 2)))), (Const (V_int 2)))) |}]
+    (Bin_expr (Add, (Cast (ID_int32, (Const (V_int 2)))), (Const (V_int 2)))) |}]
 
 let p_arg =
   p_type <* whitespace >>= fun t -> p_ident >>= fun id -> return @@ Arg (t, id)
@@ -352,17 +351,14 @@ let p_compound statements =
   <* token "}"
   >>= fun s -> whitespace *> (return @@ Compound s)
 
-let p_if statements =
-  token "if" *> parens p_expr
-  >>= fun cnd -> p_compound statements >>= fun cmpd -> return @@ If (cnd, cmpd)
-
 let p_if_else statements =
   token "if" *> parens p_expr
   >>= fun cnd ->
   p_compound statements
   >>= fun cmd_if ->
   token "else" *> p_compound statements
-  >>= fun cmd_else -> return @@ If_else (cnd, cmd_if, cmd_else)
+  >>= (fun cmd_else -> return @@ If_else (cnd, cmd_if, Some cmd_else))
+  <|> return @@ If_else (cnd, cmd_if, None)
 
 let rec p_mult_assign expr1 =
   token "=" *> p_expr
@@ -460,6 +456,14 @@ let p_assign =
   peek_char
   >>= function Some '=' -> p_mult_assign exp1 | _ -> fail "Error assign"
 
+let p_func_call_with_st =
+  let* expr = p_expr in
+  match expr with
+  | Func_call _ ->
+      token ";" *> return (Expression expr)
+  | _ ->
+      fail "Error func_call"
+
 let p_for statements =
   token "for" *> token "("
   *> (p_var_decl <|> p_assign >>| Option.some <|> (return None <* token ";"))
@@ -477,16 +481,16 @@ let p_statements =
       choice
         [ p_compound statements
         ; p_if_else statements
-        ; p_if statements
         ; p_while statements
         ; p_for statements
         ; p_assign
         ; p_var_decl
+        ; p_func_call_with_st
         ; p_continue
         ; p_break
         ; p_return ] )
 
-let p_func_decl statements =
+let p_func_decl statements : func_decl t =
   p_type
   >>= fun t ->
   whitespace *> p_ident <* whitespace
@@ -498,176 +502,14 @@ let p_func_decl statements =
   >>= function
   | Some '{' ->
       p_compound statements
-      >>= fun cmd -> return @@ Func_def (Func_decl (t, id, argls), cmd)
+      >>= fun cmd -> return @@ Func_decl (t, id, argls, cmd)
   | Some ';' ->
-      advance 1 >>= fun _ -> return @@ Func_decl (t, id, argls)
+      advance 1 >>= fun _ -> fail "Function definitions is not supported"
   | _ ->
-      fail "ERROR func decl"
+      fail "Wrong function declaration or defenition"
 
-let p_top_var =
-  p_var_decl
-  >>= function
-  | Var_decl (idd, tp, exp) ->
-      return @@ Top_var_decl (idd, tp, exp) <* whitespace
-  | _ ->
-      fail "ERROR"
-
-let p_programm =
-  whitespace *> sep_by whitespace (p_top_var <|> p_func_decl p_statements)
-  >>= fun prog_ls -> return @@ My_programm prog_ls
+let p_programm : program t =
+  whitespace *> sep_by whitespace (p_func_decl p_statements)
+  >>= fun prog_ls -> return prog_ls
 
 let parse input = parse_string ~consume:All p_programm input
-
-let%expect_test "binary search" =
-  pp pp_prog p_programm
-    {|
-    int binarySearch(int a, int *array, int n) {
-      int low = 0;
-      int high = n - 1;
-      int middle;
-      while (low <= high) {
-        middle = (low + high) / 2;
-        if (a < array[middle] || a > array[middle]) {
-          if (a < array[middle]) {
-            high = middle - 1;
-          } 
-          else {
-            low = middle + 1;
-          }
-        } 
-        else {
-          return middle;
-        } 
-      }
-      return -1;
-    }
-    
-    int main() {
-      int array[5] = {3, 7, 10, 23, 100};
-      return binarySearch(7, array, 5);
-    }
-    |};
-  [%expect
-    {|
-    (My_programm
-       [(Func_def (
-           (Func_decl (ID_int, "binarySearch",
-              [(Arg (ID_int, "a")); (Arg ((Pointer ID_int), "array"));
-                (Arg (ID_int, "n"))]
-              )),
-           (Compound
-              [(Var_decl (ID_int, "low", (Some (Expression (Const (V_int 0))))));
-                (Var_decl (ID_int, "high",
-                   (Some (Expression
-                            (Bin_expr (Sub, (Var_name "n"), (Const (V_int 1))))))
-                   ));
-                (Var_decl (ID_int, "middle", None));
-                (While (
-                   (Bin_expr (LessOrEqual, (Var_name "low"), (Var_name "high"))),
-                   (Compound
-                      [(Assign ((Var_name "middle"),
-                          (Expression
-                             (Bin_expr (Div,
-                                (Bin_expr (Add, (Var_name "low"),
-                                   (Var_name "high"))),
-                                (Const (V_int 2)))))
-                          ));
-                        (If_else (
-                           (Bin_expr (Or,
-                              (Bin_expr (Less, (Var_name "a"),
-                                 (Index ((Var_name "array"), (Var_name "middle")
-                                    ))
-                                 )),
-                              (Bin_expr (Grow, (Var_name "a"),
-                                 (Index ((Var_name "array"), (Var_name "middle")
-                                    ))
-                                 ))
-                              )),
-                           (Compound
-                              [(If_else (
-                                  (Bin_expr (Less, (Var_name "a"),
-                                     (Index ((Var_name "array"),
-                                        (Var_name "middle")))
-                                     )),
-                                  (Compound
-                                     [(Assign ((Var_name "high"),
-                                         (Expression
-                                            (Bin_expr (Sub, (Var_name "middle"),
-                                               (Const (V_int 1)))))
-                                         ))
-                                       ]),
-                                  (Compound
-                                     [(Assign ((Var_name "low"),
-                                         (Expression
-                                            (Bin_expr (Add, (Var_name "middle"),
-                                               (Const (V_int 1)))))
-                                         ))
-                                       ])
-                                  ))
-                                ]),
-                           (Compound [(Return (Var_name "middle"))])))
-                        ])
-                   ));
-                (Return (Unary_expr (Minus, (Const (V_int 1)))))])
-           ));
-         (Func_def ((Func_decl (ID_int, "main", [])),
-            (Compound
-               [(Var_decl ((Array ((Some 5), ID_int)), "array",
-                   (Some (Expression
-                            (Array_value
-                               [(Const (V_int 3)); (Const (V_int 7));
-                                 (Const (V_int 10)); (Const (V_int 23));
-                                 (Const (V_int 100))])))
-                   ));
-                 (Return
-                    (Func_call ("binarySearch",
-                       [(Const (V_int 7)); (Var_name "array"); (Const (V_int 5))]
-                       )))
-                 ])
-            ))
-         ]) |}]
-
-let%expect_test "factorial" =
-  pp pp_prog p_programm
-    {|
-    int factorial(int n) {
-      if (n >= 1) {
-        return n * factorial(n - 1);
-      }
-      else {
-        return 1;
-      }
-    }
-      
-    int main() {
-      int n = 5; 
-      return factorial(n);
-    }
-    
-    |};
-  [%expect
-    {|
-    (My_programm
-       [(Func_def ((Func_decl (ID_int, "factorial", [(Arg (ID_int, "n"))])),
-           (Compound
-              [(If_else (
-                  (Bin_expr (GrowOrEqual, (Var_name "n"), (Const (V_int 1)))),
-                  (Compound
-                     [(Return
-                         (Bin_expr (Mul, (Var_name "n"),
-                            (Func_call ("factorial",
-                               [(Bin_expr (Sub, (Var_name "n"), (Const (V_int 1))
-                                   ))
-                                 ]
-                               ))
-                            )))
-                       ]),
-                  (Compound [(Return (Const (V_int 1)))])))
-                ])
-           ));
-         (Func_def ((Func_decl (ID_int, "main", [])),
-            (Compound
-               [(Var_decl (ID_int, "n", (Some (Expression (Const (V_int 5))))));
-                 (Return (Func_call ("factorial", [(Var_name "n")])))])
-            ))
-         ]) |}]

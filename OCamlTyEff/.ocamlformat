@@ -1,2 +1,4 @@
 profile = ocamlformat
 version = 0.26.1
+module-item-spacing=preserve
+sequence-blank-line=preserve-one

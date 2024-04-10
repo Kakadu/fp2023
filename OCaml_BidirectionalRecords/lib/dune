@@ -1,7 +1,7 @@
 (library
  (name ocaml_birecords)
  (public_name OCaml_BidirectionalRecords.Lib)
- (modules Ast Parser Tests)
+ (modules ast parser tests inferencer typing interpreter)
  (libraries base angstrom)
  (instrumentation
   (backend bisect_ppx))

@@ -1,11 +1,10 @@
 (library
  (name FSharpUnitsOfMeasure_lib)
  (public_name FSharpUnitsOfMeasure.Lib)
- (modules Ast Parser)
+ (modules Ast Parser Interpreter Interpret_error)
  (libraries base angstrom)
  (preprocess
   (pps ppx_expect ppx_deriving.show ppx_deriving.eq))
  (instrumentation
   (backend bisect_ppx))
  (inline_tests))
-

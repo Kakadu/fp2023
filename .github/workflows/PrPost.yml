@@ -131,7 +131,7 @@ jobs:
 
       # The way to remove comments changes to prevent pulling extra docker image should exist.
       #- name: Delete old comment
-      #  uses: jungwinter/comment@v1
+      #  uses: winterjung/comment@v1
       #  if: ${{ steps.fc.outputs.comment-id != 0 }}
       #  with:
       #    type: delete
@@ -279,7 +279,7 @@ jobs:
 
       # The way to remove comments changes to prevent pulling extra docker image should exist.
       #- name: Delete old comment
-      #  uses: jungwinter/comment@v1
+      #  uses: winterjung/comment@v1
       #  if: ${{ steps.fc.outputs.comment-id != 0 }}
       #  with:
       #    type: delete
@@ -378,7 +378,7 @@ jobs:
       #    echo "${{ steps.fc.outputs.comment-body }}"
 
       - name: Delete old comment
-        uses: jungwinter/comment@v1
+        uses: winterjung/comment@v1
         if: ${{ steps.fc.outputs.comment-id != 0 }}
         with:
           type: delete

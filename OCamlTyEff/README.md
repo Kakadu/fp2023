@@ -1,76 +1,80 @@
 # OCamlTyEff
 
-Interpreter for a subset of OCaml language with support for typed effects
+Interpreter for a subset of `OCaml` with support for typed effects.
 
-## Typed effects
+`OCamlTyEff` tracks the (side) effects of every function and represents them in the function’s type.
 
-WIP
+![demo](https://github.com/therain7/OCamlTyEff/assets/15161335/8ed130f9-d230-418d-852d-1697067ec14d)
+
+## Effects
+
+`OCamlTyEff` has 3 basic built-in effects: `console`, `exn`, `ref`. Intepreter automatically infers these effects if they occur in a function:
+
+```ocaml
+# fun () -> print_endline "Hello, World!";;
+- : unit -[console]-> unit = <fun>
+
+# fun x -> if x = 0 then raise Invalid_argument else x * 2;;
+- : int -[exn _Invalid_argument]-> int = <fun>
+
+# fun x -> global := x; 8 / x;;
+- : int -[ref, exn _Division_by_zero]-> int = <fun>
+```
+
+`exn` effect can be lifted using `try ... with`:
+
+```ocaml
+# ( / );;
+- : int -> int -[exn _Division_by_zero]-> int = <fun>
+
+# let safe_div x y = try x / y with Division_by_zero -> 0;;
+safe_div : int -> int -> int = <fun>
+```
+
+<br />
+
+Many functions are polymorphic in their effect.
+
+For example, `list_map` applies provided function to each element of a list. As such, the effect of `list_map` depends on the effect of provided function:
+
+```ocaml
+# list_map;;
+- : ('a -'e-> 'b) -> 'a list -'e-> 'b list = <fun>
+
+# list_map id;;
+- : 'a list -> 'a list = <fun>
+
+# list_map print_endline;;
+- : string list -[console]-> unit list = <fun>
+```
+
+<br />
+
+The type system for effects is based on [Koka](https://koka-lang.github.io/koka/doc/index.html) programming language. Please refer to its [documentation](https://koka-lang.github.io/koka/doc/book.html#sec-effect-types) for more information on effect types.
 
 ## Features
 
-### Parser
+Take a look at provided [examples](examples.t) to get a grasp of what's supported.
 
--   Structure items (top level statements)
+## Run locally
 
-    -   [x] `let` value bindings
-        -   [x] `rec`
-        -   [x] `and`
-        -   [x] `let f x = ..`
-    -   [x] expressions
-
--   Constants
-
-    -   [x] integer, char constants
-    -   [x] string constants `"helo world"`
-    -   [ ] string constants `{|hello world|}`
-    -   [ ] float constants
-    -   [ ] `()` constant
-    -   [ ] boolean constants
-
--   Expressions
-
-    -   [x] function application `f x y`
-    -   [x] constants
-    -   [x] `let .. in` value bindings
-    -   [x] `if .. then .. else ..`
-    -   [ ] anonymous functions
-        -   [ ] `fun x y -> ..`
-        -   [ ] `function`
-    -   [x] lists
-        -   [x] `[a; b; c]`
-        -   [x] `::`, `[]` constructors
-    -   [x] `match .. with ..`
-    -   [x] constructors' application (`None`, `Some x`)
-    -   [x] tuples `a, b, c`
-    -   [x] sequences `a; b; c`
-    -   [x] prefix and infix operators
-        -   `let (+++) a b = a - b in 5 +++ 4`
-        -   `let (?!) _ = failwith "?!" in ?!0`
-        -   `a + b`, `(+) (-a) b`
-
--   Patterns
-    -   [x] any `_`
-    -   [x] variables `a`
-    -   [x] constants
-    -   [x] tuples `a, b`
-    -   [x] or `a | b | c`
-    -   [x] constructors' application `None`, `Some x`, `Cons (hd, tl)`
-    -   [ ] lists
-        -   [x] `::` constructor
-        -   [ ] `[a;b;c]`
-
-### Type checker
-
-WIP
-
-### Interpreter
-
-WIP
-
-## Build & Run tests
+First install the dependencies using `opam`:
 
 ```bash
-dune build
+opam install --deps-only -t -y .
+```
+
+Then build and run REPL using `dune`:
+
+```bash
+dune exec repl
+```
+
+<br />
+
+Tests can be run by executing:
+
+```bash
 dune runtest
 ```
 

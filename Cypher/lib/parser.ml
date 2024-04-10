@@ -1,4 +1,4 @@
-(** Copyright 2023 Arseniy Baytenov *)
+(** Copyright 2023-2024, Arseniy Baytenov *)
 
 (** SPDX-License-Identifier: MIT *)
 
@@ -12,10 +12,8 @@ let kws =
   ; "WHERE"
   ; "DELETE"
   ; "DETACH"
-  ; "MERGE"
+  ; "NODETACH"
   ; "RETURN"
-  ; "CREATE"
-  ; "REMOVE"
   ; "IS"
   ; "NOT"
   ; "NULL"
@@ -24,6 +22,15 @@ let kws =
   ; "XOR"
   ; "TRUE"
   ; "FALSE"
+  ; "ORDER"
+  ; "BY"
+  ; "ASC"
+  ; "DESC"
+  ; "CONTAINS"
+  ; "STARTS"
+  ; "ENDS"
+  ; "WITH"
+  ; "AS"
   ]
 ;;
 
@@ -56,8 +63,9 @@ let skip_spaces_after p =
 let check_after p cond =
   p
   <* (satisfy (fun c -> not @@ cond c)
-      <|> return '!'
-      >>= fun c -> if c != '!' then fail "Incorrect symbol" else return '!')
+      <|> return @@ Char.chr 0
+      >>= fun c ->
+      if c <> Char.chr 0 then fail "Incorrect symbol" else return @@ Char.chr 0)
 ;;
 
 let parens p = skip_spaces (char '(') *> p <* skip_spaces (char ')')
@@ -79,11 +87,7 @@ let un_chainr1 e op =
   lift2 (fun ops e -> List.fold_right (fun f e -> f e) ops e) (many op) e
 ;;
 
-let parse p str =
-  match parse_string ~consume:All (skip_spaces_after p) str with
-  | Ok v -> v
-  | Error msg -> failwith msg
-;;
+let parse p str = parse_string ~consume:All (skip_spaces_after p) str
 
 let name =
   let name1 =
@@ -101,27 +105,6 @@ let name =
       (char '`' *> return "`")
   in
   name2 <|> name1
-;;
-
-let liter =
-  let ltrue =
-    take_while is_letter
-    >>= fun l ->
-    if uc l <> "TRUE" then fail "Literal TRUE parse fail" else return @@ Liter True
-  in
-  let lfalse =
-    take_while is_letter
-    >>= fun l ->
-    if uc l <> "FALSE" then fail "Literal FALSE parse fail" else return @@ Liter False
-  in
-  let lnull =
-    take_while is_letter
-    >>= fun l ->
-    if uc l <> "NULL" then fail "Literal NULL parse fail" else return @@ Liter Null
-  in
-  check_after
-    (skip_spaces @@ choice [ ltrue; lfalse; lnull ])
-    (fun c -> not @@ is_digit c)
 ;;
 
 let const =
@@ -149,17 +132,27 @@ let const =
     let string c = char c *> content_while_not c <* char c in
     choice [ string '\"'; string '\'' ]
   in
-  skip_spaces @@ lift (fun c -> Const c) (choice [ string; float; int64 ])
+  let bool_or_null =
+    check_after
+      (take_while is_letter
+       >>= fun l ->
+       match uc l with
+       | "TRUE" -> return @@ Bool true
+       | "FALSE" -> return @@ Bool false
+       | "NULL" -> return Null
+       | _ -> fail "")
+      (fun c -> not @@ is_digit c)
+  in
+  skip_spaces @@ lift (fun c -> Const c) (choice [ string; float; int64; bool_or_null ])
 ;;
 
-let var = skip_spaces @@ lift (fun v -> Var v) name
+let var = lift (fun v -> Var v) (skip_spaces name)
 
 let property =
-  skip_spaces
-  @@ lift2
-       (fun s1 s2 -> Property (s1, s2))
-       name
-       (skip_spaces (skip (fun c -> c = '.') *> skip_spaces name))
+  lift2
+    (fun s1 s2 -> Property (s1, s2))
+    (skip_spaces name)
+    (skip_spaces (skip (fun c -> c = '.') *> skip_spaces name))
 ;;
 
 let uminus =
@@ -204,6 +197,32 @@ let unot =
         >>= fun s ->
         if uc s <> "NOT" then fail "NOT parse fail" else return (fun e -> Un_op (NOT, e))
        ))
+    (fun c -> not @@ is_digit c)
+;;
+
+let bcontains =
+  check_after
+    (skip_spaces
+       (take_while is_letter
+        >>= fun op ->
+        match uc op with
+        | "CONTAINS" -> return (fun e1 e2 -> Bin_op (CONTAINS, e1, e2))
+        | _ -> fail ""))
+    (fun c -> not @@ is_digit c)
+;;
+
+let bstarts_ends_with =
+  check_after
+    (skip_spaces
+       (lift2
+          (fun s1 s2 -> s1, s2)
+          (take_while is_letter)
+          (skip_spaces (take_while is_letter))
+        >>= fun (s1, s2) ->
+        match uc s1, uc s2 with
+        | "STARTS", "WITH" -> return (fun e1 e2 -> Bin_op (STARTS_WITH, e1, e2))
+        | "ENDS", "WITH" -> return (fun e1 e2 -> Bin_op (ENDS_WITH, e1, e2))
+        | _ -> fail ""))
     (fun c -> not @@ is_digit c)
 ;;
 
@@ -297,8 +316,9 @@ let lgeq =
 
 let expr =
   fix (fun expr ->
-    let factor = choice [ parens expr; const; property; var; liter ] in
-    let null_or_not_null = un_chainl1 factor (uis_null <|> uis_not_null) in
+    let factor = choice [ parens expr; const; property; var ] in
+    let ss_comp_op = chainl1 factor (bcontains <|> bstarts_ends_with) in
+    let null_or_not_null = un_chainl1 ss_comp_op (uis_null <|> uis_not_null) in
     let minus = un_chainr1 null_or_not_null uminus in
     let caret = chainl1 minus bcaret in
     let asterisk_slash_percent = chainl1 caret (choice [ basterisk; bslash; bpercent ]) in
@@ -313,4 +333,723 @@ let expr =
     bor)
 ;;
 
-let parse_expr = parse expr
+let labels =
+  let label = skip_spaces (char ':') *> skip_spaces name in
+  many label
+;;
+
+let properties =
+  let property =
+    lift2
+      (fun n e -> n, e)
+      (skip_spaces name)
+      (skip_spaces (char ':' *> skip_spaces expr))
+  in
+  choice
+    [ braces @@ return []
+    ; braces
+        (lift2 (fun p ps -> p :: ps) property (many (skip_spaces (char ',' *> property))))
+    ; return []
+    ]
+;;
+
+let pattern = lift2 (fun ls ps -> ls, ps) labels properties
+
+let path =
+  let named_patt =
+    lift2
+      (fun n p -> n, p)
+      (skip_spaces name >>= (fun n -> return @@ Some n) <|> return None)
+      pattern
+  in
+  let rel =
+    choice
+      [ skip_spaces
+          (string "<-" *> (sq_brackets named_patt <|> return (None, ([], [])))
+           <* skip_spaces @@ char '-'
+           >>= fun (n, p) -> return ((n, p), Left))
+      ; skip_spaces
+          (char '-' *> (sq_brackets named_patt <|> return (None, ([], [])))
+           <* skip_spaces @@ string "->"
+           >>= fun (n, p) -> return ((n, p), Right))
+      ; skip_spaces
+          (char '-' *> (sq_brackets named_patt <|> return (None, ([], [])))
+           <* skip_spaces @@ char '-'
+           >>= fun (n, p) -> return ((n, p), No))
+      ]
+  in
+  let node = parens named_patt in
+  lift2
+    (fun n rns -> { start_node_pt = n; rel_node_pts = rns })
+    node
+    (many (lift2 (fun r n -> r, n) rel node))
+;;
+
+let paths = lift2 (fun p ps -> p :: ps) path (many (skip_spaces (char ',') *> path))
+
+let where =
+  check_after
+    (skip_spaces
+       (take_while is_letter
+        >>= fun s ->
+        match uc s with
+        | "WHERE" -> return ()
+        | _ -> fail ""))
+    (fun c -> not @@ is_digit c)
+  *> lift2 (fun c cs -> c :: cs) expr (many (skip_spaces (char ',') *> expr))
+  <|> return []
+;;
+
+let star = skip_spaces (char '*') *> (return @@ Some All) <|> return None
+
+let order_by =
+  let order_by_cond =
+    check_after
+      (skip_spaces
+         (take_while is_letter
+          >>= fun c ->
+          match uc c with
+          | "ASC" -> return Asc
+          | "DESC" -> return Desc
+          | _ -> fail ""))
+      (fun c -> not @@ is_digit c)
+    <|> return Asc
+  in
+  let part =
+    lift2
+      (fun es c -> es, c)
+      (lift2 (fun e es -> e :: es) expr (many (skip_spaces (char ',') *> expr)))
+      order_by_cond
+  in
+  check_after
+    (skip_spaces
+       (lift2
+          (fun s1 s2 -> uc s1, uc s2)
+          (take_while is_letter)
+          (skip_spaces (take_while is_letter))
+        >>= function
+        | "ORDER", "BY" -> return ()
+        | _ -> fail ""))
+    (fun c -> not @@ is_digit c)
+  *> lift2 (fun p ps -> p :: ps) part (many (skip_spaces (char ',') *> part))
+  <|> return []
+;;
+
+let kwas =
+  check_after
+    (skip_spaces
+       (take_while is_letter
+        >>= fun kwas ->
+        match uc kwas with
+        | "AS" -> return ()
+        | _ -> fail ""))
+    (fun c -> not @@ is_digit c)
+;;
+
+let cwith =
+  let alias = lift2 (fun e n -> e, n) expr (kwas *> skip_spaces name) in
+  let aliases =
+    lift2 (fun al als -> al :: als) alias (many (skip_spaces (char ',') *> alias))
+  in
+  check_after
+    (skip_spaces
+       (take_while is_letter
+        >>= fun c ->
+        match uc c with
+        | "WITH" -> return ()
+        | _ -> fail ""))
+    (fun c -> not @@ is_digit c)
+  *> lift3
+       (fun (s_opt, als) o_b wh -> s_opt, als, o_b, wh)
+       (star
+        >>= function
+        | Some All ->
+          skip_spaces (char ',') *> aliases
+          <|> return []
+          >>= fun als -> return (Some All, als)
+        | None -> aliases >>= fun als -> return (None, als))
+       order_by
+       where
+;;
+
+let creturn =
+  let alias =
+    lift2
+      (fun e n -> e, n)
+      expr
+      (kwas *> skip_spaces name >>= (fun n -> return @@ Some n) <|> return None)
+  in
+  let aliases =
+    lift2 (fun al als -> al :: als) alias (many (skip_spaces (char ',') *> alias))
+  in
+  check_after
+    (skip_spaces
+       (take_while is_letter
+        >>= fun c ->
+        match uc c with
+        | "RETURN" -> return ()
+        | _ -> fail ""))
+    (fun c -> not @@ is_digit c)
+  *> lift2
+       (fun (s_opt, als) o_b -> s_opt, als, o_b)
+       (star
+        >>= function
+        | Some All ->
+          skip_spaces (char ',') *> aliases
+          <|> return []
+          >>= fun als -> return (Some All, als)
+        | None -> aliases >>= fun als -> return (None, als))
+       order_by
+;;
+
+let cmatch =
+  check_after
+    (skip_spaces
+       (take_while is_letter
+        >>= fun c ->
+        match uc c with
+        | "MATCH" -> return ()
+        | _ -> fail ""))
+    (fun c -> not @@ is_digit c)
+  *> lift2 (fun ps wh -> ps, wh) paths where
+;;
+
+let ccreate =
+  check_after
+    (skip_spaces
+       (take_while is_letter
+        >>= fun c ->
+        match uc c with
+        | "CREATE" -> return ()
+        | _ -> fail ""))
+    (fun c -> not @@ is_digit c)
+  *> paths
+;;
+
+let cdelete =
+  let delete_attr =
+    check_after
+      (skip_spaces
+         (take_while is_letter
+          >>= fun c ->
+          match uc c with
+          | "DETACH" -> return Detach
+          | "NODETACH" -> return Nodetach
+          | _ -> fail ""))
+      (fun c -> not @@ is_digit c)
+    <|> return Nodetach
+  in
+  let dname = parens (skip_spaces (skip_spaces_after name)) <|> skip_spaces name in
+  let names =
+    lift2 (fun n ns -> n :: ns) dname (many (skip_spaces (char ',') *> dname))
+  in
+  delete_attr
+  >>= fun attr ->
+  check_after
+    (skip_spaces
+       (take_while is_letter
+        >>= fun c ->
+        match uc c with
+        | "DELETE" -> return ()
+        | _ -> fail ""))
+    (fun c -> not @@ is_digit c)
+  *> lift (fun ns -> attr, ns) names
+;;
+
+type cd =
+  | C of path list
+  | D of delete_attr * name list
+
+let request =
+  let safety c_opt =
+    c_opt
+    >>= function
+    | Some c -> return c
+    | None -> fail "Incomplete request: there is expected clause."
+  in
+  let r =
+    many cwith
+    >>= fun ws ->
+    creturn
+    >>= fun (s_opt, als, o_b) ->
+    return
+    @@ List.fold_right
+         (fun (s_opt, als, o_b, wh) c -> With (s_opt, als, o_b, wh, c))
+         ws
+         (Return (s_opt, als, o_b))
+  in
+  let r_opt = r >>= (fun r -> return @@ Some r) <|> return None in
+  let c = many cwith >>= fun ws -> ccreate >>= fun ps -> return (C ps, ws) in
+  let d =
+    many cwith >>= fun ws -> cdelete >>= fun (attr, ns) -> return (D (attr, ns), ws)
+  in
+  let cds =
+    many (c <|> d)
+    >>= fun cdwss ->
+    r_opt
+    >>= fun r_opt ->
+    return
+    @@ List.fold_right
+         (fun (cd, ws) c_opt ->
+           Some
+             (List.fold_right
+                (fun (s_opt, als, o_b, wh) c -> With (s_opt, als, o_b, wh, c))
+                ws
+                (match cd with
+                 | C ps -> Create (ps, c_opt)
+                 | D (attr, ns) -> Delete (attr, ns, c_opt))))
+         cdwss
+         r_opt
+  in
+  many cwith
+  >>= (fun ws ->
+        cmatch
+        >>= fun (ps, wh) ->
+        safety cds
+        >>= fun c ->
+        return
+        @@ List.fold_right
+             (fun (s_opt, als, o_b, wh) c -> With (s_opt, als, o_b, wh, c))
+             ws
+             (Match (ps, wh, c)))
+  <|> safety cds
+;;
+
+let parse_request = parse request
+
+let parse_and_print s =
+  match parse_request s with
+  | Ok v -> Stdlib.Format.printf "%a" pp_clause v
+  | Error msg -> Stdlib.Format.printf "%a" pp_name msg
+;;
+
+let%expect_test "Simple expr" =
+  parse_and_print {| RETURN 120.607 + 400 / 10 ^ 5 |};
+  [%expect
+    {|
+    (Return (None,
+       [((Bin_op (Plus, (Const (Float 120.607)),
+            (Bin_op (Slash, (Const (Int64 400L)),
+               (Bin_op (Caret, (Const (Int64 10L)), (Const (Int64 5L))))))
+            )),
+         None)],
+       [])) |}]
+;;
+
+let%expect_test "Simple expr with unary minus" =
+  parse_and_print {| RETURN - 120.607 + -400 / 10 ^ -x |};
+  [%expect
+    {|
+    (Return (None,
+       [((Bin_op (Plus, (Un_op (Minus, (Const (Float 120.607)))),
+            (Bin_op (Slash, (Const (Int64 -400L)),
+               (Bin_op (Caret, (Const (Int64 10L)), (Un_op (Minus, (Var "x")))))
+               ))
+            )),
+         None)],
+       [])) |}]
+;;
+
+let%expect_test "Multiple sequential comparison operators" =
+  parse_and_print {| RETURN 1+-1 = 0 <> 10 >= 5*1 <= 5/1 > - -4 <> null |};
+  [%expect
+    {|
+    (Return (None,
+       [((List_op ((Bin_op (Plus, (Const (Int64 1L)), (Const (Int64 -1L)))),
+            [(Eq, (Const (Int64 0L))); (NEq, (Const (Int64 10L)));
+              (GEq, (Bin_op (Asterisk, (Const (Int64 5L)), (Const (Int64 1L)))));
+              (LEq, (Bin_op (Slash, (Const (Int64 5L)), (Const (Int64 1L)))));
+              (Greater, (Un_op (Minus, (Const (Int64 -4L)))));
+              (NEq, (Const Null))]
+            )),
+         None)],
+       [])) |}]
+;;
+
+let%expect_test "Null check operators" =
+  parse_and_print {| RETURN 4 = (4 + a is null IS NOT NULL) is null |};
+  [%expect
+    {|
+    (Return (None,
+       [((List_op ((Const (Int64 4L)),
+            [(Eq,
+              (Un_op (IS_NULL,
+                 (Bin_op (Plus, (Const (Int64 4L)),
+                    (Un_op (IS_NOT_NULL, (Un_op (IS_NULL, (Var "a")))))))
+                 )))
+              ]
+            )),
+         None)],
+       [])) |}]
+;;
+
+let%expect_test "Boolean oparators and literals" =
+  parse_and_print
+    {| RETURN not 1 = 1 or 4 = a + 23.0 and false xor not true or "Hello" = a + "llo" |};
+  [%expect
+    {|
+    (Return (None,
+       [((Bin_op (OR,
+            (Bin_op (OR,
+               (Un_op (NOT,
+                  (List_op ((Const (Int64 1L)), [(Eq, (Const (Int64 1L)))])))),
+               (Bin_op (AND,
+                  (List_op ((Const (Int64 4L)),
+                     [(Eq, (Bin_op (Plus, (Var "a"), (Const (Float 23.)))))])),
+                  (Bin_op (XOR, (Const (Bool false)),
+                     (Un_op (NOT, (Const (Bool true))))))
+                  ))
+               )),
+            (List_op ((Const (String "Hello")),
+               [(Eq, (Bin_op (Plus, (Var "a"), (Const (String "llo")))))]))
+            )),
+         None)],
+       [])) |}]
+;;
+
+let%expect_test "String specific comparison operators" =
+  parse_and_print
+    {| RETURN "hola" STARTS WITH "ho", "hola" ENDS WITH "la", "hola" CONTAINS "ola" |};
+  [%expect
+    {|
+    (Return (None,
+       [((Bin_op (STARTS_WITH, (Const (String "hola")), (Const (String "ho")))),
+         None);
+         ((Bin_op (ENDS_WITH, (Const (String "hola")), (Const (String "la")))),
+          None);
+         ((Bin_op (CONTAINS, (Const (String "hola")), (Const (String "ola")))),
+          None)
+         ],
+       [])) |}]
+;;
+
+let%expect_test "RETURN clause test1" =
+  parse_and_print {| RETURN * |};
+  [%expect {| (Return ((Some All), [], [])) |}]
+;;
+
+let%expect_test "RETURN clause test2" =
+  parse_and_print {| RETURN *, 4, 5 as five |};
+  [%expect
+    {|
+    (Return ((Some All),
+       [((Const (Int64 4L)), None); ((Const (Int64 5L)), (Some "five"))],
+       [])) |}]
+;;
+
+let%expect_test "RETURN clause test3" =
+  parse_and_print {| RETURN 4 as four, 5 as five |};
+  [%expect
+    {|
+    (Return (None,
+       [((Const (Int64 4L)), (Some "four")); ((Const (Int64 5L)), (Some "five"))],
+       [])) |}]
+;;
+
+let%expect_test "WITH clause test1" =
+  parse_and_print {| WITH * RETURN * |};
+  [%expect {| (With ((Some All), [], [], [], (Return ((Some All), [], [])))) |}]
+;;
+
+let%expect_test "WITH clause test2" =
+  parse_and_print {| WITH *, 4 as four, 5 as five RETURN * |};
+  [%expect
+    {|
+    (With ((Some All),
+       [((Const (Int64 4L)), "four"); ((Const (Int64 5L)), "five")], [],
+       [], (Return ((Some All), [], [])))) |}]
+;;
+
+let%expect_test "WITH clause test3" =
+  parse_and_print {| WITH 4 as four RETURN * |};
+  [%expect
+    {|
+    (With (None, [((Const (Int64 4L)), "four")], [], [],
+       (Return ((Some All), [], [])))) |}]
+;;
+
+let%expect_test "MATCH clause test1" =
+  parse_and_print {|
+  WITH *
+  WITH 4 as four, 5 as five
+  MATCH ()
+  RETURN * |};
+  [%expect
+    {|
+    (With ((Some All), [], [], [],
+       (With (None, [((Const (Int64 4L)), "four"); ((Const (Int64 5L)), "five")],
+          [], [],
+          (Match ([{ start_node_pt = (None, ([], [])); rel_node_pts = [] }],
+             [], (Return ((Some All), [], []))))
+          ))
+       )) |}]
+;;
+
+let%expect_test "MATCH clause test2" =
+  parse_and_print {|
+  WITH 5 as f
+  MATCH ()--(), ()-[]-()-->()<--()
+  RETURN * |};
+  [%expect
+    {|
+    (With (None, [((Const (Int64 5L)), "f")], [], [],
+       (Match (
+          [{ start_node_pt = (None, ([], []));
+             rel_node_pts = [(((None, ([], [])), No), (None, ([], [])))] };
+            { start_node_pt = (None, ([], []));
+              rel_node_pts =
+              [(((None, ([], [])), No), (None, ([], [])));
+                (((None, ([], [])), Right), (None, ([], [])));
+                (((None, ([], [])), Left), (None, ([], [])))]
+              }
+            ],
+          [], (Return ((Some All), [], []))))
+       )) |}]
+;;
+
+let%expect_test "MATCH clause test3" =
+  parse_and_print
+    {|
+  MATCH (:L1:L2{name:"Sasha"})-[r1:L1{d:5, f:6}]-(n1{})-[{}]->(n2)
+  RETURN * |};
+  [%expect
+    {|
+    (Match (
+       [{ start_node_pt =
+          (None, (["L1"; "L2"], [("name", (Const (String "Sasha")))]));
+          rel_node_pts =
+          [((((Some "r1"),
+              (["L1"], [("d", (Const (Int64 5L))); ("f", (Const (Int64 6L)))])),
+             No),
+            ((Some "n1"), ([], [])));
+            (((None, ([], [])), Right), ((Some "n2"), ([], [])))]
+          }
+         ],
+       [], (Return ((Some All), [], [])))) |}]
+;;
+
+let%expect_test "CREATE clause test1" =
+  parse_and_print
+    {|
+  WITH *
+  WITH 4 as four, 5 as five
+  CREATE (), ()-->(), ()<-[]-()-->()<--()
+  |};
+  [%expect
+    {|
+    (With ((Some All), [], [], [],
+       (With (None, [((Const (Int64 4L)), "four"); ((Const (Int64 5L)), "five")],
+          [], [],
+          (Create (
+             [{ start_node_pt = (None, ([], [])); rel_node_pts = [] };
+               { start_node_pt = (None, ([], []));
+                 rel_node_pts = [(((None, ([], [])), Right), (None, ([], [])))] };
+               { start_node_pt = (None, ([], []));
+                 rel_node_pts =
+                 [(((None, ([], [])), Left), (None, ([], [])));
+                   (((None, ([], [])), Right), (None, ([], [])));
+                   (((None, ([], [])), Left), (None, ([], [])))]
+                 }
+               ],
+             None))
+          ))
+       )) |}]
+;;
+
+let%expect_test "CREATE clause test2" =
+  parse_and_print
+    {|
+  WITH 5 as f
+  CREATE (:L1:L2{name:"Sasha"})<-[r1:L1{d:5, f:6}]-(n1{})-[{}]->(n2)
+  |};
+  [%expect
+    {|
+    (With (None, [((Const (Int64 5L)), "f")], [], [],
+       (Create (
+          [{ start_node_pt =
+             (None, (["L1"; "L2"], [("name", (Const (String "Sasha")))]));
+             rel_node_pts =
+             [((((Some "r1"),
+                 (["L1"], [("d", (Const (Int64 5L))); ("f", (Const (Int64 6L)))])),
+                Left),
+               ((Some "n1"), ([], [])));
+               (((None, ([], [])), Right), ((Some "n2"), ([], [])))]
+             }
+            ],
+          None))
+       )) |}]
+;;
+
+let%expect_test "DELETE clause test" =
+  parse_and_print
+    {|
+  WITH *
+  WITH 4 as four, 5 as five
+  MATCH (n1)-[r]-(n2)
+  DELETE n1, (r), n2
+  |};
+  [%expect
+    {|
+    (With ((Some All), [], [], [],
+       (With (None, [((Const (Int64 4L)), "four"); ((Const (Int64 5L)), "five")],
+          [], [],
+          (Match (
+             [{ start_node_pt = ((Some "n1"), ([], []));
+                rel_node_pts =
+                [((((Some "r"), ([], [])), No), ((Some "n2"), ([], [])))] }
+               ],
+             [], (Delete (Nodetach, ["n1"; "r"; "n2"], None))))
+          ))
+       )) |}]
+;;
+
+let%expect_test "DETACH DELETE test" =
+  parse_and_print {|
+CREATE (n)
+DETACH DELETE n |};
+  [%expect
+    {|
+    (Create ([{ start_node_pt = ((Some "n"), ([], [])); rel_node_pts = [] }],
+       (Some (Delete (Detach, ["n"], None))))) |}]
+;;
+
+let%expect_test "NODETACH DELETE test" =
+  parse_and_print {|
+CREATE (n)
+NODETACH DELETE n |};
+  [%expect
+    {|
+    (Create ([{ start_node_pt = ((Some "n"), ([], [])); rel_node_pts = [] }],
+       (Some (Delete (Nodetach, ["n"], None))))) |}]
+;;
+
+let%expect_test "many DELETE and CREATE clauses test" =
+  parse_and_print
+    {|
+  CREATE (n1)
+  CREATE (n2)
+  DELETE n1
+  DELETE n2
+  CREATE (n3)
+  DELETE n3
+  CREATE (n4)
+  |};
+  [%expect
+    {|
+    (Create ([{ start_node_pt = ((Some "n1"), ([], [])); rel_node_pts = [] }],
+       (Some (Create (
+                [{ start_node_pt = ((Some "n2"), ([], [])); rel_node_pts = [] }],
+                (Some (Delete (Nodetach, ["n1"],
+                         (Some (Delete (Nodetach, ["n2"],
+                                  (Some (Create (
+                                           [{ start_node_pt =
+                                              ((Some "n3"), ([], []));
+                                              rel_node_pts = [] }
+                                             ],
+                                           (Some (Delete (Nodetach, ["n3"],
+                                                    (Some (Create (
+                                                             [{ start_node_pt =
+                                                                ((Some "n4"),
+                                                                 ([], []));
+                                                                rel_node_pts = []
+                                                                }
+                                                               ],
+                                                             None)))
+                                                    )))
+                                           )))
+                                  )))
+                         )))
+                )))
+       )) |}]
+;;
+
+let%expect_test "Read-write request test" =
+  parse_and_print
+    {|
+  WITH *
+  MATCH ()
+  WITH *
+  WITH *
+  CREATE (n1)
+  CREATE (n2)
+  WITH *
+  WITH *
+  DELETE n1
+  DELETE n2
+  CREATE (n3)
+  DELETE n3
+  CREATE (n4{name:"hola", id:1})
+  RETURN *, n4.name, n4.id as id
+  |};
+  [%expect
+    {|
+    (With ((Some All), [], [], [],
+       (Match ([{ start_node_pt = (None, ([], [])); rel_node_pts = [] }],
+          [],
+          (With ((Some All), [], [], [],
+             (With ((Some All), [], [], [],
+                (Create (
+                   [{ start_node_pt = ((Some "n1"), ([], [])); rel_node_pts = []
+                      }
+                     ],
+                   (Some (Create (
+                            [{ start_node_pt = ((Some "n2"), ([], []));
+                               rel_node_pts = [] }
+                              ],
+                            (Some (With ((Some All), [], [], [],
+                                     (With ((Some All), [], [], [],
+                                        (Delete (Nodetach, ["n1"],
+                                           (Some (Delete (Nodetach, ["n2"],
+                                                    (Some (Create (
+                                                             [{ start_node_pt =
+                                                                ((Some "n3"),
+                                                                 ([], []));
+                                                                rel_node_pts = []
+                                                                }
+                                                               ],
+                                                             (Some (Delete (
+                                                                      Nodetach,
+                                                                      ["n3"],
+                                                                      (Some (
+                                                                      Create (
+                                                                        [{ start_node_pt =
+                                                                        ((Some "n4"),
+                                                                        ([],
+                                                                        [("name",
+                                                                        (Const
+                                                                        (String
+                                                                        "hola")));
+                                                                        ("id",
+                                                                        (Const
+                                                                        (Int64 1L)))
+                                                                        ]));
+                                                                        rel_node_pts =
+                                                                        [] }],
+                                                                        (Some (
+                                                                        Return (
+                                                                        (Some All),
+                                                                        [((
+                                                                        Property (
+                                                                        "n4",
+                                                                        "name")),
+                                                                        None);
+                                                                        ((
+                                                                        Property (
+                                                                        "n4",
+                                                                        "id")),
+                                                                        (Some "id"))
+                                                                        ],
+                                                                        []))))))
+                                                                      )))
+                                                             )))
+                                                    )))
+                                           ))
+                                        ))
+                                     )))
+                            )))
+                   ))
+                ))
+             ))
+          ))
+       )) |}]
+;;

@@ -1,33 +1,25 @@
-(** Copyright 2021-2023, ksenmel *)
+(** Copyright 2021-2024, ksenmel *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-type id = string [@@deriving show]
+type id = string [@@deriving show { with_path = false }]
 
 type ty =
   | TInt
   | TBool
   | TString
   | TList of ty
+  | TArrow of ty * ty
   | TTuple of ty list
-  | Unspecified
-  | UserDefined of id
-[@@deriving show]
-
-type ty_bind =
-  { name : id
-  ; ty : ty
-  }
-[@@deriving show]
+[@@deriving show { with_path = false }]
 
 type const =
   | Bool of bool
   | Int of int
   | Char of char
   | String of string
-  | Nil
   | Unit
-[@@deriving show]
+[@@deriving show { with_path = false }]
 
 type binop =
   | Plus
@@ -43,41 +35,33 @@ type binop =
   | Ltq (*  <= *)
   | Gt (*  > *)
   | Gtq (*  >= *)
-[@@deriving show]
-
-type unop =
-  | UNot (** not a *)
-  | UMinus (*  -5 *)
-  | UPlus
-[@@deriving show]
+[@@deriving show { with_path = false }]
 
 type pattern =
-  | PVar of ty_bind
+  | PVar of id
   | PConst of const
-  | PCons of pattern * pattern list (** PCons (p1,p2) is p1::p2 *)
   | PAny (* _ *)
-  | PTuple of pattern list
-[@@deriving show]
+  | PNil (* []*)
+[@@deriving show { with_path = false }]
 
 type rec_flag =
   | Rec
   | NonRec
-[@@deriving show]
+[@@deriving show { with_path = false }]
 
 type expr =
-  | EVar of ty_bind
+  | EVar of id
   | EConst of const
   | EBinOp of binop * expr * expr (** EBinOp (op,l,r) is l op r *)
-  | EUnOp of unop * expr (** EUnOp (op,e) is op e *)
-  | EFun of ty_bind * expr (** Fun x -> e *)
+  | EFun of pattern * expr (** Fun x -> e *)
   | ECons of expr * expr (** ECons (h,t) is list h::t *)
   | ETuple of expr list (** (expr1, ..., exprn) *)
   | EIfThenElse of expr * expr * expr (** IfThenElse (b,t,e) is if b then t else e *)
-  | ELet of rec_flag * ty_bind * expr * expr (** Let (x,e,e') is let x = e in e' *)
+  | ELet of decl * expr (** Let (x,e,e') is let x = e in e' *)
   | EApp of expr * expr (**  App (f,e) is application f e *)
+  | EList of expr list
   | EMatch of expr * (pattern * expr)
   | EUnit
-[@@deriving show]
+[@@deriving show { with_path = false }]
 
-type record = ty_bind list [@@deriving show]
-type decl = rec_flag * ty_bind * expr [@@deriving show]
+and decl = rec_flag * id * expr

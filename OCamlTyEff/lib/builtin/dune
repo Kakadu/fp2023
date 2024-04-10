@@ -1,0 +1,6 @@
+(library
+ (name builtin)
+ (public_name OCamlTyEff.Builtin)
+ (libraries base misc types parse eval)
+ (instrumentation
+  (backend bisect_ppx)))

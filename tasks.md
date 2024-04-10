@@ -762,7 +762,8 @@
 
 ##### Определюсь/допишу потом если тем будет не хватать/или кому-то очень захочется/и не будет лениво их доформулировать, а может на 2023 год оставлю
 
-
+1. Nemerle http://nemerle.org/About
+1. Purescript
 1. Fortran?
 1. Visual Basic.NET (клон C# с другим синтаксисом)
     * [На вики есть](https://en.wikipedia.org/wiki/Comparison_of_C_Sharp_and_Visual_Basic_.NET#Features_of_Visual_Basic_.NET_not_found_in_C#) список отличий. Если сесть и посмотреть, то наверняка можно придумать задачу.

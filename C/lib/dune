@@ -1,7 +1,7 @@
 (library
  (name C_lib)
  (public_name C.Lib)
- (modules Ast Parser)
+ (modules Ast Parser Interpret InterpretTypes)
  (libraries base angstrom stdint)
  (inline_tests)
  (preprocess

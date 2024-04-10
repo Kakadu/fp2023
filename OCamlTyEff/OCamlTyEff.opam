@@ -3,9 +3,11 @@ opam-version: "2.0"
 synopsis: "OCaml interpreter with support for typed effects"
 description: "OCaml interpreter with support for typed effects"
 maintainer: [
-  "Andrei <therain.i@yahoo.com>" "Danil S <danil.slinchuk@gmail.com"
+  "Andrei <therain.i@yahoo.com>" "Danil S <danil.slinchuk@gmail.com>"
 ]
-authors: ["Andrei <therain.i@yahoo.com>" "Danil S <danil.slinchuk@gmail.com"]
+authors: [
+  "Andrei <therain.i@yahoo.com>" "Danil S <danil.slinchuk@gmail.com>"
+]
 license: "MIT"
 homepage: "https://github.com/therain7/OCamlTyEff"
 bug-reports: "https://github.com/therain7/OCamlTyEff/issues"
@@ -13,9 +15,16 @@ depends: [
   "ocaml"
   "dune" {>= "3.7"}
   "base"
+  "stdio"
+  "lambda-term"
+  "zed"
+  "lwt"
+  "react"
   "angstrom"
+  "monads" {= "dev"}
   "ppx_deriving"
   "ppx_expect"
+  "ppx_sexp_conv"
   "bisect_ppx"
   "odoc" {with-doc}
 ]
@@ -32,4 +41,9 @@ build: [
     "@runtest" {with-test}
     "@doc" {with-doc}
   ]
+]
+pin-depends: [
+  [ "monads.dev" "git+https://github.com/BinaryAnalysisPlatform/bap#511b64ce7fcf619eae373a6a11c50c668a0cf311" ]
+  [ "bap-common.dev" "git+https://github.com/BinaryAnalysisPlatform/bap#511b64ce7fcf619eae373a6a11c50c668a0cf311" ]
+  [ "ppx_bap.dev" "git+https://github.com/BinaryAnalysisPlatform/bap#511b64ce7fcf619eae373a6a11c50c668a0cf311" ]
 ]

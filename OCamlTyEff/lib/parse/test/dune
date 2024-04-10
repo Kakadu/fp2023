@@ -1,0 +1,10 @@
+(include_subdirs no)
+
+(library
+ (name parse_test)
+ (libraries base stdio ast parse)
+ (preprocess
+  (pps ppx_expect))
+ (inline_tests)
+ (instrumentation
+  (backend bisect_ppx)))

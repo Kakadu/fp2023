@@ -1,0 +1,5 @@
+pin-depends: [
+  [ "monads.dev" "git+https://github.com/BinaryAnalysisPlatform/bap#511b64ce7fcf619eae373a6a11c50c668a0cf311" ]
+  [ "bap-common.dev" "git+https://github.com/BinaryAnalysisPlatform/bap#511b64ce7fcf619eae373a6a11c50c668a0cf311" ]
+  [ "ppx_bap.dev" "git+https://github.com/BinaryAnalysisPlatform/bap#511b64ce7fcf619eae373a6a11c50c668a0cf311" ]
+]

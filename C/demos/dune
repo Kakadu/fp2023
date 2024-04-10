@@ -1,19 +1,14 @@
 (executable
- (name demoFact)
- (modules demoFact)
- (public_name demoFact)
- (libraries C_lib)
- (instrumentation
-  (backend bisect_ppx)))
+ (name demoParse)
+ (modules demoParse)
+ (public_name demoParse)
+ (libraries C_lib stdio))
 
 (executable
- (name demoBinarySearch)
- (modules demoBinarySearch)
- (public_name demoBinarySearch)
- (libraries C_lib)
- (instrumentation
-  (backend bisect_ppx)))
+ (name demoInterpret)
+ (modules demoInterpret)
+ (public_name demoInterpret)
+ (libraries C_lib stdio))
 
 (cram
- (applies_to parsingTests)
- (deps %{bin:demoFact} %{bin:demoBinarySearch}))
+ (deps ./demoParse.exe ./demoInterpret.exe))

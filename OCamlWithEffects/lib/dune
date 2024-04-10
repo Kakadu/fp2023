@@ -1,7 +1,23 @@
+(include_subdirs unqualified)
+
 (library
  (name ocaml_with_effects_lib)
  (public_name OCamlWithEffects.Lib)
- (modules Parser Ast)
+ (modules
+  Ast
+  Auxiliary
+  Parser
+  Parser_errors
+  Parser_pprint
+  Typedtree
+  Inferencer
+  Inf_errors
+  Inf_pprint
+  Values
+  Interpreter
+  Int_errors
+  Int_pprint
+  Run)
  (libraries base angstrom)
  (preprocess
   (pps ppx_deriving.show ppx_deriving.eq))

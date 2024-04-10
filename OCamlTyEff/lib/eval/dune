@@ -1,0 +1,8 @@
+(library
+ (name eval)
+ (public_name OCamlTyEff.Eval)
+ (libraries base monads ast misc)
+ (preprocess
+  (pps ppx_deriving.show ppx_deriving.ord ppx_deriving.eq ppx_sexp_conv))
+ (instrumentation
+  (backend bisect_ppx)))
