@@ -109,17 +109,6 @@
   > greet 100;;
   (VInt 10000)
 
-  $ ./demos.exe <<- EOF
-  >  let (|Even|_|) v = if v % 2 = 0 then Even else None;;
-  >  let (|Odd|_|) v = if v % 2 <> 0 then Odd else None;;
-  >  let myfunc v =
-  >  match v with
-  >  | Even -> 50
-  >  | Odd -> 25
-  >  | _ -> 6;;
-  >  myfunc 8;;
-  (VInt 50)
-
 cps factorial  
   $ ./demos.exe <<- EOF
   > let rec fact x k = if x = 1 then k x else fact (x - 1) (fun n -> n * k x);;
