@@ -48,7 +48,7 @@
 
   $ ./demos.exe <<- EOF
   > 
-  (Error while parsing): : not enough input
+  (Error while parsing): : no more choices
 
   $ ./demos.exe <<- EOF
   > let rec fact n = if n = 1 then 1 else n * (fact (n - 1));;
@@ -127,16 +127,33 @@ cps factorial
   (VInt 120)
 
   $ ./demos.exe <<- EOF
-  > let plusfive x =
-  >    let five a = a + 5
-  >    in five x;;
-  > plusfive 570;;
-  (VInt 575)
-
-  $ ./demos.exe <<- EOF
   > let rec listmap f list =
   >     match list with
   >       | [] -> []
   >       | hd :: tl -> ((f hd) :: (listmap f tl));;
   > let result = listmap (fun x -> x * x) [1; 2; 3; 4; 5];;
   (VList [(VInt 1); (VInt 4); (VInt 9); (VInt 16); (VInt 25)])
+
+  $ ./demos.exe <<- EOF
+  > let rec rev_append l1 l2 =
+  > match l1 with
+  >   [] -> l2
+  > | a :: l -> rev_append l (a :: l2);;
+  > rev_append [1;2;3] [4;5;6];;
+  (VList [(VInt 3); (VInt 2); (VInt 1); (VInt 4); (VInt 5); (VInt 6)])
+
+  $ ./demos.exe <<- EOF
+  > let rec fold_left f accu l =
+  > match l with
+  > | [] -> accu
+  > | a::l -> (fold_left f (f accu a) l);;
+  > fold_left (fun acc element -> acc + element) 0 [1;2;3;4;5];;
+  (VInt 15)
+
+  $ ./demos.exe <<- EOF
+  > let plusfive x =
+  >    let five a = a + 5
+  >    in five x;;
+  > plusfive 570;;
+  (VInt 575)
+

@@ -317,10 +317,6 @@ let infer =
       let* s5 = unify t2 t3 in
       let* final_subst = Subst.compose_all [ s5; s4; s3; s2; s1 ] in
       return (final_subst, Subst.apply final_subst t2)
-    | LetExpr (_, name, expr) ->
-      let* tv = fresh_var in
-      let env = TypeEnv.extend env (name, S (VarSet.empty, tv)) in
-      helper env expr
     | FunExpr (arg, e) ->
       let* env, t1 = pattern_helper env arg in
       let* s, t2 = helper env e in
@@ -369,9 +365,17 @@ let infer =
             return (subst, t :: tuple))
       in
       return (s, Tuple_typ (List.rev t))
-    | LetActExpr (_, _) -> fail NotImplemented
   in
-  helper
+  let (helper_bind : TypeEnv.t -> Ast.struct_inter -> (Subst.t * typ) R.t) =
+    fun env -> function
+    | Let (_, name, expr) ->
+      let* tv = fresh_var in
+      let env = TypeEnv.extend env (name, S (VarSet.empty, tv)) in
+      helper env expr
+    | Expression expr -> helper env expr
+    | LetAct _ -> fail NotImplemented
+  in
+  helper_bind
 ;;
 
 let empty : environment = TypeEnv.empty
@@ -379,7 +383,7 @@ let empty : environment = TypeEnv.empty
 let check_type env expr =
   let* _, typ = infer env expr in
   match expr with
-  | LetExpr (_, name, _) ->
+  | Let (_, name, _) ->
     let env = TypeEnv.extend env (name, S (VarSet.empty, typ)) in
     return (env, typ)
   | _ -> return (env, typ)

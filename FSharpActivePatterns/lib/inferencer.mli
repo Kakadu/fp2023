@@ -23,7 +23,7 @@ type environment = (string * scheme) list
 
 val check_types
   :  ?env:environment
-  -> Ast.expr list
+  -> Ast.struct_inter list
   -> (environment * typ, Errorinter.error_infer) result
 
 val run_infer : ('a * typ, Errorinter.error_infer) result -> unit

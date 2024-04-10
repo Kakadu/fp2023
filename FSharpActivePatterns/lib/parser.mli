@@ -10,4 +10,5 @@ val parse_const : const t
 val parse_var : pattern t
 val pat : pattern t
 val parse : expr t
-val main_parse : string -> (Ast.expr list, string) result
+val parse_bind : struct_inter t
+val main_parse : string -> (Ast.struct_inter list, string) result

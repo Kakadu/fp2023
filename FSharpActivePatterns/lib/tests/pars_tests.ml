@@ -123,10 +123,10 @@ let%expect_test _ =
 
 let%expect_test _ =
   let test = "let f x = x+x" in
-  start_test parse show_expr test;
+  start_test parse_bind show_struct_inter test;
   [%expect
     {|
-    (LetExpr (false, "f",
+    (Let (false, "f",
        (FunExpr ((Var "x"), (BinExpr (Add, (VarExpr "x"), (VarExpr "x"))))))) |}]
 ;;
 
@@ -144,30 +144,31 @@ let%expect_test _ =
 
 let%expect_test _ =
   let test = "7 + 10 + 4 * 50 + 19 / 3 + (10 - 5) " in
-  start_test parse show_expr test;
+  start_test parse_bind show_struct_inter test;
   [%expect
     {|
-      (BinExpr (Add,
+      (Expression
          (BinExpr (Add,
             (BinExpr (Add,
-               (BinExpr (Add, (ConstExpr (CInt 7)), (ConstExpr (CInt 10)))),
-               (BinExpr (Mul, (ConstExpr (CInt 4)), (ConstExpr (CInt 50)))))),
-            (BinExpr (Div, (ConstExpr (CInt 19)), (ConstExpr (CInt 3)))))),
-         (BinExpr (Sub, (ConstExpr (CInt 10)), (ConstExpr (CInt 5)))))) |}]
+               (BinExpr (Add,
+                  (BinExpr (Add, (ConstExpr (CInt 7)), (ConstExpr (CInt 10)))),
+                  (BinExpr (Mul, (ConstExpr (CInt 4)), (ConstExpr (CInt 50)))))),
+               (BinExpr (Div, (ConstExpr (CInt 19)), (ConstExpr (CInt 3)))))),
+            (BinExpr (Sub, (ConstExpr (CInt 10)), (ConstExpr (CInt 5))))))) |}]
 ;;
 
 let%expect_test _ =
   let test = "let x = 5" in
-  start_test parse show_expr test;
-  [%expect {| (LetExpr (false, "x", (ConstExpr (CInt 5)))) |}]
+  start_test parse_bind show_struct_inter test;
+  [%expect {| (Let (false, "x", (ConstExpr (CInt 5)))) |}]
 ;;
 
 let%expect_test _ =
   let test = "let rec fact n = if n = 1 then 1 else n * (fact (n - 1))" in
-  start_test parse show_expr test;
+  start_test parse_bind show_struct_inter test;
   [%expect
     {|
-    (LetExpr (true, "fact",
+    (Let (true, "fact",
        (FunExpr ((Var "n"),
           (IfExpr ((BinExpr (Eq, (VarExpr "n"), (ConstExpr (CInt 1)))),
              (ConstExpr (CInt 1)),
@@ -182,10 +183,10 @@ let%expect_test _ =
 
 let%expect_test _ =
   let test = "let check input = match input with | 2 -> 5 | 5 -> 10" in
-  start_test parse show_expr test;
+  start_test parse_bind show_struct_inter test;
   [%expect
     {|
-      (LetExpr (false, "check",
+      (Let (false, "check",
          (FunExpr ((Var "input"),
             (MatchExpr ((VarExpr "input"),
                [((Const (CInt 2)), (ConstExpr (CInt 5)));
@@ -197,21 +198,22 @@ let%expect_test _ =
 
 let%expect_test _ =
   let test = "match x with Some x -> x | None -> 0" in
-  start_test parse show_expr test;
+  start_test parse_bind show_struct_inter test;
   [%expect
     {|
-    (MatchExpr ((VarExpr "x"),
-       [((Case ("Some", [(Var "x")])), (VarExpr "x"));
-         ((Case ("None", [])), (ConstExpr (CInt 0)))]
-       )) |}]
+    (Expression
+       (MatchExpr ((VarExpr "x"),
+          [((Case ("Some", [(Var "x")])), (VarExpr "x"));
+            ((Case ("None", [])), (ConstExpr (CInt 0)))]
+          ))) |}]
 ;;
 
 let%expect_test _ =
   let test = "let (|Even|Odd|) input = if input % 2 = 0 then Even else Odd" in
-  start_test parse show_expr test;
+  start_test parse_bind show_struct_inter test;
   [%expect
     {|
-    (LetActExpr (["Even"; "Odd"],
+    (LetAct (["Even"; "Odd"],
        (FunExpr ((Var "input"),
           (IfExpr (
              (BinExpr (Eq,
@@ -223,32 +225,64 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  let test = "let (|Even|_|) v = if v % 2 = 0 then Even else None " in
-  start_test parse show_expr test;
+  let test =
+    "   let myfunc v =\n   match v with\n   | Even -> 50\n   | Odd -> 25\n   | _ -> 6"
+  in
+  start_test parse_bind show_struct_inter test;
   [%expect
     {|
-    (LetActExpr (["Even"; "_"],
+    (Let (false, "myfunc",
        (FunExpr ((Var "v"),
-          (IfExpr (
-             (BinExpr (Eq, (BinExpr (Mod, (VarExpr "v"), (ConstExpr (CInt 2)))),
-                (ConstExpr (CInt 0)))),
-             (CaseExpr "Even"), (CaseExpr "None")))
+          (MatchExpr ((VarExpr "v"),
+             [((Case ("Even", [])), (ConstExpr (CInt 50)));
+               ((Case ("Odd", [])), (ConstExpr (CInt 25)));
+               (Wild, (ConstExpr (CInt 6)))]
+             ))
           ))
        )) |}]
 ;;
 
 let%expect_test _ =
-  let test = "let (|Even|) v = v" in
-  start_test parse show_expr test;
-  [%expect {| (LetActExpr (["Even"], (FunExpr ((Var "v"), (VarExpr "v"))))) |}]
+  let test =
+    "   let (|Default|) value =\n   match value with\n   | value -> (value * value)"
+  in
+  start_test parse_bind show_struct_inter test;
+  [%expect
+    {|
+    (LetAct (["Default"],
+       (FunExpr ((Var "value"),
+          (MatchExpr ((VarExpr "value"),
+             [((Var "value"),
+               (BinExpr (Mul, (VarExpr "value"), (VarExpr "value"))))]
+             ))
+          ))
+       )) |}]
+;;
+
+let%expect_test _ =
+  let test =
+    "   let myfunc v =\n   match v with\n   | Even -> 50\n   | Odd -> 25\n   | _ -> 6"
+  in
+  start_test parse_bind show_struct_inter test;
+  [%expect
+    {|
+    (Let (false, "myfunc",
+       (FunExpr ((Var "v"),
+          (MatchExpr ((VarExpr "v"),
+             [((Case ("Even", [])), (ConstExpr (CInt 50)));
+               ((Case ("Odd", [])), (ConstExpr (CInt 25)));
+               (Wild, (ConstExpr (CInt 6)))]
+             ))
+          ))
+       )) |}]
 ;;
 
 let%expect_test _ =
   let test = "let greet (Default value) = value" in
-  start_test parse show_expr test;
+  start_test parse_bind show_struct_inter test;
   [%expect
     {|
-    (LetExpr (false, "greet",
+    (Let (false, "greet",
        (FunExpr ((Case ("Default", [(Var "value")])), (VarExpr "value"))))) |}]
 ;;
 
@@ -256,10 +290,10 @@ let%expect_test _ =
   let test =
     "   let check value =\n   match value with\n   | Even -> 25\n   | Odd -> 53"
   in
-  start_test parse show_expr test;
+  start_test parse_bind show_struct_inter test;
   [%expect
     {|
-    (LetExpr (false, "check",
+    (Let (false, "check",
        (FunExpr ((Var "value"),
           (MatchExpr ((VarExpr "value"),
              [((Case ("Even", [])), (ConstExpr (CInt 25)));
@@ -273,10 +307,10 @@ let%expect_test _ =
   let test =
     "let rec fact x k = if x = 1 then k x else fact (x - 1) (fun n -> n * k x)"
   in
-  start_test parse show_expr test;
+  start_test parse_bind show_struct_inter test;
   [%expect
     {|
-      (LetExpr (true, "fact",
+      (Let (true, "fact",
          (FunExpr ((Var "x"),
             (FunExpr ((Var "k"),
                (IfExpr ((BinExpr (Eq, (VarExpr "x"), (ConstExpr (CInt 1)))),
@@ -297,10 +331,10 @@ let%expect_test _ =
 
 let%expect_test _ =
   let test = "let plusfive x = let five a = a + 5 in five x" in
-  start_test parse show_expr test;
+  start_test parse_bind show_struct_inter test;
   [%expect
     {|
-    (LetExpr (false, "plusfive",
+    (Let (false, "plusfive",
        (FunExpr ((Var "x"),
           (LetInExpr (false, "five",
              (FunExpr ((Var "a"),
@@ -319,10 +353,10 @@ let%expect_test _ =
     \    | hd :: tl -> (helper (hd :: acc) tl) in \n\
     \ helper [] list \n"
   in
-  start_test parse show_expr test;
+  start_test parse_bind show_struct_inter test;
   [%expect
     {|
-    (LetExpr (false, "list_rev",
+    (Let (false, "list_rev",
        (FunExpr ((Var "list"),
           (LetInExpr (true, "helper",
              (FunExpr ((Var "acc"),
@@ -347,10 +381,10 @@ let%expect_test _ =
 
 let%expect_test _ =
   let test = "let result = list_fold [1; 2; 3; 4; 5] 0 (fun acc el -> acc + el)" in
-  start_test parse show_expr test;
+  start_test parse_bind show_struct_inter test;
   [%expect
     {|
-    (LetExpr (false, "result",
+    (Let (false, "result",
        (AppExpr (
           (AppExpr (
              (AppExpr ((VarExpr "list_fold"),
@@ -374,26 +408,39 @@ let%expect_test _ =
 
 let%expect_test _ =
   let test =
-    "  \n\
-    \   let rec listmap f list =\n\
-    \       match list with\n\
-    \         | [] -> []\n\
-    \         | hd :: tl -> ((f hd) :: (listmap f tl))"
+    "   let revmap f l =\n\
+    \   let rec rmapf accu l = \n\
+    \    match l with \n\
+    \     | [] -> accu\n\
+    \     | a::l -> (rmapf (f a::accu) l)\n\
+    \   in\n\
+    \   rmapf [] l "
   in
-  start_test parse show_expr test;
+  start_test parse_bind show_struct_inter test;
   [%expect
     {|
-    (LetExpr (true, "listmap",
+    (Let (false, "revmap",
        (FunExpr ((Var "f"),
-          (FunExpr ((Var "list"),
-             (MatchExpr ((VarExpr "list"),
-                [((Const CNil), (ConstExpr CNil));
-                  ((PCon ((Var "hd"), (Var "tl"))),
-                   (BinExpr (Con, (AppExpr ((VarExpr "f"), (VarExpr "hd"))),
-                      (AppExpr ((AppExpr ((VarExpr "listmap"), (VarExpr "f"))),
-                         (VarExpr "tl")))
-                      )))
-                  ]
+          (FunExpr ((Var "l"),
+             (LetInExpr (true, "rmapf",
+                (FunExpr ((Var "accu"),
+                   (FunExpr ((Var "l"),
+                      (MatchExpr ((VarExpr "l"),
+                         [((Const CNil), (VarExpr "accu"));
+                           ((PCon ((Var "a"), (Var "l"))),
+                            (AppExpr (
+                               (AppExpr ((VarExpr "rmapf"),
+                                  (BinExpr (Con,
+                                     (AppExpr ((VarExpr "f"), (VarExpr "a"))),
+                                     (VarExpr "accu")))
+                                  )),
+                               (VarExpr "l"))))
+                           ]
+                         ))
+                      ))
+                   )),
+                (AppExpr ((AppExpr ((VarExpr "rmapf"), (ConstExpr CNil))),
+                   (VarExpr "l")))
                 ))
              ))
           ))

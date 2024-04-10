@@ -231,14 +231,12 @@ type edispatch =
   { list_e : edispatch -> expr t
   ; tuple_e : edispatch -> expr t
   ; fun_e : edispatch -> expr t
-  ; let_e : edispatch -> expr t
   ; app_e : edispatch -> expr t
   ; if_e : edispatch -> expr t
   ; let_in_e : edispatch -> expr t
   ; matching_e : edispatch -> expr t
   ; bin_e : edispatch -> expr t
   ; expr_parsers : edispatch -> expr t
-  ; act_pat_e : edispatch -> expr t
   }
 
 let pack =
@@ -248,11 +246,9 @@ let pack =
     choice
       [ pack.if_e pack
       ; pack.let_in_e pack
-      ; pack.let_e pack
       ; pack.fun_e pack
       ; pack.app_e pack <|> parens @@ pack.app_e pack
       ; parens @@ choice [ pack.tuple_e pack; pack.bin_e pack ]
-      ; pack.act_pat_e pack
       ; value_e
       ; pack.list_e pack
       ]
@@ -264,7 +260,6 @@ let pack =
         @@ choice
              [ pack.expr_parsers pack
              ; pack.let_in_e pack
-             ; pack.let_e pack
              ; pack.app_e pack
              ; pack.fun_e pack
              ; pack.tuple_e pack
@@ -316,29 +311,6 @@ let pack =
     parse_cons_semicolon_expr (expr_parsers pack) create_cons_sc
   in
   let tuple_e pack = fix @@ fun _ -> parse_tuple_expr (expr_parsers pack) in
-  let act_pat_e pack =
-    fix
-    @@ fun _ ->
-    lift2
-      (fun a d -> LetActExpr (a, d))
-      (pstrtoken "let" *> pstrtoken "(|" *> (parse_let_case <|> parse_let_name)
-       <* pstrtoken "|)")
-      (plet_body parse_fun_args (expr_parsers pack <|> parens @@ expr_parsers pack))
-  in
-  let let_e pack =
-    fix
-    @@ fun _ ->
-    lift4
-      (fun flag name args body ->
-        let body = constr_efun args body in
-        LetExpr (flag, name, body))
-      (pstrtoken "let"
-       *> option false (parse_token (string "rec") <* parse_white_space1 >>| fun _ -> true)
-      )
-      p_var
-      (parse_white_space *> many (pat <|> parens pat))
-      (pstrtoken "=" *> expr_parsers pack)
-  in
   let let_in_e pack =
     let lift5 f p1 p2 p3 p4 p5 = f <$> p1 <*> p2 <*> p3 <*> p4 <*> p5 in
     fix
@@ -371,23 +343,40 @@ let pack =
       (value_e <|> parens @@ choice [ fun_e pack; pack.app_e pack ])
       (many1 (parse_token1 @@ app_args_parsers pack))
   in
-  { list_e
-  ; tuple_e
-  ; fun_e
-  ; let_in_e
-  ; let_e
-  ; app_e
-  ; if_e
-  ; expr_parsers
-  ; matching_e
-  ; bin_e
-  ; act_pat_e
-  }
+  { list_e; tuple_e; fun_e; let_in_e; app_e; if_e; expr_parsers; matching_e; bin_e }
 ;;
 
 let parse = pack.expr_parsers pack
 
-(* Parser program *)
+let let_e parse =
+  fix
+  @@ fun _ ->
+  lift4
+    (fun flag name args body ->
+      let body = constr_efun args body in
+      Let (flag, name, body))
+    (pstrtoken "let"
+     *> option false (parse_token (string "rec") <* parse_white_space1 >>| fun _ -> true)
+    )
+    p_var
+    (parse_white_space *> many (pat <|> parens pat))
+    (pstrtoken "=" *> parse)
+;;
 
-let program = many1 (parse_token parse <* parse_token (many1 (pstrtoken ";;")))
+let let_act_e parse =
+  fix
+  @@ fun _ ->
+  lift2
+    (fun a d -> LetAct (a, d))
+    (pstrtoken "let" *> pstrtoken "(|" *> (parse_let_case <|> parse_let_name)
+     <* pstrtoken "|)")
+    (plet_body parse_fun_args (parse <|> parens @@ parse))
+;;
+
+let expr_main = (fun expr -> Expression expr) <$> parse
+let parse_bind = choice [ let_act_e parse; let_e parse; expr_main ]
+
+(** Parser program *)
+
+let program = many1 (parse_token parse_bind <* parse_token (many1 (pstrtoken ";;")))
 let main_parse str = start_parsing program (String.strip str)

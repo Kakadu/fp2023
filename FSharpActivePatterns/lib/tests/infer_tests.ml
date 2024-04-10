@@ -8,7 +8,7 @@ open Inferencer
 let%expect_test _ =
   let open Ast in
   let _ =
-    let e = [ ConstExpr (CInt 4) ] in
+    let e = [ Expression (ConstExpr (CInt 4)) ] in
     check_types e |> run_infer
   in
   [%expect {| int |}]
@@ -17,7 +17,7 @@ let%expect_test _ =
 let%expect_test _ =
   let open Ast in
   let _ =
-    let e = [ ConstExpr (CBool true) ] in
+    let e = [ Expression (ConstExpr (CBool true)) ] in
     check_types e |> run_infer
   in
   [%expect {| bool |}]
@@ -26,7 +26,7 @@ let%expect_test _ =
 let%expect_test _ =
   let open Ast in
   let _ =
-    let e = [ ConstExpr (CString "1") ] in
+    let e = [ Expression (ConstExpr (CString "1")) ] in
     check_types e |> run_infer
   in
   [%expect {| string |}]
@@ -36,11 +36,12 @@ let%expect_test _ =
   let open Ast in
   let _ =
     let e =
-      [ TupleExpr
-          [ ConstExpr (CInt 1)
-          ; TupleExpr [ ConstExpr (CInt 2); ConstExpr (CInt 3); ConstExpr (CInt 4) ]
-          ; ConstExpr (CInt 5)
-          ]
+      [ Expression
+          (TupleExpr
+             [ ConstExpr (CInt 1)
+             ; TupleExpr [ ConstExpr (CInt 2); ConstExpr (CInt 3); ConstExpr (CInt 4) ]
+             ; ConstExpr (CInt 5)
+             ])
       ]
     in
     check_types e |> run_infer
@@ -51,7 +52,11 @@ let%expect_test _ =
 let%expect_test _ =
   let open Ast in
   let _ =
-    let e = [ IfExpr (ConstExpr (CBool true), ConstExpr (CInt 4), ConstExpr (CInt 5)) ] in
+    let e =
+      [ Expression
+          (IfExpr (ConstExpr (CBool true), ConstExpr (CInt 4), ConstExpr (CInt 5)))
+      ]
+    in
     check_types e |> run_infer
   in
   [%expect {| int |}]
@@ -61,14 +66,16 @@ let%expect_test _ =
   let open Ast in
   let _ =
     let e =
-      [ TupleExpr
-          [ ConstExpr (CInt 1)
-          ; ListExpr
-              ( ConstExpr (CInt 2)
-              , ListExpr
-                  (ConstExpr (CInt 3), ListExpr (ConstExpr (CInt 4), ConstExpr CNil)) )
-          ; ConstExpr (CInt 5)
-          ]
+      [ Expression
+          (TupleExpr
+             [ ConstExpr (CInt 1)
+             ; ListExpr
+                 ( ConstExpr (CInt 2)
+                 , ListExpr
+                     (ConstExpr (CInt 3), ListExpr (ConstExpr (CInt 4), ConstExpr CNil))
+                 )
+             ; ConstExpr (CInt 5)
+             ])
       ]
     in
     check_types e |> run_infer
@@ -80,13 +87,14 @@ let%expect_test _ =
   let open Ast in
   let _ =
     let e =
-      [ BinExpr
-          ( Add
-          , BinExpr (Add, ConstExpr (CInt 1), ConstExpr (CInt 2))
-          , BinExpr
-              ( Div
-              , BinExpr (Mul, ConstExpr (CInt 1), ConstExpr (CInt 3))
-              , ConstExpr (CInt 3) ) )
+      [ Expression
+          (BinExpr
+             ( Add
+             , BinExpr (Add, ConstExpr (CInt 1), ConstExpr (CInt 2))
+             , BinExpr
+                 ( Div
+                 , BinExpr (Mul, ConstExpr (CInt 1), ConstExpr (CInt 3))
+                 , ConstExpr (CInt 3) ) ))
       ]
     in
     check_types e |> run_infer
@@ -97,7 +105,7 @@ let%expect_test _ =
 let%expect_test _ =
   let open Ast in
   let _ =
-    let e = [ LetExpr (false, "x", ConstExpr (CInt 5)) ] in
+    let e = [ Let (false, "x", ConstExpr (CInt 5)) ] in
     check_types e |> run_infer
   in
   [%expect {| int |}]
@@ -107,8 +115,10 @@ let%expect_test _ =
   let open Ast in
   let _ =
     let e =
-      [ AppExpr
-          (FunExpr (Var "x", BinExpr (Mul, VarExpr "x", VarExpr "x")), ConstExpr (CInt 5))
+      [ Expression
+          (AppExpr
+             ( FunExpr (Var "x", BinExpr (Mul, VarExpr "x", VarExpr "x"))
+             , ConstExpr (CInt 5) ))
       ]
     in
     check_types e |> run_infer
@@ -127,7 +137,7 @@ let%expect_test _ =
 let%expect_test _ =
   let open Ast in
   let _ =
-    let e = [ BinExpr (Less, ConstExpr (CInt 1), ConstExpr (CInt 3)) ] in
+    let e = [ Expression (BinExpr (Less, ConstExpr (CInt 1), ConstExpr (CInt 3))) ] in
     check_types e |> run_infer
   in
   [%expect {| bool |}]
@@ -136,7 +146,7 @@ let%expect_test _ =
 let%expect_test _ =
   let open Ast in
   let _ =
-    let e = [ BinExpr (Or, ConstExpr (CInt 1), ConstExpr (CInt 3)) ] in
+    let e = [ Expression (BinExpr (Or, ConstExpr (CInt 1), ConstExpr (CInt 3))) ] in
     check_types e |> run_infer
   in
   [%expect {| bool |}]
@@ -146,7 +156,7 @@ let%expect_test _ =
   let open Ast in
   let _ =
     let e =
-      [ LetExpr
+      [ Let
           ( false
           , "check"
           , FunExpr

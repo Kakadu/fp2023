@@ -117,6 +117,19 @@ module Interpret (M : MonadFail) = struct
        | _ -> fail MatchFailure)
     | _ -> fail MatchFailure
 
+  and eval_binding bind env =
+    match bind with
+    | Let (is_rec, name, body) ->
+      if is_rec
+      then
+        let* func_body = eval body env in
+        return @@ VLetWAPat (name, func_body)
+      else eval body env
+    | LetAct (act_name, body) ->
+      let* fun_pat = eval body env in
+      return @@ VLetAPat (act_name, fun_pat)
+    | Expression expr -> eval expr env
+
   and eval expr env =
     match expr with
     | ConstExpr v ->
@@ -190,12 +203,6 @@ module Interpret (M : MonadFail) = struct
                  (VLetWAPat (name, VFun (pat, expr, fun_env))))
               res)
        | _ -> fail TypeError)
-    | LetExpr (is_rec, name, body) ->
-      if is_rec
-      then
-        let* func_body = eval body env in
-        return @@ VLetWAPat (name, func_body)
-      else eval body env
     | MatchExpr (expr_match, cases) ->
       let* val_match = eval expr_match env in
       let rec eval_match = function
@@ -209,24 +216,21 @@ module Interpret (M : MonadFail) = struct
       eval_match cases
     | CaseExpr constr_id -> return @@ VCases constr_id
     | LetInExpr (_, name, expr1, expr2) ->
-      let* evaled_expr1 = eval expr1 env in
-      let env = add_bind env name evaled_expr1 in
+      let* v_let = eval expr1 env in
+      let env = add_bind env name v_let in
       eval expr2 env
-    | LetActExpr (act_name, body) ->
-      let* fun_pat = eval body env in
-      return @@ VLetAPat (act_name, fun_pat)
   ;;
 
-  let eval_program (program : expr list) : (value, error_inter) t =
+  let eval_program (program : struct_inter list) : (value, error_inter) t =
     let rec helper env = function
-      | h :: [] -> eval h env
+      | h :: [] -> eval_binding h env
       | [] -> fail EmptyProgram
       | h :: tl ->
-        let* eval_h = eval h env in
+        let* eval_h = eval_binding h env in
         let eval_env =
           match h with
-          | LetExpr (_, f, _) | LetInExpr (_, f, _, _) -> add_bind env f eval_h
-          | LetActExpr (fl, _) ->
+          | Let (_, f, _) -> add_bind env f eval_h
+          | LetAct (fl, _) ->
             List.fold_right ~f:(fun h acc -> add_bind acc h eval_h) ~init:env fl
           | _ -> env
         in

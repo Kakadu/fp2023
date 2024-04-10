@@ -10,20 +10,21 @@ open Interpret
 
 (*  7 + 10 + 4 * 50 + 19 / 3 + (10 - 5) *)
 let test =
-  [ BinExpr
-      ( Add
-      , BinExpr
-          ( Add
-          , BinExpr
-              ( Add
-              , BinExpr (Add, ConstExpr (CInt 7), ConstExpr (CInt 10))
-              , BinExpr (Mul, ConstExpr (CInt 4), ConstExpr (CInt 50)) )
-          , BinExpr (Div, ConstExpr (CInt 19), ConstExpr (CInt 3)) )
-      , BinExpr (Sub, ConstExpr (CInt 10), ConstExpr (CInt 5)) )
+  [ Expression
+      (BinExpr
+         ( Add
+         , BinExpr
+             ( Add
+             , BinExpr
+                 ( Add
+                 , BinExpr (Add, ConstExpr (CInt 7), ConstExpr (CInt 10))
+                 , BinExpr (Mul, ConstExpr (CInt 4), ConstExpr (CInt 50)) )
+             , BinExpr (Div, ConstExpr (CInt 19), ConstExpr (CInt 3)) )
+         , BinExpr (Sub, ConstExpr (CInt 10), ConstExpr (CInt 5)) ))
   ]
 ;;
 
-let test = [ BinExpr (Div, ConstExpr (CInt 5), ConstExpr (CInt 0)) ]
+let test = [ Expression (BinExpr (Div, ConstExpr (CInt 5), ConstExpr (CInt 0))) ]
 
 let%test _ =
   match eval_program test with
@@ -31,7 +32,7 @@ let%test _ =
   | _ -> false
 ;;
 
-let test = [ BinExpr (Mod, ConstExpr (CInt 5), ConstExpr (CInt 0)) ]
+let test = [ Expression (BinExpr (Mod, ConstExpr (CInt 5), ConstExpr (CInt 0))) ]
 
 let%test _ =
   match eval_program test with
@@ -42,9 +43,10 @@ let%test _ =
 (*[1;2;3]*)
 
 let test =
-  [ ListExpr
-      ( ConstExpr (CInt 1)
-      , ListExpr (ConstExpr (CInt 2), ListExpr (ConstExpr (CInt 3), ConstExpr CNil)) )
+  [ Expression
+      (ListExpr
+         ( ConstExpr (CInt 1)
+         , ListExpr (ConstExpr (CInt 2), ListExpr (ConstExpr (CInt 3), ConstExpr CNil)) ))
   ]
 ;;
 
@@ -54,7 +56,10 @@ let%test _ =
   | _ -> false
 ;;
 
-let test = [ TupleExpr [ ConstExpr (CInt 1); ConstExpr (CInt 2); ConstExpr (CInt 3) ] ]
+let test =
+  [ Expression (TupleExpr [ ConstExpr (CInt 1); ConstExpr (CInt 2); ConstExpr (CInt 3) ])
+  ]
+;;
 
 let%test _ =
   match eval_program test with
@@ -64,7 +69,7 @@ let%test _ =
 
 (* 5 = 5 *)
 
-let test = [ BinExpr (Eq, ConstExpr (CInt 5), ConstExpr (CInt 5)) ]
+let test = [ Expression (BinExpr (Eq, ConstExpr (CInt 5), ConstExpr (CInt 5))) ]
 
 let%test _ =
   match eval_program test with
@@ -74,14 +79,15 @@ let%test _ =
 
 (*(1, [2;3;4], 5)*)
 let test =
-  [ TupleExpr
-      [ ConstExpr (CInt 1)
-      ; ListExpr
-          ( ConstExpr (CInt 2)
-          , ListExpr (ConstExpr (CInt 3), ListExpr (ConstExpr (CInt 4), ConstExpr CNil))
-          )
-      ; ConstExpr (CInt 5)
-      ]
+  [ Expression
+      (TupleExpr
+         [ ConstExpr (CInt 1)
+         ; ListExpr
+             ( ConstExpr (CInt 2)
+             , ListExpr (ConstExpr (CInt 3), ListExpr (ConstExpr (CInt 4), ConstExpr CNil))
+             )
+         ; ConstExpr (CInt 5)
+         ])
   ]
 ;;
 
@@ -92,24 +98,24 @@ let%test _ =
 ;;
 
 (*
-   let f x = x+x
+   let f x = x * x
 
    f 25
 *)
 
 let test =
-  [ LetExpr (false, "f", FunExpr (Var "x", BinExpr (Add, VarExpr "x", VarExpr "x")))
-  ; AppExpr (VarExpr "f", ConstExpr (CInt 25))
+  [ Let (false, "f", FunExpr (Var "x", BinExpr (Mul, VarExpr "x", VarExpr "x")))
+  ; Expression (AppExpr (VarExpr "f", ConstExpr (CInt 25)))
   ]
 ;;
 
 let%test _ =
   match eval_program test with
-  | Ok (VInt 50) -> true
+  | Ok (VInt 625) -> true
   | _ -> false
 ;;
 
-let test = [ ConstExpr (CBool true) ]
+let test = [ Expression (ConstExpr (CBool true)) ]
 
 let%test _ =
   match eval_program test with
@@ -120,8 +126,9 @@ let%test _ =
 (* (fun x -> x*x) 5 *)
 
 let test =
-  [ AppExpr
-      (FunExpr (Var "x", BinExpr (Mul, VarExpr "x", VarExpr "x")), ConstExpr (CInt 5))
+  [ Expression
+      (AppExpr
+         (FunExpr (Var "x", BinExpr (Mul, VarExpr "x", VarExpr "x")), ConstExpr (CInt 5)))
   ]
 ;;
 
@@ -131,7 +138,7 @@ let%test _ =
   | _ -> false
 ;;
 
-let test = [ ConstExpr (CString "pomogite") ]
+let test = [ Expression (ConstExpr (CString "pomogite")) ]
 
 let%test _ =
   match eval_program test with
@@ -146,7 +153,7 @@ let%test _ =
 *)
 
 let test =
-  [ LetExpr
+  [ Let
       ( true
       , "fact"
       , FunExpr
@@ -160,7 +167,7 @@ let test =
                   , AppExpr
                       (VarExpr "fact", BinExpr (Sub, VarExpr "n", ConstExpr (CInt 1))) )
               ) ) )
-  ; AppExpr (VarExpr "fact", ConstExpr (CInt 5))
+  ; Expression (AppExpr (VarExpr "fact", ConstExpr (CInt 5)))
   ]
 ;;
 
@@ -177,8 +184,9 @@ let%test _ =
 *)
 
 let test =
-  [ LetExpr (false, "x", ConstExpr (CInt 5))
-  ; AppExpr (FunExpr (Var "y", BinExpr (Mul, VarExpr "y", VarExpr "y")), VarExpr "x")
+  [ Let (false, "x", ConstExpr (CInt 5))
+  ; Expression
+      (AppExpr (FunExpr (Var "y", BinExpr (Mul, VarExpr "y", VarExpr "y")), VarExpr "x"))
   ]
 ;;
 
@@ -195,7 +203,7 @@ let%test _ =
 *)
 
 let test =
-  [ LetExpr
+  [ Let
       ( false
       , "check"
       , FunExpr
@@ -205,7 +213,7 @@ let test =
               , [ Const (CInt 2), ConstExpr (CInt 5)
                 ; Const (CInt 5), ConstExpr (CInt 10)
                 ] ) ) )
-  ; AppExpr (VarExpr "check", ConstExpr (CInt 5))
+  ; Expression (AppExpr (VarExpr "check", ConstExpr (CInt 5)))
   ]
 ;;
 
@@ -229,7 +237,7 @@ let%test _ =
 *)
 
 let test =
-  [ LetActExpr
+  [ LetAct
       ( [ "Even"; "_" ]
       , FunExpr
           ( Var "v"
@@ -238,7 +246,7 @@ let test =
                   (Eq, BinExpr (Mod, VarExpr "v", ConstExpr (CInt 2)), ConstExpr (CInt 0))
               , CaseExpr "Even"
               , CaseExpr "None" ) ) )
-  ; LetActExpr
+  ; LetAct
       ( [ "Odd"; "_" ]
       , FunExpr
           ( Var "v"
@@ -247,18 +255,18 @@ let test =
                   (NEq, BinExpr (Mod, VarExpr "v", ConstExpr (CInt 2)), ConstExpr (CInt 0))
               , CaseExpr "Odd"
               , CaseExpr "None" ) ) )
-  ; LetExpr
+  ; Let
       ( false
       , "myfunc"
       , FunExpr
-          ( Var "c"
+          ( Var "v"
           , MatchExpr
-              ( VarExpr "c"
+              ( VarExpr "v"
               , [ Case ("Even", []), ConstExpr (CInt 50)
                 ; Case ("Odd", []), ConstExpr (CInt 25)
-                ; Wild, ConstExpr (CInt 10)
+                ; Wild, ConstExpr (CInt 6)
                 ] ) ) )
-  ; AppExpr (VarExpr "myfunc", ConstExpr (CInt 9))
+  ; Expression (AppExpr (VarExpr "myfunc", ConstExpr (CInt 9)))
   ]
 ;;
 
@@ -279,15 +287,15 @@ let%test _ =
 *)
 
 let test =
-  [ LetActExpr
-      ( [ "Square" ]
+  [ LetAct
+      ( [ "Default" ]
       , FunExpr
           ( Var "value"
           , MatchExpr
               ( VarExpr "value"
               , [ Var "value", BinExpr (Mul, VarExpr "value", VarExpr "value") ] ) ) )
-  ; LetExpr (false, "greet", FunExpr (Case ("Square", [ Var "value" ]), VarExpr "value"))
-  ; AppExpr (VarExpr "greet", ConstExpr (CInt 10))
+  ; Let (false, "greet", FunExpr (Case ("Default", [ Var "value" ]), VarExpr "value"))
+  ; Expression (AppExpr (VarExpr "greet", ConstExpr (CInt 10)))
   ]
 ;;
 
@@ -309,18 +317,18 @@ let%test _ =
 *)
 
 let test =
-  [ LetActExpr
+  [ LetAct
       ( [ "Even"; "Odd" ]
       , FunExpr
-          ( Var "value"
+          ( Var "input"
           , IfExpr
               ( BinExpr
                   ( Eq
-                  , BinExpr (Mod, VarExpr "value", ConstExpr (CInt 2))
+                  , BinExpr (Mod, VarExpr "input", ConstExpr (CInt 2))
                   , ConstExpr (CInt 0) )
               , CaseExpr "Even"
               , CaseExpr "Odd" ) ) )
-  ; LetExpr
+  ; Let
       ( false
       , "check"
       , FunExpr
@@ -330,7 +338,7 @@ let test =
               , [ Case ("Even", []), ConstExpr (CInt 25)
                 ; Case ("Odd", []), ConstExpr (CInt 53)
                 ] ) ) )
-  ; AppExpr (VarExpr "check", ConstExpr (CInt 14))
+  ; Expression (AppExpr (VarExpr "check", ConstExpr (CInt 14)))
   ]
 ;;
 
@@ -341,18 +349,18 @@ let%test _ =
 ;;
 
 let test =
-  [ LetActExpr
+  [ LetAct
       ( [ "Even"; "Odd" ]
       , FunExpr
-          ( Var "value"
+          ( Var "input"
           , IfExpr
               ( BinExpr
                   ( Eq
-                  , BinExpr (Mod, VarExpr "value", ConstExpr (CInt 2))
+                  , BinExpr (Mod, VarExpr "input", ConstExpr (CInt 2))
                   , ConstExpr (CInt 0) )
               , CaseExpr "Even"
               , CaseExpr "Odd" ) ) )
-  ; LetExpr
+  ; Let
       ( false
       , "check"
       , FunExpr
@@ -362,7 +370,7 @@ let test =
               , [ Case ("Even", []), ConstExpr (CInt 25)
                 ; Case ("Odd", []), ConstExpr (CInt 53)
                 ] ) ) )
-  ; AppExpr (VarExpr "check", ConstExpr (CInt 13))
+  ; Expression (AppExpr (VarExpr "check", ConstExpr (CInt 13)))
   ]
 ;;
 

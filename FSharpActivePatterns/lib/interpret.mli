@@ -27,7 +27,7 @@ module type MonadFail = sig
 end
 
 module Interpret : functor (M : MonadFail) -> sig
-  val eval_program : Ast.expr list -> (value, Errorinter.error_inter) M.t
+  val eval_program : Ast.struct_inter list -> (value, Errorinter.error_inter) M.t
 end
 
-val eval_program : expr list -> (value, Errorinter.error_inter) result
+val eval_program : struct_inter list -> (value, Errorinter.error_inter) result
