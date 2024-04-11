@@ -99,8 +99,6 @@ let var cond =
   then fail ("You can not use" ^ v ^ "keywords as vars")
   else if Char.is_digit @@ String.get v 0
   then fail "Identifier first sumbol is letter, not digit"
-  else if String.equal v "_"
-  then fail "Wildcard \"_\" not expected"
   else return v
 ;;
 
@@ -371,7 +369,7 @@ let let_act_e parse =
     (fun a d -> LetAct (a, d))
     (pstrtoken "let" *> pstrtoken "(|" *> (parse_let_case <|> parse_let_name)
      <* pstrtoken "|)")
-    (plet_body parse_fun_args (parse <|> parens @@ parse))
+    (plet_body parse_fun_args (parse <|> parens parse))
 ;;
 
 let expr_main = (fun expr -> Expression expr) <$> parse

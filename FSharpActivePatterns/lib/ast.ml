@@ -53,7 +53,8 @@ type expr =
   | CaseExpr of name (** Even, Odd *)
 [@@deriving eq, show { with_path = false }]
 
-and struct_inter =
+type struct_inter =
   | Let of bool * name * expr
   | LetAct of name list * expr
   | Expression of expr
+[@@deriving eq, show { with_path = false }]
