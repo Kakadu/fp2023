@@ -10,14 +10,13 @@ let pp printer parser str =
   Stdlib.Format.printf "%a" printer
   @@ Result.ok_or_failwith
   @@ Angstrom.parse_string ~consume:Angstrom.Consume.All parser str
-;;
 
 let chainl1 e op =
   let rec go acc = lift2 (fun f x -> f acc x) op e >>= go <|> return acc in
   e >>= fun init -> go init
-;;
 
-let rec chainr1 e op = e >>= fun a -> op >>= (fun f -> chainr1 e op >>| f a) <|> return a
+let rec chainr1 e op =
+  e >>= fun a -> op >>= (fun f -> chainr1 e op >>| f a) <|> return a
 
 let is_keywords = function
   | "while"
@@ -39,406 +38,613 @@ let is_keywords = function
   | "uint16_t"
   | "uint8_t"
   | "void"
-  | "NULL" -> true
-  | _ -> false
-;;
+  | "NULL" ->
+      true
+  | _ ->
+      false
 
-let is_digit = function
-  | '0' .. '9' -> true
-  | _ -> false
-;;
+let is_digit = function '0' .. '9' -> true | _ -> false
 
-let is_whitespace = function
-  | ' ' | '\t' | '\n' | '\r' -> true
-  | _ -> false
-;;
+let is_whitespace = function ' ' | '\t' | '\n' | '\r' -> true | _ -> false
 
-(* remember that the name cannot begin with a number *)
 let is_valid_char_id = function
-  | 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | '_' -> true
-  | _ -> false
-;;
+  | 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | '_' ->
+      true
+  | _ ->
+      false
 
 let whitespace = take_while is_whitespace
+
 let token s = whitespace *> string s
+
 let parens p = token "(" *> p <* token ")"
+
 let brackets p = token "[" *> p <* token "]"
+
 let braces p = token "{" *> p <* token "}"
 
-let number =
+let p_number =
   let dot =
     peek_char
-    >>= function
-    | Some '.' -> advance 1 >>| fun () -> true
-    | _ -> return false
+    >>= function Some '.' -> advance 1 >>| fun () -> true | _ -> return false
   in
-  let sign =
-    peek_char
-    >>= function
-    | Some '-' -> advance 1 >>| fun () -> "-"
-    | Some '+' -> advance 1 >>| fun () -> "+"
-    | Some c when is_digit c -> return "+"
-    | _ -> fail "Sign or digit expected"
-  in
-  let* sign = whitespace *> sign in
-  let* whole = take_while1 is_digit in
+  let* whole = whitespace *> take_while1 is_digit in
   let* dot = dot in
   match dot with
-  | false -> return @@ V_int (int_of_string (sign ^ whole))
+  | false ->
+      return @@ V_int (int_of_string whole)
   | true ->
-    let* part = take_while is_digit in
-    return @@ V_float (float_of_string (sign ^ whole ^ "." ^ part))
-;;
+      let* part = take_while is_digit in
+      return @@ V_float (float_of_string (whole ^ "." ^ part))
 
-let identifier =
+let p_ident =
   let is_valid_first_char = function
-    | 'a' .. 'z' | 'A' .. 'Z' | '_' -> true
-    | _ -> false
+    | 'a' .. 'z' | 'A' .. 'Z' | '_' ->
+        true
+    | _ ->
+        false
   in
   let* first_char = peek_char in
   match first_char with
   | Some c when is_valid_first_char c ->
-    let* ident = take_while is_valid_char_id in
-    if is_keywords ident then fail "Keyword name" else return ident
-  | _ -> fail "Invalid name"
-;;
+      let* ident = take_while is_valid_char_id in
+      if is_keywords ident then fail "Keyword name" else return ident
+  | _ ->
+      fail "Invalid name"
 
-let parse_char =
+let p_char =
   whitespace *> char '\'' *> any_char <* char '\'' >>| fun char -> V_char char
-;;
 
-let parr pelm = braces @@ sep_by (token ",") pelm
-let parse_elms_arr pelm = parr pelm >>= fun c -> return @@ Const (V_array c)
+let p_arr p_elm = braces @@ sep_by (token ",") p_elm
 
-let parse_type =
-  let parse_simple_type = function
-    | "int" -> return ID_int
-    | "int32_t" -> return ID_int32
-    | "int16_t" -> return ID_int16
-    | "int8_t" -> return ID_int8
-    | "uint32_t" -> return ID_uint32
-    | "uint16_t" -> return ID_uint16
-    | "uint8_t" -> return ID_uint8
-    | "char" -> return ID_char
-    | "void" -> return ID_void
-    | "float" -> return ID_float
-    | "double" -> return ID_float
-    | _ -> fail "Unknown type"
+let p_elements_arr p_elm = p_arr p_elm >>= fun c -> return @@ Array_value c
+
+let p_type =
+  let parse_simple_type t err =
+    match t with
+    | "int" ->
+        return ID_int
+    | "int32_t" ->
+        return ID_int32
+    | "int16_t" ->
+        return ID_int16
+    | "int8_t" ->
+        return ID_int8
+    | "uint32_t" ->
+        return ID_uint32
+    | "uint16_t" ->
+        return ID_uint16
+    | "uint8_t" ->
+        return ID_uint8
+    | "char" ->
+        return ID_char
+    | "void" ->
+        return ID_void
+    | "float" ->
+        return ID_float
+    | "double" ->
+        return ID_float
+    | _ ->
+        fail @@ "Unknown type in col: " ^ Int.to_string err
   in
+  pos
+  >>= fun col ->
   let* t = whitespace *> take_while1 is_valid_char_id in
-  let* pars = parse_simple_type t in
+  let* pars = parse_simple_type t col in
   let* list_ptrs = many @@ token "*" in
   return (List.fold ~init:pars ~f:(fun acc _ -> Pointer acc) list_ptrs)
-;;
+
+let pe_type = (fun t -> Type t) <$> p_type
 
 let emul = token "*" *> return (fun e1 e2 -> Bin_expr (Mul, e1, e2))
-let ediv = token "/" *> return (fun e1 e2 -> Bin_expr (Div, e1, e2))
-let emod = token "%" *> return (fun e1 e2 -> Bin_expr (Mod, e1, e2))
-let eadd = token "+" *> return (fun e1 e2 -> Bin_expr (Add, e1, e2))
-let esub = token "-" *> return (fun e1 e2 -> Bin_expr (Sub, e1, e2))
-let el = token "<" *> return (fun e1 e2 -> Bin_expr (Less, e1, e2))
-let eg = token ">" *> return (fun e1 e2 -> Bin_expr (Grow, e1, e2))
-let elte = token "<=" *> return (fun e1 e2 -> Bin_expr (LessOrEqual, e1, e2))
-let egte = token ">=" *> return (fun e1 e2 -> Bin_expr (GrowOrEqual, e1, e2))
-let eeq = token "==" *> return (fun e1 e2 -> Bin_expr (Equal, e1, e2))
-let eneq = token "!= " *> return (fun e1 e2 -> Bin_expr (NotEqual, e1, e2))
-let eand = token "&&" *> return (fun e1 e2 -> Bin_expr (And, e1, e2))
-let eor = token "||" *> return (fun e1 e2 -> Bin_expr (Or, e1, e2))
-let epr2 = emul <|> emod <|> ediv
-let epr3 = eadd <|> esub
-let epr4 = elte <|> egte <|> el <|> eg <|> eeq <|> eneq
 
-let parse_expr : expr t =
-  fix (fun expr ->
-    let var_name = (fun c -> Var_name c) <$> whitespace *> identifier in
-    let null = token "NULL" *> (return @@ V_null) in
-    let parse_const : expr t = number <|> parse_char <|> null >>| fun c -> Const c in
-    let index = lift2 (fun id exp -> Index (id, exp)) identifier @@ brackets expr in
-    let not = token "!" *> expr >>= fun c -> return @@ Unary_expr (Not, c) in
-    let deref =
-      fix (fun deref ->
-        token "*" *> (parens expr <|> index <|> var_name <|> deref)
-        >>= fun exp -> return @@ Unary_expr (Dereference, exp))
-    in
-    let address =
-      (fun exp -> Unary_expr (Address, exp))
-      <$> token "&" *> (index <|> parens expr <|> var_name <|> expr)
-    in
-    let func_call =
-      lift2
-        (fun id ls -> Func_call (id, ls))
-        (whitespace *> identifier)
-        (token "(" *> sep_by (token ",") (expr <|> (parse_type >>| fun t -> Type t))
-         <* token ")")
-    in
-    let cast =
-      lift2 (fun tp exp -> Cast (tp, exp)) (token "(" *> parse_type <* token ")") expr
-    in
-    let un_arith =
-      whitespace *> peek_char_fail
+let ediv = token "/" *> return (fun e1 e2 -> Bin_expr (Div, e1, e2))
+
+let emod = token "%" *> return (fun e1 e2 -> Bin_expr (Mod, e1, e2))
+
+let eadd = token "+" *> return (fun e1 e2 -> Bin_expr (Add, e1, e2))
+
+let esub = token "-" *> return (fun e1 e2 -> Bin_expr (Sub, e1, e2))
+
+let el = token "<" *> return (fun e1 e2 -> Bin_expr (Less, e1, e2))
+
+let eg = token ">" *> return (fun e1 e2 -> Bin_expr (Grow, e1, e2))
+
+let elte = token "<=" *> return (fun e1 e2 -> Bin_expr (LessOrEqual, e1, e2))
+
+let egte = token ">=" *> return (fun e1 e2 -> Bin_expr (GrowOrEqual, e1, e2))
+
+let eeq = token "==" *> return (fun e1 e2 -> Bin_expr (Equal, e1, e2))
+
+let eneq = token "!= " *> return (fun e1 e2 -> Bin_expr (NotEqual, e1, e2))
+
+let eand = token "&&" *> return (fun e1 e2 -> Bin_expr (And, e1, e2))
+
+let eor = token "||" *> return (fun e1 e2 -> Bin_expr (Or, e1, e2))
+
+let ershft = token ">>" *> return (fun e1 e2 -> Bin_expr (Rshift, e1, e2))
+
+let elshift = token "<<" *> return (fun e1 e2 -> Bin_expr (Lshift, e1, e2))
+
+let p_func_call expr =
+  lift2
+    (fun id ls -> Func_call (id, ls))
+    (whitespace *> p_ident)
+    (token "(" *> sep_by (token ",") (expr <|> pe_type) <* token ")")
+
+let p_index_array expr =
+  let rec helper ind =
+    whitespace *> peek_char
+    >>= function
+    | Some '[' ->
+        brackets expr >>= fun e -> helper @@ Index (ind, e)
+    | _ ->
+        return ind
+  in
+  whitespace *> p_ident
+  >>= fun id ->
+  brackets expr
+  >>= fun e ->
+  whitespace *> peek_char
+  >>= function
+  | Some '[' ->
+      helper @@ Index (Var_name id, e)
+  | _ ->
+      return @@ Index (Var_name id, e)
+
+let var_name = (fun c -> Var_name c) <$> whitespace *> p_ident
+
+let null = token "NULL" *> (return @@ V_null)
+
+let p_const : expr t = p_number <|> p_char <|> null >>| fun c -> Const c
+
+let p_un expr =
+  whitespace *> peek_char_fail
+  >>= function
+  | '-' -> (
+      advance 1 *> peek_char_fail
       >>= function
       | '-' ->
-        advance 1 *> peek_char_fail
-        >>= (function
-        | '-' -> advance 1 *> expr >>= fun e1 -> return @@ Unary_expr (Pref_decrement, e1)
-        | _ -> expr >>= fun e1 -> return @@ Unary_expr (Minus, e1))
+          advance 1 *> expr
+          >>= fun e1 -> return @@ Unary_expr (Pref_decrement, e1)
+      | _ ->
+          expr >>= fun e1 -> return @@ Unary_expr (Minus, e1) )
+  | '+' -> (
+      advance 1 *> peek_char_fail
+      >>= function
       | '+' ->
-        advance 1 *> peek_char_fail
-        >>= (function
-        | '+' -> advance 1 *> expr >>= fun e1 -> return @@ Unary_expr (Pref_increment, e1)
-        | _ -> expr >>= fun e1 -> return @@ Unary_expr (Plus, e1))
-      | _ -> fail "Expected '-'"
-    in
-    let term =
-      choice
-        [ parens expr; func_call; var_name; parse_const; not; un_arith; address; deref ]
-    in
-    let term = chainl1 term epr2 in
-    let term = chainl1 term epr3 in
-    let term = chainl1 term epr4 in
-    let term = chainl1 term eand in
-    let term = chainl1 term eor in
-    let parse_array : expr t = fix (fun e1 -> term <|> parse_elms_arr e1) in
-    choice [ parens expr; index; cast; term; parse_array ])
-;;
+          advance 1 *> expr
+          >>= fun e1 -> return @@ Unary_expr (Pref_increment, e1)
+      | _ ->
+          expr >>= fun e1 -> return @@ Unary_expr (Plus, e1) )
+  | _ ->
+      fail "Expected '-'"
 
-(*-----------------------------*)
+let p_deref expr =
+  fix (fun deref ->
+      token "*" *> (parens expr <|> p_index_array expr <|> var_name <|> deref)
+      >>= fun exp -> return @@ Unary_expr (Dereference, exp) )
 
-let argdecl =
-  parse_type <* whitespace >>= fun t -> identifier >>= fun id -> return @@ Arg (t, id)
-;;
+let p_address expr =
+  (fun exp -> Unary_expr (Address, exp))
+  <$> token "&" *> (p_index_array expr <|> parens expr <|> var_name <|> expr)
 
-let compound statements =
+let p_cast expr =
+  lift2 (fun tp exp -> Cast (tp, exp)) (token "(" *> p_type <* token ")") expr
+
+let p_not expr = token "!" *> expr >>= fun c -> return @@ Unary_expr (Not, c)
+
+let p_expr : expr t =
+  fix (fun expr ->
+      let term =
+        choice
+          [parens expr; p_func_call expr; p_index_array expr; var_name; p_const]
+      in
+      let term = p_not term <|> term in
+      let term = p_cast term <|> term in
+      let term = p_address term <|> term in
+      let term = p_deref term <|> term in
+      let term = p_un term <|> term in
+      let term = chainl1 term (emul <|> emod <|> ediv) in
+      let term = chainl1 term (eadd <|> esub) in
+      let term = chainl1 term (ershft <|> elshift) in
+      let term = chainl1 term (elte <|> egte <|> el <|> eg <|> eeq <|> eneq) in
+      let term = chainr1 term eand in
+      let term = chainr1 term eor in
+      let term = fix (fun e -> term <|> p_elements_arr e) <|> term in
+      term )
+
+let%expect_test "type parse" =
+  pp pp_types p_type "int32_t";
+  [%expect {|
+    ID_int32 |}]
+
+let%expect_test "shift parse" =
+  pp pp_expr p_expr "*a >> 2 + 2";
+  [%expect
+    {|
+    (Bin_expr (Rshift, (Unary_expr (Dereference, (Var_name "a"))),
+       (Bin_expr (Add, (Const (V_int 2)), (Const (V_int 2)))))) |}]
+
+let%expect_test "array value parse" =
+  pp pp_expr p_expr "{1, 2 + 2, 3}";
+  [%expect
+    {|
+    (Array_value
+       [(Const (V_int 1));
+         (Bin_expr (Add, (Const (V_int 2)), (Const (V_int 2))));
+         (Const (V_int 3))]) |}]
+
+let%expect_test "fun_call test" =
+  pp pp_expr p_expr "malloc(n, 12) - malloc(12 - 1)";
+  [%expect
+    {|
+    (Bin_expr (Sub, (Func_call ("malloc", [(Var_name "n"); (Const (V_int 12))])),
+       (Func_call ("malloc",
+          [(Bin_expr (Sub, (Const (V_int 12)), (Const (V_int 1))))]))
+       )) |}]
+
+let%expect_test "index array test" =
+  pp pp_expr p_expr "array[1 * 3][2 * 8]";
+  [%expect
+    {|
+    (Index (
+       (Index ((Var_name "array"),
+          (Bin_expr (Mul, (Const (V_int 1)), (Const (V_int 3)))))),
+       (Bin_expr (Mul, (Const (V_int 2)), (Const (V_int 8)))))) |}]
+
+let%expect_test "unary priority test" =
+  pp pp_expr p_expr "--1 + 2";
+  [%expect
+    {|
+    (Bin_expr (Add, (Unary_expr (Pref_decrement, (Const (V_int 1)))),
+       (Const (V_int 2)))) |}]
+
+let%expect_test "deref priority test" =
+  pp pp_expr p_expr "&2 + 2";
+  [%expect
+    {|
+    (Bin_expr (Add, (Unary_expr (Address, (Const (V_int 2)))), (Const (V_int 2))
+       )) |}]
+
+let%expect_test "not priority test" =
+  pp pp_expr p_expr "!a + 2";
+  [%expect
+    {|
+    (Bin_expr (Add, (Unary_expr (Not, (Var_name "a"))), (Const (V_int 2)))) |}]
+
+let%expect_test "sizeof test" =
+  pp pp_expr p_expr "sizeof(char)";
+  [%expect {|
+    (Func_call ("sizeof", [(Type ID_char)])) |}]
+
+let%expect_test "ref priority test" =
+  pp pp_expr p_expr "*a + 2";
+  [%expect
+    {|
+    (Bin_expr (Add, (Unary_expr (Dereference, (Var_name "a"))), (Const (V_int 2))
+       )) |}]
+
+let%expect_test "index priority test" =
+  pp pp_expr p_expr "a[2] + b[3]";
+  [%expect
+    {|
+    (Bin_expr (Add, (Index ((Var_name "a"), (Const (V_int 2)))),
+       (Index ((Var_name "b"), (Const (V_int 3)))))) |}]
+
+let%expect_test "logical not priority test" =
+  pp pp_expr p_expr "!a[2]";
+  [%expect
+    {|
+    (Unary_expr (Not, (Index ((Var_name "a"), (Const (V_int 2)))))) |}]
+
+let%expect_test "cast priority test" =
+  pp pp_expr p_expr "(int) 2 + 2";
+  [%expect
+    {|
+    (Bin_expr (Add, (Cast (ID_int, (Const (V_int 2)))), (Const (V_int 2)))) |}]
+
+let p_arg =
+  p_type <* whitespace >>= fun t -> p_ident >>= fun id -> return @@ Arg (t, id)
+
+let p_compound statements =
   whitespace *> token "{" *> many (whitespace *> statements <* whitespace)
   <* token "}"
   >>= fun s -> whitespace *> (return @@ Compound s)
-;;
 
-let if_stmt statements =
-  token "if" *> parens parse_expr
-  >>= fun cnd -> compound statements >>= fun cmpd -> return @@ If (cnd, cmpd)
-;;
+let p_if statements =
+  token "if" *> parens p_expr
+  >>= fun cnd -> p_compound statements >>= fun cmpd -> return @@ If (cnd, cmpd)
 
-let if_else_stmt statements =
-  token "if" *> parens parse_expr
+let p_if_else statements =
+  token "if" *> parens p_expr
   >>= fun cnd ->
-  compound statements
+  p_compound statements
   >>= fun cmd_if ->
-  token "else" *> compound statements
+  token "else" *> p_compound statements
   >>= fun cmd_else -> return @@ If_else (cnd, cmd_if, cmd_else)
-;;
 
-let var_decl =
-  let size_arr : int t =
-    brackets number
-    >>= function
-    | V_int x -> return x
-    | _ -> fail "size of array must be integer"
-  in
-  let parse_arr_type t =
-    fix (fun arr_type : types t ->
-      size_arr
-      >>= fun sz ->
-      whitespace *> peek_char
-      >>= function
-      | Some '[' -> arr_type >>= fun t -> return @@ Array (Some sz, t)
-      | _ -> return @@ Array (Some sz, t))
-  in
-  let value idd t =
-    match t with
-    | ID_int | ID_float | Array _ | Pointer _ ->
-      parse_expr >>= fun exp -> return @@ Var_decl (t, idd, Some exp)
-    | _ -> fail "Undefinded type"
-  in
-  parse_type
-  >>= function
-  | ID_void -> fail "VOID cannot be a type for variable declaration"
-  | t ->
-    whitespace *> identifier
-    >>= fun id ->
-    whitespace *> peek_char
-    >>= (function
-    | Some '[' ->
-      parse_arr_type t
-      >>= fun t -> token "=" *> value id t >>= fun v -> token ";" *> return v
-    | Some '=' -> advance 1 *> whitespace *> value id t >>= fun v -> token ";" *> return v
-    | Some ';' -> advance 1 *> (return @@ Var_decl (t, id, None))
-    | None | _ -> fail "Error declaration")
-;;
-
-let return_parse =
-  token "return" *> whitespace *> peek_char
-  >>= function
-  | Some ';' -> advance 1 *> (return @@ Return (Const V_void))
-  | Some _ -> parse_expr >>= fun exp -> token ";" *> (return @@ Return exp)
-  | _ -> fail "Error return"
-;;
-
-let continue_parse = token "continue" *> token ";" *> return Continue
-let break_parse = token "break" *> token ";" *> return Break
-(* let for statements =
-   token "for" *> sep_by () *)
-
-let while_stmt statements =
-  token "while" *> parens parse_expr
-  >>= fun exp -> compound statements >>= fun cmd -> return @@ While (exp, cmd)
-;;
-
-let assing_parse =
-  whitespace *> parse_expr
-  <* whitespace
-  >>= fun exp1 ->
-  peek_char
+let rec p_mult_assign expr1 =
+  token "=" *> p_expr
+  >>= fun expr2 ->
+  whitespace *> peek_char
   >>= function
   | Some '=' ->
-    advance 1 *> parse_expr
-    <* token ";"
-    >>= fun exp2 -> return @@ Assign (exp1, Expression exp2)
-  | _ -> fail "Error assign"
-;;
+      p_mult_assign expr2 >>= fun expr2 -> return @@ Assign (expr1, expr2)
+  | Some ';' ->
+      advance 1 *> (return @@ Assign (expr1, Expression expr2))
+  | _ ->
+      fail "expected ';' or '=' at the end"
 
-let for_parse statements =
-  token "for"
-  *> token "("
-  *> (var_decl
-      <|> assing_parse
-      >>= (fun var -> return @@ Some var)
-      <|> (return None <* token ";"))
-  >>= fun var ->
-  parse_expr
-  >>= (fun var -> return @@ Some var <|> return None)
-  >>= fun exp ->
-  token ";" *> (parse_expr >>= (fun step -> return @@ Some step) <|> return None)
-  >>= fun step ->
-  token ")" *> whitespace *> compound statements
-  >>= fun cmd -> return @@ For (var, exp, step, cmd)
-;;
+let p_var_decl =
+  let size_arr : int t =
+    pos
+    >>= fun col ->
+    brackets p_number
+    >>= function
+    | V_int x ->
+        return x
+    | _ ->
+        fail @@ "size of array must be integer. Error in col: "
+        ^ Int.to_string col
+  in
+  let p_type_array t =
+    fix (fun arr_type : types t ->
+        size_arr
+        >>= fun sz ->
+        whitespace *> peek_char
+        >>= function
+        | Some '[' ->
+            arr_type >>= fun t -> return @@ Array (Some sz, t)
+        | _ ->
+            return @@ Array (Some sz, t) )
+  in
+  p_type
+  >>= function
+  | ID_void ->
+      fail "VOID cannot be a type for variable declaration"
+  | t -> (
+      whitespace *> p_ident
+      >>= fun id ->
+      whitespace *> peek_char
+      >>= function
+      | Some '[' -> (
+          p_type_array t
+          >>= fun t ->
+          token "=" *> p_expr
+          >>= fun exp1 ->
+          whitespace *> peek_char
+          >>= function
+          | Some ';' ->
+              advance 1 *> (return @@ Var_decl (t, id, Some (Expression exp1)))
+          | _ ->
+              fail "Error initialization with array" )
+      | Some '=' -> (
+          advance 1 *> whitespace *> p_expr
+          >>= fun exp1 ->
+          whitespace *> peek_char
+          >>= function
+          | Some ';' ->
+              advance 1 *> (return @@ Var_decl (t, id, Some (Expression exp1)))
+          | Some '=' ->
+              p_mult_assign exp1
+              >>= fun st -> return @@ Var_decl (t, id, Some st)
+          | _ ->
+              fail "expected ';' or '=' at the end" )
+      | Some ';' ->
+          advance 1 *> (return @@ Var_decl (t, id, None))
+      | None | _ ->
+          fail "Error declaration" )
 
-let statements_parse =
+let p_return =
+  token "return" *> whitespace *> peek_char
+  >>= function
+  | Some ';' ->
+      advance 1 *> (return @@ Return (Const V_void))
+  | Some _ ->
+      p_expr >>= fun exp -> token ";" *> (return @@ Return exp)
+  | _ ->
+      fail "Error return"
+
+let p_continue = token "continue" *> token ";" *> return Continue
+
+let p_break = token "break" *> token ";" *> return Break
+
+let p_while statements =
+  token "while" *> parens p_expr
+  >>= fun exp -> p_compound statements >>= fun cmd -> return @@ While (exp, cmd)
+
+let p_assign =
+  whitespace *> p_expr <* whitespace
+  >>= fun exp1 ->
+  peek_char
+  >>= function Some '=' -> p_mult_assign exp1 | _ -> fail "Error assign"
+
+let p_for statements =
+  token "for" *> token "("
+  *> (p_var_decl <|> p_assign >>| Option.some <|> (return None <* token ";"))
+  >>= fun st ->
+  whitespace *> option None (p_expr >>| Option.some)
+  <* token ";"
+  >>= fun exp1 ->
+  whitespace *> option None (p_expr >>| Option.some)
+  <* token ")" <* whitespace
+  >>= fun exp2 ->
+  p_compound statements >>= fun cmd -> return @@ For (st, exp1, exp2, cmd)
+
+let p_statements =
   fix (fun statements ->
-    choice
-      [ compound statements
-      ; if_else_stmt statements
-      ; if_stmt statements
-      ; while_stmt statements
-      ; for_parse statements
-      ; assing_parse
-      ; var_decl
-      ; continue_parse
-      ; break_parse
-      ; return_parse
-      ])
-;;
+      choice
+        [ p_compound statements
+        ; p_if_else statements
+        ; p_if statements
+        ; p_while statements
+        ; p_for statements
+        ; p_assign
+        ; p_var_decl
+        ; p_continue
+        ; p_break
+        ; p_return ] )
 
-(*-----------------------------*)
-
-let funcdecl statements =
-  parse_type
+let p_func_decl statements =
+  p_type
   >>= fun t ->
-  whitespace *> identifier
-  <* whitespace
+  whitespace *> p_ident <* whitespace
   >>= fun id ->
-  token "(" *> sep_by (token ",") argdecl
+  token "(" *> sep_by (token ",") p_arg
   <* token ")"
   >>= fun argls ->
   whitespace *> peek_char
   >>= function
   | Some '{' ->
-    compound statements >>= fun cmd -> return @@ Func_def (Func_decl (t, id, argls), cmd)
-  | Some ';' -> advance 1 >>= fun _ -> return @@ Func_decl (t, id, argls)
-  | _ -> fail "ERROR func decl"
-;;
+      p_compound statements
+      >>= fun cmd -> return @@ Func_def (Func_decl (t, id, argls), cmd)
+  | Some ';' ->
+      advance 1 >>= fun _ -> return @@ Func_decl (t, id, argls)
+  | _ ->
+      fail "ERROR func decl"
 
-let top_var_parse =
-  var_decl
+let p_top_var =
+  p_var_decl
   >>= function
-  | Var_decl (idd, tp, exp) -> return @@ Top_var_decl (idd, tp, exp)
-  | _ -> fail "ERROR"
-;;
+  | Var_decl (idd, tp, exp) ->
+      return @@ Top_var_decl (idd, tp, exp) <* whitespace
+  | _ ->
+      fail "ERROR"
 
-let parse_prog =
-  whitespace *> sep_by whitespace (funcdecl statements_parse <|> top_var_parse)
+let p_programm =
+  whitespace *> sep_by whitespace (p_top_var <|> p_func_decl p_statements)
   >>= fun prog_ls -> return @@ My_programm prog_ls
-;;
 
-let parse input = parse_string ~consume:All parse_prog input
+let parse input = parse_string ~consume:All p_programm input
 
-(*-----------------------------*)
-let%expect_test "parse_arith" =
-  pp pp_expr parse_expr "malloc((double) 1 + 2, ++3, -(-5) * ((int) 6), {1, --2, ++3.5})";
+let%expect_test "binary search" =
+  pp pp_prog p_programm
+    {|
+    int binarySearch(int a, int *array, int n) {
+      int low = 0;
+      int high = n - 1;
+      int middle;
+      while (low <= high) {
+        middle = (low + high) / 2;
+        if (a < array[middle] || a > array[middle]) {
+          if (a < array[middle]) {
+            high = middle - 1;
+          } 
+          else {
+            low = middle + 1;
+          }
+        } 
+        else {
+          return middle;
+        } 
+      }
+      return -1;
+    }
+    
+    int main() {
+      int array[5] = {3, 7, 10, 23, 100};
+      return binarySearch(7, array, 5);
+    }
+    |};
   [%expect
     {|
-    (Func_call ("malloc",
-       [(Cast (ID_float, (Bin_expr (Add, (Const (V_int 1)), (Const (V_int 2))))));
-         (Unary_expr (Pref_increment, (Const (V_int 3))));
-         (Bin_expr (Mul, (Unary_expr (Minus, (Const (V_int -5)))),
-            (Cast (ID_int, (Const (V_int 6))))));
-         (Const
-            (V_array
-               [(Const (V_int 1));
-                 (Unary_expr (Pref_decrement, (Const (V_int 2))));
-                 (Unary_expr (Pref_increment, (Const (V_float 3.5))))]))
-         ]
-       )) |}]
-;;
-
-let%expect_test "parse_array" =
-  pp
-    pp_expr
-    (parse_expr <* whitespace)
-    "{ 'a',  2 , {1 , 2 , 3}  , name,  12, 43.23, 'c'}";
-  [%expect
-    {|
-    (Const
-       (V_array
-          [(Const (V_char 'a')); (Const (V_int 2));
-            (Const
-               (V_array [(Const (V_int 1)); (Const (V_int 2)); (Const (V_int 3))]));
-            (Var_name "name"); (Const (V_int 12)); (Const (V_float 43.23));
-            (Const (V_char 'c'))])) |}]
-;;
-
-let%expect_test "parse_name" =
-  pp pp_expr parse_expr "malloc(a, b)";
-  [%expect {|
-    (Func_call ("malloc", [(Var_name "a"); (Var_name "b")])) |}]
-;;
-
-let%expect_test "arg_decl" =
-  pp pp_arg argdecl "int a";
-  [%expect {|
-    (Arg (ID_int, "a")) |}]
-;;
-
-let%expect_test "var decl" =
-  pp pp_statements var_decl "int count[2][2] = {{1, 2}, {3, 4}};";
-  [%expect
-    {|
-    (Var_decl ((Array ((Some 2), (Array ((Some 2), ID_int)))), "count",
-       (Some (Const
-                (V_array
-                   [(Const (V_array [(Const (V_int 1)); (Const (V_int 2))]));
-                     (Const (V_array [(Const (V_int 3)); (Const (V_int 4))]))])))
-       )) |}]
-;;
+    (My_programm
+       [(Func_def (
+           (Func_decl (ID_int, "binarySearch",
+              [(Arg (ID_int, "a")); (Arg ((Pointer ID_int), "array"));
+                (Arg (ID_int, "n"))]
+              )),
+           (Compound
+              [(Var_decl (ID_int, "low", (Some (Expression (Const (V_int 0))))));
+                (Var_decl (ID_int, "high",
+                   (Some (Expression
+                            (Bin_expr (Sub, (Var_name "n"), (Const (V_int 1))))))
+                   ));
+                (Var_decl (ID_int, "middle", None));
+                (While (
+                   (Bin_expr (LessOrEqual, (Var_name "low"), (Var_name "high"))),
+                   (Compound
+                      [(Assign ((Var_name "middle"),
+                          (Expression
+                             (Bin_expr (Div,
+                                (Bin_expr (Add, (Var_name "low"),
+                                   (Var_name "high"))),
+                                (Const (V_int 2)))))
+                          ));
+                        (If_else (
+                           (Bin_expr (Or,
+                              (Bin_expr (Less, (Var_name "a"),
+                                 (Index ((Var_name "array"), (Var_name "middle")
+                                    ))
+                                 )),
+                              (Bin_expr (Grow, (Var_name "a"),
+                                 (Index ((Var_name "array"), (Var_name "middle")
+                                    ))
+                                 ))
+                              )),
+                           (Compound
+                              [(If_else (
+                                  (Bin_expr (Less, (Var_name "a"),
+                                     (Index ((Var_name "array"),
+                                        (Var_name "middle")))
+                                     )),
+                                  (Compound
+                                     [(Assign ((Var_name "high"),
+                                         (Expression
+                                            (Bin_expr (Sub, (Var_name "middle"),
+                                               (Const (V_int 1)))))
+                                         ))
+                                       ]),
+                                  (Compound
+                                     [(Assign ((Var_name "low"),
+                                         (Expression
+                                            (Bin_expr (Add, (Var_name "middle"),
+                                               (Const (V_int 1)))))
+                                         ))
+                                       ])
+                                  ))
+                                ]),
+                           (Compound [(Return (Var_name "middle"))])))
+                        ])
+                   ));
+                (Return (Unary_expr (Minus, (Const (V_int 1)))))])
+           ));
+         (Func_def ((Func_decl (ID_int, "main", [])),
+            (Compound
+               [(Var_decl ((Array ((Some 5), ID_int)), "array",
+                   (Some (Expression
+                            (Array_value
+                               [(Const (V_int 3)); (Const (V_int 7));
+                                 (Const (V_int 10)); (Const (V_int 23));
+                                 (Const (V_int 100))])))
+                   ));
+                 (Return
+                    (Func_call ("binarySearch",
+                       [(Const (V_int 7)); (Var_name "array"); (Const (V_int 5))]
+                       )))
+                 ])
+            ))
+         ]) |}]
 
 let%expect_test "factorial" =
-  pp
-    pp_prog
-    parse_prog
-    "int factorial(int n) {\n\
-    \    if (n >= 1) {\n\
-    \      return n * factorial(n - 1);\n\
-    \    }\n\
-    \    else {\n\
-    \      return 1;\n\
-    \    } \n\
-    \  }\n\
-    \  int main() {\n\
-    \    int n = 5; \n\
-    \    return factorial(n);\n\
-    \  }\n\
-    \  ";
+  pp pp_prog p_programm
+    {|
+    int factorial(int n) {
+      if (n >= 1) {
+        return n * factorial(n - 1);
+      }
+      else {
+        return 1;
+      }
+    }
+      
+    int main() {
+      int n = 5; 
+      return factorial(n);
+    }
+    
+    |};
   [%expect
     {|
     (My_programm
@@ -461,8 +667,7 @@ let%expect_test "factorial" =
            ));
          (Func_def ((Func_decl (ID_int, "main", [])),
             (Compound
-               [(Var_decl (ID_int, "n", (Some (Const (V_int 5)))));
+               [(Var_decl (ID_int, "n", (Some (Expression (Const (V_int 5))))));
                  (Return (Func_call ("factorial", [(Var_name "n")])))])
             ))
          ]) |}]
-;;
