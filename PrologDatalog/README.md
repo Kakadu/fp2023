@@ -9,11 +9,7 @@ Author: Pogorelov Ilya, ilya_pogorelov_04@mail.ru
 Features done (append only):
 
 - Parser
-
-Features in progress (and TODOs):
-
-- interpreter of non-recursive functions 
-- Interpreter of recursive functions 
+- Interpreter
 
 
 
