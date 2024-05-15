@@ -47,6 +47,7 @@ let sign_rule = token ":-" >>| oper_c
 let not = token "\\+" >>| oper_c
 let eqq = token "==" <|> token "=" >>| oper_c
 let assign = token "is" >>| oper_c
+let request = token "?-" >>| oper_c
 
 let aryth_oper =
   token "+"
@@ -141,6 +142,10 @@ let relation =
   fix (fun relation ->
     let create_relation atom terms = Relation { atom; terms } in
     let const = lift (fun x -> Const x) const in
+    let request_term =
+      let create_relation op term = create_relation op [ term ] in
+      lift2 create_relation request relation
+    in
     let term_with_prefix_op =
       let create_relation op term = create_relation op [ term ] in
       lift2 create_relation not relation
@@ -171,20 +176,25 @@ let relation =
     in_bracket
       (chainl1
          (chainl1
-            (chainl1 (chainl1 (chainl1 relation aryth_oper) assign) eqq)
-            comma_token)
-         sign_rule)
+            (chainl1
+               (chainl1 (chainl1 (chainl1 relation aryth_oper) assign) eqq)
+               comma_token)
+            sign_rule)
+         request)
     <|> term_in_list_notation
     <|> term_with_prefix_op
     <|> term_in_func_notation
+    <|> request_term
     <|> const
     <|> var)
 ;;
 
 let term =
   chainl1
-    (chainl1 (chainl1 (chainl1 (chainl1 relation aryth_oper) assign) eqq) comma_token)
-    sign_rule
+    (chainl1
+       (chainl1 (chainl1 (chainl1 (chainl1 relation aryth_oper) assign) eqq) comma_token)
+       sign_rule)
+    request
   <* dot
 ;;
 
@@ -194,52 +204,12 @@ let parse_prolog = many1 term >>| many_term_c
 
 let parse_program str =
   match parse_string ~consume:Consume.All parse_prolog str with
-  | Ok res -> Format.printf "%s" (show_many_term res)
-  | Error e -> Format.printf "%s" e
+  | Ok x -> Ok x
+  | Error er -> Error (`ParsingError er)
 ;;
 
-(**tests*)
-
-let%expect_test _ =
-  let test =
-    {|factorial(0, 1). factorial(N, Fact) :- N > 0, N1 is N - 1, factorial(N1, Fact1), Fact is N * Fact1.|}
-  in
-  parse_program test;
-  [%expect
-    {|
-     (Many_term
-        [Relation {atom = (Name "factorial");
-           terms = [(Const (Num 0)); (Const (Num 1))]};
-          Relation {atom = (Oper ":-");
-            terms =
-            [Relation {atom = (Name "factorial");
-               terms = [(Var "N"); (Var "Fact")]};
-              Relation {atom = (Oper ",");
-                terms =
-                [Relation {atom = (Oper ",");
-                   terms =
-                   [Relation {atom = (Oper ",");
-                      terms =
-                      [Relation {atom = (Oper ">");
-                         terms = [(Var "N"); (Const (Num 0))]};
-                        Relation {atom = (Oper "is");
-                          terms =
-                          [(Var "N1");
-                            Relation {atom = (Oper "-");
-                              terms = [(Var "N"); (Const (Num 1))]}
-                            ]}
-                        ]};
-                     Relation {atom = (Name "factorial");
-                       terms = [(Var "N1"); (Var "Fact1")]}
-                     ]};
-                  Relation {atom = (Oper "is");
-                    terms =
-                    [(Var "Fact");
-                      Relation {atom = (Oper "*");
-                        terms = [(Var "N"); (Var "Fact1")]}
-                      ]}
-                  ]}
-              ]}
-          ])
-     |}]
+let parse_query str =
+  match parse_string ~consume:Consume.All term str with
+  | Ok x -> Ok x
+  | Error er -> Error (`ParsingError er)
 ;;

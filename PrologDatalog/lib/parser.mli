@@ -16,4 +16,5 @@ val relation : Ast.term Angstrom.t
 val term : Ast.term Angstrom.t
 val many_term_c : Ast.term list -> Ast.many_term
 val parse_prolog : Ast.many_term Angstrom.t
-val parse_program : string -> unit
+val parse_program : string -> (Ast.many_term, [> `ParsingError of string ]) result
+val parse_query : string -> (Ast.term, [> `ParsingError of string ]) result
