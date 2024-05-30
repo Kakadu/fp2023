@@ -328,6 +328,8 @@
     * [Весь набор инструкций](https://llvm.org/docs/LangRef.html#instruction-reference)
     * [High level structure](https://llvm.org/docs/LangRef.html#high-level-structure) реализовывать не нужно, но нужно уметь их отбрасывать, чтобы можно было запускать программы включающие их
    </details>
+1. TODO MoonBit
+2. TODO purescript   
 
 ### Гробики
 
