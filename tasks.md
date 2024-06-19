@@ -764,6 +764,7 @@
 
 ##### Определюсь/допишу потом если тем будет не хватать/или кому-то очень захочется/и не будет лениво их доформулировать, а может на 2023 год оставлю
 
+1. Haskell typechecker + undecidable instances.
 1. Nemerle http://nemerle.org/About
 1. Purescript
 1. Fortran?
