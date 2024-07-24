@@ -1,6 +1,5 @@
 (library
  (name ruby_lib)
- (public_name Ruby.Lib)
  (modules Ast Interpret Parser)
  (libraries base angstrom ppx_show.runtime)
  (preprocess

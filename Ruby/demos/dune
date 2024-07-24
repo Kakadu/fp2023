@@ -1,7 +1,6 @@
 (executable
  (name demoParser)
  (modules demoParser)
- (public_name ruby_demos)
  (libraries ruby_lib stdio)
  (instrumentation
   (backend bisect_ppx)))
@@ -9,7 +8,6 @@
 (executable
  (name demoInterpreter)
  (modules demoInterpreter)
- (public_name ruby_interpreter_demos)
  (libraries ruby_lib stdio)
  (instrumentation
   (backend bisect_ppx)))
