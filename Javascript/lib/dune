@@ -1,6 +1,6 @@
 (library
  (name javascript_lib)
- (public_name Javascript.Lib)
+ ;(public_name Javascript.Lib)
  (modules Ast Parser Print Utils Interpreter VTypes)
  (modules_without_implementation VTypes)
  (libraries base angstrom)

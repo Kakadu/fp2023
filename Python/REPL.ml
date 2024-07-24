@@ -55,3 +55,7 @@ let () =
   (if opts.batch then run_single else run_repl) eval
 ;;
 *)
+let _ = Python_Lib.Interpreter.Result.( >>= )
+let _ = Python_Lib.Interpreter.Result.error
+let _ = Python_Lib.Interpreter.Result.return
+let _ = Python_Lib.Parser.pyParser

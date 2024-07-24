@@ -10,7 +10,7 @@
  (name REPL)
  (public_name REPL)
  (modules REPL)
- (libraries Python.Lib stdio))
+ (libraries python_Lib stdio))
 
 (cram
  (deps ./REPL.exe %{bin:REPL}))

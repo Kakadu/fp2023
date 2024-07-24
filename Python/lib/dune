@@ -1,6 +1,5 @@
 (library
  (name python_Lib)
- (public_name Python.Lib)
  (modules Ast Parser Interpreter)
  (libraries ppx_show.runtime base angstrom)
  (inline_tests)

@@ -2,7 +2,7 @@
  (name demo_fact)
  (public_name demo_fact)
  (modules demo_fact)
- (libraries Python.Lib)
+ (libraries python_Lib)
  (preprocess
   (pps ppx_show))
  (instrumentation
@@ -15,7 +15,7 @@
  (name interpreter)
  (public_name interpreter)
  (modules interpreter)
- (libraries Python.Lib stdio)
+ (libraries python_Lib stdio)
  (preprocess
   (pps ppx_show ppx_deriving.eq))
  (instrumentation

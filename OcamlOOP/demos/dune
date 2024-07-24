@@ -10,7 +10,7 @@
  (name demo)
  (public_name demo)
  (modules demo)
- (libraries OcamlOOP.Lib stdio)
+ (libraries ocamlOOP_lib stdio)
  (preprocess
   (pps ppx_show ppx_deriving.eq))
  (instrumentation

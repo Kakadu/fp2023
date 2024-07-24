@@ -25,3 +25,4 @@ let () =
   | Result.Ok _ -> Format.printf "%s" (GlobalState.show state)
   | Result.Error err -> Format.printf "%s" err
 ;;
+(*  *)
