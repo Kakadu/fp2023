@@ -17,14 +17,15 @@ end
 (** A module that allows you to interact with files (open) *)
 module File_Info : sig
   val name : code_ident
+  (*
+     module System_mem_internal_functions : sig
+     val read_fl_descriptors : (internal_address * file_st Intern_Mem.t, 'a) t
+     val save_fl_descriptors : sys_mem_el -> (unit, 'a) t
+     val read_out_channel : internal_address -> (out_channel, 'a) t
 
-  module System_mem_internal_functions : sig
-    val read_fl_descriptors : (internal_address * file_st Intern_Mem.t, 'a) t
-    val save_fl_descriptors : sys_mem_el -> (unit, 'a) t
-    val read_out_channel : internal_address -> (out_channel, 'a) t
-    val append_out_channel : out_channel -> (internal_address, 'a) t
-    val read_out_channel_from_self : ident -> (out_channel, 'a) t
-  end
+     (* val append_out_channel : out_channel -> (internal_address, 'a) t *)
+     val read_out_channel_from_self : ident -> (out_channel, 'a) t
+     end *)
 
   module Fields : sig
     val internal_address_name : ident

@@ -76,7 +76,8 @@ end
 type internal_address = ILink of int
 
 val pp_internal_address : Format.formatter -> internal_address -> unit
-val show_internal_address : internal_address -> string
+
+(* val show_internal_address : internal_address -> string *)
 val equal_internal_address : internal_address -> internal_address -> bool
 val i_incr_ : internal_address -> internal_address
 val i_ln : int -> internal_address
@@ -111,7 +112,8 @@ module Sys_Map : sig
   type 'a t = 'a Map.Make(Sys_id).t
 
   val empty : 'a t
-  val is_empty : 'a t -> bool
+
+  (* val is_empty : 'a t -> bool *)
   val add : key -> 'a -> 'a t -> 'a t
   val find_opt : key -> 'a t -> 'a option
 end

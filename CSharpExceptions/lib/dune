@@ -1,6 +1,5 @@
 (library
  (name csharp_Exc_Lib)
- (public_name CSharpExceptions.Lib)
  (modules
   Ast
   Parser

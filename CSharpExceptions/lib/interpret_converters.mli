@@ -23,7 +23,8 @@ val ret_bool : bool -> (t_env_value, 'a) t
 val update_bool : (bool -> bool) -> t_env_value -> (t_env_value, 'a) t
 val get_string : t_env_value -> (string, 'a) t
 val ret_string : string -> (t_env_value, 'a) t
-val get_char : t_env_value -> (char, 'a) t
+
+(* val get_char : t_env_value -> (char, 'a) t *)
 val ret_char : char -> (t_env_value, 'a) t
 val get_inst : t_env_value -> (address, 'a) t
 val ret_inst : address -> (t_env_value, 'a) t

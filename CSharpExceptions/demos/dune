@@ -1,7 +1,6 @@
 (executable
  (name demoInterpret)
  (modules demoInterpret)
- (public_name demoInterpret)
  (libraries ml_tests stdio)
  (instrumentation
   (backend bisect_ppx)))

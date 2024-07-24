@@ -15,7 +15,8 @@ val p_fild_modifier : Ast.fild_modifier t
 val ep_number : Ast.expr t
 val ep_char : Ast.expr t
 val ep_string : Ast.expr t
-val ep_bool : Ast.expr t
+
+(* val ep_bool : Ast.expr t *)
 val ep_identifier : Ast.expr t
 val ep_value : Ast.expr t
 
