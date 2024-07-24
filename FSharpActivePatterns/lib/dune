@@ -1,6 +1,6 @@
 (library
  (name FSharpActivePatterns_lib)
- (public_name FSharpActivePatterns.Lib)
+ ;(public_name FSharpActivePatterns.Lib)
  (inline_tests)
  (modules Ast Parser Interpret Errorinter Typeandprinter Inferencer)
  (libraries base angstrom)

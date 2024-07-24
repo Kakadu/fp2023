@@ -1,8 +1,7 @@
 (executable
  (name demos)
  (modules demos)
- (public_name demos)
- (libraries FSharpActivePatterns.Lib stdio))
+ (libraries FSharpActivePatterns_lib stdio))
 
 (cram
  (deps ./demos.exe))

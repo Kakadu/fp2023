@@ -14,7 +14,7 @@ module VarSet : sig
   type elt
   type t
 
-  val fold_left_m : ('a -> elt -> 'a R.t) -> t -> 'a R.t -> 'a R.t
+  (* val fold_left_m : ('a -> elt -> 'a R.t) -> t -> 'a R.t -> 'a R.t *)
 end
 
 type binder_set = VarSet.t
