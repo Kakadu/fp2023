@@ -15,7 +15,7 @@
  (name REPL)
  (public_name REPL)
  (modules REPL)
- (libraries Lambda.Lib stdio))
+ (libraries lambda_lib stdio))
 
 (cram
  (deps ./REPL.exe %{bin:REPL}))
