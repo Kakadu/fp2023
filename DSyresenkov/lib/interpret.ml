@@ -298,8 +298,6 @@ module Interpret (M : MONAD_FAIL) = struct
     helper
   ;;
 
-  open Infer
-
   let interpret_single env (e, ty) =
     match e with
     | ELet (_, id, e, None) ->
