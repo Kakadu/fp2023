@@ -1,6 +1,10 @@
-(** Copyright 2021-2023, Kakadu and contributors *)
+[@@@ocaml.text "/*"]
+
+(** Copyright 2021-2024, Kakadu and contributors *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
+
+[@@@ocaml.text "/*"]
 
 type name = string
 
@@ -12,4 +16,4 @@ type 'name t =
 
 (* Application [f g ] *)
 (** In type definition above the 3rd constructor is intentionally without documentation
-to test linter *)
+    to test linter *)

@@ -1,11 +1,15 @@
-(** Copyright 2021-2023, Kakadu and contributors *)
+[@@@ocaml.text "/*"]
+
+(** Copyright 2021-2024, Kakadu and contributors *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
+[@@@ocaml.text "/*"]
+
 (*
-val var : 'a -> 'a Ast.t
-val abs : 'a -> 'a Ast.t -> 'a Ast.t
-val app : 'a Ast.t -> 'a Ast.t -> 'a Ast.t *)
+   val var : 'a -> 'a Ast.t
+   val abs : 'a -> 'a Ast.t -> 'a Ast.t
+   val app : 'a Ast.t -> 'a Ast.t -> 'a Ast.t *)
 
 val subst : string -> by:string Ast.t -> string Ast.t -> string Ast.t
 
